@@ -1,3 +1,5 @@
+import '../../../../core/data/models/responses/rides/vehicle_types_response.dart';
+import '../../../../core/data/models/vehicle_type_model.dart';
 import '../models/home_models.dart';
 import '../models/places_models.dart';
 import '../../../../core/network/api_service.dart';
@@ -44,8 +46,8 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      final List data = response.data['data'] ?? [];
-      return data.map((e) => VehicleTypeModel.fromJson(e)).toList();
+      final vehicleResponse = VehicleTypesResponseModel.fromJson(response.data);
+      return vehicleResponse.data?.vehicleTypes ?? [];
     }
     return [];
   }

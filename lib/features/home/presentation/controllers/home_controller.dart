@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../domain/repositories/home_repository.dart';
 import '../../data/models/home_models.dart';
 import '../../../ride/domain/repositories/ride_repository.dart';
@@ -86,7 +87,11 @@ class HomeController extends GetxController {
     // Handle Recent Destinations
     results[1].fold(
       (failure) => null,
-      (destinations) => recentDestinations.assignAll(destinations as List<RecentDestinationModel>),
+      (destinations) {
+        if (destinations is List<RecentDestinationModel>) {
+          recentDestinations.assignAll(destinations);
+        }
+      },
     );
 
     isLoadingHomeData.value = false;

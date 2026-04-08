@@ -85,8 +85,8 @@ class HomeScreen extends StatelessWidget {
           children: [
             Container(
               padding: EdgeInsets.all(8.w),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
+              decoration: const BoxDecoration(
+                color: Color(0xFFF1F5F9),
                 shape: BoxShape.circle,
               ),
               child: Icon(Icons.location_on, color: AppColors.primary, size: 20.sp),
@@ -329,20 +329,30 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildVehicleHorizontalList() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          _buildVehicleCard('Boda', 'assets/images/img_boda.png'),
-          _buildVehicleCard('Bajaji', 'assets/images/img_bajaji.png'),
-          _buildVehicleCard('Cab', 'assets/images/img_cab.png'),
-          _buildVehicleCard('Cab Premium', 'assets/images/img_cab.png'),
-        ],
+    return Obx(
+      () => SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: controller.vehicleTypes
+              .map(
+                (vehicle) =>
+                    _buildVehicleCard(vehicle.displayName, vehicle.name),
+              )
+              .toList(),
+        ),
       ),
     );
   }
 
-  Widget _buildVehicleCard(String label, String imagePath) {
+  Widget _buildVehicleCard(String label, String vehicleName) {
+    String imagePath = 'assets/images/img_cab.png';
+    final name = vehicleName.toLowerCase();
+    if (name.contains('bike')) {
+      imagePath = 'assets/images/img_boda.png';
+    } else if (name.contains('auto') || name.contains('wheeler')) {
+      imagePath = 'assets/images/img_bajaji.png';
+    }
+
     return Container(
       margin: EdgeInsets.only(right: 16.w),
       child: Column(

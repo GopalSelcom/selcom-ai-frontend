@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/errors/failures.dart';
 import '../../data/models/home_models.dart';
 import '../../data/models/places_models.dart';

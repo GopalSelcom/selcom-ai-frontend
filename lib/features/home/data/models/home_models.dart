@@ -1,44 +1,44 @@
-class VehicleTypeModel {
-  final String id;
+/// This model represents the trip-specific estimate returned for each vehicle type.
+class RideEstimateModel {
+  final String vehicleType;
   final String label;
   final int fare;
   final String currency;
   final int etaMinutes;
-  final String imageUrl;
 
-  VehicleTypeModel({
-    required this.id,
+  RideEstimateModel({
+    required this.vehicleType,
     required this.label,
     required this.fare,
     required this.currency,
     required this.etaMinutes,
-    required this.imageUrl,
   });
 
-  factory VehicleTypeModel.fromJson(Map<String, dynamic> json) {
-    return VehicleTypeModel(
-      id: json['vehicle_type'] ?? '',
+  factory RideEstimateModel.fromJson(Map<String, dynamic> json) {
+    return RideEstimateModel(
+      vehicleType: json['vehicle_type'] ?? '',
       label: json['label'] ?? '',
-      fare: (json['fare'] is int) ? json['fare'] : int.parse(json['fare'].toString()),
+      fare: (json['fare'] is int)
+          ? json['fare']
+          : int.tryParse(json['fare'].toString()) ?? 0,
       currency: json['currency'] ?? 'TZS',
       etaMinutes: json['eta_pickup_min'] ?? 0,
-      imageUrl: _getImageForType(json['vehicle_type']),
     );
   }
 
-  static String _getImageForType(String? type) {
-    switch (type) {
-      case 'boda': return 'assets/images/boda.png';
-      case 'bajaj': return 'assets/images/bajaj.png';
-      case 'gari': return 'assets/images/gari.png';
-      case 'gari_plus': return 'assets/images/gari_plus.png';
-      default: return 'assets/images/gari.png';
-    }
+  Map<String, dynamic> toJson() {
+    return {
+      'vehicle_type': vehicleType,
+      'label': label,
+      'fare': fare,
+      'currency': currency,
+      'eta_pickup_min': etaMinutes,
+    };
   }
 }
 
 class FareEstimateModel {
-  final List<VehicleTypeModel> estimates;
+  final List<RideEstimateModel> estimates;
   final double distanceKm;
   final int durationMin;
 
@@ -52,11 +52,19 @@ class FareEstimateModel {
     final data = json['data'] ?? json;
     return FareEstimateModel(
       estimates: (data['estimates'] as List?)
-              ?.map((e) => VehicleTypeModel.fromJson(e))
+              ?.map((e) => RideEstimateModel.fromJson(e))
               .toList() ??
           [],
       distanceKm: (data['distance_km'] as num?)?.toDouble() ?? 0.0,
-      durationMin: data['duration_min'] ?? 0,
+      durationMin: (data['duration_min'] as num?)?.toInt() ?? 0,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'estimates': estimates.map((e) => e.toJson()).toList(),
+      'distance_km': distanceKm,
+      'duration_min': durationMin,
+    };
   }
 }
