@@ -1,4 +1,7 @@
+import 'dart:async';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
+import '../../../../core/routes/app_routes.dart';
 import '../../domain/usecases/send_otp_use_case.dart';
 import '../../domain/usecases/verify_otp_use_case.dart';
 
@@ -12,10 +15,32 @@ class AuthController extends GetxController {
   });
 
   final mobileNumber = ''.obs;
+  final email = ''.obs;
   final countryCode = '+255'.obs;
   final otp = ''.obs;
   final isLoading = false.obs;
   final errorMessage = ''.obs;
+
+  final resendTimer = 59.obs;
+  Timer? _timer;
+
+  @override
+  void onClose() {
+    _timer?.cancel();
+    super.onClose();
+  }
+
+  void startResendTimer() {
+    _timer?.cancel();
+    resendTimer.value = 59;
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (resendTimer.value > 0) {
+        resendTimer.value--;
+      } else {
+        timer.cancel();
+      }
+    });
+  }
 
   Future<bool> sendOtp() async {
     isLoading.value = true;
@@ -23,8 +48,9 @@ class AuthController extends GetxController {
     
     final result = await sendOtpUseCase(
       SendOtpParams(
-        mobileNumber: mobileNumber.value,
+        mobileNumber: mobileNumber.value.replaceAll(' ', ''),
         countryCode: countryCode.value,
+        email: email.value.trim().isEmpty ? null : email.value.trim(),
       ),
     );
 
@@ -35,7 +61,10 @@ class AuthController extends GetxController {
         errorMessage.value = failure.message;
         return false;
       },
-      (success) => success,
+      (success) {
+        startResendTimer();
+        return success;
+      },
     );
   }
 
@@ -45,7 +74,7 @@ class AuthController extends GetxController {
 
     final result = await verifyOtpUseCase(
       VerifyOtpParams(
-        mobileNumber: mobileNumber.value,
+        mobileNumber: mobileNumber.value.replaceAll(' ', ''),
         countryCode: countryCode.value,
         otp: otp.value,
       ),
@@ -53,20 +82,19 @@ class AuthController extends GetxController {
 
     isLoading.value = false;
 
-    return result.fold(
-      (failure) {
+    return await result.fold(
+      (failure) async {
         errorMessage.value = failure.message;
         return false;
       },
-      (authEntity) {
-        // Navigate to Home or Profile Setup
-        if (authEntity.isUserAlreadyRegistered) {
-          Get.offAllNamed('/home');
-        } else {
-          // If profile is not complete, go to profile setup
-          // For now, redirect to Home until Profile Setup is built
-          Get.offAllNamed('/home');
-        }
+      (authEntity) async {
+        const storage = FlutterSecureStorage();
+        await storage.write(key: 'authorization_token', value: authEntity.accessToken);
+        await storage.write(key: 'access_token', value: authEntity.accessToken);
+        await storage.write(key: 'refresh_token', value: authEntity.refreshToken);
+
+        // Navigate to Profile Loading to sync data
+        Get.offAllNamed(AppRoutes.profileLoading);
         return true;
       },
     );

@@ -2,18 +2,20 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // Brand
-  static const Color primary        = Color(0xFFF01C4B);  // Red — buttons, highlights
+  static const Color primary        = Color(0xFFF3004C);  // Red/Pink — buttons, highlights
   static const Color primaryLight   = Color(0xFFFDE8ED);  // Light red bg
 
   // Backgrounds
-  static const Color pageBackground = Color(0xFFF5F7FA);  // Screen backgrounds
+  static const Color pageBackground = Color(0xFFF8FAFC);  // Gray/Shade 7
   static const Color cardBackground = Color(0xFFFFFFFF);  // Cards, sheets, modals
   static const Color errorBackground= Color(0xFFFDECEA);  // OTP error banner
 
-  // Text
-  static const Color textDark       = Color(0xFF1A1A1A);  // Titles, labels
-  static const Color textGrey       = Color(0xFF555555);  // Subtitles, hints
-  static const Color textLight      = Color(0xFFAAAAAA);  // Placeholders, disabled
+  // Text / Shades
+  static const Color shade1         = Color(0xFF132235);  // Gray/Shade 1 (Titles)
+  static const Color shade2         = Color(0xFF364B63);  // Gray/Shade 2 (Subtitles)
+  static const Color textDark       = Color(0xFF132235);
+  static const Color textGrey       = Color(0xFF364B63);
+  static const Color textLight      = Color(0xFFAAAAAA);
 
   // Semantic
   static const Color success        = Color(0xFF1D9E75);  // Green

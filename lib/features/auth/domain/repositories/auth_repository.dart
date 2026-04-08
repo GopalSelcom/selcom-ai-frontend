@@ -6,6 +6,7 @@ abstract class AuthRepository {
   Future<Either<Failure, bool>> sendOtp({
     required String mobileNumber,
     required String countryCode,
+    String? email,
   });
 
   Future<Either<Failure, bool>> resendOtp({

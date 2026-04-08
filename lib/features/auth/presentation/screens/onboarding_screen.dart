@@ -1,144 +1,135 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/routes/app_routes.dart';
-import '../../../../shared/widgets/app_primary_button.dart';
+import '../controllers/onboarding_controller.dart';
 
-class OnboardingScreen extends StatefulWidget {
+class OnboardingScreen extends GetView<OnboardingController> {
   const OnboardingScreen({super.key});
-
-  @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
-}
-
-class _OnboardingScreenState extends State<OnboardingScreen> {
-  final PageController _pageController = PageController();
-  int _currentPage = 0;
-  Timer? _timer;
-
-  final List<OnboardingData> _pages = [
-    OnboardingData(
-      title: 'Fast & Reliable',
-      subtitle: 'Get a ride in minutes and reach your destination safely.',
-      image: Icons.speed_rounded,
-    ),
-    OnboardingData(
-      title: 'Safe Travels',
-      subtitle: 'Verified drivers and safety tracking for your peace of mind.',
-      image: Icons.security_rounded,
-    ),
-    OnboardingData(
-      title: 'Best Prices',
-      subtitle: 'Enjoy the best market rates for every trip you take.',
-      image: Icons.payments_rounded,
-    ),
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _startAutoPlay();
-  }
-
-  void _startAutoPlay() {
-    _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      if (_currentPage < _pages.length - 1) {
-        _currentPage++;
-      } else {
-        _currentPage = 0;
-      }
-      _pageController.animateToPage(
-        _currentPage,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    _pageController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.pageBackground,
       body: SafeArea(
+        top: false, // Illustration should overlap with status bar if needed, but we keep it simple
         child: Column(
           children: [
+            // Illustration Section
             Expanded(
-              flex: 3,
+              flex: 5,
               child: PageView.builder(
-                controller: _pageController,
-                onPageChanged: (index) {
-                  setState(() => _currentPage = index);
-                },
-                itemCount: _pages.length,
+                onPageChanged: controller.onPageChanged,
+                itemCount: controller.slides.length,
                 itemBuilder: (context, index) {
-                  final data = _pages[index];
-                  return Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(data.image, size: 200.w, color: AppColors.primary),
-                      SizedBox(height: 48.h),
-                      Text(
-                        data.title,
-                        style: AppTextStyles.screenTitle,
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: 16.h),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 32.w),
-                        child: Text(
-                          data.subtitle,
-                          style: AppTextStyles.body,
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ],
+                  final slide = controller.slides[index];
+                  return SvgPicture.asset(
+                    slide.image,
+                    width: double.infinity,
+                    fit: BoxFit.contain,
                   );
                 },
               ),
             ),
+
+            // Content Section
             Expanded(
-              flex: 1,
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(
-                      _pages.length,
-                      (index) => AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        margin: EdgeInsets.only(right: 8.w),
-                        height: 8.h,
-                        width: _currentPage == index ? 24.w : 8.w,
-                        decoration: BoxDecoration(
-                          color: _currentPage == index
-                              ? AppColors.primary
-                              : AppColors.inputBorderDefault,
-                          borderRadius: BorderRadius.circular(4.r),
+              flex: 4,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                child: Column(
+                  children: [
+                    // Dot Indicators
+                    Obx(() => Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        controller.slides.length,
+                        (index) => AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          margin: EdgeInsets.symmetric(horizontal: 4.w),
+                          width: controller.currentIndex.value == index ? 24.w : 8.w,
+                          height: 8.h,
+                          decoration: BoxDecoration(
+                            color: controller.currentIndex.value == index
+                                ? AppColors.primary
+                                : const Color(0xFFD1D5DB),
+                            borderRadius: BorderRadius.circular(4.r),
+                          ),
+                        ),
+                      ),
+                    )),
+                    SizedBox(height: 32.h),
+
+                    // Title
+                    Obx(() => Text(
+                      controller.slides[controller.currentIndex.value].title,
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.onboardingTitle,
+                    )),
+                    SizedBox(height: 16.h),
+
+                    // Subtitle
+                    Obx(() => Text(
+                      controller.slides[controller.currentIndex.value].subtitle,
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.onboardingSubtitle,
+                    )),
+                    
+                    const Spacer(),
+
+                    // Action Button
+                    Padding(
+                      padding: EdgeInsets.only(bottom: 16.h),
+                      child: InkWell(
+                        onTap: controller.onGetStarted,
+                        child: Container(
+                          height: 54.h,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(16.r),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primary.withOpacity(0.3),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Get Started',
+                                style: AppTextStyles.onboardingButton,
+                              ),
+                              SizedBox(width: 12.w),
+                              SvgPicture.asset(
+                                'assets/images/ic_arrow_right.svg',
+                                colorFilter: const ColorFilter.mode(
+                                  Colors.white,
+                                  BlendMode.srcIn,
+                                ),
+                                height: 24.h,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const Spacer(),
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 24.w,
-                      vertical: 32.h,
+
+                    // Footer Text
+                    Padding(
+                      padding: EdgeInsets.only(bottom: 16.h),
+                      child: Text(
+                        'By continuing, you agree that you have read and accept our T&Cs and Privacy Policy',
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.onboardingFooter,
+                      ),
                     ),
-                    child: AppPrimaryButton(
-                      label: 'Get Started',
-                      onPressed: () => Get.offNamed(AppRoutes.phone),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],
@@ -146,16 +137,4 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ),
     );
   }
-}
-
-class OnboardingData {
-  final String title;
-  final String subtitle;
-  final IconData image;
-
-  OnboardingData({
-    required this.title,
-    required this.subtitle,
-    required this.image,
-  });
 }

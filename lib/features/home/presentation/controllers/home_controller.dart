@@ -1,4 +1,4 @@
-import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -52,8 +52,20 @@ class HomeController extends GetxController {
     }, time: const Duration(seconds: 1));
   }
 
-  void onMapCreated(GoogleMapController controller) {
+  void onMapCreated(GoogleMapController controller) async {
     mapController = controller;
+    final style = await _loadMapStyle();
+    if (style != null) {
+      mapController?.setMapStyle(style);
+    }
+  }
+
+  Future<String?> _loadMapStyle() async {
+    try {
+      return await DefaultAssetBundle.of(Get.context!).loadString('assets/json/map_style.json');
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> _loadHomeData() async {
@@ -171,6 +183,12 @@ class HomeController extends GetxController {
     final position = await Geolocator.getCurrentPosition();
     currentPosition.value = LatLng(position.latitude, position.longitude);
 
+    mapController?.animateCamera(
+      CameraUpdate.newLatLng(currentPosition.value),
+    );
+  }
+
+  void recenterMap() {
     mapController?.animateCamera(
       CameraUpdate.newLatLng(currentPosition.value),
     );

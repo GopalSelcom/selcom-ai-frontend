@@ -7,6 +7,7 @@ abstract class AuthRemoteDataSource {
   Future<bool> sendOtp({
     required String mobileNumber,
     required String countryCode,
+    String? email,
   });
 
   Future<bool> resendOtp({
@@ -39,6 +40,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<bool> sendOtp({
     required String mobileNumber,
     required String countryCode,
+    String? email,
   }) async {
     final response = await ApiService().call(
       request: ApiRequest(
@@ -47,6 +49,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         body: {
           Params.mobileNumber: mobileNumber,
           Params.countryCode: countryCode,
+          if (email != null) 'email': email,
         },
       ),
     );

@@ -10,6 +10,7 @@ import 'package:http_parser/http_parser.dart';
 
 import 'failed_request_queue.dart';
 import 'retry_manager.dart';
+import '../../shared/utils/app_dialogs.dart';
 
 // ─────────────────────────────────────────────────────────
 // Enums
@@ -497,10 +498,9 @@ class ApiService {
       debugPrint("⏳ Server slow response (receive timeout)");
 
       if (request.errorPresentationType == ErrorPresentationType.dialog) {
-        Get.snackbar(
-          'Timeout',
-          'Server is taking too long to respond. Please try again.',
-          snackPosition: SnackPosition.BOTTOM,
+        AppDialogs.showErrorDialog(
+          title: 'Timeout',
+          message: 'Server is taking too long to respond. Please try again.',
         );
       }
 
@@ -533,11 +533,7 @@ class ApiService {
     }
 
     if (request.errorPresentationType == ErrorPresentationType.dialog) {
-      Get.snackbar(
-        'Error',
-        message,
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      AppDialogs.showErrorDialog(message: message);
     }
 
     return Response(

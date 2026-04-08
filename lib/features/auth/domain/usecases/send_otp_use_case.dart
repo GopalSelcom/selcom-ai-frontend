@@ -13,6 +13,7 @@ class SendOtpUseCase implements UseCase<bool, SendOtpParams> {
     return await repository.sendOtp(
       mobileNumber: params.mobileNumber,
       countryCode: params.countryCode,
+      email: params.email,
     );
   }
 }
@@ -20,6 +21,11 @@ class SendOtpUseCase implements UseCase<bool, SendOtpParams> {
 class SendOtpParams {
   final String mobileNumber;
   final String countryCode;
+  final String? email;
 
-  SendOtpParams({required this.mobileNumber, required this.countryCode});
+  SendOtpParams({
+    required this.mobileNumber,
+    required this.countryCode,
+    this.email,
+  });
 }

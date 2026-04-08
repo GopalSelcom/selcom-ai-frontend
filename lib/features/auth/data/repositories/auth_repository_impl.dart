@@ -13,11 +13,13 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, bool>> sendOtp({
     required String mobileNumber,
     required String countryCode,
+    String? email,
   }) async {
     try {
       final result = await remoteDataSource.sendOtp(
         mobileNumber: mobileNumber,
         countryCode: countryCode,
+        email: email,
       );
       return Right(result);
     } catch (e) {
