@@ -1,0 +1,22 @@
+{
+  "name": "Selcom Rides Assistant",
+  "description": "Project-specific AI assistant for Selcom Rides Flutter development.",
+  "skills": [
+    {
+      "name": "task_manager",
+      "description": "Maintains the current development sprint and task status.",
+      "path": "./skills/task_manager"
+    },
+    {
+      "name": "flutter_dev",
+      "description": "Selcom-specific Flutter coding standards and Rule 18/19 implementation.",
+      "path": "./skills/flutter_dev"
+    },
+    {
+      "name": "auth_integration",
+      "description": "Selcom Identity and API integration specifications.",
+      "path": "./skills/auth_integration"
+    }
+  ],
+  "agents": []
+}

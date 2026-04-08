@@ -1,0 +1,188 @@
+import '../../../../core/data/models/ride_model.dart';
+import '../models/ride_management_models.dart';
+import '../../../../core/network/api_service.dart';
+import '../../../../core/network/urls.dart';
+
+abstract class RideRemoteDataSource {
+  Future<List<RecentDestinationModel>> getRecentDestinations();
+  Future<List<RideModel>> getRideHistory({int page = 1, int limit = 10});
+  Future<RideModel> getRideDetails(String rideId);
+  Future<bool> cancelRide(String rideId, String reason);
+  Future<bool> updateDestination(String rideId, Map<String, dynamic> destination);
+  Future<bool> updatePickup(String rideId, Map<String, dynamic> pickup);
+  Future<bool> increaseFare(String rideId, int newFare);
+  Future<ReceiptModel> getReceipt(String rideId);
+  Future<bool> rateDriver(String rideId, int rating, String comment);
+  Future<bool> submitFeedback(String rideId, String category, String message);
+  Future<String> validateRidePayment({
+    required String rideId,
+    required int amount,
+    required String paymentMethod,
+    String currency = "TZS",
+  });
+}
+
+class RideRemoteDataSourceImpl implements RideRemoteDataSource {
+  RideRemoteDataSourceImpl();
+
+  @override
+  Future<List<RecentDestinationModel>> getRecentDestinations() async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: "go/rides/recent-destinations",
+        method: ApiMethod.get,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      final List data = response.data['data'] ?? [];
+      return data.map((e) => RecentDestinationModel.fromJson(e)).toList();
+    }
+    return [];
+  }
+
+  @override
+  Future<List<RideModel>> getRideHistory({int page = 1, int limit = 10}) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.ride.rideHistory,
+        method: ApiMethod.get,
+        queryParams: {'page': page, 'limit': limit},
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      final List data = response.data['data'] ?? [];
+      return data.map((e) => RideModel.fromJson(e)).toList();
+    }
+    return [];
+  }
+
+  @override
+  Future<RideModel> getRideDetails(String rideId) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: "go/rides/$rideId",
+        method: ApiMethod.get,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      return RideModel.fromJson(response.data['data'] ?? {});
+    }
+    throw Exception('Failed to get ride details');
+  }
+
+  @override
+  Future<bool> cancelRide(String rideId, String reason) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: "go/rides/$rideId/cancel",
+        method: ApiMethod.put,
+        body: {'reason': reason},
+      ),
+    );
+    return response.statusCode == 200;
+  }
+
+  @override
+  Future<bool> updateDestination(String rideId, Map<String, dynamic> destination) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: "go/rides/$rideId/update-destination",
+        method: ApiMethod.put,
+        body: {'destination': destination},
+      ),
+    );
+    return response.statusCode == 200;
+  }
+
+  @override
+  Future<bool> updatePickup(String rideId, Map<String, dynamic> pickup) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: "go/rides/$rideId/update-pickup",
+        method: ApiMethod.put,
+        body: {'pickup': pickup},
+      ),
+    );
+    return response.statusCode == 200;
+  }
+
+  @override
+  Future<bool> increaseFare(String rideId, int newFare) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: "go/rides/$rideId/increase-fare",
+        method: ApiMethod.put,
+        body: {'new_fare': newFare},
+      ),
+    );
+    return response.statusCode == 200;
+  }
+
+  @override
+  Future<ReceiptModel> getReceipt(String rideId) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: "go/rides/$rideId/receipt",
+        method: ApiMethod.get,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      return ReceiptModel.fromJson(response.data['data'] ?? {});
+    }
+    throw Exception('Failed to get receipt');
+  }
+
+  @override
+  Future<bool> rateDriver(String rideId, int rating, String comment) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: "go/rides/$rideId/rate",
+        method: ApiMethod.post,
+        body: {'rating': rating, 'comment': comment},
+      ),
+    );
+    return response.statusCode == 200;
+  }
+
+  @override
+  Future<bool> submitFeedback(String rideId, String category, String message) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: "go/rides/$rideId/feedback",
+        method: ApiMethod.post,
+        body: {'category': category, 'message': message},
+      ),
+    );
+    return response.statusCode == 200;
+  }
+
+  @override
+  Future<String> validateRidePayment({
+    required String rideId,
+    required int amount,
+    required String paymentMethod,
+    String currency = "TZS",
+  }) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: "go/validate_ride_payment",
+        method: ApiMethod.post,
+        body: {
+          'ride_id': rideId,
+          'amount': amount,
+          'payment_method': paymentMethod,
+          'currency': currency,
+        },
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      return response.data['data']?['validation_id'] ?? '';
+    }
+    throw Exception('Payment validation failed');
+  }
+}

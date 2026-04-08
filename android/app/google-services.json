@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "235920604285",
+    "project_id": "selcom-rides",
+    "storage_bucket": "selcom-rides.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:235920604285:android:2390cbd1d7f7e55b0ac514",
+        "android_client_info": {
+          "package_name": "com.example.selcom_rides_frontend"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAY9TzBQJlMff1yw63gw4aQr6KfWhts1bI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
