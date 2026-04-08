@@ -50,7 +50,7 @@ class AuthController extends GetxController {
 
     final result = await sendOtpUseCase(
       SendOtpRequest(
-        mobileNumber: mobileNumber.value,
+        mobileNumber: mobileNumber.value.replaceAll(' ', ''),
         countryCode: countryCode.value,
       ),
     );
@@ -81,7 +81,6 @@ class AuthController extends GetxController {
       SendOtpRequest(
         mobileNumber: mobileNumber.value.replaceAll(' ', ''),
         countryCode: countryCode.value,
-        email: email.value.trim().isEmpty ? null : email.value.trim(),
       ),
     );
 
@@ -92,9 +91,14 @@ class AuthController extends GetxController {
         errorMessage.value = failure.message;
         return false;
       },
-      (success) {
-        startResendTimer();
-        return success;
+      (response) {
+        if (response?.isSuccess == true) {
+          startResendTimer();
+          return true;
+        } else {
+          errorMessage.value = response?.message ?? 'Failed to resend OTP';
+          return false;
+        }
       },
     );
   }
@@ -118,15 +122,26 @@ class AuthController extends GetxController {
         errorMessage.value = failure.message;
         return false;
       },
-      (authEntity) async {
-        const storage = FlutterSecureStorage();
-        await storage.write(key: 'authorization_token', value: authEntity.accessToken);
-        await storage.write(key: 'access_token', value: authEntity.accessToken);
-        await storage.write(key: 'refresh_token', value: authEntity.refreshToken);
+      (response) async {
+        if (response?.isSuccess == true && response?.response != null) {
+          final verifyData = response!.response!;
+          const storage = FlutterSecureStorage();
+          
+          if (verifyData.accessToken != null) {
+            await storage.write(key: 'authorization_token', value: verifyData.accessToken);
+            await storage.write(key: 'access_token', value: verifyData.accessToken);
+          }
+          if (verifyData.refreshToken != null) {
+            await storage.write(key: 'refresh_token', value: verifyData.refreshToken);
+          }
 
-        // Navigate to Profile Loading to sync data
-        Get.offAllNamed(AppRoutes.profileLoading);
-        return true;
+          // Navigate to Profile Loading to sync data
+          Get.offAllNamed(AppRoutes.profileLoading);
+          return true;
+        } else {
+          errorMessage.value = response?.message ?? 'OTP verification failed';
+          return false;
+        }
       },
     );
   }
