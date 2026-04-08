@@ -1,25 +1,19 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/usecases/usecase.dart';
+import '../../../../core/data/models/requests/send_otp_request.dart';
+import '../../../../core/data/models/responses/send_otp_response.dart';
 import '../repositories/auth_repository.dart';
 
-class SendOtpUseCase implements UseCase<bool, SendOtpParams> {
+class SendOtpUseCase implements UseCase<SendOtpResponseModel?, SendOtpRequest> {
   final AuthRepository repository;
 
   SendOtpUseCase(this.repository);
 
   @override
-  Future<Either<Failure, bool>> call(SendOtpParams params) async {
-    return await repository.sendOtp(
-      mobileNumber: params.mobileNumber,
-      countryCode: params.countryCode,
-    );
+  Future<Either<Failure, SendOtpResponseModel?>> call(
+    SendOtpRequest params,
+  ) async {
+    return await repository.sendOtp(request: params);
   }
-}
-
-class SendOtpParams {
-  final String mobileNumber;
-  final String countryCode;
-
-  SendOtpParams({required this.mobileNumber, required this.countryCode});
 }

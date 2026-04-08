@@ -1,6 +1,9 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
-import '../../domain/entities/auth_entity.dart';
+import '../../../../core/data/models/requests/send_otp_request.dart';
+import '../../../../core/data/models/responses/send_otp_response.dart';
+import '../../../../core/data/models/requests/verify_otp_request.dart';
+import '../../../../core/data/models/responses/verify_otp_response.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_data_source.dart';
 
@@ -10,14 +13,12 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Either<Failure, bool>> sendOtp({
-    required String mobileNumber,
-    required String countryCode,
+  Future<Either<Failure, SendOtpResponseModel?>> sendOtp({
+    required SendOtpRequest request,
   }) async {
     try {
       final result = await remoteDataSource.sendOtp(
-        mobileNumber: mobileNumber,
-        countryCode: countryCode,
+        request: request,
       );
       return Right(result);
     } catch (e) {
@@ -26,14 +27,12 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, bool>> resendOtp({
-    required String mobileNumber,
-    required String countryCode,
+  Future<Either<Failure, SendOtpResponseModel?>> resendOtp({
+    required SendOtpRequest request,
   }) async {
     try {
       final result = await remoteDataSource.resendOtp(
-        mobileNumber: mobileNumber,
-        countryCode: countryCode,
+        request: request,
       );
       return Right(result);
     } catch (e) {
@@ -42,18 +41,14 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, AuthEntity>> verifyOtp({
-    required String mobileNumber,
-    required String countryCode,
-    required String otp,
+  Future<Either<Failure, VerifyOtpResponseModel?>> verifyOtp({
+    required VerifyOtpRequest request,
   }) async {
     try {
-      final authModel = await remoteDataSource.verifyOtp(
-        mobileNumber: mobileNumber,
-        countryCode: countryCode,
-        otp: otp,
+      final result = await remoteDataSource.verifyOtp(
+        request: request,
       );
-      return Right(authModel);
+      return Right(result);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

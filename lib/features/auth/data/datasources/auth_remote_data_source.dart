@@ -1,23 +1,18 @@
-import '../models/auth_models.dart';
+import 'dart:developer';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/urls.dart';
-import '../../../../core/network/api_constants.dart';
+import '../../../../core/data/models/requests/send_otp_request.dart';
+import '../../../../core/data/models/responses/send_otp_response.dart';
+import '../../../../core/data/models/requests/verify_otp_request.dart';
+import '../../../../core/data/models/responses/verify_otp_response.dart';
 
 abstract class AuthRemoteDataSource {
-  Future<bool> sendOtp({
-    required String mobileNumber,
-    required String countryCode,
-  });
+  Future<SendOtpResponseModel?> sendOtp({required SendOtpRequest request});
 
-  Future<bool> resendOtp({
-    required String mobileNumber,
-    required String countryCode,
-  });
+  Future<SendOtpResponseModel?> resendOtp({required SendOtpRequest request});
 
-  Future<AuthModel> verifyOtp({
-    required String mobileNumber,
-    required String countryCode,
-    required String otp,
+  Future<VerifyOtpResponseModel?> verifyOtp({
+    required VerifyOtpRequest request,
   });
 
   Future<String> refreshToken();
@@ -36,66 +31,69 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   AuthRemoteDataSourceImpl();
 
   @override
-  Future<bool> sendOtp({
-    required String mobileNumber,
-    required String countryCode,
+  Future<SendOtpResponseModel?> sendOtp({
+    required SendOtpRequest request,
   }) async {
-    final response = await ApiService().call(
-      request: ApiRequest(
-        endpoint: URLS.auth.sendOtp,
-        method: ApiMethod.post,
-        body: {
-          Params.mobileNumber: mobileNumber,
-          Params.countryCode: countryCode,
-        },
-      ),
-    );
+    try {
+      final response = await ApiService().call(
+        request: ApiRequest(
+          endpoint: URLS.auth.sendOtp,
+          method: ApiMethod.post,
+          body: request.toJson(),
+        ),
+      );
 
-    return response.statusCode == 200;
-  }
-
-  @override
-  Future<bool> resendOtp({
-    required String mobileNumber,
-    required String countryCode,
-  }) async {
-    final response = await ApiService().call(
-      request: ApiRequest(
-        endpoint: URLS.auth.resendOtp,
-        method: ApiMethod.post,
-        body: {
-          Params.mobileNumber: mobileNumber,
-          Params.countryCode: countryCode,
-        },
-      ),
-    );
-
-    return response.statusCode == 200;
-  }
-
-  @override
-  Future<AuthModel> verifyOtp({
-    required String mobileNumber,
-    required String countryCode,
-    required String otp,
-  }) async {
-    final response = await ApiService().call(
-      request: ApiRequest(
-        endpoint: URLS.auth.verifyOtp,
-        method: ApiMethod.post,
-        body: {
-          Params.mobileNumber: mobileNumber,
-          Params.countryCode: countryCode,
-          'otp': otp,
-        },
-      ),
-    );
-
-    if (response.statusCode == 200 && response.data != null) {
-      return AuthModel.fromJson(response.data);
-    } else {
-      throw Exception(response.data?['message'] ?? 'OTP verification failed');
+      if (response.data != null) {
+        return SendOtpResponseModel.fromJson(response.data);
+      }
+    } catch (e) {
+      log("sendOtpApi Exception: $e");
     }
+    return null;
+  }
+
+  @override
+  Future<SendOtpResponseModel?> resendOtp({
+    required SendOtpRequest request,
+  }) async {
+    try {
+      final response = await ApiService().call(
+        request: ApiRequest(
+          endpoint: URLS.auth.resendOtp,
+          method: ApiMethod.post,
+          body: request.toJson(),
+        ),
+      );
+
+      if (response.data != null) {
+        return SendOtpResponseModel.fromJson(response.data);
+      }
+    } catch (e) {
+      log("resendOtpApi Exception: $e");
+    }
+    return null;
+  }
+
+  @override
+  Future<VerifyOtpResponseModel?> verifyOtp({
+    required VerifyOtpRequest request,
+  }) async {
+    try {
+      final response = await ApiService().call(
+        request: ApiRequest(
+          endpoint: URLS.auth.verifyOtp,
+          method: ApiMethod.post,
+          body: request.toJson(),
+        ),
+      );
+
+      if (response.data != null) {
+        return VerifyOtpResponseModel.fromJson(response.data);
+      }
+    } catch (e) {
+      log("verifyOtpApi Exception: $e");
+    }
+    return null;
   }
 
   @override
@@ -126,12 +124,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       request: ApiRequest(
         endpoint: URLS.auth.saveUserDetails,
         method: ApiMethod.post,
-        body: {
-          'name': name,
-          'emailId': email,
-          'dob': dob,
-          'gender': gender,
-        },
+        body: {'name': name, 'emailId': email, 'dob': dob, 'gender': gender},
       ),
     );
 
@@ -141,10 +134,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<bool> logout() async {
     final response = await ApiService().call(
-      request: ApiRequest(
-        endpoint: URLS.auth.logout,
-        method: ApiMethod.post,
-      ),
+      request: ApiRequest(endpoint: URLS.auth.logout, method: ApiMethod.post),
     );
 
     return response.statusCode == 200;

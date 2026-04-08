@@ -1,73 +1,59 @@
 class UserEntity {
   final String id;
-  final String name;
-  final int mobileNumber;
-  final String countryCode;
-  final String? email;
-  final String? imageUrl;
-  final String? deviceToken;
-  final int? deviceType;
-  final String? accessToken;
-  final bool isVerified;
-  final bool isBlocked;
-  
-  // New Fields from v4 Response
+  final String? countryCode;
+  final int? mobileNumber;
   final String? emailId;
+  final String? image;
+  final String? dob;
+  final String? selectedLanguage;
+  final String? activeToken;
+  final String? accessToken;
+  final int? isVerify;
+  final int? isBlocked;
+  final int? personId;
   final String? tin;
   final String? tinNumber;
   final String? nidaNumber;
-  final String? dob;
-  final String? image;
-  final String? selectedLanguage;
-  final int? personId;
   final double? lat;
   final double? lng;
   final int? pushNotification;
-  final int? emailNotification;
   final int? smsNotification;
+  final int? emailNotification;
   final int? subscribeForNewsletter;
   final int? totalOrders;
   final bool? isCodEnable;
-  final String? appReferalCode;
   final bool? isEmailOtpVerify;
-  final String? activeToken;
-  final int? accountNumber;
   final String? appUuid;
+  final int? accountNumber;
+  final String? uniqueId;
 
   const UserEntity({
     required this.id,
-    required this.name,
-    required this.mobileNumber,
-    required this.countryCode,
-    this.email,
-    this.imageUrl,
-    this.deviceToken,
-    this.deviceType,
-    this.accessToken,
-    required this.isVerified,
-    required this.isBlocked,
-    
-    // New Fields
+    this.countryCode,
+    this.mobileNumber,
     this.emailId,
+    this.image,
+    this.dob,
+    this.selectedLanguage,
+    this.activeToken,
+    this.accessToken,
+    this.isVerify,
+    this.isBlocked,
+    this.personId,
     this.tin,
     this.tinNumber,
     this.nidaNumber,
-    this.dob,
-    this.image,
-    this.selectedLanguage,
-    this.personId,
     this.lat,
     this.lng,
     this.pushNotification,
-    this.emailNotification,
     this.smsNotification,
+    this.emailNotification,
     this.subscribeForNewsletter,
     this.totalOrders,
     this.isCodEnable,
-    this.appReferalCode,
     this.isEmailOtpVerify,
-    this.activeToken,
-    this.accountNumber,
     this.appUuid,
+    this.accountNumber,
+    this.uniqueId,
   });
 }

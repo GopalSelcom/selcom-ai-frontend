@@ -1,22 +1,21 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
-import '../../../auth/domain/entities/auth_entity.dart';
+import '../../../../core/data/models/requests/send_otp_request.dart';
+import '../../../../core/data/models/responses/send_otp_response.dart';
+import '../../../../core/data/models/requests/verify_otp_request.dart';
+import '../../../../core/data/models/responses/verify_otp_response.dart';
 
 abstract class AuthRepository {
-  Future<Either<Failure, bool>> sendOtp({
-    required String mobileNumber,
-    required String countryCode,
+  Future<Either<Failure, SendOtpResponseModel?>> sendOtp({
+    required SendOtpRequest request,
   });
 
-  Future<Either<Failure, bool>> resendOtp({
-    required String mobileNumber,
-    required String countryCode,
+  Future<Either<Failure, SendOtpResponseModel?>> resendOtp({
+    required SendOtpRequest request,
   });
 
-  Future<Either<Failure, AuthEntity>> verifyOtp({
-    required String mobileNumber,
-    required String countryCode,
-    required String otp,
+  Future<Either<Failure, VerifyOtpResponseModel?>> verifyOtp({
+    required VerifyOtpRequest request,
   });
 
   Future<Either<Failure, String>> refreshToken();
