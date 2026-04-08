@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/constants/app_assets.dart';
 import '../../../../core/routes/app_routes.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -21,8 +23,16 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void _navigateToNext() async {
     await Future.delayed(const Duration(milliseconds: 2500));
-    // For now, navigate to onboarding
-    Get.offAllNamed(AppRoutes.onboarding);
+    
+    // Check for existing valid session token
+    const storage = FlutterSecureStorage();
+    final token = await storage.read(key: 'authorization_token');
+
+    if (token != null && token.isNotEmpty) {
+      Get.offAllNamed(AppRoutes.home);
+    } else {
+      Get.offAllNamed(AppRoutes.onboarding);
+    }
   }
 
   @override
@@ -38,7 +48,7 @@ class _SplashScreenState extends State<SplashScreen> {
             child: Opacity(
               opacity: 0.35,
               child: SvgPicture.asset(
-                'assets/images/splash_bg_vector.svg',
+                AppAssets.splashBgVector,
                 width: 500.w,
                 colorFilter: const ColorFilter.mode(
                   Color(0xFFCC0031),
@@ -50,7 +60,7 @@ class _SplashScreenState extends State<SplashScreen> {
           // Centered Logo
           Center(
             child: SvgPicture.asset(
-              'assets/images/selcom_go_logo.svg',
+              AppAssets.selcomGoLogo,
               width: 180.w,
               fit: BoxFit.contain,
             ),

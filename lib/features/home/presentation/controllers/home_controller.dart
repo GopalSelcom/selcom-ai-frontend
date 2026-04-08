@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -7,21 +6,21 @@ import '../../domain/repositories/home_repository.dart';
 import '../../data/models/home_models.dart';
 import '../../../ride/domain/repositories/ride_repository.dart';
 import '../../../ride/data/models/ride_management_models.dart';
+import '../../../profile/domain/repositories/profile_repository.dart';
+import '../../../../core/data/models/responses/get_saved_places_response.dart';
 
 class HomeController extends GetxController {
   final HomeRepository homeRepository;
   final RideRepository rideRepository;
+  final ProfileRepository profileRepository;
 
   HomeController({
     required this.homeRepository,
     required this.rideRepository,
+    required this.profileRepository,
   });
 
   // ── States ──
-  final currentPosition = const LatLng(-6.7924, 39.2083).obs;
-  final markers = <Marker>{}.obs;
-  final polylines = <Polyline>{}.obs;
-
   final searchQuery = ''.obs;
   final suggestions = <Map<String, dynamic>>[].obs;
   final isSearching = false.obs;
@@ -29,12 +28,12 @@ class HomeController extends GetxController {
   // Home Data
   final vehicleTypes = <VehicleTypeModel>[].obs;
   final recentDestinations = <RecentDestinationModel>[].obs;
+  final savedPlaces = <SavedPlace>[].obs;
+  final isSavedPlacesExpanded = false.obs;
   final isLoadingHomeData = false.obs;
 
   final selectedVehicle = ''.obs;
   final fareEstimate = Rxn<FareEstimateModel>();
-
-  GoogleMapController? mapController;
 
   @override
   void onInit() {
@@ -53,29 +52,18 @@ class HomeController extends GetxController {
     }, time: const Duration(seconds: 1));
   }
 
-  void onMapCreated(GoogleMapController controller) async {
-    mapController = controller;
-    final style = await _loadMapStyle();
-    if (style != null) {
-      mapController?.setMapStyle(style);
-    }
-  }
-
-  Future<String?> _loadMapStyle() async {
-    try {
-      return await DefaultAssetBundle.of(Get.context!).loadString('assets/json/map_style.json');
-    } catch (_) {
-      return null;
-    }
+  void recenterMap() {
+    // map implementation removed
   }
 
   Future<void> _loadHomeData() async {
     isLoadingHomeData.value = true;
     
-    // Fetch Vehicle Types & Recent Destinations in parallel
+    // Fetch Vehicle Types, Recent Destinations, & Saved Places in parallel
     final results = await Future.wait([
       homeRepository.getVehicleTypes(),
       rideRepository.getRecentDestinations(),
+      profileRepository.getSavedPlaces(),
     ]);
 
     // Handle Vehicle Types
@@ -90,6 +78,17 @@ class HomeController extends GetxController {
       (destinations) {
         if (destinations is List<RecentDestinationModel>) {
           recentDestinations.assignAll(destinations);
+        }
+      },
+    );
+
+    // Handle Saved Places
+    results[2].fold(
+      (failure) => null,
+      (response) {
+        final res = response as GetSavedPlacesResponseModel?;
+        if (res?.data?.savedPlaces != null) {
+          savedPlaces.assignAll(res?.data!.savedPlaces! as List<SavedPlace>);
         }
       },
     );
@@ -114,88 +113,14 @@ class HomeController extends GetxController {
   }
 
   Future<void> selectPlace(Map<String, dynamic> place) async {
-    // For demo, we just simulate a destination selection
-    final destination = {'lat': -6.8000, 'lng': 39.2100};
-
-    // Fetch Fare Estimate
-    final result = await homeRepository.estimateFare(
-      pickup: {'lat': currentPosition.value.latitude, 'lng': currentPosition.value.longitude},
-      destination: destination,
-    );
-
-    result.fold(
-      (failure) => fareEstimate.value = null,
-      (estimate) {
-        fareEstimate.value = estimate;
-        _updateMapWithRoute(destination);
-      },
-    );
-  }
-
-  void _updateMapWithRoute(Map<String, dynamic> dest) {
-    final destLatLng = LatLng(dest['lat'], dest['lng']);
-    markers.clear();
-    markers.add(Marker(markerId: const MarkerId('pickup'), position: currentPosition.value));
-    markers.add(Marker(markerId: const MarkerId('destination'), position: destLatLng));
-
-    mapController?.animateCamera(
-      CameraUpdate.newLatLngBounds(
-        LatLngBounds(
-          southwest: currentPosition.value.latitude < destLatLng.latitude ? currentPosition.value : destLatLng,
-          northeast: currentPosition.value.latitude > destLatLng.latitude ? currentPosition.value : destLatLng,
-        ),
-        50.0,
-      ),
-    );
+    // Map / location selection UI stub
   }
 
   void _addMockDrivers() {
-    final base = currentPosition.value;
-    markers.addAll([
-      Marker(
-        markerId: const MarkerId('driver1'),
-        position: LatLng(base.latitude + 0.002, base.longitude + 0.002),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-      ),
-      Marker(
-        markerId: const MarkerId('driver2'),
-        position: LatLng(base.latitude - 0.001, base.longitude + 0.003),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet),
-      ),
-      Marker(
-        markerId: const MarkerId('driver3'),
-        position: LatLng(base.latitude + 0.003, base.longitude - 0.001),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueYellow),
-      ),
-    ]);
+    // Removed map driver markers
   }
 
   Future<void> _getCurrentLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return;
-
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) return;
-    }
-
-    if (permission == LocationPermission.deniedForever) return;
-
-    final position = await Geolocator.getCurrentPosition();
-    currentPosition.value = LatLng(position.latitude, position.longitude);
-
-    mapController?.animateCamera(
-      CameraUpdate.newLatLng(currentPosition.value),
-    );
-  }
-
-  void recenterMap() {
-    mapController?.animateCamera(
-      CameraUpdate.newLatLng(currentPosition.value),
-    );
+    // Removed geolocation logic tied to map centering
   }
 }

@@ -5,6 +5,9 @@ import '../../domain/repositories/home_repository.dart';
 import '../../../ride/data/datasources/ride_remote_data_source.dart';
 import '../../../ride/data/repositories/ride_repository_impl.dart';
 import '../../../ride/domain/repositories/ride_repository.dart';
+import '../../../profile/data/datasources/profile_remote_data_source.dart';
+import '../../../profile/data/repositories/profile_repository_impl.dart';
+import '../../../profile/domain/repositories/profile_repository.dart';
 import '../controllers/home_controller.dart';
 
 class HomeBinding extends Bindings {
@@ -18,11 +21,16 @@ class HomeBinding extends Bindings {
     Get.lazyPut<RideRemoteDataSource>(() => RideRemoteDataSourceImpl());
     Get.lazyPut<RideRepository>(() => RideRepositoryImpl(remoteDataSource: Get.find()));
 
+    // Profile Data (Needed for saved addresses on Home Screen)
+    Get.lazyPut<ProfileRemoteDataSource>(() => ProfileRemoteDataSourceImpl());
+    Get.lazyPut<ProfileRepository>(() => ProfileRepositoryImpl(remoteDataSource: Get.find()));
+
     // Controller
     Get.lazyPut<HomeController>(
       () => HomeController(
         homeRepository: Get.find(),
         rideRepository: Get.find(),
+        profileRepository: Get.find(),
       ),
     );
   }

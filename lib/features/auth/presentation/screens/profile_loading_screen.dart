@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:ui';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/routes/app_routes.dart';
 
@@ -127,7 +128,7 @@ class _ProfileLoadingScreenState extends State<ProfileLoadingScreen> with Single
                               borderRadius: BorderRadius.circular(16.r),
                             ),
                             child: SvgPicture.asset(
-                              'assets/images/ic_verification_success.svg',
+                              AppAssets.icVerificationSuccess,
                               fit: BoxFit.contain,
                             ),
                           ),
@@ -176,7 +177,7 @@ class _ProfileLoadingScreenState extends State<ProfileLoadingScreen> with Single
                                   ),
                                   SizedBox(width: 4.w),
                                   SvgPicture.asset(
-                                    'assets/images/ic_tick_circle.svg',
+                                    AppAssets.icTickCircle,
                                     height: 24.h,
                                     width: 24.w,
                                     colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),

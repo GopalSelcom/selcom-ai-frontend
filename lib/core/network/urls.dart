@@ -106,11 +106,11 @@ class _PaymentEndpoints {
 class _AddressEndpoints {
   const _AddressEndpoints();
 
-  final add = "add_user_address";
+  final addUserAddress = "go/user/add_user_address";
   final get = "get_user_address";
   final edit = "edit_user_address";
   final delete = "delete_user_address";
-  final getSavedPlaces = "get_saved_places";
+  final getSavedPlaces = "go/user/saved-places";
 }
 
 /// ─────────────────────────────────

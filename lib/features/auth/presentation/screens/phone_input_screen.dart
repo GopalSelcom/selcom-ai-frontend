@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../controllers/auth_controller.dart';
@@ -25,7 +26,7 @@ class PhoneInputScreen extends GetView<AuthController> {
               InkWell(
                 onTap: () => Get.back(),
                 child: SvgPicture.asset(
-                  'assets/images/ic_arrow_left.svg',
+                  AppAssets.icArrowLeft,
                   height: 28.h,
                   width: 28.w,
                 ),
@@ -65,7 +66,7 @@ class PhoneInputScreen extends GetView<AuthController> {
                         ClipRRect(
                           borderRadius: BorderRadius.circular(3.r),
                           child: SvgPicture.asset(
-                            'assets/images/ic_tanzania_flag.svg',
+                            AppAssets.icTanzaniaFlag,
                             height: 20.h,
                             width: 28.w,
                             fit: BoxFit.cover,
@@ -146,7 +147,7 @@ class PhoneInputScreen extends GetView<AuthController> {
                   children: [
                     SizedBox(width: 16.w),
                     SvgPicture.asset(
-                      'assets/images/ic_sms.svg',
+                      AppAssets.icSms,
                       height: 20.h,
                       width: 20.w,
                       colorFilter: const ColorFilter.mode(AppColors.shade2, BlendMode.srcIn),

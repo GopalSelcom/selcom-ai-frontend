@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_text_styles.dart';
 
 import '../../../../shared/widgets/app_otp_field.dart';
@@ -26,7 +27,7 @@ class OtpScreen extends GetView<AuthController> {
               InkWell(
                 onTap: () => Get.back(),
                 child: SvgPicture.asset(
-                  'assets/images/ic_arrow_left.svg',
+                  AppAssets.icArrowLeft,
                   height: 28.h,
                   width: 28.w,
                 ),

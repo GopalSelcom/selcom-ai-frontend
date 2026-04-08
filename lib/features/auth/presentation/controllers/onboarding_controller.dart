@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import '../../../../../core/constants/app_assets.dart';
 import '../../../../core/routes/app_routes.dart';
 
 class OnboardingController extends GetxController {
@@ -8,17 +9,17 @@ class OnboardingController extends GetxController {
     OnboardingSlide(
       title: 'Making your drive best is our responsibility',
       subtitle: 'Lorem ipsum dolor sit amet, consectetur',
-      image: 'assets/images/onboarding_1.svg',
+      image: AppAssets.onboarding1,
     ),
     OnboardingSlide(
       title: 'Making your drive best is our responsibility',
       subtitle: 'Lorem ipsum dolor sit amet, consectetur',
-      image: 'assets/images/onboarding_2.svg',
+      image: AppAssets.onboarding2,
     ),
     OnboardingSlide(
       title: 'Making your drive best is our responsibility',
       subtitle: 'Lorem ipsum dolor sit amet, consectetur',
-      image: 'assets/images/onboarding_3.svg',
+      image: AppAssets.onboarding3,
     ),
   ];
 

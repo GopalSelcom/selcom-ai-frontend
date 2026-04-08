@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../../../core/constants/app_assets.dart';
 import '../controllers/home_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -18,23 +18,13 @@ class HomeScreen extends StatelessWidget {
       backgroundColor: AppColors.pageBackground,
       body: Stack(
         children: [
-          // 1. Map Layer
+          // 1. Map Layer (Static Image from Figma)
           Positioned.fill(
-            child: Obx(() => GoogleMap(
-                  initialCameraPosition: CameraPosition(
-                    target: controller.currentPosition.value,
-                    zoom: 15,
-                  ),
-                  onMapCreated: controller.onMapCreated,
-                  myLocationEnabled: true,
-                  myLocationButtonEnabled: false,
-                  zoomControlsEnabled: false,
-                  mapToolbarEnabled: false,
-                  compassEnabled: false,
-                  markers: controller.markers,
-                  polylines: controller.polylines,
-                  // Apply map styles in controller
-                )),
+            child: Image.asset(
+              AppAssets.mapBackground,
+              fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
+            ),
           ),
 
           // 2. Top Header (Address + Profile)
@@ -67,81 +57,145 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildModernAddressBox() {
     return Expanded(
-      child: Container(
-        padding: EdgeInsets.all(12.w),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+      child: Obx(() {
+        if (controller.savedPlaces.isEmpty) {
+          return Container(
+            padding: EdgeInsets.all(12.w),
+            height: 60.h,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(8.w),
-              decoration: const BoxDecoration(
-                color: Color(0xFFF1F5F9),
-                shape: BoxShape.circle,
+            child: Center(
+              child: controller.isLoadingHomeData.value
+                  ? SizedBox(
+                      width: 20.w,
+                      height: 20.w,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.primary,
+                      ),
+                    )
+                  : Text(
+                      'No saved places',
+                      style: AppTextStyles.homeSubtitle.copyWith(color: AppColors.shade2),
+                    ),
+            ),
+          );
+        }
+
+        final placesToShow = controller.isSavedPlacesExpanded.value
+            ? controller.savedPlaces
+            : [controller.savedPlaces.first];
+
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          padding: EdgeInsets.all(12.w),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-              child: Icon(Icons.location_on, color: AppColors.primary, size: 20.sp),
-            ),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: List.generate(placesToShow.length, (index) {
+              final place = placesToShow[index];
+              return InkWell(
+                onTap: () {
+                  controller.isSavedPlacesExpanded.toggle();
+                },
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: index == placesToShow.length - 1 ? 0 : 12.h),
+                  child: Row(
                     children: [
-                      Text(
-                        'Home',
-                        style: AppTextStyles.homeSubtitle.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.shade1,
+                      Container(
+                        padding: EdgeInsets.all(8.w),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFF1F5F9),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.location_on, color: AppColors.primary, size: 20.sp),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  place.label ?? 'Place',
+                                  style: AppTextStyles.homeSubtitle.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.shade1,
+                                  ),
+                                ),
+                                if (index == 0) ...[
+                                  SizedBox(width: 4.w),
+                                  Icon(
+                                    controller.isSavedPlacesExpanded.value
+                                        ? Icons.keyboard_arrow_up
+                                        : Icons.keyboard_arrow_down,
+                                    size: 18.sp,
+                                    color: AppColors.shade2,
+                                  ),
+                                ]
+                              ],
+                            ),
+                            Text(
+                              place.address ?? place.name ?? 'No address provided',
+                              style: AppTextStyles.homeCaption,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ),
                       ),
-                      Icon(Icons.keyboard_arrow_down, size: 18.sp, color: AppColors.shade2),
                     ],
                   ),
-                  Text(
-                    'block number 23_B manik niwas...',
-                    style: AppTextStyles.homeCaption,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+                ),
+              );
+            }),
+          ),
+        );
+      }),
     );
   }
 
   Widget _buildProfileIcon() {
     return Container(
-      width: 52.w,
-      height: 52.w,
+      width: 64.w,
+      height: 61.h,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFD3DDE7), width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 2,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
       child: Center(
-        child: Icon(Icons.person_outline, color: AppColors.shade1, size: 24.sp),
+        child: Icon(Icons.person, color: Colors.black, size: 28.sp),
       ),
     );
   }
@@ -164,7 +218,7 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
         child: SvgPicture.asset(
-          'assets/images/ic_gps.svg',
+          AppAssets.icGps,
           width: 24.w,
           height: 24.w,
           colorFilter: ColorFilter.mode(AppColors.primary, BlendMode.srcIn),
@@ -175,18 +229,19 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildFigmaDraggableSheet() {
     return DraggableScrollableSheet(
-      initialChildSize: 0.4,
-      minChildSize: 0.4,
+      initialChildSize: 0.45,
+      minChildSize: 0.45,
       maxChildSize: 0.9,
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(37.r)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(40.r)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withOpacity(0.08),
                 blurRadius: 20,
+                offset: const Offset(0, -4),
               ),
             ],
           ),
@@ -197,61 +252,59 @@ class HomeScreen extends StatelessWidget {
               SizedBox(height: 12.h),
               Center(
                 child: Container(
-                  width: 40.w,
-                  height: 4.h,
+                  width: 48.w,
+                  height: 5.h,
                   decoration: BoxDecoration(
                     color: const Color(0xFFE2E8F0),
-                    borderRadius: BorderRadius.circular(2.r),
+                    borderRadius: BorderRadius.circular(37.r),
                   ),
                 ),
               ),
               SizedBox(height: 24.h),
               Text(
                 'Where to?',
-                style: AppTextStyles.homeTitle.copyWith(fontSize: 22.sp),
+                style: AppTextStyles.homeTitle.copyWith(fontSize: 20.sp),
               ),
               SizedBox(height: 16.h),
               // Search Bar
               GestureDetector(
                 onTap: () => Get.toNamed('/location_search'),
                 child: Container(
-                  padding: EdgeInsets.all(16.w),
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(16.r),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    border: Border.all(color: const Color(0xFFE2E8F0), width: 0.8),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.location_on, color: Colors.green, size: 20.sp),
+                      Icon(Icons.location_on, color: AppColors.primary, size: 24.sp),
                       SizedBox(width: 12.w),
                       Text(
                         'Where are you going?',
-                        style: AppTextStyles.homeSubtitle.copyWith(
-                          color: AppColors.shade2.withOpacity(0.6),
-                        ),
+                        style: AppTextStyles.homeSubtitle,
                       ),
                     ],
                   ),
                 ),
               ),
-              SizedBox(height: 16.h),
+              SizedBox(height: 20.h),
               // Quick Chips
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    _buildFigmaChip('Home', 'assets/images/ic_home_chip.svg'),
-                    _buildFigmaChip('Office', 'assets/images/ic_office_chip.svg'),
-                    _buildFigmaChip('Work', 'assets/images/ic_work_chip.svg'),
-                    _buildFigmaChip('Other', 'assets/images/ic_other_chip.svg'),
+                    _buildFigmaChip('Home', AppAssets.icHomeChip),
+                    _buildFigmaChip('Office', AppAssets.icOfficeChip),
+                    _buildFigmaChip('Work', AppAssets.icWorkChip),
+                    _buildFigmaChip('Other', AppAssets.icOtherChip),
                   ],
                 ),
               ),
-              SizedBox(height: 24.h),
+              SizedBox(height: 28.h),
               Text(
                 'Recent Location',
-                style: AppTextStyles.homeTitle.copyWith(fontSize: 18.sp),
+                style: AppTextStyles.homeTitle.copyWith(fontSize: 20.sp),
               ),
               SizedBox(height: 16.h),
               // Recent Locations List
@@ -261,7 +314,7 @@ class HomeScreen extends StatelessWidget {
               SizedBox(height: 24.h),
               Text(
                 'Explore Vehicle',
-                style: AppTextStyles.homeTitle.copyWith(fontSize: 18.sp),
+                style: AppTextStyles.homeSubtitle.copyWith(fontSize: 15.sp, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 16.h),
               // Vehicle List
@@ -277,17 +330,17 @@ class HomeScreen extends StatelessWidget {
   Widget _buildFigmaChip(String label, String iconPath) {
     return Container(
       margin: EdgeInsets.only(right: 12.w),
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       decoration: BoxDecoration(
         color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 0.8),
       ),
       child: Row(
         children: [
-          SvgPicture.asset(iconPath, width: 16.w, height: 16.w),
+          SvgPicture.asset(iconPath, width: 20.w, height: 20.w),
           SizedBox(width: 8.w),
-          Text(label, style: AppTextStyles.homeChip),
+          Text(label, style: AppTextStyles.homeChip.copyWith(fontSize: 14.sp)),
         ],
       ),
     );
@@ -295,20 +348,22 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildRecentLocationItem(dynamic loc) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 20.h),
+      padding: EdgeInsets.only(bottom: 24.h),
       child: Row(
         children: [
           // Distance Badge
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+            width: 52.w,
+            padding: EdgeInsets.symmetric(vertical: 8.h),
             decoration: BoxDecoration(
               color: const Color(0xFFF1F5F9),
-              borderRadius: BorderRadius.circular(8.r),
+              borderRadius: BorderRadius.circular(12.r),
             ),
             child: Column(
               children: [
-                Icon(Icons.directions_car_outlined, size: 16.sp, color: AppColors.shade2),
-                Text('6 KM', style: AppTextStyles.homeCaption.copyWith(fontSize: 10.sp)),
+                Icon(Icons.directions_car_outlined, size: 20.sp, color: AppColors.shade2),
+                SizedBox(height: 4.h),
+                Text('6 KM', style: AppTextStyles.homeCaption.copyWith(fontSize: 12.sp, fontWeight: FontWeight.w600)),
               ],
             ),
           ),
@@ -317,12 +372,25 @@ class HomeScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(loc.address.split(',').first, style: AppTextStyles.homeSubtitle.copyWith(fontWeight: FontWeight.bold)),
-                Text(loc.address, style: AppTextStyles.homeCaption, maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(
+                  loc.address.split(',').first,
+                  style: AppTextStyles.homeSubtitle.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.shade1,
+                    fontSize: 15.sp,
+                  ),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  loc.address,
+                  style: AppTextStyles.homeCaption.copyWith(color: AppColors.shade2, fontSize: 13.sp),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ),
           ),
-          Icon(Icons.favorite_border, color: AppColors.shade2, size: 24.sp),
+          Icon(Icons.favorite, color: const Color(0xFFE2E8F0), size: 24.sp),
         ],
       ),
     );
@@ -358,17 +426,17 @@ class HomeScreen extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            width: 100.w,
-            height: 80.h,
+            width: 86.w,
+            height: 72.h,
             padding: EdgeInsets.all(8.w),
             decoration: BoxDecoration(
               color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(12.r),
+              borderRadius: BorderRadius.circular(16.r),
             ),
             child: Image.asset(imagePath, fit: BoxFit.contain),
           ),
           SizedBox(height: 8.h),
-          Text(label, style: AppTextStyles.homeCaption.copyWith(color: AppColors.shade1)),
+          Text(label, style: AppTextStyles.homeCaption.copyWith(color: AppColors.shade1, fontWeight: FontWeight.w600)),
         ],
       ),
     );

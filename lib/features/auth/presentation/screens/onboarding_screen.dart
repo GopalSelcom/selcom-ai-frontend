@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../controllers/onboarding_controller.dart';
 
@@ -106,7 +107,7 @@ class OnboardingScreen extends GetView<OnboardingController> {
                               ),
                               SizedBox(width: 12.w),
                               SvgPicture.asset(
-                                'assets/images/ic_arrow_right.svg',
+                                AppAssets.icArrowRight,
                                 colorFilter: const ColorFilter.mode(
                                   Colors.white,
                                   BlendMode.srcIn,
