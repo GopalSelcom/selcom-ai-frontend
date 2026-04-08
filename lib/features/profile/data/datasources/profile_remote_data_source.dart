@@ -1,5 +1,8 @@
 import '../../../../core/data/models/user_profile_models.dart';
 import '../../../../core/data/models/user_model.dart';
+import '../../../../core/data/models/requests/create_saved_place_request.dart';
+import '../../../../core/data/models/responses/saved_places_response.dart';
+import '../../../../core/data/models/responses/create_saved_place_response.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/urls.dart';
 
@@ -7,7 +10,7 @@ abstract class ProfileRemoteDataSource {
   Future<UserModel> getProfile();
   Future<bool> updateProfile(Map<String, dynamic> data);
   Future<List<SavedPlaceModel>> getSavedPlaces();
-  Future<bool> addSavedPlace(SavedPlaceModel place);
+  Future<bool> addSavedPlace(CreateSavedPlaceRequest request);
   Future<bool> deleteSavedPlace(String id);
   Future<WalletBalanceModel> getWalletBalance();
   Future<List<PaymentMethodModel>> getPaymentMethods();
@@ -53,21 +56,26 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      final List data = response.data['data'] ?? response.data['response'] ?? [];
-      return data.map((e) => SavedPlaceModel.fromJson(e)).toList();
+      final savedResponse = SavedPlacesResponseModel.fromJson(response.data);
+      return savedResponse.data?.savedPlaces ?? [];
     }
     return [];
   }
 
   @override
-  Future<bool> addSavedPlace(SavedPlaceModel place) async {
+  Future<bool> addSavedPlace(CreateSavedPlaceRequest request) async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.address.getSavedPlaces, // Registry uses same for POST/GET sometimes
         method: ApiMethod.post,
-        body: place.toJson(),
+        body: request.toJson(),
       ),
     );
+
+    if (response.data != null) {
+      final createResponse = CreateSavedPlaceResponseModel.fromJson(response.data);
+      return createResponse.isSuccess;
+    }
     return response.statusCode == 200;
   }
 

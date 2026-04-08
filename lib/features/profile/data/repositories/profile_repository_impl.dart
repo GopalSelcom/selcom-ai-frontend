@@ -4,6 +4,7 @@ import '../../domain/repositories/profile_repository.dart';
 import '../datasources/profile_remote_data_source.dart';
 import '../../../../core/data/models/user_profile_models.dart';
 import '../../../../core/data/models/user_model.dart';
+import '../../../../core/data/models/requests/create_saved_place_request.dart';
 
 class ProfileRepositoryImpl implements ProfileRepository {
   final ProfileRemoteDataSource remoteDataSource;
@@ -41,9 +42,11 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
-  Future<Either<Failure, bool>> addSavedPlace(SavedPlaceModel place) async {
+  Future<Either<Failure, bool>> addSavedPlace(
+    CreateSavedPlaceRequest request,
+  ) async {
     try {
-      final result = await remoteDataSource.addSavedPlace(place);
+      final result = await remoteDataSource.addSavedPlace(request);
       return Right(result);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
