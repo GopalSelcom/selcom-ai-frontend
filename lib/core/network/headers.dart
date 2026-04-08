@@ -1,10 +1,10 @@
 import 'dart:io';
 
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../services/storage_service.dart';
 import 'api_constants.dart';
 
 /// Builds the common headers map required by every API request.
@@ -22,7 +22,6 @@ Future<Map<String, String>> commonHeaders({
   double? longitude,
 }) async {
   final Map<String, String> headers = {};
-  final secureStorage = const FlutterSecureStorage();
   final deviceInfo = DeviceInfoPlugin();
 
   // ── Content-Type ──
@@ -73,7 +72,7 @@ Future<Map<String, String>> commonHeaders({
       authToken = refreshToken;
     } else {
       authToken =
-          await secureStorage.read(key: 'authorization_token') ?? "";
+          await StorageService().read(StorageKeys.authorizationToken) ?? "";
     }
     headers[Params.authorization] = "Bearer $authToken";
   } else {
@@ -81,7 +80,7 @@ Future<Map<String, String>> commonHeaders({
   }
 
   // ── Access Token ──
-  final accessToken = await secureStorage.read(key: 'access_token');
+  final accessToken = await StorageService().read(StorageKeys.accessToken);
   if (accessToken != null) {
     headers[Params.accessToken] = accessToken;
   }

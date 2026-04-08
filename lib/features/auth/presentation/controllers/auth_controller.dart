@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
 import '../../../../core/data/models/requests/send_otp_request.dart';
 import '../../../../core/data/models/requests/verify_otp_request.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/services/storage_service.dart';
 import '../../domain/usecases/send_otp_use_case.dart';
 import '../../domain/usecases/verify_otp_use_case.dart';
 
@@ -125,14 +125,22 @@ class AuthController extends GetxController {
       (response) async {
         if (response?.isSuccess == true && response?.response != null) {
           final verifyData = response!.response!;
-          const storage = FlutterSecureStorage();
-          
+
           if (verifyData.accessToken != null) {
-            await storage.write(key: 'authorization_token', value: verifyData.accessToken);
-            await storage.write(key: 'access_token', value: verifyData.accessToken);
+            await StorageService().write(
+              StorageKeys.authorizationToken,
+              verifyData.accessToken!,
+            );
+            await StorageService().write(
+              StorageKeys.accessToken,
+              verifyData.accessToken!,
+            );
           }
           if (verifyData.refreshToken != null) {
-            await storage.write(key: 'refresh_token', value: verifyData.refreshToken);
+            await StorageService().write(
+              StorageKeys.refreshToken,
+              verifyData.refreshToken!,
+            );
           }
 
           // Navigate to Profile Loading to sync data

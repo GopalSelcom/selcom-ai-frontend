@@ -4,10 +4,10 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart' hide Response, FormData, MultipartFile;
 import 'package:http_parser/http_parser.dart';
 
+import '../services/storage_service.dart';
 import 'failed_request_queue.dart';
 import 'retry_manager.dart';
 import '../../shared/utils/app_dialogs.dart';
@@ -340,10 +340,7 @@ class ApiService {
       endpoint,
       data: formData,
       queryParameters: request.queryParams,
-      options: Options(
-        method: 'POST',
-        headers: finalHeaders,
-      ),
+      options: Options(method: 'POST', headers: finalHeaders),
       onSendProgress: (sent, total) {
         if (kDebugMode) {
           int percentage = ((sent / total) * 100).toInt();
@@ -398,9 +395,7 @@ class ApiService {
     Map<String, dynamic> headers,
     Map<String, dynamic> body,
   ) {
-    debugPrint(
-      "🚀 REQUEST >> ${request.method.name.toUpperCase()} $fullUrl",
-    );
+    debugPrint("🚀 REQUEST >> ${request.method.name.toUpperCase()} $fullUrl");
     debugPrint("$fullUrl [Headers] ${_safeJsonEncode(headers)}");
     debugPrint("$fullUrl [Query] ${_safeJsonEncode(request.queryParams)}");
     debugPrint("$fullUrl [Body] ${_safeJsonEncode(body)}");
@@ -415,9 +410,7 @@ class ApiService {
     String? errorMessage,
   }) {
     final prefix = isError ? '❌ ERROR' : '✅ SUCCESS';
-    debugPrint(
-      "$prefix >> $fullUrl | ${statusCode ?? 'N/A'} | ${duration}ms",
-    );
+    debugPrint("$prefix >> $fullUrl | ${statusCode ?? 'N/A'} | ${duration}ms");
     if (isError && errorMessage != null) {
       debugPrint("$fullUrl Message: $errorMessage");
     }
@@ -562,10 +555,9 @@ class ApiService {
       barrierDismissible: false,
       onConfirm: () async {
         // Clear tokens
-        const secureStorage = FlutterSecureStorage();
-        await secureStorage.delete(key: 'authorization_token');
-        await secureStorage.delete(key: 'access_token');
-        await secureStorage.delete(key: 'refresh_token');
+        await StorageService().delete(StorageKeys.authorizationToken);
+        await StorageService().delete(StorageKeys.accessToken);
+        await StorageService().delete(StorageKeys.refreshToken);
         Get.back();
         // Navigate to login - adjust route as needed
         Get.offAllNamed('/login');
@@ -580,7 +572,6 @@ class ApiService {
 
 class AuthInterceptor extends Interceptor {
   final ApiService apiService;
-  static const _secureStorage = FlutterSecureStorage();
 
   // Static variables for global refresh coordination
   static Completer<bool>? _refreshCompleter;
@@ -590,8 +581,11 @@ class AuthInterceptor extends Interceptor {
   AuthInterceptor({required this.apiService});
 
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
-    final token = await _secureStorage.read(key: 'authorization_token');
+  void onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
+    final token = await StorageService().read(StorageKeys.authorizationToken);
 
     final currentAuth = options.headers['Authorization'];
     final hasAuthHeader =
@@ -633,7 +627,9 @@ class AuthInterceptor extends Interceptor {
       if (refreshSuccess) {
         debugPrint("✅ Token refreshed successfully, retrying request");
 
-        final newToken = await _secureStorage.read(key: 'authorization_token');
+        final newToken = await StorageService().read(
+          StorageKeys.authorizationToken,
+        );
 
         // Update headers with new token
         final updatedHeaders = Map<String, dynamic>.from(
@@ -645,7 +641,9 @@ class AuthInterceptor extends Interceptor {
 
         // Also update access_token if present
         if (updatedHeaders.containsKey('access_token')) {
-          final newAccessToken = await _secureStorage.read(key: 'access_token');
+          final newAccessToken = await StorageService().read(
+            StorageKeys.accessToken,
+          );
           updatedHeaders['access_token'] = newAccessToken;
         }
 
@@ -742,7 +740,9 @@ class AuthInterceptor extends Interceptor {
     _refreshCompleter = Completer<bool>();
 
     try {
-      final refreshToken = await _secureStorage.read(key: 'refresh_token');
+      final refreshToken = await StorageService().read(
+        StorageKeys.refreshToken,
+      );
 
       if (refreshToken == null || refreshToken.isEmpty) {
         debugPrint("❌ No refresh token available");
@@ -766,25 +766,26 @@ class AuthInterceptor extends Interceptor {
 
       if (response.statusCode == 200 && response.data != null) {
         final data = response.data;
-        final newAccessToken = data['authorization_token'] ?? data['access_token'];
+        final newAccessToken =
+            data['authorization_token'] ?? data['access_token'];
         final newRefreshToken = data['refresh_token'];
 
         if (newAccessToken != null) {
-          await _secureStorage.write(
-            key: 'authorization_token',
-            value: newAccessToken,
+          await StorageService().write(
+            StorageKeys.authorizationToken,
+            newAccessToken,
           );
         }
         if (data['access_token'] != null) {
-          await _secureStorage.write(
-            key: 'access_token',
-            value: data['access_token'],
+          await StorageService().write(
+            StorageKeys.accessToken,
+            data['access_token'],
           );
         }
         if (newRefreshToken != null) {
-          await _secureStorage.write(
-            key: 'refresh_token',
-            value: newRefreshToken,
+          await StorageService().write(
+            StorageKeys.refreshToken,
+            newRefreshToken,
           );
         }
 
