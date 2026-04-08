@@ -5,6 +5,7 @@ import '../../domain/repositories/auth_repository.dart';
 import '../../domain/usecases/send_otp_use_case.dart';
 import '../../domain/usecases/verify_otp_use_case.dart';
 import '../controllers/auth_controller.dart';
+import '../controllers/onboarding_controller.dart';
 
 class AuthBinding extends Bindings {
   @override
@@ -30,5 +31,6 @@ class AuthBinding extends Bindings {
         verifyOtpUseCase: Get.find(),
       ),
     );
+    Get.lazyPut(() => OnboardingController());
   }
 }

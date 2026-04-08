@@ -28,6 +28,7 @@ class AppRoutes {
     GetPage(
       name: onboarding,
       page: () => const OnboardingScreen(),
+      binding: AuthBinding(),
     ),
     GetPage(
       name: phone,
