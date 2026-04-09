@@ -1,3 +1,4 @@
+import '../../domain/entities/location_entity.dart';
 import '../../domain/entities/ride_entity.dart';
 
 class RideModel extends RideEntity {
