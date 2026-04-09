@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../data/models/ride_management_models.dart';
@@ -14,10 +15,5 @@ abstract class RideRepository {
   Future<Either<Failure, ReceiptModel>> getReceipt(String rideId);
   Future<Either<Failure, bool>> rateDriver(String rideId, int rating, String comment);
   Future<Either<Failure, bool>> submitFeedback(String rideId, String category, String message);
-  Future<Either<Failure, String>> validateRidePayment({
-    required String rideId,
-    required int amount,
-    required String paymentMethod,
-    String currency = "TZS",
-  });
+  Future<Either<Failure, String>> validateRidePayment(ValidateRidePaymentRequest request);
 }

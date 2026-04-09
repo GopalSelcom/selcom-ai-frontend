@@ -1,9 +1,9 @@
 import 'package:dartz/dartz.dart';
+import '../../data/models/requests/book_ride_request.dart';
 import '../../data/models/requests/fare_estimate_request.dart';
 import '../../errors/failures.dart';
 import '../entities/ride_entity.dart';
 import '../entities/vehicle_type_entity.dart';
-import '../../data/models/requests/ride_requests.dart';
 
 abstract class RideRepository {
   Future<Either<Failure, List<VehicleTypeEntity>>> getVehicleTypes();

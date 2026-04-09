@@ -4,6 +4,7 @@ import '../../domain/repositories/ride_repository.dart';
 import '../datasources/ride_remote_data_source.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../models/ride_management_models.dart';
+import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 
 class RideRepositoryImpl implements RideRepository {
   final RideRemoteDataSource remoteDataSource;
@@ -11,7 +12,8 @@ class RideRepositoryImpl implements RideRepository {
   RideRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Either<Failure, List<RecentDestinationModel>>> getRecentDestinations() async {
+  Future<Either<Failure, List<RecentDestinationModel>>>
+  getRecentDestinations() async {
     try {
       final result = await remoteDataSource.getRecentDestinations();
       return Right(result);
@@ -21,9 +23,15 @@ class RideRepositoryImpl implements RideRepository {
   }
 
   @override
-  Future<Either<Failure, List<RideModel>>> getRideHistory({int page = 1, int limit = 10}) async {
+  Future<Either<Failure, List<RideModel>>> getRideHistory({
+    int page = 1,
+    int limit = 10,
+  }) async {
     try {
-      final result = await remoteDataSource.getRideHistory(page: page, limit: limit);
+      final result = await remoteDataSource.getRideHistory(
+        page: page,
+        limit: limit,
+      );
       return Right(result);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -51,9 +59,15 @@ class RideRepositoryImpl implements RideRepository {
   }
 
   @override
-  Future<Either<Failure, bool>> updateDestination(String rideId, Map<String, dynamic> destination) async {
+  Future<Either<Failure, bool>> updateDestination(
+    String rideId,
+    Map<String, dynamic> destination,
+  ) async {
     try {
-      final result = await remoteDataSource.updateDestination(rideId, destination);
+      final result = await remoteDataSource.updateDestination(
+        rideId,
+        destination,
+      );
       return Right(result);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -61,7 +75,10 @@ class RideRepositoryImpl implements RideRepository {
   }
 
   @override
-  Future<Either<Failure, bool>> updatePickup(String rideId, Map<String, dynamic> pickup) async {
+  Future<Either<Failure, bool>> updatePickup(
+    String rideId,
+    Map<String, dynamic> pickup,
+  ) async {
     try {
       final result = await remoteDataSource.updatePickup(rideId, pickup);
       return Right(result);
@@ -91,7 +108,11 @@ class RideRepositoryImpl implements RideRepository {
   }
 
   @override
-  Future<Either<Failure, bool>> rateDriver(String rideId, int rating, String comment) async {
+  Future<Either<Failure, bool>> rateDriver(
+    String rideId,
+    int rating,
+    String comment,
+  ) async {
     try {
       final result = await remoteDataSource.rateDriver(rideId, rating, comment);
       return Right(result);
@@ -101,9 +122,17 @@ class RideRepositoryImpl implements RideRepository {
   }
 
   @override
-  Future<Either<Failure, bool>> submitFeedback(String rideId, String category, String message) async {
+  Future<Either<Failure, bool>> submitFeedback(
+    String rideId,
+    String category,
+    String message,
+  ) async {
     try {
-      final result = await remoteDataSource.submitFeedback(rideId, category, message);
+      final result = await remoteDataSource.submitFeedback(
+        rideId,
+        category,
+        message,
+      );
       return Right(result);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -111,19 +140,11 @@ class RideRepositoryImpl implements RideRepository {
   }
 
   @override
-  Future<Either<Failure, String>> validateRidePayment({
-    required String rideId,
-    required int amount,
-    required String paymentMethod,
-    String currency = "TZS",
-  }) async {
+  Future<Either<Failure, String>> validateRidePayment(
+    ValidateRidePaymentRequest request,
+  ) async {
     try {
-      final result = await remoteDataSource.validateRidePayment(
-        rideId: rideId,
-        amount: amount,
-        paymentMethod: paymentMethod,
-        currency: currency,
-      );
+      final result = await remoteDataSource.validateRidePayment(request);
       return Right(result);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

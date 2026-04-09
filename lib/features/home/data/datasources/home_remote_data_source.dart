@@ -1,6 +1,8 @@
 import '../../../../core/data/models/responses/rides/vehicle_types_response.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
-import '../models/home_models.dart';
+import '../../../../core/data/models/requests/book_ride_request.dart';
+import '../../../../core/data/models/requests/fare_estimate_request.dart';
+import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
 import '../models/places_models.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/urls.dart';
@@ -18,19 +20,9 @@ abstract class HomeRemoteDataSource {
     required double lng,
   });
 
-  Future<FareEstimateModel> estimateFare({
-    required Map<String, dynamic> pickup,
-    required Map<String, dynamic> destination,
-  });
+  Future<FareEstimateResponseModel> estimateFare(FareEstimateRequest request);
 
-  Future<Map<String, dynamic>> bookRide({
-    required String vehicleTypeId,
-    required Map<String, dynamic> pickup,
-    required Map<String, dynamic> destination,
-    required int fare,
-    required String paymentMethod,
-    required String idempotencyKey,
-  });
+  Future<Map<String, dynamic>> bookRide(BookRideRequest request);
 }
 
 class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
@@ -61,10 +53,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       request: ApiRequest(
         endpoint: URLS.places.autocomplete,
         method: ApiMethod.get,
-        queryParams: {
-          'input': input,
-          'session_token': sessionToken,
-        },
+        queryParams: {'input': input, 'session_token': sessionToken},
       ),
     );
 
@@ -95,45 +84,25 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   }
 
   @override
-  Future<FareEstimateModel> estimateFare({
-    required Map<String, dynamic> pickup,
-    required Map<String, dynamic> destination,
-  }) async {
+  Future<FareEstimateResponseModel> estimateFare(FareEstimateRequest request) async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.ride.estimateFare,
         method: ApiMethod.post,
-        body: {
-          'pickup': pickup,
-          'destination': destination,
-        },
+        body: request.toJson(),
       ),
     );
 
-    return FareEstimateModel.fromJson(response.data);
+    return FareEstimateResponseModel.fromJson(response.data);
   }
 
   @override
-  Future<Map<String, dynamic>> bookRide({
-    required String vehicleTypeId,
-    required Map<String, dynamic> pickup,
-    required Map<String, dynamic> destination,
-    required int fare,
-    required String paymentMethod,
-    required String idempotencyKey,
-  }) async {
+  Future<Map<String, dynamic>> bookRide(BookRideRequest request) async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.ride.bookRide,
         method: ApiMethod.post,
-        body: {
-          'vehicle_type_id': vehicleTypeId,
-          'pickup': pickup,
-          'destination': destination,
-          'fare': fare,
-          'payment_method': paymentMethod,
-          'idempotency_key': idempotencyKey,
-        },
+        body: request.toJson(),
       ),
     );
 

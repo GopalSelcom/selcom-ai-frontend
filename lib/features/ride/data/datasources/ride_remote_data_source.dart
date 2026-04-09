@@ -1,4 +1,5 @@
 import '../../../../core/data/models/ride_model.dart';
+import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../models/ride_management_models.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/urls.dart';
@@ -14,12 +15,7 @@ abstract class RideRemoteDataSource {
   Future<ReceiptModel> getReceipt(String rideId);
   Future<bool> rateDriver(String rideId, int rating, String comment);
   Future<bool> submitFeedback(String rideId, String category, String message);
-  Future<String> validateRidePayment({
-    required String rideId,
-    required int amount,
-    required String paymentMethod,
-    String currency = "TZS",
-  });
+  Future<String> validateRidePayment(ValidateRidePaymentRequest request);
 }
 
 class RideRemoteDataSourceImpl implements RideRemoteDataSource {
@@ -113,7 +109,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   Future<bool> increaseFare(String rideId, int newFare) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "go/rides/$rideId/increase-fare",
+        endpoint: "${URLS.ride.base}/$rideId/increase-fare",
         method: ApiMethod.put,
         body: {'new_fare': newFare},
       ),
@@ -125,7 +121,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   Future<ReceiptModel> getReceipt(String rideId) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "go/rides/$rideId/receipt",
+        endpoint: "${URLS.ride.base}/$rideId/receipt",
         method: ApiMethod.get,
       ),
     );
@@ -140,7 +136,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   Future<bool> rateDriver(String rideId, int rating, String comment) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "go/rides/$rideId/rate",
+        endpoint: "${URLS.ride.base}/$rideId/rate",
         method: ApiMethod.post,
         body: {'rating': rating, 'comment': comment},
       ),
@@ -152,7 +148,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   Future<bool> submitFeedback(String rideId, String category, String message) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "go/rides/$rideId/feedback",
+        endpoint: "${URLS.ride.base}/$rideId/feedback",
         method: ApiMethod.post,
         body: {'category': category, 'message': message},
       ),
@@ -161,22 +157,12 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   }
 
   @override
-  Future<String> validateRidePayment({
-    required String rideId,
-    required int amount,
-    required String paymentMethod,
-    String currency = "TZS",
-  }) async {
+  Future<String> validateRidePayment(ValidateRidePaymentRequest request) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "go/validate_ride_payment",
+        endpoint: URLS.payment.validateRidePayment,
         method: ApiMethod.post,
-        body: {
-          'ride_id': rideId,
-          'amount': amount,
-          'payment_method': paymentMethod,
-          'currency': currency,
-        },
+        body: request.toJson(),
       ),
     );
 

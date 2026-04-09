@@ -1,4 +1,6 @@
 import 'package:dartz/dartz.dart';
+import '../../../../core/data/models/requests/book_ride_request.dart';
+import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/errors/failures.dart';
 import '../../data/models/home_models.dart';
@@ -17,17 +19,7 @@ abstract class HomeRepository {
     required double lng,
   });
 
-  Future<Either<Failure, FareEstimateModel>> estimateFare({
-    required Map<String, dynamic> pickup,
-    required Map<String, dynamic> destination,
-  });
+  Future<Either<Failure, FareEstimateModel>> estimateFare(FareEstimateRequest request);
 
-  Future<Either<Failure, Map<String, dynamic>>> bookRide({
-    required String vehicleTypeId,
-    required Map<String, dynamic> pickup,
-    required Map<String, dynamic> destination,
-    required int fare,
-    required String paymentMethod,
-    required String idempotencyKey,
-  });
+  Future<Either<Failure, Map<String, dynamic>>> bookRide(BookRideRequest request);
 }

@@ -1,4 +1,6 @@
 import 'package:dartz/dartz.dart';
+import '../../../../core/data/models/requests/book_ride_request.dart';
+import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/repositories/home_repository.dart';
@@ -51,39 +53,23 @@ class HomeRepositoryImpl implements HomeRepository {
   }
 
   @override
-  Future<Either<Failure, FareEstimateModel>> estimateFare({
-    required Map<String, dynamic> pickup,
-    required Map<String, dynamic> destination,
-  }) async {
+  Future<Either<Failure, FareEstimateModel>> estimateFare(
+    FareEstimateRequest request,
+  ) async {
     try {
-      final result = await remoteDataSource.estimateFare(
-        pickup: pickup,
-        destination: destination,
-      );
-      return Right(result);
+      final response = await remoteDataSource.estimateFare(request);
+      return Right(FareEstimateModel.fromResponse(response));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
   }
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> bookRide({
-    required String vehicleTypeId,
-    required Map<String, dynamic> pickup,
-    required Map<String, dynamic> destination,
-    required int fare,
-    required String paymentMethod,
-    required String idempotencyKey,
-  }) async {
+  Future<Either<Failure, Map<String, dynamic>>> bookRide(
+    BookRideRequest request,
+  ) async {
     try {
-      final result = await remoteDataSource.bookRide(
-        vehicleTypeId: vehicleTypeId,
-        pickup: pickup,
-        destination: destination,
-        fare: fare,
-        paymentMethod: paymentMethod,
-        idempotencyKey: idempotencyKey,
-      );
+      final result = await remoteDataSource.bookRide(request);
       return Right(result);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
