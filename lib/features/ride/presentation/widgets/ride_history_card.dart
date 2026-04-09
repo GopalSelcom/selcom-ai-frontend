@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/data/models/ride_model.dart';
+import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import 'ride_common_widgets.dart';
 
@@ -11,11 +12,25 @@ class RideHistoryCard extends StatelessWidget {
 
   const RideHistoryCard({super.key, required this.ride, this.onTap});
 
+  String _getStatusText(RideStatus status) {
+    switch (status) {
+      case RideStatus.rideCompleted:
+        return 'Completed';
+      case RideStatus.cancelled:
+        return 'Cancelled';
+      case RideStatus.searching:
+        return 'Searching';
+      default:
+        return 'Completed'; // Default for history usually shows completed/cancelled
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final formattedDate = DateFormat(
       'yyyy-MM-dd, hh:mm a',
     ).format(ride.createdAt);
+    final vehicleType = ride.vehicleSnapshot?.vehicleType ?? 'Boda';
 
     return GestureDetector(
       onTap: onTap,
@@ -29,7 +44,7 @@ class RideHistoryCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Top Row: Date & Status
+            // Top Row: Vehicle & Date & Status
             Padding(
               padding: EdgeInsets.only(
                 left: 15.w,
@@ -41,12 +56,12 @@ class RideHistoryCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    RideDateFormatter.formatDate(formattedDate),
+                    '$vehicleType $formattedDate',
                     style: TextStyle(
                       fontFamily: AppTextStyles.metropolisFont,
                       fontWeight: FontWeight.w500,
                       color: Colors.black,
-                      fontSize: 14.sp,
+                      fontSize: 15.sp,
                     ),
                   ),
                   Row(
@@ -62,7 +77,7 @@ class RideHistoryCard extends StatelessWidget {
                       ),
                       SizedBox(width: 4.w),
                       Text(
-                        ride.status.name.toUpperCase(),
+                        _getStatusText(ride.status),
                         style: TextStyle(
                           fontFamily: AppTextStyles.metropolisFont,
                           color: const Color(0xFF0EAD36),
@@ -108,7 +123,7 @@ class RideHistoryCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Payment method ${ride.paymentMethod.name}',
+                    'Payment method ${ride.paymentMethod == PaymentMethod.selcomPesa ? 'Selcom pesa' : ride.paymentMethod.name}',
                     style: TextStyle(
                       fontFamily: AppTextStyles.metropolisFont,
                       fontWeight: FontWeight.w500,

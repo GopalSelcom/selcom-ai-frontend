@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:selcom_rides_frontend/core/theme/app_colors.dart';
-import 'package:selcom_rides_frontend/core/theme/app_text_styles.dart';
+import '../../../../core/di/injection_container.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 
 import '../../../ride/presentation/screens/my_rides_screen.dart';
 import '../controllers/profile_controller.dart';
@@ -14,7 +15,7 @@ import '../widgets/wallet_summary_card.dart';
 class ProfileScreen extends StatelessWidget {
   ProfileScreen({super.key});
 
-  final ProfileController controller = Get.put(ProfileController());
+  final ProfileController controller = Get.put(sl<ProfileController>());
 
   @override
   Widget build(BuildContext context) {
@@ -26,14 +27,23 @@ class ProfileScreen extends StatelessWidget {
           Column(
             children: [
               // Invisible spacer perfectly matching the normal collapsed header height
-              Opacity(
-                opacity: 0.0,
-                child: _buildHeaderContainer(
-                  context: context,
-                  child: _buildNormalModeContent(),
+              Obx(
+                () => AnimatedSize(
+                  duration: const Duration(milliseconds: 350),
+                  curve: Curves.easeOutCirc,
+                  alignment: Alignment.topCenter,
+                  child: Opacity(
+                    opacity: 0.0,
+                    child: _buildHeaderContainer(
+                      context: context,
+                      child: controller.isEditing.value
+                          ? _buildEditModeContent()
+                          : _buildNormalModeContent(),
+                    ),
+                  ),
                 ),
               ),
-              
+
               // App Settings List Area
               Expanded(
                 child: SingleChildScrollView(
@@ -66,52 +76,68 @@ class ProfileScreen extends StatelessWidget {
           ),
 
           // 2. Dim & Blur Overlay (Appears only during edit mode)
-          Obx(() => AnimatedOpacity(
-            opacity: controller.isEditing.value ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 350),
-            child: IgnorePointer(
-              ignoring: !controller.isEditing.value,
-              child: GestureDetector(
-                onTap: controller.cancelEdit,
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 4.0, sigmaY: 4.0),
-                  child: Container(
-                    color: const Color(0x6D808080), // Dim color
+          Obx(
+            () => AnimatedOpacity(
+              opacity: controller.isEditing.value ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 350),
+              child: IgnorePointer(
+                ignoring: !controller.isEditing.value,
+                child: GestureDetector(
+                  onTap: controller.cancelEdit,
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 4.0, sigmaY: 4.0),
+                    child: Container(
+                      color: const Color(0x6D808080), // Dim color
+                    ),
                   ),
                 ),
               ),
             ),
-          )),
+          ),
 
           // 3. Foreground Animated Red Header (Pinned top, expands over stack)
           Positioned(
             top: 0,
             left: 0,
             right: 0,
-            child: Obx(() => AnimatedSize(
-              duration: const Duration(milliseconds: 350),
-              curve: Curves.easeOutCirc,
-              alignment: Alignment.topCenter,
-              child: _buildHeaderContainer(
-                context: context,
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 250),
-                  transitionBuilder: (child, animation) {
-                    return FadeTransition(
-                      opacity: animation,
-                      child: SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(0.0, -0.05),
-                          end: Offset.zero,
-                        ).animate(animation),
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: controller.isEditing.value ? _buildEditModeContent() : _buildNormalModeContent(),
+            child: Obx(
+              () => AnimatedSize(
+                duration: const Duration(milliseconds: 350),
+                curve: Curves.easeOutCirc,
+                alignment: Alignment.topCenter,
+                child: _buildHeaderContainer(
+                  context: context,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    transitionBuilder: (child, animation) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0.0, -0.05),
+                            end: Offset.zero,
+                          ).animate(animation),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: controller.isEditing.value
+                        ? _buildEditModeContent()
+                        : _buildNormalModeContent(),
+                  ),
                 ),
               ),
-            )),
+            ),
+          ),
+
+          // Loading Overlay
+          Obx(
+            () => controller.isLoading.value
+                ? Container(
+                    color: Colors.black26,
+                    child: const Center(child: CircularProgressIndicator()),
+                  )
+                : const SizedBox.shrink(),
           ),
         ],
       ),
@@ -119,7 +145,10 @@ class ProfileScreen extends StatelessWidget {
   }
 
   /// Structural wrapper for the Red Header container
-  Widget _buildHeaderContainer({required BuildContext context, required Widget child}) {
+  Widget _buildHeaderContainer({
+    required BuildContext context,
+    required Widget child,
+  }) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.only(
@@ -155,6 +184,14 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildNormalModeContent() {
+    final user = controller.userModel.value;
+    final name = user?.uniqueId ?? 'User';
+    final mobile = user?.mobileNumber != null
+        ? '+255 ${user!.mobileNumber}'
+        : '';
+    final balance = controller.walletBalance.value;
+    final walletNum = controller.walletNumber.value;
+
     return Column(
       key: const ValueKey('normal_mode'),
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -169,39 +206,40 @@ class ProfileScreen extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Obx(() => Text(
-                    controller.userName.value,
+                  Text(
+                    name,
                     style: AppTextStyles.screenTitle.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w800,
                     ),
-                  )),
+                  ),
                   SizedBox(width: 8.w),
                   GestureDetector(
                     onTap: controller.toggleEditMode,
-                    child: Icon(Iconsax.user_edit, color: Colors.white, size: 24.w),
+                    child: Icon(
+                      Iconsax.user_edit,
+                      color: Colors.white,
+                      size: 24.w,
+                    ),
                   ),
                 ],
               ),
               SizedBox(height: 4.h),
-              Obx(() => Text(
-                controller.phoneNumber.value,
+              Text(
+                mobile,
                 style: AppTextStyles.body.copyWith(
                   color: Colors.white.withOpacity(0.8),
                 ),
-              )),
+              ),
             ],
           ),
         ),
         SizedBox(height: 32.h),
-        
+
         // Wallet Card
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 16.w),
-          child: Obx(() => WalletSummaryCard(
-            balance: controller.walletBalance.value,
-            walletNumber: controller.walletNumber.value,
-          )),
+          child: WalletSummaryCard(balance: balance, walletNumber: walletNum),
         ),
       ],
     );
@@ -281,10 +319,7 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
             focusedBorder: const UnderlineInputBorder(
-              borderSide: BorderSide(
-                color: Colors.white,
-                width: 2.0,
-              ),
+              borderSide: BorderSide(color: Colors.white, width: 2.0),
             ),
           ),
         ),
@@ -304,18 +339,10 @@ class ProfileScreen extends StatelessWidget {
           MenuItemWidget(
             icon: Iconsax.clock,
             title: 'My Rides',
-            onTap: () => Get.to(() => MyRidesScreen()),
+            onTap: () => Get.to(() => const MyRidesScreen()),
           ),
-          MenuItemWidget(
-            icon: Iconsax.card,
-            title: 'Payment',
-            onTap: () {},
-          ),
-          MenuItemWidget(
-            icon: Iconsax.gift,
-            title: 'Promotions',
-            onTap: () {},
-          ),
+          MenuItemWidget(icon: Iconsax.card, title: 'Payment', onTap: () {}),
+          MenuItemWidget(icon: Iconsax.gift, title: 'Promotions', onTap: () {}),
           MenuItemWidget(
             icon: Iconsax.message_question,
             title: 'Help',
