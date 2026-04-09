@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/constants/app_assets.dart';
+import '../../../profile/presentation/screens/profile_screen.dart';
 import '../controllers/home_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -79,14 +80,16 @@ class HomeScreen extends StatelessWidget {
                   ? SizedBox(
                       width: 20.w,
                       height: 20.w,
-                      child: CircularProgressIndicator(
+                      child: const CircularProgressIndicator(
                         strokeWidth: 2,
                         color: AppColors.primary,
                       ),
                     )
                   : Text(
                       'No saved places',
-                      style: AppTextStyles.homeSubtitle.copyWith(color: AppColors.shade2),
+                      style: AppTextStyles.homeSubtitle.copyWith(
+                        color: AppColors.shade2,
+                      ),
                     ),
             ),
           );
@@ -120,7 +123,9 @@ class HomeScreen extends StatelessWidget {
                   controller.isSavedPlacesExpanded.toggle();
                 },
                 child: Padding(
-                  padding: EdgeInsets.only(bottom: index == placesToShow.length - 1 ? 0 : 12.h),
+                  padding: EdgeInsets.only(
+                    bottom: index == placesToShow.length - 1 ? 0 : 12.h,
+                  ),
                   child: Row(
                     children: [
                       Container(
@@ -129,7 +134,11 @@ class HomeScreen extends StatelessWidget {
                           color: Color(0xFFF1F5F9),
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(Icons.location_on, color: AppColors.primary, size: 20.sp),
+                        child: Icon(
+                          Icons.location_on,
+                          color: AppColors.primary,
+                          size: 20.sp,
+                        ),
                       ),
                       SizedBox(width: 12.w),
                       Expanded(
@@ -155,11 +164,13 @@ class HomeScreen extends StatelessWidget {
                                     size: 18.sp,
                                     color: AppColors.shade2,
                                   ),
-                                ]
+                                ],
                               ],
                             ),
                             Text(
-                              place.address ?? place.name ?? 'No address provided',
+                              place.address ??
+                                  place.name ??
+                                  'No address provided',
                               style: AppTextStyles.homeCaption,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -179,23 +190,26 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildProfileIcon() {
-    return Container(
-      width: 64.w,
-      height: 61.h,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFFD3DDE7), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 2,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Center(
-        child: Icon(Icons.person, color: Colors.black, size: 28.sp),
+    return GestureDetector(
+      onTap: () => Get.to(() => ProfileScreen()),
+      child: Container(
+        width: 64.w,
+        height: 61.h,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(color: const Color(0xFFD3DDE7), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 2,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Center(
+          child: Icon(Icons.person, color: Colors.black, size: 28.sp),
+        ),
       ),
     );
   }
@@ -221,7 +235,7 @@ class HomeScreen extends StatelessWidget {
           AppAssets.icGps,
           width: 24.w,
           height: 24.w,
-          colorFilter: ColorFilter.mode(AppColors.primary, BlendMode.srcIn),
+          colorFilter: const ColorFilter.mode(AppColors.primary, BlendMode.srcIn),
         ),
       ),
     );
@@ -270,15 +284,25 @@ class HomeScreen extends StatelessWidget {
               GestureDetector(
                 onTap: () => Get.toNamed('/location_search'),
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 14.h,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(16.r),
-                    border: Border.all(color: const Color(0xFFE2E8F0), width: 0.8),
+                    border: Border.all(
+                      color: const Color(0xFFE2E8F0),
+                      width: 0.8,
+                    ),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.location_on, color: AppColors.primary, size: 24.sp),
+                      Icon(
+                        Icons.location_on,
+                        color: AppColors.primary,
+                        size: 24.sp,
+                      ),
                       SizedBox(width: 12.w),
                       Text(
                         'Where are you going?',
@@ -308,13 +332,20 @@ class HomeScreen extends StatelessWidget {
               ),
               SizedBox(height: 16.h),
               // Recent Locations List
-              Obx(() => Column(
-                children: controller.recentDestinations.map((loc) => _buildRecentLocationItem(loc)).toList(),
-              )),
+              Obx(
+                () => Column(
+                  children: controller.recentDestinations
+                      .map((loc) => _buildRecentLocationItem(loc))
+                      .toList(),
+                ),
+              ),
               SizedBox(height: 24.h),
               Text(
                 'Explore Vehicle',
-                style: AppTextStyles.homeSubtitle.copyWith(fontSize: 15.sp, fontWeight: FontWeight.bold),
+                style: AppTextStyles.homeSubtitle.copyWith(
+                  fontSize: 15.sp,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               SizedBox(height: 16.h),
               // Vehicle List
@@ -361,9 +392,19 @@ class HomeScreen extends StatelessWidget {
             ),
             child: Column(
               children: [
-                Icon(Icons.directions_car_outlined, size: 20.sp, color: AppColors.shade2),
+                Icon(
+                  Icons.directions_car_outlined,
+                  size: 20.sp,
+                  color: AppColors.shade2,
+                ),
                 SizedBox(height: 4.h),
-                Text('6 KM', style: AppTextStyles.homeCaption.copyWith(fontSize: 12.sp, fontWeight: FontWeight.w600)),
+                Text(
+                  '6 KM',
+                  style: AppTextStyles.homeCaption.copyWith(
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
           ),
@@ -383,7 +424,10 @@ class HomeScreen extends StatelessWidget {
                 SizedBox(height: 4.h),
                 Text(
                   loc.address,
-                  style: AppTextStyles.homeCaption.copyWith(color: AppColors.shade2, fontSize: 13.sp),
+                  style: AppTextStyles.homeCaption.copyWith(
+                    color: AppColors.shade2,
+                    fontSize: 13.sp,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -436,7 +480,13 @@ class HomeScreen extends StatelessWidget {
             child: Image.asset(imagePath, fit: BoxFit.contain),
           ),
           SizedBox(height: 8.h),
-          Text(label, style: AppTextStyles.homeCaption.copyWith(color: AppColors.shade1, fontWeight: FontWeight.w600)),
+          Text(
+            label,
+            style: AppTextStyles.homeCaption.copyWith(
+              color: AppColors.shade1,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );

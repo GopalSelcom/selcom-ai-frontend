@@ -1,5 +1,10 @@
 import 'package:get_it/get_it.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../features/ride/data/datasources/ride_remote_data_source.dart';
+import '../../features/ride/data/repositories/ride_repository_impl.dart';
+import '../../features/ride/domain/repositories/ride_repository.dart';
+import '../../features/ride/domain/usecases/ride_usecase.dart';
+import '../../features/ride/presentation/controllers/my_rides_controller.dart';
 import '../config/app_config.dart';
 import '../services/analytics_service.dart';
 import '../domain/repositories/auth_repository.dart';
@@ -39,11 +44,19 @@ Future<void> init() async {
     ),
   );
 
+  // ── Ride Feature ──
+  sl.registerLazySingleton<RideRemoteDataSource>(
+    () => RideRemoteDataSourceImpl(),
+  );
+  sl.registerLazySingleton<RideRepository>(
+    () => RideRepositoryImpl(remoteDataSource: sl()),
+  );
+
   // Use Cases
-  // sl.registerLazySingleton(() => LoginUseCase(sl()));
+  sl.registerLazySingleton(() => RideUseCase(sl()));
 
   // BLoCs / Controllers
-  // sl.registerFactory(() => AuthBloc(loginUseCase: sl()));
+  sl.registerFactory(() => MyRidesController(rideUseCase: sl()));
 }
 
 /// Maps the app's Environment enum to ApiService's ApiEnvironment enum

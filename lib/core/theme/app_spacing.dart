@@ -18,7 +18,7 @@ class AppSpacing {
 }
 
 class AppRadius {
-  static double button     = 100.0.r;  // Fully rounded pill
+  static double button     = 16.0.r;  // Fully rounded pill
   static double card       = 12.0.r;   // Cards, vehicle options
   static double input      = 12.0.r;   // Text fields
   static double chip       = 100.0.r;  // Category chips (pill)
