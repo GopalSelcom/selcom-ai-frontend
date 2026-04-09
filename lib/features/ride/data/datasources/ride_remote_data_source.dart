@@ -29,7 +29,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   Future<List<RecentDestinationModel>> getRecentDestinations() async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "go/rides/recent-destinations",
+        endpoint: URLS.ride.recentDestinations,
         method: ApiMethod.get,
       ),
     );
@@ -45,7 +45,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   Future<List<RideModel>> getRideHistory({int page = 1, int limit = 10}) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: URLS.ride.rideHistory,
+        endpoint: URLS.ride.history,
         method: ApiMethod.get,
         queryParams: {'page': page, 'limit': limit},
       ),
@@ -62,7 +62,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   Future<RideModel> getRideDetails(String rideId) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "go/rides/$rideId",
+        endpoint: "${URLS.ride.base}/$rideId",
         method: ApiMethod.get,
       ),
     );
@@ -77,7 +77,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   Future<bool> cancelRide(String rideId, String reason) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "go/rides/$rideId/cancel",
+        endpoint: "${URLS.ride.base}/$rideId/cancel",
         method: ApiMethod.put,
         body: {'reason': reason},
       ),
@@ -89,7 +89,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   Future<bool> updateDestination(String rideId, Map<String, dynamic> destination) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "go/rides/$rideId/update-destination",
+        endpoint: "${URLS.ride.base}/$rideId/update-destination",
         method: ApiMethod.put,
         body: {'destination': destination},
       ),
@@ -101,7 +101,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   Future<bool> updatePickup(String rideId, Map<String, dynamic> pickup) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "go/rides/$rideId/update-pickup",
+        endpoint: "${URLS.ride.base}/$rideId/update-pickup",
         method: ApiMethod.put,
         body: {'pickup': pickup},
       ),

@@ -3,7 +3,6 @@ import '../../../../core/data/models/user_profile_models.dart';
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/data/models/requests/create_saved_place_request.dart';
-import '../../../../core/data/models/responses/saved_places_response.dart';
 import '../../../../core/data/models/responses/create_saved_place_response.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/urls.dart';
@@ -53,8 +52,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     try {
       final response = await ApiService().call(
         request: ApiRequest(
-          endpoint: URLS.address.getSavedPlaces,
-          // Postman uses v4/go/user/saved-places
+          endpoint: URLS.address.savedPlaces,
           method: ApiMethod.get,
         ),
       );
@@ -64,8 +62,9 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         return savedResponse;
       }
       return null;
-    }catch(e){
-      debugPrint("this is error -> $e");
+    } catch (e) {
+      debugPrint("Error fetching saved places: $e");
+      return null;
     }
   }
 
@@ -73,7 +72,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   Future<bool> addSavedPlace(CreateSavedPlaceRequest request) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: URLS.address.addUserAddress, // Registry uses same for POST/GET sometimes
+        endpoint: URLS.address.savedPlaces,
         method: ApiMethod.post,
         body: request.toJson(),
       ),
@@ -90,7 +89,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   Future<bool> deleteSavedPlace(String id) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "${URLS.address.delete}/$id",
+        endpoint: "${URLS.address.savedPlaces}/$id",
         method: ApiMethod.delete,
       ),
     );
@@ -101,7 +100,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   Future<WalletBalanceModel> getWalletBalance() async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "go/wallet/balance",
+        endpoint: URLS.wallet.balance,
         method: ApiMethod.get,
       ),
     );
@@ -116,7 +115,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   Future<List<PaymentMethodModel>> getPaymentMethods() async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "go/user/payment-methods",
+        endpoint: URLS.profile.paymentMethods,
         method: ApiMethod.get,
       ),
     );

@@ -124,7 +124,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   }) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: URLS.ride.requestRide, // Aligned with URLS.ride.requestRide in Registry
+        endpoint: URLS.ride.bookRide,
         method: ApiMethod.post,
         body: {
           'vehicle_type_id': vehicleTypeId,

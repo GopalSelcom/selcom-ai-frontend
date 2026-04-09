@@ -11,6 +11,8 @@ abstract class URLS {
   static const payment = _PaymentEndpoints();
   static const address = _AddressEndpoints();
   static const places = _PlacesEndpoints();
+  static const wallet = _WalletEndpoints();
+  static const notification = _NotificationEndpoints();
 }
 
 /// ─────────────────────────────────
@@ -33,16 +35,13 @@ class _AuthEndpoints {
 class _RideEndpoints {
   const _RideEndpoints();
 
-  final estimateFare = "ride/estimate_fare";
+  final estimateFare = "go/rides/estimate";
   final getVehicleTypes = "go/vehicles/types";
-  final requestRide = "ride/request";
-  final cancelRide = "ride/cancel";
-  final rideStatus = "ride/status";
-  final rideHistory = "ride/history";
-  final rideDetails = "ride/details";
-  final rateDriver = "ride/rate_driver";
-  final getNearbyDrivers = "ride/nearby_drivers";
-  final trackDriver = "ride/track_driver";
+  final bookRide = "go/rides/book";
+  final history = "go/rides/history";
+  final recentDestinations = "go/rides/recent-destinations";
+  final base =
+      "go/rides"; // Use for /{{id}}, /{{id}}/cancel, /{{id}}/rate, etc.
 }
 
 /// ─────────────────────────────────
@@ -73,8 +72,7 @@ class _ProfileEndpoints {
 
   final updateProfile = "edit_profile";
   final getProfile = "get_profile";
-  final notificationHistory = "get_all_notification";
-  final deleteNotification = "clear_all_notifications";
+  final paymentMethods = "go/user/payment-methods";
 }
 
 /// ─────────────────────────────────
@@ -96,21 +94,18 @@ class _CommonEndpoints {
 class _PaymentEndpoints {
   const _PaymentEndpoints();
 
+  final validateRidePayment = "go/validate_ride_payment";
   final makePayment = "unified_payment";
   final checkPaymentStatus = "check_payment_status";
 }
 
 /// ─────────────────────────────────
-/// ADDRESS ENDPOINTS
+/// ADDRESS ENDPOINTS (Saved Places)
 /// ─────────────────────────────────
 class _AddressEndpoints {
   const _AddressEndpoints();
 
-  final addUserAddress = "go/user/add_user_address";
-  final get = "get_user_address";
-  final edit = "edit_user_address";
-  final delete = "delete_user_address";
-  final getSavedPlaces = "go/user/saved-places";
+  final savedPlaces = "go/user/saved-places";
 }
 
 /// ─────────────────────────────────
@@ -123,3 +118,22 @@ class _PlacesEndpoints {
   final reverseGeocode = "go/places/reverse-geocode";
 }
 
+/// ─────────────────────────────────
+/// WALLET ENDPOINTS
+/// ─────────────────────────────────
+class _WalletEndpoints {
+  const _WalletEndpoints();
+
+  final balance = "go/wallet/balance";
+}
+
+/// ─────────────────────────────────
+/// NOTIFICATION ENDPOINTS
+/// ─────────────────────────────────
+class _NotificationEndpoints {
+  const _NotificationEndpoints();
+
+  final list = "go/notifications";
+  final readAll = "go/notifications/read-all";
+  final base = "go/notifications"; // Use for /{{id}}/read
+}
