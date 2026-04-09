@@ -1,3 +1,5 @@
+import 'location_entity.dart';
+
 enum RideStatus {
   searching,
   driverAssigned,
@@ -23,18 +25,6 @@ enum PaymentMethod {
   selcomPesa,
   mobileMoney,
   card,
-}
-
-class LocationEntity {
-  final double lat;
-  final double lng;
-  final String address;
-
-  const LocationEntity({
-    required this.lat,
-    required this.lng,
-    required this.address,
-  });
 }
 
 class DriverSnapshotEntity {

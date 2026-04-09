@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import '../../data/models/requests/fare_estimate_request.dart';
 import '../../errors/failures.dart';
 import '../entities/ride_entity.dart';
 import '../entities/vehicle_type_entity.dart';
