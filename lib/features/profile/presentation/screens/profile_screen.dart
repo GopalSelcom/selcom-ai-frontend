@@ -6,6 +6,7 @@ import 'package:iconsax/iconsax.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_profile_header.dart';
 
 import '../../../ride/presentation/screens/my_rides_screen.dart';
 import '../controllers/profile_controller.dart';
@@ -34,8 +35,8 @@ class ProfileScreen extends StatelessWidget {
                   alignment: Alignment.topCenter,
                   child: Opacity(
                     opacity: 0.0,
-                    child: _buildHeaderContainer(
-                      context: context,
+                    child: AppProfileHeader(
+                      onBack: controller.handleBack,
                       child: controller.isEditing.value
                           ? _buildEditModeContent()
                           : _buildNormalModeContent(),
@@ -105,8 +106,8 @@ class ProfileScreen extends StatelessWidget {
                 duration: const Duration(milliseconds: 350),
                 curve: Curves.easeOutCirc,
                 alignment: Alignment.topCenter,
-                child: _buildHeaderContainer(
-                  context: context,
+                child: AppProfileHeader(
+                  onBack: controller.handleBack,
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 250),
                     transitionBuilder: (child, animation) {
@@ -139,45 +140,6 @@ class ProfileScreen extends StatelessWidget {
                   )
                 : const SizedBox.shrink(),
           ),
-        ],
-      ),
-    );
-  }
-
-  /// Structural wrapper for the Red Header container
-  Widget _buildHeaderContainer({
-    required BuildContext context,
-    required Widget child,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 16.h,
-        bottom: 32.h,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(32.r),
-          bottomRight: Radius.circular(32.r),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Back Arrow
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
-            child: IconButton(
-              icon: Icon(Iconsax.arrow_left, color: Colors.white, size: 28.w),
-              padding: EdgeInsets.zero,
-              alignment: Alignment.centerLeft,
-              onPressed: controller.handleBack,
-            ),
-          ),
-          SizedBox(height: 24.h),
-          child,
         ],
       ),
     );
