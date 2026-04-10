@@ -8,8 +8,10 @@ import '../../../../core/data/models/requests/book_ride_request.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
+import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/data/models/user_profile_models.dart';
 import '../../../../core/domain/entities/location_entity.dart';
+import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../home/domain/repositories/home_repository.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
@@ -76,7 +78,9 @@ class VehicleSelectionController extends GetxController {
   }
 
   void _parseArguments() {
-    final args = Get.arguments as Map<String, dynamic>? ?? {};
+    final raw = Get.arguments;
+    final args = raw is Map ? Map<String, dynamic>.from(raw) : <String, dynamic>{};
+
     final pickupAddr = (args['pickup'] as String?)?.trim() ?? '';
     final destAddr = (args['destination'] as String?)?.trim() ?? '';
 
@@ -93,7 +97,8 @@ class VehicleSelectionController extends GetxController {
     _preferredVehicleName =
         (args['preferredVehicleName'] as String?)?.trim().toLowerCase();
 
-    // _buildDummyRoute(pLat, pLng, dLat, dLng);
+    // Show a route immediately; replaced when fare API returns geometry.
+    _buildDummyRoute(pLat, pLng, dLat, dLng);
   }
 
   void _buildDummyRoute(double pLat, double pLng, double dLat, double dLng) {
@@ -121,14 +126,22 @@ class VehicleSelectionController extends GetxController {
   Future<void> _loadEstimates() async {
     isLoadingEstimates.value = true;
     final req = FareEstimateRequest(pickup: pickupEntity, destination: destinationEntity);
+
+    final vehicleTypesResult = await homeRepository.getVehicleTypes();
+    List<VehicleTypeModel> vehicleTypes = [];
+    vehicleTypesResult.fold((_) {}, (list) => vehicleTypes = list);
+
     final result = await homeRepository.estimateFare(req);
     result.fold(
-      (_) => estimates.assignAll(_dummyEstimates()),
+      (_) => estimates.assignAll(_dummyEstimates(vehicleTypes)),
       (model) {
         if (model.estimates.isEmpty) {
-          estimates.assignAll(_dummyEstimates());
+          estimates.assignAll(_dummyEstimates(vehicleTypes));
         } else {
-          estimates.assignAll(model.estimates);
+          final normalized = model.estimates
+              .map((e) => _withResolvedVehicleTypeId(e, vehicleTypes))
+              .toList();
+          estimates.assignAll(normalized);
           if (model.routeGeometry?.coordinates != null &&
               model.routeGeometry!.coordinates!.isNotEmpty) {
             final coords = model.routeGeometry!.coordinates!;
@@ -156,6 +169,64 @@ class VehicleSelectionController extends GetxController {
     _applyPreferredVehicleSelection();
     _requestNearbyDriversForCurrentSelection();
     Future.microtask(_fitBounds);
+  }
+
+  /// Backend expects `vehicle_type_id` as the catalog id (e.g. Mongo `_id`), not a slug like `cab`.
+  bool _looksLikeBackendVehicleTypeId(String? s) {
+    final t = (s ?? '').trim();
+    if (t.isEmpty) return false;
+    if (t.length == 24 && RegExp(r'^[a-fA-F0-9]{24}$').hasMatch(t)) return true;
+    if (t.length == 36 && t.contains('-')) return true;
+    return false;
+  }
+
+  VehicleTypeModel? _matchVehicleTypeFromEstimate(
+    FareEstimateItem e,
+    List<VehicleTypeModel> types,
+  ) {
+    final id = (e.vehicleTypeId ?? '').trim();
+    final vn = (e.vehicleName ?? '').trim().toLowerCase();
+    final dn = (e.displayName ?? '').trim().toLowerCase();
+    for (final vt in types) {
+      if (id.isNotEmpty && vt.id == id) return vt;
+      if (id.isNotEmpty && vt.id.isNotEmpty && vt.key.toLowerCase() == id.toLowerCase()) {
+        return vt;
+      }
+      if (id.isNotEmpty && vt.name.toLowerCase() == id.toLowerCase()) return vt;
+      if (vn.isNotEmpty && vt.key.toLowerCase() == vn) return vt;
+      if (vn.isNotEmpty && vt.name.toLowerCase() == vn) return vt;
+      if (dn.isNotEmpty && vt.displayName.toLowerCase() == dn) return vt;
+    }
+    return null;
+  }
+
+  FareEstimateItem _withResolvedVehicleTypeId(
+    FareEstimateItem e,
+    List<VehicleTypeModel> types,
+  ) {
+    if (types.isEmpty) return e;
+    final raw = (e.vehicleTypeId ?? '').trim();
+    if (raw.isNotEmpty && _looksLikeBackendVehicleTypeId(raw)) {
+      final exists = types.any((vt) => vt.id == raw);
+      if (exists) return e;
+    }
+    final matched = _matchVehicleTypeFromEstimate(e, types);
+    if (matched == null) return e;
+    if (matched.id == raw) return e;
+    return FareEstimateItem(
+      vehicleTypeId: matched.id,
+      vehicleName: e.vehicleName ?? matched.name,
+      displayName: e.displayName ?? matched.displayName,
+      fareEstimate: e.fareEstimate,
+      distanceKm: e.distanceKm,
+      durationMinutes: e.durationMinutes,
+      baseFare: e.baseFare,
+      perKmCharge: e.perKmCharge,
+      perMinCharge: e.perMinCharge,
+      minimumFare: e.minimumFare,
+      maxPassengers: e.maxPassengers ?? matched.maxPassengers,
+      currency: e.currency,
+    );
   }
 
   void _applyPreferredVehicleSelection() {
@@ -186,39 +257,38 @@ class VehicleSelectionController extends GetxController {
     }
   }
 
-  List<FareEstimateItem> _dummyEstimates() {
-    return [
-      FareEstimateItem(
-        vehicleTypeId: 'cab',
-        vehicleName: 'cab',
-        displayName: 'GoRide Card',
-        fareEstimate: 500,
+  /// Fallback rows when estimate API fails; uses real `VehicleTypeModel.id` from `getVehicleTypes()`.
+  List<FareEstimateItem> _dummyEstimates(List<VehicleTypeModel> types) {
+    final sorted = (types.where((t) => t.isActive).toList()
+          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)));
+    final list = sorted.isNotEmpty ? sorted : types;
+    if (list.isEmpty) {
+      return [
+        FareEstimateItem(
+          vehicleTypeId: '',
+          vehicleName: 'ride',
+          displayName: 'Ride',
+          fareEstimate: 500,
+          distanceKm: 4.2,
+          durationMinutes: 10,
+          maxPassengers: 4,
+          currency: 'TZS',
+        ),
+      ];
+    }
+    return list.map((vt) {
+      final fare = vt.baseFare > 0 ? vt.baseFare : 500;
+      return FareEstimateItem(
+        vehicleTypeId: vt.id,
+        vehicleName: vt.name,
+        displayName: vt.displayName.isNotEmpty ? vt.displayName : vt.name,
+        fareEstimate: fare,
         distanceKm: 4.2,
         durationMinutes: 10,
-        maxPassengers: 4,
+        maxPassengers: vt.maxPassengers,
         currency: 'TZS',
-      ),
-      FareEstimateItem(
-        vehicleTypeId: 'bajaji',
-        vehicleName: 'bajaji',
-        displayName: 'Bajaji',
-        fareEstimate: 100,
-        distanceKm: 4.2,
-        durationMinutes: 5,
-        maxPassengers: 3,
-        currency: 'TZS',
-      ),
-      FareEstimateItem(
-        vehicleTypeId: 'boda',
-        vehicleName: 'boda',
-        displayName: 'Boda',
-        fareEstimate: 100,
-        distanceKm: 4.2,
-        durationMinutes: 1,
-        maxPassengers: 1,
-        currency: 'TZS',
-      ),
-    ];
+      );
+    }).toList();
   }
 
   Future<void> _loadPaymentMethods() async {
@@ -266,6 +336,24 @@ class VehicleSelectionController extends GetxController {
     selectedPayment.value = m;
   }
 
+  String? _extractRideIdFromBookingResponse(Map<String, dynamic> raw) {
+    String? pick(Map<String, dynamic> m) {
+      final v = m['ride_id'] ?? m['_id'] ?? m['id'] ?? m['rideId'];
+      if (v != null && v.toString().trim().isNotEmpty) {
+        return v.toString().trim();
+      }
+      return null;
+    }
+
+    final direct = pick(raw);
+    if (direct != null) return direct;
+    final ride = raw['ride'];
+    if (ride is Map) return pick(Map<String, dynamic>.from(ride));
+    final data = raw['data'];
+    if (data is Map) return pick(Map<String, dynamic>.from(data));
+    return null;
+  }
+
   Future<void> bookRide() async {
     final est = selectedEstimate;
     final pay = selectedPayment.value;
@@ -276,11 +364,21 @@ class VehicleSelectionController extends GetxController {
 
     isBooking.value = true;
 
+    final resolvedVehicleTypeId = (est.vehicleTypeId ?? '').trim();
+    if (resolvedVehicleTypeId.isEmpty || !_looksLikeBackendVehicleTypeId(resolvedVehicleTypeId)) {
+      isBooking.value = false;
+      Get.snackbar(
+        'Vehicle type',
+        'Could not resolve vehicle type id. Please try again.',
+      );
+      return;
+    }
+
     // 1) Validate payment first (Validate Ride Payment - Block).
     final validateRequest = ValidateRidePaymentRequest(
       fareEstimate: est.fareEstimate ?? selectedFareAmount,
       paymentMethod: pay.type,
-      vehicleTypeId: est.vehicleTypeId ?? 'unknown',
+      vehicleTypeId: resolvedVehicleTypeId,
     );
     final validationResult = await rideRepository.validateRidePayment(validateRequest);
 
@@ -327,7 +425,7 @@ class VehicleSelectionController extends GetxController {
           idempotencyKey: 'idem_${DateTime.now().millisecondsSinceEpoch}',
           pickup: pickupEntity,
           destination: destinationEntity,
-          vehicleTypeId: est.vehicleTypeId ?? 'unknown',
+          vehicleTypeId: resolvedVehicleTypeId,
           paymentMethod: pay.type,
         );
         final result = await homeRepository.bookRide(request);
@@ -335,9 +433,22 @@ class VehicleSelectionController extends GetxController {
         result.fold(
           (f) => Get.snackbar('Booking failed', 'Could not complete booking. Try again.'),
           (data) {
-            print("$data----->ride completed");
-            Get.snackbar('Success', 'Ride request submitted.');
-            Get.back();
+            final rideId = _extractRideIdFromBookingResponse(data);
+            if (rideId == null || rideId.isEmpty) {
+              Get.snackbar('Booking', 'Ride was created but ride id is missing from the response.');
+              Get.back();
+              return;
+            }
+            Get.offNamed(
+              AppRoutes.findingDriver,
+              arguments: {
+                'rideId': rideId,
+                'pickupLat': pickupEntity.lat,
+                'pickupLng': pickupEntity.lng,
+                'pickupAddress': pickupEntity.address,
+                'destinationAddress': destinationEntity.address,
+              },
+            );
           },
         );
       },
@@ -542,12 +653,19 @@ class VehicleSelectionController extends GetxController {
   }
 
   Future<void> _fitBounds() async {
-    if (mapController == null || routePoints.isEmpty) return;
-    double minLat = routePoints.first.latitude;
-    double maxLat = routePoints.first.latitude;
-    double minLng = routePoints.first.longitude;
-    double maxLng = routePoints.first.longitude;
-    for (final p in routePoints) {
+    if (mapController == null) return;
+    final pts = routePoints.isNotEmpty
+        ? routePoints.toList()
+        : <LatLng>[
+            LatLng(pickupEntity.lat, pickupEntity.lng),
+            LatLng(destinationEntity.lat, destinationEntity.lng),
+          ];
+    if (pts.isEmpty) return;
+    double minLat = pts.first.latitude;
+    double maxLat = pts.first.latitude;
+    double minLng = pts.first.longitude;
+    double maxLng = pts.first.longitude;
+    for (final p in pts) {
       minLat = minLat < p.latitude ? minLat : p.latitude;
       maxLat = maxLat > p.latitude ? maxLat : p.latitude;
       minLng = minLng < p.longitude ? minLng : p.longitude;

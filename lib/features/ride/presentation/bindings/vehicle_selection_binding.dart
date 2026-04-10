@@ -32,6 +32,7 @@ class VehicleSelectionBinding extends Bindings {
         profileRepository: Get.find(),
         rideRepository: Get.find(),
       ),
+      fenix: true,
     );
   }
 }

@@ -109,10 +109,15 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
 
   Widget _buildMap(VehicleSelectionController c) {
     return Obx(() {
-      final points = c.routePoints.toList();
-      if (points.isEmpty) {
-        return const ColoredBox(color: Color(0xFFF8FAFC));
-      }
+      final routePts = c.routePoints.toList();
+      final pickup = LatLng(c.pickupEntity.lat, c.pickupEntity.lng);
+      final drop = LatLng(c.destinationEntity.lat, c.destinationEntity.lng);
+      // Never block the map on empty geometry — use pickup→drop until API polyline arrives.
+      final points = routePts.isNotEmpty ? routePts : <LatLng>[pickup, drop];
+      final mid = LatLng(
+        (pickup.latitude + drop.latitude) / 2,
+        (pickup.longitude + drop.longitude) / 2,
+      );
 
       return AnimatedBuilder(
         animation: Listenable.merge([_polylineAnim, _pulseAnim]),
@@ -145,20 +150,21 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
           markers.add(
             Marker(
               markerId: const MarkerId('pickup'),
-              position: points.first,
+              position: pickup,
               icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
             ),
           );
           markers.add(
             Marker(
               markerId: const MarkerId('drop'),
-              position: points.last,
+              position: drop,
               icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
             ),
           );
 
           return GoogleMap(
-            initialCameraPosition: CameraPosition(target: points[points.length ~/ 2], zoom: 13.5),
+            key: const ValueKey('vehicle_selection_map'),
+            initialCameraPosition: CameraPosition(target: mid, zoom: 13.5),
             onMapCreated: c.onMapCreated,
             polylines: {
               Polyline(

@@ -8,7 +8,9 @@ import '../../features/auth/presentation/bindings/auth_binding.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/home/presentation/bindings/home_binding.dart';
 import '../../features/home/presentation/screens/location_selection_screen.dart';
+import '../../features/ride/presentation/bindings/finding_driver_binding.dart';
 import '../../features/ride/presentation/bindings/vehicle_selection_binding.dart';
+import '../../features/ride/presentation/screens/finding_driver_screen.dart';
 import '../../features/ride/presentation/screens/vehicle_selection_screen.dart';
 import '../../features/profile/presentation/screens/contact_us_screen.dart';
 import '../../features/profile/presentation/bindings/contact_us_binding.dart';
@@ -23,6 +25,7 @@ class AppRoutes {
   static const String locationSelection = '/location-selection';
   static const String search = '/search';
   static const String booking = '/booking';
+  static const String findingDriver = '/finding-driver';
   static const String ride = '/ride';
   static const String feedback = '/feedback';
   static const String contactUs = '/contact-us';
@@ -65,6 +68,11 @@ class AppRoutes {
       name: booking,
       page: () => const VehicleSelectionScreen(),
       binding: VehicleSelectionBinding(),
+    ),
+    GetPage(
+      name: findingDriver,
+      page: () => const FindingDriverScreen(),
+      binding: FindingDriverBinding(),
     ),
     GetPage(
       name: contactUs,
