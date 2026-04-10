@@ -6,6 +6,7 @@ import '../../../../core/data/models/responses/get_saved_places_response.dart';
 import '../../../../core/data/models/user_profile_models.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/data/models/requests/create_saved_place_request.dart';
+import '../models/contact_us_models.dart';
 
 class ProfileRepositoryImpl implements ProfileRepository {
   final ProfileRemoteDataSource remoteDataSource;
@@ -78,6 +79,28 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<Either<Failure, List<PaymentMethodModel>>> getPaymentMethods() async {
     try {
       final result = await remoteDataSource.getPaymentMethods();
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, EmailSubjectResponseModel>> getEmailSubjects() async {
+    try {
+      final result = await remoteDataSource.getEmailSubjects();
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, SendEmailResponseModel>> sendEmail(
+    SendEmailRequestModel request,
+  ) async {
+    try {
+      final result = await remoteDataSource.sendEmail(request);
       return Right(result);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

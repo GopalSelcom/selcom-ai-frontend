@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
@@ -308,7 +309,7 @@ class ProfileScreen extends StatelessWidget {
           MenuItemWidget(
             icon: Iconsax.message_question,
             title: 'Help',
-            onTap: () {},
+            onTap: () => Get.toNamed(AppRoutes.contactUs),
           ),
           MenuItemWidget(
             icon: Iconsax.shield_tick,

@@ -6,6 +6,7 @@ import '../../../../core/data/models/requests/create_saved_place_request.dart';
 import '../../../../core/data/models/responses/create_saved_place_response.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/urls.dart';
+import '../models/contact_us_models.dart';
 
 abstract class ProfileRemoteDataSource {
   Future<UserModel> getProfile();
@@ -15,6 +16,8 @@ abstract class ProfileRemoteDataSource {
   Future<bool> deleteSavedPlace(String id);
   Future<WalletBalanceModel> getWalletBalance();
   Future<List<PaymentMethodModel>> getPaymentMethods();
+  Future<EmailSubjectResponseModel> getEmailSubjects();
+  Future<SendEmailResponseModel> sendEmail(SendEmailRequestModel request);
 }
 
 class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
@@ -125,5 +128,39 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       return data.map((e) => PaymentMethodModel.fromJson(e)).toList();
     }
     return [];
+  }
+
+  @override
+  Future<EmailSubjectResponseModel> getEmailSubjects() async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.profile.getEmailSubject,
+        method: ApiMethod.get,
+        skipAuthInterceptor: true,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      return EmailSubjectResponseModel.fromJson(response.data);
+    }
+    throw Exception('Failed to get email subject');
+  }
+
+  @override
+  Future<SendEmailResponseModel> sendEmail(
+    SendEmailRequestModel request,
+  ) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.profile.sendEmail,
+        method: ApiMethod.post,
+        body: request.toJson(),
+      ),
+    );
+
+    if (response.data != null) {
+      return SendEmailResponseModel.fromJson(response.data);
+    }
+    throw Exception('Failed to send email');
   }
 }

@@ -10,6 +10,8 @@ import '../../features/home/presentation/bindings/home_binding.dart';
 import '../../features/home/presentation/screens/location_selection_screen.dart';
 import '../../features/ride/presentation/bindings/vehicle_selection_binding.dart';
 import '../../features/ride/presentation/screens/vehicle_selection_screen.dart';
+import '../../features/profile/presentation/screens/contact_us_screen.dart';
+import '../../features/profile/presentation/bindings/contact_us_binding.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -23,6 +25,7 @@ class AppRoutes {
   static const String booking = '/booking';
   static const String ride = '/ride';
   static const String feedback = '/feedback';
+  static const String contactUs = '/contact-us';
 
   static List<GetPage> get pages => [
     GetPage(
@@ -62,6 +65,11 @@ class AppRoutes {
       name: booking,
       page: () => const VehicleSelectionScreen(),
       binding: VehicleSelectionBinding(),
+    ),
+    GetPage(
+      name: contactUs,
+      page: () => const ContactUsScreen(),
+      binding: ContactUsBinding(),
     ),
   ];
 }
