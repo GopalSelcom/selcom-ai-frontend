@@ -71,6 +71,31 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
             ),
           ),
           Positioned(
+            top: MediaQuery.paddingOf(context).top + 14.h,
+            right: 16.w,
+            child: Obx(
+              () => Container(
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.94),
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Text(
+                  c.isSocketConnected.value
+                      ? 'Socket ON • ${c.nearbyDriverCount.value} drivers'
+                      : (c.lastSocketError.value.isNotEmpty
+                          ? 'Socket OFF • ${c.lastSocketError.value}'
+                          : 'Socket OFF'),
+                  style: AppTextStyles.homeCaption.copyWith(
+                    color: c.isSocketConnected.value ? AppColors.success : AppColors.error,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
             left: 0,
             right: 0,
             bottom: 0,
@@ -102,8 +127,8 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
           for (var i = 0; i < drivers.length; i++) {
             final base = drivers[i];
             final jitter = LatLng(
-              base.latitude + 0.00012 * math.sin(phase + i * 1.7),
-              base.longitude + 0.0001 * math.cos(phase + i * 1.1),
+              base.latitude + 0.00004 * math.sin(phase + i * 1.7),
+              base.longitude + 0.00004 * math.cos(phase + i * 1.1),
             );
             markers.add(
               Marker(

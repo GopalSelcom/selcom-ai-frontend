@@ -95,8 +95,8 @@ class HomeController extends GetxController {
         circleId: const CircleId('pickup_200m_radius'),
         center: center,
         radius: 200,
-        fillColor: AppColors.primary.withOpacity(0.08),
-        strokeColor: AppColors.primary.withOpacity(0.4),
+        fillColor: AppColors.inputBorderActive.withOpacity(0.08),
+        strokeColor: AppColors.inputBorderActive.withOpacity(0.4),
         strokeWidth: 2,
       ),
     };
@@ -312,8 +312,8 @@ class HomeController extends GetxController {
     result.fold(
       (_) => null,
       (data) {
-        if (data.address.trim().isNotEmpty) {
-          currentMapAddress.value = data.address;
+        if ((data.data?.results??[]).isNotEmpty&&(data.data?.results?.first.formattedAddress??"").trim().isNotEmpty) {
+          currentMapAddress.value = data.data?.results?.first.formattedAddress??"";
         }
       },
     );

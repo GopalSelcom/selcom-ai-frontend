@@ -548,6 +548,8 @@ class ApiService {
   // ── Session Expired Popup ──
 
   void showLogoutPopup() {
+    if (AuthInterceptor.isLoggingOutDueToAuthFailure) return;
+    AuthInterceptor.isLoggingOutDueToAuthFailure = true;
     Get.defaultDialog(
       title: 'Session Expired',
       middleText: 'Your session has expired. Please login again to continue.',
@@ -558,6 +560,7 @@ class ApiService {
         await StorageService().delete(StorageKeys.authorizationToken);
         await StorageService().delete(StorageKeys.accessToken);
         await StorageService().delete(StorageKeys.refreshToken);
+        AuthInterceptor.isLoggingOutDueToAuthFailure = false;
         Get.back();
         // Navigate to login - adjust route as needed
         Get.offAllNamed('/login');
@@ -577,6 +580,18 @@ class AuthInterceptor extends Interceptor {
   static Completer<bool>? _refreshCompleter;
   static bool _isRefreshing = false;
   static bool isLoggingOutDueToAuthFailure = false;
+
+  static bool _isAuthErrorCode(String? errorCode) {
+    switch (errorCode) {
+      case 'AUTH_NO_TOKEN':
+      case 'AUTH_INVALID_TOKEN':
+      case 'AUTH_SESSION_REVOKED':
+      case 'AUTH_TOKEN_EXPIRED':
+        return true;
+      default:
+        return false;
+    }
+  }
 
   AuthInterceptor({required this.apiService});
 
@@ -601,6 +616,21 @@ class AuthInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     debugPrint("dioError => ${err.error}");
+    final responseData = err.response?.data;
+    final errorCode =
+        (responseData is Map<String, dynamic>) ? responseData['error_code'] as String? : null;
+    if (_isAuthErrorCode(errorCode)) {
+      debugPrint("❌ Auth error_code detected ($errorCode) - logging out");
+      apiService.showLogoutPopup();
+      return handler.resolve(
+        Response(
+          requestOptions: err.requestOptions,
+          statusCode: 401,
+          data: {'message': 'Session expired, please login again'},
+        ),
+      );
+    }
+
     if (err.response?.statusCode != 401) {
       return handler.next(err);
     }

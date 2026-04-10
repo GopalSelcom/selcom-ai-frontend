@@ -34,6 +34,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
   /// From route args (home / explore vehicle); used for Book Ride pickup coords.
   double? _routePickupLat;
   double? _routePickupLng;
+  /// Destination coordinates for first drop, when user picked a source that includes coords.
+  double? _routeDestinationLat;
+  double? _routeDestinationLng;
   /// Forwarded to vehicle selection as default vehicle.
   String? _preferredVehicleTypeId;
   String? _preferredVehicleName;
@@ -417,10 +420,16 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       padding: EdgeInsets.only(right: 8.w),
       child: InkWell(
         onTap: () {
-          final saved = controller.getSavedPlaceSubtitle(label);
-          if (saved != null && saved.trim().isNotEmpty) {
+          final savedPlace = controller.getSavedPlaceByLabel(label);
+          final saved = savedPlace?.address?.trim();
+          if (saved != null && saved.isNotEmpty) {
+            final coords = savedPlace?.location?.coordinates;
+            final lat = savedPlace?.lat ?? ((coords != null && coords.length >= 2) ? coords[1] : null);
+            final lng = savedPlace?.lng ?? ((coords != null && coords.length >= 2) ? coords[0] : null);
             setState(() {
-              destinationController.text = saved.trim();
+              destinationController.text = saved;
+              _routeDestinationLat = lat;
+              _routeDestinationLng = lng;
               _destinationPlaceId = null;
               _activeSegmentIndex = 1;
             });
@@ -497,7 +506,13 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             subtitle: destination.address,
             isFavorite: index.isOdd,
             onTap: () {
-              setState(() => _applyTextToActiveSegment(destination.address));
+              setState(() {
+                _applyTextToActiveSegment(destination.address);
+                if (_activeSegmentIndex == 1) {
+                  _routeDestinationLat = destination.lat;
+                  _routeDestinationLng = destination.lng;
+                }
+              });
               controller.searchQuery.value = '';
             },
             onFavoriteTap: () {},
@@ -667,6 +682,8 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                     _routePickupLat ?? controller.mapCenter.value.latitude;
                 final pLng =
                     _routePickupLng ?? controller.mapCenter.value.longitude;
+                final dLat = _routeDestinationLat ?? (pLat - 0.018);
+                final dLng = _routeDestinationLng ?? (pLng + 0.014);
                 Get.toNamed(
                   AppRoutes.booking,
                   arguments: {
@@ -675,8 +692,8 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                     'destinations': destinations,
                     'pickupLat': pLat,
                     'pickupLng': pLng,
-                    'destinationLat': controller.mapCenter.value.latitude - 0.018,
-                    'destinationLng': controller.mapCenter.value.longitude + 0.014,
+                    'destinationLat': dLat,
+                    'destinationLng': dLng,
                     if (_preferredVehicleTypeId != null &&
                         _preferredVehicleTypeId!.isNotEmpty)
                       'preferredVehicleTypeId': _preferredVehicleTypeId,
@@ -750,6 +767,8 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       );
     } else if (_activeSegmentIndex == 1) {
       destinationController.text = description;
+      _routeDestinationLat = null;
+      _routeDestinationLng = null;
       _destinationPlaceId = prediction.placeId?.trim();
       destinationController.selection = TextSelection.fromPosition(
         TextPosition(offset: destinationController.text.length),
@@ -774,6 +793,8 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       pickupController.text = text;
     } else if (_activeSegmentIndex == 1) {
       destinationController.text = text;
+      _routeDestinationLat = null;
+      _routeDestinationLng = null;
       _destinationPlaceId = null;
     } else {
       final i = _activeSegmentIndex - 2;

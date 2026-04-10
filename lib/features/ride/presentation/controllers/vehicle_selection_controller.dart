@@ -1,23 +1,31 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../core/data/models/requests/book_ride_request.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
+import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
 import '../../../../core/data/models/user_profile_models.dart';
 import '../../../../core/domain/entities/location_entity.dart';
+import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../home/domain/repositories/home_repository.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
+import '../../domain/repositories/ride_repository.dart';
 
 /// SCR-09 — vehicle + fare selection. Uses estimate + payment APIs with dummy map fallbacks.
 class VehicleSelectionController extends GetxController {
   VehicleSelectionController({
     required this.homeRepository,
     required this.profileRepository,
+    required this.rideRepository,
   });
 
   final HomeRepository homeRepository;
   final ProfileRepository profileRepository;
+  final RideRepository rideRepository;
 
   final estimates = <FareEstimateItem>[].obs;
   final paymentMethods = <PaymentMethodModel>[].obs;
@@ -26,6 +34,10 @@ class VehicleSelectionController extends GetxController {
   final isLoadingEstimates = true.obs;
   final isLoadingPayments = true.obs;
   final isBooking = false.obs;
+  final isLoadingNearbyDrivers = false.obs;
+  final isSocketConnected = false.obs;
+  final lastSocketError = ''.obs;
+  final nearbyDriverCount = 0.obs;
 
   /// Full route for polyline (dummy or API).
   final routePoints = <LatLng>[].obs;
@@ -39,13 +51,28 @@ class VehicleSelectionController extends GetxController {
   String? _preferredVehicleTypeId;
   String? _preferredVehicleName;
 
+  final AppSocketService _socketService = AppSocketService();
+  StreamSubscription<List<NearbyDriverPoint>>? _nearbyDriversSub;
+  StreamSubscription<String>? _nearbyDriversErrorSub;
+  StreamSubscription<bool>? _nearbyDriversConnectionSub;
+
   GoogleMapController? mapController;
 
   @override
   void onInit() {
     super.onInit();
     _parseArguments();
+    _initNearbyDriversSocket();
     _loadAll();
+  }
+
+  @override
+  void onClose() {
+    _nearbyDriversSub?.cancel();
+    _nearbyDriversErrorSub?.cancel();
+    _nearbyDriversConnectionSub?.cancel();
+    _socketService.dispose();
+    super.onClose();
   }
 
   void _parseArguments() {
@@ -66,7 +93,7 @@ class VehicleSelectionController extends GetxController {
     _preferredVehicleName =
         (args['preferredVehicleName'] as String?)?.trim().toLowerCase();
 
-    _buildDummyRoute(pLat, pLng, dLat, dLng);
+    // _buildDummyRoute(pLat, pLng, dLat, dLng);
   }
 
   void _buildDummyRoute(double pLat, double pLng, double dLat, double dLng) {
@@ -127,6 +154,7 @@ class VehicleSelectionController extends GetxController {
     );
     isLoadingEstimates.value = false;
     _applyPreferredVehicleSelection();
+    _requestNearbyDriversForCurrentSelection();
     Future.microtask(_fitBounds);
   }
 
@@ -231,6 +259,7 @@ class VehicleSelectionController extends GetxController {
   void selectVehicle(int index) {
     if (index < 0 || index >= estimates.length) return;
     selectedVehicleIndex.value = index;
+    _requestNearbyDriversForCurrentSelection();
   }
 
   void selectPaymentMethod(PaymentMethodModel m) {
@@ -244,24 +273,267 @@ class VehicleSelectionController extends GetxController {
       Get.snackbar('Missing info', 'Select a vehicle and payment method.');
       return;
     }
+
     isBooking.value = true;
-    final request = BookRideRequest(
-      validationId: 'client_preview_${DateTime.now().millisecondsSinceEpoch}',
-      idempotencyKey: 'idem_${DateTime.now().millisecondsSinceEpoch}',
-      pickup: pickupEntity,
-      destination: destinationEntity,
-      vehicleTypeId: est.vehicleTypeId ?? 'unknown',
+
+    // 1) Validate payment first (Validate Ride Payment - Block).
+    final validateRequest = ValidateRidePaymentRequest(
+      fareEstimate: est.fareEstimate ?? selectedFareAmount,
       paymentMethod: pay.type,
+      vehicleTypeId: est.vehicleTypeId ?? 'unknown',
     );
-    final result = await homeRepository.bookRide(request);
-    isBooking.value = false;
-    result.fold(
-      (f) => Get.snackbar('Booking failed', 'Could not complete booking. Try again.'),
-      (data) {
-        Get.snackbar('Success', 'Ride request submitted.');
-        Get.back();
+    final validationResult = await rideRepository.validateRidePayment(validateRequest);
+
+    await validationResult.fold(
+      (f) async {
+        isBooking.value = false;
+        Get.snackbar(
+          'Payment validation failed',
+          'Could not validate payment. Please try again.',
+        );
+      },
+      (validationId) async {
+        if (validationId.trim().isEmpty) {
+          isBooking.value = false;
+          Get.snackbar(
+            'Payment validation failed',
+            'Validation id missing from server response.',
+          );
+          return;
+        }
+
+        // Join payment room and wait for block callback before booking.
+        if (!_socketService.isConnected) {
+          await _socketService.connect();
+        }
+        _socketService.joinPaymentRoom(validationId: validationId);
+        _showPaymentPendingDialog();
+        final blockOk = await _waitForPaymentBlockStatus(
+          timeout: const Duration(minutes: 2),
+        );
+        _closePaymentPendingDialogIfOpen();
+        if (!blockOk) {
+          isBooking.value = false;
+          Get.snackbar(
+            'Payment not confirmed',
+            'We could not confirm your payment block. Please try again.',
+          );
+          return;
+        }
+
+        // 2) Only after validation, submit ride booking.
+        final request = BookRideRequest(
+          validationId: validationId,
+          idempotencyKey: 'idem_${DateTime.now().millisecondsSinceEpoch}',
+          pickup: pickupEntity,
+          destination: destinationEntity,
+          vehicleTypeId: est.vehicleTypeId ?? 'unknown',
+          paymentMethod: pay.type,
+        );
+        final result = await homeRepository.bookRide(request);
+        isBooking.value = false;
+        result.fold(
+          (f) => Get.snackbar('Booking failed', 'Could not complete booking. Try again.'),
+          (data) {
+            print("$data----->ride completed");
+            Get.snackbar('Success', 'Ride request submitted.');
+            Get.back();
+          },
+        );
       },
     );
+  }
+
+  Future<bool> _waitForPaymentBlockStatus({
+    Duration timeout = const Duration(minutes: 2),
+  }) async {
+    final completer = Completer<bool>();
+    late StreamSubscription<Map<String, dynamic>> sub;
+
+    sub = _socketService.paymentStatusStream.listen((event) {
+      final outcome = _paymentBlockOutcome(event);
+      if (outcome == null) return;
+      if (!completer.isCompleted) completer.complete(outcome);
+    });
+
+    try {
+      return await completer.future.timeout(
+        timeout,
+        onTimeout: () => false,
+      );
+    } finally {
+      await sub.cancel();
+    }
+  }
+
+  bool? _paymentBlockOutcome(Map<String, dynamic> event) {
+    final phase = (event['phase'] ?? '').toString().toLowerCase();
+    final status = (event['status'] ?? '').toString().toLowerCase();
+
+    // Accept both documented shapes:
+    // - { phase: "block", status: "confirmed|failed" }
+    // - { status: "completed|failed" } (without phase)
+    if (phase.isNotEmpty && phase != 'block') return null;
+
+    if (status == 'confirmed' || status == 'completed' || status == 'success') {
+      return true;
+    }
+    if (status == 'failed' || status == 'error' || status == 'declined') {
+      return false;
+    }
+    return null;
+  }
+
+  void _showPaymentPendingDialog() {
+    if (Get.isDialogOpen == true) return;
+    Get.dialog<void>(
+      Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(28),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                height: 132,
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFE6DCCD),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                ),
+                child: Center(
+                  child: Container(
+                    width: 90,
+                    height: 90,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF59E0B),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.access_time_rounded, color: Colors.white, size: 44),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                child: Text(
+                  'Request sent. Please complete payment on Selcom Pesa to book your ride.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontFamily: 'Metropolis',
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF132235),
+                    height: 1.3,
+                    letterSpacing: -0.4,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 18),
+                child: StreamBuilder<int>(
+                  stream: Stream<int>.periodic(
+                    const Duration(seconds: 1),
+                    (tick) => (120 - tick).clamp(0, 120),
+                  ).take(121),
+                  initialData: 120,
+                  builder: (context, snapshot) {
+                    final secLeft = snapshot.data ?? 120;
+                    return Text(
+                      'Expire in ${_formatTimer(secLeft)}',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontFamily: 'Metropolis',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF364B63),
+                        height: 1.33,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+  void _closePaymentPendingDialogIfOpen() {
+    if (Get.isDialogOpen == true) {
+      Get.back();
+    }
+  }
+
+  String _formatTimer(int totalSeconds) {
+    final m = (totalSeconds ~/ 60).toString();
+    final s = (totalSeconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
+  Future<void> _initNearbyDriversSocket() async {
+    _nearbyDriversSub?.cancel();
+    _nearbyDriversErrorSub?.cancel();
+    _nearbyDriversConnectionSub?.cancel();
+
+    _nearbyDriversSub = _socketService.nearbyDriversStream.listen((drivers) {
+      if (drivers.isEmpty) {
+        driverMarkerPoints.clear();
+      } else {
+        driverMarkerPoints.assignAll(
+          drivers.map((d) => LatLng(d.lat, d.lng)),
+        );
+      }
+      nearbyDriverCount.value = drivers.length;
+      lastSocketError.value = '';
+      isLoadingNearbyDrivers.value = false;
+    });
+
+    _nearbyDriversErrorSub = _socketService.errorStream.listen((msg) {
+      lastSocketError.value = msg;
+      isLoadingNearbyDrivers.value = false;
+    });
+    _nearbyDriversConnectionSub = _socketService.connectionStream.listen((ok) {
+      isSocketConnected.value = ok;
+      if (!ok) {
+        isLoadingNearbyDrivers.value = false;
+      }
+    });
+
+    await _socketService.connect();
+    _requestNearbyDriversForCurrentSelection();
+  }
+
+  void _requestNearbyDriversForCurrentSelection() {
+    if (pickupEntity.lat == 0 || pickupEntity.lng == 0) return;
+    isLoadingNearbyDrivers.value = true;
+    if (!isSocketConnected.value) {
+      lastSocketError.value = 'Connecting socket...';
+    }
+    final vehicleType = _socketVehicleTypeForEstimate(selectedEstimate);
+    _socketService.requestNearbyDrivers(
+      lat: pickupEntity.lat,
+      lng: pickupEntity.lng,
+      vehicleType: vehicleType,
+      radiusKm: 3,
+    );
+  }
+
+  String? _socketVehicleTypeForEstimate(FareEstimateItem? item) {
+    if (item == null) return null;
+    final raw = '${item.vehicleName ?? ''} ${item.displayName ?? ''}'.toLowerCase();
+    if (raw.contains('boda') || raw.contains('bike') || raw.contains('moto')) return 'Bike';
+    if (raw.contains('bajaj') || raw.contains('auto') || raw.contains('three')) {
+      return 'Three_Wheeler';
+    }
+    if (raw.contains('van')) return 'Van';
+    if (raw.contains('cab') || raw.contains('car') || raw.contains('goride')) return 'Car';
+    return null; // omit vehicle_type => server returns all types
   }
 
   void onMapCreated(GoogleMapController c) {

@@ -5,12 +5,16 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 
 class AppDialogs {
+  static bool _isErrorDialogVisible = false;
+
   /// Shows a common error dialog with an OK button.
   static void showErrorDialog({
     String title = 'Error',
     required String message,
     VoidCallback? onConfirm,
   }) {
+    if (_isErrorDialogVisible) return;
+    _isErrorDialogVisible = true;
     Get.dialog(
       Dialog(
         shape: RoundedRectangleBorder(
@@ -61,6 +65,7 @@ class AppDialogs {
               // OK Button
               InkWell(
                 onTap: () {
+                  _isErrorDialogVisible = false;
                   Get.back(); // Close dialog
                   if (onConfirm != null) onConfirm();
                 },
