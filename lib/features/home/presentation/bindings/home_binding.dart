@@ -9,6 +9,8 @@ import '../../../profile/data/datasources/profile_remote_data_source.dart';
 import '../../../profile/data/repositories/profile_repository_impl.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
 import '../controllers/home_controller.dart';
+import '../../../../core/di/injection_container.dart' as di;
+import '../../../../core/services/analytics_service.dart';
 
 class HomeBinding extends Bindings {
   @override
@@ -31,6 +33,7 @@ class HomeBinding extends Bindings {
         homeRepository: Get.find(),
         rideRepository: Get.find(),
         profileRepository: Get.find(),
+        analyticsService: di.sl<AnalyticsService>(),
       ),
     );
   }

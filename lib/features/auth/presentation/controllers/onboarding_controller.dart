@@ -12,12 +12,12 @@ class OnboardingController extends GetxController {
       image: AppAssets.onboarding1,
     ),
     OnboardingSlide(
-      title: 'Making your drive best is our responsibility',
+      title: 'This is Second Slide',
       subtitle: 'Lorem ipsum dolor sit amet, consectetur',
       image: AppAssets.onboarding2,
     ),
     OnboardingSlide(
-      title: 'Making your drive best is our responsibility',
+      title: 'This is third Slide',
       subtitle: 'Lorem ipsum dolor sit amet, consectetur',
       image: AppAssets.onboarding3,
     ),

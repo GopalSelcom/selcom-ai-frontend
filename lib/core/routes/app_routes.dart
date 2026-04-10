@@ -7,6 +7,9 @@ import '../../features/auth/presentation/screens/profile_loading_screen.dart';
 import '../../features/auth/presentation/bindings/auth_binding.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/home/presentation/bindings/home_binding.dart';
+import '../../features/home/presentation/screens/location_selection_screen.dart';
+import '../../features/ride/presentation/bindings/vehicle_selection_binding.dart';
+import '../../features/ride/presentation/screens/vehicle_selection_screen.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -15,6 +18,7 @@ class AppRoutes {
   static const String otp = '/auth/otp';
   static const String profileLoading = '/auth/profile-loading';
   static const String home = '/home';
+  static const String locationSelection = '/location-selection';
   static const String search = '/search';
   static const String booking = '/booking';
   static const String ride = '/ride';
@@ -48,6 +52,16 @@ class AppRoutes {
       name: home,
       page: () => const HomeScreen(),
       binding: HomeBinding(),
+    ),
+    GetPage(
+      name: locationSelection,
+      page: () => const LocationSelectionScreen(),
+      binding: HomeBinding(),
+    ),
+    GetPage(
+      name: booking,
+      page: () => const VehicleSelectionScreen(),
+      binding: VehicleSelectionBinding(),
     ),
   ];
 }

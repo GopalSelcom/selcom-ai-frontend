@@ -9,7 +9,7 @@ import '../../data/models/places_models.dart';
 abstract class HomeRepository {
   Future<Either<Failure, List<VehicleTypeModel>>> getVehicleTypes();
 
-  Future<Either<Failure, List<AutocompletePredictionModel>>> autocomplete({
+  Future<Either<Failure, AutocompletePredictionModel?>> autocomplete({
     required String input,
     required String sessionToken,
   });

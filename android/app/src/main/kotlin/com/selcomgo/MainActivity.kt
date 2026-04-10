@@ -1,4 +1,4 @@
-package com.example.selcom_rides_frontend
+package com.selcomgo
 
 import io.flutter.embedding.android.FlutterActivity
 

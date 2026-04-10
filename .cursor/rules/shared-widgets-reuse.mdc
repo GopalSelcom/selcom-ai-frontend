@@ -1,0 +1,32 @@
+---
+description: Reuse shared widgets and utilities before adding new screens or widgets
+alwaysApply: true
+---
+
+# Shared widgets & reuse (screens and UI)
+
+Whenever you **create or substantially edit** a screen, route page, or reusable UI block:
+
+## 1. Search first
+- **Search the codebase** for an existing widget or pattern that matches the need (same layout, button style, field, list row, dialog, loading state, etc.).
+- Check in order:
+  - `lib/shared/widgets/` — **preferred** home for app-wide UI building blocks (e.g. `app_primary_button.dart`, `app_text_field.dart`, `app_otp_field.dart`, `app_skeleton_loader.dart`).
+  - `lib/core/widgets/` — cross-cutting, low-level helpers tied to core (e.g. `svg_picture_asset.dart`).
+  - Feature folders `lib/features/<feature>/presentation/widgets/` — only when the UI is **feature-specific** and not reusable elsewhere.
+
+## 2. Prefer existing shared components
+- If a suitable widget **already exists** under `lib/shared/widgets/` (or an appropriate feature widget), **use or extend it** instead of duplicating markup and styling in the screen file.
+- Do **not** introduce a second “primary button” or “text field” pattern in a feature if `AppPrimaryButton` / shared text field already exists—align with those APIs and theming.
+
+## 3. When to add something new to `lib/shared/widgets/`
+- Add a **new** file under `lib/shared/widgets/` only when the component is (or clearly will be) used in **more than one feature or screen**, or is part of the **design system** (buttons, inputs, chips, sheets).
+- Use clear names with a consistent prefix (e.g. `app_`) matching existing files in that folder.
+
+## 4. Shared functions / helpers
+- If logic will likely be used in **multiple places** (formatting, validation snippets, dialog helpers, mappers used across features), place it in **`lib/shared/utils/`** (or a small dedicated file under `lib/core/` if it is infrastructure-only, e.g. network-related).
+- Avoid copying the same private helper into multiple feature files; extract once and import.
+
+## 5. Conflict with Figma one-off screens
+- A screen can still be composed **from** shared pieces even when matching a Figma frame—assemble shared widgets with local layout/spacing rather than reinventing primitives each time.
+
+If a task explicitly requires a one-off prototype, note that in the PR/description; still prefer shared pieces where they fit without fighting the design.

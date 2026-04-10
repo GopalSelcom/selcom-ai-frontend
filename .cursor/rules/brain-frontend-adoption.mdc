@@ -1,0 +1,37 @@
+---
+description: Brain-sourced frontend guardrails and workflow
+alwaysApply: true
+---
+
+# Brain Frontend Rules
+
+Apply these rules for all work in this repository, using the brain docs as canonical guidance:
+- `/Users/gopal/StudioProjects/selcom-go-ai-agent/context/shared/RULES.md`
+- `/Users/gopal/StudioProjects/selcom-go-ai-agent/agents/frontend/AGENT.md`
+- `/Users/gopal/StudioProjects/selcom-go-ai-agent/context/shared/ARCHITECTURE.md`
+- `/Users/gopal/StudioProjects/selcom-go-ai-agent/context/backend/API_CONTRACT.md`
+- `/Users/gopal/StudioProjects/selcom-go-ai-agent/context/shared/ERROR_CATALOG.md`
+
+## Required Task Flow
+
+1. Before edits, state which relevant brain rules are being applied.
+2. Keep frontend changes aligned with clean architecture boundaries and project routing/state patterns.
+3. Run analysis/lint checks after substantive edits and fix newly introduced issues.
+4. Keep API usage, envelope expectations, and error semantics contract-consistent.
+
+## Hard Guardrails
+
+- Avoid disallowed frontend patterns from brain frontend rules (including direct `setState`-style state mutation flow and direct navigation patterns that bypass project architecture).
+- Do not introduce logging or error surfaces that expose PII or secrets.
+- Preserve consistent naming and handling conventions for API/domain errors.
+- If a requested change would violate a hard brain rule, do not implement silently.
+
+## Ambiguity And Conflict Protocol
+
+When brain sources conflict or are ambiguous, resolve by precedence:
+1. shared rules
+2. active API contract
+3. frontend agent guidance
+4. historical/spec references
+
+If ambiguity still remains, ask the user for clarification before coding.

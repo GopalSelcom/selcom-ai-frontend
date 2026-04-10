@@ -24,7 +24,7 @@ class HomeRepositoryImpl implements HomeRepository {
   }
 
   @override
-  Future<Either<Failure, List<AutocompletePredictionModel>>> autocomplete({
+  Future<Either<Failure, AutocompletePredictionModel?>> autocomplete({
     required String input,
     required String sessionToken,
   }) async {

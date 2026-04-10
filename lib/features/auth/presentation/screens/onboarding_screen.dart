@@ -15,7 +15,8 @@ class OnboardingScreen extends GetView<OnboardingController> {
     return Scaffold(
       backgroundColor: AppColors.pageBackground,
       body: SafeArea(
-        top: false, // Illustration should overlap with status bar if needed, but we keep it simple
+        top: false,
+        // Illustration should overlap with status bar if needed, but we keep it simple
         child: Column(
           children: [
             // Illustration Section
@@ -41,43 +42,62 @@ class OnboardingScreen extends GetView<OnboardingController> {
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 24.w),
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Dot Indicators
-                    Obx(() => Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(
-                        controller.slides.length,
-                        (index) => AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          margin: EdgeInsets.symmetric(horizontal: 4.w),
-                          width: controller.currentIndex.value == index ? 24.w : 8.w,
-                          height: 8.h,
-                          decoration: BoxDecoration(
-                            color: controller.currentIndex.value == index
-                                ? AppColors.primary
-                                : const Color(0xFFD1D5DB),
-                            borderRadius: BorderRadius.circular(4.r),
+                    SizedBox(height: 10.h),
+
+                    // Title
+                    Obx(
+                      () => Text(
+                        controller.slides[controller.currentIndex.value].title,
+                        textAlign: TextAlign.start,
+                        style: AppTextStyles.onboardingTitle,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+
+                    // Subtitle
+                    Obx(
+                      () => Text(
+                        controller
+                            .slides[controller.currentIndex.value]
+                            .subtitle,
+                        textAlign: TextAlign.start,
+                        style: AppTextStyles.onboardingSubtitle,
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+                    Obx(
+                      () => Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: List.generate(
+                          controller.slides.length,
+                          (index) => AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            margin: EdgeInsets.symmetric(horizontal: 4.w),
+                            width: controller.currentIndex.value == index
+                                ? 24.w
+                                : 8.w,
+                            height: 8.h,
+                            decoration: BoxDecoration(
+                              color: controller.currentIndex.value == index
+                                  ? AppColors.primary
+                                  : Colors.transparent,
+                              border: Border.all(
+                                color: controller.currentIndex.value != index
+                                    ? AppColors.textGrey
+                                    : AppColors.primary,
+                                width: 1.5,
+                              ),
+                              borderRadius: BorderRadius.circular(4.r),
+                            ),
                           ),
                         ),
                       ),
-                    )),
-                    SizedBox(height: 32.h),
+                    ),
 
-                    // Title
-                    Obx(() => Text(
-                      controller.slides[controller.currentIndex.value].title,
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.onboardingTitle,
-                    )),
-                    SizedBox(height: 16.h),
-
-                    // Subtitle
-                    Obx(() => Text(
-                      controller.slides[controller.currentIndex.value].subtitle,
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.onboardingSubtitle,
-                    )),
-                    
                     const Spacer(),
 
                     // Action Button

@@ -1,0 +1,38 @@
+---
+description: Keep business and navigation logic in controllers, not in widget build methods
+alwaysApply: true
+---
+
+# UI vs controller logic (GetX / Flutter)
+
+Apply this to **all** features in this repo: screens and reusable widgets should stay **presentational**; **behavior** lives in the appropriate layer.
+
+## What belongs in **widgets / screens** (`*_screen.dart`, `*_widget.dart`)
+
+- **Layout and composition** (structure, `Padding`, `Row`, `Stack`, theming).
+- **Binding to state**: `Obx` / `GetBuilder`, reading `controller.someObs` or calling **thin** delegates.
+- **Pure presentation helpers** that only format for display *if* they cannot live in the controller (prefer controller).
+- **`BuildContext`** usage: `MediaQuery`, `Theme.of`, `Navigator` only when no controller owns the flow (prefer GetX navigation from controller when the screen already has a controller).
+
+## What belongs in **controllers** (`*_controller.dart`) or domain / use cases
+
+- **Navigation**: `Get.to`, `Get.toNamed`, `Get.back`, route arguments, and any sequence (e.g. analytics then navigate).
+- **Branching and rules**: which list to show, collapsed vs expanded lists, `if`/`else` for feature behavior, feature flags.
+- **Derived data for UI**: strings from models (titles, subtitles, asset paths, visibility flags like `shouldShowSection`).
+- **Side effects**: snackbars, dialogs that encode product rules, repository calls, debounced search.
+- **Map / external SDK orchestration** (e.g. `GoogleMapController`, circles, camera targets) when tied to app rules.
+
+## Naming and patterns
+
+- Prefer **explicit methods** on the controller: `openProfile()`, `openLocationSelection()`, `toggleAddressHeaderExpansion()`, `chipSubtitleFor(label)`, `vehicleExploreImageAsset(name)`.
+- Prefer **getters** for simple derived state: `addressHeaderPlacesToShow`, `shouldShowRecentSection`, `addressHeaderChevronTurns`.
+- The screen should **not** duplicate business rules (e.g. `if (name.contains('boda'))` for assets) — that lives in one place on the controller (or a shared mapper utility if reused across features).
+
+## Exceptions
+
+- **Theme/size tokens** tied only to `context` or `ScreenUtil` can stay in the widget.
+- **One-off** `onPressed: () => controller.submit()` style callbacks are fine; avoid growing anonymous closures with logic — move that body to the controller.
+
+## Conflicts
+
+If this rule conflicts with another project rule, follow **shared brain rules** first, then this file, then feature-specific docs.

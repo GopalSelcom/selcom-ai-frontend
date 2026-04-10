@@ -27,34 +27,34 @@ class PhoneInputScreen extends GetView<AuthController> {
                 onTap: () => Get.back(),
                 child: SvgPicture.asset(
                   AppAssets.icArrowLeft,
-                  height: 28.h,
-                  width: 28.w,
+                  height: 22.h,
+                  width: 20.w,
                 ),
               ),
-              SizedBox(height: 32.h),
+              SizedBox(height: 13.h),
 
               // Title
               Text(
                 'Enter Phone number for verification',
                 style: AppTextStyles.onboardingTitle.copyWith(
-                  fontSize: 24.sp, // Adjusting slightly for fit if needed
+                  fontSize: 28.sp, // Adjusting slightly for fit if needed
                 ),
               ),
-              SizedBox(height: 12.h),
+              SizedBox(height: 8.h),
 
               // Subtitle
               Text(
                 'We’ll text a code to verify your phone number',
                 style: AppTextStyles.onboardingSubtitle,
               ),
-              SizedBox(height: 48.h),
+              SizedBox(height: 24.h),
 
               // Phone Input Field
               Row(
                 children: [
                   // Country Selector
                   Container(
-                    height: 56.h,
+                    height: 54.h,
                     padding: EdgeInsets.symmetric(horizontal: 12.w),
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -67,8 +67,8 @@ class PhoneInputScreen extends GetView<AuthController> {
                           borderRadius: BorderRadius.circular(3.r),
                           child: SvgPicture.asset(
                             AppAssets.icTanzaniaFlag,
-                            height: 20.h,
-                            width: 28.w,
+                            height: 15.h,
+                            width: 23.w,
                             fit: BoxFit.cover,
                           ),
                         ),
@@ -90,12 +90,12 @@ class PhoneInputScreen extends GetView<AuthController> {
                       ],
                     ),
                   ),
-                  SizedBox(width: 12.w),
+                  SizedBox(width: 8.w),
 
                   // Number Input
                   Expanded(
                     child: Container(
-                      height: 56.h,
+                      height: 54.h,
                       decoration: BoxDecoration(
                         color: Colors.white,
                         border: Border.all(color: const Color(0xFFE5E7EB)),
@@ -110,7 +110,8 @@ class PhoneInputScreen extends GetView<AuthController> {
                           color: AppColors.shade1,
                           letterSpacing: 1.2,
                         ),
-                        maxLength: 11, // To allow spaces (XXX XXX XXX)
+                        maxLength: 11,
+                        // To allow spaces (XXX XXX XXX)
                         onChanged: (v) {
                           // Allow only 9 digits total
                           final digits = v.replaceAll(' ', '');
@@ -119,14 +120,17 @@ class PhoneInputScreen extends GetView<AuthController> {
                           }
                         },
                         decoration: InputDecoration(
-                          hintText: '711 410 410',
+                          hintText: '7XX XX XXX',
                           counterText: "",
                           hintStyle: AppTextStyles.body.copyWith(
                             color: AppColors.textLight,
                             fontFamily: AppTextStyles.metropolisFont,
                           ),
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 16.w,
+                            vertical: 14.h,
+                          ),
                         ),
                       ),
                     ),
@@ -150,7 +154,10 @@ class PhoneInputScreen extends GetView<AuthController> {
                       AppAssets.icSms,
                       height: 20.h,
                       width: 20.w,
-                      colorFilter: const ColorFilter.mode(AppColors.shade2, BlendMode.srcIn),
+                      colorFilter: const ColorFilter.mode(
+                        AppColors.shade2,
+                        BlendMode.srcIn,
+                      ),
                     ),
                     Expanded(
                       child: TextField(
@@ -169,7 +176,9 @@ class PhoneInputScreen extends GetView<AuthController> {
                             fontFamily: AppTextStyles.metropolisFont,
                           ),
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16.w),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 16.w,
+                          ),
                         ),
                       ),
                     ),
@@ -180,18 +189,20 @@ class PhoneInputScreen extends GetView<AuthController> {
               const Spacer(),
 
               // Error Message
-              Obx(() => controller.errorMessage.isNotEmpty
-                  ? Padding(
-                      padding: EdgeInsets.only(bottom: 16.h),
-                      child: Text(
-                        controller.errorMessage.value,
-                        style: TextStyle(
-                          color: AppColors.error,
-                          fontSize: 14.sp,
+              Obx(
+                () => controller.errorMessage.isNotEmpty
+                    ? Padding(
+                        padding: EdgeInsets.only(bottom: 16.h),
+                        child: Text(
+                          controller.errorMessage.value,
+                          style: TextStyle(
+                            color: AppColors.error,
+                            fontSize: 14.sp,
+                          ),
                         ),
-                      ),
-                    )
-                  : const SizedBox.shrink()),
+                      )
+                    : const SizedBox.shrink(),
+              ),
 
               // Legal Note
               Padding(
@@ -206,50 +217,54 @@ class PhoneInputScreen extends GetView<AuthController> {
               ),
 
               // Action Button
-              Obx(() => InkWell(
-                onTap: controller.mobileNumber.value.length >= 9 && !controller.isLoading.value
-                    ? () async {
-                        final success = await controller.sendOtp();
-                        if (success) {
-                          Get.toNamed(AppRoutes.otp);
+              Obx(
+                () => InkWell(
+                  onTap:
+                      controller.mobileNumber.value.length >= 9 &&
+                          !controller.isLoading.value
+                      ? () async {
+                          final success = await controller.sendOtp();
+                          if (success) {
+                            Get.toNamed(AppRoutes.otp);
+                          }
                         }
-                      }
-                    : null,
-                child: Container(
-                  height: 54.h,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: controller.mobileNumber.value.length >= 9
-                        ? AppColors.primary
-                        : AppColors.primary.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(16.r),
-                    boxShadow: controller.mobileNumber.value.length >= 9
-                        ? [
-                            BoxShadow(
-                              color: AppColors.primary.withOpacity(0.3),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
+                      : null,
+                  child: Container(
+                    height: 54.h,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: controller.mobileNumber.value.length >= 9
+                          ? AppColors.primary
+                          : AppColors.primary.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(16.r),
+                      boxShadow: controller.mobileNumber.value.length >= 9
+                          ? [
+                              BoxShadow(
+                                color: AppColors.primary.withOpacity(0.3),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Center(
+                      child: controller.isLoading.value
+                          ? SizedBox(
+                              height: 24.h,
+                              width: 24.h,
+                              child: const CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              'Get Verification Code',
+                              style: AppTextStyles.onboardingButton,
                             ),
-                          ]
-                        : null,
-                  ),
-                  child: Center(
-                    child: controller.isLoading.value
-                        ? SizedBox(
-                            height: 24.h,
-                            width: 24.h,
-                            child: const CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : Text(
-                            'Get Verification Code',
-                            style: AppTextStyles.onboardingButton,
-                          ),
+                    ),
                   ),
                 ),
-              )),
+              ),
               SizedBox(height: 16.h),
             ],
           ),

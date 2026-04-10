@@ -73,10 +73,10 @@ class AppTextStyles {
   // Onboarding Styles (Metropolis)
   static TextStyle onboardingTitle = TextStyle(
     fontSize: 28.sp,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w600,
     color: AppColors.shade1,
     fontFamily: metropolisFont,
-    height: 1.2,
+    // height: 1.2,
   );
 
   static TextStyle onboardingSubtitle = TextStyle(
@@ -84,7 +84,7 @@ class AppTextStyles {
     fontWeight: FontWeight.w400,
     color: AppColors.shade2,
     fontFamily: metropolisFont,
-    height: 1.5,
+    // height: 1.5,
   );
 
   static TextStyle onboardingFooter = TextStyle(

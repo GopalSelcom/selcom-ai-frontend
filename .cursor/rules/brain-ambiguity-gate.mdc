@@ -1,0 +1,16 @@
+---
+description: Mandatory ask-first gate when brain guidance conflicts
+alwaysApply: true
+---
+
+# Ambiguity Gate
+
+When implementing frontend work with brain guidance:
+- Detect conflicts between rule sources early.
+- Apply precedence order:
+  1. `/context/shared/RULES.md`
+  2. `/context/backend/API_CONTRACT.md`
+  3. `/agents/frontend/AGENT.md`
+  4. historical/spec docs
+- If conflict or uncertainty remains after precedence resolution, ask the user before editing code.
+- Do not proceed with silent assumptions on ambiguous behavior, architecture, security, or API semantics.

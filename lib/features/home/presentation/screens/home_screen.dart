@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../core/constants/app_assets.dart';
-import '../../../profile/presentation/screens/profile_screen.dart';
+import '../../../../core/data/models/vehicle_type_model.dart';
+import '../../../ride/data/models/ride_management_models.dart';
 import '../controllers/home_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -21,10 +22,23 @@ class HomeScreen extends StatelessWidget {
         children: [
           // 1. Map Layer (Static Image from Figma)
           Positioned.fill(
-            child: Image.asset(
-              AppAssets.mapBackground,
-              fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
+            child: Obx(
+              () => GoogleMap(
+                initialCameraPosition: CameraPosition(
+                  target: controller.mapCenter.value,
+                  zoom: 16,
+                ),
+                myLocationEnabled: controller.hasLocationPermission.value,
+                myLocationButtonEnabled: false,
+                zoomControlsEnabled: false,
+                compassEnabled: false,
+                mapToolbarEnabled: false,
+                circles: controller.nearbyPickupRadiusCircles,
+                markers: controller.selectedPickupMarkers,
+                onMapCreated: controller.onMapCreated,
+                onCameraMove: controller.onCameraMove,
+                onCameraIdle: controller.onCameraIdle,
+              ),
             ),
           ),
 
@@ -34,6 +48,7 @@ class HomeScreen extends StatelessWidget {
             left: 20.w,
             right: 20.w,
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildModernAddressBox(),
                 SizedBox(width: 12.w),
@@ -60,9 +75,63 @@ class HomeScreen extends StatelessWidget {
     return Expanded(
       child: Obx(() {
         if (controller.savedPlaces.isEmpty) {
-          return Container(
+          return AnimatedSize(
+            duration: const Duration(milliseconds: 320),
+            curve: Curves.easeInOutCubic,
+            alignment: Alignment.topCenter,
+            clipBehavior: Clip.hardEdge,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 320),
+              curve: Curves.easeInOutCubic,
+              padding: EdgeInsets.all(12.w),
+              height: 60.h,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16.r),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: controller.isLoadingHomeData.value
+                    ? SizedBox(
+                        width: 20.w,
+                        height: 20.w,
+                        child: const CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.primary,
+                        ),
+                      )
+                    : Text(
+                        controller.currentMapAddress.value,
+                        style: AppTextStyles.homeSubtitle.copyWith(
+                          color: AppColors.shade2,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                      ),
+              ),
+            ),
+          );
+        }
+
+        final placesToShow = controller.addressHeaderPlacesToShow;
+
+        return AnimatedSize(
+          duration: const Duration(milliseconds: 320),
+          curve: Curves.easeInOutCubic,
+          alignment: Alignment.topCenter,
+          clipBehavior: Clip.hardEdge,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 320),
+            curve: Curves.easeInOutCubic,
             padding: EdgeInsets.all(12.w),
-            height: 60.h,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16.r),
@@ -75,114 +144,97 @@ class HomeScreen extends StatelessWidget {
                 ),
               ],
             ),
-            child: Center(
-              child: controller.isLoadingHomeData.value
-                  ? SizedBox(
-                      width: 20.w,
-                      height: 20.w,
-                      child: const CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppColors.primary,
-                      ),
-                    )
-                  : Text(
-                      'No saved places',
-                      style: AppTextStyles.homeSubtitle.copyWith(
-                        color: AppColors.shade2,
-                      ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(placesToShow.length, (index) {
+                final place = placesToShow[index];
+                final selected = controller.isSavedPlaceSelectedAsPickup(place.id);
+                return InkWell(
+                  onTap: () {
+                    if (controller.isSavedPlacesExpanded.value) {
+                      controller.selectSavedPlaceAsPickup(place);
+                    } else {
+                      controller.toggleAddressHeaderExpansion();
+                    }
+                  },
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      bottom: index == placesToShow.length - 1 ? 0 : 12.h,
                     ),
-            ),
-          );
-        }
-
-        final placesToShow = controller.isSavedPlacesExpanded.value
-            ? controller.savedPlaces
-            : [controller.savedPlaces.first];
-
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          padding: EdgeInsets.all(12.w),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: List.generate(placesToShow.length, (index) {
-              final place = placesToShow[index];
-              return InkWell(
-                onTap: () {
-                  controller.isSavedPlacesExpanded.toggle();
-                },
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    bottom: index == placesToShow.length - 1 ? 0 : 12.h,
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(8.w),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFF1F5F9),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.location_on,
-                          color: AppColors.primary,
-                          size: 20.sp,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(vertical: 4.h, horizontal: 4.w),
+                      decoration: BoxDecoration(
+                        color: selected && controller.isSavedPlacesExpanded.value
+                            ? AppColors.primaryLight.withOpacity(0.35)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(
+                          color: selected ? AppColors.primary : Colors.transparent,
+                          width: selected ? 1 : 0,
                         ),
                       ),
-                      SizedBox(width: 12.w),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  place.label ?? 'Place',
-                                  style: AppTextStyles.homeSubtitle.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.shade1,
+                      child: Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(8.w),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFF1F5F9),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.location_on,
+                            color: AppColors.primary,
+                            size: 20.sp,
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    place.label ?? 'Place',
+                                    style: AppTextStyles.homeSubtitle.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.shade1,
+                                    ),
                                   ),
-                                ),
-                                if (index == 0) ...[
-                                  SizedBox(width: 4.w),
-                                  Icon(
-                                    controller.isSavedPlacesExpanded.value
-                                        ? Icons.keyboard_arrow_up
-                                        : Icons.keyboard_arrow_down,
-                                    size: 18.sp,
-                                    color: AppColors.shade2,
-                                  ),
+                                  if (index == 0) ...[
+                                    SizedBox(width: 4.w),
+                                    AnimatedRotation(
+                                      duration: const Duration(milliseconds: 280),
+                                      curve: Curves.easeInOutCubic,
+                                      turns: controller.addressHeaderChevronTurns,
+                                      child: Icon(
+                                        Icons.keyboard_arrow_down,
+                                        size: 18.sp,
+                                        color: AppColors.shade2,
+                                      ),
+                                    ),
+                                  ],
                                 ],
-                              ],
-                            ),
-                            Text(
-                              place.address ??
-                                  place.name ??
-                                  'No address provided',
-                              style: AppTextStyles.homeCaption,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
+                              ),
+                              Text(
+                                place.address ??
+                                    place.name ??
+                                    'No address provided',
+                                style: AppTextStyles.homeCaption,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
+                    ),
                   ),
-                ),
-              );
-            }),
+                );
+              }),
+            ),
           ),
         );
       }),
@@ -191,7 +243,7 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildProfileIcon() {
     return GestureDetector(
-      onTap: () => Get.to(() => ProfileScreen()),
+      onTap: controller.openProfile,
       child: Container(
         width: 64.w,
         height: 61.h,
@@ -259,59 +311,59 @@ class HomeScreen extends StatelessWidget {
               ),
             ],
           ),
-          child: ListView(
-            controller: scrollController,
-            padding: EdgeInsets.symmetric(horizontal: 24.w),
-            children: [
-              SizedBox(height: 12.h),
-              Center(
-                child: Container(
-                  width: 48.w,
-                  height: 5.h,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE2E8F0),
-                    borderRadius: BorderRadius.circular(37.r),
-                  ),
-                ),
-              ),
-              SizedBox(height: 24.h),
-              Text(
-                'Where to?',
-                style: AppTextStyles.homeTitle.copyWith(fontSize: 20.sp),
-              ),
-              SizedBox(height: 16.h),
-              // Search Bar
-              GestureDetector(
-                onTap: () => Get.toNamed('/location_search'),
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 16.w,
-                    vertical: 14.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(16.r),
-                    border: Border.all(
+          child: Obx(
+            () => ListView(
+              controller: scrollController,
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              children: [
+                SizedBox(height: 12.h),
+                Center(
+                  child: Container(
+                    width: 48.w,
+                    height: 5.h,
+                    decoration: BoxDecoration(
                       color: const Color(0xFFE2E8F0),
-                      width: 0.8,
+                      borderRadius: BorderRadius.circular(37.r),
                     ),
                   ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.location_on,
-                        color: AppColors.primary,
-                        size: 24.sp,
+                ),
+                SizedBox(height: 24.h),
+                Text(
+                  'Where to?',
+                  style: AppTextStyles.homeTitle.copyWith(fontSize: 20.sp),
+                ),
+                SizedBox(height: 16.h),
+                GestureDetector(
+                  onTap: () => controller.openLocationSelection(),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 14.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(16.r),
+                      border: Border.all(
+                        color: const Color(0xFFE2E8F0),
+                        width: 0.8,
                       ),
-                      SizedBox(width: 12.w),
-                      Text(
-                        'Where are you going?',
-                        style: AppTextStyles.homeSubtitle,
-                      ),
-                    ],
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.location_on,
+                          color: AppColors.primary,
+                          size: 24.sp,
+                        ),
+                        SizedBox(width: 12.w),
+                        Text(
+                          'Where are you going?',
+                          style: AppTextStyles.homeSubtitle,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
               SizedBox(height: 20.h),
               // Quick Chips
               SingleChildScrollView(
@@ -325,33 +377,35 @@ class HomeScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              SizedBox(height: 28.h),
-              Text(
-                'Recent Location',
-                style: AppTextStyles.homeTitle.copyWith(fontSize: 20.sp),
-              ),
-              SizedBox(height: 16.h),
-              // Recent Locations List
-              Obx(
-                () => Column(
-                  children: controller.recentDestinations
-                      .map((loc) => _buildRecentLocationItem(loc))
-                      .toList(),
+              if (controller.shouldShowRecentSection) ...[
+                SizedBox(height: 28.h),
+                Text(
+                  'Recent Location',
+                  style: AppTextStyles.homeTitle.copyWith(fontSize: 20.sp),
                 ),
-              ),
-              SizedBox(height: 24.h),
-              Text(
-                'Explore Vehicle',
-                style: AppTextStyles.homeSubtitle.copyWith(
-                  fontSize: 15.sp,
-                  fontWeight: FontWeight.bold,
+                SizedBox(height: 16.h),
+                if (controller.isLoadingHomeData.value)
+                  ...List.generate(3, (_) => _buildRecentLocationSkeleton())
+                else
+                  ...controller.recentDestinations
+                      .map((loc) => _buildRecentLocationItem(loc)),
+              ],
+              if (controller.shouldShowVehicleSection) ...[
+                if (controller.shouldShowRecentSection) SizedBox(height: 24.h),
+                if (!controller.shouldShowRecentSection) SizedBox(height: 28.h),
+                Text(
+                  'Explore Vehicle',
+                  style: AppTextStyles.homeSubtitle.copyWith(
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              SizedBox(height: 16.h),
-              // Vehicle List
-              _buildVehicleHorizontalList(),
+                SizedBox(height: 16.h),
+                _buildVehicleHorizontalList(),
+              ],
               SizedBox(height: 40.h),
             ],
+            ),
           ),
         );
       },
@@ -359,25 +413,46 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildFigmaChip(String label, String iconPath) {
-    return Container(
-      margin: EdgeInsets.only(right: 12.w),
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 0.8),
-      ),
-      child: Row(
-        children: [
-          SvgPicture.asset(iconPath, width: 20.w, height: 20.w),
-          SizedBox(width: 8.w),
-          Text(label, style: AppTextStyles.homeChip.copyWith(fontSize: 14.sp)),
-        ],
+    final subtitle = controller.chipSubtitleFor(label);
+    return GestureDetector(
+      onTap: () => controller.navigateToVehicleSelectionForSavedLabel(label),
+      child: Container(
+        margin: EdgeInsets.only(right: 12.w),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: const Color(0xFFE2E8F0), width: 0.8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SvgPicture.asset(iconPath, width: 20.w, height: 20.w),
+            SizedBox(width: 8.w),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(label, style: AppTextStyles.homeChip.copyWith(fontSize: 14.sp)),
+                if (subtitle != null && subtitle.trim().isNotEmpty)
+                  SizedBox(
+                    width: 120.w,
+                    child: Text(
+                      subtitle,
+                      style: AppTextStyles.homeCaption.copyWith(fontSize: 11.sp),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildRecentLocationItem(dynamic loc) {
+  Widget _buildRecentLocationItem(RecentDestinationModel loc) {
     return Padding(
       padding: EdgeInsets.only(bottom: 24.h),
       child: Row(
@@ -414,7 +489,7 @@ class HomeScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  loc.address.split(',').first,
+                  controller.recentDestinationTitleLine(loc),
                   style: AppTextStyles.homeSubtitle.copyWith(
                     fontWeight: FontWeight.bold,
                     color: AppColors.shade1,
@@ -440,31 +515,106 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildRecentLocationSkeleton() {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 24.h),
+      child: Row(
+        children: [
+          Container(
+            width: 52.w,
+            height: 52.w,
+            decoration: BoxDecoration(
+              color: const Color(0xFFE2E8F0),
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+          ),
+          SizedBox(width: 16.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  height: 14.h,
+                  width: 130.w,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE2E8F0),
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                Container(
+                  height: 12.h,
+                  width: 200.w,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE2E8F0),
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildVehicleHorizontalList() {
     return Obx(
       () => SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
-          children: controller.vehicleTypes
-              .map(
-                (vehicle) =>
-                    _buildVehicleCard(vehicle.displayName, vehicle.name),
-              )
-              .toList(),
+          children: controller.isLoadingHomeData.value
+              ? List.generate(3, (_) => _buildVehicleSkeleton())
+              : controller.vehicleTypes
+                  .map((vehicle) => _buildVehicleCard(vehicle))
+                  .toList(),
         ),
       ),
     );
   }
 
-  Widget _buildVehicleCard(String label, String vehicleName) {
-    String imagePath = 'assets/images/img_cab.png';
-    final name = vehicleName.toLowerCase();
-    if (name.contains('bike')) {
-      imagePath = 'assets/images/img_boda.png';
-    } else if (name.contains('auto') || name.contains('wheeler')) {
-      imagePath = 'assets/images/img_bajaji.png';
-    }
+  Widget _buildVehicleCard(VehicleTypeModel vehicle) {
+    final imagePath = controller.vehicleExploreImageAsset(vehicle.name);
 
+    return GestureDetector(
+      onTap: () => controller.openLocationSelectionWithPreferredVehicle(vehicle),
+      child: Container(
+        margin: EdgeInsets.only(right: 16.w),
+        child: Column(
+          children: [
+            Container(
+              width: 86.w,
+              height: 72.h,
+              padding: EdgeInsets.all(8.w),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(16.r),
+              ),
+              child: Image.asset(
+                imagePath,
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => Icon(
+                  Icons.directions_car,
+                  color: AppColors.shade2,
+                  size: 28.sp,
+                ),
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              vehicle.displayName,
+              style: AppTextStyles.homeCaption.copyWith(
+                color: AppColors.shade1,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVehicleSkeleton() {
     return Container(
       margin: EdgeInsets.only(right: 16.w),
       child: Column(
@@ -472,19 +622,18 @@ class HomeScreen extends StatelessWidget {
           Container(
             width: 86.w,
             height: 72.h,
-            padding: EdgeInsets.all(8.w),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
+              color: const Color(0xFFE2E8F0),
               borderRadius: BorderRadius.circular(16.r),
             ),
-            child: Image.asset(imagePath, fit: BoxFit.contain),
           ),
           SizedBox(height: 8.h),
-          Text(
-            label,
-            style: AppTextStyles.homeCaption.copyWith(
-              color: AppColors.shade1,
-              fontWeight: FontWeight.w600,
+          Container(
+            width: 56.w,
+            height: 10.h,
+            decoration: BoxDecoration(
+              color: const Color(0xFFE2E8F0),
+              borderRadius: BorderRadius.circular(8.r),
             ),
           ),
         ],

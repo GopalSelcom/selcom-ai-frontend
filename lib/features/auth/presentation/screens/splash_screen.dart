@@ -43,22 +43,24 @@ class _SplashScreenState extends State<SplashScreen> {
         children: [
           // Background Vector Decoration
           Positioned(
-            bottom: -100.h,
-            right: -100.w,
-            child: Opacity(
-              opacity: 0.35,
-              child: SvgPicture.asset(
-                AppAssets.splashBgVector,
-                width: 500.w,
-                colorFilter: const ColorFilter.mode(
-                  Color(0xFFCC0031),
-                  BlendMode.srcIn,
-                ),
+            bottom: -175.h,
+            right: -225.w,
+            child: SvgPicture.asset(
+              AppAssets.splashBgVector,
+              width: 574.w,
+              height: 576.h,
+              colorFilter: const ColorFilter.mode(
+                // Colors.white,
+                Color(0xFFCC0031),
+                BlendMode.srcIn,
               ),
             ),
           ),
           // Centered Logo
-          Center(
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 300.h,
             child: SvgPicture.asset(
               AppAssets.selcomGoLogo,
               width: 180.w,

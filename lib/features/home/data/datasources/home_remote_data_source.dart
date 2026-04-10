@@ -10,7 +10,7 @@ import '../../../../core/network/urls.dart';
 abstract class HomeRemoteDataSource {
   Future<List<VehicleTypeModel>> getVehicleTypes();
 
-  Future<List<AutocompletePredictionModel>> autocomplete({
+  Future<AutocompletePredictionModel?> autocomplete({
     required String input,
     required String sessionToken,
   });
@@ -45,7 +45,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   }
 
   @override
-  Future<List<AutocompletePredictionModel>> autocomplete({
+  Future<AutocompletePredictionModel?> autocomplete({
     required String input,
     required String sessionToken,
   }) async {
@@ -58,10 +58,9 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      final List data = response.data['response'] ?? [];
-      return data.map((e) => AutocompletePredictionModel.fromJson(e)).toList();
+      return AutocompletePredictionModel.fromJson(response.data);
     }
-    return [];
+    return null;
   }
 
   @override
@@ -84,7 +83,9 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   }
 
   @override
-  Future<FareEstimateResponseModel> estimateFare(FareEstimateRequest request) async {
+  Future<FareEstimateResponseModel> estimateFare(
+    FareEstimateRequest request,
+  ) async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.ride.estimateFare,

@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:235920604285:android:2390cbd1d7f7e55b0ac514",
+        "mobilesdk_app_id": "1:235920604285:android:d5047ac0be90be800ac514",
         "android_client_info": {
-          "package_name": "com.example.selcom_rides_frontend"
+          "package_name": "com.selcomgo"
         }
       },
       "oauth_client": [],

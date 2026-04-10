@@ -1,0 +1,28 @@
+---
+description: Figma/MCP image assets — central paths, no duplicates, shared SVG widget
+alwaysApply: true
+---
+
+# Figma & image assets
+
+When adding or changing UI that uses images/icons from Figma (including MCP `get_design_context` asset URLs):
+
+1. **Register paths only in** `lib/core/constants/app_assets.dart`  
+   - Use grouped sections (e.g. location flow under `assets/images/figma/location/`).  
+   - Do **not** hard-code asset path strings in feature screens or widgets.
+
+2. **Prefer existing repo assets over new downloads**  
+   - Before exporting from Figma MCP, check `assets/images/` (and feature folders like `figma/location/`) for an existing `ic_*` or named file that matches the design.  
+   - If an equivalent already exists, **reference it from `AppAssets`** and do **not** add a second copy under another name or folder.
+
+3. **MCP-only files**  
+   - Only when no suitable asset exists in-repo, add the exported file under a clear path (e.g. `assets/images/figma/<feature>/mcp_scr07/`) and add **one** `AppAssets` constant pointing to it.  
+   - Never duplicate the same graphic in two files.
+
+4. **SVG usage**  
+   - Use the shared widget `lib/core/widgets/svg_picture_asset.dart` (`SvgPictureAsset`) for SVGs loaded from `AppAssets`, instead of scattering `SvgPicture.asset` with raw path strings.
+
+5. **Reuse**  
+   - If multiple screens need the same control, extract a small shared widget under `lib/core/widgets/` or the feature’s `widgets/` folder; keep asset paths in `AppAssets` only.
+
+If guidance conflicts with a product request (e.g. “always re-export from Figma”), resolve with the user before duplicating assets.

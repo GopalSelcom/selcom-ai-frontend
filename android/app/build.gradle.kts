@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
@@ -9,8 +12,14 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("app/key.properties")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
 android {
-    namespace = "com.example.selcom_rides_frontend"
+    namespace = "com.selcomgo"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "26.3.11579264"
 
@@ -25,7 +34,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.selcom_rides_frontend"
+        applicationId = "com.selcomgo"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -34,11 +43,40 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties.getProperty("keyAlias")
+            keyPassword = keystoreProperties.getProperty("keyPassword")
+            storeFile = keystoreProperties.getProperty("storeFile")?.let {
+                val fileRef = file(it)
+                if (!fileRef.exists()) {
+                    throw GradleException("Keystore file not found at path: $it")
+                }
+                fileRef
+            }
+            storePassword = keystoreProperties.getProperty("storePassword")
+        }
+    }
+
     buildTypes {
-        release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = true
+            isShrinkResources = true
+//            proguardFiles(
+//                getDefaultProguardFile("proguard-android.txt"),
+//                "proguard-rules.pro"
+//            )
+        }
+        getByName("debug") {
+            signingConfig = signingConfigs.getByName("release")
+            isDebuggable = true
+            isMinifyEnabled = false
+            isShrinkResources = false
+//            proguardFiles(
+//                getDefaultProguardFile("proguard-android.txt"),
+//                "proguard-rules.pro"
+//            )
         }
     }
 }

@@ -1,0 +1,14 @@
+---
+description: Preflight checks for forbidden patterns and contract drift
+alwaysApply: true
+---
+
+# Frontend Preflight Checks
+
+Before finalizing any frontend change, verify:
+- No forbidden UI flow shortcuts are introduced (architecture-bypassing state/navigation patterns).
+- API request/response handling stays aligned with the active contract and domain error semantics.
+- No PII or secrets are emitted in logs, analytics, or user-facing error text.
+- Changes do not introduce inconsistent naming, status handling, or response parsing rules.
+
+If a violation is required to satisfy a request, stop and ask for explicit user approval first.

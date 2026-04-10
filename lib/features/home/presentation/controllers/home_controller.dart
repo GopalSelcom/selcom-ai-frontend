@@ -1,99 +1,186 @@
+import 'dart:ui';
+
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:selcom_rides_frontend/features/home/data/models/places_models.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
+import '../../../../core/data/models/requests/create_saved_place_request.dart';
 import '../../domain/repositories/home_repository.dart';
 import '../../data/models/home_models.dart';
 import '../../../ride/domain/repositories/ride_repository.dart';
 import '../../../ride/data/models/ride_management_models.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
+import '../../../../core/constants/app_assets.dart';
+import '../../../../core/routes/app_routes.dart';
+import '../../../../core/services/analytics_service.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../profile/presentation/screens/profile_screen.dart';
 
 class HomeController extends GetxController {
   final HomeRepository homeRepository;
   final RideRepository rideRepository;
   final ProfileRepository profileRepository;
+  final AnalyticsService analyticsService;
 
   HomeController({
     required this.homeRepository,
     required this.rideRepository,
     required this.profileRepository,
+    required this.analyticsService,
   });
 
   // ── States ──
   final searchQuery = ''.obs;
-  final suggestions = <Map<String, dynamic>>[].obs;
+  final List<Prediction> suggestions = <Prediction>[].obs;
+  final recentSearches = <String>[].obs;
   final isSearching = false.obs;
+  final isSavingPlace = false.obs;
   
   // Home Data
   final vehicleTypes = <VehicleTypeModel>[].obs;
   final recentDestinations = <RecentDestinationModel>[].obs;
   final savedPlaces = <SavedPlace>[].obs;
+  /// Picked saved address for pickup (header dropdown). Map + chips use this when set.
+  final Rxn<String> selectedPickupSavedPlaceId = Rxn<String>();
   final isSavedPlacesExpanded = false.obs;
   final isLoadingHomeData = false.obs;
+  final mapCenter = const LatLng(-6.7924, 39.2083).obs;
+  final currentMapAddress = 'Locating...'.obs;
+  final isMapReady = false.obs;
+  final isResolvingAddress = false.obs;
+  final hasLocationPermission = false.obs;
+
+  /// Last device GPS fix — used for 1 km radius overlay (does not follow map pan).
+  final Rxn<LatLng> deviceGpsLocation = Rxn<LatLng>();
 
   final selectedVehicle = ''.obs;
   final fareEstimate = Rxn<FareEstimateModel>();
+  GoogleMapController? _mapController;
 
   @override
   void onInit() {
     super.onInit();
+    analyticsService.logEvent('home_screen_viewed');
     _getCurrentLocation();
     _addMockDrivers();
     _loadHomeData();
 
-    // 1-second delay (debounce) for search logic
+    // 300ms debounce with 2-char threshold for location autocomplete.
     debounce(searchQuery, (query) {
-      if (query.isNotEmpty) {
-        _searchPlaces(query);
+      final normalized = query.trim();
+      if (normalized.length >= 2) {
+        _searchPlaces(normalized);
       } else {
         suggestions.clear();
       }
-    }, time: const Duration(seconds: 1));
+    }, time: const Duration(milliseconds: 300));
   }
 
   void recenterMap() {
-    // map implementation removed
+    if (_mapController == null) return;
+    final target = deviceGpsLocation.value ?? mapCenter.value;
+    _mapController!.animateCamera(
+      CameraUpdate.newLatLngZoom(target, 16),
+    );
+  }
+
+  /// 200 m radius around [deviceGpsLocation] (true GPS), not map drag position.
+  Set<Circle> get nearbyPickupRadiusCircles {
+    final center = deviceGpsLocation.value;
+    if (center == null || !hasLocationPermission.value) return {};
+    return {
+      Circle(
+        circleId: const CircleId('pickup_200m_radius'),
+        center: center,
+        radius: 200,
+        fillColor: AppColors.primary.withOpacity(0.08),
+        strokeColor: AppColors.primary.withOpacity(0.4),
+        strokeWidth: 2,
+      ),
+    };
+  }
+
+  /// Pin for the pickup implied by the header dropdown ([activePickupLatLng]).
+  Set<Marker> get selectedPickupMarkers {
+    final pos = activePickupLatLng;
+    final addr = activePickupAddress.trim();
+    final snippet = addr.length > 56 ? '${addr.substring(0, 53)}...' : addr;
+    return {
+      Marker(
+        markerId: const MarkerId('home_selected_pickup'),
+        position: pos,
+        anchor: const Offset(0.5, 1),
+        infoWindow: InfoWindow(
+          title: savedPlaces.isEmpty ? 'Location' : 'Pickup',
+          snippet: snippet.isEmpty ? 'Selected address' : snippet,
+        ),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+      ),
+    };
+  }
+
+  Future<void> onSearchTapped() async {
+    await analyticsService.logEvent('search_opened');
+  }
+
+  void onMapCreated(GoogleMapController controller) {
+    _mapController = controller;
+    isMapReady.value = true;
+    _mapController!.animateCamera(
+      CameraUpdate.newLatLngZoom(mapCenter.value, 16),
+    );
+  }
+
+  void onCameraMove(CameraPosition position) {
+    mapCenter.value = position.target;
+  }
+
+  Future<void> onCameraIdle() async {
+    await _reverseGeocodeAtCenter();
   }
 
   Future<void> _loadHomeData() async {
     isLoadingHomeData.value = true;
-    
-    // Fetch Vehicle Types, Recent Destinations, & Saved Places in parallel
-    final results = await Future.wait([
-      homeRepository.getVehicleTypes(),
-      rideRepository.getRecentDestinations(),
-      profileRepository.getSavedPlaces(),
-    ]);
+    try {
+      // Fetch vehicle types, recent destinations, and saved places in parallel.
+      final results = await Future.wait([
+        homeRepository.getVehicleTypes(),
+        rideRepository.getRecentDestinations(),
+        profileRepository.getSavedPlaces(),
+      ]);
 
-    // Handle Vehicle Types
-    results[0].fold(
-      (failure) => null, // Handle error silently or show snackbar
-      (types) => vehicleTypes.assignAll(types as List<VehicleTypeModel>),
-    );
+      // Handle Vehicle Types
+      results[0].fold(
+        (_) => null,
+        (types) => vehicleTypes.assignAll(types as List<VehicleTypeModel>),
+      );
 
-    // Handle Recent Destinations
-    results[1].fold(
-      (failure) => null,
-      (destinations) {
-        if (destinations is List<RecentDestinationModel>) {
-          recentDestinations.assignAll(destinations);
-        }
-      },
-    );
+      // Handle Recent Destinations
+      results[1].fold(
+        (_) => null,
+        (destinations) {
+          if (destinations is List<RecentDestinationModel>) {
+            recentDestinations.assignAll(destinations);
+          }
+        },
+      );
 
-    // Handle Saved Places
-    results[2].fold(
-      (failure) => null,
-      (response) {
-        final res = response as GetSavedPlacesResponseModel?;
-        if (res?.data?.savedPlaces != null) {
-          savedPlaces.assignAll(res?.data!.savedPlaces! as List<SavedPlace>);
-        }
-      },
-    );
-
-    isLoadingHomeData.value = false;
+      // Handle Saved Places
+      results[2].fold(
+        (_) => null,
+        (response) {
+          final res = response as GetSavedPlacesResponseModel?;
+          if (res?.data?.savedPlaces != null) {
+            savedPlaces.assignAll(res!.data!.savedPlaces!);
+            _syncSelectedPickupAfterSavedPlacesLoad();
+          }
+        },
+      );
+    } finally {
+      isLoadingHomeData.value = false;
+    }
   }
 
   Future<void> _searchPlaces(String input) async {
@@ -104,16 +191,66 @@ class HomeController extends GetxController {
     );
     result.fold(
       (failure) => suggestions.clear(),
-      (list) => suggestions.assignAll(list.map((e) => {
-            'description': e.description,
-            'place_id': e.placeId,
-          }).toList()),
+      (list) {
+        suggestions
+          ..clear()
+          ..addAll(list?.data?.predictions ?? []);
+      },
     );
     isSearching.value = false;
   }
 
-  Future<void> selectPlace(Map<String, dynamic> place) async {
-    // Map / location selection UI stub
+  Future<void> selectPlace(Prediction place) async {
+    final description = (place.description)?.trim();
+    if (description == null || description.isEmpty) return;
+    _pushRecentSearch(description);
+    currentMapAddress.value = description;
+  }
+
+  Future<void> savePlace({
+    required String label,
+    required String name,
+    required String placeId,
+  }) async {
+    if (isSavingPlace.value) return;
+    isSavingPlace.value = true;
+    final request = CreateSavedPlaceRequest(
+      label: label,
+      name: name,
+      placeId: placeId,
+      lat: mapCenter.value.latitude,
+      lng: mapCenter.value.longitude,
+    );
+
+    final result = await profileRepository.addSavedPlace(request);
+    result.fold(
+      (_) => Get.snackbar(
+        'Unable to save',
+        'Could not save this location right now.',
+        snackPosition: SnackPosition.BOTTOM,
+      ),
+      (ok) async {
+        if (!ok) {
+          Get.snackbar(
+            'Unable to save',
+            'Could not save this location right now.',
+            snackPosition: SnackPosition.BOTTOM,
+          );
+        } else {
+          await _loadSavedPlacesOnly();
+          Get.snackbar(
+            'Saved',
+            '$label location has been saved.',
+            snackPosition: SnackPosition.BOTTOM,
+          );
+        }
+      },
+    );
+    isSavingPlace.value = false;
+  }
+
+  Future<void> refreshCurrentLocationAddress() async {
+    await _getCurrentLocation();
   }
 
   void _addMockDrivers() {
@@ -121,6 +258,315 @@ class HomeController extends GetxController {
   }
 
   Future<void> _getCurrentLocation() async {
-    // Removed geolocation logic tied to map centering
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      hasLocationPermission.value = false;
+      deviceGpsLocation.value = null;
+      currentMapAddress.value = 'Enable location service';
+      return;
+    }
+
+    var permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      hasLocationPermission.value = false;
+      deviceGpsLocation.value = null;
+      currentMapAddress.value = 'Location permission denied';
+      return;
+    }
+
+    hasLocationPermission.value = true;
+
+    final position = await Geolocator.getCurrentPosition(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+      ),
+    );
+    final target = LatLng(position.latitude, position.longitude);
+    deviceGpsLocation.value = target;
+    mapCenter.value = target;
+
+    if (_mapController != null) {
+      await _mapController!.animateCamera(
+        CameraUpdate.newLatLngZoom(target, 16),
+      );
+    }
+
+    await _reverseGeocodeAtCenter();
   }
+
+  Future<void> _reverseGeocodeAtCenter() async {
+    if (isResolvingAddress.value) return;
+
+    isResolvingAddress.value = true;
+    final target = mapCenter.value;
+    final result = await homeRepository.reverseGeocode(
+      lat: target.latitude,
+      lng: target.longitude,
+    );
+
+    result.fold(
+      (_) => null,
+      (data) {
+        if (data.address.trim().isNotEmpty) {
+          currentMapAddress.value = data.address;
+        }
+      },
+    );
+    isResolvingAddress.value = false;
+  }
+
+  SavedPlace? getSavedPlaceByLabel(String label) {
+    for (final place in savedPlaces) {
+      if ((place.label ?? '').toLowerCase() == label.toLowerCase()) {
+        return place;
+      }
+    }
+    return null;
+  }
+
+  String? getSavedPlaceSubtitle(String label) {
+    final place = getSavedPlaceByLabel(label);
+    final value = place?.address?.trim();
+    if (value == null || value.isEmpty) return null;
+    return value;
+  }
+
+  /// Pickup = current map center; destination = saved place for [label] (Home / Office / Work / Other).
+  Future<void> navigateToVehicleSelectionForSavedLabel(String label) async {
+    final place = getSavedPlaceByLabel(label);
+    if (place == null) {
+      Get.snackbar(
+        'Add a saved place',
+        'Save this address first, then you can book from here.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    double? dLat = place.lat;
+    double? dLng = place.lng;
+    final coords = place.location?.coordinates;
+    if ((dLat == null || dLng == null) && coords != null && coords.length >= 2) {
+      dLng = coords[0];
+      dLat = coords[1];
+    }
+
+    if (dLat == null || dLng == null) {
+      Get.snackbar(
+        'Location unavailable',
+        'This saved place is missing coordinates. Try saving it again.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    final destAddr = (place.address ?? place.name ?? label).trim();
+    if (destAddr.isEmpty) {
+      Get.snackbar(
+        'Address missing',
+        'This saved place has no address.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    await analyticsService.logEvent(
+      'home_saved_chip_vehicle_selection',
+      parameters: {'label': label},
+    );
+
+    final pickupAddr = activePickupAddress;
+    final pickupLL = activePickupLatLng;
+
+    Get.toNamed(
+      AppRoutes.booking,
+      arguments: {
+        'pickup': pickupAddr,
+        'pickupLat': pickupLL.latitude,
+        'pickupLng': pickupLL.longitude,
+        'destination': destAddr,
+        'destinationLat': dLat,
+        'destinationLng': dLng,
+        if (place.id != null && place.id!.isNotEmpty) 'destinationPlaceId': place.id,
+      },
+    );
+  }
+
+  Future<void> _loadSavedPlacesOnly() async {
+    final result = await profileRepository.getSavedPlaces();
+    result.fold(
+      (_) => null,
+      (response) {
+        if (response?.data?.savedPlaces != null) {
+          savedPlaces.assignAll(response!.data!.savedPlaces!);
+          _syncSelectedPickupAfterSavedPlacesLoad();
+        }
+      },
+    );
+  }
+
+  void _syncSelectedPickupAfterSavedPlacesLoad() {
+    if (savedPlaces.isEmpty) {
+      selectedPickupSavedPlaceId.value = null;
+      return;
+    }
+    final current = selectedPickupSavedPlaceId.value;
+    final stillValid =
+        current != null && savedPlaces.any((p) => p.id == current);
+    if (!stillValid) {
+      selectedPickupSavedPlaceId.value = savedPlaces.first.id;
+    }
+  }
+
+  LatLng? _latLngFromSavedPlace(SavedPlace p) {
+    if (p.lat != null && p.lng != null) return LatLng(p.lat!, p.lng!);
+    final c = p.location?.coordinates;
+    if (c != null && c.length >= 2) return LatLng(c[1], c[0]);
+    return null;
+  }
+
+  SavedPlace? get activePickupSavedPlace {
+    if (savedPlaces.isEmpty) return null;
+    final id = selectedPickupSavedPlaceId.value;
+    if (id != null) {
+      for (final p in savedPlaces) {
+        if (p.id == id) return p;
+      }
+    }
+    return savedPlaces.first;
+  }
+
+  LatLng get activePickupLatLng {
+    final p = activePickupSavedPlace;
+    if (p != null) {
+      final ll = _latLngFromSavedPlace(p);
+      if (ll != null) return ll;
+    }
+    return mapCenter.value;
+  }
+
+  String get activePickupAddress {
+    final p = activePickupSavedPlace;
+    if (p != null) {
+      final a = (p.address ?? p.name ?? '').trim();
+      if (a.isNotEmpty) return a;
+    }
+    return currentMapAddress.value;
+  }
+
+  Future<void> selectSavedPlaceAsPickup(SavedPlace place) async {
+    selectedPickupSavedPlaceId.value = place.id;
+    isSavedPlacesExpanded.value = false;
+
+    final latLng = _latLngFromSavedPlace(place);
+    final addr = (place.address ?? place.name ?? '').trim();
+    if (addr.isNotEmpty) currentMapAddress.value = addr;
+
+    if (latLng != null) {
+      mapCenter.value = latLng;
+      if (_mapController != null) {
+        await _mapController!.animateCamera(
+          CameraUpdate.newLatLngZoom(latLng, 16),
+        );
+      }
+      if (addr.isEmpty) await _reverseGeocodeAtCenter();
+    }
+  }
+
+  bool isSavedPlaceSelectedAsPickup(String? placeId) {
+    if (placeId == null || placeId.isEmpty) return false;
+    return selectedPickupSavedPlaceId.value == placeId;
+  }
+
+  void _pushRecentSearch(String value) {
+    recentSearches.removeWhere((item) => item.toLowerCase() == value.toLowerCase());
+    recentSearches.insert(0, value);
+    if (recentSearches.length > 8) {
+      recentSearches.removeRange(8, recentSearches.length);
+    }
+  }
+
+  // ── Home screen UI orchestration (keep branching / navigation out of widgets) ──
+
+  /// Collapsed: active pickup only; expanded: all saved places (tap one to set pickup).
+  List<SavedPlace> get addressHeaderPlacesToShow {
+    if (savedPlaces.isEmpty) return const [];
+    final active = activePickupSavedPlace;
+    if (active == null) return const [];
+    return isSavedPlacesExpanded.value
+        ? savedPlaces.toList()
+        : <SavedPlace>[active];
+  }
+
+  void toggleAddressHeaderExpansion() {
+    isSavedPlacesExpanded.toggle();
+  }
+
+  double get addressHeaderChevronTurns => isSavedPlacesExpanded.value ? 0.5 : 0.0;
+
+  /// Opens location flow with current [activePickupAddress] / [activePickupLatLng].
+  /// Optional [preferredVehicle] is forwarded to booking → vehicle selection.
+  Future<void> openLocationSelection({VehicleTypeModel? preferredVehicle}) async {
+    await onSearchTapped();
+    final args = <String, dynamic>{
+      'pickup': activePickupAddress,
+      'pickupLat': activePickupLatLng.latitude,
+      'pickupLng': activePickupLatLng.longitude,
+    };
+    if (preferredVehicle != null) {
+      if (preferredVehicle.id.isNotEmpty) {
+        args['preferredVehicleTypeId'] = preferredVehicle.id;
+      }
+      if (preferredVehicle.name.isNotEmpty) {
+        args['preferredVehicleName'] = preferredVehicle.name;
+      }
+      if (preferredVehicle.key.isNotEmpty) {
+        args['preferredVehicleKey'] = preferredVehicle.key;
+      }
+    }
+    Get.toNamed(AppRoutes.locationSelection, arguments: args);
+  }
+
+  Future<void> openLocationSelectionWithPreferredVehicle(VehicleTypeModel vehicle) {
+    return openLocationSelection(preferredVehicle: vehicle);
+  }
+
+  void openProfile() {
+    Get.to(() => ProfileScreen());
+  }
+
+  /// Chip subtitle; Home falls back to current map address when saved line is empty.
+  String? chipSubtitleFor(String label) {
+    final s = getSavedPlaceSubtitle(label);
+    if (s != null && s.trim().isNotEmpty) return s;
+    if (label.toLowerCase() == 'home') return currentMapAddress.value;
+    return null;
+  }
+
+  String vehicleExploreImageAsset(String vehicleName) {
+    final name = vehicleName.toLowerCase();
+    if (name.contains('bike') || name.contains('boda')) return AppAssets.imgBoda;
+    if (name.contains('auto') || name.contains('wheeler') || name.contains('bajaj')) {
+      return AppAssets.imgBajaji;
+    }
+    return AppAssets.imgCab;
+  }
+
+  String recentDestinationTitleLine(RecentDestinationModel loc) {
+    final parts = loc.address.split(',');
+    if (parts.isEmpty) return loc.address;
+    final first = parts.first.trim();
+    return first.isEmpty ? loc.address : first;
+  }
+
+  bool get shouldShowRecentSection =>
+      isLoadingHomeData.value || recentDestinations.isNotEmpty;
+
+  bool get shouldShowVehicleSection =>
+      isLoadingHomeData.value || vehicleTypes.isNotEmpty;
 }
