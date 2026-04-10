@@ -51,7 +51,7 @@ class AuthController extends GetxController {
     final result = await sendOtpUseCase(
       SendOtpRequest(
         mobileNumber: mobileNumber.value.replaceAll(' ', ''),
-        countryCode: countryCode.value,
+        countryCode: countryCode.value.replaceAll('+', ''),
       ),
     );
 
@@ -80,7 +80,7 @@ class AuthController extends GetxController {
     final result = await sendOtpUseCase(
       SendOtpRequest(
         mobileNumber: mobileNumber.value.replaceAll(' ', ''),
-        countryCode: countryCode.value,
+        countryCode: countryCode.value.replaceAll('+', ''),
       ),
     );
 
@@ -110,7 +110,7 @@ class AuthController extends GetxController {
     final result = await verifyOtpUseCase(
       VerifyOtpRequest(
         mobileNumber: mobileNumber.value.replaceAll(' ', ''),
-        countryCode: countryCode.value,
+        countryCode: countryCode.value.replaceAll('+', ''),
         otp: otp.value,
       ),
     );
