@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -540,6 +541,53 @@ class HomeController extends GetxController {
     Get.to(() => ProfileScreen());
   }
 
+  void closeLocationSelection() {
+    Get.back();
+  }
+
+  Future<void> proceedToBookingFromLocationSelection({
+    required String pickup,
+    required List<String> destinations,
+    String? destinationPlaceId,
+    double? routePickupLat,
+    double? routePickupLng,
+    double? routeDestinationLat,
+    double? routeDestinationLng,
+    String? preferredVehicleTypeId,
+    String? preferredVehicleName,
+  }) async {
+    final pid = destinationPlaceId?.trim();
+    if (pid != null && pid.isNotEmpty) {
+      await savePlace(
+        label: 'Destination',
+        name: destinations.first,
+        placeId: pid,
+      );
+    }
+
+    final pLat = routePickupLat ?? mapCenter.value.latitude;
+    final pLng = routePickupLng ?? mapCenter.value.longitude;
+    final dLat = routeDestinationLat ?? (pLat - 0.018);
+    final dLng = routeDestinationLng ?? (pLng + 0.014);
+
+    Get.toNamed(
+      AppRoutes.booking,
+      arguments: {
+        'pickup': pickup,
+        'destination': destinations.first,
+        'destinations': destinations,
+        'pickupLat': pLat,
+        'pickupLng': pLng,
+        'destinationLat': dLat,
+        'destinationLng': dLng,
+        if (preferredVehicleTypeId != null && preferredVehicleTypeId.isNotEmpty)
+          'preferredVehicleTypeId': preferredVehicleTypeId,
+        if (preferredVehicleName != null && preferredVehicleName.isNotEmpty)
+          'preferredVehicleName': preferredVehicleName,
+      },
+    );
+  }
+
   /// Chip subtitle; Home falls back to current map address when saved line is empty.
   String? chipSubtitleFor(String label) {
     final s = getSavedPlaceSubtitle(label);
@@ -573,6 +621,173 @@ class HomeController extends GetxController {
 
   bool get shouldShowVehicleSection =>
       isLoadingHomeData.value || vehicleTypes.isNotEmpty;
+
+  // Location selection screen orchestration helpers.
+  void applyLocationSelectionTextToSegment({
+    required int activeSegmentIndex,
+    required String text,
+    required TextEditingController pickupController,
+    required TextEditingController destinationController,
+    required List<TextEditingController> extraDestinationControllers,
+    required RxBool pickupEditedByUser,
+    required RxnDouble routePickupLat,
+    required RxnDouble routePickupLng,
+    required RxnDouble routeDestinationLat,
+    required RxnDouble routeDestinationLng,
+    required RxnString destinationPlaceId,
+  }) {
+    if (activeSegmentIndex == 0) {
+      pickupEditedByUser.value = true;
+      routePickupLat.value = null;
+      routePickupLng.value = null;
+      pickupController.text = text;
+      return;
+    }
+
+    if (activeSegmentIndex == 1) {
+      destinationController.text = text;
+      routeDestinationLat.value = null;
+      routeDestinationLng.value = null;
+      destinationPlaceId.value = null;
+      return;
+    }
+
+    final i = activeSegmentIndex - 2;
+    if (i >= 0 && i < extraDestinationControllers.length) {
+      extraDestinationControllers[i].text = text;
+    }
+  }
+
+  void applySuggestionToLocationSelection({
+    required Prediction prediction,
+    required int activeSegmentIndex,
+    required TextEditingController pickupController,
+    required TextEditingController destinationController,
+    required List<TextEditingController> extraDestinationControllers,
+    required RxBool pickupEditedByUser,
+    required RxnDouble routePickupLat,
+    required RxnDouble routePickupLng,
+    required RxnDouble routeDestinationLat,
+    required RxnDouble routeDestinationLng,
+    required RxnString destinationPlaceId,
+  }) {
+    final description = prediction.description ?? '';
+    if (activeSegmentIndex == 0) {
+      pickupEditedByUser.value = true;
+      routePickupLat.value = null;
+      routePickupLng.value = null;
+      pickupController.text = description;
+      pickupController.selection = TextSelection.fromPosition(
+        TextPosition(offset: pickupController.text.length),
+      );
+      return;
+    }
+
+    if (activeSegmentIndex == 1) {
+      destinationController.text = description;
+      routeDestinationLat.value = null;
+      routeDestinationLng.value = null;
+      destinationPlaceId.value = prediction.placeId?.trim();
+      destinationController.selection = TextSelection.fromPosition(
+        TextPosition(offset: destinationController.text.length),
+      );
+      return;
+    }
+
+    final i = activeSegmentIndex - 2;
+    if (i >= 0 && i < extraDestinationControllers.length) {
+      final c = extraDestinationControllers[i];
+      c.text = description;
+      c.selection = TextSelection.fromPosition(TextPosition(offset: c.text.length));
+    }
+  }
+
+  void applySavedLabelToLocationSelection({
+    required String label,
+    required TextEditingController destinationController,
+    required RxInt activeSegmentIndex,
+    required RxnDouble routeDestinationLat,
+    required RxnDouble routeDestinationLng,
+    required RxnString destinationPlaceId,
+  }) {
+    final savedPlace = getSavedPlaceByLabel(label);
+    final saved = savedPlace?.address?.trim();
+    if (saved == null || saved.isEmpty) return;
+    final coords = savedPlace?.location?.coordinates;
+    final lat = savedPlace?.lat ??
+        ((coords != null && coords.length >= 2) ? coords[1] : null);
+    final lng = savedPlace?.lng ??
+        ((coords != null && coords.length >= 2) ? coords[0] : null);
+
+    destinationController.text = saved;
+    routeDestinationLat.value = lat;
+    routeDestinationLng.value = lng;
+    destinationPlaceId.value = null;
+    activeSegmentIndex.value = 1;
+    searchQuery.value = '';
+  }
+
+  void applyRecentDestinationToLocationSelection({
+    required RecentDestinationModel destination,
+    required int activeSegmentIndex,
+    required TextEditingController pickupController,
+    required TextEditingController destinationController,
+    required List<TextEditingController> extraDestinationControllers,
+    required RxBool pickupEditedByUser,
+    required RxnDouble routePickupLat,
+    required RxnDouble routePickupLng,
+    required RxnDouble routeDestinationLat,
+    required RxnDouble routeDestinationLng,
+    required RxnString destinationPlaceId,
+  }) {
+    applyLocationSelectionTextToSegment(
+      activeSegmentIndex: activeSegmentIndex,
+      text: destination.address,
+      pickupController: pickupController,
+      destinationController: destinationController,
+      extraDestinationControllers: extraDestinationControllers,
+      pickupEditedByUser: pickupEditedByUser,
+      routePickupLat: routePickupLat,
+      routePickupLng: routePickupLng,
+      routeDestinationLat: routeDestinationLat,
+      routeDestinationLng: routeDestinationLng,
+      destinationPlaceId: destinationPlaceId,
+    );
+    if (activeSegmentIndex == 1) {
+      routeDestinationLat.value = destination.lat;
+      routeDestinationLng.value = destination.lng;
+    }
+    searchQuery.value = '';
+  }
+
+  void applyRecentSearchToLocationSelection({
+    required String recentText,
+    required int activeSegmentIndex,
+    required TextEditingController pickupController,
+    required TextEditingController destinationController,
+    required List<TextEditingController> extraDestinationControllers,
+    required RxBool pickupEditedByUser,
+    required RxnDouble routePickupLat,
+    required RxnDouble routePickupLng,
+    required RxnDouble routeDestinationLat,
+    required RxnDouble routeDestinationLng,
+    required RxnString destinationPlaceId,
+  }) {
+    applyLocationSelectionTextToSegment(
+      activeSegmentIndex: activeSegmentIndex,
+      text: recentText,
+      pickupController: pickupController,
+      destinationController: destinationController,
+      extraDestinationControllers: extraDestinationControllers,
+      pickupEditedByUser: pickupEditedByUser,
+      routePickupLat: routePickupLat,
+      routePickupLng: routePickupLng,
+      routeDestinationLat: routeDestinationLat,
+      routeDestinationLng: routeDestinationLng,
+      destinationPlaceId: destinationPlaceId,
+    );
+    searchQuery.value = '';
+  }
 
   Future<LatLng?> getLatLngFromAddress(String address) async {
     final result = await homeRepository.getGeocode(address: address);

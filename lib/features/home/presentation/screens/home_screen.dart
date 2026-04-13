@@ -10,7 +10,7 @@ import '../controllers/home_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_map_gps_button.dart';
-import '../../../../shared/widgets/app_map_profile_chip.dart';
+import '../../../../shared/widgets/app_map_top_header.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -45,22 +45,12 @@ class HomeScreen extends StatelessWidget {
           ),
 
           // 2. Top Header (Address + Profile)
-          Positioned(
+          AppMapTopHeader(
             top: MediaQuery.of(context).padding.top + 10.h,
-            left: 20.w,
-            right: 20.w,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildModernAddressBox(),
-                SizedBox(width: 12.w),
-                AppMapProfileChip(
-                  onTap: controller.openProfile,
-                  icon: Icons.person,
-                  iconColor: Colors.black,
-                ),
-              ],
-            ),
+            addressWidget: _buildModernAddressBox(),
+            onProfileTap: controller.openProfile,
+            profileIcon: Icons.person,
+            profileIconColor: Colors.black,
           ),
 
           // 3. Floating Action Buttons (GPS)

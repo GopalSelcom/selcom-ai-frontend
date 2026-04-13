@@ -3,7 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/constants/app_assets.dart';
-import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
@@ -25,23 +24,23 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
   late final FocusNode pickupFocusNode;
   late final FocusNode destinationFocusNode;
   /// 0 = pickup, 1 = first destination, 2+ = extra stop at index `segment - 2`.
-  int _activeSegmentIndex = 1;
+  final RxInt _activeSegmentIndex = 1.obs;
   final List<TextEditingController> _extraDestinationControllers = [];
   final List<FocusNode> _extraDestinationFocusNodes = [];
-  bool pickupEditedByUser = false;
+  final RxBool pickupEditedByUser = false.obs;
   /// Set when the first destination is chosen from autocomplete (required for `saved-places` on Book Ride).
-  String? _destinationPlaceId;
+  final RxnString _destinationPlaceId = RxnString();
   static const int _maxExtraStops = 6;
 
   /// From route args (home / explore vehicle); used for Book Ride pickup coords.
-  double? _routePickupLat;
-  double? _routePickupLng;
+  final RxnDouble _routePickupLat = RxnDouble();
+  final RxnDouble _routePickupLng = RxnDouble();
   /// Destination coordinates for first drop, when user picked a source that includes coords.
-  double? _routeDestinationLat;
-  double? _routeDestinationLng;
+  final RxnDouble _routeDestinationLat = RxnDouble();
+  final RxnDouble _routeDestinationLng = RxnDouble();
   /// Forwarded to vehicle selection as default vehicle.
-  String? _preferredVehicleTypeId;
-  String? _preferredVehicleName;
+  final RxnString _preferredVehicleTypeId = RxnString();
+  final RxnString _preferredVehicleName = RxnString();
 
   @override
   void initState() {
@@ -54,16 +53,17 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       final p = (m['pickup'] as String?)?.trim();
       if (p != null && p.isNotEmpty) {
         initialPickup = p;
-        pickupEditedByUser = true;
+        pickupEditedByUser.value = true;
       }
       final plat = (m['pickupLat'] as num?)?.toDouble();
       final plng = (m['pickupLng'] as num?)?.toDouble();
       if (plat != null && plng != null) {
-        _routePickupLat = plat;
-        _routePickupLng = plng;
+        _routePickupLat.value = plat;
+        _routePickupLng.value = plng;
       }
-      _preferredVehicleTypeId = (m['preferredVehicleTypeId'] as String?)?.trim();
-      _preferredVehicleName = (m['preferredVehicleName'] as String?)?.trim();
+      _preferredVehicleTypeId.value =
+          (m['preferredVehicleTypeId'] as String?)?.trim();
+      _preferredVehicleName.value = (m['preferredVehicleName'] as String?)?.trim();
     }
     pickupController = TextEditingController(text: initialPickup);
     destinationController = TextEditingController();
@@ -88,11 +88,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
 
   void _onAddDestinationStop() {
     if (_extraDestinationControllers.length >= _maxExtraStops) return;
-    setState(() {
-      _extraDestinationControllers.add(TextEditingController());
-      _extraDestinationFocusNodes.add(FocusNode());
-      _activeSegmentIndex = 2 + _extraDestinationControllers.length - 1;
-    });
+    _extraDestinationControllers.add(TextEditingController());
+    _extraDestinationFocusNodes.add(FocusNode());
+    _activeSegmentIndex.value = 2 + _extraDestinationControllers.length - 1;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_extraDestinationFocusNodes.isEmpty) return;
       final node = _extraDestinationFocusNodes.last;
@@ -104,8 +102,8 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
   int get _destinationCount => 1 + _extraDestinationControllers.length;
 
   void _setActiveSegment(int index) {
-    if (_activeSegmentIndex == index) return;
-    setState(() => _activeSegmentIndex = index);
+    if (_activeSegmentIndex.value == index) return;
+    _activeSegmentIndex.value = index;
   }
 
   @override
@@ -114,7 +112,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       backgroundColor: AppColors.pageBackground,
       body: Obx(() {
         final liveAddress = controller.currentMapAddress.value.trim();
-        if (!pickupEditedByUser && liveAddress.isNotEmpty) {
+        if (!pickupEditedByUser.value && liveAddress.isNotEmpty) {
           pickupController.text = liveAddress;
         }
 
@@ -149,7 +147,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                 top: 12.h,
                 left: 16.w,
                 child: InkWell(
-                  onTap: Get.back,
+                  onTap: controller.closeLocationSelection,
                   child: SizedBox(
                     width: 28.w,
                     height: 28.w,
@@ -332,7 +330,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           controller.searchQuery.value = pickupController.text.trim();
         },
         onChanged: (value) {
-          pickupEditedByUser = true;
+          pickupEditedByUser.value = true;
           _setActiveSegment(0);
           controller.searchQuery.value = value;
         },
@@ -354,7 +352,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           controller.searchQuery.value = destinationController.text.trim();
         },
         onChanged: (value) {
-          _destinationPlaceId = null;
+          _destinationPlaceId.value = null;
           _setActiveSegment(1);
           controller.searchQuery.value = value;
         },
@@ -422,21 +420,14 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       padding: EdgeInsets.only(right: 8.w),
       child: InkWell(
         onTap: () {
-          final savedPlace = controller.getSavedPlaceByLabel(label);
-          final saved = savedPlace?.address?.trim();
-          if (saved != null && saved.isNotEmpty) {
-            final coords = savedPlace?.location?.coordinates;
-            final lat = savedPlace?.lat ?? ((coords != null && coords.length >= 2) ? coords[1] : null);
-            final lng = savedPlace?.lng ?? ((coords != null && coords.length >= 2) ? coords[0] : null);
-            setState(() {
-              destinationController.text = saved;
-              _routeDestinationLat = lat;
-              _routeDestinationLng = lng;
-              _destinationPlaceId = null;
-              _activeSegmentIndex = 1;
-            });
-            controller.searchQuery.value = '';
-          }
+          controller.applySavedLabelToLocationSelection(
+            label: label,
+            destinationController: destinationController,
+            activeSegmentIndex: _activeSegmentIndex,
+            routeDestinationLat: _routeDestinationLat,
+            routeDestinationLng: _routeDestinationLng,
+            destinationPlaceId: _destinationPlaceId,
+          );
         },
         child: Container(
           height: 36.h,
@@ -508,14 +499,19 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             subtitle: destination.address,
             isFavorite: index.isOdd,
             onTap: () {
-              setState(() {
-                _applyTextToActiveSegment(destination.address);
-                if (_activeSegmentIndex == 1) {
-                  _routeDestinationLat = destination.lat;
-                  _routeDestinationLng = destination.lng;
-                }
-              });
-              controller.searchQuery.value = '';
+              controller.applyRecentDestinationToLocationSelection(
+                destination: destination,
+                activeSegmentIndex: _activeSegmentIndex.value,
+                pickupController: pickupController,
+                destinationController: destinationController,
+                extraDestinationControllers: _extraDestinationControllers,
+                pickupEditedByUser: pickupEditedByUser,
+                routePickupLat: _routePickupLat,
+                routePickupLng: _routePickupLng,
+                routeDestinationLat: _routeDestinationLat,
+                routeDestinationLng: _routeDestinationLng,
+                destinationPlaceId: _destinationPlaceId,
+              );
             },
             onFavoriteTap: () {},
           );
@@ -541,8 +537,19 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         subtitle: controller.recentSearches[index],
         isFavorite: false,
         onTap: () {
-          setState(() => _applyTextToActiveSegment(controller.recentSearches[index]));
-          controller.searchQuery.value = '';
+          controller.applyRecentSearchToLocationSelection(
+            recentText: controller.recentSearches[index],
+            activeSegmentIndex: _activeSegmentIndex.value,
+            pickupController: pickupController,
+            destinationController: destinationController,
+            extraDestinationControllers: _extraDestinationControllers,
+            pickupEditedByUser: pickupEditedByUser,
+            routePickupLat: _routePickupLat,
+            routePickupLng: _routePickupLng,
+            routeDestinationLat: _routeDestinationLat,
+            routeDestinationLng: _routeDestinationLng,
+            destinationPlaceId: _destinationPlaceId,
+          );
         },
         onFavoriteTap: () {},
       ),
@@ -676,37 +683,16 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         borderRadius: BorderRadius.circular(16.r),
         onTap: enabled
             ? () async {
-                final pid = _destinationPlaceId?.trim();
-                if (pid != null && pid.isNotEmpty) {
-                  await controller.savePlace(
-                    label: 'Destination',
-                    name: destinations.first,
-                    placeId: pid,
-                  );
-                }
-                final pLat =
-                    _routePickupLat ?? controller.mapCenter.value.latitude;
-                final pLng =
-                    _routePickupLng ?? controller.mapCenter.value.longitude;
-                final dLat = _routeDestinationLat ?? (pLat - 0.018);
-                final dLng = _routeDestinationLng ?? (pLng + 0.014);
-                Get.toNamed(
-                  AppRoutes.booking,
-                  arguments: {
-                    'pickup': pickup,
-                    'destination': destinations.first,
-                    'destinations': destinations,
-                    'pickupLat': pLat,
-                    'pickupLng': pLng,
-                    'destinationLat': dLat,
-                    'destinationLng': dLng,
-                    if (_preferredVehicleTypeId != null &&
-                        _preferredVehicleTypeId!.isNotEmpty)
-                      'preferredVehicleTypeId': _preferredVehicleTypeId,
-                    if (_preferredVehicleName != null &&
-                        _preferredVehicleName!.isNotEmpty)
-                      'preferredVehicleName': _preferredVehicleName,
-                  },
+                await controller.proceedToBookingFromLocationSelection(
+                  pickup: pickup,
+                  destinations: destinations,
+                  destinationPlaceId: _destinationPlaceId.value,
+                  routePickupLat: _routePickupLat.value,
+                  routePickupLng: _routePickupLng.value,
+                  routeDestinationLat: _routeDestinationLat.value,
+                  routeDestinationLng: _routeDestinationLng.value,
+                  preferredVehicleTypeId: _preferredVehicleTypeId.value,
+                  preferredVehicleName: _preferredVehicleName.value,
                 );
               }
             : null,
@@ -769,24 +755,24 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     final lat = latLng?.latitude;
     final lng = latLng?.longitude;
 
-    if (_activeSegmentIndex == 0) {
-      pickupEditedByUser = true;
-      _routePickupLat = lat;
-      _routePickupLng = lng;
+    if (_activeSegmentIndex.value == 0) {
+      pickupEditedByUser.value = true;
+      _routePickupLat.value = lat;
+      _routePickupLng.value = lng;
       pickupController.text = description;
       pickupController.selection = TextSelection.fromPosition(
         TextPosition(offset: pickupController.text.length),
       );
-    } else if (_activeSegmentIndex == 1) {
+    } else if (_activeSegmentIndex.value == 1) {
       destinationController.text = description;
-      _routeDestinationLat = lat;
-      _routeDestinationLng = lng;
-      _destinationPlaceId = prediction.placeId?.trim();
+      _routeDestinationLat.value = lat;
+      _routeDestinationLng.value = lng;
+      _destinationPlaceId.value = prediction.placeId?.trim();
       destinationController.selection = TextSelection.fromPosition(
         TextPosition(offset: destinationController.text.length),
       );
     } else {
-      final i = _activeSegmentIndex - 2;
+      final i = _activeSegmentIndex.value - 2;
       if (i >= 0 && i < _extraDestinationControllers.length) {
         final c = _extraDestinationControllers[i];
         c.text = description;
@@ -796,25 +782,5 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       }
     }
     controller.searchQuery.value = '';
-    setState(() {});
-  }
-
-  void _applyTextToActiveSegment(String text) {
-    if (_activeSegmentIndex == 0) {
-      pickupEditedByUser = true;
-      _routePickupLat = null;
-      _routePickupLng = null;
-      pickupController.text = text;
-    } else if (_activeSegmentIndex == 1) {
-      destinationController.text = text;
-      _routeDestinationLat = null;
-      _routeDestinationLng = null;
-      _destinationPlaceId = null;
-    } else {
-      final i = _activeSegmentIndex - 2;
-      if (i >= 0 && i < _extraDestinationControllers.length) {
-        _extraDestinationControllers[i].text = text;
-      }
-    }
   }
 }

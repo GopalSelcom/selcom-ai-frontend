@@ -6,7 +6,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/routes/app_routes.dart';
 import '../../../../shared/utils/phone_formatter.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../controllers/auth_controller.dart';
@@ -231,13 +230,7 @@ class PhoneInputScreen extends GetView<AuthController> {
                             label: 'Get Verification Code',
                             isLoading: controller.isLoading.value,
                             onPressed: controller.mobileNumber.value.length >= 9
-                                ? () async {
-                                    final success = await controller.sendOtp();
-                                    if (success) {
-                                      controller.startResendTimer();
-                                      Get.toNamed(AppRoutes.otp);
-                                    }
-                                  }
+                                ? controller.sendOtpAndNavigate
                                 : null,
                           ),
                         ),

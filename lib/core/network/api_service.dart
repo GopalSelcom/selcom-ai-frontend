@@ -395,10 +395,13 @@ class ApiService {
     Map<String, dynamic> headers,
     Map<String, dynamic> body,
   ) {
+    final safeHeaders = _redactSensitiveMap(headers);
+    final safeQuery = _redactSensitiveMap(request.queryParams);
+    final safeBody = _redactSensitiveMap(body);
     debugPrint("🚀 REQUEST >> ${request.method.name.toUpperCase()} $fullUrl");
-    debugPrint("$fullUrl [Headers] ${_safeJsonEncode(headers)}");
-    debugPrint("$fullUrl [Query] ${_safeJsonEncode(request.queryParams)}");
-    debugPrint("$fullUrl [Body] ${_safeJsonEncode(body)}");
+    debugPrint("$fullUrl [Headers] ${_safeJsonEncode(safeHeaders)}");
+    debugPrint("$fullUrl [Query] ${_safeJsonEncode(safeQuery)}");
+    debugPrint("$fullUrl [Body] ${_safeJsonEncode(safeBody)}");
   }
 
   void _logResponse({
@@ -414,7 +417,7 @@ class ApiService {
     if (isError && errorMessage != null) {
       debugPrint("$fullUrl Message: $errorMessage");
     }
-    debugPrint("$fullUrl [Response] ${_safeJsonEncode(data)}");
+    debugPrint("$fullUrl [Response] ${_safeJsonEncode(_redactSensitiveData(data))}");
   }
 
   String _methodToString(ApiMethod method) {
@@ -543,6 +546,46 @@ class ApiService {
     } catch (_) {
       return data?.toString() ?? '{}';
     }
+  }
+
+  static const Set<String> _sensitiveKeys = {
+    'authorization',
+    'access_token',
+    'refresh_token',
+    'authorization_token',
+    'token',
+    'otp',
+    'pin',
+    'phone',
+    'mobile',
+    'mobile_number',
+    'email',
+    'nida',
+  };
+
+  static dynamic _redactSensitiveData(dynamic data) {
+    if (data is Map) {
+      return _redactSensitiveMap(data);
+    }
+    if (data is List) {
+      return data.map(_redactSensitiveData).toList();
+    }
+    return data;
+  }
+
+  static Map<String, dynamic> _redactSensitiveMap(Map? source) {
+    if (source == null) return {};
+    final out = <String, dynamic>{};
+    source.forEach((key, value) {
+      final keyText = key.toString();
+      final normalized = keyText.toLowerCase();
+      if (_sensitiveKeys.any((s) => normalized.contains(s))) {
+        out[keyText] = '***REDACTED***';
+        return;
+      }
+      out[keyText] = _redactSensitiveData(value);
+    });
+    return out;
   }
 
   // ── Session Expired Popup ──

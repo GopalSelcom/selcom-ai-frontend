@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:selcom_rides_frontend/core/data/models/responses/payment_status_response/payment_status_response.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
+import '../data/models/responses/nearbyRiders/response/near_by_rider_response.dart';
 import 'storage_service.dart';
 
 class NearbyDriverPoint {
@@ -45,7 +46,7 @@ class AppSocketService {
   static const String evtPaymentStatusUpdate = 'payment:status_update';
 
   io.Socket? _socket;
-  final _driversController = StreamController<List<NearbyDriverPoint>>.broadcast();
+  final _driversController = StreamController<List<Driver>>.broadcast();
   final _errorController = StreamController<String>.broadcast();
   final _connectionController = StreamController<bool>.broadcast();
   final _rideStatusController =
@@ -59,7 +60,7 @@ class AppSocketService {
 
   final String baseUrl;
 
-  Stream<List<NearbyDriverPoint>> get nearbyDriversStream => _driversController.stream;
+  Stream<List<Driver>> get nearbyDriversStream => _driversController.stream;
   Stream<String> get errorStream => _errorController.stream;
   Stream<bool> get connectionStream => _connectionController.stream;
   Stream<Map<String, dynamic>> get rideStatusStream => _rideStatusController.stream;
@@ -98,13 +99,11 @@ class AppSocketService {
 
     if (kDebugMode) {
       _socket?.onAny((event, data) {
-        debugPrint("socket => socketId: ${_socket?.id}");
         debugPrint("socket => event: $event");
-        debugPrint("socket => data: ${json.encode(data)}");
       });
     }
     _socket!.onConnect((data) {
-      debugPrint("onConnect init function: ${json.encode(data)}");
+      debugPrint("Socket connected");
       debugPrint("Connected socketId: ${_socket?.id}");
 
       _connectionController.add(true);
@@ -122,8 +121,8 @@ class AppSocketService {
       _errorController.add(err?.toString() ?? 'Socket error');
     });
     _socket!.on(evtNearbyDriversResult, (payload) {
-      final drivers = _parseDrivers(payload);
-      _driversController.add(drivers);
+      final drivers =ridersResponseSocketFromJson(jsonEncode(payload));
+      _driversController.add(drivers.drivers??[]);
     });
     _socket!.on(evtNearbyDriversError, (payload) {
       _errorController.add(_parseError(payload));
@@ -138,7 +137,7 @@ class AppSocketService {
     });
     _socket!.on(evtPaymentStatusUpdate, (payload) {
       final data = PaymentStatusUpdateResponse.fromJson(payload as Map<String,dynamic>);
-      if (data != null) _paymentStatusController.add(data);
+      _paymentStatusController.add(data);
     });
 
     _socket!.connect();
@@ -159,6 +158,9 @@ class AppSocketService {
       'lng': lng,
       'radius_km': radiusKm,
     };
+    if (kDebugMode) {
+      debugPrint('requested nearby drivers with configured radius');
+    }
     if (vehicleType != null && vehicleType.trim().isNotEmpty) {
       body['vehicle_type'] = vehicleType;
     }
@@ -178,10 +180,12 @@ class AppSocketService {
       _errorController.add('Socket not connected');
       return;
     }
-    try{
+    try {
       _socket!.emit(evtJoinPaymentRoom, {'validation_id': validationId});
-    }catch(e){
-      print("this is the error ----->$e");
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('joinPaymentRoom failed');
+      }
     }
   }
 

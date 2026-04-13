@@ -3,21 +3,17 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_map_gps_button.dart';
 import '../../../../shared/widgets/app_map_location_summary_card.dart';
-import '../../../../shared/widgets/app_map_profile_chip.dart';
+import '../../../../shared/widgets/app_map_top_header.dart';
 import '../controllers/finding_driver_controller.dart';
 
-/// SCR-10 — Finding driver (Figma `207:24889`). Map + nearby drivers socket (same as vehicle selection),
-/// ride room for status, 10-minute search window, progress UI tied to countdown.
 class FindingDriverScreen extends StatelessWidget {
   const FindingDriverScreen({super.key});
 
-  /// Search radius on map (meters); static — no pulse animation.
   static const double _searchCircleRadiusM = 220;
 
   @override
@@ -27,94 +23,102 @@ class FindingDriverScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          _buildMap(c),
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 120.h,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.white,
-                    Colors.white.withOpacity(0.92),
-                    Colors.white.withOpacity(0),
-                  ],
+      body: Obx(() {
+        const initialSheetSize = 0.42;
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            _buildMap(c),
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 120.h,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.white,
+                      Colors.white.withOpacity(0.92),
+                      Colors.white.withOpacity(0),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          Positioned(
-            top: topPad + 8.h,
-            left: 16.w,
-            right: 16.w,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: AppMapLocationSummaryCard(
-                    label: 'Pickup',
-                    address: c.pickupAddress.isEmpty ? 'Selected location' : c.pickupAddress,
-                  ),
+            AppMapTopHeader(
+              top: topPad + 8.h,
+              left: 16,
+              right: 16,
+              addressWidget: Expanded(
+                child: AppMapLocationSummaryCard(
+                  label: 'Home',
+                  address: c.pickupAddress.isEmpty ? 'Selected location' : c.pickupAddress,
                 ),
-                SizedBox(width: 12.w),
-                const AppMapProfileChip(),
-              ],
+              ),
             ),
-          ),
-          Positioned(
-            bottom: 0.48.sh + 8.h,
-            right: 20.w,
-            child: AppMapGpsButton(onPressed: c.recenterMap),
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: 0.52.sh,
-            child: _bottomSheet(c),
-          ),
-        ],
-      ),
+            Positioned(
+              bottom: (MediaQuery.of(context).size.height * initialSheetSize) - 60.h,
+              right: 20.w,
+              child: AppMapGpsButton(onPressed: c.recenterMap),
+            ),
+            _topMapActions(c, topPad),
+            _draggableBottomSheet(c, initialSize: initialSheetSize),
+          ],
+        );
+      }),
     );
   }
 
   Widget _buildMap(FindingDriverController c) {
     return Obx(() {
       final pickup = c.pickupLatLng;
+      final mine = c.myLocation.value;
       final drivers = c.driverMarkerPoints.toList();
       final assigned = c.assignedDriverLocation.value;
+      final isAssigned = c.ridePhase.value == 'driver_assigned';
 
       final markers = <Marker>{};
-      for (var i = 0; i < drivers.length; i++) {
-        final base = drivers[i];
-        markers.add(
-          Marker(
-            markerId: MarkerId('near_$i'),
-            position: base,
-            icon: BitmapDescriptor.defaultMarkerWithHue(
-              i == 0 ? BitmapDescriptor.hueRose : BitmapDescriptor.hueAzure,
+      if (!isAssigned) {
+        for (var i = 0; i < drivers.length; i++) {
+          final base = drivers[i];
+          final isCar = i == 1;
+          markers.add(
+            Marker(
+              markerId: MarkerId('near_$i'),
+              position: base,
+              icon: isCar
+                  ? (c.nearCarMarkerIcon.value ??
+                      BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure))
+                  : (c.nearBikeMarkerIcon.value ??
+                      BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRose)),
+              anchor: const Offset(0.5, 0.5),
+              flat: true,
             ),
-            anchor: const Offset(0.5, 0.5),
-          ),
-        );
+          );
+        }
       }
       if (assigned != null) {
         markers.add(
           Marker(
             markerId: const MarkerId('assigned_driver'),
             position: assigned,
-            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+            icon: c.assignedDriverMarkerIcon.value ??
+                BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
             anchor: const Offset(0.5, 0.5),
+            flat: true,
           ),
         );
       }
+      markers.add(
+        Marker(
+          markerId: const MarkerId('my_location'),
+          position: mine,
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+        ),
+      );
       markers.add(
         Marker(
           markerId: const MarkerId('pickup'),
@@ -128,16 +132,41 @@ class FindingDriverScreen extends StatelessWidget {
         initialCameraPosition: CameraPosition(target: pickup, zoom: 15),
         onMapCreated: c.onMapCreated,
         markers: markers,
-        circles: {
-          Circle(
-            circleId: const CircleId('search_pulse'),
-            center: pickup,
-            radius: _searchCircleRadiusM,
-            fillColor: const Color(0xFF2668D2).withOpacity(0.12),
-            strokeColor: const Color(0xFF2668D2).withOpacity(0.35),
-            strokeWidth: 2,
-          ),
-        },
+        polylines: assigned == null
+            ? {
+                Polyline(
+                  polylineId: const PolylineId('mock_rider_route'),
+                  points: [mine, pickup],
+                  color: const Color(0xFF3073E8),
+                  width: 4,
+                ),
+              }
+            : {
+                Polyline(
+                  polylineId: const PolylineId('mock_rider_route'),
+                  points: [mine, pickup],
+                  color: const Color(0xFF3073E8),
+                  width: 4,
+                ),
+                Polyline(
+                  polylineId: const PolylineId('assigned_route'),
+                  points: [assigned, pickup],
+                  color: const Color(0xFF3073E8),
+                  width: 4,
+                ),
+              },
+        circles: isAssigned
+            ? const {}
+            : {
+                Circle(
+                  circleId: const CircleId('search_pulse'),
+                  center: pickup,
+                  radius: _searchCircleRadiusM,
+                  fillColor: const Color(0xFF2668D2).withOpacity(0.12),
+                  strokeColor: const Color(0xFF2668D2).withOpacity(0.35),
+                  strokeWidth: 2,
+                ),
+              },
         myLocationEnabled: true,
         myLocationButtonEnabled: false,
         zoomControlsEnabled: false,
@@ -146,198 +175,269 @@ class FindingDriverScreen extends StatelessWidget {
     });
   }
 
-  Widget _bottomSheet(FindingDriverController c) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(40.r)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.w),
-          child: Column(
-            children: [
-              SizedBox(height: 10.h),
-              Container(
-                width: 64.w,
-                height: 5.h,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0),
-                  borderRadius: BorderRadius.circular(37.r),
-                ),
-              ),
-              SizedBox(height: 20.h),
-              Text(
-                'Finding Your Driver',
-                style: AppTextStyles.homeTitle.copyWith(
-                  fontSize: 20.sp,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF132235),
-                  letterSpacing: -0.4,
-                ),
-              ),
-              SizedBox(height: 8.h),
-              Text(
-                'The driver will pick you up as soon as possible\nafter they confirm your order',
-                textAlign: TextAlign.center,
-                style: AppTextStyles.homeCaption.copyWith(
-                  fontSize: 15.sp,
-                  color: const Color(0xFF364B63),
-                  height: 1.33,
-                ),
-              ),
-              SizedBox(height: 20.h),
-              _searchingSlider(c),
-              SizedBox(height: 16.h),
-              Obx(() {
-                final mins = c.remainingWholeMinutes;
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.access_time, size: 22.sp, color: Colors.black87),
-                    SizedBox(width: 6.w),
-                    Text(
-                      '$mins minutes remain',
-                      style: AppTextStyles.homeCaption.copyWith(
-                        fontSize: 15.sp,
-                        color: const Color(0xFF364B63),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                );
-              }),
-              const Spacer(),
-              Obx(
-                () => Padding(
-                  padding: EdgeInsets.only(bottom: 8.h),
-                  child: Text(
-                    c.isSocketConnected.value
-                        ? 'Live • ${c.nearbyDriverCount.value} nearby'
-                        : (c.lastSocketError.value.isNotEmpty
-                            ? c.lastSocketError.value
-                            : 'Connecting…'),
-                    style: AppTextStyles.homeCaption.copyWith(
-                      color: c.isSocketConnected.value ? AppColors.success : AppColors.shade2,
-                      fontSize: 12.sp,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                    side: const BorderSide(color: AppColors.primary, width: 1.2),
-                    padding: EdgeInsets.symmetric(vertical: 16.h),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16.r),
-                    ),
-                  ),
-                  onPressed: c.confirmCancelRide,
-                  child: Text(
-                    'Cancel Ride',
-                    style: TextStyle(
-                      fontSize: 17.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(height: 12.h),
-            ],
-          ),
-        ),
+  Widget _draggableBottomSheet(FindingDriverController c, {required double initialSize}) {
+    return AppDraggableBottomSheet(
+      initialChildSize: initialSize,
+      minChildSize: 0.42,
+      childBuilder: (scrollController) => _bottomSheet(
+        c,
+        scrollController: scrollController,
       ),
     );
   }
 
-  /// Track width = full 10-minute window; fill advances once per second with the countdown.
-  Widget _searchingSlider(FindingDriverController c) {
-    return Obx(() {
-      final total = FindingDriverController.searchTimeoutSeconds;
-      final rem = c.remainingSeconds.value.clamp(0, total);
-      final elapsed = total - rem;
-      final t = total > 0 ? (elapsed / total).clamp(0.0, 1.0) : 1.0;
-
-      return LayoutBuilder(
-        builder: (context, constraints) {
-          final trackW = constraints.maxWidth;
-          final carSize = 40.w;
-          final pad = 8.w;
-          final maxTravel = (trackW - 2 * pad - carSize).clamp(0.0, double.infinity);
-          final carLeft = pad + t * maxTravel;
-          final fillW = (trackW * t).clamp(0.0, trackW);
-
-          return Container(
-            height: 48.h,
+  Widget _bottomSheet(
+    FindingDriverController c, {
+    required ScrollController scrollController,
+  }) {
+    return ListView(
+      controller: scrollController,
+      padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 0),
+      children: [
+        Center(
+          child: Container(
+            width: 64.w,
+            height: 5.h,
             decoration: BoxDecoration(
-              color: const Color(0xFFF8F9FD),
-              borderRadius: BorderRadius.circular(26.r),
-              border: Border.all(color: const Color(0xFFE6E9EE), width: 0.8),
+              color: const Color(0xFFE2E8F0),
+              borderRadius: BorderRadius.circular(37.r),
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(26.r),
-              child: Stack(
-                clipBehavior: Clip.hardEdge,
-                children: [
-                  Positioned(
-                    left: 0,
-                    top: 0,
-                    bottom: 0,
-                    width: fillW,
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Color(0xFFF3004C), Color(0xFFDE074A)],
+          ),
+        ),
+        SizedBox(height: 20.h),
+        _chooseRideContent(c),
+        SizedBox(height: 12.h),
+        _paymentFooter(c),
+      ],
+    );
+  }
+
+  Widget _chooseRideContent(FindingDriverController c) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Choose a ride',
+          style: AppTextStyles.homeTitle.copyWith(
+            fontSize: 20.sp,
+            fontWeight: FontWeight.w600,
+            color: Colors.black,
+            letterSpacing: -0.4,
+          ),
+        ),
+        SizedBox(height: 8.h),
+        ...List.generate(
+          c.rideOptions.length,
+          (index) => Padding(
+            padding: EdgeInsets.only(bottom: 10.h),
+            child: _rideOptionTile(c, index),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _rideOptionTile(FindingDriverController c, int index) {
+    return Obx(() {
+      final opt = c.rideOptions[index];
+      final selected = c.selectedRideIndex.value == index;
+      return InkWell(
+        borderRadius: BorderRadius.circular(16.r),
+        onTap: () => c.selectRideOption(index),
+        child: Container(
+          height: 79.h,
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8F9FD),
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(
+              color: selected ? AppColors.primary : const Color(0xFFE6E9EE),
+              width: selected ? 1.2 : .8,
+            ),
+          ),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 70.w,
+                child: Image.asset(
+                  opt.assetPath,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) =>
+                      Icon(Icons.directions_car, color: AppColors.shade2, size: 30.sp),
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          opt.name,
+                          style: AppTextStyles.homeSubtitle.copyWith(
+                            color: const Color(0xFF132235),
+                            fontSize: 30.sp / 2,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Text(
+                          ' \u2022 ${opt.capacity}',
+                          style: AppTextStyles.homeCaption.copyWith(
+                            color: const Color(0xFF364B63),
+                            fontSize: 12.sp,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (opt.nearFast)
+                      Container(
+                        margin: EdgeInsets.only(top: 2.h, bottom: 2.h),
+                        padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF5FFF9),
+                          borderRadius: BorderRadius.circular(4.r),
+                        ),
+                        child: Text(
+                          '\u26A1 NEAR & FAST',
+                          style: TextStyle(
+                            color: const Color(0xFF269441),
+                            fontSize: 10.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
-                      alignment: Alignment.center,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.chevron_right, color: Colors.white, size: 18.sp),
-                          Icon(Icons.chevron_right, color: Colors.white, size: 18.sp),
-                          Icon(Icons.chevron_right, color: Colors.white, size: 18.sp),
-                        ],
+                    Text(
+                      '${opt.eta} \u2022 ${opt.dropAt}',
+                      style: AppTextStyles.homeCaption.copyWith(
+                        color: const Color(0xFF364B63),
+                        fontSize: 12.sp,
                       ),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                opt.fare,
+                style: AppTextStyles.homeTitle.copyWith(
+                  fontSize: 28.sp / 2,
+                  color: const Color(0xFF132235),
+                  fontWeight: FontWeight.w700,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _paymentFooter(FindingDriverController c) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: -16.w),
+      padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 8.h),
+      decoration: BoxDecoration(
+        color: AppColors.primary,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Obx(
+              () => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Pay Using',
+                    style: TextStyle(color: Colors.white, fontSize: 13.sp),
+                  ),
+                  SizedBox(height: 2.h),
+                  Text(
+                    'Mastercard / Visa',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 30.sp / 2,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  Positioned(
-                    left: carLeft,
-                    top: 4.h,
-                    child: Container(
-                      width: carSize,
-                      height: carSize,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFDE074A),
-                        shape: BoxShape.circle,
-                      ),
-                      child: SvgPictureAsset(
-                        AppAssets.rideFindingLoaderCar,
-                        width: 22.w,
-                        height: 22.w,
-                        placeholderBuilder: (_) =>
-                            Icon(Icons.directions_car, color: Colors.white, size: 22.sp),
-                      ),
-                    ),
+                  Text(
+                    'Card ending in XX1234',
+                    style: TextStyle(color: Colors.white, fontSize: 10.sp),
                   ),
                 ],
               ),
             ),
-          );
-        },
-      );
-    });
+          ),
+          Obx(
+            () => Container(
+              width: 212.w,
+              height: 68.h,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(22.r),
+              ),
+              child: Center(
+                child: Text(
+                  'Book Ride ${c.selectedFare}',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
+
+  Widget _topMapActions(FindingDriverController c, double topPad) {
+    return Stack(
+      children: [
+        Positioned(
+          top: topPad + 8.h,
+          left: 16.w,
+          child: InkWell(
+            onTap: Get.back,
+            child: SizedBox(
+              width: 28.w,
+              height: 28.h,
+              child: const Icon(Icons.arrow_back, color: Colors.black),
+            ),
+          ),
+        ),
+        Positioned(
+          top: topPad + 8.h,
+          right: 16.w,
+          child: Container(
+            height: 28.h,
+            padding: EdgeInsets.symmetric(horizontal: 8.w),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2668D2),
+              borderRadius: BorderRadius.circular(31.r),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.settings, color: Colors.white, size: 14),
+                SizedBox(width: 4.w),
+                Text(
+                  'Promotions',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 11.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
 }

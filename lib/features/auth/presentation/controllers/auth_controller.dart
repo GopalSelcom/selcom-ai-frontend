@@ -73,6 +73,13 @@ class AuthController extends GetxController {
     );
   }
 
+  Future<void> sendOtpAndNavigate() async {
+    final success = await sendOtp();
+    if (!success) return;
+    startResendTimer();
+    Get.toNamed(AppRoutes.otp);
+  }
+
   Future<bool> resendOtp() async {
     isLoading.value = true;
     errorMessage.value = '';
@@ -158,5 +165,9 @@ class AuthController extends GetxController {
         }
       },
     );
+  }
+
+  void completeProfileLoading() {
+    Get.offAllNamed(AppRoutes.home);
   }
 }

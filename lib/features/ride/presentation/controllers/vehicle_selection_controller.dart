@@ -8,6 +8,7 @@ import 'package:selcom_rides_frontend/core/data/models/responses/rides/book_ride
 import '../../../../core/data/models/requests/book_ride_request.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
+import '../../../../core/data/models/responses/nearbyRiders/response/near_by_rider_response.dart';
 import '../../../../core/data/models/responses/payment_status_response/payment_status_response.dart';
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
@@ -56,7 +57,7 @@ class VehicleSelectionController extends GetxController {
   String? _preferredVehicleName;
 
   final AppSocketService _socketService = AppSocketService();
-  StreamSubscription<List<NearbyDriverPoint>>? _nearbyDriversSub;
+  StreamSubscription<List<Driver>>? _nearbyDriversSub;
   StreamSubscription<String>? _nearbyDriversErrorSub;
   StreamSubscription<bool>? _nearbyDriversConnectionSub;
 
@@ -368,17 +369,17 @@ class VehicleSelectionController extends GetxController {
 
     await validationResult.fold(
       (f) async {
-        // isBooking.value = false;
-        Get.offNamed(
-          AppRoutes.findingDriver,
-          arguments: {
-            'rideId': "1234",
-            'pickupLat': pickupEntity.lat,
-            'pickupLng': pickupEntity.lng,
-            'pickupAddress': pickupEntity.address,
-            'destinationAddress': destinationEntity.address,
-          },
-        );
+        isBooking.value = false;
+        // Get.offNamed(
+        //   AppRoutes.findingDriver,
+        //   arguments: {
+        //     'rideId': "1234",
+        //     'pickupLat': pickupEntity.lat,
+        //     'pickupLng': pickupEntity.lng,
+        //     'pickupAddress': pickupEntity.address,
+        //     'destinationAddress': destinationEntity.address,
+        //   },
+        // );
         Get.snackbar(
           'Payment validation failed',
           'Could not validate payment. Please try again.',
@@ -591,7 +592,7 @@ class VehicleSelectionController extends GetxController {
         driverMarkerPoints.clear();
       } else {
         driverMarkerPoints.assignAll(
-          drivers.map((d) => LatLng(d.lat, d.lng)),
+          drivers.map((d) => LatLng(double.parse(d.lat??""), double.parse(d.lng??""))),
         );
       }
       nearbyDriverCount.value = drivers.length;

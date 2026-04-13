@@ -3,27 +3,29 @@ import '../user_model.dart';
 class VerifyOtpResponseModel {
   int? statusCode;
   String? message;
-  VerifyOtpData? response;
+  VerifyOtpData? data;
 
-  VerifyOtpResponseModel({this.statusCode, this.message, this.response});
+  VerifyOtpResponseModel({this.statusCode, this.message, this.data});
 
   VerifyOtpResponseModel.fromJson(Map<String, dynamic> json) {
     statusCode = json['status_code'];
     message = json['message'];
-    response = json['response'] != null ? VerifyOtpData.fromJson(json['response']) : null;
+    final payload = json['data'] ?? json['response'];
+    data = payload is Map<String, dynamic> ? VerifyOtpData.fromJson(payload) : null;
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['status_code'] = statusCode;
     data['message'] = message;
-    if (response != null) {
-      data['response'] = response!.toJson();
+    if (this.data != null) {
+      data['data'] = this.data!.toJson();
     }
     return data;
   }
 
   bool get isSuccess => statusCode == 200;
+  VerifyOtpData? get response => data;
 }
 
 class VerifyOtpData {
@@ -43,8 +45,9 @@ class VerifyOtpData {
 
   VerifyOtpData.fromJson(Map<String, dynamic> json) {
     user = json['user'] != null ? UserModel.fromJson(json['user']) : null;
-    accessToken = json['accessToken'];
-    refreshToken = json['refreshToken'];
+    accessToken = (json['access_token'] ?? json['authorization_token'] ?? json['accessToken'])
+        ?.toString();
+    refreshToken = (json['refresh_token'] ?? json['refreshToken'])?.toString();
     isUserAlreadyRegistered = json['is_user_already_registered'];
     isUserAddressAdded = json['is_user_address_added'];
   }
@@ -54,8 +57,8 @@ class VerifyOtpData {
     if (user != null) {
       data['user'] = user!.toJson();
     }
-    data['accessToken'] = accessToken;
-    data['refreshToken'] = refreshToken;
+    data['access_token'] = accessToken;
+    data['refresh_token'] = refreshToken;
     data['is_user_already_registered'] = isUserAlreadyRegistered;
     data['is_user_address_added'] = isUserAddressAdded;
     return data;

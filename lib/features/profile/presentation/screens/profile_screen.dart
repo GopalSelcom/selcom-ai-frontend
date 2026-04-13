@@ -4,12 +4,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../../core/di/injection_container.dart';
-import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 
-import '../../../ride/presentation/screens/my_rides_screen.dart';
 import '../controllers/profile_controller.dart';
 import '../widgets/menu_item_widget.dart';
 import '../widgets/wallet_summary_card.dart';
@@ -302,14 +300,14 @@ class ProfileScreen extends StatelessWidget {
           MenuItemWidget(
             icon: Iconsax.clock,
             title: 'My Rides',
-            onTap: () => Get.to(() => const MyRidesScreen()),
+            onTap: controller.openMyRides,
           ),
           MenuItemWidget(icon: Iconsax.card, title: 'Payment', onTap: () {}),
           MenuItemWidget(icon: Iconsax.gift, title: 'Promotions', onTap: () {}),
           MenuItemWidget(
             icon: Iconsax.message_question,
             title: 'Help',
-            onTap: () => Get.toNamed(AppRoutes.contactUs),
+            onTap: controller.openContactUs,
           ),
           MenuItemWidget(
             icon: Iconsax.shield_tick,

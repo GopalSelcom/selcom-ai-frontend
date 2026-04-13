@@ -1,4 +1,3 @@
-import 'dart:developer';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/urls.dart';
 import '../../../../core/data/models/requests/send_otp_request.dart';
@@ -47,7 +46,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         return SendOtpResponseModel.fromJson(response.data);
       }
     } catch (e) {
-      log("sendOtpApi Exception: $e");
+      // Intentionally avoid logging request payload details.
     }
     return null;
   }
@@ -69,7 +68,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         return SendOtpResponseModel.fromJson(response.data);
       }
     } catch (e) {
-      log("resendOtpApi Exception: $e");
+      // Intentionally avoid logging request payload details.
     }
     return null;
   }
@@ -91,7 +90,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         return VerifyOtpResponseModel.fromJson(response.data);
       }
     } catch (e) {
-      log("verifyOtpApi Exception: $e");
+      // Intentionally avoid logging request payload details.
     }
     return null;
   }
@@ -108,7 +107,15 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      return response.data['accessToken'] ?? '';
+      final data = response.data as Map<String, dynamic>;
+      final payload = data['data'] is Map<String, dynamic>
+          ? data['data'] as Map<String, dynamic>
+          : data;
+      return (payload['authorization_token'] ??
+              payload['access_token'] ??
+              payload['accessToken'] ??
+              '')
+          .toString();
     }
     return '';
   }

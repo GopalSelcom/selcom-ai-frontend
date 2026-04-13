@@ -1,11 +1,12 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '../../../../core/constants/app_assets.dart';
 import '../../../../core/routes/app_routes.dart';
-import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../domain/repositories/ride_repository.dart';
 
 /// SCR-10 — finding driver: map + nearby drivers socket (same events as vehicle selection)
@@ -14,8 +15,6 @@ class FindingDriverController extends GetxController {
   FindingDriverController({required this.rideRepository});
 
   final RideRepository rideRepository;
-
-  final AppSocketService _socket = AppSocketService();
 
   /// Total search window (product: 10 minutes).
   static const int searchTimeoutSeconds = 600;
@@ -26,52 +25,45 @@ class FindingDriverController extends GetxController {
   late final String destinationAddress;
 
   final driverMarkerPoints = <LatLng>[].obs;
-  /// When server sends `ride:driver_location`, show assigned driver on map.
+  final myLocation = const LatLng(-6.7927, 39.2092).obs;
   final Rxn<LatLng> assignedDriverLocation = Rxn<LatLng>();
-
-  final isSocketConnected = false.obs;
-  final lastSocketError = ''.obs;
-  final nearbyDriverCount = 0.obs;
 
   final remainingSeconds = searchTimeoutSeconds.obs;
   final ridePhase = 'searching'.obs;
+  final driverName = 'John Doe'.obs;
+  final driverRating = '4'.obs;
+  final driverVehicle = 'Volkswagen'.obs;
+  final driverPlate = 'HG5045'.obs;
+  final vehicleDisplay = 'Toyota corolla, White'.obs;
+  final etaLabel = '10 Mins'.obs;
+  final arrivalLabel = 'Driver will arriving in 1 min...'.obs;
+  final otpDigits = const ['2', '7', '5', '6'].obs;
+  final plateDigits = const ['T772', 'BBE'].obs;
+  final isDebugUiSwitcherVisible = kDebugMode.obs;
+  final selectedRideIndex = 0.obs;
+  final Rxn<BitmapDescriptor> nearBikeMarkerIcon = Rxn<BitmapDescriptor>();
+  final Rxn<BitmapDescriptor> nearCarMarkerIcon = Rxn<BitmapDescriptor>();
+  final Rxn<BitmapDescriptor> assignedDriverMarkerIcon = Rxn<BitmapDescriptor>();
 
   GoogleMapController? mapController;
 
   Timer? _countdownTimer;
-  Timer? _nearbyRefreshTimer;
-
-  StreamSubscription<List<NearbyDriverPoint>>? _driversSub;
-  StreamSubscription<String>? _errorSub;
-  StreamSubscription<bool>? _connectionSub;
-  StreamSubscription<Map<String, dynamic>>? _rideStatusSub;
-  StreamSubscription<Map<String, dynamic>>? _driverLocSub;
+  Timer? _mockDriverAssignTimer;
 
   @override
   void onInit() {
     super.onInit();
     _parseArgs();
-    if (rideId.isEmpty) {
-      Future.microtask(() {
-        Get.snackbar('Ride', 'Missing ride id.');
-        Get.back();
-      });
-      return;
-    }
+    _seedMockMapData();
+    _loadMarkerIcons();
     _startCountdown();
-    _initSocket();
+    _scheduleMockDriverAssigned();
   }
 
   @override
   void onClose() {
     _countdownTimer?.cancel();
-    _nearbyRefreshTimer?.cancel();
-    _driversSub?.cancel();
-    _errorSub?.cancel();
-    _connectionSub?.cancel();
-    _rideStatusSub?.cancel();
-    _driverLocSub?.cancel();
-    _socket.dispose();
+    _mockDriverAssignTimer?.cancel();
     super.onClose();
   }
 
@@ -86,6 +78,33 @@ class FindingDriverController extends GetxController {
     destinationAddress = (args['destinationAddress'] as String?)?.trim() ?? '';
   }
 
+  void _seedMockMapData() {
+    driverMarkerPoints.assignAll([
+      const LatLng(-6.7915, 39.2078),
+      const LatLng(-6.7939, 39.2107),
+      const LatLng(-6.7948, 39.2069),
+    ]);
+  }
+
+  Future<void> _loadMarkerIcons() async {
+    try {
+      nearBikeMarkerIcon.value = await BitmapDescriptor.asset(
+        const ImageConfiguration(size: Size(34, 34)),
+        AppAssets.boda,
+      );
+      nearCarMarkerIcon.value = await BitmapDescriptor.asset(
+        const ImageConfiguration(size: Size(36, 36)),
+        AppAssets.gari,
+      );
+      assignedDriverMarkerIcon.value = await BitmapDescriptor.asset(
+        const ImageConfiguration(size: Size(36, 36)),
+        AppAssets.gariPlus,
+      );
+    } catch (_) {
+      // Keep marker fallbacks from screen if custom assets fail.
+    }
+  }
+
   void _startCountdown() {
     remainingSeconds.value = searchTimeoutSeconds;
     _countdownTimer?.cancel();
@@ -95,97 +114,21 @@ class FindingDriverController extends GetxController {
     });
   }
 
-  Future<void> _initSocket() async {
-    _driversSub?.cancel();
-    _errorSub?.cancel();
-    _connectionSub?.cancel();
-    _rideStatusSub?.cancel();
-    _driverLocSub?.cancel();
-
-    _driversSub = _socket.nearbyDriversStream.listen((drivers) {
-      if (drivers.isEmpty) {
-        driverMarkerPoints.clear();
-      } else {
-        driverMarkerPoints.assignAll(drivers.map((d) => LatLng(d.lat, d.lng)));
-      }
-      nearbyDriverCount.value = drivers.length;
-      lastSocketError.value = '';
-    });
-
-    _errorSub = _socket.errorStream.listen((msg) {
-      lastSocketError.value = msg;
-    });
-
-    _connectionSub = _socket.connectionStream.listen((ok) {
-      isSocketConnected.value = ok;
-      if (ok) {
-        if (rideId.isNotEmpty) {
-          _socket.joinRideRoom(rideId: rideId);
-        }
-        _emitNearbyDriversAllTypes();
-      }
-    });
-
-    _rideStatusSub = _socket.rideStatusStream.listen(_onRideStatus);
-
-    _driverLocSub = _socket.rideDriverLocationStream.listen((payload) {
-      final lat = (payload['lat'] as num?)?.toDouble();
-      final lng = (payload['lng'] as num?)?.toDouble();
-      if (lat != null && lng != null) {
-        assignedDriverLocation.value = LatLng(lat, lng);
-      }
-    });
-
-    await _socket.connect();
-    if (rideId.isNotEmpty) {
-      _socket.joinRideRoom(rideId: rideId);
-    }
-    _emitNearbyDriversAllTypes();
-
-    _nearbyRefreshTimer?.cancel();
-    _nearbyRefreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
-      if (isSocketConnected.value) _emitNearbyDriversAllTypes();
+  void _scheduleMockDriverAssigned() {
+    _mockDriverAssignTimer?.cancel();
+    _mockDriverAssignTimer = Timer(const Duration(seconds: 6), () {
+      setMockPhase('driver_assigned');
     });
   }
 
-  /// Same as vehicle selection when `vehicle_type` is omitted — all vehicle types.
-  void _emitNearbyDriversAllTypes() {
-    _socket.requestNearbyDrivers(
-      lat: pickupLatLng.latitude,
-      lng: pickupLatLng.longitude,
-      vehicleType: null,
-      radiusKm: 3,
-    );
-  }
-
-  void _onRideStatus(Map<String, dynamic> event) {
-    final status = (event['status'] ?? '').toString().toLowerCase();
-    ridePhase.value = status.isEmpty ? ridePhase.value : status;
-
-    if (status == 'driver_assigned') {
-      Get.snackbar('Driver found', 'A driver has been assigned to your ride.');
-      // TODO(SCR-11): Get.offNamed(AppRoutes.driverAccepted, arguments: { 'rideId': rideId, ... });
-    } else if (status == 'no_driver_found') {
-      final msg = (event['message'] as String?)?.trim() ??
-          'No drivers available. Try again later.';
-      Get.dialog<void>(
-        AlertDialog(
-          title: const Text('No drivers'),
-          content: Text(msg),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Get.back();
-                Get.offAllNamed(AppRoutes.home);
-              },
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
-    } else if (status == 'cancelled') {
-      Get.offAllNamed(AppRoutes.home);
+  void setMockPhase(String phase) {
+    if (phase == 'driver_assigned') {
+      assignedDriverLocation.value = const LatLng(-6.7921, 39.2101);
+      ridePhase.value = 'driver_assigned';
+      return;
     }
+    assignedDriverLocation.value = null;
+    ridePhase.value = 'searching';
   }
 
   void onMapCreated(GoogleMapController c) {
@@ -196,8 +139,9 @@ class FindingDriverController extends GetxController {
   }
 
   void recenterMap() {
+    final focus = assignedDriverLocation.value ?? pickupLatLng;
     mapController?.animateCamera(
-      CameraUpdate.newLatLngZoom(pickupLatLng, 15),
+      CameraUpdate.newLatLngZoom(focus, 15),
     );
   }
 
@@ -222,17 +166,61 @@ class FindingDriverController extends GetxController {
       ),
     );
     if (ok != true) return;
-
-    final result = await rideRepository.cancelRide(rideId, 'rider_cancelled');
-    result.fold(
-      (f) => Get.snackbar('Cancel failed', 'Could not cancel. Try again.'),
-      (success) {
-        if (success) {
-          Get.offAllNamed(AppRoutes.home);
-        } else {
-          Get.snackbar('Cancel failed', 'Please try again.');
-        }
-      },
-    );
+    Get.offAllNamed(AppRoutes.home);
   }
+
+  final rideOptions = const <MockRideOption>[
+    MockRideOption(
+      name: 'GoRide Card',
+      capacity: '4',
+      eta: '10 min away',
+      dropAt: 'Drop 1:11 pm',
+      fare: 'TZS 500',
+      assetPath: AppAssets.gari,
+      nearFast: true,
+    ),
+    MockRideOption(
+      name: 'Bajaji',
+      capacity: '3',
+      eta: '5 min away',
+      dropAt: 'Drop 1:09 pm',
+      fare: 'TZS 100',
+      assetPath: AppAssets.bajaj,
+    ),
+    MockRideOption(
+      name: 'Boda',
+      capacity: '1',
+      eta: '1 min away',
+      dropAt: 'Drop 1:00 pm',
+      fare: 'TZS 100',
+      assetPath: AppAssets.boda,
+    ),
+  ];
+
+  String get selectedFare => rideOptions[selectedRideIndex.value].fare;
+
+  void selectRideOption(int index) {
+    if (index < 0 || index >= rideOptions.length) return;
+    selectedRideIndex.value = index;
+  }
+}
+
+class MockRideOption {
+  final String name;
+  final String capacity;
+  final String eta;
+  final String dropAt;
+  final String fare;
+  final String assetPath;
+  final bool nearFast;
+
+  const MockRideOption({
+    required this.name,
+    required this.capacity,
+    required this.eta,
+    required this.dropAt,
+    required this.fare,
+    required this.assetPath,
+    this.nearFast = false,
+  });
 }

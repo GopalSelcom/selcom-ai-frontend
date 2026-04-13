@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../core/routes/app_routes.dart';
+import '../../../ride/presentation/screens/my_rides_screen.dart';
 import '../../domain/usecases/profile_usecase.dart';
 import '../../../../core/data/models/user_model.dart';
 
@@ -155,5 +157,13 @@ class ProfileController extends GetxController {
     } else {
       Get.back();
     }
+  }
+
+  void openMyRides() {
+    Get.to(() => const MyRidesScreen());
+  }
+
+  void openContactUs() {
+    Get.toNamed(AppRoutes.contactUs);
   }
 }

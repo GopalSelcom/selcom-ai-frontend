@@ -5,8 +5,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:ui';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_assets.dart';
-import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/theme/app_text_styles.dart';
+import '../controllers/auth_controller.dart';
 
 class ProfileLoadingScreen extends StatefulWidget {
   const ProfileLoadingScreen({super.key});
@@ -156,7 +157,13 @@ class _ProfileLoadingScreenState extends State<ProfileLoadingScreen> with Single
 
                           // Done Button
                           InkWell(
-                            onTap: () => Get.offAllNamed(AppRoutes.home),
+                            onTap: () {
+                              if (Get.isRegistered<AuthController>()) {
+                                Get.find<AuthController>().completeProfileLoading();
+                                return;
+                              }
+                              Get.offAllNamed(AppRoutes.home);
+                            },
                             child: Container(
                               height: 54.h,
                               width: double.infinity,
