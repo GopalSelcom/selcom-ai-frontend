@@ -7,6 +7,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../domain/repositories/ride_repository.dart';
 
 /// SCR-10 — finding driver: map + nearby drivers socket (same events as vehicle selection)
@@ -15,6 +16,7 @@ class FindingDriverController extends GetxController {
   FindingDriverController({required this.rideRepository});
 
   final RideRepository rideRepository;
+  final AppSocketService _socketService = AppSocketService();
 
   /// Total search window (product: 10 minutes).
   static const int searchTimeoutSeconds = 600;
@@ -49,6 +51,9 @@ class FindingDriverController extends GetxController {
 
   Timer? _countdownTimer;
   Timer? _mockDriverAssignTimer;
+  StreamSubscription<bool>? _connectionSub;
+  StreamSubscription<Map<String, dynamic>>? _rideStatusSub;
+  StreamSubscription<Map<String, dynamic>>? _driverLocSub;
 
   @override
   void onInit() {
@@ -57,13 +62,17 @@ class FindingDriverController extends GetxController {
     _seedMockMapData();
     _loadMarkerIcons();
     _startCountdown();
-    _scheduleMockDriverAssigned();
+    _initRideRoomSocket();
   }
 
   @override
   void onClose() {
     _countdownTimer?.cancel();
     _mockDriverAssignTimer?.cancel();
+    _connectionSub?.cancel();
+    _rideStatusSub?.cancel();
+    _driverLocSub?.cancel();
+    _socketService.dispose();
     super.onClose();
   }
 
@@ -121,6 +130,46 @@ class FindingDriverController extends GetxController {
     });
   }
 
+  Future<void> _initRideRoomSocket() async {
+    if (rideId.isEmpty) {
+      // Keep visual flow working when screen is opened without a backend ride id.
+      _scheduleMockDriverAssigned();
+      return;
+    }
+
+    _connectionSub?.cancel();
+    _rideStatusSub?.cancel();
+    _driverLocSub?.cancel();
+
+    _connectionSub = _socketService.connectionStream.listen((connected) {
+      if (!connected) return;
+      _socketService.joinRideRoom(rideId: rideId);
+    });
+
+    _rideStatusSub = _socketService.rideStatusStream.listen((payload) {
+      final status = (payload['status'] ?? '').toString().toLowerCase();
+      if (status.isEmpty) return;
+      if (status == 'driver_assigned' || status == 'accepted') {
+        ridePhase.value = 'driver_assigned';
+      } else if (status == 'cancelled' || status == 'completed') {
+        Get.offAllNamed(AppRoutes.home);
+      }
+    });
+
+    _driverLocSub = _socketService.rideDriverLocationStream.listen((payload) {
+      final lat = (payload['lat'] as num?)?.toDouble();
+      final lng = (payload['lng'] as num?)?.toDouble();
+      if (lat == null || lng == null) return;
+      assignedDriverLocation.value = LatLng(lat, lng);
+      ridePhase.value = 'driver_assigned';
+    });
+
+    await _socketService.connect();
+    if (_socketService.isConnected) {
+      _socketService.joinRideRoom(rideId: rideId);
+    }
+  }
+
   void setMockPhase(String phase) {
     if (phase == 'driver_assigned') {
       assignedDriverLocation.value = const LatLng(-6.7921, 39.2101);
@@ -166,7 +215,23 @@ class FindingDriverController extends GetxController {
       ),
     );
     if (ok != true) return;
-    Get.offAllNamed(AppRoutes.home);
+
+    if (rideId.isEmpty) {
+      Get.snackbar('Cancel failed', 'Ride id is missing.');
+      return;
+    }
+
+    final result = await rideRepository.cancelRide(rideId, 'rider_cancelled');
+    result.fold(
+      (_) => Get.snackbar('Cancel failed', 'Could not cancel. Try again.'),
+      (success) {
+        if (success) {
+          Get.offAllNamed(AppRoutes.home);
+        } else {
+          Get.snackbar('Cancel failed', 'Please try again.');
+        }
+      },
+    );
   }
 
   final rideOptions = const <MockRideOption>[

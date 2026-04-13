@@ -40,6 +40,7 @@ class _RideEndpoints {
   final bookRide = "go/rides/book";
   final history = "go/rides/history";
   final recentDestinations = "go/rides/recent-destinations";
+  String cancelRide(String rideId) => "$base/$rideId/cancel";
   final base =
       "go/rides"; // Use for /{{id}}, /{{id}}/cancel, /{{id}}/rate, etc.
 }

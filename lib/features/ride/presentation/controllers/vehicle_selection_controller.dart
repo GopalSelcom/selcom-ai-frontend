@@ -428,7 +428,7 @@ class VehicleSelectionController extends GetxController {
         result.fold(
           (f) => Get.snackbar('Booking failed', 'Could not complete booking. Try again.'),
           (data) {
-            final rideId = data.data?.id;
+            final rideId = data.data?.ride?.id;
             if (rideId == null || rideId.isEmpty) {
               Get.snackbar('Booking', 'Ride was created but ride id is missing from the response.');
               Get.back();

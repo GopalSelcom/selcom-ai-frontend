@@ -36,7 +36,7 @@ class Driver {
   String? lat;
   String? lng;
   String? vehicleType;
-  int? distanceKm;
+  double? distanceKm;
 
   Driver({
     this.fleetId,
@@ -51,7 +51,7 @@ class Driver {
     String? lat,
     String? lng,
     String? vehicleType,
-    int? distanceKm,
+    double? distanceKm,
   }) =>
       Driver(
         fleetId: fleetId ?? this.fleetId,
@@ -66,7 +66,7 @@ class Driver {
     lat: json["lat"],
     lng: json["lng"],
     vehicleType: json["vehicle_type"],
-    distanceKm: json["distance_km"],
+    distanceKm: double.parse((json["distance_km"]??0).toString()),
   );
 
   Map<String, dynamic> toJson() => {
