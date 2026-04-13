@@ -5,6 +5,7 @@ import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/data/models/requests/book_ride_request.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
+import '../models/geocode_response_model.dart';
 import '../models/places_models.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/urls.dart';
@@ -20,6 +21,10 @@ abstract class HomeRemoteDataSource {
   Future<ReverseGeocodeModel> reverseGeocode({
     required double lat,
     required double lng,
+  });
+
+  Future<GeocodeResponse> getGeocode({
+    required String address,
   });
 
   Future<FareEstimateResponseModel> estimateFare(FareEstimateRequest request);
@@ -82,6 +87,24 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       return ReverseGeocodeModel.fromJson(response.data);
     }
     throw Exception('Reverse geocoding failed');
+  }
+
+  @override
+  Future<GeocodeResponse> getGeocode({
+    required String address,
+  }) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.places.geocode,
+        method: ApiMethod.get,
+        queryParams: {'address': address},
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      return GeocodeResponse.fromJson(response.data);
+    }
+    throw Exception('Geocoding failed');
   }
 
   @override

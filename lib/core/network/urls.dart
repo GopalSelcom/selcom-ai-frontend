@@ -118,6 +118,7 @@ class _PlacesEndpoints {
 
   final autocomplete = "go/places/autocomplete";
   final reverseGeocode = "go/places/reverse-geocode";
+  final geocode = "go/places/geocode";
 }
 
 /// ─────────────────────────────────

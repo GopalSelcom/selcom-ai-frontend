@@ -550,8 +550,12 @@ class HomeController extends GetxController {
 
   String vehicleExploreImageAsset(String vehicleName) {
     final name = vehicleName.toLowerCase();
-    if (name.contains('bike') || name.contains('boda')) return AppAssets.imgBoda;
-    if (name.contains('auto') || name.contains('wheeler') || name.contains('bajaj')) {
+    if (name.contains('bike') || name.contains('boda')) {
+      return AppAssets.imgBoda;
+    }
+    if (name.contains('auto') ||
+        name.contains('wheeler') ||
+        name.contains('bajaj')) {
       return AppAssets.imgBajaji;
     }
     return AppAssets.imgCab;
@@ -569,4 +573,20 @@ class HomeController extends GetxController {
 
   bool get shouldShowVehicleSection =>
       isLoadingHomeData.value || vehicleTypes.isNotEmpty;
+
+  Future<LatLng?> getLatLngFromAddress(String address) async {
+    final result = await homeRepository.getGeocode(address: address);
+    return result.fold(
+      (failure) => null,
+      (response) {
+        if (response.results != null && response.results!.isNotEmpty) {
+          final loc = response.results!.first.geometry?.location;
+          if (loc?.lat != null && loc?.lng != null) {
+            return LatLng(loc!.lat!, loc!.lng!);
+          }
+        }
+        return null;
+      },
+    );
+  }
 }

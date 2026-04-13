@@ -6,6 +6,7 @@ import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/repositories/home_repository.dart';
 import '../datasources/home_remote_data_source.dart';
+import '../models/geocode_response_model.dart';
 import '../models/home_models.dart';
 import '../models/places_models.dart';
 
@@ -47,6 +48,18 @@ class HomeRepositoryImpl implements HomeRepository {
   }) async {
     try {
       final result = await remoteDataSource.reverseGeocode(lat: lat, lng: lng);
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, GeocodeResponse>> getGeocode({
+    required String address,
+  }) async {
+    try {
+      final result = await remoteDataSource.getGeocode(address: address);
       return Right(result);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

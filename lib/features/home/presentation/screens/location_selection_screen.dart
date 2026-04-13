@@ -8,12 +8,14 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../controllers/home_controller.dart';
+import '../../data/models/places_models.dart';
 
 class LocationSelectionScreen extends StatefulWidget {
   const LocationSelectionScreen({super.key});
 
   @override
-  State<LocationSelectionScreen> createState() => _LocationSelectionScreenState();
+  State<LocationSelectionScreen> createState() =>
+      _LocationSelectionScreenState();
 }
 
 class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
@@ -575,7 +577,11 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                         AppAssets.locationClockDistance,
                         width: 21.44.w,
                         height: 21.44.h,
-                        placeholderBuilder: (_) => const Icon(Icons.schedule, color: Color(0xFFCACACA), size: 20),
+                        placeholderBuilder: (_) => const Icon(
+                          Icons.schedule,
+                          color: Color(0xFFCACACA),
+                          size: 20,
+                        ),
                       ),
                       SizedBox(height: 1.h),
                       Text(
@@ -754,21 +760,27 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     return _recentList(controller);
   }
 
-  Future<void> _onSuggestionSelected(dynamic prediction) async {
+  Future<void> _onSuggestionSelected(Prediction prediction) async {
     await controller.selectPlace(prediction);
     final description = prediction.description ?? '';
+
+    // Fetch coordinates using geocode API via controller helper
+    final latLng = await controller.getLatLngFromAddress(description);
+    final lat = latLng?.latitude;
+    final lng = latLng?.longitude;
+
     if (_activeSegmentIndex == 0) {
       pickupEditedByUser = true;
-      _routePickupLat = null;
-      _routePickupLng = null;
+      _routePickupLat = lat;
+      _routePickupLng = lng;
       pickupController.text = description;
       pickupController.selection = TextSelection.fromPosition(
         TextPosition(offset: pickupController.text.length),
       );
     } else if (_activeSegmentIndex == 1) {
       destinationController.text = description;
-      _routeDestinationLat = null;
-      _routeDestinationLng = null;
+      _routeDestinationLat = lat;
+      _routeDestinationLng = lng;
       _destinationPlaceId = prediction.placeId?.trim();
       destinationController.selection = TextSelection.fromPosition(
         TextPosition(offset: destinationController.text.length),
@@ -778,7 +790,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       if (i >= 0 && i < _extraDestinationControllers.length) {
         final c = _extraDestinationControllers[i];
         c.text = description;
-        c.selection = TextSelection.fromPosition(TextPosition(offset: c.text.length));
+        c.selection = TextSelection.fromPosition(
+          TextPosition(offset: c.text.length),
+        );
       }
     }
     controller.searchQuery.value = '';
@@ -803,5 +817,4 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       }
     }
   }
-
 }
