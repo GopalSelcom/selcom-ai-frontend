@@ -9,6 +9,8 @@ import '../../../ride/data/models/ride_management_models.dart';
 import '../controllers/home_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_map_gps_button.dart';
+import '../../../../shared/widgets/app_map_profile_chip.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -52,7 +54,11 @@ class HomeScreen extends StatelessWidget {
               children: [
                 _buildModernAddressBox(),
                 SizedBox(width: 12.w),
-                _buildProfileIcon(),
+                AppMapProfileChip(
+                  onTap: controller.openProfile,
+                  icon: Icons.person,
+                  iconColor: Colors.black,
+                ),
               ],
             ),
           ),
@@ -61,7 +67,7 @@ class HomeScreen extends StatelessWidget {
           Positioned(
             bottom: 370.h, // Adjusted based on initial bottom sheet height
             right: 20.w,
-            child: _buildGpsButton(),
+            child: AppMapGpsButton(onPressed: () => controller.recenterMap()),
           ),
 
           // 4. Interactive Bottom UI
@@ -238,58 +244,6 @@ class HomeScreen extends StatelessWidget {
           ),
         );
       }),
-    );
-  }
-
-  Widget _buildProfileIcon() {
-    return GestureDetector(
-      onTap: controller.openProfile,
-      child: Container(
-        width: 64.w,
-        height: 61.h,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: const Color(0xFFD3DDE7), width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 2,
-              offset: const Offset(0, 1),
-            ),
-          ],
-        ),
-        child: Center(
-          child: Icon(Icons.person, color: Colors.black, size: 28.sp),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGpsButton() {
-    return GestureDetector(
-      onTap: () => controller.recenterMap(),
-      child: Container(
-        padding: EdgeInsets.all(12.w),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          border: Border.all(color: const Color(0xFFCBD5E1)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: SvgPicture.asset(
-          AppAssets.icGps,
-          width: 24.w,
-          height: 24.w,
-          colorFilter: const ColorFilter.mode(AppColors.primary, BlendMode.srcIn),
-        ),
-      ),
     );
   }
 

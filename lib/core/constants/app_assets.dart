@@ -58,4 +58,9 @@ class AppAssets {
   static const String locationFieldDivider = '$_locationMcpOnly/img_divider_line.svg';
   static const String locationAddPillBackground = '$_locationMcpOnly/img_add_pill_bg.svg';
   static const String locationClockDistance = '$_locationMcpOnly/img_clock_distance.svg';
+
+  // ── Figma / ride SCR-10 (finding driver loader, node `207:24900`)
+  static const String _figmaRideScr10 = '$_imagePath/figma/ride_scr10';
+  /// Replace via `./scripts/fetch_figma_loader_svg.sh` + `FIGMA_TOKEN` for pixel match to Figma.
+  static const String rideFindingLoaderCar = '$_figmaRideScr10/ic_finding_loader_car.svg';
 }

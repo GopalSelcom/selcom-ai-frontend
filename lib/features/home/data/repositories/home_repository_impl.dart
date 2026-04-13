@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/data/models/requests/book_ride_request.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
+import '../../../../core/data/models/responses/rides/book_rides_response.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/repositories/home_repository.dart';
@@ -65,7 +66,7 @@ class HomeRepositoryImpl implements HomeRepository {
   }
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> bookRide(
+  Future<Either<Failure, BookRideResponse>> bookRide(
     BookRideRequest request,
   ) async {
     try {

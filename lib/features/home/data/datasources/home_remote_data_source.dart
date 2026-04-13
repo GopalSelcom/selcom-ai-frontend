@@ -1,3 +1,5 @@
+import 'package:selcom_rides_frontend/core/data/models/responses/rides/book_rides_response.dart';
+
 import '../../../../core/data/models/responses/rides/vehicle_types_response.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/data/models/requests/book_ride_request.dart';
@@ -22,7 +24,7 @@ abstract class HomeRemoteDataSource {
 
   Future<FareEstimateResponseModel> estimateFare(FareEstimateRequest request);
 
-  Future<Map<String, dynamic>> bookRide(BookRideRequest request);
+  Future<BookRideResponse> bookRide(BookRideRequest request);
 }
 
 class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
@@ -77,7 +79,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      return ReverseGeocodeModel.fromJson(response.data['response'] ?? {});
+      return ReverseGeocodeModel.fromJson(response.data);
     }
     throw Exception('Reverse geocoding failed');
   }
@@ -98,7 +100,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   }
 
   @override
-  Future<Map<String, dynamic>> bookRide(BookRideRequest request) async {
+  Future<BookRideResponse> bookRide(BookRideRequest request) async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.ride.bookRide,
@@ -107,6 +109,6 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       ),
     );
 
-    return response.data['data'] ?? response.data['response'] ?? {};
+    return BookRideResponse.fromJson(response.data);
   }
 }

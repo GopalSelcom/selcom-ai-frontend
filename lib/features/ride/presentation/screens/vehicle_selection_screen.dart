@@ -23,22 +23,22 @@ class VehicleSelectionScreen extends StatefulWidget {
 
 class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
     with TickerProviderStateMixin {
-  late AnimationController _polylineAnim;
-  late AnimationController _pulseAnim;
+  // late AnimationController _polylineAnim;
+  // late AnimationController _pulseAnim;
 
   @override
   void initState() {
     super.initState();
-    _polylineAnim = AnimationController(vsync: this, duration: const Duration(milliseconds: 2200))
-      ..forward();
-    _pulseAnim = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400))
-      ..repeat(reverse: true);
+    // _polylineAnim = AnimationController(vsync: this, duration: const Duration(milliseconds: 2200))
+    //   ..forward();
+    // _pulseAnim = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400))
+    //   ..repeat(reverse: true);
   }
 
   @override
   void dispose() {
-    _polylineAnim.dispose();
-    _pulseAnim.dispose();
+    // _polylineAnim.dispose();
+    // _pulseAnim.dispose();
     super.dispose();
   }
 
@@ -118,69 +118,70 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
         (pickup.latitude + drop.latitude) / 2,
         (pickup.longitude + drop.longitude) / 2,
       );
-
-      return AnimatedBuilder(
-        animation: Listenable.merge([_polylineAnim, _pulseAnim]),
-        builder: (context, _) {
-          final t = _polylineAnim.value.clamp(0.0, 1.0);
-          final n = math.max(2, (points.length * t).ceil());
-          final visible = points.take(n).toList();
-
-          final phase = _pulseAnim.value * 2 * math.pi;
-          final drivers = c.driverMarkerPoints.toList();
-          final markers = <Marker>{};
-          for (var i = 0; i < drivers.length; i++) {
-            final base = drivers[i];
-            final jitter = LatLng(
-              base.latitude + 0.00004 * math.sin(phase + i * 1.7),
-              base.longitude + 0.00004 * math.cos(phase + i * 1.1),
-            );
-            markers.add(
-              Marker(
-                markerId: MarkerId('driver_$i'),
-                position: jitter,
-                icon: BitmapDescriptor.defaultMarkerWithHue(
-                  i == 0 ? BitmapDescriptor.hueRose : BitmapDescriptor.hueAzure,
-                ),
-                anchor: const Offset(0.5, 0.5),
-              ),
-            );
-          }
-
-          markers.add(
-            Marker(
-              markerId: const MarkerId('pickup'),
-              position: pickup,
-              icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+      final drivers = c.driverMarkerPoints.toList();
+      final markers = <Marker>{};
+      for (var i = 0; i < drivers.length; i++) {
+        final base = drivers[i];
+        final jitter = LatLng(
+          base.latitude,
+          base.longitude,
+        );
+        markers.add(
+          Marker(
+            markerId: MarkerId('driver_$i'),
+            position: jitter,
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+              i == 0 ? BitmapDescriptor.hueRose : BitmapDescriptor.hueAzure,
             ),
-          );
-          markers.add(
-            Marker(
-              markerId: const MarkerId('drop'),
-              position: drop,
-              icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-            ),
-          );
+            anchor: const Offset(0.5, 0.5),
+          ),
+        );
+      }
 
-          return GoogleMap(
-            key: const ValueKey('vehicle_selection_map'),
-            initialCameraPosition: CameraPosition(target: mid, zoom: 13.5),
-            onMapCreated: c.onMapCreated,
-            polylines: {
-              Polyline(
-                polylineId: const PolylineId('route'),
-                points: visible,
-                color: const Color(0xFF2668D2),
-                width: 5,
-              ),
-            },
-            markers: markers,
-            myLocationButtonEnabled: false,
-            zoomControlsEnabled: false,
-            mapToolbarEnabled: false,
-          );
-        },
+      markers.add(
+        Marker(
+          markerId: const MarkerId('pickup'),
+          position: pickup,
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+        ),
       );
+      markers.add(
+        Marker(
+          markerId: const MarkerId('drop'),
+          position: drop,
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+        ),
+      );
+
+      return GoogleMap(
+        key: const ValueKey('vehicle_selection_map'),
+        initialCameraPosition: CameraPosition(target: mid, zoom: 13.5),
+        onMapCreated: c.onMapCreated,
+        polylines: {
+          Polyline(
+            polylineId: const PolylineId('route'),
+            points: points,
+            color: const Color(0xFF2668D2),
+            width: 5,
+          ),
+        },
+        markers: markers,
+        myLocationButtonEnabled: false,
+        zoomControlsEnabled: false,
+        mapToolbarEnabled: false,
+      );
+
+      // return AnimatedBuilder(
+      //   animation: Listenable.merge([_polylineAnim, _pulseAnim]),
+      //   builder: (context, _) {
+      //     final t = _polylineAnim.value.clamp(0.0, 1.0);
+      //     final n = math.max(2, (points.length * t).ceil());
+      //     final visible = points.take(n).toList();
+      //
+      //     final phase = _pulseAnim.value * 2 * math.pi;
+      //
+      //   },
+      // );
     });
   }
 

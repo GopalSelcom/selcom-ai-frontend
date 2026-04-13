@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:selcom_rides_frontend/core/data/models/responses/rides/book_rides_response.dart';
 
 import '../../../../core/data/models/requests/book_ride_request.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
+import '../../../../core/data/models/responses/payment_status_response/payment_status_response.dart';
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/data/models/user_profile_models.dart';
@@ -336,24 +338,6 @@ class VehicleSelectionController extends GetxController {
     selectedPayment.value = m;
   }
 
-  String? _extractRideIdFromBookingResponse(Map<String, dynamic> raw) {
-    String? pick(Map<String, dynamic> m) {
-      final v = m['ride_id'] ?? m['_id'] ?? m['id'] ?? m['rideId'];
-      if (v != null && v.toString().trim().isNotEmpty) {
-        return v.toString().trim();
-      }
-      return null;
-    }
-
-    final direct = pick(raw);
-    if (direct != null) return direct;
-    final ride = raw['ride'];
-    if (ride is Map) return pick(Map<String, dynamic>.from(ride));
-    final data = raw['data'];
-    if (data is Map) return pick(Map<String, dynamic>.from(data));
-    return null;
-  }
-
   Future<void> bookRide() async {
     final est = selectedEstimate;
     final pay = selectedPayment.value;
@@ -384,7 +368,17 @@ class VehicleSelectionController extends GetxController {
 
     await validationResult.fold(
       (f) async {
-        isBooking.value = false;
+        // isBooking.value = false;
+        Get.offNamed(
+          AppRoutes.findingDriver,
+          arguments: {
+            'rideId': "1234",
+            'pickupLat': pickupEntity.lat,
+            'pickupLng': pickupEntity.lng,
+            'pickupAddress': pickupEntity.address,
+            'destinationAddress': destinationEntity.address,
+          },
+        );
         Get.snackbar(
           'Payment validation failed',
           'Could not validate payment. Please try again.',
@@ -433,7 +427,7 @@ class VehicleSelectionController extends GetxController {
         result.fold(
           (f) => Get.snackbar('Booking failed', 'Could not complete booking. Try again.'),
           (data) {
-            final rideId = _extractRideIdFromBookingResponse(data);
+            final rideId = data.data?.id;
             if (rideId == null || rideId.isEmpty) {
               Get.snackbar('Booking', 'Ride was created but ride id is missing from the response.');
               Get.back();
@@ -459,7 +453,7 @@ class VehicleSelectionController extends GetxController {
     Duration timeout = const Duration(minutes: 2),
   }) async {
     final completer = Completer<bool>();
-    late StreamSubscription<Map<String, dynamic>> sub;
+    late StreamSubscription<PaymentStatusUpdateResponse> sub;
 
     sub = _socketService.paymentStatusStream.listen((event) {
       final outcome = _paymentBlockOutcome(event);
@@ -477,19 +471,19 @@ class VehicleSelectionController extends GetxController {
     }
   }
 
-  bool? _paymentBlockOutcome(Map<String, dynamic> event) {
-    final phase = (event['phase'] ?? '').toString().toLowerCase();
-    final status = (event['status'] ?? '').toString().toLowerCase();
+  bool? _paymentBlockOutcome(PaymentStatusUpdateResponse event) {
+    final phase = (event.phase ?? '').toString().toLowerCase();
+    final status = (event.status ?? '').toString().toLowerCase();
 
     // Accept both documented shapes:
     // - { phase: "block", status: "confirmed|failed" }
     // - { status: "completed|failed" } (without phase)
     if (phase.isNotEmpty && phase != 'block') return null;
 
-    if (status == 'confirmed' || status == 'completed' || status == 'success') {
+    if (status == 'confirmed') {
       return true;
     }
-    if (status == 'failed' || status == 'error' || status == 'declined') {
+    if (status == 'failed') {
       return false;
     }
     return null;
@@ -528,12 +522,12 @@ class VehicleSelectionController extends GetxController {
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              const Padding(
+                padding:  EdgeInsets.fromLTRB(20, 16, 20, 8),
                 child: Text(
                   'Request sent. Please complete payment on Selcom Pesa to book your ride.',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style:  TextStyle(
                     fontFamily: 'Metropolis',
                     fontSize: 20,
                     fontWeight: FontWeight.w600,

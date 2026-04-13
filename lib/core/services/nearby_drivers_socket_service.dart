@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:selcom_rides_frontend/core/data/models/responses/payment_status_response/payment_status_response.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
 import 'storage_service.dart';
@@ -52,7 +53,7 @@ class AppSocketService {
   final _rideDriverLocationController =
       StreamController<Map<String, dynamic>>.broadcast();
   final _paymentStatusController =
-      StreamController<Map<String, dynamic>>.broadcast();
+      StreamController<PaymentStatusUpdateResponse>.broadcast();
 
   AppSocketService({this.baseUrl = defaultBaseUrl});
 
@@ -64,7 +65,7 @@ class AppSocketService {
   Stream<Map<String, dynamic>> get rideStatusStream => _rideStatusController.stream;
   Stream<Map<String, dynamic>> get rideDriverLocationStream =>
       _rideDriverLocationController.stream;
-  Stream<Map<String, dynamic>> get paymentStatusStream =>
+  Stream<PaymentStatusUpdateResponse> get paymentStatusStream =>
       _paymentStatusController.stream;
 
   bool get isConnected => _socket?.connected == true;
@@ -136,7 +137,7 @@ class AppSocketService {
       if (data != null) _rideDriverLocationController.add(data);
     });
     _socket!.on(evtPaymentStatusUpdate, (payload) {
-      final data = _asMap(payload);
+      final data = PaymentStatusUpdateResponse.fromJson(payload as Map<String,dynamic>);
       if (data != null) _paymentStatusController.add(data);
     });
 

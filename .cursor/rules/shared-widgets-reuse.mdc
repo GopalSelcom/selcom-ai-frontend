@@ -30,3 +30,7 @@ Whenever you **create or substantially edit** a screen, route page, or reusable 
 - A screen can still be composed **from** shared pieces even when matching a Figma frame—assemble shared widgets with local layout/spacing rather than reinventing primitives each time.
 
 If a task explicitly requires a one-off prototype, note that in the PR/description; still prefer shared pieces where they fit without fighting the design.
+
+## 6. Duplication rule (explicit)
+- If the **same visual + interaction** (or the same Figma component) already exists or will appear on **more than one screen**, **extract it once** under `lib/shared/widgets/` (or extend an existing shared widget) **in the same change** unless the user explicitly asks for a one-off.
+- Do **not** copy-paste map chrome, headers, chips, sliders, or buttons into a new screen when an equivalent already exists in the repo—search, then reuse or generalize with parameters.
