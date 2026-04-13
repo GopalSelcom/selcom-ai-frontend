@@ -128,10 +128,12 @@ class AppSocketService {
       _errorController.add(_parseError(payload));
     });
     _socket!.on(evtRideStatusUpdate, (payload) {
+      print("this is the evtRideStatusUpdate---->${jsonEncode(payload)}");
       final data = _asMap(payload);
       if (data != null) _rideStatusController.add(data);
     });
     _socket!.on(evtRideDriverLocation, (payload) {
+      print("this is the evtRideDriverLocation---->${jsonEncode(payload)}");
       final data = _asMap(payload);
       if (data != null) _rideDriverLocationController.add(data);
     });

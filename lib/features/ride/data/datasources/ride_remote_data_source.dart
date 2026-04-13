@@ -73,7 +73,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   Future<bool> cancelRide(String rideId, String reason) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "${URLS.ride.base}/$rideId/cancel",
+        endpoint: URLS.ride.cancelRide(rideId),
         method: ApiMethod.put,
         body: {'reason': reason},
       ),
