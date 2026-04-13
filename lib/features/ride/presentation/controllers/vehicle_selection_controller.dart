@@ -625,7 +625,7 @@ class VehicleSelectionController extends GetxController {
       lat: pickupEntity.lat,
       lng: pickupEntity.lng,
       vehicleType: vehicleType,
-      radiusKm: 3,
+      radiusKm: 1000,
     );
   }
 
