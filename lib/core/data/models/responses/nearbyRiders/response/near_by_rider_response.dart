@@ -36,7 +36,7 @@ class Driver {
   String? lat;
   String? lng;
   String? vehicleType;
-  int? distanceKm;
+  double? distanceKm;
 
   Driver({
     this.fleetId,
@@ -51,7 +51,7 @@ class Driver {
     String? lat,
     String? lng,
     String? vehicleType,
-    int? distanceKm,
+    double? distanceKm,
   }) =>
       Driver(
         fleetId: fleetId ?? this.fleetId,

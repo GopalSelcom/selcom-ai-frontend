@@ -3,7 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:selcom_rides_frontend/core/data/models/responses/rides/book_rides_response.dart';
+import 'package:selcom_rides_frontend/core/constants/app_assets.dart';
+import 'package:selcom_rides_frontend/core/utils/map_marker_utils.dart';
 
 import '../../../../core/data/models/requests/book_ride_request.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
@@ -63,10 +64,15 @@ class VehicleSelectionController extends GetxController {
 
   GoogleMapController? mapController;
 
+  BitmapDescriptor? driverIcon;
+  BitmapDescriptor? pickupIcon;
+  BitmapDescriptor? dropIcon;
+
   @override
   void onInit() {
     super.onInit();
     _parseArguments();
+    loadLocationIcons();
     _initNearbyDriversSocket();
     _loadAll();
   }
@@ -82,7 +88,9 @@ class VehicleSelectionController extends GetxController {
 
   void _parseArguments() {
     final raw = Get.arguments;
-    final args = raw is Map ? Map<String, dynamic>.from(raw) : <String, dynamic>{};
+    final args = raw is Map
+        ? Map<String, dynamic>.from(raw)
+        : <String, dynamic>{};
 
     final pickupAddr = (args['pickup'] as String?)?.trim() ?? '';
     final destAddr = (args['destination'] as String?)?.trim() ?? '';
@@ -95,10 +103,11 @@ class VehicleSelectionController extends GetxController {
     pickupEntity = LocationEntity(lat: pLat, lng: pLng, address: pickupAddr);
     destinationEntity = LocationEntity(lat: dLat, lng: dLng, address: destAddr);
 
-    _preferredVehicleTypeId =
-        (args['preferredVehicleTypeId'] as String?)?.trim();
-    _preferredVehicleName =
-        (args['preferredVehicleName'] as String?)?.trim().toLowerCase();
+    _preferredVehicleTypeId = (args['preferredVehicleTypeId'] as String?)
+        ?.trim();
+    _preferredVehicleName = (args['preferredVehicleName'] as String?)
+        ?.trim()
+        .toLowerCase();
 
     // Show a route immediately; replaced when fare API returns geometry.
     _buildDummyRoute(pLat, pLng, dLat, dLng);
@@ -114,12 +123,6 @@ class VehicleSelectionController extends GetxController {
       pts.add(LatLng(lat, lng));
     }
     routePoints.assignAll(pts);
-
-    driverMarkerPoints.assignAll([
-      pts[(steps * 0.25).round()],
-      pts[(steps * 0.55).round()],
-      pts[(steps * 0.78).round()],
-    ]);
   }
 
   Future<void> _loadAll() async {
@@ -170,8 +173,37 @@ class VehicleSelectionController extends GetxController {
     );
     isLoadingEstimates.value = false;
     _applyPreferredVehicleSelection();
+
+    if (estimates.isNotEmpty) {
+      await loadDriverIcon();
+    }
+
     _requestNearbyDriversForCurrentSelection();
     Future.microtask(_fitBounds);
+  }
+
+  Future<void> loadDriverIcon() async {
+    driverIcon = await MapMarkerUtils.getResizedMarker(
+      vehicleImage(estimates[selectedVehicleIndex.value]),
+      150,
+    );
+  }
+
+  Future<void> loadLocationIcons() async {
+    pickupIcon = await MapMarkerUtils.createCustomCircleMarker(
+      color: const Color(0xFF4FA3FF),
+    );
+    dropIcon = await MapMarkerUtils.createCustomCircleMarker(
+      color: const Color(0xFFE11D48),
+    );
+  }
+
+  String vehicleImage(FareEstimateItem e) {
+    final n = '${e.vehicleName ?? ''} ${e.displayName ?? ''}'.toLowerCase();
+    if (n.contains('boda') || n.contains('bike') || n.contains('moto'))
+      return AppAssets.imgBoda;
+    if (n.contains('bajaj') || n.contains('auto')) return AppAssets.imgBajaji;
+    return AppAssets.imgCab;
   }
 
   /// Backend expects `vehicle_type_id` as the catalog id (e.g. Mongo `_id`), not a slug like `cab`.
@@ -329,9 +361,10 @@ class VehicleSelectionController extends GetxController {
 
   String get currency => selectedEstimate?.currency ?? 'TZS';
 
-  void selectVehicle(int index) {
+  Future<void> selectVehicle(int index) async {
     if (index < 0 || index >= estimates.length) return;
     selectedVehicleIndex.value = index;
+    await loadDriverIcon();
     _requestNearbyDriversForCurrentSelection();
   }
 
@@ -676,5 +709,4 @@ class VehicleSelectionController extends GetxController {
       ),
     );
   }
-
 }

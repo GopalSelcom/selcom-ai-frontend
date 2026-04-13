@@ -7,6 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:selcom_rides_frontend/features/home/data/models/places_models.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/data/models/requests/create_saved_place_request.dart';
+import '../../../../core/utils/map_marker_utils.dart';
 import '../../domain/repositories/home_repository.dart';
 import '../../data/models/home_models.dart';
 import '../../../ride/domain/repositories/ride_repository.dart';
@@ -60,10 +61,13 @@ class HomeController extends GetxController {
   final fareEstimate = Rxn<FareEstimateModel>();
   GoogleMapController? _mapController;
 
+  final pickupMarkerIcon = Rxn<BitmapDescriptor>();
+
   @override
   void onInit() {
     super.onInit();
     analyticsService.logEvent('home_screen_viewed');
+    _loadMapIcons();
     _getCurrentLocation();
     _addMockDrivers();
     _loadHomeData();
@@ -77,6 +81,14 @@ class HomeController extends GetxController {
         suggestions.clear();
       }
     }, time: const Duration(milliseconds: 300));
+  }
+
+  Future<void> _loadMapIcons() async {
+    pickupMarkerIcon.value = await MapMarkerUtils.createCustomCircleMarker(
+      color: const Color(0xFF4FA3FF),
+      // Match the blue used in vehicle selection
+      size: 60,
+    );
   }
 
   void recenterMap() {
@@ -117,7 +129,9 @@ class HomeController extends GetxController {
           title: savedPlaces.isEmpty ? 'Location' : 'Pickup',
           snippet: snippet.isEmpty ? 'Selected address' : snippet,
         ),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+        icon:
+            pickupMarkerIcon.value ??
+            BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
       ),
     };
   }

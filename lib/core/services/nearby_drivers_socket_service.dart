@@ -214,29 +214,6 @@ class AppSocketService {
     _paymentStatusController.close();
   }
 
-  List<NearbyDriverPoint> _parseDrivers(dynamic payload) {
-    final list = (payload is Map && payload['drivers'] is List)
-        ? payload['drivers'] as List
-        : const [];
-    final out = <NearbyDriverPoint>[];
-    for (final item in list) {
-      if (item is! Map) continue;
-      final lat = (item['lat'] as num?)?.toDouble();
-      final lng = (item['lng'] as num?)?.toDouble();
-      if (lat == null || lng == null) continue;
-      out.add(
-        NearbyDriverPoint(
-          fleetId: (item['fleet_id'] ?? '').toString(),
-          lat: lat,
-          lng: lng,
-          vehicleType: item['vehicle_type']?.toString(),
-          distanceKm: (item['distance_km'] as num?)?.toDouble(),
-        ),
-      );
-    }
-    return out;
-  }
-
   String _parseError(dynamic payload) {
     if (payload is Map) {
       final message = payload['message']?.toString();

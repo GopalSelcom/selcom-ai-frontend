@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -130,9 +128,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
           Marker(
             markerId: MarkerId('driver_$i'),
             position: jitter,
-            icon: BitmapDescriptor.defaultMarkerWithHue(
-              i == 0 ? BitmapDescriptor.hueRose : BitmapDescriptor.hueAzure,
-            ),
+            icon: c.driverIcon ?? BitmapDescriptor.defaultMarker, // fallback
             anchor: const Offset(0.5, 0.5),
           ),
         );
@@ -142,14 +138,14 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
         Marker(
           markerId: const MarkerId('pickup'),
           position: pickup,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+          icon: c.pickupIcon ?? BitmapDescriptor.defaultMarker,
         ),
       );
       markers.add(
         Marker(
           markerId: const MarkerId('drop'),
           position: drop,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+          icon: c.dropIcon ?? BitmapDescriptor.defaultMarker,
         ),
       );
 
@@ -198,7 +194,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
           ),
         ],
       ),
-        child: SafeArea(
+      child: SafeArea(
         top: false,
         child: Column(
           children: [
@@ -270,7 +266,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
     required FareEstimateItem item,
     required bool selected,
   }) {
-    final img = _vehicleImage(item);
+    final img = c.vehicleImage(item);
     final eta = item.durationMinutes ?? 0;
     final drop = DateTime.now().add(Duration(minutes: eta));
     final dropLabel =
@@ -281,7 +277,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
       borderRadius: BorderRadius.circular(16.r),
       child: InkWell(
         borderRadius: BorderRadius.circular(16.r),
-        onTap: () => c.selectVehicle(index),
+        onTap: () async => await c.selectVehicle(index),
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
           decoration: BoxDecoration(
@@ -378,13 +374,6 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
         ),
       ),
     );
-  }
-
-  String _vehicleImage(FareEstimateItem e) {
-    final n = '${e.vehicleName ?? ''} ${e.displayName ?? ''}'.toLowerCase();
-    if (n.contains('boda') || n.contains('bike') || n.contains('moto')) return AppAssets.imgBoda;
-    if (n.contains('bajaj') || n.contains('auto')) return AppAssets.imgBajaji;
-    return AppAssets.imgCab;
   }
 
   Widget _paymentBar(BuildContext context, VehicleSelectionController c) {
