@@ -62,7 +62,8 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
                   AppAssets.locationIcArrowLeft,
                   width: 22.w,
                   height: 20.h,
-                  placeholderBuilder: (_) => const Icon(Icons.arrow_back_ios_new, size: 18),
+                  placeholderBuilder: (_) =>
+                      const Icon(Icons.arrow_back_ios_new, size: 18),
                 ),
                 onPressed: Get.back,
               ),
@@ -83,10 +84,12 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
                   c.isSocketConnected.value
                       ? 'Socket ON • ${c.nearbyDriverCount.value} drivers'
                       : (c.lastSocketError.value.isNotEmpty
-                          ? 'Socket OFF • ${c.lastSocketError.value}'
-                          : 'Socket OFF'),
+                            ? 'Socket OFF • ${c.lastSocketError.value}'
+                            : 'Socket OFF'),
                   style: AppTextStyles.homeCaption.copyWith(
-                    color: c.isSocketConnected.value ? AppColors.success : AppColors.error,
+                    color: c.isSocketConnected.value
+                        ? AppColors.success
+                        : AppColors.error,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -120,10 +123,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
       final markers = <Marker>{};
       for (var i = 0; i < drivers.length; i++) {
         final base = drivers[i];
-        final jitter = LatLng(
-          base.latitude,
-          base.longitude,
-        );
+        final jitter = LatLng(base.latitude, base.longitude);
         markers.add(
           Marker(
             markerId: MarkerId('driver_$i'),
@@ -196,6 +196,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
       ),
       child: SafeArea(
         top: false,
+        bottom: false,
         child: Column(
           children: [
             SizedBox(height: 10.h),
@@ -233,7 +234,11 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
                   );
                 }
                 return ListView.separated(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  padding: EdgeInsets.only(
+                    left: 16.w,
+                    right: 16.w,
+                    bottom: 16.w,
+                  ),
                   itemCount: c.estimates.length,
                   separatorBuilder: (_, __) => SizedBox(height: 10.h),
                   itemBuilder: (_, index) {
@@ -251,9 +256,9 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
                 );
               }),
             ),
-            SizedBox(height: 12.h),
+            // SizedBox(height: 12.h),
             _paymentBar(context, c),
-            SizedBox(height: 8.h),
+            // SizedBox(height: 8.h),
           ],
         ),
       ),
@@ -318,7 +323,11 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
                           ),
                         ),
                         SizedBox(width: 4.w),
-                        Icon(Icons.person_outline, size: 14.sp, color: AppColors.shade2),
+                        Icon(
+                          Icons.person_outline,
+                          size: 14.sp,
+                          color: AppColors.shade2,
+                        ),
                         SizedBox(width: 4.w),
                         Text(
                           '${item.maxPassengers ?? 1}',
@@ -412,7 +421,11 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
                             ),
                           ),
                           SizedBox(width: 6.w),
-                          Icon(Icons.keyboard_arrow_up, color: Colors.white, size: 18.sp),
+                          Icon(
+                            Icons.keyboard_arrow_up,
+                            color: Colors.white,
+                            size: 18.sp,
+                          ),
                         ],
                       ),
                       SizedBox(height: 4.h),
@@ -448,7 +461,10 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
                 borderRadius: BorderRadius.circular(22.r),
                 onTap: c.isBooking.value ? null : c.bookRide,
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 20.w,
+                    vertical: 14.h,
+                  ),
                   child: c.isBooking.value
                       ? SizedBox(
                           width: 24.w,
@@ -484,6 +500,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
       ),
       builder: (ctx) {
         return SafeArea(
+          bottom: false,
           child: Obx(() {
             if (c.isLoadingPayments.value) {
               return const Padding(
@@ -497,20 +514,21 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
               children: [
                 Padding(
                   padding: EdgeInsets.all(16.w),
-                  child: Text(
-                    'Pay using',
-                    style: AppTextStyles.sectionTitle,
-                  ),
+                  child: Text('Pay using', style: AppTextStyles.sectionTitle),
                 ),
                 ...c.paymentMethods.map((PaymentMethodModel m) {
                   final sel = c.selectedPayment.value?.id == m.id;
                   return ListTile(
                     leading: Icon(
-                      m.type == 'wallet' ? Icons.account_balance_wallet_outlined : Icons.payment,
+                      m.type == 'wallet'
+                          ? Icons.account_balance_wallet_outlined
+                          : Icons.payment,
                       color: AppColors.shade1,
                     ),
                     title: Text(m.label),
-                    trailing: sel ? Icon(Icons.check_circle, color: AppColors.primary) : null,
+                    trailing: sel
+                        ? Icon(Icons.check_circle, color: AppColors.primary)
+                        : null,
                     onTap: () {
                       c.selectPaymentMethod(m);
                       Navigator.of(ctx).pop();
