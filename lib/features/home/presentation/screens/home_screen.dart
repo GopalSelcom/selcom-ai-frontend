@@ -340,22 +340,14 @@ class HomeScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (controller.savedPlaces.isNotEmpty) ...[
-                  SizedBox(height: 28.h),
-                  Text(
-                    'Saved Places',
-                    style: AppTextStyles.homeTitle.copyWith(fontSize: 20.sp),
-                  ),
-                  SizedBox(height: 16.h),
-                  ...controller.savedPlaces.map(
-                    (place) => _buildSavedPlaceItem(place),
-                  ),
-                ],
                 if (controller.shouldShowRecentSection) ...[
                   SizedBox(height: 28.h),
                   Text(
                     'Recent Location',
-                    style: AppTextStyles.homeTitle.copyWith(fontSize: 20.sp),
+                    style: AppTextStyles.homeSubtitle.copyWith(
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   SizedBox(height: 16.h),
                   if (controller.isLoadingHomeData.value)
@@ -379,6 +371,20 @@ class HomeScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 16.h),
                   _buildVehicleHorizontalList(),
+                ],
+                if (controller.savedPlaces.isNotEmpty) ...[
+                  SizedBox(height: 28.h),
+                  Text(
+                    'Saved Places',
+                    style: AppTextStyles.homeSubtitle.copyWith(
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  ...controller.savedPlaces.map(
+                    (place) => _buildSavedPlaceItem(place),
+                  ),
                 ],
                 SizedBox(height: 40.h),
               ],
