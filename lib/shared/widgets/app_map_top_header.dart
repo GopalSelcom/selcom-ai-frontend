@@ -32,19 +32,17 @@ class AppMapTopHeader extends StatelessWidget {
       top: top,
       left: left.w,
       right: right.w,
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            addressWidget,
-            SizedBox(width: spacing.w),
-            AppMapProfileChip(
-              onTap: onProfileTap,
-              icon: profileIcon,
-              iconColor: profileIconColor,
-            ),
-          ],
-        ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          addressWidget,
+          SizedBox(width: spacing.w),
+          AppMapProfileChip(
+            onTap: onProfileTap,
+            icon: profileIcon,
+            iconColor: profileIconColor,
+          ),
+        ],
       ),
     );
   }
