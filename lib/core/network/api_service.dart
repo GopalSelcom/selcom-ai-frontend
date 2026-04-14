@@ -417,7 +417,9 @@ class ApiService {
     if (isError && errorMessage != null) {
       debugPrint("$fullUrl Message: $errorMessage");
     }
-    debugPrint("$fullUrl [Response] ${_safeJsonEncode(_redactSensitiveData(data))}");
+    debugPrint(
+      "$fullUrl [Response] ${_safeJsonEncode(_redactSensitiveData(data))}",
+    );
   }
 
   String _methodToString(ApiMethod method) {
@@ -580,7 +582,7 @@ class ApiService {
       final keyText = key.toString();
       final normalized = keyText.toLowerCase();
       if (_sensitiveKeys.any((s) => normalized.contains(s))) {
-        out[keyText] = '***REDACTED***';
+        out[keyText] = kDebugMode ? value : '***REDACTED***';
         return;
       }
       out[keyText] = _redactSensitiveData(value);
@@ -660,8 +662,9 @@ class AuthInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     debugPrint("dioError => ${err.error}");
     final responseData = err.response?.data;
-    final errorCode =
-        (responseData is Map<String, dynamic>) ? responseData['error_code'] as String? : null;
+    final errorCode = (responseData is Map<String, dynamic>)
+        ? responseData['error_code'] as String?
+        : null;
     if (_isAuthErrorCode(errorCode)) {
       debugPrint("❌ Auth error_code detected ($errorCode) - logging out");
       apiService.showLogoutPopup();

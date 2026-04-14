@@ -39,7 +39,7 @@ class AppDialogs {
                 ),
               ),
               SizedBox(height: 20.h),
-              
+
               // Title
               Text(
                 title,
@@ -132,9 +132,7 @@ class AppDialogs {
               SizedBox(height: 20.h),
               Text(
                 title,
-                style: AppTextStyles.onboardingTitle.copyWith(
-                  fontSize: 20.sp,
-                ),
+                style: AppTextStyles.onboardingTitle.copyWith(fontSize: 20.sp),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 12.h),
@@ -170,6 +168,135 @@ class AppDialogs {
           ),
         ),
       ),
+    );
+  }
+
+  /// Shows a confirmation dialog with Cancel and Confirm buttons.
+  static void showConfirmationDialog({
+    String title = 'Confirmation',
+    required String message,
+    String confirmText = 'Confirm',
+    String cancelText = 'Cancel',
+    Color? confirmColor,
+    required VoidCallback onConfirm,
+    VoidCallback? onCancel,
+  }) {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.r),
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(24.w),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Confirmation Icon
+              Container(
+                padding: EdgeInsets.all(16.w),
+                decoration: BoxDecoration(
+                  color: (confirmColor ?? AppColors.primary).withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.help_outline,
+                  color: confirmColor ?? AppColors.primary,
+                  size: 32.sp,
+                ),
+              ),
+              SizedBox(height: 20.h),
+
+              // Title
+              Text(
+                title,
+                style: AppTextStyles.onboardingTitle.copyWith(
+                  fontSize: 20.sp,
+                  color: AppColors.shade1,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 12.h),
+
+              // Message
+              Text(
+                message,
+                style: AppTextStyles.onboardingSubtitle.copyWith(
+                  fontSize: 14.sp,
+                  color: AppColors.shade2,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 32.h),
+
+              // Buttons
+              Row(
+                children: [
+                  // Cancel Button
+                  Expanded(
+                    child: InkWell(
+                      onTap: () {
+                        Get.back();
+                        if (onCancel != null) onCancel();
+                      },
+                      child: Container(
+                        height: 50.h,
+                        decoration: BoxDecoration(
+                          color: Colors.transparent,
+                          border: Border.all(color: AppColors.divider),
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        child: Center(
+                          child: Text(
+                            cancelText,
+                            style: AppTextStyles.body.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.shade2,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  // Confirm Button
+                  Expanded(
+                    child: InkWell(
+                      onTap: () {
+                        Get.back();
+                        onConfirm();
+                      },
+                      child: Container(
+                        height: 50.h,
+                        decoration: BoxDecoration(
+                          color: confirmColor ?? AppColors.primary,
+                          borderRadius: BorderRadius.circular(12.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: (confirmColor ?? AppColors.primary)
+                                  .withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Text(
+                            confirmText,
+                            style: AppTextStyles.onboardingButton.copyWith(
+                              fontSize: 16.sp,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: false,
     );
   }
 }

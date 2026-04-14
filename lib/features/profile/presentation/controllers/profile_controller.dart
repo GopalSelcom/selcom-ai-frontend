@@ -4,6 +4,8 @@ import '../../../../core/routes/app_routes.dart';
 import '../../../ride/presentation/screens/my_rides_screen.dart';
 import '../../domain/usecases/profile_usecase.dart';
 import '../../../../core/data/models/user_model.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 
 class ProfileController extends GetxController {
   final ProfileUseCase profileUseCase;
@@ -174,7 +176,15 @@ class ProfileController extends GetxController {
   }
 
   void logout() {
-    // For now, just navigate to phone input screen
-    Get.offAllNamed(AppRoutes.phone);
+    AppDialogs.showConfirmationDialog(
+      title: 'Logout',
+      message: 'Are you sure you want to logout from the app?',
+      confirmText: 'Logout',
+      confirmColor: AppColors.error,
+      onConfirm: () {
+        // For now, just navigate to phone input screen
+        Get.offAllNamed(AppRoutes.phone);
+      },
+    );
   }
 }
