@@ -70,7 +70,7 @@ class OtpScreen extends GetView<AuthController> {
                           child: Text(
                             'Edit your phone number?',
                             style: AppTextStyles.body.copyWith(
-                              color: const Color(0xFF378ADD),
+                              color: AppColors.info,
                               // Blue color as per generic design commonalities
                               decoration: TextDecoration.underline,
                               fontWeight: FontWeight.w600,

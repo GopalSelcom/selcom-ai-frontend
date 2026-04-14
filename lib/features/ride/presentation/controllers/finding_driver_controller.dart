@@ -268,6 +268,16 @@ class FindingDriverController extends GetxController {
     if (index < 0 || index >= rideOptions.length) return;
     selectedRideIndex.value = index;
   }
+
+  void openRideMessage() {
+    Get.toNamed(
+      AppRoutes.rideMessage,
+      arguments: <String, dynamic>{
+        'rideId': rideId,
+        'driverName': 'John Anthany deo',
+      },
+    );
+  }
 }
 
 class MockRideOption {

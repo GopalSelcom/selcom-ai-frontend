@@ -70,6 +70,7 @@ class AppTextStyles {
     color: AppColors.textDark,
     fontFamily: fontFamily,
   );
+
   // Onboarding Styles (Metropolis)
   static TextStyle onboardingTitle = TextStyle(
     fontSize: 28.sp,

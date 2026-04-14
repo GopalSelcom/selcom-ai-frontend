@@ -57,7 +57,7 @@ class VehicleSelectionController extends GetxController {
   String? _preferredVehicleTypeId;
   String? _preferredVehicleName;
 
-  final AppSocketService _socketService = AppSocketService();
+  AppSocketService get _socketService => Get.find<AppSocketService>();
   StreamSubscription<List<Driver>>? _nearbyDriversSub;
   StreamSubscription<String>? _nearbyDriversErrorSub;
   StreamSubscription<bool>? _nearbyDriversConnectionSub;
@@ -82,7 +82,6 @@ class VehicleSelectionController extends GetxController {
     _nearbyDriversSub?.cancel();
     _nearbyDriversErrorSub?.cancel();
     _nearbyDriversConnectionSub?.cancel();
-    _socketService.dispose();
     super.onClose();
   }
 

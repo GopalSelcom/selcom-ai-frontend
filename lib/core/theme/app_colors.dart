@@ -31,4 +31,8 @@ class AppColors {
   // Dividers
   static const Color divider        = Color(0xFFEEEEEE);
   static const Color shadow         = Color(0x1A000000);  // 10% black
+
+  static const Color safetyBannerBg = Color(0xFFE8F4FC);
+  static const Color onlineGreen    = Color(0xFF22C55E);
+  static const Color driverBubbleBg = Color(0xFFF0F2F5);
 }

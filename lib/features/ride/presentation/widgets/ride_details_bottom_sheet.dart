@@ -152,7 +152,7 @@ class RideDetailsBottomSheet extends StatelessWidget {
                           amount: 'TZS ${ride.fareEstimate}'
                         ),
                         SizedBox(height: 12.h),
-                        FareBreakdownRow(
+                        const FareBreakdownRow(
                           title: 'Booking Fees & Convenience Charges',
                           amount: 'TZS 0.00',
                         ),
