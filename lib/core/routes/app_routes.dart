@@ -8,6 +8,7 @@ import '../../features/auth/presentation/bindings/auth_binding.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/home/presentation/bindings/home_binding.dart';
 import '../../features/home/presentation/screens/location_selection_screen.dart';
+import '../../features/notification/presentation/screens/notification_screen.dart';
 import '../../features/ride/presentation/bindings/finding_driver_binding.dart';
 import '../../features/ride/presentation/bindings/vehicle_selection_binding.dart';
 import '../../features/ride/presentation/screens/finding_driver_screen.dart';
@@ -34,6 +35,7 @@ class AppRoutes {
   static const String contactUs = '/contact-us';
   static const String promotions = '/promotions';
   static const String favoriteLocations = '/favorite-locations';
+  static const String notifications = '/notifications';
 
   static List<GetPage> get pages => [
     GetPage(name: splash, page: () => const SplashScreen()),
@@ -76,5 +78,6 @@ class AppRoutes {
       page: () => const FavoriteLocationsScreen(),
       binding: FavoriteLocationsBinding(),
     ),
+    GetPage(name: notifications, page: () => const NotificationScreen()),
   ];
 }
