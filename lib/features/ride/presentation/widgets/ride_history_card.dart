@@ -20,8 +20,25 @@ class RideHistoryCard extends StatelessWidget {
         return 'Cancelled';
       case RideStatus.searching:
         return 'Searching';
+      case RideStatus.noDriverFound:
+        return 'No Driver Found';
       default:
         return 'Completed'; // Default for history usually shows completed/cancelled
+    }
+  }
+
+  Color _getStatusColor(RideStatus status) {
+    switch (status) {
+      case RideStatus.rideCompleted:
+        return const Color(0xFF0EAD36); // Green
+      case RideStatus.cancelled:
+        return const Color(0xFFE53935); // Red
+      case RideStatus.searching:
+        return const Color(0xFFF59E0B); // Orange
+      case RideStatus.noDriverFound:
+        return const Color(0xFF9CA3AF); // Grey
+      default:
+        return const Color(0xFF0EAD36);
     }
   }
 
@@ -54,24 +71,28 @@ class RideHistoryCard extends StatelessWidget {
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '$vehicleType $formattedDate',
-                    style: TextStyle(
-                      fontFamily: AppTextStyles.metropolisFont,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black,
-                      fontSize: 15.sp,
+                  Expanded(
+                    child: Text(
+                      '$vehicleType $formattedDate',
+                      style: TextStyle(
+                        fontFamily: AppTextStyles.metropolisFont,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black,
+                        fontSize: 15.sp,
+                      ),
                     ),
                   ),
+                  const SizedBox(width: 8),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
                         width: 6.w,
                         height: 6.w,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF0EAD36),
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(ride.status),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -80,7 +101,7 @@ class RideHistoryCard extends StatelessWidget {
                         _getStatusText(ride.status),
                         style: TextStyle(
                           fontFamily: AppTextStyles.metropolisFont,
-                          color: const Color(0xFF0EAD36),
+                          color: _getStatusColor(ride.status),
                           fontWeight: FontWeight.w500,
                           fontSize: 15.sp,
                         ),
