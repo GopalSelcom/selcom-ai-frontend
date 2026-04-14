@@ -83,7 +83,7 @@ class HomeScreen extends StatelessWidget {
               duration: const Duration(milliseconds: 320),
               curve: Curves.easeInOutCubic,
               padding: EdgeInsets.all(12.w),
-              height: 61.h,
+              height: 66.h,
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16.r),
@@ -131,6 +131,8 @@ class HomeScreen extends StatelessWidget {
             duration: const Duration(milliseconds: 320),
             curve: Curves.easeInOutCubic,
             padding: EdgeInsets.all(12.w),
+            // Removed constraints from AnimatedContainer to avoid interpolation crash.
+            // Using BoxConstraints on the child or simply relying on content + padding.
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16.r),
@@ -143,112 +145,119 @@ class HomeScreen extends StatelessWidget {
                 ),
               ],
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: List.generate(placesToShow.length, (index) {
-                final place = placesToShow[index];
-                final selected = controller.isSavedPlaceSelectedAsPickup(
-                  place.id,
-                );
-                return InkWell(
-                  onTap: () {
-                    if (controller.isSavedPlacesExpanded.value) {
-                      controller.selectSavedPlaceAsPickup(place);
-                    } else {
-                      controller.toggleAddressHeaderExpansion();
-                    }
-                  },
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      bottom: index == placesToShow.length - 1 ? 0 : 12.h,
-                    ),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        vertical: 4.h,
-                        horizontal: 4.w,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: 42.h,
+              ), // 66.h total padding subtracted: 12.w * 2 ≈ 24. 66-24=42.
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(placesToShow.length, (index) {
+                  final place = placesToShow[index];
+                  final selected = controller.isSavedPlaceSelectedAsPickup(
+                    place.id,
+                  );
+                  return InkWell(
+                    onTap: () {
+                      if (controller.isSavedPlacesExpanded.value) {
+                        controller.selectSavedPlaceAsPickup(place);
+                      } else {
+                        controller.toggleAddressHeaderExpansion();
+                      }
+                    },
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        bottom: index == placesToShow.length - 1 ? 0 : 12.h,
                       ),
-                      decoration: BoxDecoration(
-                        color:
-                            selected && controller.isSavedPlacesExpanded.value
-                            ? AppColors.primaryLight.withOpacity(0.35)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(12.r),
-                        border: Border.all(
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          vertical: 4.h,
+                          horizontal: 4.w,
+                        ),
+                        decoration: BoxDecoration(
                           color:
                               selected && controller.isSavedPlacesExpanded.value
-                              ? AppColors.primary
+                              ? AppColors.primaryLight.withOpacity(0.35)
                               : Colors.transparent,
-                          width:
-                              selected && controller.isSavedPlacesExpanded.value
-                              ? 1
-                              : 0,
+                          borderRadius: BorderRadius.circular(12.r),
+                          border: Border.all(
+                            color:
+                                selected &&
+                                    controller.isSavedPlacesExpanded.value
+                                ? AppColors.primary
+                                : Colors.transparent,
+                            width:
+                                selected &&
+                                    controller.isSavedPlacesExpanded.value
+                                ? 1
+                                : 0,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(8.w),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFF1F5F9),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.location_on,
+                                color: AppColors.primary,
+                                size: 20.sp,
+                              ),
+                            ),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        place.label ?? 'Place',
+                                        style: AppTextStyles.homeSubtitle
+                                            .copyWith(
+                                              fontWeight: FontWeight.bold,
+                                              color: AppColors.shade1,
+                                            ),
+                                      ),
+                                      if (index == 0) ...[
+                                        SizedBox(width: 4.w),
+                                        AnimatedRotation(
+                                          duration: const Duration(
+                                            milliseconds: 280,
+                                          ),
+                                          curve: Curves.easeInOutCubic,
+                                          turns: controller
+                                              .addressHeaderChevronTurns,
+                                          child: Icon(
+                                            Icons.keyboard_arrow_down,
+                                            size: 18.sp,
+                                            color: AppColors.shade2,
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                  Text(
+                                    place.address ??
+                                        place.name ??
+                                        'No address provided',
+                                    style: AppTextStyles.homeCaption,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: EdgeInsets.all(8.w),
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFF1F5F9),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.location_on,
-                              color: AppColors.primary,
-                              size: 20.sp,
-                            ),
-                          ),
-                          SizedBox(width: 12.w),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Row(
-                                  children: [
-                                    Text(
-                                      place.label ?? 'Place',
-                                      style: AppTextStyles.homeSubtitle
-                                          .copyWith(
-                                            fontWeight: FontWeight.bold,
-                                            color: AppColors.shade1,
-                                          ),
-                                    ),
-                                    if (index == 0) ...[
-                                      SizedBox(width: 4.w),
-                                      AnimatedRotation(
-                                        duration: const Duration(
-                                          milliseconds: 280,
-                                        ),
-                                        curve: Curves.easeInOutCubic,
-                                        turns: controller
-                                            .addressHeaderChevronTurns,
-                                        child: Icon(
-                                          Icons.keyboard_arrow_down,
-                                          size: 18.sp,
-                                          color: AppColors.shade2,
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                                Text(
-                                  place.address ??
-                                      place.name ??
-                                      'No address provided',
-                                  style: AppTextStyles.homeCaption,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
-                  ),
-                );
-              }),
+                  );
+                }),
+              ),
             ),
           ),
         );
