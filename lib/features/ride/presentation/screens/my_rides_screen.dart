@@ -23,7 +23,7 @@ class MyRidesScreen extends StatelessWidget {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const AppProfileHeader(title: 'My Rides', bottomPadding: 24),
+          AppProfileHeader(title: 'My Rides', bottomPadding: 24.w),
 
           Expanded(
             child: Obx(() {

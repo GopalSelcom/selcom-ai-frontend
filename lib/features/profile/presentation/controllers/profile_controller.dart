@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../core/config/app_config.dart';
+import '../../../../core/network/urls.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../shared/widgets/web_view_screen.dart';
 import '../../../ride/presentation/screens/my_rides_screen.dart';
 import '../../domain/usecases/profile_usecase.dart';
 import '../../../../core/data/models/user_model.dart';
@@ -177,6 +180,19 @@ class ProfileController extends GetxController {
 
   void openFavoriteLocations() {
     Get.toNamed(AppRoutes.favoriteLocations);
+  }
+
+  void openPrivacyPolicy() {
+    Get.to(
+      () => WebViewScreen(
+        title: "Privacy Policy",
+        url: "${AppConfig.baseUrl}/${URLS.common.privacy}",
+      ),
+    );
+  }
+
+  void openNotifications() {
+    Get.toNamed(AppRoutes.notifications);
   }
 
   void logout() {

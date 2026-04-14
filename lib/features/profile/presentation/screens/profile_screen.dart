@@ -3,14 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
-import '../../../../core/config/app_config.dart';
 import '../../../../core/di/injection_container.dart';
-import '../../../../core/network/urls.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 
-import '../../../../shared/widgets/web_view_screen.dart';
 import '../controllers/profile_controller.dart';
 import '../widgets/menu_item_widget.dart';
 import '../widgets/wallet_summary_card.dart';
@@ -355,14 +352,7 @@ class ProfileScreen extends StatelessWidget {
           MenuItemWidget(
             icon: Iconsax.shield_tick,
             title: 'Safety & Privacy',
-            onTap: () {
-              Get.to(
-                () => WebViewScreen(
-                  title: "Privacy Policy",
-                  url: "${AppConfig.baseUrl}/${URLS.common.privacy}",
-                ),
-              );
-            },
+            onTap: controller.openPrivacyPolicy
           ),
           MenuItemWidget(
             icon: Iconsax.heart,
@@ -372,7 +362,7 @@ class ProfileScreen extends StatelessWidget {
           MenuItemWidget(
             icon: Iconsax.reserve,
             title: 'Notification',
-            onTap: () {},
+            onTap: controller.openNotifications,
             showDivider: false, // Last item has no divider
           ),
         ],
