@@ -10,6 +10,7 @@ import '../../features/ride/data/repositories/ride_repository_impl.dart';
 import '../../features/ride/domain/repositories/ride_repository.dart';
 import '../../features/ride/domain/usecases/ride_usecase.dart';
 import '../../features/ride/presentation/controllers/my_rides_controller.dart';
+import '../../features/promotions/presentation/controllers/promocode_controller.dart';
 import '../config/app_config.dart';
 import '../services/analytics_service.dart';
 import '../domain/repositories/auth_repository.dart';
@@ -44,9 +45,7 @@ Future<void> init() async {
 
   // ── Repository ──
   sl.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(
-      secureStorage: sl(),
-    ),
+    () => AuthRepositoryImpl(secureStorage: sl()),
   );
 
   // ── Ride Feature ──
@@ -72,6 +71,7 @@ Future<void> init() async {
   // BLoCs / Controllers
   sl.registerFactory(() => MyRidesController(rideUseCase: sl()));
   sl.registerFactory(() => ProfileController(profileUseCase: sl()));
+  sl.registerFactory(() => PromocodeController());
 }
 
 /// Maps the app's Environment enum to ApiService's ApiEnvironment enum

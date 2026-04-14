@@ -14,6 +14,7 @@ import '../../features/ride/presentation/screens/finding_driver_screen.dart';
 import '../../features/ride/presentation/screens/vehicle_selection_screen.dart';
 import '../../features/profile/presentation/screens/contact_us_screen.dart';
 import '../../features/profile/presentation/bindings/contact_us_binding.dart';
+import '../../features/promotions/presentation/screens/promocode_screen.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -29,12 +30,10 @@ class AppRoutes {
   static const String ride = '/ride';
   static const String feedback = '/feedback';
   static const String contactUs = '/contact-us';
+  static const String promotions = '/promotions';
 
   static List<GetPage> get pages => [
-    GetPage(
-      name: splash,
-      page: () => const SplashScreen(),
-    ),
+    GetPage(name: splash, page: () => const SplashScreen()),
     GetPage(
       name: onboarding,
       page: () => const OnboardingScreen(),
@@ -45,20 +44,9 @@ class AppRoutes {
       page: () => const PhoneInputScreen(),
       binding: AuthBinding(),
     ),
-    GetPage(
-      name: otp,
-      page: () => const OtpScreen(),
-      binding: AuthBinding(),
-    ),
-    GetPage(
-      name: profileLoading,
-      page: () => const ProfileLoadingScreen(),
-    ),
-    GetPage(
-      name: home,
-      page: () => const HomeScreen(),
-      binding: HomeBinding(),
-    ),
+    GetPage(name: otp, page: () => const OtpScreen(), binding: AuthBinding()),
+    GetPage(name: profileLoading, page: () => const ProfileLoadingScreen()),
+    GetPage(name: home, page: () => const HomeScreen(), binding: HomeBinding()),
     GetPage(
       name: locationSelection,
       page: () => const LocationSelectionScreen(),
@@ -79,5 +67,6 @@ class AppRoutes {
       page: () => const ContactUsScreen(),
       binding: ContactUsBinding(),
     ),
+    GetPage(name: promotions, page: () => const PromocodeScreen()),
   ];
 }

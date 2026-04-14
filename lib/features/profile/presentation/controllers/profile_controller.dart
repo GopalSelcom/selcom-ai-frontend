@@ -13,7 +13,7 @@ class ProfileController extends GetxController {
   // Observables for state
   final RxBool isEditing = false.obs;
   final RxBool isLoading = false.obs;
-  
+
   // User Data
   final Rxn<UserModel> userModel = Rxn<UserModel>();
   final RxString walletBalance = '43,829'.obs;
@@ -32,14 +32,14 @@ class ProfileController extends GetxController {
     super.onInit();
     nameTextController = TextEditingController(text: 'Chirag Panchal');
     phoneTextController = TextEditingController(text: '+255 711 410 410');
-    
+
     nameFocusNode = FocusNode();
     phoneFocusNode = FocusNode();
 
     // TODO: Skip API call for now
-    // fetchProfile(); 
-    // fetchWalletBalance(); 
-    
+    // fetchProfile();
+    // fetchWalletBalance();
+
     // Initialize with static data for now
     userModel.value = const UserModel(
       id: 'static_id',
@@ -105,18 +105,20 @@ class ProfileController extends GetxController {
   Future<void> saveProfile() async {
     nameFocusNode.unfocus();
     phoneFocusNode.unfocus();
-    
+
     // Simulate static save
     isLoading.value = true;
     await Future.delayed(const Duration(milliseconds: 500));
-    
+
     userModel.value = UserModel(
       id: 'static_id',
       uniqueId: nameTextController.text,
-      mobileNumber: int.tryParse(phoneTextController.text.replaceAll('+', '').replaceAll(' ', '')),
+      mobileNumber: int.tryParse(
+        phoneTextController.text.replaceAll('+', '').replaceAll(' ', ''),
+      ),
       accountNumber: userModel.value?.accountNumber,
     );
-    
+
     isEditing.value = false;
     isLoading.value = false;
     Get.snackbar('Success', 'Profile updated locally');
@@ -140,7 +142,7 @@ class ProfileController extends GetxController {
     isLoading.value = false;
     */
   }
-  
+
   void cancelEdit() {
     nameFocusNode.unfocus();
     phoneFocusNode.unfocus();
@@ -165,5 +167,14 @@ class ProfileController extends GetxController {
 
   void openContactUs() {
     Get.toNamed(AppRoutes.contactUs);
+  }
+
+  void openPromotions() {
+    Get.toNamed(AppRoutes.promotions);
+  }
+
+  void logout() {
+    // For now, just navigate to phone input screen
+    Get.offAllNamed(AppRoutes.phone);
   }
 }

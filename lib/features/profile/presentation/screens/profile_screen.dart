@@ -67,6 +67,42 @@ class ProfileScreen extends StatelessWidget {
                         padding: EdgeInsets.symmetric(horizontal: 16.w),
                         child: _buildSettingsList(),
                       ),
+                      SizedBox(height: 24.h),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.w),
+                        child: InkWell(
+                          onTap: controller.logout,
+                          borderRadius: BorderRadius.circular(16.r),
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              vertical: 16.h,
+                              horizontal: 16.w,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              border: Border.all(color: AppColors.divider),
+                              borderRadius: BorderRadius.circular(16.r),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Iconsax.logout,
+                                  size: 24.w,
+                                  color: AppColors.error,
+                                ),
+                                SizedBox(width: 16.w),
+                                Text(
+                                  'Logout',
+                                  style: AppTextStyles.body.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.error,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
                       SizedBox(height: 40.h),
                     ],
                   ),
@@ -303,7 +339,11 @@ class ProfileScreen extends StatelessWidget {
             onTap: controller.openMyRides,
           ),
           MenuItemWidget(icon: Iconsax.card, title: 'Payment', onTap: () {}),
-          MenuItemWidget(icon: Iconsax.gift, title: 'Promotions', onTap: () {}),
+          MenuItemWidget(
+            icon: Iconsax.gift,
+            title: 'Promotions',
+            onTap: controller.openPromotions,
+          ),
           MenuItemWidget(
             icon: Iconsax.message_question,
             title: 'Help',
