@@ -35,14 +35,26 @@ class PromocodeController extends GetxController {
   void applyPromoCode() {
     final code = promoCodeTextController.text;
     if (code.isNotEmpty) {
-      Get.snackbar('Success', 'Promo code $code applied!');
+      Get.snackbar(
+        'Success',
+        'Promo code $code applied!',
+        snackPosition: SnackPosition.BOTTOM,
+      );
     } else {
-      Get.snackbar('Error', 'Please enter a promo code');
+      Get.snackbar(
+        'Error',
+        'Please enter a promo code',
+        snackPosition: SnackPosition.BOTTOM,
+      );
     }
   }
 
   void applyPromo(PromocodeModel promo) {
-    Get.snackbar('Success', 'Promo "${promo.title}" applied!');
+    Get.snackbar(
+      'Success',
+      'Promo "${promo.title}" applied!',
+      snackPosition: SnackPosition.BOTTOM,
+    );
   }
 }
 
