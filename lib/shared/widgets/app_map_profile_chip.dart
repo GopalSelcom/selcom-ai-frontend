@@ -20,7 +20,7 @@ class AppMapProfileChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final child = Container(
       width: 64.w,
-      height: 61.h,
+      constraints: BoxConstraints(minHeight: 61.h),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16.r),
