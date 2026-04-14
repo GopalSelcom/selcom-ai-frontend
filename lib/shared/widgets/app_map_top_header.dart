@@ -15,6 +15,8 @@ class AppMapTopHeader extends StatelessWidget {
     this.onProfileTap,
     this.profileIcon = Icons.person,
     this.profileIconColor = Colors.black,
+    this.isLoading = false,
+    this.isExpanded = false,
   });
 
   final double top;
@@ -25,6 +27,8 @@ class AppMapTopHeader extends StatelessWidget {
   final VoidCallback? onProfileTap;
   final IconData profileIcon;
   final Color profileIconColor;
+  final bool isLoading;
+  final bool isExpanded;
 
   @override
   Widget build(BuildContext context) {
@@ -32,17 +36,22 @@ class AppMapTopHeader extends StatelessWidget {
       top: top,
       left: left.w,
       right: right.w,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          addressWidget,
-          SizedBox(width: spacing.w),
-          AppMapProfileChip(
-            onTap: onProfileTap,
-            icon: profileIcon,
-            iconColor: profileIconColor,
-          ),
-        ],
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: isExpanded
+              ? CrossAxisAlignment.start
+              : CrossAxisAlignment.stretch,
+          children: [
+            addressWidget,
+            SizedBox(width: spacing.w),
+            AppMapProfileChip(
+              onTap: onProfileTap,
+              icon: profileIcon,
+              iconColor: profileIconColor,
+              isLoading: isLoading,
+            ),
+          ],
+        ),
       ),
     );
   }

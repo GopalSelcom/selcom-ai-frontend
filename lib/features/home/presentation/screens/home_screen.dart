@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../ride/data/models/ride_management_models.dart';
@@ -48,12 +49,16 @@ class HomeScreen extends StatelessWidget {
           ),
 
           // 2. Top Header (Address + Profile)
-          AppMapTopHeader(
-            top: MediaQuery.of(context).padding.top + 10.h,
-            addressWidget: _buildModernAddressBox(),
-            onProfileTap: controller.openProfile,
-            profileIcon: Icons.person,
-            profileIconColor: Colors.black,
+          Obx(
+            () => AppMapTopHeader(
+              top: MediaQuery.of(context).padding.top + 10.h,
+              addressWidget: _buildModernAddressBox(),
+              onProfileTap: controller.openProfile,
+              profileIcon: Icons.person,
+              profileIconColor: Colors.black,
+              isLoading: controller.isLoadingHomeData.value,
+              isExpanded: controller.isSavedPlacesExpanded.value,
+            ),
           ),
 
           // 3. Floating Action Buttons (GPS)
@@ -83,7 +88,7 @@ class HomeScreen extends StatelessWidget {
               duration: const Duration(milliseconds: 320),
               curve: Curves.easeInOutCubic,
               padding: EdgeInsets.all(12.w),
-              height: 66.h,
+              height: 75.h, // Matched with Profile Chip height
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16.r),
@@ -98,12 +103,16 @@ class HomeScreen extends StatelessWidget {
               ),
               child: Center(
                 child: controller.isLoadingHomeData.value
-                    ? SizedBox(
-                        width: 20.w,
-                        height: 20.w,
-                        child: const CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.primary,
+                    ? Shimmer.fromColors(
+                        baseColor: const Color(0xFFE2E8F0),
+                        highlightColor: const Color(0xFFF8FAFC),
+                        child: Container(
+                          width: 200.w,
+                          height: 16.h,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(4.r),
+                          ),
                         ),
                       )
                     : Text(
@@ -121,6 +130,7 @@ class HomeScreen extends StatelessWidget {
         }
 
         final placesToShow = controller.addressHeaderPlacesToShow;
+        final bool isExpanded = controller.isSavedPlacesExpanded.value;
 
         return AnimatedSize(
           duration: const Duration(milliseconds: 320),
@@ -131,8 +141,9 @@ class HomeScreen extends StatelessWidget {
             duration: const Duration(milliseconds: 320),
             curve: Curves.easeInOutCubic,
             padding: EdgeInsets.all(12.w),
-            // Removed constraints from AnimatedContainer to avoid interpolation crash.
-            // Using BoxConstraints on the child or simply relying on content + padding.
+            height: isExpanded
+                ? null
+                : 75.h, // Matched with Profile Chip height
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16.r),
@@ -145,119 +156,112 @@ class HomeScreen extends StatelessWidget {
                 ),
               ],
             ),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: 42.h,
-              ), // 66.h total padding subtracted: 12.w * 2 ≈ 24. 66-24=42.
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: List.generate(placesToShow.length, (index) {
-                  final place = placesToShow[index];
-                  final selected = controller.isSavedPlaceSelectedAsPickup(
-                    place.id,
-                  );
-                  return InkWell(
-                    onTap: () {
-                      if (controller.isSavedPlacesExpanded.value) {
-                        controller.selectSavedPlaceAsPickup(place);
-                      } else {
-                        controller.toggleAddressHeaderExpansion();
-                      }
-                    },
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        bottom: index == placesToShow.length - 1 ? 0 : 12.h,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(placesToShow.length, (index) {
+                final place = placesToShow[index];
+                final selected = controller.isSavedPlaceSelectedAsPickup(
+                  place.id,
+                );
+                return InkWell(
+                  onTap: () {
+                    if (controller.isSavedPlacesExpanded.value) {
+                      controller.selectSavedPlaceAsPickup(place);
+                    } else {
+                      controller.toggleAddressHeaderExpansion();
+                    }
+                  },
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      bottom: index == placesToShow.length - 1 ? 0 : 12.h,
+                    ),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        vertical: 4.h,
+                        horizontal: 4.w,
                       ),
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          vertical: 4.h,
-                          horizontal: 4.w,
-                        ),
-                        decoration: BoxDecoration(
+                      decoration: BoxDecoration(
+                        color:
+                            selected && controller.isSavedPlacesExpanded.value
+                            ? AppColors.primaryLight.withOpacity(0.35)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(
                           color:
                               selected && controller.isSavedPlacesExpanded.value
-                              ? AppColors.primaryLight.withOpacity(0.35)
+                              ? AppColors.primary
                               : Colors.transparent,
-                          borderRadius: BorderRadius.circular(12.r),
-                          border: Border.all(
-                            color:
-                                selected &&
-                                    controller.isSavedPlacesExpanded.value
-                                ? AppColors.primary
-                                : Colors.transparent,
-                            width:
-                                selected &&
-                                    controller.isSavedPlacesExpanded.value
-                                ? 1
-                                : 0,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(8.w),
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFF1F5F9),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.location_on,
-                                color: AppColors.primary,
-                                size: 20.sp,
-                              ),
-                            ),
-                            SizedBox(width: 12.w),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Text(
-                                        place.label ?? 'Place',
-                                        style: AppTextStyles.homeSubtitle
-                                            .copyWith(
-                                              fontWeight: FontWeight.bold,
-                                              color: AppColors.shade1,
-                                            ),
-                                      ),
-                                      if (index == 0) ...[
-                                        SizedBox(width: 4.w),
-                                        AnimatedRotation(
-                                          duration: const Duration(
-                                            milliseconds: 280,
-                                          ),
-                                          curve: Curves.easeInOutCubic,
-                                          turns: controller
-                                              .addressHeaderChevronTurns,
-                                          child: Icon(
-                                            Icons.keyboard_arrow_down,
-                                            size: 18.sp,
-                                            color: AppColors.shade2,
-                                          ),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                  Text(
-                                    place.address ??
-                                        place.name ??
-                                        'No address provided',
-                                    style: AppTextStyles.homeCaption,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                          width:
+                              selected && controller.isSavedPlacesExpanded.value
+                              ? 1
+                              : 0,
                         ),
                       ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(8.w),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFF1F5F9),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.location_on,
+                              color: AppColors.primary,
+                              size: 20.sp,
+                            ),
+                          ),
+                          SizedBox(width: 12.w),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      place.label ?? 'Place',
+                                      style: AppTextStyles.homeSubtitle
+                                          .copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.shade1,
+                                          ),
+                                    ),
+                                    if (index == 0) ...[
+                                      SizedBox(width: 4.w),
+                                      AnimatedRotation(
+                                        duration: const Duration(
+                                          milliseconds: 280,
+                                        ),
+                                        curve: Curves.easeInOutCubic,
+                                        turns: controller
+                                            .addressHeaderChevronTurns,
+                                        child: Icon(
+                                          Icons.keyboard_arrow_down,
+                                          size: 18.sp,
+                                          color: AppColors.shade2,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                Text(
+                                  place.address ??
+                                      place.name ??
+                                      'No address provided',
+                                  style: AppTextStyles.homeCaption,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  );
-                }),
-              ),
+                  ),
+                );
+              }),
             ),
           ),
         );
