@@ -1,0 +1,22 @@
+{
+    "flutter": {
+        "platforms": {
+            "ios": {
+                "default": {
+                    "projectId": "selcom-rides",
+                    "appId": "1:235920604285:ios:8a1a696424c1977e0ac514",
+                    "uploadDebugSymbols": true,
+                    "file": "ios/Runner/GoogleService-Info.plist"
+                }
+            },
+            "android": {
+                "default": {
+                    "projectId": "selcom-rides",
+                    "appId": "1:235920604285:android:2390cbd1d7f7e55b0ac514",
+                    "uploadDebugSymbols": true,
+                    "file": "android/app/google-services.json"
+                }
+            }
+        }
+    }
+}
