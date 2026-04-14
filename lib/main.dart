@@ -84,7 +84,8 @@ class MyApp extends StatelessWidget {
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: ThemeMode.system,
-          initialRoute: AppRoutes.splash,
+          // initialRoute: AppRoutes.splash,
+          initialRoute: AppRoutes.cancelDialogGallery,
           getPages: AppRoutes.pages,
         );
       },

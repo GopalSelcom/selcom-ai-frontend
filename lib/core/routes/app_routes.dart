@@ -20,6 +20,7 @@ import '../../features/profile/presentation/screens/favorite_locations_screen.da
 import '../../features/profile/presentation/bindings/favorite_locations_binding.dart';
 import '../../features/ride/presentation/bindings/ride_message_binding.dart';
 import '../../features/ride/presentation/screens/ride_message_screen.dart';
+import '../../features/ride/presentation/screens/cancel_dialog_gallery_screen.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -39,6 +40,7 @@ class AppRoutes {
   static const String favoriteLocations = '/favorite-locations';
   static const String notifications = '/notifications';
   static const String rideMessage = '/ride/message';
+  static const String cancelDialogGallery = '/cancel-dialog-gallery';
 
   static List<GetPage> get pages => [
     GetPage(name: splash, page: () => const SplashScreen()),
@@ -86,6 +88,10 @@ class AppRoutes {
       name: rideMessage,
       page: () => const RideMessageScreen(),
       binding: RideMessageBinding(),
+    ),
+    GetPage(
+      name: cancelDialogGallery,
+      page: () => const CancelDialogGalleryScreen(),
     ),
   ];
 }

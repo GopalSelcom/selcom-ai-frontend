@@ -9,6 +9,7 @@ import '../../../../core/constants/app_assets.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../domain/repositories/ride_repository.dart';
+import '../widgets/cancel_ride_dialogs.dart';
 
 /// SCR-10 — finding driver: map + nearby drivers socket (same events as vehicle selection)
 /// + ride room for `ride:status_update` / `ride:driver_location`.
@@ -45,7 +46,8 @@ class FindingDriverController extends GetxController {
   final selectedRideIndex = 0.obs;
   final Rxn<BitmapDescriptor> nearBikeMarkerIcon = Rxn<BitmapDescriptor>();
   final Rxn<BitmapDescriptor> nearCarMarkerIcon = Rxn<BitmapDescriptor>();
-  final Rxn<BitmapDescriptor> assignedDriverMarkerIcon = Rxn<BitmapDescriptor>();
+  final Rxn<BitmapDescriptor> assignedDriverMarkerIcon =
+      Rxn<BitmapDescriptor>();
 
   GoogleMapController? mapController;
 
@@ -78,7 +80,9 @@ class FindingDriverController extends GetxController {
 
   void _parseArgs() {
     final raw = Get.arguments;
-    final args = raw is Map ? Map<String, dynamic>.from(raw) : <String, dynamic>{};
+    final args = raw is Map
+        ? Map<String, dynamic>.from(raw)
+        : <String, dynamic>{};
     rideId = (args['rideId'] as String?)?.trim() ?? '';
     final plat = (args['pickupLat'] as num?)?.toDouble() ?? -6.7924;
     final plng = (args['pickupLng'] as num?)?.toDouble() ?? 39.2083;
@@ -182,16 +186,12 @@ class FindingDriverController extends GetxController {
 
   void onMapCreated(GoogleMapController c) {
     mapController = c;
-    c.animateCamera(
-      CameraUpdate.newLatLngZoom(pickupLatLng, 15),
-    );
+    c.animateCamera(CameraUpdate.newLatLngZoom(pickupLatLng, 15));
   }
 
   void recenterMap() {
     final focus = assignedDriverLocation.value ?? pickupLatLng;
-    mapController?.animateCamera(
-      CameraUpdate.newLatLngZoom(focus, 15),
-    );
+    mapController?.animateCamera(CameraUpdate.newLatLngZoom(focus, 15));
   }
 
   /// Minutes label for UI (Figma-style "N minutes remain").
@@ -199,29 +199,32 @@ class FindingDriverController extends GetxController {
       (remainingSeconds.value / 60).ceil().clamp(0, searchTimeoutSeconds ~/ 60);
 
   Future<void> confirmCancelRide() async {
-    final ok = await Get.dialog<bool>(
-      AlertDialog(
-        title: const Text('Cancel ride?'),
-        content: const Text(
-          'Are you sure you want to cancel this ride request?',
-        ),
-        actions: [
-          TextButton(onPressed: () => Get.back(result: false), child: const Text('No')),
-          TextButton(
-            onPressed: () => Get.back(result: true),
-            child: const Text('Yes, cancel'),
-          ),
-        ],
-      ),
+    // 1. Initial Confirmation
+    final bool isAssigned = ridePhase.value == 'driver_assigned';
+    final dynamic confirmResult = await Get.dialog(
+      isAssigned
+          ? const CancelAssignmentWarningDialog()
+          : const CancelConfirmationDialog(),
+      barrierDismissible: false,
     );
-    if (ok != true) return;
 
+    if (confirmResult != true) return;
+
+    // 2. Reason Selection
+    final String? reason = await Get.dialog<String>(
+      const CancelReasonSelectionDialog(),
+      barrierDismissible: false,
+    );
+
+    if (reason == null) return;
+
+    // 3. Perform Cancellation
     if (rideId.isEmpty) {
       Get.snackbar('Cancel failed', 'Ride id is missing.');
       return;
     }
 
-    final result = await rideRepository.cancelRide(rideId, 'rider_cancelled');
+    final result = await rideRepository.cancelRide(rideId, reason);
     result.fold(
       (_) => Get.snackbar('Cancel failed', 'Could not cancel. Try again.'),
       (success) {
