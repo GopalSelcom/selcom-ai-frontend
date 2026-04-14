@@ -489,7 +489,7 @@ class HomeScreen extends StatelessWidget {
                     FittedBox(
                       fit: BoxFit.scaleDown,
                       child: Text(
-                        distance.isEmpty ? '-- KM' : distance,
+                        distance.isEmpty ? 'SAVED' : distance,
                         style: AppTextStyles.homeCaption.copyWith(
                           fontSize: 10.sp,
                           fontWeight: FontWeight.w600,
@@ -573,7 +573,7 @@ class HomeScreen extends StatelessWidget {
                     FittedBox(
                       fit: BoxFit.scaleDown,
                       child: Text(
-                        distance.isEmpty ? '-- KM' : distance,
+                        distance.isEmpty ? 'SAVED' : distance,
                         style: AppTextStyles.homeCaption.copyWith(
                           fontSize: 10.sp,
                           fontWeight: FontWeight.w600,

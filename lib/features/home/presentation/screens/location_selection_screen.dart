@@ -505,8 +505,13 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         final isFavorite = savedPlace?.isFavourite ?? false;
         final showFavorite = savedPlace != null;
 
+        final dist = controller.calculateDistanceKm(
+          savedPlace?.lat,
+          savedPlace?.lng,
+        );
+
         return _locationTile(
-          kmText: '${index + 2} KM',
+          kmText: dist.isEmpty ? 'SEARCH' : dist,
           title: title,
           subtitle: description,
           isFavorite: isFavorite,
@@ -557,8 +562,13 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                 final isFavorite = savedPlace?.isFavourite ?? false;
                 final showFavorite = savedPlace != null;
 
+                final dist = controller.calculateDistanceKm(
+                  destination.lat,
+                  destination.lng,
+                );
+
                 return _locationTile(
-                  kmText: '${index + 2} KM',
+                  kmText: dist.isEmpty ? 'RECENT' : dist,
                   title: destination.address.split(',').first,
                   subtitle: destination.address,
                   isFavorite: isFavorite,
@@ -598,8 +608,13 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         final isFavorite = savedPlace?.isFavourite ?? false;
         final showFavorite = savedPlace != null;
 
+        final dist = controller.calculateDistanceKm(
+          savedPlace?.lat,
+          savedPlace?.lng,
+        );
+
         return _locationTile(
-          kmText: '${index + 2} KM',
+          kmText: dist.isEmpty ? 'RECENT' : dist,
           title: recentText,
           subtitle: recentText,
           isFavorite: isFavorite,
@@ -635,8 +650,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       itemBuilder: (_, index) {
         final place = controller.savedPlaces[index];
         final label = (place.label ?? '').capitalizeFirst ?? '';
+        final dist = controller.calculateDistanceKm(place.lat, place.lng);
         return _locationTile(
-          kmText: 'SAVED',
+          kmText: dist.isEmpty ? 'SAVED' : dist,
           title: label,
           subtitle: place.address ?? '',
           isFavorite: place.isFavourite ?? false,
@@ -691,30 +707,26 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             child: Row(
               children: [
                 SizedBox(
-                  width: 45.w,
+                  width: 60.w,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      SvgPictureAsset(
-                        AppAssets.locationClockDistance,
-                        width: 21.44.w,
-                        height: 21.44.h,
-                        placeholderBuilder: (_) => const Icon(
-                          Icons.schedule,
-                          color: Color(0xFFCACACA),
-                          size: 20,
-                        ),
+                      Icon(
+                        Icons.access_time_outlined,
+                        color: const Color(0xFF94A3B8),
+                        size: 20.sp,
                       ),
-                      SizedBox(height: 1.h),
+                      SizedBox(height: 4.h),
                       Text(
                         kmText,
                         textAlign: TextAlign.center,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTextStyles.homeCaption.copyWith(
-                          color: const Color(0xFF656565),
-                          fontWeight: FontWeight.w400,
-                          height: 20 / 12,
+                          color: const Color(0xFF64748B),
+                          fontWeight: FontWeight.w500,
+                          fontSize: 12.sp,
+                          height: 1.0,
                         ),
                       ),
                     ],
@@ -794,122 +806,94 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
   }
 
   Widget _bookRideButton() {
-    final pickup = pickupController.text.trim();
-    final destinations = [
-      destinationController.text.trim(),
-      ..._extraDestinationControllers.map((c) => c.text.trim()),
-    ];
-    final enabled = _isPickupSelected.value && _isDestinationSelected.value;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
+    return Obx(() {
+      final isReady = _isPickupSelected.value && _isDestinationSelected.value;
+      return Material(
+        color: isReady ? AppColors.primary : const Color(0xFFCBD5E1),
         borderRadius: BorderRadius.circular(16.r),
-        onTap: enabled
-            ? () async {
-                await controller.proceedToBookingFromLocationSelection(
-                  pickup: pickup,
-                  destinations: destinations,
-                  destinationPlaceId: _destinationPlaceId.value,
-                  routePickupLat: _routePickupLat.value,
-                  routePickupLng: _routePickupLng.value,
-                  routeDestinationLat: _routeDestinationLat.value,
-                  routeDestinationLng: _routeDestinationLng.value,
-                  preferredVehicleTypeId: _preferredVehicleTypeId.value,
-                  preferredVehicleName: _preferredVehicleName.value,
-                );
-              }
-            : null,
-        child: Ink(
-          height: 54.h,
-          decoration: BoxDecoration(
-            color: enabled ? AppColors.primary : const Color(0xFFBFC7D1),
-            borderRadius: BorderRadius.circular(16.r),
-          ),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Center(
-                child: Text(
+        child: InkWell(
+          onTap: isReady
+              ? () {
+                  final destinations = <String>[];
+                  destinations.add(destinationController.text.trim());
+                  for (final c in _extraDestinationControllers) {
+                    final t = c.text.trim();
+                    if (t.isNotEmpty) destinations.add(t);
+                  }
+                  controller.proceedToBookingFromLocationSelection(
+                    pickup: pickupController.text.trim(),
+                    destinations: destinations,
+                    destinationPlaceId: _destinationPlaceId.value,
+                    routePickupLat: _routePickupLat.value,
+                    routePickupLng: _routePickupLng.value,
+                    routeDestinationLat: _routeDestinationLat.value,
+                    routeDestinationLng: _routeDestinationLng.value,
+                    preferredVehicleTypeId: _preferredVehicleTypeId.value,
+                    preferredVehicleName: _preferredVehicleName.value,
+                  );
+                }
+              : null,
+          borderRadius: BorderRadius.circular(16.r),
+          child: SizedBox(
+            height: 56.h,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Text(
                   'Book Ride',
-                  style: AppTextStyles.onboardingButton.copyWith(
-                    fontSize: 17.sp,
+                  style: AppTextStyles.homeTitle.copyWith(
+                    color: isReady ? Colors.white : const Color(0xFF94A3B8),
+                    fontSize: 18.sp,
                     fontWeight: FontWeight.w600,
-                    height: 22 / 17,
                   ),
                 ),
-              ),
-              Positioned(
-                right: 16.w,
-                top: 0,
-                bottom: 0,
-                child: Center(
-                  child: SvgPictureAsset(
-                    AppAssets.locationIcArrowRight,
-                    width: 24.w,
-                    height: 24.w,
-                    placeholderBuilder: (_) => const Icon(
-                      Icons.arrow_forward,
-                      color: Colors.white,
-                      size: 18,
-                    ),
+                Positioned(
+                  right: 20.w,
+                  child: Icon(
+                    Icons.arrow_forward,
+                    color: isReady ? Colors.white : const Color(0xFF94A3B8),
+                    size: 20.sp,
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
+      );
+    });
+  }
+
+  void _onSuggestionSelected(Prediction prediction) {
+    controller.applySuggestionToLocationSelection(
+      prediction: prediction,
+      activeSegmentIndex: _activeSegmentIndex.value,
+      pickupController: pickupController,
+      destinationController: destinationController,
+      extraDestinationControllers: _extraDestinationControllers,
+      pickupEditedByUser: pickupEditedByUser,
+      routePickupLat: _routePickupLat,
+      routePickupLng: _routePickupLng,
+      routeDestinationLat: _routeDestinationLat,
+      routeDestinationLng: _routeDestinationLng,
+      destinationPlaceId: _destinationPlaceId,
     );
+    if (_activeSegmentIndex.value == 0) {
+      _isPickupSelected.value = true;
+    } else {
+      _isDestinationSelected.value = true;
+    }
+    controller.suggestions.clear();
   }
 
   Widget _buildSearchContent() {
-    final query = controller.searchQuery.value.trim();
-    if (query.length >= 2) {
+    return Obx(() {
       if (controller.isSearching.value) {
         return const Center(child: CircularProgressIndicator());
       }
-      return _suggestionsList(controller);
-    }
-    return _recentList(controller);
-  }
-
-  Future<void> _onSuggestionSelected(Prediction prediction) async {
-    await controller.selectPlace(prediction);
-    final description = prediction.description ?? '';
-
-    // Fetch coordinates using geocode API via controller helper
-    final latLng = await controller.getLatLngFromAddress(description);
-    final lat = latLng?.latitude;
-    final lng = latLng?.longitude;
-
-    if (_activeSegmentIndex.value == 0) {
-      pickupEditedByUser.value = true;
-      _isPickupSelected.value = true;
-      _routePickupLat.value = lat;
-      _routePickupLng.value = lng;
-      pickupController.text = description;
-      pickupController.selection = TextSelection.fromPosition(
-        TextPosition(offset: pickupController.text.length),
-      );
-    } else if (_activeSegmentIndex.value == 1) {
-      _isDestinationSelected.value = true;
-      destinationController.text = description;
-      _routeDestinationLat.value = lat;
-      _routeDestinationLng.value = lng;
-      _destinationPlaceId.value = prediction.placeId?.trim();
-      destinationController.selection = TextSelection.fromPosition(
-        TextPosition(offset: destinationController.text.length),
-      );
-    } else {
-      final i = _activeSegmentIndex.value - 2;
-      if (i >= 0 && i < _extraDestinationControllers.length) {
-        final c = _extraDestinationControllers[i];
-        c.text = description;
-        c.selection = TextSelection.fromPosition(
-          TextPosition(offset: c.text.length),
-        );
+      if (controller.searchQuery.value.trim().isNotEmpty) {
+        return _suggestionsList(controller);
       }
-    }
-    controller.searchQuery.value = '';
+      return _recentList(controller);
+    });
   }
 }
