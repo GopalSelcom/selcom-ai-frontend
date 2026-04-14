@@ -810,8 +810,8 @@ class HomeController extends GetxController {
       (response) {
         if (response.results != null && response.results!.isNotEmpty) {
           final loc = response.results!.first.geometry?.location;
-          if (loc?.lat != null && loc?.lng != null) {
-            return LatLng(loc!.lat!, loc!.lng!);
+          if (loc != null && loc.lat != null && loc.lng != null) {
+            return LatLng(loc.lat!, loc.lng!);
           }
         }
         return null;

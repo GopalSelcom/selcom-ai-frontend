@@ -165,8 +165,10 @@ class HomeScreen extends StatelessWidget {
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(12.r),
                         border: Border.all(
-                          color: selected ? AppColors.primary : Colors.transparent,
-                          width: selected ? 1 : 0,
+                          color: selected && controller.isSavedPlacesExpanded.value
+                              ? AppColors.primary
+                              : Colors.transparent,
+                          width: selected && controller.isSavedPlacesExpanded.value ? 1 : 0,
                         ),
                       ),
                       child: Row(

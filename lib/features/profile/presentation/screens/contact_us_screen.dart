@@ -5,6 +5,7 @@ import 'package:iconsax/iconsax.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
+import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../controllers/contact_us_controller.dart';
 
@@ -15,76 +16,59 @@ class ContactUsScreen extends GetView<ContactUsController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.pageBackground,
-      body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24.w),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: 16.h),
-              // Back Button
-              InkWell(
-                onTap: () => Get.back(),
-                child: const Icon(Iconsax.arrow_left, color: AppColors.shade1),
-              ),
-              SizedBox(height: 32.h),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const AppProfileHeader(title: 'Contact Us', bottomPadding: 24),
 
-              // Title
-              Text(
-                'Contact Us',
-                style: AppTextStyles.onboardingTitle.copyWith(
-                  fontSize: 24.sp,
+          SizedBox(height: 32.h),
+
+          Expanded(
+            child: Obx(() {
+              if (controller.isLoading.value && controller.subjects.isEmpty) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              return SingleChildScrollView(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 24.w),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Reason to Contact',
+                        style: AppTextStyles.homeSubtitle,
+                      ),
+                      SizedBox(height: 8.h),
+                      _buildReasonDropdown(context),
+
+                      SizedBox(height: 24.h),
+                      Text('Message', style: AppTextStyles.homeSubtitle),
+                      SizedBox(height: 8.h),
+                      AppTextField(
+                        controller: controller.messageController,
+                        hintText: 'Type your message here...',
+                        maxLines: 5,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              SizedBox(height: 12.h),
-
-              // Subtitle
-              Text(
-                'Please fill in the details below to contact us.',
-                style: AppTextStyles.onboardingSubtitle,
-              ),
-              SizedBox(height: 32.h),
-
-              Expanded(
-                child: Obx(() {
-                  if (controller.isLoading.value && controller.subjects.isEmpty) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  return SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Reason to Contact', style: AppTextStyles.homeSubtitle),
-                        SizedBox(height: 8.h),
-                        _buildReasonDropdown(context),
-
-                        SizedBox(height: 24.h),
-                        Text('Message', style: AppTextStyles.homeSubtitle),
-                        SizedBox(height: 8.h),
-                        AppTextField(
-                          controller: controller.messageController,
-                          hintText: 'Type your message here...',
-                          maxLines: 5,
-                        ),
-                      ],
-                    ),
-                  );
-                }),
-              ),
-
-              // Submit Button (Footer)
-              Obx(() => Padding(
-                padding: EdgeInsets.only(bottom: 16.h),
-                child: AppPrimaryButton(
-                  label: 'Submit',
-                  onPressed: controller.sendMessage,
-                  isLoading: controller.isLoading.value,
-                ),
-              )),
-            ],
+              );
+            }),
           ),
-        ),
+
+          // Submit Button (Footer)
+          Obx(
+            () => Padding(
+              padding: EdgeInsets.only(bottom: 16.h, left: 24.w, right: 24.w),
+              child: AppPrimaryButton(
+                label: 'Submit',
+                onPressed: controller.sendMessage,
+                isLoading: controller.isLoading.value,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

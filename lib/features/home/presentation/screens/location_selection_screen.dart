@@ -42,6 +42,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
   final RxnString _preferredVehicleTypeId = RxnString();
   final RxnString _preferredVehicleName = RxnString();
 
+  final RxBool _isPickupSelected = false.obs;
+  final RxBool _isDestinationSelected = false.obs;
+
   @override
   void initState() {
     super.initState();
@@ -69,6 +72,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     destinationController = TextEditingController();
     pickupFocusNode = FocusNode();
     destinationFocusNode = FocusNode();
+    if (_routePickupLat.value != null) {
+      _isPickupSelected.value = true;
+    }
   }
 
   @override
@@ -331,6 +337,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         },
         onChanged: (value) {
           pickupEditedByUser.value = true;
+          _isPickupSelected.value = false; // reset
           _setActiveSegment(0);
           controller.searchQuery.value = value;
         },
@@ -353,6 +360,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         },
         onChanged: (value) {
           _destinationPlaceId.value = null;
+          _isDestinationSelected.value = false; // reset
           _setActiveSegment(1);
           controller.searchQuery.value = value;
         },
@@ -380,6 +388,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           },
           onChanged: (value) {
             _setActiveSegment(segment);
+            _isDestinationSelected.value = false;
             controller.searchQuery.value = value;
           },
           style: fieldStyle,
@@ -428,6 +437,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             routeDestinationLng: _routeDestinationLng,
             destinationPlaceId: _destinationPlaceId,
           );
+          _isDestinationSelected.value = true;
         },
         child: Container(
           height: 36.h,
@@ -499,19 +509,20 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             subtitle: destination.address,
             isFavorite: index.isOdd,
             onTap: () {
-              controller.applyRecentDestinationToLocationSelection(
-                destination: destination,
-                activeSegmentIndex: _activeSegmentIndex.value,
-                pickupController: pickupController,
-                destinationController: destinationController,
-                extraDestinationControllers: _extraDestinationControllers,
-                pickupEditedByUser: pickupEditedByUser,
-                routePickupLat: _routePickupLat,
-                routePickupLng: _routePickupLng,
-                routeDestinationLat: _routeDestinationLat,
-                routeDestinationLng: _routeDestinationLng,
-                destinationPlaceId: _destinationPlaceId,
-              );
+                controller.applyRecentDestinationToLocationSelection(
+                  destination: destination,
+                  activeSegmentIndex: _activeSegmentIndex.value,
+                  pickupController: pickupController,
+                  destinationController: destinationController,
+                  extraDestinationControllers: _extraDestinationControllers,
+                  pickupEditedByUser: pickupEditedByUser,
+                  routePickupLat: _routePickupLat,
+                  routePickupLng: _routePickupLng,
+                  routeDestinationLat: _routeDestinationLat,
+                  routeDestinationLng: _routeDestinationLng,
+                  destinationPlaceId: _destinationPlaceId,
+                );
+                _isDestinationSelected.value = true;
             },
             onFavoriteTap: () {},
           );
@@ -675,8 +686,8 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       ..._extraDestinationControllers.map((c) => c.text.trim()),
     ];
     final enabled =
-        pickup.isNotEmpty && destinations.isNotEmpty && destinations.every((d) => d.isNotEmpty);
-
+        _isPickupSelected.value &&
+            _isDestinationSelected.value;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -757,6 +768,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
 
     if (_activeSegmentIndex.value == 0) {
       pickupEditedByUser.value = true;
+      _isPickupSelected.value = true;
       _routePickupLat.value = lat;
       _routePickupLng.value = lng;
       pickupController.text = description;
@@ -764,6 +776,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         TextPosition(offset: pickupController.text.length),
       );
     } else if (_activeSegmentIndex.value == 1) {
+      _isDestinationSelected.value = true;
       destinationController.text = description;
       _routeDestinationLat.value = lat;
       _routeDestinationLng.value = lng;
