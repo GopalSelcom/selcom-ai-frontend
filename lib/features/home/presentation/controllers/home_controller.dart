@@ -579,10 +579,10 @@ class HomeController extends GetxController {
     }
   }
 
-  /// Calculates distance in KM from [deviceGpsLocation] to [lat],[lng].
-  /// Returns empty string if unavailable.
   String calculateDistanceKm(double? lat, double? lng) {
-    if (lat == null || lng == null) return '';
+    // If coordinates are likely placeholders (0,0) or missing, don't show distance
+    if ((lat == 0.0 && lng == 0.0) || lat == null || lng == null) return '';
+
     final current = deviceGpsLocation.value;
     if (current == null) return '';
 
@@ -595,6 +595,7 @@ class HomeController extends GetxController {
 
     final km = distanceMeters / 1000;
     if (km < 0.1) return '0.1 KM';
+    if (km > 999) return '>999 KM';
     return '${km.toStringAsFixed(1)} KM';
   }
 

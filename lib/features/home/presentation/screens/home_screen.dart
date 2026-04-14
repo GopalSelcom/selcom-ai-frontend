@@ -451,13 +451,14 @@ class HomeScreen extends StatelessWidget {
                 place.lng,
               );
               return Container(
-                width: 52.w,
-                padding: EdgeInsets.symmetric(vertical: 8.h),
+                constraints: BoxConstraints(minWidth: 52.w),
+                padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 8.h),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       Icons.access_time,
@@ -465,12 +466,15 @@ class HomeScreen extends StatelessWidget {
                       color: AppColors.shade2,
                     ),
                     SizedBox(height: 4.h),
-                    Text(
-                      distance.isEmpty ? '-- KM' : distance,
-                      style: AppTextStyles.homeCaption.copyWith(
-                        fontSize: 10.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.shade2,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        distance.isEmpty ? '-- KM' : distance,
+                        style: AppTextStyles.homeCaption.copyWith(
+                          fontSize: 10.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.shade2,
+                        ),
                       ),
                     ),
                   ],
@@ -531,13 +535,14 @@ class HomeScreen extends StatelessWidget {
             Obx(() {
               final distance = controller.calculateDistanceKm(loc.lat, loc.lng);
               return Container(
-                width: 52.w,
-                padding: EdgeInsets.symmetric(vertical: 8.h),
+                constraints: BoxConstraints(minWidth: 52.w),
+                padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 8.h),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       Icons.directions_car_outlined,
@@ -545,11 +550,14 @@ class HomeScreen extends StatelessWidget {
                       color: AppColors.shade2,
                     ),
                     SizedBox(height: 4.h),
-                    Text(
-                      distance.isEmpty ? '-- KM' : distance,
-                      style: AppTextStyles.homeCaption.copyWith(
-                        fontSize: 10.sp,
-                        fontWeight: FontWeight.w600,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        distance.isEmpty ? '-- KM' : distance,
+                        style: AppTextStyles.homeCaption.copyWith(
+                          fontSize: 10.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
