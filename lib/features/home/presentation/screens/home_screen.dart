@@ -40,6 +40,7 @@ class HomeScreen extends StatelessWidget {
                 circles: controller.nearbyPickupRadiusCircles,
                 markers: controller.selectedPickupMarkers,
                 onMapCreated: controller.onMapCreated,
+                padding: EdgeInsets.only(bottom: 245.h),
                 onCameraMove: controller.onCameraMove,
                 onCameraIdle: controller.onCameraIdle,
               ),
