@@ -10,10 +10,14 @@ abstract class ProfileRepository {
   Future<Either<Failure, UserModel>> getProfile();
   Future<Either<Failure, bool>> updateProfile(Map<String, dynamic> data);
   Future<Either<Failure, GetSavedPlacesResponseModel?>> getSavedPlaces();
+  Future<Either<Failure, GetSavedPlacesResponseModel?>> getFavoritePlaces();
   Future<Either<Failure, bool>> addSavedPlace(CreateSavedPlaceRequest request);
   Future<Either<Failure, bool>> deleteSavedPlace(String id);
   Future<Either<Failure, WalletBalanceModel>> getWalletBalance();
   Future<Either<Failure, List<PaymentMethodModel>>> getPaymentMethods();
   Future<Either<Failure, EmailSubjectResponseModel>> getEmailSubjects();
-  Future<Either<Failure, SendEmailResponseModel>> sendEmail(SendEmailRequestModel request);
+  Future<Either<Failure, SendEmailResponseModel>> sendEmail(
+    SendEmailRequestModel request,
+  );
+  Future<Either<Failure, bool>> toggleFavorite(String id, bool isFavorite);
 }

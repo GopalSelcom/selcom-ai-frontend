@@ -11,6 +11,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_map_gps_button.dart';
 import '../../../../shared/widgets/app_map_top_header.dart';
+
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -144,7 +145,9 @@ class HomeScreen extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: List.generate(placesToShow.length, (index) {
                 final place = placesToShow[index];
-                final selected = controller.isSavedPlaceSelectedAsPickup(place.id);
+                final selected = controller.isSavedPlaceSelectedAsPickup(
+                  place.id,
+                );
                 return InkWell(
                   onTap: () {
                     if (controller.isSavedPlacesExpanded.value) {
@@ -158,76 +161,88 @@ class HomeScreen extends StatelessWidget {
                       bottom: index == placesToShow.length - 1 ? 0 : 12.h,
                     ),
                     child: Container(
-                      padding: EdgeInsets.symmetric(vertical: 4.h, horizontal: 4.w),
+                      padding: EdgeInsets.symmetric(
+                        vertical: 4.h,
+                        horizontal: 4.w,
+                      ),
                       decoration: BoxDecoration(
-                        color: selected && controller.isSavedPlacesExpanded.value
+                        color:
+                            selected && controller.isSavedPlacesExpanded.value
                             ? AppColors.primaryLight.withOpacity(0.35)
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(12.r),
                         border: Border.all(
-                          color: selected && controller.isSavedPlacesExpanded.value
+                          color:
+                              selected && controller.isSavedPlacesExpanded.value
                               ? AppColors.primary
                               : Colors.transparent,
-                          width: selected && controller.isSavedPlacesExpanded.value ? 1 : 0,
+                          width:
+                              selected && controller.isSavedPlacesExpanded.value
+                              ? 1
+                              : 0,
                         ),
                       ),
                       child: Row(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.all(8.w),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFF1F5F9),
-                            shape: BoxShape.circle,
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(8.w),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFF1F5F9),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.location_on,
+                              color: AppColors.primary,
+                              size: 20.sp,
+                            ),
                           ),
-                          child: Icon(
-                            Icons.location_on,
-                            color: AppColors.primary,
-                            size: 20.sp,
-                          ),
-                        ),
-                        SizedBox(width: 12.w),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    place.label ?? 'Place',
-                                    style: AppTextStyles.homeSubtitle.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.shade1,
+                          SizedBox(width: 12.w),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      place.label ?? 'Place',
+                                      style: AppTextStyles.homeSubtitle
+                                          .copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.shade1,
+                                          ),
                                     ),
-                                  ),
-                                  if (index == 0) ...[
-                                    SizedBox(width: 4.w),
-                                    AnimatedRotation(
-                                      duration: const Duration(milliseconds: 280),
-                                      curve: Curves.easeInOutCubic,
-                                      turns: controller.addressHeaderChevronTurns,
-                                      child: Icon(
-                                        Icons.keyboard_arrow_down,
-                                        size: 18.sp,
-                                        color: AppColors.shade2,
+                                    if (index == 0) ...[
+                                      SizedBox(width: 4.w),
+                                      AnimatedRotation(
+                                        duration: const Duration(
+                                          milliseconds: 280,
+                                        ),
+                                        curve: Curves.easeInOutCubic,
+                                        turns: controller
+                                            .addressHeaderChevronTurns,
+                                        child: Icon(
+                                          Icons.keyboard_arrow_down,
+                                          size: 18.sp,
+                                          color: AppColors.shade2,
+                                        ),
                                       ),
-                                    ),
+                                    ],
                                   ],
-                                ],
-                              ),
-                              Text(
-                                place.address ??
-                                    place.name ??
-                                    'No address provided',
-                                style: AppTextStyles.homeCaption,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
+                                ),
+                                Text(
+                                  place.address ??
+                                      place.name ??
+                                      'No address provided',
+                                  style: AppTextStyles.homeCaption,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
                     ),
                   ),
                 );
@@ -310,47 +325,50 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-              SizedBox(height: 20.h),
-              // Quick Chips
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _buildFigmaChip('Home', AppAssets.icHomeChip),
-                    _buildFigmaChip('Office', AppAssets.icOfficeChip),
-                    _buildFigmaChip('Work', AppAssets.icWorkChip),
-                    _buildFigmaChip('Other', AppAssets.icOtherChip),
-                  ],
-                ),
-              ),
-              if (controller.shouldShowRecentSection) ...[
-                SizedBox(height: 28.h),
-                Text(
-                  'Recent Location',
-                  style: AppTextStyles.homeTitle.copyWith(fontSize: 20.sp),
-                ),
-                SizedBox(height: 16.h),
-                if (controller.isLoadingHomeData.value)
-                  ...List.generate(3, (_) => _buildRecentLocationSkeleton())
-                else
-                  ...controller.recentDestinations
-                      .map((loc) => _buildRecentLocationItem(loc)),
-              ],
-              if (controller.shouldShowVehicleSection) ...[
-                if (controller.shouldShowRecentSection) SizedBox(height: 24.h),
-                if (!controller.shouldShowRecentSection) SizedBox(height: 28.h),
-                Text(
-                  'Explore Vehicle',
-                  style: AppTextStyles.homeSubtitle.copyWith(
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.bold,
+                SizedBox(height: 20.h),
+                // Quick Chips
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildFigmaChip('Home', AppAssets.icHomeChip),
+                      _buildFigmaChip('Office', AppAssets.icOfficeChip),
+                      _buildFigmaChip('Work', AppAssets.icWorkChip),
+                      _buildFigmaChip('Other', AppAssets.icOtherChip),
+                    ],
                   ),
                 ),
-                SizedBox(height: 16.h),
-                _buildVehicleHorizontalList(),
+                if (controller.shouldShowRecentSection) ...[
+                  SizedBox(height: 28.h),
+                  Text(
+                    'Recent Location',
+                    style: AppTextStyles.homeTitle.copyWith(fontSize: 20.sp),
+                  ),
+                  SizedBox(height: 16.h),
+                  if (controller.isLoadingHomeData.value)
+                    ...List.generate(3, (_) => _buildRecentLocationSkeleton())
+                  else
+                    ...controller.recentDestinations.map(
+                      (loc) => _buildRecentLocationItem(loc),
+                    ),
+                ],
+                if (controller.shouldShowVehicleSection) ...[
+                  if (controller.shouldShowRecentSection)
+                    SizedBox(height: 24.h),
+                  if (!controller.shouldShowRecentSection)
+                    SizedBox(height: 28.h),
+                  Text(
+                    'Explore Vehicle',
+                    style: AppTextStyles.homeSubtitle.copyWith(
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  _buildVehicleHorizontalList(),
+                ],
+                SizedBox(height: 40.h),
               ],
-              SizedBox(height: 40.h),
-            ],
             ),
           ),
         );
@@ -379,13 +397,18 @@ class HomeScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(label, style: AppTextStyles.homeChip.copyWith(fontSize: 14.sp)),
+                Text(
+                  label,
+                  style: AppTextStyles.homeChip.copyWith(fontSize: 14.sp),
+                ),
                 if (subtitle != null && subtitle.trim().isNotEmpty)
                   SizedBox(
                     width: 120.w,
                     child: Text(
                       subtitle,
-                      style: AppTextStyles.homeCaption.copyWith(fontSize: 11.sp),
+                      style: AppTextStyles.homeCaption.copyWith(
+                        fontSize: 11.sp,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -455,7 +478,18 @@ class HomeScreen extends StatelessWidget {
               ],
             ),
           ),
-          Icon(Icons.favorite, color: const Color(0xFFE2E8F0), size: 24.sp),
+          Obx(() {
+            final savedPlace = controller.getSavedPlaceFor(loc.address, null);
+            final isFavorite = savedPlace?.isFavourite ?? false;
+            return IconButton(
+              onPressed: () => controller.toggleFavorite(loc.address, null),
+              icon: Icon(
+                isFavorite ? Icons.favorite : Icons.favorite_border,
+                color: isFavorite ? AppColors.primary : const Color(0xFFE2E8F0),
+                size: 24.sp,
+              ),
+            );
+          }),
         ],
       ),
     );
@@ -512,8 +546,8 @@ class HomeScreen extends StatelessWidget {
           children: controller.isLoadingHomeData.value
               ? List.generate(3, (_) => _buildVehicleSkeleton())
               : controller.vehicleTypes
-                  .map((vehicle) => _buildVehicleCard(vehicle))
-                  .toList(),
+                    .map((vehicle) => _buildVehicleCard(vehicle))
+                    .toList(),
         ),
       ),
     );
@@ -523,7 +557,8 @@ class HomeScreen extends StatelessWidget {
     final imagePath = controller.vehicleExploreImageAsset(vehicle.name);
 
     return GestureDetector(
-      onTap: () => controller.openLocationSelectionWithPreferredVehicle(vehicle),
+      onTap: () =>
+          controller.openLocationSelectionWithPreferredVehicle(vehicle),
       child: Container(
         margin: EdgeInsets.only(right: 16.w),
         child: Column(

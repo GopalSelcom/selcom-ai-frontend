@@ -39,11 +39,12 @@ class HomeController extends GetxController {
   final recentSearches = <String>[].obs;
   final isSearching = false.obs;
   final isSavingPlace = false.obs;
-  
+
   // Home Data
   final vehicleTypes = <VehicleTypeModel>[].obs;
   final recentDestinations = <RecentDestinationModel>[].obs;
   final savedPlaces = <SavedPlace>[].obs;
+
   /// Picked saved address for pickup (header dropdown). Map + chips use this when set.
   final Rxn<String> selectedPickupSavedPlaceId = Rxn<String>();
   final isSavedPlacesExpanded = false.obs;
@@ -94,9 +95,7 @@ class HomeController extends GetxController {
   void recenterMap() {
     if (_mapController == null) return;
     final target = deviceGpsLocation.value ?? mapCenter.value;
-    _mapController!.animateCamera(
-      CameraUpdate.newLatLngZoom(target, 16),
-    );
+    _mapController!.animateCamera(CameraUpdate.newLatLngZoom(target, 16));
   }
 
   /// 200 m radius around [deviceGpsLocation] (true GPS), not map drag position.
@@ -173,26 +172,20 @@ class HomeController extends GetxController {
       );
 
       // Handle Recent Destinations
-      results[1].fold(
-        (_) => null,
-        (destinations) {
-          if (destinations is List<RecentDestinationModel>) {
-            recentDestinations.assignAll(destinations);
-          }
-        },
-      );
+      results[1].fold((_) => null, (destinations) {
+        if (destinations is List<RecentDestinationModel>) {
+          recentDestinations.assignAll(destinations);
+        }
+      });
 
       // Handle Saved Places
-      results[2].fold(
-        (_) => null,
-        (response) {
-          final res = response as GetSavedPlacesResponseModel?;
-          if (res?.data?.savedPlaces != null) {
-            savedPlaces.assignAll(res!.data!.savedPlaces!);
-            _syncSelectedPickupAfterSavedPlacesLoad();
-          }
-        },
-      );
+      results[2].fold((_) => null, (response) {
+        final res = response as GetSavedPlacesResponseModel?;
+        if (res?.data?.savedPlaces != null) {
+          savedPlaces.assignAll(res!.data!.savedPlaces!);
+          _syncSelectedPickupAfterSavedPlacesLoad();
+        }
+      });
     } finally {
       isLoadingHomeData.value = false;
     }
@@ -204,14 +197,11 @@ class HomeController extends GetxController {
       input: input,
       sessionToken: 'session_token_123',
     );
-    result.fold(
-      (failure) => suggestions.clear(),
-      (list) {
-        suggestions
-          ..clear()
-          ..addAll(list?.data?.predictions ?? []);
-      },
-    );
+    result.fold((failure) => suggestions.clear(), (list) {
+      suggestions
+        ..clear()
+        ..addAll(list?.data?.predictions ?? []);
+    });
     isSearching.value = false;
   }
 
@@ -252,7 +242,7 @@ class HomeController extends GetxController {
             snackPosition: SnackPosition.BOTTOM,
           );
         } else {
-          await _loadSavedPlacesOnly();
+          await loadSavedPlaces();
           Get.snackbar(
             'Saved',
             '$label location has been saved.',
@@ -297,9 +287,7 @@ class HomeController extends GetxController {
     hasLocationPermission.value = true;
 
     final position = await Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-      ),
+      locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
     );
     final target = LatLng(position.latitude, position.longitude);
     deviceGpsLocation.value = target;
@@ -324,14 +312,15 @@ class HomeController extends GetxController {
       lng: target.longitude,
     );
 
-    result.fold(
-      (_) => null,
-      (data) {
-        if ((data.data?.results??[]).isNotEmpty&&(data.data?.results?.first.formattedAddress??"").trim().isNotEmpty) {
-          currentMapAddress.value = data.data?.results?.first.formattedAddress??"";
-        }
-      },
-    );
+    result.fold((_) => null, (data) {
+      if ((data.data?.results ?? []).isNotEmpty &&
+          (data.data?.results?.first.formattedAddress ?? "")
+              .trim()
+              .isNotEmpty) {
+        currentMapAddress.value =
+            data.data?.results?.first.formattedAddress ?? "";
+      }
+    });
     isResolvingAddress.value = false;
   }
 
@@ -366,7 +355,9 @@ class HomeController extends GetxController {
     double? dLat = place.lat;
     double? dLng = place.lng;
     final coords = place.location?.coordinates;
-    if ((dLat == null || dLng == null) && coords != null && coords.length >= 2) {
+    if ((dLat == null || dLng == null) &&
+        coords != null &&
+        coords.length >= 2) {
       dLng = coords[0];
       dLat = coords[1];
     }
@@ -407,22 +398,20 @@ class HomeController extends GetxController {
         'destination': destAddr,
         'destinationLat': dLat,
         'destinationLng': dLng,
-        if (place.id != null && place.id!.isNotEmpty) 'destinationPlaceId': place.id,
+        if (place.id != null && place.id!.isNotEmpty)
+          'destinationPlaceId': place.id,
       },
     );
   }
 
-  Future<void> _loadSavedPlacesOnly() async {
+  Future<void> loadSavedPlaces() async {
     final result = await profileRepository.getSavedPlaces();
-    result.fold(
-      (_) => null,
-      (response) {
-        if (response?.data?.savedPlaces != null) {
-          savedPlaces.assignAll(response!.data!.savedPlaces!);
-          _syncSelectedPickupAfterSavedPlacesLoad();
-        }
-      },
-    );
+    result.fold((_) => null, (response) {
+      if (response?.data?.savedPlaces != null) {
+        savedPlaces.assignAll(response!.data!.savedPlaces!);
+        _syncSelectedPickupAfterSavedPlacesLoad();
+      }
+    });
   }
 
   void _syncSelectedPickupAfterSavedPlacesLoad() {
@@ -499,7 +488,9 @@ class HomeController extends GetxController {
   }
 
   void _pushRecentSearch(String value) {
-    recentSearches.removeWhere((item) => item.toLowerCase() == value.toLowerCase());
+    recentSearches.removeWhere(
+      (item) => item.toLowerCase() == value.toLowerCase(),
+    );
     recentSearches.insert(0, value);
     if (recentSearches.length > 8) {
       recentSearches.removeRange(8, recentSearches.length);
@@ -522,11 +513,14 @@ class HomeController extends GetxController {
     isSavedPlacesExpanded.toggle();
   }
 
-  double get addressHeaderChevronTurns => isSavedPlacesExpanded.value ? 0.5 : 0.0;
+  double get addressHeaderChevronTurns =>
+      isSavedPlacesExpanded.value ? 0.5 : 0.0;
 
   /// Opens location flow with current [activePickupAddress] / [activePickupLatLng].
   /// Optional [preferredVehicle] is forwarded to booking → vehicle selection.
-  Future<void> openLocationSelection({VehicleTypeModel? preferredVehicle}) async {
+  Future<void> openLocationSelection({
+    VehicleTypeModel? preferredVehicle,
+  }) async {
     await onSearchTapped();
     final args = <String, dynamic>{
       'pickup': activePickupAddress,
@@ -547,7 +541,9 @@ class HomeController extends GetxController {
     Get.toNamed(AppRoutes.locationSelection, arguments: args);
   }
 
-  Future<void> openLocationSelectionWithPreferredVehicle(VehicleTypeModel vehicle) {
+  Future<void> openLocationSelectionWithPreferredVehicle(
+    VehicleTypeModel vehicle,
+  ) {
     return openLocationSelection(preferredVehicle: vehicle);
   }
 
@@ -712,7 +708,9 @@ class HomeController extends GetxController {
     if (i >= 0 && i < extraDestinationControllers.length) {
       final c = extraDestinationControllers[i];
       c.text = description;
-      c.selection = TextSelection.fromPosition(TextPosition(offset: c.text.length));
+      c.selection = TextSelection.fromPosition(
+        TextPosition(offset: c.text.length),
+      );
     }
   }
 
@@ -728,9 +726,11 @@ class HomeController extends GetxController {
     final saved = savedPlace?.address?.trim();
     if (saved == null || saved.isEmpty) return;
     final coords = savedPlace?.location?.coordinates;
-    final lat = savedPlace?.lat ??
+    final lat =
+        savedPlace?.lat ??
         ((coords != null && coords.length >= 2) ? coords[1] : null);
-    final lng = savedPlace?.lng ??
+    final lng =
+        savedPlace?.lng ??
         ((coords != null && coords.length >= 2) ? coords[0] : null);
 
     destinationController.text = saved;
@@ -805,16 +805,70 @@ class HomeController extends GetxController {
 
   Future<LatLng?> getLatLngFromAddress(String address) async {
     final result = await homeRepository.getGeocode(address: address);
-    return result.fold(
-      (failure) => null,
-      (response) {
-        if (response.results != null && response.results!.isNotEmpty) {
-          final loc = response.results!.first.geometry?.location;
-          if (loc != null && loc.lat != null && loc.lng != null) {
-            return LatLng(loc.lat!, loc.lng!);
+    return result.fold((failure) => null, (response) {
+      if (response.results != null && response.results!.isNotEmpty) {
+        final loc = response.results!.first.geometry?.location;
+        if (loc != null && loc.lat != null && loc.lng != null) {
+          return LatLng(loc.lat!, loc.lng!);
+        }
+      }
+      return null;
+    });
+  }
+
+  SavedPlace? getSavedPlaceFor(String address, String? placeId) {
+    if (savedPlaces.isEmpty) return null;
+    return savedPlaces.firstWhereOrNull(
+      (s) =>
+          (placeId != null && s.id == placeId) ||
+          s.address?.trim().toLowerCase() == address.trim().toLowerCase(),
+    );
+  }
+
+  bool isPlaceFavorite(String address, String? placeId) {
+    final saved = getSavedPlaceFor(address, placeId);
+    return saved?.isFavourite ?? false;
+  }
+
+  Future<void> toggleFavorite(String address, String? placeId) async {
+    final saved = getSavedPlaceFor(address, placeId);
+    if (saved == null || saved.id == null) {
+      Get.snackbar('Note', 'Only saved places can be favourited.');
+      return;
+    }
+
+    final newStatus = !(saved.isFavourite ?? false);
+
+    // Optimistic UI update
+    final index = savedPlaces.indexWhere((p) => p.id == saved.id);
+    if (index != -1) {
+      savedPlaces[index] = savedPlaces[index].copyWith(isFavourite: newStatus);
+      savedPlaces.refresh();
+    }
+
+    final result = await profileRepository.toggleFavorite(saved.id!, newStatus);
+
+    result.fold(
+      (failure) {
+        // Rollback
+        if (index != -1) {
+          savedPlaces[index] = savedPlaces[index].copyWith(
+            isFavourite: !newStatus,
+          );
+          savedPlaces.refresh();
+        }
+        Get.snackbar('Error', 'Could not update favorite status');
+      },
+      (success) {
+        if (!success) {
+          // Rollback
+          if (index != -1) {
+            savedPlaces[index] = savedPlaces[index].copyWith(
+              isFavourite: !newStatus,
+            );
+            savedPlaces.refresh();
           }
         }
-        return null;
       },
     );
   }

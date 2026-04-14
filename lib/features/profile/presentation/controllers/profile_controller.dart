@@ -175,6 +175,10 @@ class ProfileController extends GetxController {
     Get.toNamed(AppRoutes.promotions);
   }
 
+  void openFavoriteLocations() {
+    Get.toNamed(AppRoutes.favoriteLocations);
+  }
+
   void logout() {
     AppDialogs.showConfirmationDialog(
       title: 'Logout',

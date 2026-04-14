@@ -4,32 +4,29 @@
 
 import 'dart:convert';
 
-GetSavedPlacesResponseModel getSavedPlacesResponseModelFromJson(String str) => GetSavedPlacesResponseModel.fromJson(json.decode(str));
+GetSavedPlacesResponseModel getSavedPlacesResponseModelFromJson(String str) =>
+    GetSavedPlacesResponseModel.fromJson(json.decode(str));
 
-String getSavedPlacesResponseModelToJson(GetSavedPlacesResponseModel data) => json.encode(data.toJson());
+String getSavedPlacesResponseModelToJson(GetSavedPlacesResponseModel data) =>
+    json.encode(data.toJson());
 
 class GetSavedPlacesResponseModel {
   int? statusCode;
   Data? data;
 
-  GetSavedPlacesResponseModel({
-    this.statusCode,
-    this.data,
-  });
+  GetSavedPlacesResponseModel({this.statusCode, this.data});
 
-  GetSavedPlacesResponseModel copyWith({
-    int? statusCode,
-    Data? data,
-  }) =>
+  GetSavedPlacesResponseModel copyWith({int? statusCode, Data? data}) =>
       GetSavedPlacesResponseModel(
         statusCode: statusCode ?? this.statusCode,
         data: data ?? this.data,
       );
 
-  factory GetSavedPlacesResponseModel.fromJson(Map<String, dynamic> json) => GetSavedPlacesResponseModel(
-    statusCode: json["status_code"],
-    data: json["data"] == null ? null : Data.fromJson(json["data"]),
-  );
+  factory GetSavedPlacesResponseModel.fromJson(Map<String, dynamic> json) =>
+      GetSavedPlacesResponseModel(
+        statusCode: json["status_code"],
+        data: json["data"] == null ? null : Data.fromJson(json["data"]),
+      );
 
   Map<String, dynamic> toJson() => {
     "status_code": statusCode,
@@ -40,23 +37,27 @@ class GetSavedPlacesResponseModel {
 class Data {
   List<SavedPlace>? savedPlaces;
 
-  Data({
-    this.savedPlaces,
-  });
+  Data({this.savedPlaces});
 
-  Data copyWith({
-    List<SavedPlace>? savedPlaces,
-  }) =>
-      Data(
-        savedPlaces: savedPlaces ?? this.savedPlaces,
-      );
+  Data copyWith({List<SavedPlace>? savedPlaces}) =>
+      Data(savedPlaces: savedPlaces ?? this.savedPlaces);
 
   factory Data.fromJson(Map<String, dynamic> json) => Data(
-    savedPlaces: json["saved_places"] == null ? [] : List<SavedPlace>.from(json["saved_places"]!.map((x) => SavedPlace.fromJson(x))),
+    savedPlaces: json["saved_places"] != null
+        ? List<SavedPlace>.from(
+            json["saved_places"]!.map((x) => SavedPlace.fromJson(x)),
+          )
+        : json["favourite_places"] != null
+        ? List<SavedPlace>.from(
+            json["favourite_places"]!.map((x) => SavedPlace.fromJson(x)),
+          )
+        : [],
   );
 
   Map<String, dynamic> toJson() => {
-    "saved_places": savedPlaces == null ? [] : List<dynamic>.from(savedPlaces!.map((x) => x.toJson())),
+    "saved_places": savedPlaces == null
+        ? []
+        : List<dynamic>.from(savedPlaces!.map((x) => x.toJson())),
   };
 }
 
@@ -72,6 +73,7 @@ class SavedPlace {
   double? lng;
   String? name;
   DateTime? updatedAt;
+  bool? isFavourite;
 
   SavedPlace({
     this.location,
@@ -85,6 +87,7 @@ class SavedPlace {
     this.lng,
     this.name,
     this.updatedAt,
+    this.isFavourite,
   });
 
   SavedPlace copyWith({
@@ -99,33 +102,41 @@ class SavedPlace {
     double? lng,
     String? name,
     DateTime? updatedAt,
-  }) =>
-      SavedPlace(
-        location: location ?? this.location,
-        id: id ?? this.id,
-        label: label ?? this.label,
-        userId: userId ?? this.userId,
-        v: v ?? this.v,
-        address: address ?? this.address,
-        createdAt: createdAt ?? this.createdAt,
-        lat: lat ?? this.lat,
-        lng: lng ?? this.lng,
-        name: name ?? this.name,
-        updatedAt: updatedAt ?? this.updatedAt,
-      );
+    bool? isFavourite,
+  }) => SavedPlace(
+    location: location ?? this.location,
+    id: id ?? this.id,
+    label: label ?? this.label,
+    userId: userId ?? this.userId,
+    v: v ?? this.v,
+    address: address ?? this.address,
+    createdAt: createdAt ?? this.createdAt,
+    lat: lat ?? this.lat,
+    lng: lng ?? this.lng,
+    name: name ?? this.name,
+    updatedAt: updatedAt ?? this.updatedAt,
+    isFavourite: isFavourite ?? this.isFavourite,
+  );
 
   factory SavedPlace.fromJson(Map<String, dynamic> json) => SavedPlace(
-    location: json["location"] == null ? null : Location.fromJson(json["location"]),
+    location: json["location"] == null
+        ? null
+        : Location.fromJson(json["location"]),
     id: json["_id"],
     label: json["label"],
     userId: json["user_id"],
     v: json["__v"],
     address: json["address"],
-    createdAt: json["createdAt"] == null ? null : DateTime.parse(json["createdAt"]),
+    createdAt: json["createdAt"] == null
+        ? null
+        : DateTime.parse(json["createdAt"]),
     lat: json["lat"]?.toDouble(),
     lng: json["lng"]?.toDouble(),
     name: json["name"],
-    updatedAt: json["updatedAt"] == null ? null : DateTime.parse(json["updatedAt"]),
+    updatedAt: json["updatedAt"] == null
+        ? null
+        : DateTime.parse(json["updatedAt"]),
+    isFavourite: json["isFavourite"] ?? json["is_favourite"],
   );
 
   Map<String, dynamic> toJson() => {
@@ -140,6 +151,7 @@ class SavedPlace {
     "lng": lng,
     "name": name,
     "updatedAt": updatedAt?.toIso8601String(),
+    "isFavourite": isFavourite,
   };
 }
 
@@ -147,27 +159,24 @@ class Location {
   String? type;
   List<double>? coordinates;
 
-  Location({
-    this.type,
-    this.coordinates,
-  });
+  Location({this.type, this.coordinates});
 
-  Location copyWith({
-    String? type,
-    List<double>? coordinates,
-  }) =>
-      Location(
-        type: type ?? this.type,
-        coordinates: coordinates ?? this.coordinates,
-      );
+  Location copyWith({String? type, List<double>? coordinates}) => Location(
+    type: type ?? this.type,
+    coordinates: coordinates ?? this.coordinates,
+  );
 
   factory Location.fromJson(Map<String, dynamic> json) => Location(
     type: json["type"],
-    coordinates: json["coordinates"] == null ? [] : List<double>.from(json["coordinates"]!.map((x) => x?.toDouble())),
+    coordinates: json["coordinates"] == null
+        ? []
+        : List<double>.from(json["coordinates"]!.map((x) => x?.toDouble())),
   );
 
   Map<String, dynamic> toJson() => {
     "type": type,
-    "coordinates": coordinates == null ? [] : List<dynamic>.from(coordinates!.map((x) => x)),
+    "coordinates": coordinates == null
+        ? []
+        : List<dynamic>.from(coordinates!.map((x) => x)),
   };
 }

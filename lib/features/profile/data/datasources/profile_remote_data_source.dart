@@ -12,12 +12,14 @@ abstract class ProfileRemoteDataSource {
   Future<UserModel> getProfile();
   Future<bool> updateProfile(Map<String, dynamic> data);
   Future<GetSavedPlacesResponseModel?> getSavedPlaces();
+  Future<GetSavedPlacesResponseModel?> getFavoritePlaces();
   Future<bool> addSavedPlace(CreateSavedPlaceRequest request);
   Future<bool> deleteSavedPlace(String id);
   Future<WalletBalanceModel> getWalletBalance();
   Future<List<PaymentMethodModel>> getPaymentMethods();
   Future<EmailSubjectResponseModel> getEmailSubjects();
   Future<SendEmailResponseModel> sendEmail(SendEmailRequestModel request);
+  Future<bool> toggleFavorite(String id, bool isFavorite);
 }
 
 class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
@@ -33,7 +35,9 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      return UserModel.fromJson(response.data['data'] ?? response.data['response'] ?? {});
+      return UserModel.fromJson(
+        response.data['data'] ?? response.data['response'] ?? {},
+      );
     }
     throw Exception('Failed to get profile');
   }
@@ -61,7 +65,9 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       );
 
       if (response.statusCode == 200 && response.data != null) {
-        final savedResponse = GetSavedPlacesResponseModel.fromJson(response.data);
+        final savedResponse = GetSavedPlacesResponseModel.fromJson(
+          response.data,
+        );
         return savedResponse;
       }
       return null;
@@ -82,7 +88,9 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     );
 
     if (response.data != null) {
-      final createResponse = CreateSavedPlaceResponseModel.fromJson(response.data);
+      final createResponse = CreateSavedPlaceResponseModel.fromJson(
+        response.data,
+      );
       return createResponse.isSuccess;
     }
     return response.statusCode == 200;
@@ -102,10 +110,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   @override
   Future<WalletBalanceModel> getWalletBalance() async {
     final response = await ApiService().call(
-      request: ApiRequest(
-        endpoint: URLS.wallet.balance,
-        method: ApiMethod.get,
-      ),
+      request: ApiRequest(endpoint: URLS.wallet.balance, method: ApiMethod.get),
     );
 
     if (response.statusCode == 200 && response.data != null) {
@@ -162,5 +167,32 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       return SendEmailResponseModel.fromJson(response.data);
     }
     throw Exception('Failed to send email');
+  }
+
+  @override
+  Future<GetSavedPlacesResponseModel?> getFavoritePlaces() async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: "${URLS.address.savedPlaces}/favourites",
+        method: ApiMethod.get,
+        version: "v4",
+      ),
+    );
+    if (response.statusCode == 200) {
+      return GetSavedPlacesResponseModel.fromJson(response.data);
+    }
+    return null;
+  }
+
+  @override
+  Future<bool> toggleFavorite(String id, bool isFavorite) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: "${URLS.address.savedPlaces}/$id/favourite",
+        method: isFavorite ? ApiMethod.put : ApiMethod.delete,
+        version: "v4",
+      ),
+    );
+    return response.statusCode == 200;
   }
 }
