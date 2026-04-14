@@ -393,7 +393,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
 
       return Container(
         width: double.infinity,
-        padding: EdgeInsets.fromLTRB(16.w, 18.h, 16.w, 18.h),
+        padding: EdgeInsets.fromLTRB(25.w, 18.h, 25.w, 18.h),
         decoration: const BoxDecoration(
           color: AppColors.primary,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
