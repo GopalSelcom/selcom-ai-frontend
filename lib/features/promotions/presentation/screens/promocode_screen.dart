@@ -50,6 +50,7 @@ class PromocodeScreen extends StatelessWidget {
                   Obx(
                     () => ListView.separated(
                       shrinkWrap: true,
+                      padding: const EdgeInsets.only(),
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: controller.promocodes.length,
                       separatorBuilder: (context, index) =>
