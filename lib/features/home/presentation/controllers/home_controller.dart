@@ -404,6 +404,88 @@ class HomeController extends GetxController {
     );
   }
 
+  /// Pickup = current map center; destination = specific [SavedPlace].
+  Future<void> navigateToVehicleSelectionForSavedPlace(SavedPlace place) async {
+    double? dLat = place.lat;
+    double? dLng = place.lng;
+    final coords = place.location?.coordinates;
+    if ((dLat == null || dLng == null) &&
+        coords != null &&
+        coords.length >= 2) {
+      dLng = coords[0];
+      dLat = coords[1];
+    }
+
+    if (dLat == null || dLng == null) {
+      Get.snackbar(
+        'Location unavailable',
+        'This saved place is missing coordinates.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    final destAddr = (place.address ?? place.name ?? 'Saved Place').trim();
+    if (destAddr.isEmpty) {
+      Get.snackbar(
+        'Address missing',
+        'This saved place has no address.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    await analyticsService.logEvent(
+      'home_saved_item_vehicle_selection',
+      parameters: {'id': place.id},
+    );
+
+    final pickupAddr = activePickupAddress;
+    final pickupLL = activePickupLatLng;
+
+    Get.toNamed(
+      AppRoutes.booking,
+      arguments: {
+        'pickup': pickupAddr,
+        'pickupLat': pickupLL.latitude,
+        'pickupLng': pickupLL.longitude,
+        'destination': destAddr,
+        'destinationLat': dLat,
+        'destinationLng': dLng,
+        if (place.id != null && place.id!.isNotEmpty)
+          'destinationPlaceId': place.id,
+      },
+    );
+  }
+
+  /// Pickup = current map center; destination = [RecentDestinationModel].
+  Future<void> navigateToVehicleSelectionForRecentDestination(
+    RecentDestinationModel loc,
+  ) async {
+    final destAddr = loc.address.trim();
+    if (destAddr.isEmpty) return;
+
+    await analyticsService.logEvent(
+      'home_recent_item_vehicle_selection',
+      parameters: {'address': destAddr},
+    );
+
+    final pickupAddr = activePickupAddress;
+    final pickupLL = activePickupLatLng;
+
+    Get.toNamed(
+      AppRoutes.booking,
+      arguments: {
+        'pickup': pickupAddr,
+        'pickupLat': pickupLL.latitude,
+        'pickupLng': pickupLL.longitude,
+        'destination': destAddr,
+        'destinationLat': loc.lat,
+        'destinationLng': loc.lng,
+      },
+    );
+  }
+
   Future<void> loadSavedPlaces() async {
     final result = await profileRepository.getSavedPlaces();
     result.fold((_) => null, (response) {
@@ -495,6 +577,25 @@ class HomeController extends GetxController {
     if (recentSearches.length > 8) {
       recentSearches.removeRange(8, recentSearches.length);
     }
+  }
+
+  /// Calculates distance in KM from [deviceGpsLocation] to [lat],[lng].
+  /// Returns empty string if unavailable.
+  String calculateDistanceKm(double? lat, double? lng) {
+    if (lat == null || lng == null) return '';
+    final current = deviceGpsLocation.value;
+    if (current == null) return '';
+
+    final distanceMeters = Geolocator.distanceBetween(
+      current.latitude,
+      current.longitude,
+      lat,
+      lng,
+    );
+
+    final km = distanceMeters / 1000;
+    if (km < 0.1) return '0.1 KM';
+    return '${km.toStringAsFixed(1)} KM';
   }
 
   // ── Home screen UI orchestration (keep branching / navigation out of widgets) ──
