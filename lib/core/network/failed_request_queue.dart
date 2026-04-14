@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer' as developer;
 
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 
 import 'api_service.dart';
 
@@ -50,8 +50,9 @@ class FailedRequestQueue {
   Future<bool> add(ApiRequest request, Completer<Response> completer) async {
     // Check queue size limit
     if (_queue.length >= _maxQueueSize) {
-      debugPrint(
+      developer.log(
         "⚠️ Queue is full (${_queue.length}/$_maxQueueSize), rejecting request",
+        name: 'FailedRequestQueue',
       );
       completer.completeError(
         DioException(
@@ -67,8 +68,9 @@ class FailedRequestQueue {
 
     // Check for duplicates
     if (contains(hash)) {
-      debugPrint(
+      developer.log(
         "🔄 Duplicate request detected, skipping: ${request.endpoint}",
+        name: 'FailedRequestQueue',
       );
       completer.completeError(
         DioException(
@@ -90,8 +92,9 @@ class FailedRequestQueue {
     );
 
     _queue.add(failedRequest);
-    debugPrint(
+    developer.log(
       "➕ Added to queue (${_queue.length}/$_maxQueueSize): ${request.endpoint}",
+      name: 'FailedRequestQueue',
     );
 
     return true;
@@ -102,7 +105,10 @@ class FailedRequestQueue {
     final index = _queue.indexWhere((req) => req.id == id);
     if (index != -1) {
       final removed = _queue.removeAt(index);
-      debugPrint("➖ Removed from queue: ${removed.request.endpoint}");
+      developer.log(
+        "➖ Removed from queue: ${removed.request.endpoint}",
+        name: 'FailedRequestQueue',
+      );
       return true;
     }
     return false;
@@ -115,7 +121,10 @@ class FailedRequestQueue {
 
   /// Clear all requests from queue
   void clear() {
-    debugPrint("🗑️ Clearing queue (${_queue.length} requests)");
+    developer.log(
+      "🗑️ Clearing queue (${_queue.length} requests)",
+      name: 'FailedRequestQueue',
+    );
 
     // Complete all pending requests with error
     for (final req in _queue) {

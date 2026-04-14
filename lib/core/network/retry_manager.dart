@@ -1,6 +1,6 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 
-import 'package:flutter/foundation.dart';
 import 'package:get/get.dart' hide Response;
 
 import 'api_service.dart';
@@ -29,7 +29,7 @@ class RetryManager {
   /// Initialize the retry manager and setup auto-retry
   void initialize() {
     _setupAutoRetry();
-    debugPrint("🔄 RetryManager initialized");
+    developer.log("🔄 RetryManager initialized", name: 'RetryManager');
   }
 
   /// Setup auto-retry when connection is restored
@@ -40,8 +40,9 @@ class RetryManager {
       isOnline,
     ) {
       if (isOnline && _queue.isNotEmpty) {
-        debugPrint(
+        developer.log(
           "🌐 Connection restored, auto-retrying ${_queue.size} requests",
+          name: 'RetryManager',
         );
 
         // Wait 1 second before retrying (debounce)
@@ -55,12 +56,15 @@ class RetryManager {
   /// Show retry popup using GetX dialog
   Future<void> showRetryPopup() async {
     if (_isPopupShowing) {
-      debugPrint("⚠️ Popup already showing, skipping");
+      developer.log("⚠️ Popup already showing, skipping", name: 'RetryManager');
       return;
     }
 
     _isPopupShowing = true;
-    debugPrint("📱 Showing retry popup for ${_queue.size} queued requests");
+    developer.log(
+      "📱 Showing retry popup for ${_queue.size} queued requests",
+      name: 'RetryManager',
+    );
 
     await Get.defaultDialog(
       title: 'Connection Error',
@@ -89,19 +93,25 @@ class RetryManager {
   /// Retry all queued requests in batches
   Future<void> retryAll() async {
     if (_isRetrying) {
-      debugPrint("⚠️ Retry already in progress, skipping");
+      developer.log(
+        "⚠️ Retry already in progress, skipping",
+        name: 'RetryManager',
+      );
       return;
     }
 
     final requests = _queue.getAll();
     if (requests.isEmpty) {
-      debugPrint("ℹ️ No requests to retry");
+      developer.log("ℹ️ No requests to retry", name: 'RetryManager');
       dismissPopup();
       return;
     }
 
     _isRetrying = true;
-    debugPrint("🔄 Starting batch retry for ${requests.length} requests");
+    developer.log(
+      "🔄 Starting batch retry for ${requests.length} requests",
+      name: 'RetryManager',
+    );
 
     const batchSize = 5;
     int successCount = 0;
@@ -122,8 +132,9 @@ class RetryManager {
 
     _isRetrying = false;
 
-    debugPrint(
+    developer.log(
       "✅ Retry completed: $successCount succeeded, $failureCount failed",
+      name: 'RetryManager',
     );
 
     // Dismiss popup if all succeeded
@@ -131,7 +142,10 @@ class RetryManager {
       dismissPopup();
     } else {
       // If some failed, show popup again
-      debugPrint("⚠️ $failureCount requests still failed, showing popup again");
+      developer.log(
+        "⚠️ $failureCount requests still failed, showing popup again",
+        name: 'RetryManager',
+      );
       showRetryPopup();
     }
   }
@@ -144,7 +158,10 @@ class RetryManager {
     await Future.wait(
       batch.map((failedRequest) async {
         try {
-          debugPrint("🔄 Retrying: ${failedRequest.request.endpoint}");
+          developer.log(
+            "🔄 Retrying: ${failedRequest.request.endpoint}",
+            name: 'RetryManager',
+          );
 
           // Create a modified request that won't be queued if it fails again
           final retryRequest = ApiRequest(
@@ -179,21 +196,24 @@ class RetryManager {
             _queue.remove(failedRequest.id);
             successCount++;
 
-            debugPrint(
+            developer.log(
               "✅ Retry succeeded: ${failedRequest.request.endpoint}",
+              name: 'RetryManager',
             );
           } else {
             // Failed - keep in queue
             failureCount++;
-            debugPrint(
+            developer.log(
               "❌ Retry failed (${response.statusCode}): ${failedRequest.request.endpoint}",
+              name: 'RetryManager',
             );
           }
         } catch (e) {
           // Error during retry - keep in queue
           failureCount++;
-          debugPrint(
+          developer.log(
             "❌ Retry error: ${failedRequest.request.endpoint} - $e",
+            name: 'RetryManager',
           );
         }
       }),
@@ -207,6 +227,6 @@ class RetryManager {
     _connectivitySubscription?.cancel();
     _queue.clear();
     dismissPopup();
-    debugPrint("🔄 RetryManager disposed");
+    developer.log("🔄 RetryManager disposed", name: 'RetryManager');
   }
 }
