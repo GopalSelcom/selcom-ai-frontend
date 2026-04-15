@@ -8,6 +8,8 @@ import '../../../ride/domain/repositories/ride_repository.dart';
 import '../../../profile/data/datasources/profile_remote_data_source.dart';
 import '../../../profile/data/repositories/profile_repository_impl.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
+import '../../../ride_rating/presentation/bindings/ride_rating_binding.dart';
+import '../../../ride_rating/presentation/controllers/ride_rating_controller.dart';
 import '../controllers/home_controller.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../../../../core/services/analytics_service.dart';
@@ -15,6 +17,10 @@ import '../../../../core/services/analytics_service.dart';
 class HomeBinding extends Bindings {
   @override
   void dependencies() {
+    if (!Get.isRegistered<RideRatingController>()) {
+      RideRatingBinding().dependencies();
+    }
+
     // Home Data
     Get.lazyPut<HomeRemoteDataSource>(() => HomeRemoteDataSourceImpl());
     Get.lazyPut<HomeRepository>(() => HomeRepositoryImpl(remoteDataSource: Get.find()));
@@ -34,6 +40,7 @@ class HomeBinding extends Bindings {
         rideRepository: Get.find(),
         profileRepository: Get.find(),
         analyticsService: di.sl<AnalyticsService>(),
+        rideRatingController: Get.find<RideRatingController>(),
       ),
     );
   }

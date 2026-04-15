@@ -16,6 +16,8 @@ class AppTextField extends StatelessWidget {
   final Function(String)? onChanged;
   final bool enabled;
   final int? maxLines;
+  final int? maxLength;
+  final bool showCounter;
 
   const AppTextField({
     super.key,
@@ -30,6 +32,8 @@ class AppTextField extends StatelessWidget {
     this.onChanged,
     this.enabled = true,
     this.maxLines = 1,
+    this.maxLength,
+    this.showCounter = false,
   });
 
   @override
@@ -48,6 +52,7 @@ class AppTextField extends StatelessWidget {
           onChanged: onChanged,
           enabled: enabled,
           maxLines: maxLines,
+          maxLength: maxLength,
           style: AppTextStyles.body,
           decoration: InputDecoration(
             hintText: hintText,
@@ -61,6 +66,7 @@ class AppTextField extends StatelessWidget {
               horizontal: 16.w,
               vertical: 18.h,
             ),
+            counterText: "",
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppRadius.input),
               borderSide: const BorderSide(color: AppColors.inputBorderDefault),
@@ -83,6 +89,27 @@ class AppTextField extends StatelessWidget {
             ),
           ),
         ),
+        if (showCounter && maxLength != null && controller != null) ...[
+          SizedBox(height: 6.h),
+          Align(
+            alignment: Alignment.centerRight,
+            child: ValueListenableBuilder(
+              valueListenable: controller!,
+              builder: (context, TextEditingValue value, _) {
+                final length = value.text.length;
+                return Text(
+                  '$length/$maxLength',
+                  style: AppTextStyles.bodySecondary.copyWith(
+                    fontSize: 12.sp,
+                    color: length >= maxLength!
+                        ? Colors.red
+                        : const Color(0xFF9CA3AF),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ],
     );
   }

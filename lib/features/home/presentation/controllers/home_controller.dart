@@ -10,6 +10,7 @@ import '../../domain/repositories/home_repository.dart';
 import '../../data/models/home_models.dart';
 import '../../../ride/domain/repositories/ride_repository.dart';
 import '../../../ride/data/models/ride_management_models.dart';
+import '../../../ride_rating/presentation/controllers/ride_rating_controller.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
 import '../../../../core/constants/app_assets.dart';
@@ -25,12 +26,14 @@ class HomeController extends GetxController {
   final RideRepository rideRepository;
   final ProfileRepository profileRepository;
   final AnalyticsService analyticsService;
+  final RideRatingController rideRatingController;
 
   HomeController({
     required this.homeRepository,
     required this.rideRepository,
     required this.profileRepository,
     required this.analyticsService,
+    required this.rideRatingController,
   });
 
   // ── States ──
@@ -71,7 +74,9 @@ class HomeController extends GetxController {
     _loadMapIcons();
     _getCurrentLocation();
     _addMockDrivers();
-    _loadHomeData();
+    _loadHomeData().whenComplete(
+      rideRatingController.tryOpenRatingSheetAfterHomeLoad,
+    );
 
     // 300ms debounce with 2-char threshold for location autocomplete.
     debounce(searchQuery, (query) {
