@@ -9,6 +9,8 @@ import '../../data/models/contact_us_models.dart';
 abstract class ProfileRepository {
   Future<Either<Failure, UserModel>> getProfile();
   Future<Either<Failure, bool>> updateProfile(Map<String, dynamic> data);
+  Future<Either<Failure, UserModel>> saveUserAdditionalDetails(
+      {required String name, required String emailId});
   Future<Either<Failure, GetSavedPlacesResponseModel?>> getSavedPlaces();
   Future<Either<Failure, GetSavedPlacesResponseModel?>> getFavoritePlaces();
   Future<Either<Failure, bool>> addSavedPlace(CreateSavedPlaceRequest request);

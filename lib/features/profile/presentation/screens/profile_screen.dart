@@ -6,6 +6,7 @@ import 'package:iconsax/iconsax.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/utils/phone_formatter.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 
 import '../controllers/profile_controller.dart';
@@ -182,9 +183,9 @@ class ProfileScreen extends StatelessWidget {
 
   Widget _buildNormalModeContent() {
     final user = controller.userModel.value;
-    final name = user?.uniqueId ?? 'User';
+    final name = user?.name ?? '';
     final mobile = user?.mobileNumber != null
-        ? '+255 ${user!.mobileNumber}'
+        ? '+${user!.countryCode} ${TanzaniaPhoneFormatter.formatString(user.mobileNumber.toString())}'
         : '';
     final balance = controller.walletBalance.value;
     final walletNum = controller.walletNumber.value;
@@ -255,8 +256,8 @@ class ProfileScreen extends StatelessWidget {
             textController: controller.nameTextController,
             focusNode: controller.nameFocusNode,
             isPhone: false,
-            textInputAction: TextInputAction.next,
-            onSubmitted: (_) => controller.phoneFocusNode.requestFocus(),
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => controller.saveProfile(),
           ),
           SizedBox(height: 32.h),
 
@@ -267,7 +268,7 @@ class ProfileScreen extends StatelessWidget {
             focusNode: controller.phoneFocusNode,
             isPhone: true,
             textInputAction: TextInputAction.done,
-            onSubmitted: (_) => controller.saveProfile(),
+            onSubmitted: (_) => {},
           ),
           SizedBox(height: 32.h),
         ],
@@ -308,6 +309,7 @@ class ProfileScreen extends StatelessWidget {
           ),
           decoration: InputDecoration(
             isDense: true,
+            enabled: !isPhone,
             contentPadding: EdgeInsets.only(bottom: 8.h),
             enabledBorder: UnderlineInputBorder(
               borderSide: BorderSide(
@@ -352,7 +354,7 @@ class ProfileScreen extends StatelessWidget {
           MenuItemWidget(
             icon: Iconsax.shield_tick,
             title: 'Safety & Privacy',
-            onTap: controller.openPrivacyPolicy
+            onTap: controller.openPrivacyPolicy,
           ),
           MenuItemWidget(
             icon: Iconsax.heart,

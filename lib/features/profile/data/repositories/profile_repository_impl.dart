@@ -34,6 +34,22 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
+  Future<Either<Failure, UserModel>> saveUserAdditionalDetails({
+    required String name,
+    required String emailId,
+  }) async {
+    try {
+      final result = await remoteDataSource.saveUserAdditionalDetails(
+        name: name,
+        emailId: emailId,
+      );
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, GetSavedPlacesResponseModel?>> getSavedPlaces() async {
     try {
       final result = await remoteDataSource.getSavedPlaces();

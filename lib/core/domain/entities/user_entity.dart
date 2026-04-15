@@ -3,6 +3,7 @@ class UserEntity {
   final String? countryCode;
   final int? mobileNumber;
   final String? emailId;
+  final String? name;
   final String? image;
   final String? dob;
   final String? selectedLanguage;
@@ -32,6 +33,7 @@ class UserEntity {
     this.countryCode,
     this.mobileNumber,
     this.emailId,
+    this.name,
     this.image,
     this.dob,
     this.selectedLanguage,

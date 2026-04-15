@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:get/get.dart';
 import '../../../../core/data/models/requests/send_otp_request.dart';
 import '../../../../core/data/models/requests/verify_otp_request.dart';
@@ -155,6 +156,11 @@ class AuthController extends GetxController {
               verifyData.refreshToken!,
             );
           }
+
+          await StorageService().write(
+            StorageKeys.user,
+            jsonEncode(verifyData.user!.toJson()),
+          );
 
           // Navigate to Profile Loading to sync data
           Get.offAllNamed(AppRoutes.profileLoading);

@@ -20,12 +20,5 @@ abstract class AuthRepository {
 
   Future<Either<Failure, String>> refreshToken();
 
-  Future<Either<Failure, bool>> saveUserAdditionalDetails({
-    required String name,
-    required String email,
-    required String dob,
-    required String gender,
-  });
-
   Future<Either<Failure, bool>> logout();
 }

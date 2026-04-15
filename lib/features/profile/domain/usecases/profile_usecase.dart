@@ -18,6 +18,13 @@ class ProfileUseCase {
     return repository.updateProfile(data);
   }
 
+  Future<Either<Failure, UserModel>> saveUserAdditionalDetails({
+    required String name,
+    required String emailId,
+  }) {
+    return repository.saveUserAdditionalDetails(name: name, emailId: emailId);
+  }
+
   Future<Either<Failure, WalletBalanceModel>> getWalletBalance() {
     return repository.getWalletBalance();
   }

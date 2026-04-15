@@ -10,15 +10,30 @@ import '../models/contact_us_models.dart';
 
 abstract class ProfileRemoteDataSource {
   Future<UserModel> getProfile();
+
   Future<bool> updateProfile(Map<String, dynamic> data);
+
+  Future<UserModel> saveUserAdditionalDetails({
+    required String name,
+    required String emailId,
+  });
+
   Future<GetSavedPlacesResponseModel?> getSavedPlaces();
+
   Future<GetSavedPlacesResponseModel?> getFavoritePlaces();
+
   Future<bool> addSavedPlace(CreateSavedPlaceRequest request);
+
   Future<bool> deleteSavedPlace(String id);
+
   Future<WalletBalanceModel> getWalletBalance();
+
   Future<List<PaymentMethodModel>> getPaymentMethods();
+
   Future<EmailSubjectResponseModel> getEmailSubjects();
+
   Future<SendEmailResponseModel> sendEmail(SendEmailRequestModel request);
+
   Future<bool> toggleFavorite(String id, bool isFavorite);
 }
 
@@ -52,6 +67,25 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       ),
     );
     return response.statusCode == 200;
+  }
+
+  @override
+  Future<UserModel> saveUserAdditionalDetails({
+    required String name,
+    required String emailId,
+  }) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.auth.saveUserDetails,
+        method: ApiMethod.post,
+        body: {'name': name, 'emailId': emailId},
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      return UserModel.fromJson(response.data['response'] ?? {});
+    }
+    throw Exception(response.data['message'] ?? 'Failed to update profile');
   }
 
   @override

@@ -14,11 +14,12 @@ import '../../features/ride/data/repositories/ride_repository_impl.dart';
 import '../../features/ride/domain/repositories/ride_repository.dart';
 import '../../features/ride/domain/usecases/ride_usecase.dart';
 import '../../features/ride/presentation/controllers/my_rides_controller.dart';
+import '../../features/auth/data/datasources/auth_remote_data_source.dart';
+import '../../features/auth/data/repositories/auth_repository_impl.dart';
+import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/promotions/presentation/controllers/promocode_controller.dart';
 import '../config/app_config.dart';
 import '../services/analytics_service.dart';
-import '../domain/repositories/auth_repository.dart';
-import '../data/repositories/auth_repository_impl.dart';
 import '../network/api_service.dart';
 import '../network/headers.dart';
 import '../network/network_connectivity_service.dart';
@@ -48,8 +49,11 @@ Future<void> init() async {
   RetryManager.instance.initialize();
 
   // ── Repository ──
+  sl.registerLazySingleton<AuthRemoteDataSource>(
+    () => AuthRemoteDataSourceImpl(),
+  );
   sl.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(secureStorage: sl()),
+    () => AuthRepositoryImpl(remoteDataSource: sl()),
   );
 
   // ── Ride Feature ──

@@ -1,8 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/network/urls.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/services/storage_service.dart';
+import '../../../../shared/utils/phone_formatter.dart';
 import '../../../../shared/widgets/web_view_screen.dart';
 import '../../../ride/presentation/screens/my_rides_screen.dart';
 import '../../domain/usecases/profile_usecase.dart';
@@ -35,23 +39,40 @@ class ProfileController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    nameTextController = TextEditingController(text: 'Chirag Panchal');
-    phoneTextController = TextEditingController(text: '+255 711 410 410');
+    nameTextController = TextEditingController();
+    phoneTextController = TextEditingController();
 
     nameFocusNode = FocusNode();
     phoneFocusNode = FocusNode();
 
-    // TODO: Skip API call for now
-    // fetchProfile();
-    // fetchWalletBalance();
+    loadUserFromStorage();
+    fetchWalletBalance();
+  }
 
-    // Initialize with static data for now
-    userModel.value = const UserModel(
-      id: 'static_id',
-      uniqueId: 'Chirag Panchal',
-      mobileNumber: 711410410,
-      accountNumber: 1601000000034,
-    );
+  Future<void> loadUserFromStorage() async {
+    final data = await StorageService().read(StorageKeys.user);
+
+    if (data != null) {
+      final json = jsonDecode(data);
+      final user = UserModel.fromJson(json);
+      _updateLocalUserState(user);
+    }
+  }
+
+  void _updateLocalUserState(UserModel user) {
+    userModel.value = user;
+    nameTextController.text = user.name ?? '';
+    final mobile = user.mobileNumber?.toString() ?? '';
+    phoneTextController.text = _formatPhoneForDisplay(mobile);
+  }
+
+  String _formatPhoneForDisplay(String number) {
+    if (number.isEmpty) return '';
+    String clean = number
+        .replaceAll('+${userModel.value?.countryCode ?? ""}', '')
+        .replaceAll(' ', '');
+    final formatted = TanzaniaPhoneFormatter.formatString(clean);
+    return '+${userModel.value?.countryCode ?? ""} $formatted';
   }
 
   @override
@@ -63,30 +84,12 @@ class ProfileController extends GetxController {
     super.onClose();
   }
 
-  Future<void> fetchProfile() async {
-    // TODO: Skip API call for now
-    /*
-    isLoading.value = true;
-    final result = await profileUseCase.getProfile();
-    result.fold(
-      (failure) => Get.snackbar('Error', failure.message),
-      (user) {
-        userModel.value = user;
-        nameTextController.text = user.uniqueId ?? ''; 
-        phoneTextController.text = user.mobileNumber?.toString() ?? '';
-        walletNumber.value = user.accountNumber?.toString() ?? '';
-      },
-    );
-    isLoading.value = false;
-    */
-  }
-
   Future<void> fetchWalletBalance() async {
-    // TODO: Skip API call for now
+    // TODO: Skip API call for now if still pending on backend
     /*
     final result = await profileUseCase.getWalletBalance();
     result.fold(
-      (failure) => null, // Silently fail for now
+      (failure) => null,
       (balance) {
         walletBalance.value = balance.balance.toString();
       },
@@ -108,52 +111,48 @@ class ProfileController extends GetxController {
   }
 
   Future<void> saveProfile() async {
+    if (nameTextController.text.trim().isEmpty) {
+      Get.snackbar('Validation', 'Name cannot be empty');
+      return;
+    }
+
     nameFocusNode.unfocus();
     phoneFocusNode.unfocus();
 
-    // Simulate static save
     isLoading.value = true;
-    await Future.delayed(const Duration(milliseconds: 500));
 
-    userModel.value = UserModel(
-      id: 'static_id',
-      uniqueId: nameTextController.text,
-      mobileNumber: int.tryParse(
-        phoneTextController.text.replaceAll('+', '').replaceAll(' ', ''),
-      ),
-      accountNumber: userModel.value?.accountNumber,
+    final result = await profileUseCase.saveUserAdditionalDetails(
+      name: nameTextController.text.trim(),
+      emailId: userModel.value?.emailId ?? '',
     );
-
-    isEditing.value = false;
-    isLoading.value = false;
-    Get.snackbar('Success', 'Profile updated locally');
-
-    // TODO: Skip API call for now
-    /*
-    final result = await profileUseCase.updateProfile({
-      'name': nameTextController.text,
-      'mobile_number': phoneTextController.text,
-    });
 
     result.fold(
-      (failure) => Get.snackbar('Error', failure.message),
-      (success) {
-        if (success) {
-          isEditing.value = false;
-          fetchProfile();
-        }
+      (failure) {
+        Get.snackbar('Error', failure.message);
+      },
+      (updatedUser) async {
+        // Save to storage
+        await StorageService().write(
+          StorageKeys.user,
+          jsonEncode(updatedUser.toJson()),
+        );
+
+        // Update local state
+        _updateLocalUserState(updatedUser);
+
+        isEditing.value = false;
+        Get.snackbar('Success', 'User profile updated successfully');
       },
     );
+
     isLoading.value = false;
-    */
   }
 
   void cancelEdit() {
     nameFocusNode.unfocus();
     phoneFocusNode.unfocus();
     if (userModel.value != null) {
-      nameTextController.text = userModel.value!.uniqueId ?? '';
-      phoneTextController.text = '+255 ${userModel.value!.mobileNumber}';
+      _updateLocalUserState(userModel.value!);
     }
     isEditing.value = false;
   }
@@ -201,8 +200,8 @@ class ProfileController extends GetxController {
       message: 'Are you sure you want to logout from the app?',
       confirmText: 'Logout',
       confirmColor: AppColors.error,
-      onConfirm: () {
-        // For now, just navigate to phone input screen
+      onConfirm: () async {
+        await StorageService().deleteAll();
         Get.offAllNamed(AppRoutes.phone);
       },
     );

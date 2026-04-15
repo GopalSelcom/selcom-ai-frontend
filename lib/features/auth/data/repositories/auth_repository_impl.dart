@@ -17,9 +17,7 @@ class AuthRepositoryImpl implements AuthRepository {
     required SendOtpRequest request,
   }) async {
     try {
-      final result = await remoteDataSource.sendOtp(
-        request: request,
-      );
+      final result = await remoteDataSource.sendOtp(request: request);
       return Right(result);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -31,9 +29,7 @@ class AuthRepositoryImpl implements AuthRepository {
     required SendOtpRequest request,
   }) async {
     try {
-      final result = await remoteDataSource.resendOtp(
-        request: request,
-      );
+      final result = await remoteDataSource.resendOtp(request: request);
       return Right(result);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -45,9 +41,7 @@ class AuthRepositoryImpl implements AuthRepository {
     required VerifyOtpRequest request,
   }) async {
     try {
-      final result = await remoteDataSource.verifyOtp(
-        request: request,
-      );
+      final result = await remoteDataSource.verifyOtp(request: request);
       return Right(result);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -61,26 +55,6 @@ class AuthRepositoryImpl implements AuthRepository {
       return Right(token);
     } catch (e) {
       return Left(AuthFailure(e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, bool>> saveUserAdditionalDetails({
-    required String name,
-    required String email,
-    required String dob,
-    required String gender,
-  }) async {
-    try {
-      final result = await remoteDataSource.saveUserAdditionalDetails(
-        name: name,
-        email: email,
-        dob: dob,
-        gender: gender,
-      );
-      return Right(result);
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
     }
   }
 

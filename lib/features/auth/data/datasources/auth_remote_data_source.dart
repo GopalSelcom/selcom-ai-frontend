@@ -16,13 +16,6 @@ abstract class AuthRemoteDataSource {
 
   Future<String> refreshToken();
 
-  Future<bool> saveUserAdditionalDetails({
-    required String name,
-    required String email,
-    required String dob,
-    required String gender,
-  });
-
   Future<bool> logout();
 }
 
@@ -118,24 +111,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           .toString();
     }
     return '';
-  }
-
-  @override
-  Future<bool> saveUserAdditionalDetails({
-    required String name,
-    required String email,
-    required String dob,
-    required String gender,
-  }) async {
-    final response = await ApiService().call(
-      request: ApiRequest(
-        endpoint: URLS.auth.saveUserDetails,
-        method: ApiMethod.post,
-        body: {'name': name, 'emailId': email, 'dob': dob, 'gender': gender},
-      ),
-    );
-
-    return response.statusCode == 200;
   }
 
   @override
