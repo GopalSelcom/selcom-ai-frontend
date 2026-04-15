@@ -22,25 +22,31 @@ class HomeBinding extends Bindings {
     }
 
     // Home Data
-    Get.lazyPut<HomeRemoteDataSource>(() => HomeRemoteDataSourceImpl());
+    Get.lazyPut<HomeRemoteDataSource>(() => HomeRemoteDataSourceImpl(), fenix: true);
     Get.lazyPut<HomeRepository>(
       () => HomeRepositoryImpl(remoteDataSource: Get.find()),
+      fenix: true,
     );
 
     // Ride Data (Needed for recent destinations on Home Screen)
-    Get.lazyPut<RideRemoteDataSource>(() => RideRemoteDataSourceImpl());
+    Get.lazyPut<RideRemoteDataSource>(() => RideRemoteDataSourceImpl(), fenix: true);
     Get.lazyPut<RideRepository>(
       () => RideRepositoryImpl(remoteDataSource: Get.find()),
+      fenix: true,
     );
 
     // Profile Data (Needed for saved addresses on Home Screen)
-    Get.lazyPut<ProfileRemoteDataSource>(() => ProfileRemoteDataSourceImpl());
+    Get.lazyPut<ProfileRemoteDataSource>(
+      () => ProfileRemoteDataSourceImpl(),
+      fenix: true,
+    );
     Get.lazyPut<ProfileRepository>(
       () => ProfileRepositoryImpl(remoteDataSource: Get.find()),
+      fenix: true,
     );
 
     // Controller
-    Get.put<HomeController>(
+    Get.lazyPut<HomeController>(()=>
       HomeController(
         homeRepository: Get.find(),
         rideRepository: Get.find(),
@@ -48,6 +54,8 @@ class HomeBinding extends Bindings {
         analyticsService: di.sl<AnalyticsService>(),
         rideRatingController: Get.find<RideRatingController>(),
       ),
+      fenix: true
     );
+
   }
 }

@@ -78,34 +78,59 @@ class FindingDriverScreen extends StatelessWidget {
   }
 
   Widget _buildMap(BuildContext context, FindingDriverController c) {
-    final pickup = c.pickupLatLng;
-    final destination = c.destinationLatLng;
-    return AppGoogleMap(
-      mapWidgetKey: const ValueKey('finding_driver_map'),
-      initialCameraPosition: CameraPosition(target: pickup, zoom: 15),
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).size.height * _sheetInitial,
-      ),
-      onMapCreated: c.onMapCreated,
-      polylines: {
-        Polyline(
-          polylineId: const PolylineId('pickup_to_destination_route'),
-          points: [pickup, destination],
-          color: const Color(0xFF3073E8),
-          width: 4,
+    return Obx(() {
+      final pickup = c.pickupLatLng;
+      final destination = c.destinationLatLng;
+      final driver = c.assignedDriverLocation.value;
+      final routePoints = c.activeRoutePoints.toList();
+      final isPickupRoute = c.routeTarget.value == 'pick_up';
+      final markers = <Marker>{};
+      if (driver != null) {
+        markers.add(
+          Marker(
+            markerId: const MarkerId('assigned_driver'),
+            position: driver,
+            icon: c.assignedDriverMarkerIcon.value ??
+                BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+            anchor: const Offset(0.5, 0.5),
+            flat: true,
+          ),
+        );
+      }
+      return AppGoogleMap(
+        mapWidgetKey: const ValueKey('finding_driver_map'),
+        initialCameraPosition: CameraPosition(target: pickup, zoom: 15),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).size.height * _sheetInitial,
         ),
-      },
-      circles: {
-        Circle(
-          circleId: const CircleId('search_pulse'),
-          center: pickup,
-          radius: _searchCircleRadiusM,
-          fillColor: const Color(0xFF2668D2).withOpacity(0.12),
-          strokeColor: const Color(0xFF2668D2).withOpacity(0.35),
-          strokeWidth: 2,
-        ),
-      },
-    );
+        onMapCreated: c.onMapCreated,
+        markers: markers,
+        polylines: {
+          Polyline(
+            polylineId: const PolylineId('active_route'),
+            points: routePoints.isNotEmpty
+                ? routePoints
+                : (isPickupRoute && driver != null
+                    ? [driver, pickup]
+                    : [pickup, destination]),
+            color: const Color(0xFF3073E8),
+            width: 4,
+          ),
+        },
+        circles: isPickupRoute
+            ? {
+                Circle(
+                  circleId: const CircleId('search_pulse'),
+                  center: pickup,
+                  radius: _searchCircleRadiusM,
+                  fillColor: const Color(0xFF2668D2).withOpacity(0.12),
+                  strokeColor: const Color(0xFF2668D2).withOpacity(0.35),
+                  strokeWidth: 2,
+                ),
+              }
+            : <Circle>{},
+      );
+    });
   }
 
   Widget _bottomSheet(
@@ -169,13 +194,13 @@ class FindingDriverScreen extends StatelessWidget {
           );
         }),
         SizedBox(height: 12.h),
-        SizedBox(
-          width: double.infinity,
-          child: TextButton(
-            onPressed: c.debugSkipToDriverAccepted,
-            child: const Text('Temporary: Open SCR-11'),
-          ),
-        ),
+        // SizedBox(
+        //   width: double.infinity,
+        //   child: TextButton(
+        //     onPressed: c.debugSkipToDriverAccepted,
+        //     child: const Text('Temporary: Open SCR-11'),
+        //   ),
+        // ),
         SizedBox(height: 16.h),
         SizedBox(
           width: double.infinity,
