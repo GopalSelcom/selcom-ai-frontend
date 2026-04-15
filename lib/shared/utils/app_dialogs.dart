@@ -309,6 +309,9 @@ class AppDialogs {
   }) {
     Get.dialog(
       Dialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(13.0),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(28.r),
         ),
@@ -317,45 +320,56 @@ class AppDialogs {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Illustration (Placeholder for the one in screenshot)
+              // Illustration Container (Matching mockup tiered style)
               Container(
-                height: 120.h,
-                width: 140.w,
+                height: 140.h,
+                width: double.infinity,
                 decoration: BoxDecoration(
-                  color: AppColors.divider.withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(16.r),
+                  color: const Color(0xFFF5F5F5),
+                  borderRadius: BorderRadius.circular(20.r),
                 ),
                 child: Center(
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Icon(
-                        Icons.notifications_off_outlined,
-                        size: 64.sp,
-                        color: AppColors.primary,
-                      ),
-                      Positioned(
-                        bottom: 10,
-                        right: 10,
-                        child: Icon(
-                          Icons.settings,
-                          size: 24.sp,
-                          color: AppColors.shade2,
+                  child: Container(
+                    padding: EdgeInsets.all(20.w),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16.r),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Icon(
+                          Icons.notifications_active,
+                          size: 48.sp,
+                          color: AppColors.primary.withOpacity(0.1),
+                        ),
+                        Icon(
+                          Icons.notifications_off,
+                          size: 48.sp,
+                          color: AppColors.primary,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-              SizedBox(height: 32.h),
+              SizedBox(height: 24.h),
 
               // Title
               Text(
                 title,
                 style: AppTextStyles.onboardingTitle.copyWith(
-                  fontSize: 22.sp,
-                  color: const Color(0xFF1A1A1A),
-                  fontWeight: FontWeight.w700,
+                  fontSize: 24.sp,
+                  color: const Color(0xFF222222),
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -367,71 +381,56 @@ class AppDialogs {
                 style: AppTextStyles.onboardingSubtitle.copyWith(
                   fontSize: 15.sp,
                   color: const Color(0xFF666666),
-                  height: 1.4,
+                  height: 1.5,
                 ),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 32.h),
 
               // Open Settings Button (Primary)
-              InkWell(
-                onTap: () {
+              ElevatedButton(
+                onPressed: () {
                   Get.back();
                   onOpenSettings();
                 },
-                child: Container(
-                  height: 56.h,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(28.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withOpacity(0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  minimumSize: Size(double.infinity, 56.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30.r),
                   ),
-                  child: Center(
-                    child: Text(
-                      'Open Settings',
-                      style: AppTextStyles.onboardingButton.copyWith(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                  elevation: 0,
+                ),
+                child: Text(
+                  'Open Settings',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
               SizedBox(height: 12.h),
 
               // Cancel Button (Secondary)
-              InkWell(
-                onTap: () {
+              OutlinedButton(
+                onPressed: () {
                   Get.back();
                   if (onCancel != null) onCancel();
                 },
-                child: Container(
-                  height: 56.h,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    border: Border.all(
-                      color: const Color(0xFFE0E0E0),
-                      width: 1.5,
-                    ),
-                    borderRadius: BorderRadius.circular(28.r),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Color(0xFFE0E0E0), width: 1.2),
+                  minimumSize: Size(double.infinity, 56.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30.r),
                   ),
-                  child: Center(
-                    child: Text(
-                      'Maybe Later',
-                      style: AppTextStyles.body.copyWith(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF888888),
-                      ),
-                    ),
+                ),
+                child: Text(
+                  'Maybe Later',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    color: const Color(0xFF9E9E9E),
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
