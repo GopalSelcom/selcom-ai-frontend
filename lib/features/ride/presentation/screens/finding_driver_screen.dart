@@ -55,7 +55,9 @@ class FindingDriverScreen extends StatelessWidget {
             addressWidget: Expanded(
               child: AppMapLocationSummaryCard(
                 label: 'Home',
-                address: c.pickupAddress.isEmpty ? 'Selected location' : c.pickupAddress,
+                address: c.pickupAddress.isEmpty
+                    ? 'Selected location'
+                    : c.pickupAddress,
               ),
             ),
           ),
@@ -67,7 +69,8 @@ class FindingDriverScreen extends StatelessWidget {
           AppDraggableBottomSheet(
             initialChildSize: _sheetInitial,
             minChildSize: 0.48,
-            childBuilder: (scrollController) => _bottomSheet(c, scrollController),
+            childBuilder: (scrollController) =>
+                _bottomSheet(c, scrollController),
           ),
         ],
       ),
@@ -105,7 +108,10 @@ class FindingDriverScreen extends StatelessWidget {
     );
   }
 
-  Widget _bottomSheet(FindingDriverController c, ScrollController scrollController) {
+  Widget _bottomSheet(
+    FindingDriverController c,
+    ScrollController scrollController,
+  ) {
     return ListView(
       controller: scrollController,
       padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 12.h),
@@ -185,10 +191,7 @@ class FindingDriverScreen extends StatelessWidget {
             onPressed: c.confirmCancelRide,
             child: Text(
               'Cancel Ride',
-              style: TextStyle(
-                fontSize: 17.sp,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 17.sp, fontWeight: FontWeight.w600),
             ),
           ),
         ),
@@ -208,7 +211,10 @@ class FindingDriverScreen extends StatelessWidget {
           final trackW = constraints.maxWidth;
           final carSize = 40.w;
           final pad = 8.w;
-          final maxTravel = (trackW - 2 * pad - carSize).clamp(0.0, double.infinity);
+          final maxTravel = (trackW - 2 * pad - carSize).clamp(
+            0.0,
+            double.infinity,
+          );
           final carLeft = pad + t * maxTravel;
           final fillW = (trackW * t).clamp(0.0, trackW);
 
@@ -236,14 +242,34 @@ class FindingDriverScreen extends StatelessWidget {
                         ),
                       ),
                       alignment: Alignment.center,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.chevron_right, color: Colors.white, size: 18.sp),
-                          Icon(Icons.chevron_right, color: Colors.white, size: 18.sp),
-                          Icon(Icons.chevron_right, color: Colors.white, size: 18.sp),
-                          Icon(Icons.chevron_right, color: Colors.white, size: 18.sp),
-                        ],
+                      child: const SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        physics: NeverScrollableScrollPhysics(),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.chevron_right,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                            Icon(
+                              Icons.chevron_right,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                            Icon(
+                              Icons.chevron_right,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                            Icon(
+                              Icons.chevron_right,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -261,8 +287,11 @@ class FindingDriverScreen extends StatelessWidget {
                         AppAssets.rideFindingLoaderCar,
                         width: 22.w,
                         height: 22.w,
-                        placeholderBuilder: (_) =>
-                            Icon(Icons.directions_car, color: Colors.white, size: 22.sp),
+                        placeholderBuilder: (_) => Icon(
+                          Icons.directions_car,
+                          color: Colors.white,
+                          size: 22.sp,
+                        ),
                       ),
                     ),
                   ),
