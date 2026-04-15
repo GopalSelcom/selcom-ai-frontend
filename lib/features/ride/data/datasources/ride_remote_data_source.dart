@@ -73,7 +73,9 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      return RideModel.fromJson(response.data['data'] ?? {});
+      final rideData =
+          response.data['data']?['ride'] ?? response.data['data'] ?? {};
+      return RideModel.fromJson(rideData);
     }
     throw Exception('Failed to get ride details');
   }
@@ -87,7 +89,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
         body: {'reason': reason},
       ),
     );
-    return response.statusCode == 200;
+    return response.statusCode == 200 || response.statusCode == 201;
   }
 
   @override

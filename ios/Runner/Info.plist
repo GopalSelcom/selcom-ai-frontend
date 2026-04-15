@@ -54,5 +54,10 @@
 	<string>Selcom Rides needs access to your location to show you on the map and find nearby drivers.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Selcom Rides needs access to your location to provide a seamless ride tracking experience.</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>tel</string>
+		<string>sms</string>
+	</array>
 </dict>
 </plist>

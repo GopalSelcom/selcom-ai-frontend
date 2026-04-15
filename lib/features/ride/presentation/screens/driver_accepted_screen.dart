@@ -57,7 +57,9 @@ class DriverAcceptedScreen extends StatelessWidget {
             addressWidget: Expanded(
               child: AppMapLocationSummaryCard(
                 label: 'Home',
-                address: c.pickupAddress.isEmpty ? 'Selected location' : c.pickupAddress,
+                address: c.pickupAddress.isEmpty
+                    ? 'Selected location'
+                    : c.pickupAddress,
               ),
             ),
           ),
@@ -69,7 +71,10 @@ class DriverAcceptedScreen extends StatelessWidget {
               top: px.dy - 46.h,
               child: IgnorePointer(
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 10.w,
+                    vertical: 6.h,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.primary,
                     borderRadius: BorderRadius.circular(8.r),
@@ -101,7 +106,8 @@ class DriverAcceptedScreen extends StatelessWidget {
           AppDraggableBottomSheet(
             initialChildSize: _sheetInitial,
             minChildSize: 0.56,
-            childBuilder: (scrollController) => _bottomSheet(c, scrollController),
+            childBuilder: (scrollController) =>
+                _bottomSheet(c, scrollController),
           ),
         ],
       ),
@@ -121,8 +127,11 @@ class DriverAcceptedScreen extends StatelessWidget {
           Marker(
             markerId: const MarkerId('assigned_driver'),
             position: assigned,
-            icon: c.assignedDriverMarkerIcon.value ??
-                BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+            icon:
+                c.assignedDriverMarkerIcon.value ??
+                BitmapDescriptor.defaultMarkerWithHue(
+                  BitmapDescriptor.hueGreen,
+                ),
             anchor: const Offset(0.5, 0.5),
             flat: true,
           ),
@@ -132,7 +141,9 @@ class DriverAcceptedScreen extends StatelessWidget {
         Marker(
           markerId: const MarkerId('pickup'),
           position: pickup,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueGreen,
+          ),
         ),
       );
 
@@ -170,7 +181,10 @@ class DriverAcceptedScreen extends StatelessWidget {
     });
   }
 
-  Widget _bottomSheet(DriverAcceptedController c, ScrollController scrollController) {
+  Widget _bottomSheet(
+    DriverAcceptedController c,
+    ScrollController scrollController,
+  ) {
     return ListView(
       controller: scrollController,
       padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 16.h),
@@ -193,7 +207,8 @@ class DriverAcceptedScreen extends StatelessWidget {
               child: const Center(child: CircularProgressIndicator()),
             );
           }
-          if (c.rideBottomSheetState.value == RideBottomSheetState.driverAssigned) {
+          if (c.rideBottomSheetState.value ==
+              RideBottomSheetState.driverAssigned) {
             return _driverAssignedSheet(c);
           }
           return _rideProgressSheet(c);
@@ -274,10 +289,7 @@ class DriverAcceptedScreen extends StatelessWidget {
           decoration: BoxDecoration(
             color: const Color(0xFFD9A800),
             borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(
-              color: const Color(0xFFE6E9EE),
-              width: 0.787,
-            ),
+            border: Border.all(color: const Color(0xFFE6E9EE), width: 0.787),
           ),
           child: Obx(
             () => Column(
@@ -338,20 +350,20 @@ class DriverAcceptedScreen extends StatelessWidget {
             CircleAvatar(
               radius: 24.r,
               backgroundColor: const Color(0xFFD3DDE7),
-              child: Obx(
-                () {
-                  final name = c.driverName.value;
-                  final initial = name.isEmpty ? '?' : String.fromCharCode(name.runes.first);
-                  return Text(
-                    initial,
-                    style: AppTextStyles.homeTitle.copyWith(
-                      color: AppColors.shade1,
-                      fontSize: 20.sp,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  );
-                },
-              ),
+              child: Obx(() {
+                final name = c.driverName.value;
+                final initial = name.isEmpty
+                    ? '?'
+                    : String.fromCharCode(name.runes.first);
+                return Text(
+                  initial,
+                  style: AppTextStyles.homeTitle.copyWith(
+                    color: AppColors.shade1,
+                    fontSize: 20.sp,
+                    fontWeight: FontWeight.w700,
+                  ),
+                );
+              }),
             ),
             SizedBox(width: 12.w),
             Expanded(
@@ -372,7 +384,11 @@ class DriverAcceptedScreen extends StatelessWidget {
                           ),
                         ),
                         SizedBox(width: 6.w),
-                        const Icon(Icons.star, color: Color(0xFFF4C542), size: 16),
+                        const Icon(
+                          Icons.star,
+                          color: Color(0xFFF4C542),
+                          size: 16,
+                        ),
                         SizedBox(width: 2.w),
                         Text(
                           c.driverRating.value,
@@ -393,13 +409,9 @@ class DriverAcceptedScreen extends StatelessWidget {
                 ),
               ),
             ),
-            _roundAction(icon: Icons.call, onTap: c.callDriver, badge: '1'),
+            _roundAction(icon: Icons.call, onTap: c.callDriver),
             SizedBox(width: 8.w),
-            _roundAction(
-              icon: Icons.message_rounded,
-              onTap: c.onChatTap,
-              badge: '1',
-            ),
+            _roundAction(icon: Icons.message_rounded, onTap: c.onChatTap),
           ],
         ),
         SizedBox(height: 16.h),
@@ -417,10 +429,7 @@ class DriverAcceptedScreen extends StatelessWidget {
             onPressed: c.confirmCancelRide,
             child: Text(
               'Cancel Ride',
-              style: TextStyle(
-                fontSize: 17.sp,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 17.sp, fontWeight: FontWeight.w600),
             ),
           ),
         ),
@@ -669,10 +678,7 @@ class DriverAcceptedScreen extends StatelessWidget {
               onPressed: c.confirmCancelRide,
               child: Text(
                 'Cancel Ride',
-                style: TextStyle(
-                  fontSize: 17.sp,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 17.sp, fontWeight: FontWeight.w600),
               ),
             ),
           ),

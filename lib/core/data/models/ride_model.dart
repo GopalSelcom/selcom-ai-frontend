@@ -24,6 +24,22 @@ class RideModel extends RideEntity {
   });
 
   factory RideModel.fromJson(Map<String, dynamic> json) {
+    // Backend may return createdAt or created_at
+    final createdAtStr =
+        json['createdAt'] ??
+        json['created_at'] ??
+        DateTime.now().toIso8601String();
+
+    final driverSnapshotJson = json['driver_snapshot'];
+    final driverSnapshot = driverSnapshotJson != null
+        ? DriverSnapshotModel.fromJson(driverSnapshotJson)
+        : null;
+
+    // Use top-level pin_code or fallback to verification_code from driver_snapshot
+    final pin =
+        (json['pin_code']?.toString() ?? driverSnapshot?.verificationCode ?? '')
+            .trim();
+
     return RideModel(
       id: json['_id'] ?? '',
       riderId: json['rider_id'] ?? '',
@@ -40,7 +56,7 @@ class RideModel extends RideEntity {
       finalFare: json['final_fare'],
       distanceKm: (json['distance_km'] ?? 0.0).toDouble(),
       durationMinutes: json['duration_minutes'] ?? 0,
-      pinCode: json['pin_code'] ?? '',
+      pinCode: pin,
       paymentMethod: PaymentMethod.values.firstWhere(
         (e) => e.name == _toCamelCase(json['payment_method'] ?? 'wallet'),
         orElse: () => PaymentMethod.wallet,
@@ -49,25 +65,28 @@ class RideModel extends RideEntity {
         (e) => e.name == (json['payment_status'] ?? 'pending'),
         orElse: () => PaymentStatus.pending,
       ),
-      driverSnapshot: json['driver_snapshot'] != null
-          ? DriverSnapshotModel.fromJson(json['driver_snapshot'])
-          : null,
+      driverSnapshot: driverSnapshot,
       vehicleSnapshot: json['vehicle_snapshot'] != null
           ? VehicleSnapshotModel.fromJson(json['vehicle_snapshot'])
           : null,
-      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
+      createdAt: DateTime.parse(createdAtStr),
     );
   }
 
   static String _toCamelCase(String snakeCase) {
     List<String> words = snakeCase.split('_');
     if (words.length == 1) return words[0];
-    return words[0] + words.skip(1).map((w) => w[0].toUpperCase() + w.substring(1)).join('');
+    return words[0] +
+        words.skip(1).map((w) => w[0].toUpperCase() + w.substring(1)).join('');
   }
 }
 
 class LocationModel extends LocationEntity {
-  const LocationModel({required super.lat, required super.lng, required super.address});
+  const LocationModel({
+    required super.lat,
+    required super.lng,
+    required super.address,
+  });
 
   factory LocationModel.fromJson(Map<String, dynamic> json) {
     return LocationModel(
@@ -79,7 +98,23 @@ class LocationModel extends LocationEntity {
 }
 
 class DriverSnapshotModel extends DriverSnapshotEntity {
-  const DriverSnapshotModel({required super.name, required super.phone, super.avatarUrl, required super.rating});
+  final String? verificationCode;
+  final String? vehicleRegistrationNumber;
+  final String? vehicleModel;
+  final String? vehicleType;
+  final String? vehicleColor;
+
+  const DriverSnapshotModel({
+    required super.name,
+    required super.phone,
+    super.avatarUrl,
+    required super.rating,
+    this.verificationCode,
+    this.vehicleRegistrationNumber,
+    this.vehicleModel,
+    this.vehicleType,
+    this.vehicleColor,
+  });
 
   factory DriverSnapshotModel.fromJson(Map<String, dynamic> json) {
     return DriverSnapshotModel(
@@ -87,6 +122,12 @@ class DriverSnapshotModel extends DriverSnapshotEntity {
       phone: json['phone'] ?? '',
       avatarUrl: json['avatar_url'],
       rating: (json['rating'] ?? 0.0).toDouble(),
+      verificationCode: json['verification_code']?.toString(),
+      vehicleRegistrationNumber: json['vehicle_registration_number']
+          ?.toString(),
+      vehicleModel: json['vehicle_model']?.toString(),
+      vehicleType: json['vehicle_type']?.toString(),
+      vehicleColor: json['vehicle_color']?.toString(),
     );
   }
 }
@@ -102,7 +143,11 @@ class VehicleSnapshotModel extends VehicleSnapshotEntity {
 
   factory VehicleSnapshotModel.fromJson(Map<String, dynamic> json) {
     return VehicleSnapshotModel(
-      vehicleType: json['vehicle_type'] ?? '',
+      vehicleType:
+          json['vehicle_type'] ??
+          json['vehicle_name'] ??
+          json['display_name'] ??
+          '',
       vehicleMake: json['vehicle_make'] ?? '',
       vehicleModel: json['vehicle_model'] ?? '',
       vehicleColor: json['vehicle_color'] ?? '',

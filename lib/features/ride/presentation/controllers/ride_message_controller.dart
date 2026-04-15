@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
@@ -244,16 +245,29 @@ class RideMessageController extends GetxController {
   }
 
   /// **TODO(static → API):** Wire to `tel:` / in-app call flow when driver phone is available from API.
-  void onTapCallDriver() {
-    if (driverPhone.isNotEmpty) {
-      Get.snackbar(
-        'Calling Driver',
-        'Initiating call to $driverPhone...',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.white.withOpacity(0.9),
-      );
-    } else {
-      Get.snackbar('Error', 'Driver phone number not available');
+  Future<void> onTapCallDriver() async {
+    final phone = driverPhone.trim();
+    if (phone.isEmpty) {
+      Get.snackbar('Call', 'Phone number unavailable');
+      return;
+    }
+
+    final uri = Uri.parse('tel:${phone.replaceAll(' ', '')}');
+    try {
+      if (await canLaunchUrl(uri)) {
+        Get.snackbar(
+          'Calling Driver',
+          'Initiating call to $driverPhone...',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.white.withOpacity(0.9),
+        );
+        await launchUrl(uri);
+      } else {
+        Get.snackbar('Call', 'Unable to open phone dialer');
+      }
+    } catch (e) {
+      debugPrint("Error launching dialer: $e");
+      Get.snackbar('Call', 'Error opening phone dialer');
     }
   }
 
