@@ -127,37 +127,44 @@ class DriverAcceptedScreen extends StatelessWidget {
       );
 
       final markers = <Marker>{};
+
+      // Driver Marker
       if (assigned != null) {
         markers.add(
           Marker(
             markerId: const MarkerId('assigned_driver'),
             position: assigned,
-            icon:
-                c.driverIcon.value ??
-                BitmapDescriptor.defaultMarkerWithHue(
-                  BitmapDescriptor.hueGreen,
-                ),
+            icon: c.assignedDriverMarkerIcon.value ??
+                BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
             anchor: const Offset(0.5, 0.5),
             flat: true,
           ),
         );
       }
-      markers.add(
-        Marker(
-          markerId: const MarkerId('pickup'),
-          position: pickup,
-          icon: BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueGreen,
+
+      // Pickup Marker
+      if (c.pickupIcon.value != null) {
+        markers.add(
+          Marker(
+            markerId: const MarkerId('pickup'),
+            position: pickup,
+            icon: c.pickupIcon.value!,
+            anchor: const Offset(0.5, 0.5),
           ),
-        ),
-      );
-      markers.add(
-        Marker(
-          markerId: const MarkerId('drop'),
-          position: destination,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-        ),
-      );
+        );
+      }
+
+      // Drop Marker
+      if (c.dropIcon.value != null) {
+        markers.add(
+          Marker(
+            markerId: const MarkerId('drop'),
+            position: destination,
+            icon: c.dropIcon.value!,
+            anchor: const Offset(0.5, 0.5),
+          ),
+        );
+      }
 
       final polylines = <Polyline>{};
       polylines.add(

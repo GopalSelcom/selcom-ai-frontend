@@ -344,6 +344,8 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         },
         onChanged: (value) {
           pickupEditedByUser.value = true;
+          _routePickupLat.value = null;
+          _routePickupLng.value = null;
           controller.isPickupSelected.value = false; // reset
           _setActiveSegment(0);
           controller.searchQuery.value = value;

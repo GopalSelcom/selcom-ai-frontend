@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:selcom_rides_frontend/core/constants/app_assets.dart';
@@ -101,6 +102,14 @@ class VehicleSelectionController extends GetxController {
 
     pickupEntity = LocationEntity(lat: pLat, lng: pLng, address: pickupAddr);
     destinationEntity = LocationEntity(lat: dLat, lng: dLng, address: destAddr);
+    if (kDebugMode) {
+      debugPrint(
+        '[VehicleSelection] Parsed args => '
+        'pickup=(${pickupEntity.lat},${pickupEntity.lng}), '
+        'destination=(${destinationEntity.lat},${destinationEntity.lng}), '
+        'pickupAddrLen=${pickupAddr.length}, destinationAddrLen=${destAddr.length}',
+      );
+    }
 
     _preferredVehicleTypeId = (args['preferredVehicleTypeId'] as String?)
         ?.trim();
@@ -122,6 +131,12 @@ class VehicleSelectionController extends GetxController {
       pts.add(LatLng(lat, lng));
     }
     routePoints.assignAll(pts);
+    if (kDebugMode) {
+      debugPrint(
+        '[VehicleSelection] Dummy route built => '
+        'pickup=($pLat,$pLng), destination=($dLat,$dLng), points=${pts.length}',
+      );
+    }
   }
 
   Future<void> _loadAll() async {
@@ -159,12 +174,25 @@ class VehicleSelectionController extends GetxController {
                 .toList();
             if (mapped.length >= 2) {
               routePoints.assignAll(mapped);
+              if (kDebugMode) {
+                debugPrint(
+                  '[VehicleSelection] API route geometry applied => points=${mapped.length}, '
+                  'first=(${mapped.first.latitude},${mapped.first.longitude}), '
+                  'last=(${mapped.last.latitude},${mapped.last.longitude})',
+                );
+              }
               final n = mapped.length;
               driverMarkerPoints.assignAll([
                 mapped[(n * 0.25).floor().clamp(0, n - 1)],
                 mapped[(n * 0.55).floor().clamp(0, n - 1)],
                 mapped[(n * 0.78).floor().clamp(0, n - 1)],
               ]);
+            }
+          } else {
+            if (kDebugMode) {
+              debugPrint(
+                '[VehicleSelection] API route geometry empty; using fallback route.',
+              );
             }
           }
         }
