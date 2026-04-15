@@ -210,7 +210,6 @@ class FindingDriverScreen extends StatelessWidget {
         builder: (context, constraints) {
           final trackW = constraints.maxWidth;
           final carSize = 64.w;
-          final pad = 4.w;
           final maxTravel = (trackW - carSize).clamp(0.0, double.infinity);
           final carLeft = t * maxTravel;
           final fillW = (trackW * t).clamp(0.0, trackW);

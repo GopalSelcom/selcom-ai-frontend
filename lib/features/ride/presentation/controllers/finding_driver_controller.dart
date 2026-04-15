@@ -98,9 +98,40 @@ class FindingDriverController extends GetxController {
     remainingSeconds.value = searchTimeoutSeconds;
     _countdownTimer?.cancel();
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (remainingSeconds.value <= 0) return;
+      if (remainingSeconds.value <= 0) {
+        _countdownTimer?.cancel();
+        _autoCancelRide();
+        return;
+      }
       remainingSeconds.value--;
     });
+  }
+
+  Future<void> _autoCancelRide() async {
+    if (rideId.isEmpty) return;
+
+    // Show a small loader or snackbar to inform user
+    Get.snackbar(
+      'Search Timeout',
+      'No drivers found within 10 minutes. Cancelling ride...',
+      backgroundColor: Colors.black87,
+      colorText: Colors.white,
+      duration: const Duration(seconds: 3),
+    );
+
+    final result = await rideRepository.cancelRide(
+      rideId,
+      'Search timeout: no driver found',
+    );
+    result.fold(
+      (failure) {
+        // If it fails, we still go home because the search is technically over
+        Get.offAllNamed(AppRoutes.home);
+      },
+      (success) {
+        Get.offAllNamed(AppRoutes.home);
+      },
+    );
   }
 
   void _scheduleMockDriverAssigned() {
