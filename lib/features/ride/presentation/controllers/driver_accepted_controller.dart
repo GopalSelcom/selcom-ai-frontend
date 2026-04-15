@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:intl/intl.dart';
 import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/driver_location_socker_response.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -19,8 +18,6 @@ import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../domain/repositories/ride_repository.dart';
 
 /// SCR-11 — Driver accepted: live map, driver details, OTP, cancel (SCR-12 flow later).
-enum RideBottomSheetState { rideStarted, rideCompleted }
-
 class DriverAcceptedController extends GetxController {
   DriverAcceptedController({
     required this.rideRepository,
@@ -54,8 +51,6 @@ class DriverAcceptedController extends GetxController {
   final otpDigits = <String>[].obs;
   final etaLabel = '10 Mins'.obs;
   final arrivalLabel = 'Driver will arriving in 1 min...'.obs;
-  final rideBottomSheetState = RideBottomSheetState.rideStarted.obs;
-  final selectedRideRating = 4.obs;
 
   final Rxn<BitmapDescriptor> assignedDriverMarkerIcon =
       Rxn<BitmapDescriptor>();
@@ -229,17 +224,13 @@ class DriverAcceptedController extends GetxController {
       _applyStatusPayload(payload);
 
       if (status == 'cancelled' || status == 'completed') {
-        if (status == 'cancelled') {
-          Get.offAllNamed(AppRoutes.home);
-          return;
-        }
-        rideBottomSheetState.value = RideBottomSheetState.rideCompleted;
+        Get.offAllNamed(AppRoutes.home);
         return;
       }
       if (status == 'ride_started' ||
           status == 'ride_in_progress' ||
           status == 'driver_arrived') {
-        rideBottomSheetState.value = RideBottomSheetState.rideStarted;
+        Get.snackbar('Trip update', 'Status: $status');
       }
     });
 
@@ -423,53 +414,6 @@ class DriverAcceptedController extends GetxController {
   void onChatTap() {
     // Get.to(()=>Cha)
     Get.snackbar('Chat', 'In-app chat will be available in a future update.');
-  }
-
-  void setRideRating(int rating) {
-    if (rating < 1 || rating > 5) return;
-    selectedRideRating.value = rating;
-  }
-
-  void finishCompletedRide() {
-    Get.offAllNamed(AppRoutes.home);
-  }
-
-  String get pickupTitle => _firstAddressLine(pickupAddress);
-  String get destinationTitle => _firstAddressLine(destinationAddress);
-  String get rideVehicleLabel {
-    final value = driverVehicleLine.value.trim();
-    if (value.isNotEmpty) return value.split('-').first.trim();
-    return 'Boda';
-  }
-
-  String get arrivalDateLabel {
-    final value = ride.value;
-    if (value == null) return '05th Mar 2026 . 08:08PM';
-    return DateFormat('dd\'th\' MMM yyyy . hh:mma').format(value.createdAt);
-  }
-
-  String get rideChargeLabel => 'TZS ${ride.value?.fareEstimate ?? 100}.00';
-  String get bookingFeeLabel => 'TZS ${ride.value?.fareEstimate ?? 100}.00';
-  String get totalAmountLabel =>
-      'TZS ${ride.value?.finalFare ?? ride.value?.fareEstimate ?? 100}.00';
-  String get paymentModeLabel {
-    final method = ride.value?.paymentMethod.name ?? 'wallet';
-    switch (method) {
-      case 'mobileMoney':
-        return 'Mobile Money';
-      case 'selcomPesa':
-        return 'Selcom Pesa';
-      case 'card':
-        return 'Card';
-      default:
-        return 'Wallet';
-    }
-  }
-
-  String _firstAddressLine(String address) {
-    final trimmed = address.trim();
-    if (trimmed.isEmpty) return 'Unknown location';
-    return trimmed.split(',').first.trim();
   }
 
   Future<void> confirmCancelRide() async {
