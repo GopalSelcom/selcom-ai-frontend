@@ -120,6 +120,11 @@ class DriverAcceptedScreen extends StatelessWidget {
       final destination = c.destinationLatLng;
       final assigned = c.assignedDriverLocation.value;
       final route = c.routePoints.toList();
+      final isPickupRoute = c.routeTarget.value == 'pick_up';
+      final mid = LatLng(
+        (pickup.latitude + destination.latitude) / 2,
+        (pickup.longitude + destination.longitude) / 2,
+      );
 
       final markers = <Marker>{};
       if (assigned != null) {
@@ -128,7 +133,7 @@ class DriverAcceptedScreen extends StatelessWidget {
             markerId: const MarkerId('assigned_driver'),
             position: assigned,
             icon:
-                c.assignedDriverMarkerIcon.value ??
+                c.driverIcon.value ??
                 BitmapDescriptor.defaultMarkerWithHue(
                   BitmapDescriptor.hueGreen,
                 ),
@@ -146,30 +151,31 @@ class DriverAcceptedScreen extends StatelessWidget {
           ),
         ),
       );
+      markers.add(
+        Marker(
+          markerId: const MarkerId('drop'),
+          position: destination,
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+        ),
+      );
 
       final polylines = <Polyline>{};
       polylines.add(
         Polyline(
-          polylineId: const PolylineId('pickup_to_destination'),
-          points: route.isNotEmpty ? route : [pickup, destination],
+          polylineId: const PolylineId('active_route'),
+          points: route.isNotEmpty
+              ? route
+              : (isPickupRoute && assigned != null
+                    ? [assigned, pickup]
+                    : [pickup, destination]),
           color: const Color(0xFF3073E8),
-          width: 4,
+          width: 5,
         ),
       );
-      if (assigned != null) {
-        polylines.add(
-          Polyline(
-            polylineId: const PolylineId('driver_to_pickup'),
-            points: [assigned, pickup],
-            color: const Color(0xFF3073E8),
-            width: 4,
-          ),
-        );
-      }
 
       return AppGoogleMap(
         mapWidgetKey: const ValueKey('driver_accepted_map'),
-        initialCameraPosition: CameraPosition(target: pickup, zoom: 15),
+        initialCameraPosition: CameraPosition(target: mid, zoom: 13.5),
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).size.height * _sheetInitial,
         ),

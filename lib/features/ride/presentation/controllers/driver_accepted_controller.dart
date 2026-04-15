@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
@@ -16,6 +17,7 @@ import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/app_map_service.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
+import '../../../../core/utils/map_marker_utils.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../widgets/cancel_ride_dialogs.dart';
@@ -42,8 +44,9 @@ class DriverAcceptedController extends GetxController {
 
   final Rxn<LatLng> assignedDriverLocation = Rxn<LatLng>();
   final routePoints = <LatLng>[].obs;
+  final routeTarget = 'pick_up'.obs;
 
-  final isLoadingRide = true.obs;
+  final isLoadingRide = false.obs;
   final Rxn<RideModel> ride = Rxn<RideModel>();
 
   final driverName = ''.obs;
@@ -75,14 +78,14 @@ class DriverAcceptedController extends GetxController {
   void onInit() {
     super.onInit();
     _parseArgs();
-    _loadMarkerIcon();
     _bootstrap();
     ever(assignedDriverLocation, (_) => scheduleAssignedEtaOverlayRefresh());
     analyticsService.logEvent('driver_assigned_screen_viewed');
   }
 
   Future<void> _bootstrap() async {
-    await _fetchRideDetails();
+    await loadDriverIcon();
+    // await _fetchRideDetails();
     await _initRideRoomSocket();
   }
 
@@ -110,35 +113,62 @@ class DriverAcceptedController extends GetxController {
     destinationLatLng = LatLng(dlat, dlng);
     pickupAddress = (args['pickupAddress'] as String?)?.trim() ?? '';
     destinationAddress = (args['destinationAddress'] as String?)?.trim() ?? '';
-    _buildRoutePolyline();
+    _setDropRouteFallback();
+    _hydrateSocketSeedPayloads(args);
   }
 
-  void _buildRoutePolyline() {
-    final p = pickupLatLng;
-    final d = destinationLatLng;
-    const steps = 24;
-    final pts = <LatLng>[];
-    for (var i = 0; i <= steps; i++) {
-      final t = i / steps;
-      final lat =
-          p.latitude +
-          (d.latitude - p.latitude) * t +
-          0.0012 * (t - 0.5) * (t - 0.5);
-      final lng =
-          p.longitude + (d.longitude - p.longitude) * t + 0.001 * (t - 0.3);
-      pts.add(LatLng(lat, lng));
+  void _setDropRouteFallback() {
+    routeTarget.value = 'drop_off';
+    routePoints.assignAll([pickupLatLng, destinationLatLng]);
+  }
+
+  void _setPickupRouteFallback() {
+    final driver = assignedDriverLocation.value;
+    if (driver != null) {
+      routePoints.assignAll([driver, pickupLatLng]);
+    } else {
+      routePoints.assignAll([pickupLatLng, destinationLatLng]);
     }
-    routePoints.assignAll(pts);
+    routeTarget.value = 'pickup';
   }
 
-  Future<void> _loadMarkerIcon() async {
-    try {
-      assignedDriverMarkerIcon.value = await BitmapDescriptor.asset(
-        const ImageConfiguration(size: Size(36, 36)),
-        AppAssets.gariPlus,
+  void _hydrateSocketSeedPayloads(Map<String, dynamic> args) {
+    final statusRaw = args['statusPayload'];
+    if (statusRaw is Map) {
+      final payload = EventRiderStatusUpdateResponse.fromJson(
+        Map<String, dynamic>.from(statusRaw),
       );
-    } catch (_) {}
+      _applyStatusPayload(payload);
+    }
+    final driverRaw = args['driverLocationPayload'];
+    if (driverRaw is Map) {
+      final payload = DriverLocationSocketResponse.fromJson(
+        Map<String, dynamic>.from(driverRaw),
+      );
+      final lat = payload.latitude;
+      final lng = payload.longitude;
+      if (lat != null && lng != null) {
+        assignedDriverLocation.value = LatLng(lat, lng);
+      }
+    }
+    final trackingRaw = args['trackingPayload'];
+    if (trackingRaw is Map) {
+      final payload = TrackingUpdateSocketResponse.fromJson(
+        Map<String, dynamic>.from(trackingRaw),
+      );
+      _applyTrackingPayload(payload);
+    }
   }
+
+  // Future<void> _loadMarkerIcon() async {
+  //   try {
+  //     await rootBundle.load(AppAssets.gariPlus);
+  //     assignedDriverMarkerIcon.value = await BitmapDescriptor.asset(
+  //       const ImageConfiguration(size: Size(36, 36)),
+  //       AppAssets.gariPlus,
+  //     );
+  //   } catch (_) {}
+  // }
 
   Future<void> _fetchRideDetails() async {
     if (rideId.isEmpty) {
@@ -155,7 +185,7 @@ class DriverAcceptedController extends GetxController {
       },
       (r) {
         ride.value = r;
-        _applyRide(r);
+        // _applyRide(r);
       },
     );
     isLoadingRide.value = false;
@@ -267,6 +297,10 @@ class DriverAcceptedController extends GetxController {
       final lng = payload.longitude;
       if (lat == null || lng == null) return;
       assignedDriverLocation.value = LatLng(lat, lng);
+
+        _setPickupRouteFallback();
+
+
       _fitRouteBounds();
     });
 
@@ -279,6 +313,15 @@ class DriverAcceptedController extends GetxController {
     if (_socketService.isConnected) {
       _socketService.joinRideRoom(rideId: rideId);
     }
+  }
+
+  Rx<BitmapDescriptor> driverIcon = BitmapDescriptor.defaultMarker.obs;
+
+  Future<void> loadDriverIcon() async {
+    driverIcon.value = await MapMarkerUtils.getResizedMarker(
+      AppAssets.imgBoda,
+      150,
+    );
   }
 
   void onMapCreated(GoogleMapController c) {
@@ -390,10 +433,22 @@ class DriverAcceptedController extends GetxController {
       }
     }
 
-    if ((payload.routeTarget ?? '').toLowerCase() == 'pick_up') {
+    final target = _normalizeRouteTarget(payload.routeTarget);
+    if (target == 'pick_up') {
+      routeTarget.value = target;
       final coords = payload.routeGeometry?.coordinates;
       if (coords != null && coords.isNotEmpty) {
         routePoints.assignAll(_toLatLngPolyline(coords));
+      } else {
+        _setPickupRouteFallback();
+      }
+    } else if (target == 'drop_off') {
+      routeTarget.value = target;
+      final coords = payload.routeGeometry?.coordinates;
+      if (coords != null && coords.isNotEmpty) {
+        routePoints.assignAll(_toLatLngPolyline(coords));
+      } else {
+        _setDropRouteFallback();
       }
     }
 
@@ -408,14 +463,34 @@ class DriverAcceptedController extends GetxController {
           'Driver will arriving in ${eta <= 1 ? '1 min' : '$eta mins'}...';
     }
 
-    final target = (payload.routeTarget ?? '').toLowerCase();
+    final target = _normalizeRouteTarget(payload.routeTarget);
     if (target == 'pick_up') {
+      routeTarget.value = target;
       final coords = payload.routeGeometry?.coordinates;
       if (coords != null && coords.isNotEmpty) {
         routePoints.assignAll(_toLatLngPolyline(coords));
+      } else {
+        _setPickupRouteFallback();
+      }
+    } else if (target == 'drop_off') {
+      routeTarget.value = target;
+      final coords = payload.routeGeometry?.coordinates;
+      if (coords != null && coords.isNotEmpty) {
+        routePoints.assignAll(_toLatLngPolyline(coords));
+      } else {
+        _setDropRouteFallback();
       }
     }
     _fitRouteBounds();
+  }
+
+  String _normalizeRouteTarget(String? target) {
+    final t = (target ?? '').trim().toLowerCase();
+    if (t == 'pickup' || t == 'pick_up') return 'pick_up';
+    if (t == 'dropoff' || t == 'drop_off' || t == 'destination') {
+      return 'drop_off';
+    }
+    return '';
   }
 
   List<LatLng> _toLatLngPolyline(List<List<double>> coords) {

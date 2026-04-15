@@ -20,8 +20,8 @@ class DriverLocationSocketResponse {
   });
 
   factory DriverLocationSocketResponse.fromJson(Map<String, dynamic> json) => DriverLocationSocketResponse(
-    latitude: json["latitude"]?.toDouble(),
-    longitude: json["longitude"]?.toDouble(),
+    latitude: (json["latitude"] ?? json["lat"])?.toDouble(),
+    longitude: (json["longitude"] ?? json["lng"])?.toDouble(),
     heading: json["heading"],
   );
 
