@@ -6,6 +6,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:selcom_rides_frontend/shared/widgets/map_widgets.dart';
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../ride/data/models/ride_management_models.dart';
 import '../controllers/home_controller.dart';
@@ -70,9 +71,22 @@ class HomeScreen extends GetView<HomeController> {
             right: 20.w,
             child: AppMapGpsButton(onPressed: () => controller.recenterMap()),
           ),
+          Obx(() {
+            if (controller.isLoadingHomeData.value) {
+              return const SizedBox.shrink();
+            }
+            final activeRide = controller.activeRide.value;
+            if (activeRide != null) {
+              return Positioned(
+                left: 16.w,
+                right: 16.w,
+                bottom: MediaQuery.of(context).padding.bottom + 12.h,
+                child: _activeRideCard(activeRide),
+              );
+            }
+            return _buildFigmaDraggableSheet();
+          }),
 
-          // 4. Interactive Bottom UI
-          _buildFigmaDraggableSheet(),
         ],
       ),
     );
@@ -758,5 +772,116 @@ class HomeScreen extends GetView<HomeController> {
         ],
       ),
     );
+  }
+
+  Widget _activeRideCard(RideModel ride) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16.r),
+      elevation: 4,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16.r),
+        onTap: controller.openActiveRide,
+        child: Container(
+          padding: EdgeInsets.all(12.w),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFCE7F3),
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                    child: Text(
+                      _activeRideStatusLabel(ride.status.name),
+                      style: AppTextStyles.homeCaption.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  Icon(Icons.directions_car_filled, color: AppColors.primary, size: 18.sp),
+                  SizedBox(width: 4.w),
+                  Text(
+                    ride.vehicleSnapshot?.vehicleType ?? ride.vehicleTypeId,
+                    style: AppTextStyles.homeCaption.copyWith(
+                      color: AppColors.shade1,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 10.h),
+              Text(
+                ride.pickup.address,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.homeSubtitle.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.shade1,
+                ),
+              ),
+              SizedBox(height: 2.h),
+              Text(
+                ride.destination.address,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.homeCaption.copyWith(
+                  color: AppColors.shade2,
+                ),
+              ),
+              SizedBox(height: 10.h),
+              Row(
+                children: [
+                  Text(
+                    'TZS ${ride.fareEstimate}',
+                    style: AppTextStyles.homeSubtitle.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.shade1,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    'View trip',
+                    style: AppTextStyles.homeCaption.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  SizedBox(width: 4.w),
+                  Icon(Icons.arrow_forward_ios, size: 14.sp, color: AppColors.primary),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _activeRideStatusLabel(String status) {
+    switch (status.toLowerCase()) {
+      case 'driverassigned':
+        return 'Driver Assigned';
+      case 'driverarriving':
+        return 'Driver Arriving';
+      case 'driverarrived':
+        return 'Driver Arrived';
+      case 'ridestarted':
+      case 'rideinprogress':
+        return 'Ride In Progress';
+      case 'neardestination':
+        return 'Near Destination';
+      default:
+        return 'Active Ride';
+    }
   }
 }

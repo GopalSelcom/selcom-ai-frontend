@@ -5,6 +5,7 @@ import '../../../../core/network/api_service.dart';
 import '../../../../core/network/urls.dart';
 
 abstract class RideRemoteDataSource {
+  Future<RideModel?> getActiveRide();
   Future<List<RecentDestinationModel>> getRecentDestinations();
   Future<List<RideModel>> getRideHistory({int page = 1, int limit = 10});
   Future<RideModel> getRideDetails(String rideId);
@@ -29,6 +30,22 @@ abstract class RideRemoteDataSource {
 
 class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   RideRemoteDataSourceImpl();
+
+  @override
+  Future<RideModel?> getActiveRide() async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.ride.activeRide,
+        method: ApiMethod.get,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      final rideJson = response.data['data']?['ride'] as Map<String, dynamic>?;
+      if (rideJson != null) return RideModel.fromJson(rideJson);
+    }
+    return null;
+  }
 
   @override
   Future<List<RecentDestinationModel>> getRecentDestinations() async {

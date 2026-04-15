@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:selcom_rides_frontend/features/home/data/models/places_models.dart';
+import 'package:selcom_rides_frontend/core/data/models/ride_model.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/data/models/requests/create_saved_place_request.dart';
 import '../../../../core/utils/map_marker_utils.dart';
@@ -47,6 +48,7 @@ class HomeController extends GetxController {
   final vehicleTypes = <VehicleTypeModel>[].obs;
   final recentDestinations = <RecentDestinationModel>[].obs;
   final savedPlaces = <SavedPlace>[].obs;
+  final activeRide = Rxn<RideModel>();
 
   /// Picked saved address for pickup (header dropdown). Map + chips use this when set.
   final Rxn<String> selectedPickupSavedPlaceId = Rxn<String>();
@@ -172,6 +174,7 @@ class HomeController extends GetxController {
         homeRepository.getVehicleTypes(),
         rideRepository.getRecentDestinations(),
         profileRepository.getSavedPlaces(),
+        rideRepository.getActiveRide(),
       ]);
 
       // Handle Vehicle Types
@@ -195,9 +198,32 @@ class HomeController extends GetxController {
           _syncSelectedPickupAfterSavedPlacesLoad();
         }
       });
+
+      // Handle Active Ride
+      results[3].fold((_) => null, (ride) {
+        activeRide.value = ride as RideModel?;
+      });
     } finally {
       isLoadingHomeData.value = false;
     }
+  }
+
+  void openActiveRide() {
+    final rideValue = activeRide.value;
+    if (rideValue == null) return;
+
+    Get.toNamed(
+      AppRoutes.driverAccepted,
+      arguments: {
+        'rideId': rideValue.id,
+        'pickupLat': rideValue.pickup.lat,
+        'pickupLng': rideValue.pickup.lng,
+        'pickupAddress': rideValue.pickup.address,
+        'destinationLat': rideValue.destination.lat,
+        'destinationLng': rideValue.destination.lng,
+        'destinationAddress': rideValue.destination.address,
+      },
+    );
   }
 
   Future<void> _searchPlaces(String input) async {

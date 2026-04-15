@@ -12,6 +12,16 @@ class RideRepositoryImpl implements RideRepository {
   RideRepositoryImpl({required this.remoteDataSource});
 
   @override
+  Future<Either<Failure, RideModel?>> getActiveRide() async {
+    try {
+      final result = await remoteDataSource.getActiveRide();
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, List<RecentDestinationModel>>>
   getRecentDestinations() async {
     try {
