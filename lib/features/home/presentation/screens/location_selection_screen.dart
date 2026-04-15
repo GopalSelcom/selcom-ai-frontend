@@ -777,7 +777,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                             AppAssets.locationIcHeartFilled,
                             width: 24.w,
                             height: 24.h,
-                            placeholderBuilder: (_) => Icon(
+                            placeholderBuilder: (_) => const Icon(
                               Icons.favorite,
                               color: AppColors.primary,
                               size: 20,

@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_profile_header.dart';
 import '../controllers/favorite_locations_controller.dart';
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
 
@@ -13,56 +14,53 @@ class FavoriteLocationsScreen extends GetView<FavoriteLocationsController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.pageBackground,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.shade1),
-          onPressed: () => Get.back(),
-        ),
-        title: Text(
-          'Favourite Locations',
-          style: AppTextStyles.homeTitle.copyWith(fontSize: 18.sp),
-        ),
-        centerTitle: true,
-      ),
-      body: Obx(() {
-        if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
-        }
+      body: Column(
+        children: [
+          const AppProfileHeader(title: 'Favourite Locations'),
+          Expanded(
+            child: Obx(() {
+              if (controller.isLoading.value) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-        if (controller.favorites.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.favorite_border,
-                  size: 64.sp,
-                  color: AppColors.shade2.withOpacity(0.5),
-                ),
-                SizedBox(height: 16.h),
-                Text(
-                  'No favorite locations yet',
-                  style: AppTextStyles.homeSubtitle.copyWith(
-                    color: AppColors.shade2,
+              if (controller.favorites.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.favorite_border,
+                        size: 64.sp,
+                        color: AppColors.shade2.withOpacity(0.5),
+                      ),
+                      SizedBox(height: 16.h),
+                      Text(
+                        'No favorite locations yet',
+                        style: AppTextStyles.homeSubtitle.copyWith(
+                          color: AppColors.shade2,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
-          );
-        }
+                );
+              }
 
-        return ListView.separated(
-          padding: EdgeInsets.all(16.w),
-          itemCount: controller.favorites.length,
-          separatorBuilder: (_, __) => SizedBox(height: 12.h),
-          itemBuilder: (context, index) {
-            final place = controller.favorites[index];
-            return _locationTile(place);
-          },
-        );
-      }),
+              return RefreshIndicator(
+                onRefresh: controller.fetchFavorites,
+                child: ListView.separated(
+                  padding: EdgeInsets.all(16.w),
+                  itemCount: controller.favorites.length,
+                  separatorBuilder: (_, __) => SizedBox(height: 12.h),
+                  itemBuilder: (context, index) {
+                    final place = controller.favorites[index];
+                    return _locationTile(place);
+                  },
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
     );
   }
 

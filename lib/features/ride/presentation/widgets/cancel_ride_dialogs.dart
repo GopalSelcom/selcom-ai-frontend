@@ -90,16 +90,16 @@ class CancelAssignmentWarningDialog extends StatelessWidget {
                   height: 1.5,
                   fontWeight: FontWeight.w400,
                 ),
-                children: [
-                  const TextSpan(text: 'A cancellation fee of '),
+                children: const [
+                  TextSpan(text: 'A cancellation fee of '),
                   TextSpan(
                     text: 'TZS 150',
                     style: TextStyle(
-                      color: const Color(0xFFFF0050),
+                      color: Color(0xFFFF0050),
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const TextSpan(
+                  TextSpan(
                     text: ' will be charged since your driver is on the way.',
                   ),
                 ],

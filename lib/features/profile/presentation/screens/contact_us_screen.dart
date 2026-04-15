@@ -19,7 +19,7 @@ class ContactUsScreen extends GetView<ContactUsController> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AppProfileHeader(title: 'Contact Us', bottomPadding: 24.w),
+          const AppProfileHeader(title: 'Contact Us'),
 
           SizedBox(height: 32.h),
 

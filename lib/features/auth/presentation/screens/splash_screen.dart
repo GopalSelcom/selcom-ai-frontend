@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../../../core/services/storage_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/routes/app_routes.dart';
@@ -23,10 +23,9 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void _navigateToNext() async {
     await Future.delayed(const Duration(milliseconds: 2500));
-    
+
     // Check for existing valid session token
-    const storage = FlutterSecureStorage();
-    final token = await storage.read(key: 'authorization_token');
+    final token = await StorageService().read(StorageKeys.authorizationToken);
 
     if (token != null && token.isNotEmpty) {
       Get.offAllNamed(AppRoutes.home);

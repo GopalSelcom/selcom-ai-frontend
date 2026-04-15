@@ -13,7 +13,7 @@ class AppTheme {
         secondary: AppColors.info,
       ),
       scaffoldBackgroundColor: AppColors.pageBackground,
-      appBarTheme: AppBarTheme(
+      appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.pageBackground,
         elevation: 0,
         centerTitle: true,
@@ -22,7 +22,7 @@ class AppTheme {
           fontSize: 18,
           fontWeight: FontWeight.w600,
         ),
-        iconTheme: const IconThemeData(color: AppColors.textDark),
+        iconTheme: IconThemeData(color: AppColors.textDark),
       ),
       useMaterial3: true,
       cardTheme: CardThemeData(

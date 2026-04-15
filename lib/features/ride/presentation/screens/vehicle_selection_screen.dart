@@ -379,7 +379,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
           width: 72.w,
           height: 52.h,
           color: const Color(0xFFF1F5F9),
-          child: Icon(Icons.directions_car, color: AppColors.shade2),
+          child: const Icon(Icons.directions_car, color: AppColors.shade2),
         ),
       ),
     );
@@ -469,7 +469,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
                       ? SizedBox(
                           width: 24.w,
                           height: 24.w,
-                          child: CircularProgressIndicator(
+                          child: const CircularProgressIndicator(
                             strokeWidth: 2,
                             color: AppColors.primary,
                           ),
@@ -527,7 +527,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
                     ),
                     title: Text(m.label),
                     trailing: sel
-                        ? Icon(Icons.check_circle, color: AppColors.primary)
+                        ? const Icon(Icons.check_circle, color: AppColors.primary)
                         : null,
                     onTap: () {
                       c.selectPaymentMethod(m);

@@ -18,11 +18,7 @@ class PromocodeScreen extends StatelessWidget {
       backgroundColor: AppColors.pageBackground,
       body: Column(
         children: [
-          AppProfileHeader(
-            title: 'Apply Promo code',
-            onBack: () => Get.back(),
-            bottomPadding: 24.h,
-          ),
+          const AppProfileHeader(title: 'Apply Promo code'),
           Expanded(
             child: SingleChildScrollView(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),

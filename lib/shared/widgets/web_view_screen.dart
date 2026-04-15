@@ -93,7 +93,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
         /// Body
         body: Column(
           children: [
-            AppProfileHeader(title: widget.title, bottomPadding: 24.w),
+            AppProfileHeader(title: widget.title),
             Expanded(
               child: Stack(
                 children: [
@@ -109,9 +109,10 @@ class _WebViewScreenState extends State<WebViewScreen> {
                     ),
                     child: WebViewWidget(controller: webController),
                   ),
-              
+
                   /// Loader
-                  if (isLoading) const Center(child: CircularProgressIndicator()),
+                  if (isLoading)
+                    const Center(child: CircularProgressIndicator()),
                 ],
               ),
             ),
