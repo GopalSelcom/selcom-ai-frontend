@@ -12,6 +12,7 @@ import '../../../../core/constants/app_assets.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
 import '../../../../core/data/models/ride_model.dart';
+import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/app_map_service.dart';
@@ -63,6 +64,8 @@ class DriverAcceptedController extends GetxController {
 
   final Rxn<BitmapDescriptor> assignedDriverMarkerIcon =
       Rxn<BitmapDescriptor>();
+  final Rxn<BitmapDescriptor> pickupIcon = Rxn<BitmapDescriptor>();
+  final Rxn<BitmapDescriptor> dropIcon = Rxn<BitmapDescriptor>();
   final Rxn<Offset> assignedDriverEtaScreenPx = Rxn<Offset>();
 
   GoogleMapController? mapController;
@@ -83,9 +86,20 @@ class DriverAcceptedController extends GetxController {
   }
 
   Future<void> _bootstrap() async {
-    await loadDriverIcon();
+    await _loadMarkerIcons();
     // await _fetchRideDetails();
     await _initRideRoomSocket();
+  }
+
+  Future<void> _loadMarkerIcons() async {
+    pickupIcon.value = await MapMarkerUtils.createCustomCircleMarker(
+      color: const Color(0xFF4FA3FF),
+    );
+    dropIcon.value = await MapMarkerUtils.createCustomCircleMarker(
+      color: const Color(0xFFE11D48),
+    );
+    // Initial load
+    await loadDriverIcon();
   }
 
   @override
@@ -314,13 +328,23 @@ class DriverAcceptedController extends GetxController {
     }
   }
 
-  Rx<BitmapDescriptor> driverIcon = BitmapDescriptor.defaultMarker.obs;
-
-  Future<void> loadDriverIcon() async {
-    driverIcon.value = await MapMarkerUtils.getResizedMarker(
-      AppAssets.imgBoda,
-      150,
-    );
+  Future<void> loadDriverIcon({String? vehicleType}) async {
+    try {
+      String asset = AppAssets.imgCab;
+      if (vehicleType != null) {
+        final vt = vehicleType.toLowerCase();
+        if (vt.contains('boda') || vt.contains('bike')) {
+          asset = AppAssets.imgBoda;
+        } else if (vt.contains('bajaj')) {
+          asset = AppAssets.imgBajaji;
+        }
+      }
+      assignedDriverMarkerIcon.value =
+          await MapMarkerUtils.getResizedMarker(asset, 150);
+    } catch (_) {
+      assignedDriverMarkerIcon.value =
+          await MapMarkerUtils.getResizedMarker(AppAssets.imgBoda, 150);
+    }
   }
 
   void onMapCreated(GoogleMapController c) {
@@ -352,10 +376,28 @@ class DriverAcceptedController extends GetxController {
   Future<void> _fitRouteBounds() async {
     final ctrl = mapController;
     if (ctrl == null) return;
-    final points = <LatLng>[pickupLatLng, destinationLatLng];
+
+    final points = <LatLng>[];
     final assigned = assignedDriverLocation.value;
-    if (assigned != null) points.add(assigned);
-    if (routePoints.isNotEmpty) points.addAll(routePoints);
+
+    if (routeTarget.value == 'pick_up' && assigned != null) {
+      // Focus on segment: Driver -> Pickup
+      points.add(assigned);
+      points.add(pickupLatLng);
+    } else if (routeTarget.value == 'drop_off') {
+      // Focus on segment: Pickup/Current -> Destination
+      points.add(assigned ?? pickupLatLng);
+      points.add(destinationLatLng);
+    } else {
+      points.addAll([pickupLatLng, destinationLatLng]);
+      if (assigned != null) points.add(assigned);
+    }
+
+    if (routePoints.isNotEmpty) {
+      points.addAll(routePoints);
+    }
+
+    if (points.isEmpty) return;
 
     double minLat = points.first.latitude;
     double maxLat = points.first.latitude;
@@ -371,8 +413,8 @@ class DriverAcceptedController extends GetxController {
     await ctrl.animateCamera(
       CameraUpdate.newLatLngBounds(
         LatLngBounds(
-          southwest: LatLng(minLat - 0.006, minLng - 0.006),
-          northeast: LatLng(maxLat + 0.006, maxLng + 0.006),
+          southwest: LatLng(minLat - 0.004, minLng - 0.004),
+          northeast: LatLng(maxLat + 0.004, maxLng + 0.004),
         ),
         56,
       ),
@@ -388,6 +430,7 @@ class DriverAcceptedController extends GetxController {
       if ((d.lat) != null && (d.lng) != null) {
         assignedDriverLocation.value = LatLng(d.lat!, d.lng!);
       }
+      loadDriverIcon(vehicleType: d.vehicleType);
       final otp = (d.verificationCode ?? '').replaceAll(RegExp(r'\s'), '');
       if (otp.isNotEmpty) {
         otpDigits.assignAll(otp.split('').take(4).toList());
@@ -531,8 +574,22 @@ class DriverAcceptedController extends GetxController {
         'driverPhone': driverPhone.value,
         'driverSubtitle': plateLinePrimary.value + plateLineSecondary.value,
         'riderName': 'Rider', // Default placeholder
+        'initialStatus': _mapBottomSheetToRideStatus(
+          rideBottomSheetState.value,
+        ).name,
       },
     );
+  }
+
+  RideStatus _mapBottomSheetToRideStatus(RideBottomSheetState state) {
+    switch (state) {
+      case RideBottomSheetState.driverAssigned:
+        return RideStatus.driverAssigned;
+      case RideBottomSheetState.rideStarted:
+        return RideStatus.rideStarted;
+      case RideBottomSheetState.rideCompleted:
+        return RideStatus.rideCompleted;
+    }
   }
 
   void setRideRating(int rating) {

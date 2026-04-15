@@ -84,7 +84,7 @@ class RideChatSocketDataSource {
       );
     } else if (ts is String) {
       final parsed = DateTime.tryParse(ts);
-      if (parsed != null) sentAt = parsed;
+      if (parsed != null) sentAt = parsed.toLocal();
     }
 
     final id =

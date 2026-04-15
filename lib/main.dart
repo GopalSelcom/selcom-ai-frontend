@@ -4,14 +4,24 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'firebase_options.dart';
 import 'core/config/app_config.dart';
 import 'core/di/injection_container.dart' as di;
 import 'core/services/analytics_service.dart';
+import 'core/services/notification_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/routes/app_routes.dart';
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // Optional: You could show a local notification here if needed,
+  // but FCM usually handles background notifications automatically
+  // if the 'notification' block is present.
+}
 
 void main() async {
   await runZonedGuarded(
@@ -28,6 +38,11 @@ void main() async {
       // Initialize Firebase
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
+      );
+
+      // Set background handler
+      FirebaseMessaging.onBackgroundMessage(
+        _firebaseMessagingBackgroundHandler,
       );
 
       // Report all framework errors to Crashlytics outside debug mode.
@@ -55,6 +70,10 @@ void main() async {
 
       AppConfig.init(env: env);
       await di.init();
+
+      // Initialize Notification Service
+      await di.sl<NotificationService>().initialize();
+
       await di.sl<AnalyticsService>().logEvent('app_opened');
 
       runApp(const MyApp());

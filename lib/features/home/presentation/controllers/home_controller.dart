@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import 'package:app_settings/app_settings.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/services/notification_service.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:selcom_rides_frontend/features/home/data/models/places_models.dart';
 import 'package:selcom_rides_frontend/core/data/models/ride_model.dart';
@@ -17,7 +23,6 @@ import '../../../../core/data/models/responses/get_saved_places_response.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/analytics_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 
 class HomeController extends GetxController {
@@ -27,6 +32,7 @@ class HomeController extends GetxController {
   final RideRepository rideRepository;
   final ProfileRepository profileRepository;
   final AnalyticsService analyticsService;
+  final NotificationService notificationService;
   final RideRatingController rideRatingController;
 
   HomeController({
@@ -34,6 +40,7 @@ class HomeController extends GetxController {
     required this.rideRepository,
     required this.profileRepository,
     required this.analyticsService,
+    required this.notificationService,
     required this.rideRatingController,
   });
 
@@ -83,6 +90,9 @@ class HomeController extends GetxController {
       rideRatingController.tryOpenRatingSheetAfterHomeLoad,
     );
 
+    // Request Notification Permission (Best practice: delayed until Home Screen)
+    _checkNotificationPermission();
+
     // 300ms debounce with 2-char threshold for location autocomplete.
     debounce(searchQuery, (query) {
       final normalized = query.trim();
@@ -92,6 +102,22 @@ class HomeController extends GetxController {
         suggestions.clear();
       }
     }, time: const Duration(milliseconds: 300));
+  }
+
+  Future<void> _checkNotificationPermission() async {
+    final status = await notificationService.requestPermission();
+
+    // If explicitly denied, show the custom settings popup
+    if (status.authorizationStatus == AuthorizationStatus.denied) {
+      AppDialogs.showPermissionDialog(
+        title: 'Stay Notified!',
+        message:
+            'Enable notifications to get real-time updates on your ride arrival and driver status.',
+        onOpenSettings: () {
+          AppSettings.openAppSettings(type: AppSettingsType.notification);
+        },
+      );
+    }
   }
 
   Future<void> _loadMapIcons() async {
@@ -251,6 +277,8 @@ class HomeController extends GetxController {
     required String label,
     required String name,
     required String placeId,
+    double? lat,
+    double? lng,
   }) async {
     if (isSavingPlace.value) return;
     isSavingPlace.value = true;
@@ -258,8 +286,8 @@ class HomeController extends GetxController {
       label: label,
       name: name,
       placeId: placeId,
-      lat: mapCenter.value.latitude,
-      lng: mapCenter.value.longitude,
+      lat: lat ?? mapCenter.value.latitude,
+      lng: lng ?? mapCenter.value.longitude,
     );
 
     final result = await profileRepository.addSavedPlace(request);
@@ -563,7 +591,8 @@ class HomeController extends GetxController {
   }
 
   SavedPlace? get activePickupSavedPlace {
-    if (selectedPickupSavedPlaceId.value == _currentLocationPlaceId) return null;
+    if (selectedPickupSavedPlaceId.value == _currentLocationPlaceId)
+      return null;
     if (savedPlaces.isEmpty) return null;
     final id = selectedPickupSavedPlaceId.value;
     if (id != null) {
@@ -727,19 +756,56 @@ class HomeController extends GetxController {
     String? preferredVehicleTypeId,
     String? preferredVehicleName,
   }) async {
+    if (kDebugMode) {
+      debugPrint(
+        '[LocationSelection] BookRide tapped: '
+        'pickupTextLen=${pickup.trim().length}, '
+        'destinationTextLen=${destinations.isNotEmpty ? destinations.first.trim().length : 0}, '
+        'routePickup=($routePickupLat,$routePickupLng), '
+        'routeDestination=($routeDestinationLat,$routeDestinationLng), '
+        'destinationPlaceIdPresent=${(destinationPlaceId ?? '').trim().isNotEmpty}',
+      );
+    }
+    double? pLat = routePickupLat;
+    double? pLng = routePickupLng;
+
+    // Resolve pickup if missing
+    if ((pLat == null || pLng == null) && pickup.trim().isNotEmpty) {
+      final resolvedPickup = await getLatLngFromAddress(pickup.trim());
+      if (resolvedPickup != null) {
+        pLat = resolvedPickup.latitude;
+        pLng = resolvedPickup.longitude;
+      }
+    }
+    pLat ??= mapCenter.value.latitude;
+    pLng ??= mapCenter.value.longitude;
+
+    double? dLat = routeDestinationLat;
+    double? dLng = routeDestinationLng;
+
+    // Resolve destination if missing
+    if ((dLat == null || dLng == null) && destinations.isNotEmpty) {
+      final resolved = await getLatLngFromAddress(destinations.first);
+      if (resolved != null) {
+        dLat = resolved.latitude;
+        dLng = resolved.longitude;
+      }
+    }
+
+    // fallback to something sensible if still null, but NOT a hardcoded offset that feels like a bug
+    dLat ??= pLat;
+    dLng ??= pLng;
+
     final pid = destinationPlaceId?.trim();
     if (pid != null && pid.isNotEmpty) {
       await savePlace(
         label: 'Destination',
         name: destinations.first,
         placeId: pid,
+        lat: dLat,
+        lng: dLng,
       );
     }
-
-    final pLat = routePickupLat ?? mapCenter.value.latitude;
-    final pLng = routePickupLng ?? mapCenter.value.longitude;
-    final dLat = routeDestinationLat ?? (pLat - 0.018);
-    final dLng = routeDestinationLng ?? (pLng + 0.014);
 
     Get.toNamed(
       AppRoutes.booking,
@@ -757,6 +823,13 @@ class HomeController extends GetxController {
           'preferredVehicleName': preferredVehicleName,
       },
     );
+    if (kDebugMode) {
+      debugPrint(
+        '[LocationSelection] Navigate booking args => '
+        'pickup=($pLat,$pLng), destination=($dLat,$dLng), '
+        'preferredVehicleTypeId=${preferredVehicleTypeId ?? ''}',
+      );
+    }
   }
 
   /// Chip subtitle; Home falls back to current map address when saved line is empty.
@@ -862,6 +935,14 @@ class HomeController extends GetxController {
       destinationController.selection = TextSelection.fromPosition(
         TextPosition(offset: destinationController.text.length),
       );
+
+      // Async resolve coordinates to avoid faulty fallbacks later
+      getLatLngFromAddress(description).then((latLng) {
+        if (latLng != null) {
+          routeDestinationLat.value = latLng.latitude;
+          routeDestinationLng.value = latLng.longitude;
+        }
+      });
       return;
     }
 
@@ -872,6 +953,14 @@ class HomeController extends GetxController {
       c.selection = TextSelection.fromPosition(
         TextPosition(offset: c.text.length),
       );
+
+      // Also resolve for extra stops if needed
+      getLatLngFromAddress(description).then((latLng) {
+        if (latLng != null && activeSegmentIndex == (i + 2)) {
+          // We don't have reactive lat/lng list for extra stops yet in this controller state,
+          // but we can at least resolve if we add them later.
+        }
+      });
     }
   }
 

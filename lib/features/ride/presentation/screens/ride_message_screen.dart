@@ -344,12 +344,6 @@ class RideMessageScreen extends GetView<RideMessageController> {
                     ),
                     child: Row(
                       children: [
-                        Icon(
-                          Icons.sentiment_satisfied_alt_outlined,
-                          color: Colors.grey[400],
-                          size: 24,
-                        ),
-                        SizedBox(width: 8.w),
                         Expanded(
                           child: TextField(
                             controller: controller.messageController,
@@ -365,11 +359,6 @@ class RideMessageScreen extends GetView<RideMessageController> {
                               border: InputBorder.none,
                             ),
                           ),
-                        ),
-                        Icon(
-                          Icons.attach_file,
-                          color: Colors.grey[400],
-                          size: 24,
                         ),
                       ],
                     ),
