@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/driver_location_socker_response.dart';
 
+import '../../../../core/constants/app_assets.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
@@ -20,8 +21,8 @@ class FindingDriverController extends GetxController {
   final RideRepository rideRepository;
   final AppSocketService _socketService = AppSocketService();
 
-  /// Total search window (product: 10 minutes).
-  static const int searchTimeoutSeconds = 600;
+  /// Total search window (product: 9 minutes).
+  static const int searchTimeoutSeconds = 540;
 
   late final String rideId;
   late final LatLng pickupLatLng;
@@ -30,6 +31,23 @@ class FindingDriverController extends GetxController {
   late final String destinationAddress;
 
   final remainingSeconds = searchTimeoutSeconds.obs;
+  final ridePhase = 'searching'.obs;
+  final driverName = 'John Doe'.obs;
+  final driverPhone = '+255 700 000 000'.obs;
+  final driverRating = '4'.obs;
+  final driverVehicle = 'Volkswagen'.obs;
+  final driverPlate = 'HG5045'.obs;
+  final vehicleDisplay = 'Toyota corolla, White'.obs;
+  final etaLabel = '10 Mins'.obs;
+  final arrivalLabel = 'Driver will arriving in 1 min...'.obs;
+  final otpDigits = const ['2', '7', '5', '6'].obs;
+  final plateDigits = const ['T772', 'BBE'].obs;
+  final isDebugUiSwitcherVisible = kDebugMode.obs;
+  final selectedRideIndex = 0.obs;
+  final Rxn<BitmapDescriptor> nearBikeMarkerIcon = Rxn<BitmapDescriptor>();
+  final Rxn<BitmapDescriptor> nearCarMarkerIcon = Rxn<BitmapDescriptor>();
+  final Rxn<BitmapDescriptor> assignedDriverMarkerIcon =
+      Rxn<BitmapDescriptor>();
 
   GoogleMapController? mapController;
 
@@ -80,14 +98,48 @@ class FindingDriverController extends GetxController {
     remainingSeconds.value = searchTimeoutSeconds;
     _countdownTimer?.cancel();
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (remainingSeconds.value <= 0) return;
+      if (remainingSeconds.value <= 0) {
+        _countdownTimer?.cancel();
+        _autoCancelRide();
+        return;
+      }
       remainingSeconds.value--;
     });
   }
 
+  Future<void> _autoCancelRide() async {
+    if (rideId.isEmpty) return;
+
+    // Show a small loader or snackbar to inform user
+    Get.snackbar(
+      'Search Timeout',
+      'No drivers found within 9 minutes. Cancelling ride...',
+      backgroundColor: Colors.black87,
+      colorText: Colors.white,
+      duration: const Duration(seconds: 3),
+    );
+
+    final result = await rideRepository.cancelRide(
+      rideId,
+      'Search timeout: no driver found',
+    );
+    result.fold(
+      (failure) {
+        // If it fails, we still go home because the search is technically over
+        Get.offAllNamed(AppRoutes.home);
+      },
+      (success) {
+        Get.offAllNamed(AppRoutes.home);
+      },
+    );
+  }
+
   void _scheduleMockDriverAssigned() {
     _mockDriverAssignTimer?.cancel();
-    _mockDriverAssignTimer = Timer(const Duration(seconds: 6), _navigateToDriverAccepted);
+    _mockDriverAssignTimer = Timer(
+      const Duration(seconds: 6),
+      _navigateToDriverAccepted,
+    );
   }
 
   void _navigateToDriverAccepted() {
@@ -176,13 +228,15 @@ class FindingDriverController extends GetxController {
     final minLng = p.longitude < d.longitude ? p.longitude : d.longitude;
     final maxLng = p.longitude > d.longitude ? p.longitude : d.longitude;
 
-    await ctrl.animateCamera(CameraUpdate.newLatLngBounds(
+    await ctrl.animateCamera(
+      CameraUpdate.newLatLngBounds(
         LatLngBounds(
           southwest: LatLng(minLat - 0.006, minLng - 0.006),
           northeast: LatLng(maxLat + 0.006, maxLng + 0.006),
         ),
         56,
-      ));
+      ),
+    );
   }
 
   int get remainingWholeMinutes =>
@@ -194,7 +248,8 @@ class FindingDriverController extends GetxController {
     final dynamic confirmResult = await Get.dialog(
       /*isAssigned
           ? const CancelAssignmentWarningDialog()
-          : const */CancelConfirmationDialog(),
+          : const */
+      CancelConfirmationDialog(),
       barrierDismissible: false,
     );
 
@@ -226,4 +281,70 @@ class FindingDriverController extends GetxController {
       },
     );
   }
+
+  final rideOptions = const <MockRideOption>[
+    MockRideOption(
+      name: 'GoRide Card',
+      capacity: '4',
+      eta: '10 min away',
+      dropAt: 'Drop 1:11 pm',
+      fare: 'TZS 500',
+      assetPath: AppAssets.gari,
+      nearFast: true,
+    ),
+    MockRideOption(
+      name: 'Bajaji',
+      capacity: '3',
+      eta: '5 min away',
+      dropAt: 'Drop 1:09 pm',
+      fare: 'TZS 100',
+      assetPath: AppAssets.bajaj,
+    ),
+    MockRideOption(
+      name: 'Boda',
+      capacity: '1',
+      eta: '1 min away',
+      dropAt: 'Drop 1:00 pm',
+      fare: 'TZS 100',
+      assetPath: AppAssets.boda,
+    ),
+  ];
+
+  String get selectedFare => rideOptions[selectedRideIndex.value].fare;
+
+  void selectRideOption(int index) {
+    if (index < 0 || index >= rideOptions.length) return;
+    selectedRideIndex.value = index;
+  }
+
+  void openRideMessage() {
+    Get.toNamed(
+      AppRoutes.rideMessage,
+      arguments: <String, dynamic>{
+        'rideId': rideId,
+        'driverName': driverName.value,
+        'driverPhone': driverPhone.value, // Added driverPhone
+      },
+    );
+  }
+}
+
+class MockRideOption {
+  final String name;
+  final String capacity;
+  final String eta;
+  final String dropAt;
+  final String fare;
+  final String assetPath;
+  final bool nearFast;
+
+  const MockRideOption({
+    required this.name,
+    required this.capacity,
+    required this.eta,
+    required this.dropAt,
+    required this.fare,
+    required this.assetPath,
+    this.nearFast = false,
+  });
 }

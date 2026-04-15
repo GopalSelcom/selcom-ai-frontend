@@ -56,7 +56,7 @@ class AppSocketService {
 
   // 💬 Chat
   static const String evtSendMessage = 'chat:send_message';
-  static const String evtReceiveMessage = 'chat:receive_message';
+  static const String evtReceiveMessage = 'ride:new_message';
 
   io.Socket? _socket;
   final _driversController = StreamController<List<Driver>>.broadcast();
@@ -156,8 +156,8 @@ class AppSocketService {
     // ---------------- LISTENERS ----------------
 
     _socket!.on(evtNearbyDriversResult, (payload) {
-      final drivers =ridersResponseSocketFromJson(jsonEncode(payload));
-      _driversController.add(drivers.drivers??[]);
+      final drivers = ridersResponseSocketFromJson(jsonEncode(payload));
+      _driversController.add(drivers.drivers ?? []);
     });
     _socket!.on(evtNearbyDriversError, (payload) {
       _errorController.add(_parseError(payload));
@@ -182,7 +182,9 @@ class AppSocketService {
       _rideDriverLocationController.add(data);
     });
     _socket!.on(evtPaymentStatusUpdate, (payload) {
-      final data = PaymentStatusUpdateResponse.fromJson(payload as Map<String,dynamic>);
+      final data = PaymentStatusUpdateResponse.fromJson(
+        payload as Map<String, dynamic>,
+      );
       _paymentStatusController.add(data);
     });
 

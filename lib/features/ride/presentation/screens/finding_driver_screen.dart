@@ -55,7 +55,9 @@ class FindingDriverScreen extends StatelessWidget {
             addressWidget: Expanded(
               child: AppMapLocationSummaryCard(
                 label: 'Home',
-                address: c.pickupAddress.isEmpty ? 'Selected location' : c.pickupAddress,
+                address: c.pickupAddress.isEmpty
+                    ? 'Selected location'
+                    : c.pickupAddress,
               ),
             ),
           ),
@@ -67,7 +69,8 @@ class FindingDriverScreen extends StatelessWidget {
           AppDraggableBottomSheet(
             initialChildSize: _sheetInitial,
             minChildSize: 0.48,
-            childBuilder: (scrollController) => _bottomSheet(c, scrollController),
+            childBuilder: (scrollController) =>
+                _bottomSheet(c, scrollController),
           ),
         ],
       ),
@@ -105,7 +108,10 @@ class FindingDriverScreen extends StatelessWidget {
     );
   }
 
-  Widget _bottomSheet(FindingDriverController c, ScrollController scrollController) {
+  Widget _bottomSheet(
+    FindingDriverController c,
+    ScrollController scrollController,
+  ) {
     return ListView(
       controller: scrollController,
       padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 12.h),
@@ -185,10 +191,7 @@ class FindingDriverScreen extends StatelessWidget {
             onPressed: c.confirmCancelRide,
             child: Text(
               'Cancel Ride',
-              style: TextStyle(
-                fontSize: 17.sp,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 17.sp, fontWeight: FontWeight.w600),
             ),
           ),
         ),
@@ -206,68 +209,105 @@ class FindingDriverScreen extends StatelessWidget {
       return LayoutBuilder(
         builder: (context, constraints) {
           final trackW = constraints.maxWidth;
-          final carSize = 40.w;
-          final pad = 8.w;
-          final maxTravel = (trackW - 2 * pad - carSize).clamp(0.0, double.infinity);
-          final carLeft = pad + t * maxTravel;
-          final fillW = (trackW * t).clamp(0.0, trackW);
+          final carSize = 64.w;
+          final maxTravel = (trackW - carSize).clamp(0.0, double.infinity);
+          final carLeft = t * maxTravel;
+          final fillW = (carLeft + carSize / 2).clamp(0.0, trackW);
 
           return Container(
-            height: 48.h,
+            height: 52.h,
             decoration: BoxDecoration(
-              color: const Color(0xFFF8F9FD),
+              color: const Color(0xFFF1F5F9),
               borderRadius: BorderRadius.circular(26.r),
-              border: Border.all(color: const Color(0xFFE6E9EE), width: 0.8),
+              border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(26.r),
-              child: Stack(
-                clipBehavior: Clip.hardEdge,
-                children: [
-                  Positioned(
-                    left: 0,
-                    top: 0,
-                    bottom: 0,
-                    width: fillW,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                // 1. Pink Fill
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(26.r),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
                     child: Container(
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Color(0xFFF3004C), Color(0xFFDE074A)],
+                      width: fillW,
+                      height: double.infinity,
+                      decoration: const BoxDecoration(color: Color(0xFFE11D48)),
+                      alignment: Alignment.center,
+                      child: ShaderMask(
+                        shaderCallback: (bounds) {
+                          return const LinearGradient(
+                            colors: [Colors.transparent, Colors.white],
+                            stops: [0.0, 0.4],
+                          ).createShader(bounds);
+                        },
+                        blendMode: BlendMode.dstIn,
+                        child: const SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          physics: NeverScrollableScrollPhysics(),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.chevron_right,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                              Icon(
+                                Icons.chevron_right,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                              Icon(
+                                Icons.chevron_right,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                              Icon(
+                                Icons.chevron_right,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      alignment: Alignment.center,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.chevron_right, color: Colors.white, size: 18.sp),
-                          Icon(Icons.chevron_right, color: Colors.white, size: 18.sp),
-                          Icon(Icons.chevron_right, color: Colors.white, size: 18.sp),
-                          Icon(Icons.chevron_right, color: Colors.white, size: 18.sp),
-                        ],
+                    ),
+                  ),
+                ),
+                // 2. Car Thumb
+                Positioned(
+                  left: carLeft,
+                  top: -6.h,
+                  child: Container(
+                    width: carSize,
+                    height: carSize,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE11D48),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    padding: EdgeInsets.all(12.w),
+                    child: SvgPictureAsset(
+                      AppAssets.rideFindingLoaderCar,
+                      width: 32.w,
+                      height: 32.w,
+                      placeholderBuilder: (_) => Icon(
+                        Icons.directions_car,
+                        color: Colors.white,
+                        size: 32.sp,
                       ),
                     ),
                   ),
-                  Positioned(
-                    left: carLeft,
-                    top: 4.h,
-                    child: Container(
-                      width: carSize,
-                      height: carSize,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFDE074A),
-                        shape: BoxShape.circle,
-                      ),
-                      child: SvgPictureAsset(
-                        AppAssets.rideFindingLoaderCar,
-                        width: 22.w,
-                        height: 22.w,
-                        placeholderBuilder: (_) =>
-                            Icon(Icons.directions_car, color: Colors.white, size: 22.sp),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         },
