@@ -48,10 +48,6 @@ class AppAssets {
   static const String locationIcAdd = '$_figmaLocation/ic_add.svg';
   static const String locationIcHeartOutline = '$_figmaLocation/ic_heart_outline.svg';
   static const String locationIcHeartFilled = '$_figmaLocation/ic_heart_filled.svg';
-  static const String locationIcChipHome = '$_figmaLocation/ic_chip_home.svg';
-  static const String locationIcChipOffice = '$_figmaLocation/ic_chip_office.svg';
-  static const String locationIcChipOther = '$_figmaLocation/ic_chip_other.svg';
-  static const String locationIcChipWork = '$_figmaLocation/ic_chip_work.svg';
 
   /// No prior `ic_*` in repo — kept from Figma MCP export (SCR-07).
   static const String locationCardBackground = '$_locationMcpOnly/img_card_bg.svg';

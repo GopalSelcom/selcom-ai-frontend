@@ -67,6 +67,9 @@ class HomeController extends GetxController {
 
   final pickupMarkerIcon = Rxn<BitmapDescriptor>();
 
+  final RxBool isPickupSelected = false.obs;
+  final RxBool isDestinationSelected = false.obs;
+
   @override
   void onInit() {
     super.onInit();
@@ -871,6 +874,7 @@ class HomeController extends GetxController {
     destinationPlaceId.value = null;
     activeSegmentIndex.value = 1;
     searchQuery.value = '';
+    isDestinationSelected.value = true;
   }
 
   void applyRecentDestinationToLocationSelection({

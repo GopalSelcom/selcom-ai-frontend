@@ -46,9 +46,6 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
   final RxnString _preferredVehicleTypeId = RxnString();
   final RxnString _preferredVehicleName = RxnString();
 
-  final RxBool _isPickupSelected = false.obs;
-  final RxBool _isDestinationSelected = false.obs;
-
   @override
   void initState() {
     super.initState();
@@ -78,7 +75,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     pickupFocusNode = FocusNode();
     destinationFocusNode = FocusNode();
     if (_routePickupLat.value != null) {
-      _isPickupSelected.value = true;
+      controller.isPickupSelected.value = true;
     }
   }
 
@@ -347,7 +344,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         },
         onChanged: (value) {
           pickupEditedByUser.value = true;
-          _isPickupSelected.value = false; // reset
+          controller.isPickupSelected.value = false; // reset
           _setActiveSegment(0);
           controller.searchQuery.value = value;
         },
@@ -370,7 +367,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         },
         onChanged: (value) {
           _destinationPlaceId.value = null;
-          _isDestinationSelected.value = false; // reset
+          controller.isDestinationSelected.value = false; // reset
           _setActiveSegment(1);
           controller.searchQuery.value = value;
         },
@@ -399,7 +396,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           },
           onChanged: (value) {
             _setActiveSegment(segment);
-            _isDestinationSelected.value = false;
+            controller.isDestinationSelected.value = false;
             controller.searchQuery.value = value;
           },
           style: fieldStyle,
@@ -426,10 +423,10 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          _chip('Home', AppAssets.locationIcChipHome),
-          _chip('Office', AppAssets.locationIcChipOffice),
-          _chip('Other', AppAssets.locationIcChipOther),
-          _chip('Work', AppAssets.locationIcChipWork),
+          _chip('Home', AppAssets.icHomeChip),
+          _chip('Office', AppAssets.icOfficeChip),
+          _chip('Other', AppAssets.icOtherChip),
+          _chip('Work', AppAssets.icWorkChip),
         ],
       ),
     );
@@ -448,7 +445,6 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             routeDestinationLng: _routeDestinationLng,
             destinationPlaceId: _destinationPlaceId,
           );
-          _isDestinationSelected.value = true;
         },
         child: Container(
           height: 36.h,
@@ -587,7 +583,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                       routeDestinationLng: _routeDestinationLng,
                       destinationPlaceId: _destinationPlaceId,
                     );
-                    _isDestinationSelected.value = true;
+                    controller.isDestinationSelected.value = true;
                   },
                   onFavoriteTap: () =>
                       controller.toggleFavorite(destination.address, null),
@@ -633,7 +629,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
               routeDestinationLng: _routeDestinationLng,
               destinationPlaceId: _destinationPlaceId,
             );
-            _isDestinationSelected.value = true;
+            controller.isDestinationSelected.value = true;
           },
           onFavoriteTap: () => controller.toggleFavorite(recentText, null),
         );
@@ -666,7 +662,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
               routeDestinationLng: _routeDestinationLng,
               destinationPlaceId: _destinationPlaceId,
             );
-            _isDestinationSelected.value = true;
+            controller.isDestinationSelected.value = true;
           },
           onFavoriteTap: () =>
               controller.toggleFavorite(place.address ?? '', null),
@@ -807,7 +803,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
 
   Widget _bookRideButton() {
     return Obx(() {
-      final isReady = _isPickupSelected.value && _isDestinationSelected.value;
+      final isReady =
+          controller.isPickupSelected.value &&
+          controller.isDestinationSelected.value;
       return Material(
         color: isReady ? AppColors.primary : const Color(0xFFCBD5E1),
         borderRadius: BorderRadius.circular(16.r),
@@ -878,9 +876,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       destinationPlaceId: _destinationPlaceId,
     );
     if (_activeSegmentIndex.value == 0) {
-      _isPickupSelected.value = true;
+      controller.isPickupSelected.value = true;
     } else {
-      _isDestinationSelected.value = true;
+      controller.isDestinationSelected.value = true;
     }
     controller.suggestions.clear();
   }
