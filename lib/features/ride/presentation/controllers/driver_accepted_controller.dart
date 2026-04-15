@@ -11,6 +11,7 @@ import '../../../../core/constants/app_assets.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
 import '../../../../core/data/models/ride_model.dart';
+import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/app_map_service.dart';
@@ -456,8 +457,22 @@ class DriverAcceptedController extends GetxController {
         'driverPhone': driverPhone.value,
         'driverSubtitle': plateLinePrimary.value + plateLineSecondary.value,
         'riderName': 'Rider', // Default placeholder
+        'initialStatus': _mapBottomSheetToRideStatus(
+          rideBottomSheetState.value,
+        ).name,
       },
     );
+  }
+
+  RideStatus _mapBottomSheetToRideStatus(RideBottomSheetState state) {
+    switch (state) {
+      case RideBottomSheetState.driverAssigned:
+        return RideStatus.driverAssigned;
+      case RideBottomSheetState.rideStarted:
+        return RideStatus.rideStarted;
+      case RideBottomSheetState.rideCompleted:
+        return RideStatus.rideCompleted;
+    }
   }
 
   void setRideRating(int rating) {

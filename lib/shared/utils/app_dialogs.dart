@@ -299,4 +299,147 @@ class AppDialogs {
       barrierDismissible: false,
     );
   }
+
+  /// Shows a permission dialog when notifications are disabled.
+  static void showPermissionDialog({
+    required String title,
+    required String message,
+    required VoidCallback onOpenSettings,
+    VoidCallback? onCancel,
+  }) {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(28.r),
+        ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Illustration (Placeholder for the one in screenshot)
+              Container(
+                height: 120.h,
+                width: 140.w,
+                decoration: BoxDecoration(
+                  color: AppColors.divider.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(16.r),
+                ),
+                child: Center(
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Icon(
+                        Icons.notifications_off_outlined,
+                        size: 64.sp,
+                        color: AppColors.primary,
+                      ),
+                      Positioned(
+                        bottom: 10,
+                        right: 10,
+                        child: Icon(
+                          Icons.settings,
+                          size: 24.sp,
+                          color: AppColors.shade2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 32.h),
+
+              // Title
+              Text(
+                title,
+                style: AppTextStyles.onboardingTitle.copyWith(
+                  fontSize: 22.sp,
+                  color: const Color(0xFF1A1A1A),
+                  fontWeight: FontWeight.w700,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 12.h),
+
+              // Message
+              Text(
+                message,
+                style: AppTextStyles.onboardingSubtitle.copyWith(
+                  fontSize: 15.sp,
+                  color: const Color(0xFF666666),
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 32.h),
+
+              // Open Settings Button (Primary)
+              InkWell(
+                onTap: () {
+                  Get.back();
+                  onOpenSettings();
+                },
+                child: Container(
+                  height: 56.h,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(28.r),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Open Settings',
+                      style: AppTextStyles.onboardingButton.copyWith(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: 12.h),
+
+              // Cancel Button (Secondary)
+              InkWell(
+                onTap: () {
+                  Get.back();
+                  if (onCancel != null) onCancel();
+                },
+                child: Container(
+                  height: 56.h,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    border: Border.all(
+                      color: const Color(0xFFE0E0E0),
+                      width: 1.5,
+                    ),
+                    borderRadius: BorderRadius.circular(28.r),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Maybe Later',
+                      style: AppTextStyles.body.copyWith(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF888888),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: true,
+    );
+  }
 }

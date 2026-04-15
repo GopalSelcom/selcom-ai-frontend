@@ -13,6 +13,7 @@ import '../../../ride_rating/presentation/controllers/ride_rating_controller.dar
 import '../controllers/home_controller.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../../../../core/services/analytics_service.dart';
+import '../../../../core/services/notification_service.dart';
 
 class HomeBinding extends Bindings {
   @override
@@ -46,6 +47,7 @@ class HomeBinding extends Bindings {
         rideRepository: Get.find(),
         profileRepository: Get.find(),
         analyticsService: di.sl<AnalyticsService>(),
+        notificationService: di.sl<NotificationService>(),
         rideRatingController: Get.find<RideRatingController>(),
       ),
     );

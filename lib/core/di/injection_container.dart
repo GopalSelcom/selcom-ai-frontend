@@ -26,6 +26,7 @@ import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/promotions/presentation/controllers/promocode_controller.dart';
 import '../config/app_config.dart';
 import '../services/analytics_service.dart';
+import '../services/notification_service.dart';
 import '../network/api_service.dart';
 import '../network/headers.dart';
 import '../network/network_connectivity_service.dart';
@@ -36,6 +37,7 @@ final sl = GetIt.instance; // sl: Service Locator
 Future<void> init() async {
   // ── Services ──
   sl.registerLazySingleton(() => AnalyticsService());
+  sl.registerLazySingleton(() => NotificationService());
 
   // ── External ──
   sl.registerLazySingleton(() => const FlutterSecureStorage());

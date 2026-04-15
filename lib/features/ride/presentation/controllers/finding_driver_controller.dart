@@ -324,6 +324,7 @@ class FindingDriverController extends GetxController {
         'rideId': rideId,
         'driverName': driverName.value,
         'driverPhone': driverPhone.value, // Added driverPhone
+        'initialStatus': 'searching',
       },
     );
   }

@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:app_settings/app_settings.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/services/notification_service.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:selcom_rides_frontend/features/home/data/models/places_models.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
@@ -16,7 +21,6 @@ import '../../../../core/data/models/responses/get_saved_places_response.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/analytics_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 
 class HomeController extends GetxController {
@@ -26,6 +30,7 @@ class HomeController extends GetxController {
   final RideRepository rideRepository;
   final ProfileRepository profileRepository;
   final AnalyticsService analyticsService;
+  final NotificationService notificationService;
   final RideRatingController rideRatingController;
 
   HomeController({
@@ -33,6 +38,7 @@ class HomeController extends GetxController {
     required this.rideRepository,
     required this.profileRepository,
     required this.analyticsService,
+    required this.notificationService,
     required this.rideRatingController,
   });
 
@@ -81,6 +87,9 @@ class HomeController extends GetxController {
       rideRatingController.tryOpenRatingSheetAfterHomeLoad,
     );
 
+    // Request Notification Permission (Best practice: delayed until Home Screen)
+    _checkNotificationPermission();
+
     // 300ms debounce with 2-char threshold for location autocomplete.
     debounce(searchQuery, (query) {
       final normalized = query.trim();
@@ -90,6 +99,22 @@ class HomeController extends GetxController {
         suggestions.clear();
       }
     }, time: const Duration(milliseconds: 300));
+  }
+
+  Future<void> _checkNotificationPermission() async {
+    final status = await notificationService.requestPermission();
+
+    // If explicitly denied, show the custom settings popup
+    if (status.authorizationStatus == AuthorizationStatus.denied) {
+      AppDialogs.showPermissionDialog(
+        title: 'Stay Notified!',
+        message:
+            'Enable notifications to get real-time updates on your ride arrival and driver status.',
+        onOpenSettings: () {
+          AppSettings.openAppSettings(type: AppSettingsType.notification);
+        },
+      );
+    }
   }
 
   Future<void> _loadMapIcons() async {
@@ -537,7 +562,8 @@ class HomeController extends GetxController {
   }
 
   SavedPlace? get activePickupSavedPlace {
-    if (selectedPickupSavedPlaceId.value == _currentLocationPlaceId) return null;
+    if (selectedPickupSavedPlaceId.value == _currentLocationPlaceId)
+      return null;
     if (savedPlaces.isEmpty) return null;
     final id = selectedPickupSavedPlaceId.value;
     if (id != null) {

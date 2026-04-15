@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
+import '../../../../core/data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
@@ -48,6 +49,7 @@ class RideMessageController extends GetxController {
   StreamSubscription<RideChatMessage>? _chatSub;
   StreamSubscription<bool>? _connectionSub;
   StreamSubscription<EventRiderStatusUpdateResponse>? _rideStatusSub;
+  StreamSubscription<TrackingUpdateSocketResponse?>? _trackingStatusSub;
 
   /// **TODO(static → API):** Set to `false` when chat history + send are fully driven by API/socket.
   /// While `true`, seeded [staticSeedMessages] are shown and socket send is skipped (UI-only).
@@ -94,6 +96,7 @@ class RideMessageController extends GetxController {
     _chatSub?.cancel();
     _connectionSub?.cancel();
     _rideStatusSub?.cancel();
+    _trackingStatusSub?.cancel();
     if (!useStaticChatDataOnly) {
       _repository.stopListening();
     }
@@ -131,6 +134,25 @@ class RideMessageController extends GetxController {
     if (phone != null && phone.isNotEmpty) {
       driverPhone = phone;
     }
+
+    final initialStatus = args['initialStatus'];
+    if (initialStatus != null) {
+      if (initialStatus is RideStatus) {
+        rideStatus.value = initialStatus;
+      } else if (initialStatus is String) {
+        final normalized = initialStatus.trim().toLowerCase();
+        if (normalized == 'accepted') {
+          rideStatus.value = RideStatus.driverAssigned;
+        } else {
+          rideStatus.value = RideStatus.values.firstWhere(
+            (e) =>
+                e.name.toLowerCase() == normalized ||
+                e.name.toLowerCase() == _toCamelCase(normalized).toLowerCase(),
+            orElse: () => rideStatus.value,
+          );
+        }
+      }
+    }
   }
 
   void _applyStaticSeed() {
@@ -151,9 +173,23 @@ class RideMessageController extends GetxController {
         // Update existing (e.g. from local temp ID to real ID)
         messages[existingIndex] = msg;
       } else {
-        // New message
-        messages.add(msg);
-        _scrollToBottom();
+        // Find matching local message (same text, sent within 30 seconds)
+        // We use a wider window (30s) to account for potential clock drift or delay.
+        final localIndex = messages.indexWhere(
+          (m) =>
+              m.id.startsWith('local_') &&
+              m.text == msg.text &&
+              msg.sentAt.difference(m.sentAt).inSeconds.abs() < 30,
+        );
+
+        if (localIndex != -1) {
+          // Replace the local optimistic bubble with the real server message
+          messages[localIndex] = msg;
+        } else {
+          // Truly new message from other party
+          messages.add(msg);
+          _scrollToBottom();
+        }
       }
     });
 
@@ -177,18 +213,30 @@ class RideMessageController extends GetxController {
     await _repository.ensureConnected();
     _repository.joinRideRoom(rideId: rideId);
 
-    // 4. Listen for status updates to enable/disable chat
     _rideStatusSub = socket.rideStatusStream.listen((payload) {
       final statusStr = (payload.status ?? '').toString().toLowerCase();
-      if (statusStr.isNotEmpty) {
-        rideStatus.value = RideStatus.values.firstWhere(
-          (e) => e.name == _toCamelCase(statusStr),
-          orElse: () => rideStatus.value,
-        );
-      }
+      _updateRideStatusFromStr(statusStr);
+    });
+
+    _trackingStatusSub = socket.trackingUpdateStatusStream.listen((payload) {
+      if (payload == null) return;
+      final statusStr = (payload.status ?? '').toString().toLowerCase();
+      _updateRideStatusFromStr(statusStr);
     });
 
     _scrollToBottom();
+  }
+
+  void _updateRideStatusFromStr(String statusStr) {
+    if (statusStr.isEmpty) return;
+    if (statusStr == 'accepted' || statusStr == 'driver_assigned') {
+      rideStatus.value = RideStatus.driverAssigned;
+    } else {
+      rideStatus.value = RideStatus.values.firstWhere(
+        (e) => e.name == _toCamelCase(statusStr),
+        orElse: () => rideStatus.value,
+      );
+    }
   }
 
   String _toCamelCase(String snakeCase) {
