@@ -2,6 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/driver_location_socker_response.dart';
+import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
+import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
 import 'package:selcom_rides_frontend/core/data/models/responses/payment_status_response/payment_status_response.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
@@ -45,6 +48,7 @@ class AppSocketService {
   static const String evtJoinRideRoom = 'join_ride_room';
   static const String evtRideStatusUpdate = 'ride:status_update';
   static const String evtRideDriverLocation = 'ride:driver_location';
+  static const String trackingDriverLocation = 'ride:tracking_update';
 
   // Payment
   static const String evtJoinPaymentRoom = 'join_payment_room';
@@ -60,11 +64,13 @@ class AppSocketService {
   final _connectionController = StreamController<bool>.broadcast();
 
   final _rideStatusController =
-      StreamController<Map<String, dynamic>>.broadcast();
+      StreamController<EventRiderStatusUpdateResponse>.broadcast();
   final _rideDriverLocationController =
-      StreamController<Map<String, dynamic>>.broadcast();
+      StreamController<DriverLocationSocketResponse>.broadcast();
   final _paymentStatusController =
       StreamController<PaymentStatusUpdateResponse>.broadcast();
+  final _trackingUpdateStatusController =
+  StreamController<TrackingUpdateSocketResponse?>.broadcast();
 
   // 💬 Chat controller
   final _chatController = StreamController<Map<String, dynamic>>.broadcast();
@@ -78,10 +84,14 @@ class AppSocketService {
 
   Stream<bool> get connectionStream => _connectionController.stream;
 
-  Stream<Map<String, dynamic>> get rideStatusStream =>
+  Stream<EventRiderStatusUpdateResponse> get rideStatusStream =>
       _rideStatusController.stream;
 
-  Stream<Map<String, dynamic>> get rideDriverLocationStream =>
+  Stream<TrackingUpdateSocketResponse?> get trackingUpdateStatusStream =>
+      _trackingUpdateStatusController.stream;
+
+
+  Stream<DriverLocationSocketResponse> get rideDriverLocationStream =>
       _rideDriverLocationController.stream;
   Stream<PaymentStatusUpdateResponse> get paymentStatusStream =>
       _paymentStatusController.stream;
@@ -153,14 +163,23 @@ class AppSocketService {
       _errorController.add(_parseError(payload));
     });
     _socket!.on(evtRideStatusUpdate, (payload) {
-      print("this is the evtRideStatusUpdate---->${jsonEncode(payload)}");
-      final data = _asMap(payload);
+      print("this is the evtRideStatusUpdate----->$payload");
+      final data = eventRiderStatusUpdateResponseFromJson(jsonEncode(payload));
+
       if (data != null) _rideStatusController.add(data);
+    });
+    _socket!.on(trackingDriverLocation, (payload){
+      print("this is the call back ---driver_location:->${jsonEncode(payload)}");
+      final data = trackingUpdateSocketResponseFromJson(jsonEncode(payload));
+      if(data != null){
+        _trackingUpdateStatusController.add(trackingUpdateSocketResponseFromJson(jsonEncode(payload)));
+      }
+
     });
     _socket!.on(evtRideDriverLocation, (payload) {
       print("this is the evtRideDriverLocation---->${jsonEncode(payload)}");
-      final data = _asMap(payload);
-      if (data != null) _rideDriverLocationController.add(data);
+      final data = driverLocationSocketResponseFromJson(jsonEncode(payload));
+      _rideDriverLocationController.add(data);
     });
     _socket!.on(evtPaymentStatusUpdate, (payload) {
       final data = PaymentStatusUpdateResponse.fromJson(
@@ -171,6 +190,7 @@ class AppSocketService {
 
     // 💬 CHAT LISTENER
     _socket!.on(evtReceiveMessage, (payload) {
+      print("this is payLoad --->evtReceiveMessage---->$payload");
       final data = _asMap(payload);
       if (data != null) _chatController.add(data);
     });
@@ -259,6 +279,7 @@ class AppSocketService {
     _errorController.close();
     _connectionController.close();
     _rideStatusController.close();
+    _trackingUpdateStatusController.close();
     _rideDriverLocationController.close();
     _paymentStatusController.close();
     _chatController.close();

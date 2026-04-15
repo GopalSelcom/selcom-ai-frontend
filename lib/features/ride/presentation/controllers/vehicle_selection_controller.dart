@@ -473,6 +473,8 @@ class VehicleSelectionController extends GetxController {
                 'pickupLat': pickupEntity.lat,
                 'pickupLng': pickupEntity.lng,
                 'pickupAddress': pickupEntity.address,
+                'destinationLat': destinationEntity.lat,
+                'destinationLng': destinationEntity.lng,
                 'destinationAddress': destinationEntity.address,
               },
             );
@@ -558,7 +560,7 @@ class VehicleSelectionController extends GetxController {
               const Padding(
                 padding:  EdgeInsets.fromLTRB(20, 16, 20, 8),
                 child: Text(
-                  'Request sent. Please complete payment on Selcom Pesa to book your ride.',
+                  'Request sent. Please complete payment on Wallet to book your ride.',
                   textAlign: TextAlign.center,
                   style:  TextStyle(
                     fontFamily: 'Metropolis',

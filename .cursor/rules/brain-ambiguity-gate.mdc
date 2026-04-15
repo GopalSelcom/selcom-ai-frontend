@@ -7,10 +7,10 @@ alwaysApply: true
 
 When implementing frontend work with brain guidance:
 - Detect conflicts between rule sources early.
-- Apply precedence order:
-  1. `/context/shared/RULES.md`
-  2. `/context/backend/API_CONTRACT.md`
-  3. `/agents/frontend/AGENT.md`
-  4. historical/spec docs
+- Apply precedence order (paths relative to **this repo root**, via `.agent/`):
+  1. `.agent/context/shared/RULES.md`
+  2. `.agent/context/backend/API_CONTRACT.md`
+  3. `.agent/agents/frontend/AGENT.md`
+  4. Historical/spec docs under `.agent/docs/` or feature docs
 - If conflict or uncertainty remains after precedence resolution, ask the user before editing code.
 - Do not proceed with silent assumptions on ambiguous behavior, architecture, security, or API semantics.

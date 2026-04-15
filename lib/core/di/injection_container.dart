@@ -4,6 +4,12 @@ import '../../features/notification/data/datasources/notification_remote_data_so
 import '../../features/notification/data/repositories/notification_repository_impl.dart';
 import '../../features/notification/domain/repositories/notification_repository.dart';
 import '../../features/notification/presentation/controllers/notification_controller.dart';
+import '../../features/ride_rating/data/datasources/ride_rating_remote_data_source.dart';
+import '../../features/ride_rating/data/repositories/ride_rating_repository_impl.dart';
+import '../../features/ride_rating/domain/repositories/ride_rating_repository.dart';
+import '../../features/ride_rating/domain/usecases/get_last_completed_ride_usecase.dart';
+import '../../features/ride_rating/domain/usecases/skip_ride_rating_usecase.dart';
+import '../../features/ride_rating/domain/usecases/submit_ride_rating_usecase.dart';
 import '../../features/profile/data/datasources/profile_remote_data_source.dart';
 import '../../features/profile/data/repositories/profile_repository_impl.dart';
 import '../../features/profile/domain/repositories/profile_repository.dart';
@@ -91,6 +97,17 @@ Future<void> init() async {
   );
 
   sl.registerFactory(() => NotificationController(repository: sl()));
+
+  // ── Ride Rating Feature ──
+  sl.registerLazySingleton<RideRatingRemoteDataSource>(
+    () => RideRatingRemoteDataSourceImpl(),
+  );
+  sl.registerLazySingleton<RideRatingRepository>(
+    () => RideRatingRepositoryImpl(remoteDataSource: sl()),
+  );
+  sl.registerLazySingleton(() => GetLastCompletedRideUseCase(sl()));
+  sl.registerLazySingleton(() => SubmitRideRatingUseCase(sl()));
+  sl.registerLazySingleton(() => SkipRideRatingUseCase(sl()));
 }
 
 /// Maps the app's Environment enum to ApiService's ApiEnvironment enum

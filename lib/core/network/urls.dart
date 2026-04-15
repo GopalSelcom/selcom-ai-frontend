@@ -41,6 +41,8 @@ class _RideEndpoints {
   final history = "go/rides/history";
   final recentDestinations = "go/rides/recent-destinations";
   String cancelRide(String rideId) => "$base/$rideId/cancel";
+  String rateRide(String rideId) => "$base/$rideId/rate";
+  String skipRideRating(String rideId) => "$base/$rideId/skip-rating";
   final base =
       "go/rides"; // Use for /{{id}}, /{{id}}/cancel, /{{id}}/rate, etc.
 }

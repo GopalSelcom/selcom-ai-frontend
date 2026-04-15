@@ -10,7 +10,7 @@ Whenever you **create or substantially edit** a screen, route page, or reusable 
 ## 1. Search first
 - **Search the codebase** for an existing widget or pattern that matches the need (same layout, button style, field, list row, dialog, loading state, etc.).
 - Check in order:
-  - `lib/shared/widgets/` — **preferred** home for app-wide UI building blocks (e.g. `app_primary_button.dart`, `app_text_field.dart`, `app_otp_field.dart`, `app_skeleton_loader.dart`).
+  - `lib/shared/widgets/` — **preferred** home for app-wide UI building blocks (e.g. `app_primary_button.dart`, `app_text_field.dart`, `app_otp_field.dart`, `app_skeleton_loader.dart`, **`app_google_map.dart`**, `map_widgets.dart`).
   - `lib/core/widgets/` — cross-cutting, low-level helpers tied to core (e.g. `svg_picture_asset.dart`).
   - Feature folders `lib/features/<feature>/presentation/widgets/` — only when the UI is **feature-specific** and not reusable elsewhere.
 
@@ -34,3 +34,9 @@ If a task explicitly requires a one-off prototype, note that in the PR/descripti
 ## 6. Duplication rule (explicit)
 - If the **same visual + interaction** (or the same Figma component) already exists or will appear on **more than one screen**, **extract it once** under `lib/shared/widgets/` (or extend an existing shared widget) **in the same change** unless the user explicitly asks for a one-off.
 - Do **not** copy-paste map chrome, headers, chips, sliders, or buttons into a new screen when an equivalent already exists in the repo—search, then reuse or generalize with parameters.
+
+## 7. Google Map (mandatory)
+- **Never** embed the raw `GoogleMap` widget from `google_maps_flutter` in feature screens or feature-local widgets.
+- **Always** use **`AppGoogleMap`** from `lib/shared/widgets/app_google_map.dart` (or import the barrel **`lib/shared/widgets/map_widgets.dart`** for `AppGoogleMap` + map chrome + **`AppMapService`** in one place).
+- **Projection / defaults:** use **`AppMapService`** (`lib/core/services/app_map_service.dart`) for helpers like `screenOffsetFor`; do not duplicate `getScreenCoordinate` error handling in features.
+- If a new map capability is needed app-wide (e.g. extra `GoogleMap` parameters), **extend `AppGoogleMap` in `lib/shared/widgets/`** in the same change — do not add a second map wrapper in a feature folder.

@@ -4,15 +4,16 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/driver_location_socker_response.dart';
 
-import '../../../../core/constants/app_assets.dart';
+import '../../../../core/data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
+import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../widgets/cancel_ride_dialogs.dart';
 
-/// SCR-10 — finding driver: map + nearby drivers socket (same events as vehicle selection)
-/// + ride room for `ride:status_update` / `ride:driver_location`.
+/// SCR-10 — finding driver: search UI only; on assignment navigates to [AppRoutes.driverAccepted].
 class FindingDriverController extends GetxController {
   FindingDriverController({required this.rideRepository});
 
@@ -24,12 +25,9 @@ class FindingDriverController extends GetxController {
 
   late final String rideId;
   late final LatLng pickupLatLng;
+  late final LatLng destinationLatLng;
   late final String pickupAddress;
   late final String destinationAddress;
-
-  final driverMarkerPoints = <LatLng>[].obs;
-  final myLocation = const LatLng(-6.7927, 39.2092).obs;
-  final Rxn<LatLng> assignedDriverLocation = Rxn<LatLng>();
 
   final remainingSeconds = searchTimeoutSeconds.obs;
   final ridePhase = 'searching'.obs;
@@ -55,15 +53,15 @@ class FindingDriverController extends GetxController {
   Timer? _countdownTimer;
   Timer? _mockDriverAssignTimer;
   StreamSubscription<bool>? _connectionSub;
-  StreamSubscription<Map<String, dynamic>>? _rideStatusSub;
-  StreamSubscription<Map<String, dynamic>>? _driverLocSub;
+  StreamSubscription<EventRiderStatusUpdateResponse>? _rideStatusSub;
+  StreamSubscription<DriverLocationSocketResponse>? _driverLocSub;
+
+  bool _didNavigateToAccepted = false;
 
   @override
   void onInit() {
     super.onInit();
     _parseArgs();
-    _seedMockMapData();
-    _loadMarkerIcons();
     _startCountdown();
     _initRideRoomSocket();
   }
@@ -87,36 +85,12 @@ class FindingDriverController extends GetxController {
     rideId = (args['rideId'] as String?)?.trim() ?? '';
     final plat = (args['pickupLat'] as num?)?.toDouble() ?? -6.7924;
     final plng = (args['pickupLng'] as num?)?.toDouble() ?? 39.2083;
+    final dlat = (args['destinationLat'] as num?)?.toDouble() ?? (plat - 0.018);
+    final dlng = (args['destinationLng'] as num?)?.toDouble() ?? (plng + 0.014);
     pickupLatLng = LatLng(plat, plng);
+    destinationLatLng = LatLng(dlat, dlng);
     pickupAddress = (args['pickupAddress'] as String?)?.trim() ?? '';
     destinationAddress = (args['destinationAddress'] as String?)?.trim() ?? '';
-  }
-
-  void _seedMockMapData() {
-    driverMarkerPoints.assignAll([
-      const LatLng(-6.7915, 39.2078),
-      const LatLng(-6.7939, 39.2107),
-      const LatLng(-6.7948, 39.2069),
-    ]);
-  }
-
-  Future<void> _loadMarkerIcons() async {
-    try {
-      nearBikeMarkerIcon.value = await BitmapDescriptor.asset(
-        const ImageConfiguration(size: Size(34, 34)),
-        AppAssets.boda,
-      );
-      nearCarMarkerIcon.value = await BitmapDescriptor.asset(
-        const ImageConfiguration(size: Size(36, 36)),
-        AppAssets.gari,
-      );
-      assignedDriverMarkerIcon.value = await BitmapDescriptor.asset(
-        const ImageConfiguration(size: Size(36, 36)),
-        AppAssets.gariPlus,
-      );
-    } catch (_) {
-      // Keep marker fallbacks from screen if custom assets fail.
-    }
   }
 
   void _startCountdown() {
@@ -130,14 +104,32 @@ class FindingDriverController extends GetxController {
 
   void _scheduleMockDriverAssigned() {
     _mockDriverAssignTimer?.cancel();
-    _mockDriverAssignTimer = Timer(const Duration(seconds: 6), () {
-      setMockPhase('driver_assigned');
-    });
+    _mockDriverAssignTimer = Timer(
+      const Duration(seconds: 6),
+      _navigateToDriverAccepted,
+    );
+  }
+
+  void _navigateToDriverAccepted() {
+    if (_didNavigateToAccepted) return;
+    _didNavigateToAccepted = true;
+    _mockDriverAssignTimer?.cancel();
+    Get.offNamed(
+      AppRoutes.driverAccepted,
+      arguments: {
+        'rideId': rideId,
+        'pickupLat': pickupLatLng.latitude,
+        'pickupLng': pickupLatLng.longitude,
+        'pickupAddress': pickupAddress,
+        'destinationLat': destinationLatLng.latitude,
+        'destinationLng': destinationLatLng.longitude,
+        'destinationAddress': destinationAddress,
+      },
+    );
   }
 
   Future<void> _initRideRoomSocket() async {
     if (rideId.isEmpty) {
-      // Keep visual flow working when screen is opened without a backend ride id.
       _scheduleMockDriverAssigned();
       return;
     }
@@ -152,21 +144,20 @@ class FindingDriverController extends GetxController {
     });
 
     _rideStatusSub = _socketService.rideStatusStream.listen((payload) {
-      final status = (payload['status'] ?? '').toString().toLowerCase();
+      final status = (payload.status ?? '').toString().toLowerCase();
       if (status.isEmpty) return;
       if (status == 'driver_assigned' || status == 'accepted') {
-        ridePhase.value = 'driver_assigned';
+        _navigateToDriverAccepted();
       } else if (status == 'cancelled' || status == 'completed') {
         Get.offAllNamed(AppRoutes.home);
       }
     });
 
     _driverLocSub = _socketService.rideDriverLocationStream.listen((payload) {
-      final lat = (payload['lat'] as num?)?.toDouble();
-      final lng = (payload['lng'] as num?)?.toDouble();
+      final lat = payload.latitude;
+      final lng = payload.longitude;
       if (lat == null || lng == null) return;
-      assignedDriverLocation.value = LatLng(lat, lng);
-      ridePhase.value = 'driver_assigned';
+      _navigateToDriverAccepted();
     });
 
     await _socketService.connect();
@@ -175,37 +166,58 @@ class FindingDriverController extends GetxController {
     }
   }
 
-  void setMockPhase(String phase) {
-    if (phase == 'driver_assigned') {
-      assignedDriverLocation.value = const LatLng(-6.7921, 39.2101);
-      ridePhase.value = 'driver_assigned';
-      return;
-    }
-    assignedDriverLocation.value = null;
-    ridePhase.value = 'searching';
+  /// Debug: jump to SCR-11 without waiting for socket (only in debug builds).
+  void debugSkipToDriverAccepted() {
+    assert(kDebugMode);
+    _navigateToDriverAccepted();
   }
 
   void onMapCreated(GoogleMapController c) {
     mapController = c;
-    c.animateCamera(CameraUpdate.newLatLngZoom(pickupLatLng, 15));
+    _fitRouteBounds();
+  }
+
+  void openProfile() {
+    Get.to(() => ProfileScreen());
   }
 
   void recenterMap() {
-    final focus = assignedDriverLocation.value ?? pickupLatLng;
-    mapController?.animateCamera(CameraUpdate.newLatLngZoom(focus, 15));
+    _fitRouteBounds();
   }
 
-  /// Minutes label for UI (Figma-style "N minutes remain").
+  Future<void> _fitRouteBounds() async {
+    final ctrl = mapController;
+    if (ctrl == null) return;
+    final p = pickupLatLng;
+    final d = destinationLatLng;
+
+    final minLat = p.latitude < d.latitude ? p.latitude : d.latitude;
+    final maxLat = p.latitude > d.latitude ? p.latitude : d.latitude;
+    final minLng = p.longitude < d.longitude ? p.longitude : d.longitude;
+    final maxLng = p.longitude > d.longitude ? p.longitude : d.longitude;
+
+    await ctrl.animateCamera(
+      CameraUpdate.newLatLngBounds(
+        LatLngBounds(
+          southwest: LatLng(minLat - 0.006, minLng - 0.006),
+          northeast: LatLng(maxLat + 0.006, maxLng + 0.006),
+        ),
+        56,
+      ),
+    );
+  }
+
   int get remainingWholeMinutes =>
       (remainingSeconds.value / 60).ceil().clamp(0, searchTimeoutSeconds ~/ 60);
 
   Future<void> confirmCancelRide() async {
     // 1. Initial Confirmation
-    final bool isAssigned = ridePhase.value == 'driver_assigned';
+    // final bool isAssigned = ridePhase.value == 'driver_assigned';
     final dynamic confirmResult = await Get.dialog(
-      isAssigned
+      /*isAssigned
           ? const CancelAssignmentWarningDialog()
-          : const CancelConfirmationDialog(),
+          : const */
+      CancelConfirmationDialog(),
       barrierDismissible: false,
     );
 

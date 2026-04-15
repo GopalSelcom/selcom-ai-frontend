@@ -1,6 +1,6 @@
 {
   "name": "Selcom Rides Assistant",
-  "description": "Project-specific AI assistant for Selcom Rides Flutter development.",
+  "description": "Project-specific AI assistant for Selcom Rides Flutter development. Brain docs and agent prompts live under .agent/ (see .agent/README.md); Cursor rules reference the same paths.",
   "skills": [
     {
       "name": "task_manager",

@@ -5,12 +5,15 @@ alwaysApply: true
 
 # Brain Frontend Rules
 
-Apply these rules for all work in this repository, using the brain docs as canonical guidance:
-- `/Users/gopal/StudioProjects/selcom-go-ai-agent/context/shared/RULES.md`
-- `/Users/gopal/StudioProjects/selcom-go-ai-agent/agents/frontend/AGENT.md`
-- `/Users/gopal/StudioProjects/selcom-go-ai-agent/context/shared/ARCHITECTURE.md`
-- `/Users/gopal/StudioProjects/selcom-go-ai-agent/context/backend/API_CONTRACT.md`
-- `/Users/gopal/StudioProjects/selcom-go-ai-agent/context/shared/ERROR_CATALOG.md`
+Apply these rules for all work in this repository, using **`.agent/`** (symlinks into `selcom-go-ai-agent`) as canonical guidance — **not** ad-hoc paths:
+
+- `.agent/context/shared/RULES.md`
+- `.agent/agents/frontend/AGENT.md`
+- `.agent/context/shared/ARCHITECTURE.md`
+- `.agent/context/backend/API_CONTRACT.md`
+- `.agent/context/shared/ERROR_CATALOG.md`
+
+See `.agent/README.md` for the full layout. If `.agent/agents` or `.agent/context` are missing, fix symlinks or clone/sync the shared agent repo before implementing API/architecture-sensitive work.
 
 ## Required Task Flow
 
