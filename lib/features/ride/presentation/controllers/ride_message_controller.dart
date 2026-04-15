@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../../core/data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
@@ -45,7 +46,7 @@ class RideMessageController extends GetxController {
 
   StreamSubscription<RideChatMessage>? _chatSub;
   StreamSubscription<bool>? _connectionSub;
-  StreamSubscription<Map<String, dynamic>>? _rideStatusSub;
+  StreamSubscription<EventRiderStatusUpdateResponse>? _rideStatusSub;
 
   /// **TODO(static → API):** Set to `false` when chat history + send are fully driven by API/socket.
   /// While `true`, seeded [staticSeedMessages] are shown and socket send is skipped (UI-only).
@@ -177,7 +178,7 @@ class RideMessageController extends GetxController {
 
     // 4. Listen for status updates to enable/disable chat
     _rideStatusSub = socket.rideStatusStream.listen((payload) {
-      final statusStr = (payload['status'] ?? '').toString().toLowerCase();
+      final statusStr = (payload.status ?? '').toString().toLowerCase();
       if (statusStr.isNotEmpty) {
         rideStatus.value = RideStatus.values.firstWhere(
           (e) => e.name == _toCamelCase(statusStr),
