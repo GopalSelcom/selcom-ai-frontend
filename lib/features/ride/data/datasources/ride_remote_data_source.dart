@@ -9,13 +9,22 @@ abstract class RideRemoteDataSource {
   Future<List<RideModel>> getRideHistory({int page = 1, int limit = 10});
   Future<RideModel> getRideDetails(String rideId);
   Future<bool> cancelRide(String rideId, String reason);
-  Future<bool> updateDestination(String rideId, Map<String, dynamic> destination);
+  Future<bool> updateDestination(
+    String rideId,
+    Map<String, dynamic> destination,
+  );
   Future<bool> updatePickup(String rideId, Map<String, dynamic> pickup);
   Future<bool> increaseFare(String rideId, int newFare);
   Future<ReceiptModel> getReceipt(String rideId);
   Future<bool> rateDriver(String rideId, int rating, String comment);
   Future<bool> submitFeedback(String rideId, String category, String message);
   Future<String> validateRidePayment(ValidateRidePaymentRequest request);
+  Future<Map<String, dynamic>> getChatMessages(
+    String rideId, {
+    int page = 1,
+    int limit = 50,
+  });
+  Future<bool> sendChatMessage(String rideId, String message);
 }
 
 class RideRemoteDataSourceImpl implements RideRemoteDataSource {
@@ -82,7 +91,10 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   }
 
   @override
-  Future<bool> updateDestination(String rideId, Map<String, dynamic> destination) async {
+  Future<bool> updateDestination(
+    String rideId,
+    Map<String, dynamic> destination,
+  ) async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: "${URLS.ride.base}/$rideId/update-destination",
@@ -145,7 +157,11 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   }
 
   @override
-  Future<bool> submitFeedback(String rideId, String category, String message) async {
+  Future<bool> submitFeedback(
+    String rideId,
+    String category,
+    String message,
+  ) async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: "${URLS.ride.base}/$rideId/feedback",
@@ -170,5 +186,37 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       return response.data['data']?['validation_id'] ?? '';
     }
     throw Exception('Payment validation failed');
+  }
+
+  @override
+  Future<Map<String, dynamic>> getChatMessages(
+    String rideId, {
+    int page = 1,
+    int limit = 50,
+  }) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: "${URLS.ride.base}/$rideId/messages",
+        method: ApiMethod.get,
+        queryParams: {'page': page, 'limit': limit},
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      return response.data['data'] ?? {};
+    }
+    return {};
+  }
+
+  @override
+  Future<bool> sendChatMessage(String rideId, String message) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: "${URLS.ride.base}/$rideId/messages",
+        method: ApiMethod.post,
+        body: {'message': message},
+      ),
+    );
+    return response.statusCode == 200;
   }
 }

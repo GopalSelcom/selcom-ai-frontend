@@ -318,67 +318,85 @@ class RideMessageScreen extends GetView<RideMessageController> {
   }
 
   Widget _composer() {
-    return Container(
-      padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 16.h),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.black.withOpacity(0.06))),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF9FAFB),
-                borderRadius: BorderRadius.circular(32.r),
-                border: Border.all(color: const Color(0xFFE5E7EB)),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.sentiment_satisfied_alt_outlined,
-                    color: Colors.grey[400],
-                    size: 24,
-                  ),
-                  SizedBox(width: 8.w),
-                  Expanded(
-                    child: TextField(
-                      controller: controller.messageController,
-                      style: AppTextStyles.body.copyWith(
-                        color: AppColors.shade1,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: 'Write a message...',
-                        hintStyle: TextStyle(color: Colors.grey[400]),
-                        border: InputBorder.none,
-                      ),
+    return Obx(() {
+      final bool allowed = controller.canChat;
+      return Container(
+        padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 16.h),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border(
+            top: BorderSide(color: Colors.black.withOpacity(0.06)),
+          ),
+        ),
+        child: Opacity(
+          opacity: allowed ? 1.0 : 0.5,
+          child: AbsorbPointer(
+            absorbing: !allowed,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF9FAFB),
+                      borderRadius: BorderRadius.circular(32.r),
+                      border: Border.all(color: const Color(0xFFE5E7EB)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.sentiment_satisfied_alt_outlined,
+                          color: Colors.grey[400],
+                          size: 24,
+                        ),
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: TextField(
+                            controller: controller.messageController,
+                            enabled: allowed,
+                            style: AppTextStyles.body.copyWith(
+                              color: AppColors.shade1,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: allowed
+                                  ? 'Write a message...'
+                                  : 'Chat unavailable',
+                              hintStyle: TextStyle(color: Colors.grey[400]),
+                              border: InputBorder.none,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          Icons.attach_file,
+                          color: Colors.grey[400],
+                          size: 24,
+                        ),
+                      ],
                     ),
                   ),
-                  Icon(Icons.attach_file, color: Colors.grey[400], size: 24),
-                ],
-              ),
+                ),
+                SizedBox(width: 12.w),
+                Container(
+                  width: 48.w,
+                  height: 48.w,
+                  decoration: BoxDecoration(
+                    color: allowed ? AppColors.primary : Colors.grey[300],
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    onPressed: controller.sendCurrentMessage,
+                    icon: const Icon(
+                      Icons.send_rounded,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          SizedBox(width: 12.w),
-          Container(
-            width: 48.w,
-            height: 48.w,
-            decoration: const BoxDecoration(
-              color: AppColors.primary,
-              shape: BoxShape.circle,
-            ),
-            child: IconButton(
-              onPressed: controller.sendCurrentMessage,
-              icon: const Icon(
-                Icons.send_rounded,
-                color: Colors.white,
-                size: 24,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+        ),
+      );
+    });
   }
 }

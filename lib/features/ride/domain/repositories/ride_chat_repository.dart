@@ -9,7 +9,12 @@ abstract class RideChatRepository {
 
   void stopListening();
 
-  void sendMessage({required String rideId, required String text});
+  Future<bool> sendMessage({required String rideId, required String text});
+
+  Future<List<RideChatMessage>> getHistory({
+    required String rideId,
+    int page = 1,
+  });
 
   void joinRideRoom({required String rideId});
 }

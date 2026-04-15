@@ -34,6 +34,7 @@ class FindingDriverController extends GetxController {
   final remainingSeconds = searchTimeoutSeconds.obs;
   final ridePhase = 'searching'.obs;
   final driverName = 'John Doe'.obs;
+  final driverPhone = '+255 700 000 000'.obs;
   final driverRating = '4'.obs;
   final driverVehicle = 'Volkswagen'.obs;
   final driverPlate = 'HG5045'.obs;
@@ -277,7 +278,8 @@ class FindingDriverController extends GetxController {
       AppRoutes.rideMessage,
       arguments: <String, dynamic>{
         'rideId': rideId,
-        'driverName': 'John Anthany deo',
+        'driverName': driverName.value,
+        'driverPhone': driverPhone.value, // Added driverPhone
       },
     );
   }
