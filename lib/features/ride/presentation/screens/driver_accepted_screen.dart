@@ -9,7 +9,9 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
+import '../../../../shared/widgets/app_primary_button.dart';
 import '../controllers/driver_accepted_controller.dart';
+import '../widgets/ride_common_widgets.dart';
 
 /// SCR-11 — Driver accepted (heading to pickup). See `.agent/context/frontend/SCREENS.md`.
 class DriverAcceptedScreen extends StatelessWidget {
@@ -171,7 +173,7 @@ class DriverAcceptedScreen extends StatelessWidget {
   Widget _bottomSheet(DriverAcceptedController c, ScrollController scrollController) {
     return ListView(
       controller: scrollController,
-      padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 12.h),
+      padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 16.h),
       children: [
         Center(
           child: Container(
@@ -191,210 +193,215 @@ class DriverAcceptedScreen extends StatelessWidget {
               child: const Center(child: CircularProgressIndicator()),
             );
           }
-          return Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.access_time, size: 22.sp, color: Colors.black87),
-                  SizedBox(width: 6.w),
-                  Expanded(
-                    child: Text(
-                      c.arrivalLabel.value,
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.homeCaption.copyWith(
-                        fontSize: 15.sp,
-                        color: const Color(0xFF364B63),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 2.h),
-              Text(
-                'Driver is heading to your location',
-                style: AppTextStyles.homeTitle.copyWith(
-                  fontSize: 20.sp,
-                  color: const Color(0xFF132235),
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: -0.4,
-                ),
-              ),
-              SizedBox(height: 17.h),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'OTP',
-                    style: AppTextStyles.homeCaption.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF364B63),
-                    ),
-                  ),
-                  SizedBox(width: 8.w),
-                  ...c.otpDigits.map(
-                    (d) => Container(
-                      margin: EdgeInsets.only(right: 4.w),
-                      width: 28.w,
-                      height: 28.w,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF8F9FD),
-                        borderRadius: BorderRadius.circular(14.r),
-                        border: Border.all(color: const Color(0xFFE6E9EE), width: .8),
-                      ),
-                      child: Text(
-                        d,
-                        style: AppTextStyles.homeCaption.copyWith(
-                          color: Colors.black,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 17.h),
-              Container(
-                width: 221.w,
-                padding: EdgeInsets.symmetric(vertical: 8.h),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFD9A800),
-                  borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(
-                    color: const Color(0xFFE6E9EE),
-                    width: 0.787,
-                  ),
-                ),
-                child: Obx(
-                  () => Column(
-                    children: [
-                      SizedBox(
-                        width: 221.w,
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Padding(
-                            padding: EdgeInsets.only(left: 12.w, top: 4.h),
-                            child: SvgPictureAsset(
-                              AppAssets.icTanzaniaFlag,
-                              width: 26.w,
-                              height: 17.h,
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (c.plateLinePrimary.value.isNotEmpty)
-                        Text(
-                          c.plateLinePrimary.value,
-                          style: AppTextStyles.homeTitle.copyWith(
-                            fontSize: 48.sp,
-                            height: 1,
-                            letterSpacing: 9.6,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF131D0B),
-                          ),
-                        ),
-                      if (c.plateLineSecondary.value.isNotEmpty)
-                        Text(
-                          c.plateLineSecondary.value,
-                          style: AppTextStyles.homeTitle.copyWith(
-                            fontSize: 48.sp,
-                            height: 1,
-                            letterSpacing: 9.6,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF131D0B),
-                          ),
-                        ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        c.vehicleSubtitle.value,
-                        style: AppTextStyles.homeCaption.copyWith(
-                          fontSize: 15.sp,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(height: 17.h),
-              const Divider(color: Color(0xFFE6E9EE), height: 1),
-              SizedBox(height: 17.h),
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 24.r,
-                    backgroundColor: const Color(0xFFD3DDE7),
-                    child: Obx(
-                      () {
-                        final name = c.driverName.value;
-                        final initial = name.isEmpty
-                            ? '?'
-                            : String.fromCharCode(name.runes.first);
-                        return Text(
-                          initial,
-                          style: AppTextStyles.homeTitle.copyWith(
-                            color: AppColors.shade1,
-                            fontSize: 20.sp,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: Obx(
-                      () => Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  c.driverName.value,
-                                  style: AppTextStyles.homeTitle.copyWith(
-                                    color: const Color(0xFF132235),
-                                    fontSize: 20.sp,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 6.w),
-                              const Icon(Icons.star, color: Color(0xFFF4C542), size: 16),
-                              SizedBox(width: 2.w),
-                              Text(
-                                c.driverRating.value,
-                                style: AppTextStyles.homeCaption.copyWith(
-                                  color: const Color(0xFF585858),
-                                ),
-                              ),
-                            ],
-                          ),
-                          Text(
-                            c.driverVehicleLine.value,
-                            style: AppTextStyles.homeCaption.copyWith(
-                              color: const Color(0xFF585858),
-                              fontSize: 15.sp,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  _roundAction(icon: Icons.call, onTap: c.callDriver, badge: '1'),
-                  SizedBox(width: 8.w),
-                  _roundAction(
-                    icon: Icons.message_rounded,
-                    onTap: c.onChatTap,
-                    badge: '1',
-                  ),
-                ],
-              ),
-            ],
-          );
+          if (c.rideBottomSheetState.value == RideBottomSheetState.driverAssigned) {
+            return _driverAssignedSheet(c);
+          }
+          return _rideProgressSheet(c);
         }),
+      ],
+    );
+  }
+
+  Widget _driverAssignedSheet(DriverAcceptedController c) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.access_time, size: 22.sp, color: Colors.black87),
+            SizedBox(width: 6.w),
+            Expanded(
+              child: Text(
+                c.arrivalLabel.value,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.homeCaption.copyWith(
+                  fontSize: 15.sp,
+                  color: const Color(0xFF364B63),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 2.h),
+        Text(
+          'Driver is heading to your location',
+          style: AppTextStyles.homeTitle.copyWith(
+            fontSize: 20.sp,
+            color: const Color(0xFF132235),
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.4,
+          ),
+        ),
+        SizedBox(height: 17.h),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'OTP',
+              style: AppTextStyles.homeCaption.copyWith(
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF364B63),
+              ),
+            ),
+            SizedBox(width: 8.w),
+            ...c.otpDigits.map(
+              (d) => Container(
+                margin: EdgeInsets.only(right: 4.w),
+                width: 28.w,
+                height: 28.w,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8F9FD),
+                  borderRadius: BorderRadius.circular(14.r),
+                  border: Border.all(color: const Color(0xFFE6E9EE), width: .8),
+                ),
+                child: Text(
+                  d,
+                  style: AppTextStyles.homeCaption.copyWith(
+                    color: Colors.black,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 17.h),
+        Container(
+          width: 221.w,
+          padding: EdgeInsets.symmetric(vertical: 8.h),
+          decoration: BoxDecoration(
+            color: const Color(0xFFD9A800),
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(
+              color: const Color(0xFFE6E9EE),
+              width: 0.787,
+            ),
+          ),
+          child: Obx(
+            () => Column(
+              children: [
+                SizedBox(
+                  width: 221.w,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding: EdgeInsets.only(left: 12.w, top: 4.h),
+                      child: SvgPictureAsset(
+                        AppAssets.icTanzaniaFlag,
+                        width: 26.w,
+                        height: 17.h,
+                      ),
+                    ),
+                  ),
+                ),
+                if (c.plateLinePrimary.value.isNotEmpty)
+                  Text(
+                    c.plateLinePrimary.value,
+                    style: AppTextStyles.homeTitle.copyWith(
+                      fontSize: 48.sp,
+                      height: 1,
+                      letterSpacing: 9.6,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF131D0B),
+                    ),
+                  ),
+                if (c.plateLineSecondary.value.isNotEmpty)
+                  Text(
+                    c.plateLineSecondary.value,
+                    style: AppTextStyles.homeTitle.copyWith(
+                      fontSize: 48.sp,
+                      height: 1,
+                      letterSpacing: 9.6,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF131D0B),
+                    ),
+                  ),
+                SizedBox(height: 4.h),
+                Text(
+                  c.vehicleSubtitle.value,
+                  style: AppTextStyles.homeCaption.copyWith(
+                    fontSize: 15.sp,
+                    color: Colors.black,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        SizedBox(height: 17.h),
+        const Divider(color: Color(0xFFE6E9EE), height: 1),
+        SizedBox(height: 17.h),
+        Row(
+          children: [
+            CircleAvatar(
+              radius: 24.r,
+              backgroundColor: const Color(0xFFD3DDE7),
+              child: Obx(
+                () {
+                  final name = c.driverName.value;
+                  final initial = name.isEmpty ? '?' : String.fromCharCode(name.runes.first);
+                  return Text(
+                    initial,
+                    style: AppTextStyles.homeTitle.copyWith(
+                      color: AppColors.shade1,
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  );
+                },
+              ),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Obx(
+                () => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            c.driverName.value,
+                            style: AppTextStyles.homeTitle.copyWith(
+                              color: const Color(0xFF132235),
+                              fontSize: 20.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 6.w),
+                        const Icon(Icons.star, color: Color(0xFFF4C542), size: 16),
+                        SizedBox(width: 2.w),
+                        Text(
+                          c.driverRating.value,
+                          style: AppTextStyles.homeCaption.copyWith(
+                            color: const Color(0xFF585858),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      c.driverVehicleLine.value,
+                      style: AppTextStyles.homeCaption.copyWith(
+                        color: const Color(0xFF585858),
+                        fontSize: 15.sp,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            _roundAction(icon: Icons.call, onTap: c.callDriver, badge: '1'),
+            SizedBox(width: 8.w),
+            _roundAction(
+              icon: Icons.message_rounded,
+              onTap: c.onChatTap,
+              badge: '1',
+            ),
+          ],
+        ),
         SizedBox(height: 16.h),
         SizedBox(
           width: double.infinity,
@@ -417,6 +424,259 @@ class DriverAcceptedScreen extends StatelessWidget {
             ),
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _rideProgressSheet(DriverAcceptedController c) {
+    final isCompleted =
+        c.rideBottomSheetState.value == RideBottomSheetState.rideCompleted;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          isCompleted ? 'You have arrived!' : 'Ride Started',
+          textAlign: TextAlign.center,
+          style: AppTextStyles.homeTitle.copyWith(
+            fontSize: 38.sp / 2,
+            color: const Color(0xFF132235),
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        SizedBox(height: 14.h),
+        const Divider(color: Color(0xFFE6E9EE), height: 1),
+        SizedBox(height: 16.h),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    c.rideVehicleLabel,
+                    style: AppTextStyles.homeTitle.copyWith(
+                      fontSize: 36.sp / 2,
+                      color: const Color(0xFF132235),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  SizedBox(height: 2.h),
+                  Text(
+                    isCompleted
+                        ? c.arrivalDateLabel
+                        : 'Arrived in ${c.etaLabel.value.toLowerCase()}',
+                    style: AppTextStyles.homeCaption.copyWith(
+                      fontSize: 15.sp,
+                      color: const Color(0xFF364B63),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Image.asset(
+              AppAssets.imgBoda,
+              height: 52.h,
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => Icon(
+                Icons.two_wheeler,
+                size: 40.w,
+                color: const Color(0xFF364B63),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 16.h),
+        Container(
+          padding: EdgeInsets.all(14.w),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8F9FD),
+            border: Border.all(color: const Color(0xFFE6E9EE), width: 0.8),
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          child: Column(
+            children: [
+              RideLocationsTimeline(
+                startLocation: c.pickupTitle,
+                startAddress: c.pickupAddress,
+                endLocation: c.destinationTitle,
+                endAddress: c.destinationAddress,
+              ),
+              if (!isCompleted) ...[
+                SizedBox(height: 6.h),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Change Drop Location',
+                    style: AppTextStyles.homeCaption.copyWith(
+                      color: AppColors.primary,
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        SizedBox(height: 12.h),
+        Container(
+          padding: EdgeInsets.all(14.w),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8F9FD),
+            border: Border.all(color: const Color(0xFFE6E9EE), width: 0.8),
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    'Total Fare',
+                    style: AppTextStyles.homeTitle.copyWith(
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF132235),
+                    ),
+                  ),
+                  const Spacer(),
+                  if (isCompleted)
+                    Text(
+                      c.totalAmountLabel,
+                      style: AppTextStyles.homeTitle.copyWith(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF132235),
+                      ),
+                    ),
+                ],
+              ),
+              SizedBox(height: 10.h),
+              FareBreakdownRow(title: 'Ride Charge', amount: c.rideChargeLabel),
+              SizedBox(height: 8.h),
+              FareBreakdownRow(
+                title: 'Booking Fees & Convenience Charges',
+                amount: c.bookingFeeLabel,
+              ),
+              if (!isCompleted) ...[
+                SizedBox(height: 8.h),
+                FareBreakdownRow(
+                  title: 'Payment mode',
+                  amount: c.paymentModeLabel,
+                ),
+              ],
+              SizedBox(height: 8.h),
+              FareBreakdownRow(
+                title: 'Total Amount',
+                amount: c.totalAmountLabel,
+                isTotal: true,
+              ),
+            ],
+          ),
+        ),
+        if (isCompleted) ...[
+          SizedBox(height: 12.h),
+          Container(
+            padding: EdgeInsets.all(14.w),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8F9FD),
+              border: Border.all(color: const Color(0xFFE6E9EE), width: 0.8),
+              borderRadius: BorderRadius.circular(16.r),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'How was your ride?',
+                  style: AppTextStyles.homeTitle.copyWith(
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF132235),
+                  ),
+                ),
+                SizedBox(height: 10.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: List.generate(5, (index) {
+                    final star = index + 1;
+                    return GestureDetector(
+                      onTap: () => c.setRideRating(star),
+                      child: Icon(
+                        Icons.star,
+                        color: star <= c.selectedRideRating.value
+                            ? const Color(0xFFFFCC00)
+                            : const Color(0xFFD9DDE3),
+                        size: 34.w,
+                      ),
+                    );
+                  }),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 14.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.headset_mic_outlined,
+                color: const Color(0xFF364B63),
+                size: 18.sp,
+              ),
+              SizedBox(width: 6.w),
+              Text(
+                'Need Help?',
+                style: AppTextStyles.homeCaption.copyWith(
+                  color: const Color(0xFF364B63),
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              SizedBox(width: 20.w),
+              Icon(
+                Icons.download_rounded,
+                color: const Color(0xFF364B63),
+                size: 18.sp,
+              ),
+              SizedBox(width: 6.w),
+              Text(
+                'Download Slip',
+                style: AppTextStyles.homeCaption.copyWith(
+                  color: const Color(0xFF364B63),
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+          AppPrimaryButton(label: 'Finish', onPressed: c.finishCompletedRide),
+        ] else ...[
+          SizedBox(height: 16.h),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                side: const BorderSide(color: AppColors.primary, width: 1.2),
+                padding: EdgeInsets.symmetric(vertical: 16.h),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16.r),
+                ),
+              ),
+              onPressed: c.confirmCancelRide,
+              child: Text(
+                'Cancel Ride',
+                style: TextStyle(
+                  fontSize: 17.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }
