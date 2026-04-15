@@ -9,6 +9,9 @@ import '../controllers/ride_message_controller.dart';
 class RideMessageBinding extends Bindings {
   @override
   void dependencies() {
+    if (!Get.isRegistered<AppSocketService>()) {
+      Get.lazyPut<AppSocketService>(() => AppSocketService(), fenix: true);
+    }
     Get.lazyPut<RideChatSocketDataSource>(
       () => RideChatSocketDataSource(socket: Get.find<AppSocketService>()),
       fenix: true,

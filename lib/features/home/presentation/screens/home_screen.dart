@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:selcom_rides_frontend/shared/widgets/map_widgets.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../ride/data/models/ride_management_models.dart';
@@ -16,6 +17,7 @@ import '../../../../core/data/models/responses/get_saved_places_response.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
+  static const double _homeSheetInitialSize = 0.45;
 
   HomeController get controller => Get.find<HomeController>();
 
@@ -28,20 +30,19 @@ class HomeScreen extends StatelessWidget {
           // 1. Map Layer (Static Image from Figma)
           Positioned.fill(
             child: Obx(
-              () => GoogleMap(
+              () => AppGoogleMap(
                 initialCameraPosition: CameraPosition(
                   target: controller.mapCenter.value,
                   zoom: 16,
                 ),
+                // Keep map focal content above the draggable sheet peek area.
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).size.height * _homeSheetInitialSize,
+                ),
                 myLocationEnabled: controller.hasLocationPermission.value,
-                myLocationButtonEnabled: false,
-                zoomControlsEnabled: false,
-                compassEnabled: false,
-                mapToolbarEnabled: false,
                 circles: controller.nearbyPickupRadiusCircles,
                 markers: controller.selectedPickupMarkers,
                 onMapCreated: controller.onMapCreated,
-                padding: EdgeInsets.only(bottom: 245.h),
                 onCameraMove: controller.onCameraMove,
                 onCameraIdle: controller.onCameraIdle,
               ),
@@ -63,7 +64,7 @@ class HomeScreen extends StatelessWidget {
 
           // 3. Floating Action Buttons (GPS)
           Positioned(
-            bottom: 370.h, // Adjusted based on initial bottom sheet height
+            bottom: (MediaQuery.of(context).size.height * _homeSheetInitialSize) + 20.h,
             right: 20.w,
             child: AppMapGpsButton(onPressed: () => controller.recenterMap()),
           ),
@@ -271,8 +272,8 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildFigmaDraggableSheet() {
     return DraggableScrollableSheet(
-      initialChildSize: 0.45,
-      minChildSize: 0.45,
+      initialChildSize: _homeSheetInitialSize,
+      minChildSize: _homeSheetInitialSize,
       maxChildSize: 0.9,
       builder: (context, scrollController) {
         return Container(

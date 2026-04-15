@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 
+import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../home/data/datasources/home_remote_data_source.dart';
 import '../../../home/data/repositories/home_repository_impl.dart';
 import '../../../home/domain/repositories/home_repository.dart';
@@ -14,6 +15,9 @@ import '../controllers/vehicle_selection_controller.dart';
 class VehicleSelectionBinding extends Bindings {
   @override
   void dependencies() {
+    if (!Get.isRegistered<AppSocketService>()) {
+      Get.lazyPut<AppSocketService>(() => AppSocketService(), fenix: true);
+    }
     if (!Get.isRegistered<HomeRepository>()) {
       Get.lazyPut<HomeRemoteDataSource>(() => HomeRemoteDataSourceImpl());
       Get.lazyPut<HomeRepository>(() => HomeRepositoryImpl(remoteDataSource: Get.find()));

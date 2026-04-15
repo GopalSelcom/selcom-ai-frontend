@@ -19,6 +19,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 
 class HomeController extends GetxController {
+  static const String _currentLocationPlaceId = '__current_location__';
+
   final HomeRepository homeRepository;
   final RideRepository rideRepository;
   final ProfileRepository profileRepository;
@@ -90,10 +92,11 @@ class HomeController extends GetxController {
     );
   }
 
-  void recenterMap() {
-    if (_mapController == null) return;
-    final target = deviceGpsLocation.value ?? mapCenter.value;
-    _mapController!.animateCamera(CameraUpdate.newLatLngZoom(target, 16));
+  Future<void> recenterMap() async {
+    // GPS tap should switch header pickup to current location.
+    selectedPickupSavedPlaceId.value = _currentLocationPlaceId;
+    isSavedPlacesExpanded.value = false;
+    await _getCurrentLocation();
   }
 
   /// 200 m radius around [deviceGpsLocation] (true GPS), not map drag position.
@@ -495,17 +498,28 @@ class HomeController extends GetxController {
   }
 
   void _syncSelectedPickupAfterSavedPlacesLoad() {
-    if (savedPlaces.isEmpty) {
+    if (savedPlaces.isEmpty &&
+        selectedPickupSavedPlaceId.value != _currentLocationPlaceId) {
       selectedPickupSavedPlaceId.value = null;
       return;
     }
     final current = selectedPickupSavedPlaceId.value;
+    if (current == _currentLocationPlaceId) return;
     final stillValid =
         current != null && savedPlaces.any((p) => p.id == current);
     if (!stillValid) {
       selectedPickupSavedPlaceId.value = savedPlaces.first.id;
     }
   }
+
+  SavedPlace get currentLocationHeaderPlace => SavedPlace(
+    id: _currentLocationPlaceId,
+    label: 'Current location',
+    name: 'Current location',
+    address: currentMapAddress.value,
+    lat: mapCenter.value.latitude,
+    lng: mapCenter.value.longitude,
+  );
 
   LatLng? _latLngFromSavedPlace(SavedPlace p) {
     if (p.lat != null && p.lng != null) return LatLng(p.lat!, p.lng!);
@@ -515,6 +529,7 @@ class HomeController extends GetxController {
   }
 
   SavedPlace? get activePickupSavedPlace {
+    if (selectedPickupSavedPlaceId.value == _currentLocationPlaceId) return null;
     if (savedPlaces.isEmpty) return null;
     final id = selectedPickupSavedPlaceId.value;
     if (id != null) {
@@ -544,6 +559,12 @@ class HomeController extends GetxController {
   }
 
   Future<void> selectSavedPlaceAsPickup(SavedPlace place) async {
+    if (place.id == _currentLocationPlaceId) {
+      selectedPickupSavedPlaceId.value = _currentLocationPlaceId;
+      isSavedPlacesExpanded.value = false;
+      await _getCurrentLocation();
+      return;
+    }
     selectedPickupSavedPlaceId.value = place.id;
     isSavedPlacesExpanded.value = false;
 
@@ -601,12 +622,18 @@ class HomeController extends GetxController {
 
   /// Collapsed: active pickup only; expanded: all saved places (tap one to set pickup).
   List<SavedPlace> get addressHeaderPlacesToShow {
-    if (savedPlaces.isEmpty) return const [];
+    final current = currentLocationHeaderPlace;
     final active = activePickupSavedPlace;
-    if (active == null) return const [];
-    return isSavedPlacesExpanded.value
-        ? savedPlaces.toList()
-        : <SavedPlace>[active];
+    if (isSavedPlacesExpanded.value) {
+      return <SavedPlace>[current, ...savedPlaces];
+    }
+    if (selectedPickupSavedPlaceId.value == _currentLocationPlaceId) {
+      return <SavedPlace>[current];
+    }
+    if (active != null) {
+      return <SavedPlace>[active];
+    }
+    return <SavedPlace>[current];
   }
 
   void toggleAddressHeaderExpansion() {

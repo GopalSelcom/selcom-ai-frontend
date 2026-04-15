@@ -5,6 +5,16 @@ description: Selcom-specific Flutter coding standards and Rule 18/19 implementat
 
 # 🚀 Flutter Development Guidelines
 
+## 0. Shared brain (`.agent/`)
+
+Canonical rules and API docs for this app are **not** only in `.cursor/rules/` — they resolve through **`.agent/`** (symlinks to `selcom-go-ai-agent`). Before large changes, align with:
+
+- `.agent/context/shared/RULES.md`
+- `.agent/context/backend/API_CONTRACT.md`
+- `.agent/agents/frontend/AGENT.md`
+
+See `.agent/README.md` in the repo root’s `.agent` folder.
+
 ## 1. FVM Enforcement (Rule 18)
 All Flutter commands must be prefixed with `fvm`.
 ```bash

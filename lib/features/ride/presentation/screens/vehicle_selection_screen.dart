@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:selcom_rides_frontend/shared/widgets/map_widgets.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
@@ -21,6 +22,7 @@ class VehicleSelectionScreen extends StatefulWidget {
 
 class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
     with TickerProviderStateMixin {
+  static const double _sheetHeightFactor = 0.58;
   // late AnimationController _polylineAnim;
   // late AnimationController _pulseAnim;
 
@@ -100,7 +102,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
             left: 0,
             right: 0,
             bottom: 0,
-            height: 0.58.sh,
+            height: _sheetHeightFactor.sh,
             child: _bottomSheet(c),
           ),
         ],
@@ -149,9 +151,12 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
         ),
       );
 
-      return GoogleMap(
-        key: const ValueKey('vehicle_selection_map'),
+      return AppGoogleMap(
+        mapWidgetKey: const ValueKey('vehicle_selection_map'),
         initialCameraPosition: CameraPosition(target: mid, zoom: 13.5),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).size.height * _sheetHeightFactor,
+        ),
         onMapCreated: c.onMapCreated,
         polylines: {
           Polyline(
@@ -162,9 +167,6 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
           ),
         },
         markers: markers,
-        myLocationButtonEnabled: false,
-        zoomControlsEnabled: false,
-        mapToolbarEnabled: false,
       );
 
       // return AnimatedBuilder(
