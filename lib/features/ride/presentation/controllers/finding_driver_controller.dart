@@ -21,8 +21,8 @@ class FindingDriverController extends GetxController {
   final RideRepository rideRepository;
   final AppSocketService _socketService = AppSocketService();
 
-  /// Total search window (product: 10 minutes).
-  static const int searchTimeoutSeconds = 600;
+  /// Total search window (product: 9 minutes).
+  static const int searchTimeoutSeconds = 540;
 
   late final String rideId;
   late final LatLng pickupLatLng;
@@ -113,7 +113,7 @@ class FindingDriverController extends GetxController {
     // Show a small loader or snackbar to inform user
     Get.snackbar(
       'Search Timeout',
-      'No drivers found within 10 minutes. Cancelling ride...',
+      'No drivers found within 9 minutes. Cancelling ride...',
       backgroundColor: Colors.black87,
       colorText: Colors.white,
       duration: const Duration(seconds: 3),
