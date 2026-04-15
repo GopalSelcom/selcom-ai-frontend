@@ -23,19 +23,25 @@ class HomeBinding extends Bindings {
 
     // Home Data
     Get.lazyPut<HomeRemoteDataSource>(() => HomeRemoteDataSourceImpl());
-    Get.lazyPut<HomeRepository>(() => HomeRepositoryImpl(remoteDataSource: Get.find()));
+    Get.lazyPut<HomeRepository>(
+      () => HomeRepositoryImpl(remoteDataSource: Get.find()),
+    );
 
     // Ride Data (Needed for recent destinations on Home Screen)
     Get.lazyPut<RideRemoteDataSource>(() => RideRemoteDataSourceImpl());
-    Get.lazyPut<RideRepository>(() => RideRepositoryImpl(remoteDataSource: Get.find()));
+    Get.lazyPut<RideRepository>(
+      () => RideRepositoryImpl(remoteDataSource: Get.find()),
+    );
 
     // Profile Data (Needed for saved addresses on Home Screen)
     Get.lazyPut<ProfileRemoteDataSource>(() => ProfileRemoteDataSourceImpl());
-    Get.lazyPut<ProfileRepository>(() => ProfileRepositoryImpl(remoteDataSource: Get.find()));
+    Get.lazyPut<ProfileRepository>(
+      () => ProfileRepositoryImpl(remoteDataSource: Get.find()),
+    );
 
     // Controller
-    Get.lazyPut<HomeController>(
-      () => HomeController(
+    Get.put<HomeController>(
+      HomeController(
         homeRepository: Get.find(),
         rideRepository: Get.find(),
         profileRepository: Get.find(),

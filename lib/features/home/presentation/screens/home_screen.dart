@@ -15,11 +15,9 @@ import '../../../../shared/widgets/app_map_gps_button.dart';
 import '../../../../shared/widgets/app_map_top_header.dart';
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends GetView<HomeController> {
   const HomeScreen({super.key});
   static const double _homeSheetInitialSize = 0.45;
-
-  HomeController get controller => Get.find<HomeController>();
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +35,9 @@ class HomeScreen extends StatelessWidget {
                 ),
                 // Keep map focal content above the draggable sheet peek area.
                 padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).size.height * _homeSheetInitialSize,
+                  bottom:
+                      MediaQuery.of(context).size.height *
+                      _homeSheetInitialSize,
                 ),
                 myLocationEnabled: controller.hasLocationPermission.value,
                 circles: controller.nearbyPickupRadiusCircles,
@@ -64,7 +64,9 @@ class HomeScreen extends StatelessWidget {
 
           // 3. Floating Action Buttons (GPS)
           Positioned(
-            bottom: (MediaQuery.of(context).size.height * _homeSheetInitialSize) + 20.h,
+            bottom:
+                (MediaQuery.of(context).size.height * _homeSheetInitialSize) +
+                20.h,
             right: 20.w,
             child: AppMapGpsButton(onPressed: () => controller.recenterMap()),
           ),

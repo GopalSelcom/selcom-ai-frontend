@@ -212,7 +212,7 @@ class FindingDriverScreen extends StatelessWidget {
           final carSize = 64.w;
           final maxTravel = (trackW - carSize).clamp(0.0, double.infinity);
           final carLeft = t * maxTravel;
-          final fillW = (trackW * t).clamp(0.0, trackW);
+          final fillW = (carLeft + carSize / 2).clamp(0.0, trackW);
 
           return Container(
             height: 52.h,
@@ -242,31 +242,35 @@ class FindingDriverScreen extends StatelessWidget {
                           ).createShader(bounds);
                         },
                         blendMode: BlendMode.dstIn,
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.chevron_right,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                            Icon(
-                              Icons.chevron_right,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                            Icon(
-                              Icons.chevron_right,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                            Icon(
-                              Icons.chevron_right,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                          ],
+                        child: const SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          physics: NeverScrollableScrollPhysics(),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.chevron_right,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                              Icon(
+                                Icons.chevron_right,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                              Icon(
+                                Icons.chevron_right,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                              Icon(
+                                Icons.chevron_right,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
