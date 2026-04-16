@@ -182,12 +182,22 @@ class RideRatingController extends GetxController {
       return;
     }
 
-    await analyticsService.logEvent(
-      'ride_rating_skipped',
-      parameters: {'ride_id': ride.rideId},
-    );
-    _resetSheetState(clearPendingRide: false);
-    closeBottomSheet();
+    isSubmitting.value = true;
+    final result = await skipRideRatingUseCase(rideId: ride.rideId);
+    isSubmitting.value = false;
+
+    result.fold((failure) => _handleFailure(failure), (ok) async {
+      if (!ok) {
+        Get.snackbar('Skip failed', 'Unable to skip rating now.');
+        return;
+      }
+      await analyticsService.logEvent(
+        'ride_rating_skipped',
+        parameters: {'ride_id': ride.rideId},
+      );
+      _resetSheetState(clearPendingRide: true);
+      closeBottomSheet();
+    });
   }
 
   void closeBottomSheet() {

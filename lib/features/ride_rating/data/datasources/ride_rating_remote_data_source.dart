@@ -124,28 +124,27 @@ class RideRatingRemoteDataSourceImpl implements RideRatingRemoteDataSource {
   Future<bool> skipRideRating({
     required String rideId,
   }) async {
-    // TODO(api): enable when skip-rating endpoint is confirmed and ready.
-    // POST /v4/go/rides/{{rideId}}/skip-rating
-    // final response = await ApiService().call(
-    //   request: ApiRequest(
-    //     endpoint: URLS.ride.skipRideRating(rideId),
-    //     method: ApiMethod.post,
-    //   ),
-    // );
-    // if (response.statusCode == 200) {
-    //   return true;
-    // }
-    // final data = response.data;
-    // final message = data is Map<String, dynamic>
-    //     ? (data['message']?.toString() ??
-    //           data['error']?.toString() ??
-    //           data['error_message']?.toString() ??
-    //           'Unable to skip rating.')
-    //     : 'Unable to skip rating.';
-    // throw Exception(message);
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.ride.skipRideRating(rideId),
+        method: ApiMethod.put,
+        errorPresentationType: ErrorPresentationType.none,
+      ),
+    );
 
-    await Future<void>.delayed(const Duration(milliseconds: 250));
-    return true;
+    if (response.statusCode == 200) {
+      return true;
+    }
+
+    final errorCode = _errorCodeFromResponse(response);
+    final message = _errorMessageFromResponse(
+      response,
+      'Unable to skip rating.',
+    );
+    if (errorCode.isNotEmpty) {
+      throw Exception('$errorCode|$message');
+    }
+    throw Exception(message);
   }
 
   String _errorCodeFromResponse(dynamic response) {

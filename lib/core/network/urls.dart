@@ -44,7 +44,7 @@ class _RideEndpoints {
   final reviewTags = "go/review-tags";
   String cancelRide(String rideId) => "$base/$rideId/cancel";
   String rateRide(String rideId) => "$base/$rideId/rate";
-  String skipRideRating(String rideId) => "$base/$rideId/skip-rating";
+  String skipRideRating(String rideId) => "$base/$rideId/skip-review";
   final base =
       "go/rides"; // Use for /{{id}}, /{{id}}/cancel, /{{id}}/rate, etc.
 }
