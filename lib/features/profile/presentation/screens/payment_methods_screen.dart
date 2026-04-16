@@ -118,12 +118,14 @@ class PaymentMethodsScreen extends StatelessWidget {
                       ),
                     ),
                   ],
-                  const Spacer(),
-                  Icon(
-                    Iconsax.arrow_right_3,
-                    size: 20.w,
-                    color: AppColors.shade2.withOpacity(0.5),
-                  ),
+                  if (isLinked) ...[
+                    const Spacer(),
+                    Icon(
+                      Iconsax.arrow_right_3,
+                      size: 20.w,
+                      color: AppColors.shade2.withOpacity(0.5),
+                    ),
+                  ],
                 ],
               ),
               SizedBox(height: 8.h),
