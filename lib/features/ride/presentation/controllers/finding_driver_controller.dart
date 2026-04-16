@@ -39,7 +39,7 @@ class FindingDriverController extends GetxController {
       Rxn<BitmapDescriptor>();
   final Rxn<BitmapDescriptor> pickupIcon = Rxn<BitmapDescriptor>();
   final Rxn<BitmapDescriptor> dropIcon = Rxn<BitmapDescriptor>();
-  final routeTarget = 'pick_up'.obs;
+  final routeTarget = ''.obs;
   final activeRoutePoints = <LatLng>[].obs;
 
   final currentStatusLabel = 'Finding Your Driver'.obs;
@@ -131,7 +131,6 @@ class FindingDriverController extends GetxController {
     destinationLatLng = LatLng(dlat, dlng);
     pickupAddress = (args['pickupAddress'] as String?)?.trim() ?? '';
     destinationAddress = (args['destinationAddress'] as String?)?.trim() ?? '';
-    _setPickupRouteFallback();
   }
 
   void _setPickupRouteFallback() {
@@ -139,7 +138,7 @@ class FindingDriverController extends GetxController {
     if (driver != null) {
       activeRoutePoints.assignAll([driver, pickupLatLng]);
     } else {
-      activeRoutePoints.assignAll([pickupLatLng, destinationLatLng]);
+      activeRoutePoints.clear();
     }
     routeTarget.value = 'pick_up';
   }
@@ -148,6 +147,15 @@ class FindingDriverController extends GetxController {
     activeRoutePoints.assignAll([pickupLatLng, destinationLatLng]);
     routeTarget.value = 'drop_off';
   }
+
+  bool get shouldShowPickupRoute => routeTarget.value == 'pick_up';
+
+  bool get shouldShowDropRoute => routeTarget.value == 'drop_off';
+
+  bool get shouldShowDestinationMarker => shouldShowDropRoute;
+
+  bool get shouldShowDriverMarker =>
+      assignedDriverLocation.value != null && shouldShowPickupRoute;
 
   void _startCountdown() {
     remainingSeconds.value = searchTimeoutSeconds;
@@ -296,7 +304,7 @@ class FindingDriverController extends GetxController {
       final lng = payload.longitude;
       if (lat == null || lng == null) return;
       assignedDriverLocation.value = LatLng(lat, lng);
-      if (routeTarget.value == 'pick_up') {
+      if (shouldShowPickupRoute) {
         _setPickupRouteFallback();
       }
       _fitRouteBounds();
@@ -338,9 +346,10 @@ class FindingDriverController extends GetxController {
     if (ctrl == null) return;
     final points = <LatLng>[
       pickupLatLng,
-      destinationLatLng,
+      if (shouldShowDropRoute) destinationLatLng,
       ...activeRoutePoints,
-      if (assignedDriverLocation.value != null) assignedDriverLocation.value!,
+      if (shouldShowPickupRoute && assignedDriverLocation.value != null)
+        assignedDriverLocation.value!,
     ];
 
     var minLat = points.first.latitude;

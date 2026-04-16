@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import '../../../../core/data/models/responses/rides/active_ride_response.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../datasources/ride_remote_data_source.dart';
@@ -12,7 +13,7 @@ class RideRepositoryImpl implements RideRepository {
   RideRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Either<Failure, RideModel?>> getActiveRide() async {
+  Future<Either<Failure, ActiveRideResponseModel?>> getActiveRide() async {
     try {
       final result = await remoteDataSource.getActiveRide();
       return Right(result);

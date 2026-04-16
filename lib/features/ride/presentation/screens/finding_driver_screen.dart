@@ -83,7 +83,8 @@ class FindingDriverScreen extends StatelessWidget {
       final destination = c.destinationLatLng;
       final driver = c.assignedDriverLocation.value;
       final routePoints = c.activeRoutePoints.toList();
-      final isPickupRoute = c.routeTarget.value == 'pick_up';
+      final isPickupRoute = c.shouldShowPickupRoute;
+      final isDropRoute = c.shouldShowDropRoute;
       final markers = <Marker>{};
 
       // Pickup Marker
@@ -99,7 +100,7 @@ class FindingDriverScreen extends StatelessWidget {
       }
 
       // Drop/Destination Marker
-      if (c.dropIcon.value != null) {
+      if (c.dropIcon.value != null && c.shouldShowDestinationMarker) {
         markers.add(
           Marker(
             markerId: const MarkerId('destination'),
@@ -111,18 +112,27 @@ class FindingDriverScreen extends StatelessWidget {
       }
 
       // Driver Marker
-      if (driver != null) {
+      if (driver != null && c.shouldShowDriverMarker) {
         markers.add(
           Marker(
             markerId: const MarkerId('assigned_driver'),
             position: driver,
-            icon: c.assignedDriverMarkerIcon.value ??
-                BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+            icon:
+                c.assignedDriverMarkerIcon.value ??
+                BitmapDescriptor.defaultMarkerWithHue(
+                  BitmapDescriptor.hueGreen,
+                ),
             anchor: const Offset(0.5, 0.5),
             flat: true,
           ),
         );
       }
+      final polylinePoints = routePoints.isNotEmpty
+          ? routePoints
+          : (isPickupRoute && driver != null
+                ? [driver, pickup]
+                : (isDropRoute ? [pickup, destination] : <LatLng>[]));
+
       return AppGoogleMap(
         mapWidgetKey: const ValueKey('finding_driver_map'),
         initialCameraPosition: CameraPosition(target: pickup, zoom: 15),
@@ -131,18 +141,16 @@ class FindingDriverScreen extends StatelessWidget {
         ),
         onMapCreated: c.onMapCreated,
         markers: markers,
-        polylines: {
-          Polyline(
-            polylineId: const PolylineId('active_route'),
-            points: routePoints.isNotEmpty
-                ? routePoints
-                : (isPickupRoute && driver != null
-                    ? [driver, pickup]
-                    : [pickup, destination]),
-            color: const Color(0xFF3073E8),
-            width: 4,
-          ),
-        },
+        polylines: polylinePoints.isEmpty
+            ? <Polyline>{}
+            : {
+                Polyline(
+                  polylineId: const PolylineId('active_route'),
+                  points: polylinePoints,
+                  color: const Color(0xFF3073E8),
+                  width: 4,
+                ),
+              },
         circles: isPickupRoute
             ? {
                 Circle(
@@ -178,26 +186,30 @@ class FindingDriverScreen extends StatelessWidget {
           ),
         ),
         SizedBox(height: 20.h),
-        Obx(() => Text(
-              c.currentStatusLabel.value,
-              textAlign: TextAlign.center,
-              style: AppTextStyles.homeTitle.copyWith(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF132235),
-                letterSpacing: -0.4,
-              ),
-            )),
+        Obx(
+          () => Text(
+            c.currentStatusLabel.value,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.homeTitle.copyWith(
+              fontSize: 20.sp,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF132235),
+              letterSpacing: -0.4,
+            ),
+          ),
+        ),
         SizedBox(height: 8.h),
-        Obx(() => Text(
-              c.currentDescriptionLabel.value,
-              textAlign: TextAlign.center,
-              style: AppTextStyles.homeCaption.copyWith(
-                fontSize: 15.sp,
-                color: const Color(0xFF364B63),
-                height: 1.33,
-              ),
-            )),
+        Obx(
+          () => Text(
+            c.currentDescriptionLabel.value,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.homeCaption.copyWith(
+              fontSize: 15.sp,
+              color: const Color(0xFF364B63),
+              height: 1.33,
+            ),
+          ),
+        ),
         SizedBox(height: 20.h),
         Obx(() {
           if (c.currentStatusLabel.value == 'Finding Your Driver') {

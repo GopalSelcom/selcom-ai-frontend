@@ -1,11 +1,12 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
+import '../../../../core/data/models/responses/rides/active_ride_response.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../data/models/ride_management_models.dart';
 
 abstract class RideRepository {
-  Future<Either<Failure, RideModel?>> getActiveRide();
+  Future<Either<Failure, ActiveRideResponseModel?>> getActiveRide();
   Future<Either<Failure, List<RecentDestinationModel>>> getRecentDestinations();
   Future<Either<Failure, List<RideModel>>> getRideHistory({int page = 1, int limit = 10});
   Future<Either<Failure, RideModel>> getRideDetails(String rideId);

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'dart:async';
 import 'package:get/get.dart';
 import 'package:app_settings/app_settings.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -23,6 +24,8 @@ import '../../../../core/data/models/responses/get_saved_places_response.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/analytics_service.dart';
+import '../../../../core/services/nearby_drivers_socket_service.dart';
+import '../../../../core/data/models/responses/rides/active_ride_response.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 
 class HomeController extends GetxController {
@@ -73,6 +76,9 @@ class HomeController extends GetxController {
   final selectedVehicle = ''.obs;
   final fareEstimate = Rxn<FareEstimateModel>();
   GoogleMapController? _mapController;
+  final AppSocketService _socketService = AppSocketService();
+  bool _didHandleActiveRideFlow = false;
+  StreamSubscription<bool>? _homeSocketConnectionSub;
 
   final pickupMarkerIcon = Rxn<BitmapDescriptor>();
 
@@ -226,8 +232,14 @@ class HomeController extends GetxController {
       });
 
       // Handle Active Ride
-      results[3].fold((_) => null, (ride) {
-        activeRide.value = ride as RideModel?;
+      results[3].fold((_) => null, (response) {
+        final activeRideResponse = response as ActiveRideResponseModel?;
+        final activeRideData = activeRideResponse?.data?.ride;
+        if (activeRideData == null) return;
+
+        final rideModel = RideModel.fromJson(activeRideData.toJson());
+        activeRide.value = rideModel;
+        _connectAndJoinActiveRideRoom(rideModel);
       });
     } finally {
       isLoadingHomeData.value = false;
@@ -237,6 +249,8 @@ class HomeController extends GetxController {
   void openActiveRide() {
     final rideValue = activeRide.value;
     if (rideValue == null) return;
+    final driver = rideValue.driverSnapshot;
+    final vehicle = rideValue.vehicleSnapshot;
 
     Get.toNamed(
       AppRoutes.driverAccepted,
@@ -248,8 +262,69 @@ class HomeController extends GetxController {
         'destinationLat': rideValue.destination.lat,
         'destinationLng': rideValue.destination.lng,
         'destinationAddress': rideValue.destination.address,
+        // Seed SCR-11 with active-ride data while waiting for socket updates.
+        'statusPayload': {
+          'ride_id': rideValue.id,
+          'status': rideValue.status.name,
+          'driver_snapshot': driver == null
+              ? null
+              : {
+                  'name': driver.name,
+                  'phone': driver.phone,
+                  'avatar_url': driver.avatarUrl,
+                  if (driver is DriverSnapshotModel)
+                    'vehicle_color': driver.vehicleColor,
+                  if (driver is DriverSnapshotModel)
+                    'vehicle_model': driver.vehicleModel,
+                  if (driver is DriverSnapshotModel)
+                    'vehicle_registration_number':
+                        driver.vehicleRegistrationNumber,
+                  if (driver is DriverSnapshotModel)
+                    'vehicle_type': driver.vehicleType,
+                  if (driver is DriverSnapshotModel)
+                    'verification_code': driver.verificationCode,
+                },
+          'vehicle_snapshot': vehicle == null
+              ? null
+              : {
+                  'vehicle_type': vehicle.vehicleType,
+                  'vehicle_name': vehicle.vehicleModel,
+                  'display_name': vehicle.vehicleType,
+                },
+        },
       },
     );
+  }
+
+  Future<void> _connectAndJoinActiveRideRoom(RideModel ride) async {
+    if (_didHandleActiveRideFlow) return;
+    _didHandleActiveRideFlow = true;
+
+    final riderId = ride.id.trim();
+    if (riderId.isEmpty) return;
+
+    _homeSocketConnectionSub?.cancel();
+    _homeSocketConnectionSub = _socketService.connectionStream.listen((
+      connected,
+    ) {
+      if (!connected) return;
+      _socketService.joinRideRoom(rideId: riderId);
+      _homeSocketConnectionSub?.cancel();
+      _homeSocketConnectionSub = null;
+    });
+    // await _socketService.connect();
+    // if (_socketService.isConnected) {
+    //   _socketService.joinRideRoom(rideId: riderId);
+    //   _homeSocketConnectionSub?.cancel();
+    //   _homeSocketConnectionSub = null;
+    // }
+  }
+
+  @override
+  void onClose() {
+    _homeSocketConnectionSub?.cancel();
+    _socketService.dispose();
+    super.onClose();
   }
 
   Future<void> _searchPlaces(String input) async {

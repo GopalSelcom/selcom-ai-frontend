@@ -75,6 +75,7 @@ class DriverAcceptedController extends GetxController {
   StreamSubscription<EventRiderStatusUpdateResponse>? _rideStatusSub;
   StreamSubscription<DriverLocationSocketResponse>? _driverLocSub;
   StreamSubscription<TrackingUpdateSocketResponse?>? _trackingSub;
+  bool _didJoinRideRoom = false;
 
   @override
   void onInit() {
@@ -282,7 +283,7 @@ class DriverAcceptedController extends GetxController {
 
     _connectionSub = _socketService.connectionStream.listen((connected) {
       if (!connected) return;
-      _socketService.joinRideRoom(rideId: rideId);
+      _joinRideRoomIfNeeded();
     });
 
     _rideStatusSub = _socketService.rideStatusStream.listen((payload) {
@@ -298,7 +299,9 @@ class DriverAcceptedController extends GetxController {
         rideBottomSheetState.value = RideBottomSheetState.rideCompleted;
         return;
       }
-      if (status == 'ride_started' || status == 'ride_in_progress') {
+      if (status == 'ride_started' ||
+          status == 'ride_in_progress' ||
+          status == 'near_destination') {
         rideBottomSheetState.value = RideBottomSheetState.rideStarted;
         return;
       }
@@ -311,8 +314,7 @@ class DriverAcceptedController extends GetxController {
       if (lat == null || lng == null) return;
       assignedDriverLocation.value = LatLng(lat, lng);
 
-        _setPickupRouteFallback();
-
+      _setPickupRouteFallback();
 
       _fitRouteBounds();
     });
@@ -323,9 +325,15 @@ class DriverAcceptedController extends GetxController {
     });
 
     await _socketService.connect();
-    if (_socketService.isConnected) {
-      _socketService.joinRideRoom(rideId: rideId);
+    _joinRideRoomIfNeeded();
+  }
+
+  void _joinRideRoomIfNeeded() {
+    if (_didJoinRideRoom || !_socketService.isConnected || rideId.isEmpty) {
+      return;
     }
+    _socketService.joinRideRoom(rideId: rideId);
+    _didJoinRideRoom = true;
   }
 
   Future<void> loadDriverIcon({String? vehicleType}) async {
@@ -339,11 +347,15 @@ class DriverAcceptedController extends GetxController {
           asset = AppAssets.imgBajaji;
         }
       }
-      assignedDriverMarkerIcon.value =
-          await MapMarkerUtils.getResizedMarker(asset, 150);
+      assignedDriverMarkerIcon.value = await MapMarkerUtils.getResizedMarker(
+        asset,
+        150,
+      );
     } catch (_) {
-      assignedDriverMarkerIcon.value =
-          await MapMarkerUtils.getResizedMarker(AppAssets.imgBoda, 150);
+      assignedDriverMarkerIcon.value = await MapMarkerUtils.getResizedMarker(
+        AppAssets.imgBoda,
+        150,
+      );
     }
   }
 
@@ -602,7 +614,9 @@ class DriverAcceptedController extends GetxController {
   }
 
   String get pickupTitle => _firstAddressLine(pickupAddress);
+
   String get destinationTitle => _firstAddressLine(destinationAddress);
+
   String get rideVehicleLabel {
     final value = driverVehicleLine.value.trim();
     if (value.isNotEmpty) return value.split('-').first.trim();
@@ -616,9 +630,12 @@ class DriverAcceptedController extends GetxController {
   }
 
   String get rideChargeLabel => 'TZS ${ride.value?.fareEstimate ?? 100}.00';
+
   String get bookingFeeLabel => 'TZS ${ride.value?.fareEstimate ?? 100}.00';
+
   String get totalAmountLabel =>
       'TZS ${ride.value?.finalFare ?? ride.value?.fareEstimate ?? 100}.00';
+
   String get paymentModeLabel {
     final method = ride.value?.paymentMethod.name ?? 'wallet';
     switch (method) {
