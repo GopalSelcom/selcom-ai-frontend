@@ -603,12 +603,17 @@ class DriverAcceptedController extends GetxController {
       Get.snackbar('Call', 'Phone number unavailable');
       return;
     }
-    final uri = Uri.parse('tel:${phone.replaceAll(' ', '')}');
+
+    // Clean string for tel: link
+    final cleanPhone = phone.replaceAll(RegExp(r'[^0-9+]'), '');
+    final uri = Uri(scheme: 'tel', path: cleanPhone);
+
     try {
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri);
       } else {
-        Get.snackbar('Call', 'Unable to open phone dialer');
+        // Fallback: try launch regardless if canLaunch fails on some systems
+        await launchUrl(uri);
       }
     } catch (e) {
       debugPrint("Error launching dialer: $e");
