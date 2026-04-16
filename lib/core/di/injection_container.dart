@@ -7,6 +7,7 @@ import '../../features/notification/presentation/controllers/notification_contro
 import '../../features/ride_rating/data/datasources/ride_rating_remote_data_source.dart';
 import '../../features/ride_rating/data/repositories/ride_rating_repository_impl.dart';
 import '../../features/ride_rating/domain/repositories/ride_rating_repository.dart';
+import '../../features/ride_rating/domain/usecases/get_review_tags_usecase.dart';
 import '../../features/ride_rating/domain/usecases/get_last_completed_ride_usecase.dart';
 import '../../features/ride_rating/domain/usecases/skip_ride_rating_usecase.dart';
 import '../../features/ride_rating/domain/usecases/submit_ride_rating_usecase.dart';
@@ -15,6 +16,7 @@ import '../../features/profile/data/repositories/profile_repository_impl.dart';
 import '../../features/profile/domain/repositories/profile_repository.dart';
 import '../../features/profile/domain/usecases/profile_usecase.dart';
 import '../../features/profile/presentation/controllers/profile_controller.dart';
+import '../services/nearby_drivers_socket_service.dart';
 import '../../features/ride/data/datasources/ride_remote_data_source.dart';
 import '../../features/ride/data/repositories/ride_repository_impl.dart';
 import '../../features/ride/domain/repositories/ride_repository.dart';
@@ -38,6 +40,7 @@ Future<void> init() async {
   // ── Services ──
   sl.registerLazySingleton(() => AnalyticsService());
   sl.registerLazySingleton(() => NotificationService());
+  sl.registerLazySingleton(() => AppSocketService());
 
   // ── External ──
   sl.registerLazySingleton(() => const FlutterSecureStorage());
@@ -108,6 +111,7 @@ Future<void> init() async {
     () => RideRatingRepositoryImpl(remoteDataSource: sl()),
   );
   sl.registerLazySingleton(() => GetLastCompletedRideUseCase(sl()));
+  sl.registerLazySingleton(() => GetReviewTagsUseCase(sl()));
   sl.registerLazySingleton(() => SubmitRideRatingUseCase(sl()));
   sl.registerLazySingleton(() => SkipRideRatingUseCase(sl()));
 }

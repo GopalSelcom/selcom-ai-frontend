@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,6 +18,7 @@ import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/app_map_service.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
@@ -59,6 +62,7 @@ class DriverAcceptedController extends GetxController {
   final otpDigits = <String>[].obs;
   final etaLabel = '10 Mins'.obs;
   final arrivalLabel = 'Driver will arriving in 1 min...'.obs;
+  final unreadCount = 0.obs;
   final rideBottomSheetState = RideBottomSheetState.driverAssigned.obs;
   final selectedRideRating = 4.obs;
 
@@ -75,6 +79,7 @@ class DriverAcceptedController extends GetxController {
   StreamSubscription<EventRiderStatusUpdateResponse>? _rideStatusSub;
   StreamSubscription<DriverLocationSocketResponse>? _driverLocSub;
   StreamSubscription<TrackingUpdateSocketResponse?>? _trackingSub;
+  StreamSubscription<Map<String, dynamic>>? _chatSub;
   bool _didJoinRideRoom = false;
 
   @override
@@ -109,7 +114,7 @@ class DriverAcceptedController extends GetxController {
     _rideStatusSub?.cancel();
     _driverLocSub?.cancel();
     _trackingSub?.cancel();
-    _socketService.dispose();
+    _chatSub?.cancel();
     super.onClose();
   }
 
@@ -306,6 +311,7 @@ class DriverAcceptedController extends GetxController {
         return;
       }
       rideBottomSheetState.value = RideBottomSheetState.driverAssigned;
+      _applyStatusPayload(payload);
     });
 
     _driverLocSub = _socketService.rideDriverLocationStream.listen((payload) {
@@ -313,19 +319,55 @@ class DriverAcceptedController extends GetxController {
       final lng = payload.longitude;
       if (lat == null || lng == null) return;
       assignedDriverLocation.value = LatLng(lat, lng);
-
       _setPickupRouteFallback();
-
       _fitRouteBounds();
     });
 
     _trackingSub = _socketService.trackingUpdateStatusStream.listen((payload) {
-      if (payload == null) return;
-      _applyTrackingPayload(payload);
+      if (payload != null) _applyTrackingPayload(payload);
     });
 
-    await _socketService.connect();
-    _joinRideRoomIfNeeded();
+    if (rideId.isEmpty) return;
+
+    _connectionSub = _socketService.connectionStream.listen((connected) {
+      if (!connected) return;
+      _joinRideRoomIfNeeded();
+    });
+
+    // If already connected, join now
+    if (_socketService.isConnected) {
+      _joinRideRoomIfNeeded();
+    }
+
+    _chatSub = _socketService.chatStream.listen((data) {
+      final payloadRideId =
+          (data['ride_id'] ?? data['rideId'])?.toString().trim() ?? '';
+
+      if (payloadRideId != rideId) return;
+
+      final senderType =
+          (data['sender_type'] ?? data['sender'] ?? data['role'])
+              ?.toString()
+              .toLowerCase() ??
+          '';
+
+      final bool isFromRider =
+          senderType == 'rider' ||
+          senderType == 'user' ||
+          senderType == 'passenger';
+
+      if (!isFromRider && !Get.currentRoute.contains(AppRoutes.rideMessage)) {
+        unreadCount.value++;
+
+        final msg = data['message'] ?? data['text'] ?? 'New message';
+
+        NotificationService().showLocalNotification(
+          title: 'New Message',
+          body: msg.toString(),
+          payload: jsonEncode(data),
+        );
+      }
+    });
   }
 
   void _joinRideRoomIfNeeded() {
@@ -443,7 +485,7 @@ class DriverAcceptedController extends GetxController {
         assignedDriverLocation.value = LatLng(d.lat!, d.lng!);
       }
       loadDriverIcon(vehicleType: d.vehicleType);
-      final otp = (d.verificationCode ?? '').replaceAll(RegExp(r'\s'), '');
+      final otp = (payload.pinCode ?? '').replaceAll(RegExp(r'\s'), '');
       if (otp.isNotEmpty) {
         otpDigits.assignAll(otp.split('').take(4).toList());
       }
@@ -564,12 +606,17 @@ class DriverAcceptedController extends GetxController {
       Get.snackbar('Call', 'Phone number unavailable');
       return;
     }
-    final uri = Uri.parse('tel:${phone.replaceAll(' ', '')}');
+
+    // Clean string for tel: link
+    final cleanPhone = phone.replaceAll(RegExp(r'[^0-9+]'), '');
+    final uri = Uri(scheme: 'tel', path: cleanPhone);
+
     try {
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri);
       } else {
-        Get.snackbar('Call', 'Unable to open phone dialer');
+        // Fallback: try launch regardless if canLaunch fails on some systems
+        await launchUrl(uri);
       }
     } catch (e) {
       debugPrint("Error launching dialer: $e");
@@ -578,6 +625,7 @@ class DriverAcceptedController extends GetxController {
   }
 
   void onChatTap() {
+    unreadCount.value = 0;
     Get.toNamed(
       AppRoutes.rideMessage,
       arguments: {

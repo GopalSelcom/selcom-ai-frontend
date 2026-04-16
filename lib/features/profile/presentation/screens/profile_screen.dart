@@ -340,7 +340,11 @@ class ProfileScreen extends StatelessWidget {
             title: 'My Rides',
             onTap: controller.openMyRides,
           ),
-          MenuItemWidget(icon: Iconsax.card, title: 'Payment', onTap: () {}),
+          MenuItemWidget(
+            icon: Iconsax.card,
+            title: 'Payment',
+            onTap: controller.openPaymentMethods,
+          ),
           MenuItemWidget(
             icon: Iconsax.gift,
             title: 'Promotions',

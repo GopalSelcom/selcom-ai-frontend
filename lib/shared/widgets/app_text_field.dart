@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
@@ -18,6 +19,8 @@ class AppTextField extends StatelessWidget {
   final int? maxLines;
   final int? maxLength;
   final bool showCounter;
+  final List<TextInputFormatter>? inputFormatters;
+  final bool autofocus;
 
   const AppTextField({
     super.key,
@@ -34,6 +37,8 @@ class AppTextField extends StatelessWidget {
     this.maxLines = 1,
     this.maxLength,
     this.showCounter = false,
+    this.inputFormatters,
+    this.autofocus = false,
   });
 
   @override
@@ -53,6 +58,8 @@ class AppTextField extends StatelessWidget {
           enabled: enabled,
           maxLines: maxLines,
           maxLength: maxLength,
+          autofocus: autofocus,
+          inputFormatters: inputFormatters,
           style: AppTextStyles.body,
           decoration: InputDecoration(
             hintText: hintText,

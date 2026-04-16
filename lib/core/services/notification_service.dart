@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:get/get.dart';
+import '../routes/app_routes.dart';
 import 'package:logger/logger.dart';
 
 class NotificationService {
@@ -27,21 +30,36 @@ class NotificationService {
 
     const DarwinInitializationSettings initializationSettingsIOS =
         DarwinInitializationSettings(
-          requestAlertPermission: false,
-          requestBadgePermission: false,
-          requestSoundPermission: false,
+          requestAlertPermission: true,
+          requestBadgePermission: true,
+          requestSoundPermission: true,
+          defaultPresentAlert: true,
+          defaultPresentSound: true,
+          defaultPresentBadge: true,
+          defaultPresentBanner: true,
+          defaultPresentList: true,
         );
 
     const InitializationSettings initializationSettings =
         InitializationSettings(
           android: initializationSettingsAndroid,
           iOS: initializationSettingsIOS,
+          macOS: null,
         );
 
     await _localNotifications.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: _onDidReceiveNotificationResponse,
     );
+
+    // Request permissions for iOS immediately
+    if (Platform.isIOS) {
+      await _localNotifications
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >()
+          ?.requestPermissions(alert: true, badge: true, sound: true);
+    }
 
     // 3. Create Android Notification Channel
     if (Platform.isAndroid) {
@@ -122,7 +140,7 @@ class NotificationService {
     AndroidNotification? android = message.notification?.android;
 
     if (notification != null) {
-      _showLocalNotification(
+      showLocalNotification(
         id: notification.hashCode,
         title: notification.title,
         body: notification.body,
@@ -143,33 +161,88 @@ class NotificationService {
     }
   }
 
-  Future<void> _showLocalNotification({
-    required int id,
+  int _idCounter = 0;
+  Future<void> showLocalNotification({
+    int? id,
     String? title,
     String? body,
     String? payload,
   }) async {
-    await _localNotifications.show(
-      id,
-      title,
-      body,
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'high_importance_channel',
-          'High Importance Notifications',
-          channelDescription:
-              'This channel is used for important notifications.',
-          importance: Importance.max,
-          priority: Priority.high,
-          icon: '@mipmap/ic_launcher',
+    _idCounter++;
+    final finalId = id ?? _idCounter;
+
+    // 1. System Notification (Always triggered for the Notification Drawer/History)
+    try {
+      await _localNotifications.show(
+        finalId,
+        title,
+        body,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'high_importance_channel',
+            'High Importance Notifications',
+            channelDescription:
+                'This channel is used for important notifications.',
+            importance: Importance.max,
+            priority: Priority.high,
+            icon: '@mipmap/ic_launcher',
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+            presentBanner: true,
+            presentList: true,
+          ),
         ),
-        iOS: DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
+        payload: payload,
+      );
+    } catch (e) {
+      debugPrint("Error in _localNotifications.show: $e");
+    }
+
+    // 2. In-App Banner (Guaranteed visibility for foreground)
+    // We use Get.snackbar styled as a native notification
+    if (Get.currentRoute != AppRoutes.rideMessage) {
+      // Add sound and haptic feedback for the in-app banner
+      HapticFeedback.lightImpact();
+      SystemSound.play(SystemSoundType.click);
+
+      Get.snackbar(
+        title ?? 'New Message',
+        body ?? '',
+        backgroundColor: Colors.white,
+        colorText: Colors.black87,
+        snackPosition: SnackPosition.TOP,
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        borderRadius: 12,
+        duration: const Duration(seconds: 4),
+        isDismissible: true,
+        dismissDirection: DismissDirection.vertical,
+        boxShadows: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.12),
+            blurRadius: 15,
+            spreadRadius: 2,
+            offset: const Offset(0, 5),
+          ),
+        ],
+        mainButton: TextButton(
+          onPressed: () {
+            if (payload != null) {
+              // Handle tap logic if needed
+            }
+            Get.back();
+          },
+          child: const Text(
+            'VIEW',
+            style: TextStyle(
+              color: Colors.blueAccent,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
-      ),
-      payload: payload,
-    );
+      );
+    }
   }
 }

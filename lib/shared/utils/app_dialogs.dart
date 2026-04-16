@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/constants/app_assets.dart';
 
 class AppDialogs {
   static bool _isErrorDialogVisible = false;
@@ -306,6 +307,8 @@ class AppDialogs {
     required String message,
     required VoidCallback onOpenSettings,
     VoidCallback? onCancel,
+    IconData icon = Icons.notifications_off,
+    IconData? secondaryIcon,
   }) {
     Get.dialog(
       Dialog(
@@ -345,16 +348,13 @@ class AppDialogs {
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        Icon(
-                          Icons.notifications_active,
-                          size: 48.sp,
-                          color: AppColors.primary.withOpacity(0.1),
-                        ),
-                        Icon(
-                          Icons.notifications_off,
-                          size: 48.sp,
-                          color: AppColors.primary,
-                        ),
+                        if (secondaryIcon != null)
+                          Icon(
+                            secondaryIcon,
+                            size: 48.sp,
+                            color: AppColors.primary.withOpacity(0.1),
+                          ),
+                        Icon(icon, size: 48.sp, color: AppColors.primary),
                       ],
                     ),
                   ),
@@ -441,4 +441,152 @@ class AppDialogs {
       barrierDismissible: true,
     );
   }
+
+  /// Shows a success dialog for verification completion.
+  static void showVerificationSuccessDialog({VoidCallback? onConfirm}) {
+    // ... (omitted for brevity in replacement, but I will include the whole method or just append)
+  }
+
+  /// Shows a PIN locked error dialog.
+  static void showPinLockedDialog({
+    required String message,
+    required int retryAfterSeconds,
+    VoidCallback? onConfirm,
+  }) {
+    final minutes = (retryAfterSeconds / 60).ceil();
+    final timeText = minutes > 1 ? "$minutes minutes" : "1 minute";
+
+    Get.dialog(
+      Dialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        elevation: 20,
+        shadowColor: Colors.black.withOpacity(0.4),
+        insetPadding: EdgeInsets.symmetric(horizontal: 24.w),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(32.r),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              children: [
+                ClipPath(
+                  clipper: SuccessHeaderClipper(),
+                  child: Container(
+                    height: 140.h,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFDECEA),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(32.r),
+                        topRight: Radius.circular(32.r),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 40.h,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Container(
+                      padding: EdgeInsets.all(16.w),
+                      decoration: BoxDecoration(
+                        color: AppColors.error,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.error.withOpacity(0.2),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.lock_rounded,
+                        size: 32.w,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(32.w, 40.h, 32.w, 48.h),
+              child: Column(
+                children: [
+                  Text(
+                    "PIN Locked",
+                    style: AppTextStyles.sectionTitle.copyWith(
+                      fontSize: 22.sp,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 12.h),
+                  Text(
+                    "$message. Please try again in $timeText.",
+                    style: AppTextStyles.body.copyWith(
+                      fontSize: 16.sp,
+                      color: AppColors.shade2,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 32.h),
+                  InkWell(
+                    onTap: () {
+                      Get.back();
+                      if (onConfirm != null) onConfirm();
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(vertical: 16.h),
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(16.r),
+                      ),
+                      child: Center(
+                        child: Text(
+                          "Got it",
+                          style: AppTextStyles.body.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      barrierDismissible: true,
+    );
+  }
+}
+
+class SuccessHeaderClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    Path path = Path();
+    path.lineTo(0, size.height - 25.h);
+    path.quadraticBezierTo(
+      size.width / 2,
+      size.height,
+      size.width,
+      size.height - 25.h,
+    );
+    path.lineTo(size.width, 0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }

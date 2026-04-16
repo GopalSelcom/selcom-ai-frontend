@@ -1,13 +1,19 @@
 import '../models/ride_rating_ride_model.dart';
+import '../models/ride_rating_tag_model.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/urls.dart';
 
 abstract class RideRatingRemoteDataSource {
   Future<RideRatingRideModel?> getLastCompletedRide();
 
+  Future<List<RideRatingTagModel>> getReviewTags({
+    required int rating,
+  });
+
   Future<bool> submitRideRating({
     required String rideId,
     required int rating,
+    required List<String> tags,
     required String comment,
   });
 
@@ -21,32 +27,81 @@ class RideRatingRemoteDataSourceImpl implements RideRatingRemoteDataSource {
 
   @override
   Future<RideRatingRideModel?> getLastCompletedRide() async {
-    // TODO(api): enable once backend endpoint is ready.
-    // GET /v4/go/rides/last-completed
-    // final response = await ApiService().call(
-    //   request: ApiRequest(
-    //     endpoint: 'go/rides/last-completed',
-    //     method: ApiMethod.get,
-    //   ),
-    // );
-    // if (response.statusCode == 200) {
-    //   return RideRatingRideModel.fromJson(response.data['data'] ?? {});
-    // }
-    await Future<void>.delayed(const Duration(milliseconds: 200));
-    return RideRatingRideModel.mock();
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.ride.pendingReview,
+        method: ApiMethod.get,
+        errorPresentationType: ErrorPresentationType.none,
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      final data = response.data;
+      final payload = data is Map<String, dynamic>
+          ? (data['data'] as Map<String, dynamic>?)
+          : null;
+      final pendingReview = payload?['pending_review'];
+      if (pendingReview is Map<String, dynamic>) {
+        return RideRatingRideModel.fromPendingReviewJson(pendingReview);
+      }
+      return null;
+    }
+
+    throw Exception(_errorMessageFromResponse(response, 'Unable to load ride.'));
+  }
+
+  @override
+  Future<List<RideRatingTagModel>> getReviewTags({
+    required int rating,
+  }) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.ride.reviewTags,
+        method: ApiMethod.get,
+        queryParams: {'rating': rating},
+        errorPresentationType: ErrorPresentationType.none,
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      final data = response.data;
+      final payload = data is Map<String, dynamic>
+          ? (data['data'] as Map<String, dynamic>?)
+          : null;
+      final tags = payload?['tags'];
+      if (tags is List) {
+        final parsed = tags
+            .whereType<Map>()
+            .map((item) => RideRatingTagModel.fromJson(item.cast<String, dynamic>()))
+            .toList();
+        parsed.sort((a, b) => a.order.compareTo(b.order));
+        return parsed;
+      }
+      return const <RideRatingTagModel>[];
+    }
+
+    throw Exception(
+      _errorMessageFromResponse(response, 'Unable to load review tags.'),
+    );
   }
 
   @override
   Future<bool> submitRideRating({
     required String rideId,
     required int rating,
+    required List<String> tags,
     required String comment,
   }) async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.ride.rateRide(rideId),
         method: ApiMethod.post,
-        body: {'rating': rating, 'comment': comment},
+        body: {
+          'rating': rating,
+          'tags': tags,
+          if (comment.isNotEmpty) 'comment': comment,
+        },
+        errorPresentationType: ErrorPresentationType.none,
       ),
     );
 
@@ -54,13 +109,14 @@ class RideRatingRemoteDataSourceImpl implements RideRatingRemoteDataSource {
       return true;
     }
 
-    final data = response.data;
-    final message = data is Map<String, dynamic>
-        ? (data['message']?.toString() ??
-              data['error']?.toString() ??
-              data['error_message']?.toString() ??
-              'Unable to submit rating.')
-        : 'Unable to submit rating.';
+    final errorCode = _errorCodeFromResponse(response);
+    final message = _errorMessageFromResponse(
+      response,
+      'Unable to submit rating.',
+    );
+    if (errorCode.isNotEmpty) {
+      throw Exception('$errorCode|$message');
+    }
     throw Exception(message);
   }
 
@@ -68,27 +124,45 @@ class RideRatingRemoteDataSourceImpl implements RideRatingRemoteDataSource {
   Future<bool> skipRideRating({
     required String rideId,
   }) async {
-    // TODO(api): enable when skip-rating endpoint is confirmed and ready.
-    // POST /v4/go/rides/{{rideId}}/skip-rating
-    // final response = await ApiService().call(
-    //   request: ApiRequest(
-    //     endpoint: URLS.ride.skipRideRating(rideId),
-    //     method: ApiMethod.post,
-    //   ),
-    // );
-    // if (response.statusCode == 200) {
-    //   return true;
-    // }
-    // final data = response.data;
-    // final message = data is Map<String, dynamic>
-    //     ? (data['message']?.toString() ??
-    //           data['error']?.toString() ??
-    //           data['error_message']?.toString() ??
-    //           'Unable to skip rating.')
-    //     : 'Unable to skip rating.';
-    // throw Exception(message);
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.ride.skipRideRating(rideId),
+        method: ApiMethod.put,
+        errorPresentationType: ErrorPresentationType.none,
+      ),
+    );
 
-    await Future<void>.delayed(const Duration(milliseconds: 250));
-    return true;
+    if (response.statusCode == 200) {
+      return true;
+    }
+
+    final errorCode = _errorCodeFromResponse(response);
+    final message = _errorMessageFromResponse(
+      response,
+      'Unable to skip rating.',
+    );
+    if (errorCode.isNotEmpty) {
+      throw Exception('$errorCode|$message');
+    }
+    throw Exception(message);
+  }
+
+  String _errorCodeFromResponse(dynamic response) {
+    final data = response.data;
+    if (data is Map<String, dynamic>) {
+      return (data['error_code'] as String?)?.trim() ?? '';
+    }
+    return '';
+  }
+
+  String _errorMessageFromResponse(dynamic response, String fallback) {
+    final data = response.data;
+    if (data is Map<String, dynamic>) {
+      return data['message']?.toString() ??
+          data['error']?.toString() ??
+          data['error_message']?.toString() ??
+          fallback;
+    }
+    return fallback;
   }
 }

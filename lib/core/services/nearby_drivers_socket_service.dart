@@ -35,6 +35,11 @@ class NearbyDriverPoint {
 /// - Ride tracking (`join_ride_room`, `ride:status_update`, `ride:driver_location`)
 /// - Payment status (`join_payment_room`, `payment:status_update`)
 class AppSocketService {
+  static final AppSocketService _instance = AppSocketService._internal();
+  factory AppSocketService() => _instance;
+
+  AppSocketService._internal();
+
   static const String defaultBaseUrl = 'http://82.112.227.6:5010';
 
   // ---------------- EVENTS ----------------
@@ -70,14 +75,12 @@ class AppSocketService {
   final _paymentStatusController =
       StreamController<PaymentStatusUpdateResponse>.broadcast();
   final _trackingUpdateStatusController =
-  StreamController<TrackingUpdateSocketResponse?>.broadcast();
+      StreamController<TrackingUpdateSocketResponse?>.broadcast();
 
   // 💬 Chat controller
   final _chatController = StreamController<Map<String, dynamic>>.broadcast();
 
-  AppSocketService({this.baseUrl = defaultBaseUrl});
-
-  final String baseUrl;
+  String get baseUrl => defaultBaseUrl;
 
   Stream<List<Driver>> get nearbyDriversStream => _driversController.stream;
   Stream<String> get errorStream => _errorController.stream;
@@ -89,7 +92,6 @@ class AppSocketService {
 
   Stream<TrackingUpdateSocketResponse?> get trackingUpdateStatusStream =>
       _trackingUpdateStatusController.stream;
-
 
   Stream<DriverLocationSocketResponse> get rideDriverLocationStream =>
       _rideDriverLocationController.stream;
@@ -168,13 +170,16 @@ class AppSocketService {
 
       if (data != null) _rideStatusController.add(data);
     });
-    _socket!.on(trackingDriverLocation, (payload){
-      print("this is the call back ---driver_location:->${jsonEncode(payload)}");
+    _socket!.on(trackingDriverLocation, (payload) {
+      print(
+        "this is the call back ---driver_location:->${jsonEncode(payload)}",
+      );
       final data = trackingUpdateSocketResponseFromJson(jsonEncode(payload));
-      if(data != null){
-        _trackingUpdateStatusController.add(trackingUpdateSocketResponseFromJson(jsonEncode(payload)));
+      if (data != null) {
+        _trackingUpdateStatusController.add(
+          trackingUpdateSocketResponseFromJson(jsonEncode(payload)),
+        );
       }
-
     });
     _socket!.on(evtRideDriverLocation, (payload) {
       print("this is the evtRideDriverLocation---->${jsonEncode(payload)}");
@@ -268,21 +273,12 @@ class AppSocketService {
 
   void disconnect() {
     _socket?.disconnect();
-    _socket?.dispose();
-    _socket = null;
-    _connectionController.add(false);
   }
 
   void dispose() {
-    disconnect();
-    _driversController.close();
-    _errorController.close();
-    _connectionController.close();
-    _rideStatusController.close();
-    _trackingUpdateStatusController.close();
-    _rideDriverLocationController.close();
-    _paymentStatusController.close();
-    _chatController.close();
+    // For a singleton, we might not want to close streams until the app dies,
+    // but we can provide a method to clear things if needed.
+    // _socket?.dispose();
   }
 
   // ---------------- HELPERS ----------------

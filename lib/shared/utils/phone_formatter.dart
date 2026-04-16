@@ -18,10 +18,11 @@ class TanzaniaPhoneFormatter extends TextInputFormatter {
 
   static String formatString(String number) {
     if (number.isEmpty) return '';
+    final digits = number.replaceAll(' ', '');
     final buffer = StringBuffer();
-    for (int i = 0; i < number.length; i++) {
-      buffer.write(number[i]);
-      if ((i == 2 || i == 5) && i != number.length - 1) {
+    for (int i = 0; i < digits.length; i++) {
+      buffer.write(digits[i]);
+      if ((i == 2 || i == 5) && i != digits.length - 1) {
         buffer.write(' ');
       }
     }
