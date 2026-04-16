@@ -120,15 +120,28 @@ class SelcomPesaOtpBottomSheet extends GetView<PaymentMethodsController> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Obx(
-                  () => Text(
-                    '0:${controller.resendTimer.value.toString().padLeft(2, '0')}',
-                    style: AppTextStyles.body.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
+                Obx(() {
+                  if (controller.resendTimer.value > 0) {
+                    return Text(
+                      '0:${controller.resendTimer.value.toString().padLeft(2, '0')}',
+                      style: AppTextStyles.body.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    );
+                  } else {
+                    return InkWell(
+                      onTap: controller.resendOtp,
+                      child: Text(
+                        'Resend OTP',
+                        style: AppTextStyles.body.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    );
+                  }
+                }),
                 InkWell(
                   onTap: controller.openPhoneInput,
                   child: Text(
