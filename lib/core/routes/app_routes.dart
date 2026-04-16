@@ -23,6 +23,7 @@ import '../../features/profile/presentation/bindings/favorite_locations_binding.
 import '../../features/ride/presentation/bindings/ride_message_binding.dart';
 import '../../features/ride/presentation/screens/ride_message_screen.dart';
 import '../../features/ride/presentation/screens/cancel_dialog_gallery_screen.dart';
+import '../../features/profile/presentation/screens/payment_methods_screen.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -35,6 +36,7 @@ class AppRoutes {
   static const String search = '/search';
   static const String booking = '/booking';
   static const String findingDriver = '/finding-driver';
+
   /// SCR-11 — driver accepted (heading to pickup).
   static const String driverAccepted = '/driver-accepted';
   static const String ride = '/ride';
@@ -45,6 +47,7 @@ class AppRoutes {
   static const String notifications = '/notifications';
   static const String rideMessage = '/ride/message';
   static const String cancelDialogGallery = '/cancel-dialog-gallery';
+  static const String paymentMethods = '/payment-methods';
 
   static List<GetPage> get pages => [
     GetPage(name: splash, page: () => const SplashScreen()),
@@ -102,5 +105,6 @@ class AppRoutes {
       name: cancelDialogGallery,
       page: () => const CancelDialogGalleryScreen(),
     ),
+    GetPage(name: paymentMethods, page: () => const PaymentMethodsScreen()),
   ];
 }

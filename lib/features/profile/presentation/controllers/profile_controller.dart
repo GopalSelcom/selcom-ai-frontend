@@ -169,6 +169,10 @@ class ProfileController extends GetxController {
     Get.to(() => const MyRidesScreen());
   }
 
+  void openPaymentMethods() {
+    Get.toNamed(AppRoutes.paymentMethods);
+  }
+
   void openContactUs() {
     Get.toNamed(AppRoutes.contactUs);
   }
