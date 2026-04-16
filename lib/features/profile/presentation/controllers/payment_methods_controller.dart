@@ -1,4 +1,6 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../widgets/selcom_pesa_connect_bottom_sheet.dart';
 
 class PaymentMethodsController extends GetxController {
   final RxString walletBalance = '43,829'.obs;
@@ -15,8 +17,11 @@ class PaymentMethodsController extends GetxController {
   }
 
   void linkSelcomPesa() {
-    // Placeholder for linking logic
-    Get.snackbar('Selcom Pesa', 'Linking flow will be implemented next.');
+    Get.bottomSheet(
+      const SelcomPesaConnectBottomSheet(),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+    );
   }
 
   void addCard() {
