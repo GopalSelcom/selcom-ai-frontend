@@ -11,11 +11,13 @@ class SubmitRideRatingUseCase {
   Future<Either<Failure, bool>> call({
     required String rideId,
     required int rating,
+    required List<String> tags,
     required String comment,
   }) {
     return repository.submitRideRating(
       rideId: rideId,
       rating: rating,
+      tags: tags,
       comment: comment,
     );
   }

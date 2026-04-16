@@ -40,6 +40,8 @@ class _RideEndpoints {
   final bookRide = "go/rides/book";
   final history = "go/rides/history";
   final recentDestinations = "go/rides/recent-destinations";
+  final pendingReview = "go/rides/pending-review";
+  final reviewTags = "go/review-tags";
   String cancelRide(String rideId) => "$base/$rideId/cancel";
   String rateRide(String rideId) => "$base/$rideId/rate";
   String skipRideRating(String rideId) => "$base/$rideId/skip-rating";

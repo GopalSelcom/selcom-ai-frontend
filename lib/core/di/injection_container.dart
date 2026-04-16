@@ -7,6 +7,7 @@ import '../../features/notification/presentation/controllers/notification_contro
 import '../../features/ride_rating/data/datasources/ride_rating_remote_data_source.dart';
 import '../../features/ride_rating/data/repositories/ride_rating_repository_impl.dart';
 import '../../features/ride_rating/domain/repositories/ride_rating_repository.dart';
+import '../../features/ride_rating/domain/usecases/get_review_tags_usecase.dart';
 import '../../features/ride_rating/domain/usecases/get_last_completed_ride_usecase.dart';
 import '../../features/ride_rating/domain/usecases/skip_ride_rating_usecase.dart';
 import '../../features/ride_rating/domain/usecases/submit_ride_rating_usecase.dart';
@@ -110,6 +111,7 @@ Future<void> init() async {
     () => RideRatingRepositoryImpl(remoteDataSource: sl()),
   );
   sl.registerLazySingleton(() => GetLastCompletedRideUseCase(sl()));
+  sl.registerLazySingleton(() => GetReviewTagsUseCase(sl()));
   sl.registerLazySingleton(() => SubmitRideRatingUseCase(sl()));
   sl.registerLazySingleton(() => SkipRideRatingUseCase(sl()));
 }
