@@ -4,8 +4,9 @@ import 'package:get/get.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
+import '../controllers/payment_methods_controller.dart';
 
-class SelcomPesaConnectBottomSheet extends StatelessWidget {
+class SelcomPesaConnectBottomSheet extends GetView<PaymentMethodsController> {
   const SelcomPesaConnectBottomSheet({super.key});
 
   @override
@@ -67,7 +68,10 @@ class SelcomPesaConnectBottomSheet extends StatelessWidget {
           SizedBox(height: 24.h),
 
           // Continue Button
-          AppPrimaryButton(label: 'Continue', onPressed: () => Get.back()),
+          AppPrimaryButton(
+            label: 'Continue',
+            onPressed: controller.openPhoneInput,
+          ),
           SizedBox(height: 16.h),
         ],
       ),
