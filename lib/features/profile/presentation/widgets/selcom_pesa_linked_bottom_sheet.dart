@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/constants/app_assets.dart';
 import '../controllers/payment_methods_controller.dart';
 
 class SelcomPesaLinkedBottomSheet extends GetView<PaymentMethodsController> {
@@ -51,14 +53,13 @@ class SelcomPesaLinkedBottomSheet extends GetView<PaymentMethodsController> {
           _buildReadOnlyField(label: 'Phone number', value: '+255 711 410 410'),
           SizedBox(height: 24.h),
 
-          // Verified Status
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Iconsax.shield_tick,
-                color: const Color(0xFF2E7D32),
-                size: 24.w,
+              SvgPicture.asset(
+                AppAssets.icAccountVerified,
+                width: 24.w,
+                height: 24.w,
               ),
               SizedBox(width: 12.w),
               Text(
