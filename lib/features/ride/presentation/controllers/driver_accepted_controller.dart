@@ -59,6 +59,7 @@ class DriverAcceptedController extends GetxController {
   final otpDigits = <String>[].obs;
   final etaLabel = '10 Mins'.obs;
   final arrivalLabel = 'Driver will arriving in 1 min...'.obs;
+  final unreadCount = 0.obs;
   final rideBottomSheetState = RideBottomSheetState.driverAssigned.obs;
   final selectedRideRating = 4.obs;
 
@@ -73,6 +74,7 @@ class DriverAcceptedController extends GetxController {
   StreamSubscription<EventRiderStatusUpdateResponse>? _rideStatusSub;
   StreamSubscription<DriverLocationSocketResponse>? _driverLocSub;
   StreamSubscription<TrackingUpdateSocketResponse?>? _trackingSub;
+  StreamSubscription<Map<String, dynamic>>? _chatSub;
 
   @override
   void onInit() {
@@ -95,6 +97,7 @@ class DriverAcceptedController extends GetxController {
     _rideStatusSub?.cancel();
     _driverLocSub?.cancel();
     _trackingSub?.cancel();
+    _chatSub?.cancel();
     _socketService.dispose();
     super.onClose();
   }
@@ -298,8 +301,7 @@ class DriverAcceptedController extends GetxController {
       if (lat == null || lng == null) return;
       assignedDriverLocation.value = LatLng(lat, lng);
 
-        _setPickupRouteFallback();
-
+      _setPickupRouteFallback();
 
       _fitRouteBounds();
     });
@@ -307,6 +309,52 @@ class DriverAcceptedController extends GetxController {
     _trackingSub = _socketService.trackingUpdateStatusStream.listen((payload) {
       if (payload == null) return;
       _applyTrackingPayload(payload);
+    });
+
+    _chatSub = _socketService.chatStream.listen((data) {
+      final payloadRideId =
+          (data['ride_id'] ?? data['rideId'])?.toString().trim() ?? '';
+      debugPrint(
+        "BADGE DEBUG: Received chat event. payloadRideId=$payloadRideId, controller.rideId=$rideId",
+      );
+
+      // If controller rideId is empty, skip but log it
+      if (rideId.isEmpty) {
+        debugPrint(
+          "BADGE DEBUG: Controller rideId is empty, skipping badge increment.",
+        );
+        return;
+      }
+
+      // Log matching result
+      final isIdMatch = payloadRideId == rideId;
+      debugPrint("BADGE DEBUG: isIdMatch=$isIdMatch");
+
+      final senderType =
+          (data['sender_type'] ?? data['sender'] ?? data['role'])
+              ?.toString()
+              .toLowerCase() ??
+          '';
+
+      final bool isFromRider =
+          senderType == 'rider' ||
+          senderType == 'user' ||
+          senderType == 'passenger';
+      final bool isExplicitDriver =
+          senderType.contains('driver') ||
+          senderType.contains('fleet') ||
+          senderType.contains('captain');
+
+      debugPrint(
+        "BADGE DEBUG: senderType=$senderType, isFromRider=$isFromRider, isExplicitDriver=$isExplicitDriver, currentRoute=${Get.currentRoute}",
+      );
+
+      if (!isFromRider && !Get.currentRoute.contains(AppRoutes.rideMessage)) {
+        unreadCount.value++;
+        debugPrint(
+          "BADGE DEBUG: unreadCount incremented to ${unreadCount.value}",
+        );
+      }
     });
 
     await _socketService.connect();
@@ -524,6 +572,7 @@ class DriverAcceptedController extends GetxController {
   }
 
   void onChatTap() {
+    unreadCount.value = 0;
     Get.toNamed(
       AppRoutes.rideMessage,
       arguments: {

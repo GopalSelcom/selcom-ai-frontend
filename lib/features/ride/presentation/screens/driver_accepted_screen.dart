@@ -417,7 +417,15 @@ class DriverAcceptedScreen extends StatelessWidget {
             ),
             _roundAction(icon: Icons.call, onTap: c.callDriver),
             SizedBox(width: 8.w),
-            _roundAction(icon: Icons.message_rounded, onTap: c.onChatTap),
+            Obx(
+              () => _roundAction(
+                icon: Icons.message_rounded,
+                onTap: c.onChatTap,
+                badge: c.unreadCount.value > 0
+                    ? c.unreadCount.value.toString()
+                    : null,
+              ),
+            ),
           ],
         ),
         SizedBox(height: 16.h),
@@ -722,7 +730,7 @@ class DriverAcceptedScreen extends StatelessWidget {
               width: 15.w,
               height: 15.w,
               decoration: const BoxDecoration(
-                color: AppColors.success,
+                color: AppColors.error,
                 shape: BoxShape.circle,
               ),
               alignment: Alignment.center,
