@@ -1,4 +1,4 @@
-package com.selcomgo
+package com.selcom.go
 
 import io.flutter.embedding.android.FlutterActivity
 
