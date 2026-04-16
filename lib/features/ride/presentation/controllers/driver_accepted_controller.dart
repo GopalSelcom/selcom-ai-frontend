@@ -120,14 +120,11 @@ class DriverAcceptedController extends GetxController {
   }
 
   void _parseArgs() {
-    print("BADGE DEBUG: _parseArgs starting");
     final raw = Get.arguments;
-    print("BADGE DEBUG: raw arguments: $raw");
     final args = raw is Map
         ? Map<String, dynamic>.from(raw)
         : <String, dynamic>{};
     rideId = (args['rideId'] as String?)?.trim() ?? '';
-    print("BADGE DEBUG: parsed rideId: $rideId");
     final plat = (args['pickupLat'] as num?)?.toDouble() ?? -6.7924;
     final plng = (args['pickupLng'] as num?)?.toDouble() ?? 39.2083;
     final dlat = (args['destinationLat'] as num?)?.toDouble() ?? (plat - 0.018);
@@ -331,31 +328,18 @@ class DriverAcceptedController extends GetxController {
       _applyTrackingPayload(payload);
     });
 
-    print("BADGE DEBUG: _initRideRoomSocket for rideId=$rideId");
-    if (rideId.isEmpty) {
-      print("BADGE DEBUG: rideId is empty, skipping socket init.");
-      return;
-    }
+    if (rideId.isEmpty) return;
 
     _connectionSub = _socketService.connectionStream.listen((connected) {
-      print("BADGE DEBUG: socket connected status: $connected");
       if (!connected) return;
-      print("BADGE DEBUG: joining ride room: $rideId");
       _socketService.joinRideRoom(rideId: rideId);
     });
 
     _chatSub = _socketService.chatStream.listen((data) {
       final payloadRideId =
           (data['ride_id'] ?? data['rideId'])?.toString().trim() ?? '';
-      print(
-        "BADGE DEBUG: Received chat event. payloadRideId=$payloadRideId, controller.rideId=$rideId",
-      );
 
-      // Log matching result
-      final isIdMatch = payloadRideId == rideId;
-      print("BADGE DEBUG: isIdMatch=$isIdMatch");
-
-      if (!isIdMatch) return;
+      if (payloadRideId != rideId) return;
 
       final senderType =
           (data['sender_type'] ?? data['sender'] ?? data['role'])
@@ -367,18 +351,9 @@ class DriverAcceptedController extends GetxController {
           senderType == 'rider' ||
           senderType == 'user' ||
           senderType == 'passenger';
-      final bool isExplicitDriver =
-          senderType.contains('driver') ||
-          senderType.contains('fleet') ||
-          senderType.contains('captain');
-
-      print(
-        "BADGE DEBUG: senderType=$senderType, isFromRider=$isFromRider, isExplicitDriver=$isExplicitDriver, currentRoute=${Get.currentRoute}",
-      );
 
       if (!isFromRider && !Get.currentRoute.contains(AppRoutes.rideMessage)) {
         unreadCount.value++;
-        print("BADGE DEBUG: unreadCount incremented to ${unreadCount.value}");
 
         final msg = data['message'] ?? data['text'] ?? 'New message';
         Get.snackbar(
