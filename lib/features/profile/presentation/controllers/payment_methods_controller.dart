@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../widgets/selcom_pesa_connect_bottom_sheet.dart';
 import '../widgets/selcom_pesa_phone_input_bottom_sheet.dart';
 import '../widgets/selcom_pesa_otp_bottom_sheet.dart';
+import '../widgets/selcom_pesa_selfie_bottom_sheet.dart';
 
 class PaymentMethodsController extends GetxController {
   final RxString walletBalance = '43,829'.obs;
@@ -106,9 +107,29 @@ class PaymentMethodsController extends GetxController {
       return;
     }
     otpError.value = '';
-    // Placeholder for completion logic
-    Get.back(); // Close OTP sheet
-    Get.snackbar('Selcom Pesa', 'Account linked successfully!');
+    openSelfieVerification();
+  }
+
+  void openSelfieVerification() {
+    if (Get.isBottomSheetOpen ?? false) {
+      Get.back();
+    }
+    Get.bottomSheet(
+      const SelcomPesaSelfieBottomSheet(),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+    );
+  }
+
+  void takeSelfie() {
+    // Placeholder for selfie capture logic
+    Get.back(); // Close selfie sheet
+    Get.snackbar('Selcom Pesa', 'Selfie captured. Verifying...');
+
+    // Simulate verification delay
+    Future.delayed(const Duration(seconds: 2), () {
+      Get.snackbar('Selcom Pesa', 'Account linked successfully!');
+    });
   }
 
   void addCard() {
