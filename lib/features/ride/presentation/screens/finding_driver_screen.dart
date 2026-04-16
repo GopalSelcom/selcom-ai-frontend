@@ -85,6 +85,32 @@ class FindingDriverScreen extends StatelessWidget {
       final routePoints = c.activeRoutePoints.toList();
       final isPickupRoute = c.routeTarget.value == 'pick_up';
       final markers = <Marker>{};
+
+      // Pickup Marker
+      if (c.pickupIcon.value != null) {
+        markers.add(
+          Marker(
+            markerId: const MarkerId('pickup'),
+            position: pickup,
+            icon: c.pickupIcon.value!,
+            anchor: const Offset(0.5, 0.5),
+          ),
+        );
+      }
+
+      // Drop/Destination Marker
+      if (c.dropIcon.value != null) {
+        markers.add(
+          Marker(
+            markerId: const MarkerId('destination'),
+            position: destination,
+            icon: c.dropIcon.value!,
+            anchor: const Offset(0.5, 0.5),
+          ),
+        );
+      }
+
+      // Driver Marker
       if (driver != null) {
         markers.add(
           Marker(
@@ -152,28 +178,33 @@ class FindingDriverScreen extends StatelessWidget {
           ),
         ),
         SizedBox(height: 20.h),
-        Text(
-          'Finding Your Driver',
-          textAlign: TextAlign.center,
-          style: AppTextStyles.homeTitle.copyWith(
-            fontSize: 20.sp,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF132235),
-            letterSpacing: -0.4,
-          ),
-        ),
+        Obx(() => Text(
+              c.currentStatusLabel.value,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.homeTitle.copyWith(
+                fontSize: 20.sp,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF132235),
+                letterSpacing: -0.4,
+              ),
+            )),
         SizedBox(height: 8.h),
-        Text(
-          'The driver will pick you up as soon as possible\nafter they confirm your order',
-          textAlign: TextAlign.center,
-          style: AppTextStyles.homeCaption.copyWith(
-            fontSize: 15.sp,
-            color: const Color(0xFF364B63),
-            height: 1.33,
-          ),
-        ),
+        Obx(() => Text(
+              c.currentDescriptionLabel.value,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.homeCaption.copyWith(
+                fontSize: 15.sp,
+                color: const Color(0xFF364B63),
+                height: 1.33,
+              ),
+            )),
         SizedBox(height: 20.h),
-        _searchingSlider(c),
+        Obx(() {
+          if (c.currentStatusLabel.value == 'Finding Your Driver') {
+            return _searchingSlider(c);
+          }
+          return const SizedBox.shrink();
+        }),
         SizedBox(height: 16.h),
         Obx(() {
           final mins = c.remainingWholeMinutes;
