@@ -35,10 +35,7 @@ class AppDraggableBottomSheet extends StatelessWidget {
               ),
             ],
           ),
-          child: SafeArea(
-            top: false,
-            child: childBuilder(scrollController),
-          ),
+          child: childBuilder(scrollController),
         );
       },
     );
