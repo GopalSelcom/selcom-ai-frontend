@@ -474,7 +474,7 @@ class DriverAcceptedController extends GetxController {
         assignedDriverLocation.value = LatLng(d.lat!, d.lng!);
       }
       loadDriverIcon(vehicleType: d.vehicleType);
-      final otp = (d.verificationCode ?? '').replaceAll(RegExp(r'\s'), '');
+      final otp = (payload.pinCode ?? '').replaceAll(RegExp(r'\s'), '');
       if (otp.isNotEmpty) {
         otpDigits.assignAll(otp.split('').take(4).toList());
       }
@@ -651,7 +651,9 @@ class DriverAcceptedController extends GetxController {
   }
 
   String get pickupTitle => _firstAddressLine(pickupAddress);
+
   String get destinationTitle => _firstAddressLine(destinationAddress);
+
   String get rideVehicleLabel {
     final value = driverVehicleLine.value.trim();
     if (value.isNotEmpty) return value.split('-').first.trim();
@@ -665,9 +667,12 @@ class DriverAcceptedController extends GetxController {
   }
 
   String get rideChargeLabel => 'TZS ${ride.value?.fareEstimate ?? 100}.00';
+
   String get bookingFeeLabel => 'TZS ${ride.value?.fareEstimate ?? 100}.00';
+
   String get totalAmountLabel =>
       'TZS ${ride.value?.finalFare ?? ride.value?.fareEstimate ?? 100}.00';
+
   String get paymentModeLabel {
     final method = ride.value?.paymentMethod.name ?? 'wallet';
     switch (method) {

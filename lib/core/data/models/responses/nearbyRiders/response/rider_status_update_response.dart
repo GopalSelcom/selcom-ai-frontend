@@ -21,6 +21,7 @@ class EventRiderStatusUpdateResponse {
   int? cancellationFee;
   EventRouteGeometry? routeGeometry;
   String? routeTarget;
+  String? pinCode;
 
   EventRiderStatusUpdateResponse({
     this.rideId,
@@ -31,6 +32,7 @@ class EventRiderStatusUpdateResponse {
     this.cancellationFee,
     this.routeGeometry,
     this.routeTarget,
+    this.pinCode,
   });
 
   factory EventRiderStatusUpdateResponse.fromJson(Map<String, dynamic> json) =>
@@ -49,6 +51,7 @@ class EventRiderStatusUpdateResponse {
             ? null
             : EventRouteGeometry.fromJson(json["route_geometry"]),
         routeTarget: json["route_target"],
+        pinCode: json["pin_code"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -60,6 +63,7 @@ class EventRiderStatusUpdateResponse {
     "cancellation_fee": cancellationFee,
     "route_geometry": routeGeometry?.toJson(),
     "route_target": routeTarget,
+    "pin_code": pinCode,
   };
 }
 
@@ -75,9 +79,7 @@ class EventRouteGeometry {
             ? []
             : List<List<double>>.from(
                 json["coordinates"].map(
-                  (x) => List<double>.from(
-                    x.map((v) => (v as num).toDouble()),
-                  ),
+                  (x) => List<double>.from(x.map((v) => (v as num).toDouble())),
                 ),
               ),
         type: json["type"]?.toString(),
