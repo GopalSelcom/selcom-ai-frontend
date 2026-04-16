@@ -444,6 +444,18 @@ class AppDialogs {
 
   /// Shows a success dialog for verification completion.
   static void showVerificationSuccessDialog({VoidCallback? onConfirm}) {
+    // ... (omitted for brevity in replacement, but I will include the whole method or just append)
+  }
+
+  /// Shows a PIN locked error dialog.
+  static void showPinLockedDialog({
+    required String message,
+    required int retryAfterSeconds,
+    VoidCallback? onConfirm,
+  }) {
+    final minutes = (retryAfterSeconds / 60).ceil();
+    final timeText = minutes > 1 ? "$minutes minutes" : "1 minute";
+
     Get.dialog(
       Dialog(
         backgroundColor: Colors.white,
@@ -465,7 +477,7 @@ class AppDialogs {
                     height: 140.h,
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEBF6EE),
+                      color: const Color(0xFFFDECEA),
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(32.r),
                         topRight: Radius.circular(32.r),
@@ -479,22 +491,21 @@ class AppDialogs {
                   right: 0,
                   child: Center(
                     child: Container(
-                      padding: EdgeInsets.all(12.w),
+                      padding: EdgeInsets.all(16.w),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1B5E20),
+                        color: AppColors.error,
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: AppColors.error.withOpacity(0.2),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
                         ],
                       ),
-                      child: Image.asset(
-                        AppAssets.imgSuccessTick,
-                        width: 38.w,
-                        height: 38.w,
+                      child: Icon(
+                        Icons.lock_rounded,
+                        size: 32.w,
                         color: Colors.white,
                       ),
                     ),
@@ -504,21 +515,52 @@ class AppDialogs {
             ),
             Padding(
               padding: EdgeInsets.fromLTRB(32.w, 40.h, 32.w, 48.h),
-              child: InkWell(
-                onTap: () {
-                  Get.back();
-                  if (onConfirm != null) onConfirm();
-                },
-                child: Text(
-                  "You're all set! Your account is verified and ready to use.",
-                  style: AppTextStyles.sectionTitle.copyWith(
-                    fontSize: 22.sp,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.black,
-                    height: 1.3,
+              child: Column(
+                children: [
+                  Text(
+                    "PIN Locked",
+                    style: AppTextStyles.sectionTitle.copyWith(
+                      fontSize: 22.sp,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
-                ),
+                  SizedBox(height: 12.h),
+                  Text(
+                    "$message. Please try again in $timeText.",
+                    style: AppTextStyles.body.copyWith(
+                      fontSize: 16.sp,
+                      color: AppColors.shade2,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 32.h),
+                  InkWell(
+                    onTap: () {
+                      Get.back();
+                      if (onConfirm != null) onConfirm();
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(vertical: 16.h),
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(16.r),
+                      ),
+                      child: Center(
+                        child: Text(
+                          "Got it",
+                          style: AppTextStyles.body.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
