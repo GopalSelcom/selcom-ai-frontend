@@ -134,8 +134,11 @@ class DriverAcceptedScreen extends StatelessWidget {
           Marker(
             markerId: const MarkerId('assigned_driver'),
             position: assigned,
-            icon: c.assignedDriverMarkerIcon.value ??
-                BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+            icon:
+                c.assignedDriverMarkerIcon.value ??
+                BitmapDescriptor.defaultMarkerWithHue(
+                  BitmapDescriptor.hueGreen,
+                ),
             anchor: const Offset(0.5, 0.5),
             flat: true,
           ),

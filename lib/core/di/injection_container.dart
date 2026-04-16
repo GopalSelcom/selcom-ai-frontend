@@ -15,6 +15,7 @@ import '../../features/profile/data/repositories/profile_repository_impl.dart';
 import '../../features/profile/domain/repositories/profile_repository.dart';
 import '../../features/profile/domain/usecases/profile_usecase.dart';
 import '../../features/profile/presentation/controllers/profile_controller.dart';
+import '../services/nearby_drivers_socket_service.dart';
 import '../../features/ride/data/datasources/ride_remote_data_source.dart';
 import '../../features/ride/data/repositories/ride_repository_impl.dart';
 import '../../features/ride/domain/repositories/ride_repository.dart';
@@ -38,6 +39,7 @@ Future<void> init() async {
   // ── Services ──
   sl.registerLazySingleton(() => AnalyticsService());
   sl.registerLazySingleton(() => NotificationService());
+  sl.registerLazySingleton(() => AppSocketService());
 
   // ── External ──
   sl.registerLazySingleton(() => const FlutterSecureStorage());

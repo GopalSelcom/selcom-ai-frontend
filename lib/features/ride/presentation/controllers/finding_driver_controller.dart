@@ -44,7 +44,8 @@ class FindingDriverController extends GetxController {
 
   final currentStatusLabel = 'Finding Your Driver'.obs;
   final currentDescriptionLabel =
-      'The driver will pick you up as soon as possible\nafter they confirm your order'.obs;
+      'The driver will pick you up as soon as possible\nafter they confirm your order'
+          .obs;
 
   final Rxn<EventRiderStatusUpdateResponse> latestRideStatusPayload =
       Rxn<EventRiderStatusUpdateResponse>();
@@ -92,10 +93,15 @@ class FindingDriverController extends GetxController {
       String asset = AppAssets.imgCab;
       if (vehicleType != null) {
         final vt = vehicleType.toLowerCase();
-        if (vt.contains('boda') || vt.contains('bike')) asset = AppAssets.imgBoda;
-        else if (vt.contains('bajaj')) asset = AppAssets.imgBajaji;
+        if (vt.contains('boda') || vt.contains('bike'))
+          asset = AppAssets.imgBoda;
+        else if (vt.contains('bajaj'))
+          asset = AppAssets.imgBajaji;
       }
-      assignedDriverMarkerIcon.value = await MapMarkerUtils.getResizedMarker(asset, 150);
+      assignedDriverMarkerIcon.value = await MapMarkerUtils.getResizedMarker(
+        asset,
+        150,
+      );
     } catch (_) {
       // Fallback
       assignedDriverMarkerIcon.value = await BitmapDescriptor.asset(
@@ -113,7 +119,6 @@ class FindingDriverController extends GetxController {
     _rideStatusSub?.cancel();
     _driverLocSub?.cancel();
     _trackingSub?.cancel();
-    _socketService.dispose();
     super.onClose();
   }
 
@@ -249,7 +254,9 @@ class FindingDriverController extends GetxController {
           currentStatusLabel.value = 'Driver Assigned';
           currentDescriptionLabel.value =
               'A driver has accepted your ride and is on the way.';
-          _loadDriverMarkerIcon(vehicleType: payload.driverSnapshot?.vehicleType);
+          _loadDriverMarkerIcon(
+            vehicleType: payload.driverSnapshot?.vehicleType,
+          );
           _navigateToDriverAccepted();
           break;
         case 'driver_arrived':
@@ -262,7 +269,8 @@ class FindingDriverController extends GetxController {
         case 'ride_started':
         case 'ride_in_progress':
           currentStatusLabel.value = 'Ride Started';
-          currentDescriptionLabel.value = 'You are on your way to the destination.';
+          currentDescriptionLabel.value =
+              'You are on your way to the destination.';
           _setDropRouteFallback();
           _fitRouteBounds();
           break;
@@ -283,8 +291,12 @@ class FindingDriverController extends GetxController {
         case 'no_driver_found':
           currentStatusLabel.value = 'No Driver Found';
           currentDescriptionLabel.value = 'We couldn\'t find a driver nearby.';
-          Get.snackbar('Ride Cancelled', 'No drivers nearby. Please try again later.',
-              backgroundColor: Colors.black87, colorText: Colors.white);
+          Get.snackbar(
+            'Ride Cancelled',
+            'No drivers nearby. Please try again later.',
+            backgroundColor: Colors.black87,
+            colorText: Colors.white,
+          );
           Get.offAllNamed(AppRoutes.home);
           break;
       }

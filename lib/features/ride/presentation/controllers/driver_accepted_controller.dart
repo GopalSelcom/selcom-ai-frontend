@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,6 +18,7 @@ import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/app_map_service.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
@@ -80,12 +83,8 @@ class DriverAcceptedController extends GetxController {
 
   @override
   void onInit() {
-    print("BADGE DEBUG: DriverAcceptedController onInit starting");
     super.onInit();
     _parseArgs();
-    print(
-      "BADGE DEBUG: DriverAcceptedController _parseArgs done, rideId=$rideId",
-    );
     _bootstrap();
     ever(assignedDriverLocation, (_) => scheduleAssignedEtaOverlayRefresh());
     analyticsService.logEvent('driver_assigned_screen_viewed');
@@ -115,7 +114,6 @@ class DriverAcceptedController extends GetxController {
     _driverLocSub?.cancel();
     _trackingSub?.cancel();
     _chatSub?.cancel();
-    _socketService.dispose();
     super.onClose();
   }
 
@@ -310,6 +308,7 @@ class DriverAcceptedController extends GetxController {
         return;
       }
       rideBottomSheetState.value = RideBottomSheetState.driverAssigned;
+      _applyStatusPayload(payload);
     });
 
     _driverLocSub = _socketService.rideDriverLocationStream.listen((payload) {
@@ -317,15 +316,12 @@ class DriverAcceptedController extends GetxController {
       final lng = payload.longitude;
       if (lat == null || lng == null) return;
       assignedDriverLocation.value = LatLng(lat, lng);
-
       _setPickupRouteFallback();
-
       _fitRouteBounds();
     });
 
     _trackingSub = _socketService.trackingUpdateStatusStream.listen((payload) {
-      if (payload == null) return;
-      _applyTrackingPayload(payload);
+      if (payload != null) _applyTrackingPayload(payload);
     });
 
     if (rideId.isEmpty) return;
@@ -334,6 +330,11 @@ class DriverAcceptedController extends GetxController {
       if (!connected) return;
       _socketService.joinRideRoom(rideId: rideId);
     });
+
+    // If already connected, join now
+    if (_socketService.isConnected) {
+      _socketService.joinRideRoom(rideId: rideId);
+    }
 
     _chatSub = _socketService.chatStream.listen((data) {
       final payloadRideId =
@@ -356,23 +357,14 @@ class DriverAcceptedController extends GetxController {
         unreadCount.value++;
 
         final msg = data['message'] ?? data['text'] ?? 'New message';
-        Get.snackbar(
-          'Driver',
-          msg.toString(),
-          backgroundColor: Colors.black87,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.TOP,
-          margin: const EdgeInsets.all(12),
-          borderRadius: 8,
-          duration: const Duration(seconds: 4),
+
+        NotificationService().showLocalNotification(
+          title: 'New Message',
+          body: msg.toString(),
+          payload: jsonEncode(data),
         );
       }
     });
-
-    await _socketService.connect();
-    if (_socketService.isConnected) {
-      _socketService.joinRideRoom(rideId: rideId);
-    }
   }
 
   Future<void> loadDriverIcon({String? vehicleType}) async {
