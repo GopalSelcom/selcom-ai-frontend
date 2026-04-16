@@ -82,7 +82,9 @@ class PaymentMethodsScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(20.r),
         ),
         child: InkWell(
-          onTap: isLinked ? null : controller.linkSelcomPesa,
+          onTap: isLinked
+              ? controller.openLinkedAccountSheet
+              : controller.linkSelcomPesa,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

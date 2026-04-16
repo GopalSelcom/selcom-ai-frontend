@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:m7_livelyness_detection/index.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -7,6 +8,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../widgets/selcom_pesa_connect_bottom_sheet.dart';
+import '../widgets/selcom_pesa_linked_bottom_sheet.dart';
 import '../widgets/selcom_pesa_phone_input_bottom_sheet.dart';
 import '../widgets/selcom_pesa_otp_bottom_sheet.dart';
 import '../widgets/selcom_pesa_selfie_bottom_sheet.dart';
@@ -84,6 +86,29 @@ class PaymentMethodsController extends GetxController {
       const SelcomPesaPhoneInputBottomSheet(),
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+    );
+  }
+
+  void openLinkedAccountSheet() {
+    Get.bottomSheet(
+      const SelcomPesaLinkedBottomSheet(),
+      isScrollControlled: true,
+      enableDrag: true,
+    );
+  }
+
+  void unlinkAccount() {
+    Get.back(); // Close bottom sheet
+    isSelcomPesaLinked.value = false;
+    // Optional: Clear selection or reset other states
+    Get.snackbar(
+      'Selcom Pesa',
+      'Account unlinked successfully',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: AppColors.shade1,
+      colorText: Colors.white,
+      margin: EdgeInsets.all(16.w),
+      borderRadius: 12.r,
     );
   }
 
