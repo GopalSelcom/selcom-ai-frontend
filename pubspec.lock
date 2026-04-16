@@ -9,6 +9,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.68"
+  animate_do:
+    dependency: transitive
+    description:
+      name: animate_do
+      sha256: b6ff08dc6cf3cb5586a86d7f32a3b5f45502d2e08e3fb4f5a484c8421c9b3fc0
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.3.9"
   app_settings:
     dependency: "direct main"
     description:
@@ -17,6 +25,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.2.0"
+  archive:
+    dependency: transitive
+    description:
+      name: archive
+      sha256: a96e8b390886ee8abb49b7bd3ac8df6f451c621619f52a26e815fdcf568959ff
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.0.9"
   args:
     dependency: transitive
     description:
@@ -65,6 +81,62 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.1"
+  camera:
+    dependency: transitive
+    description:
+      name: camera
+      sha256: dfa8fc5a1adaeb95e7a54d86a5bd56f4bb0e035515354c8ac6d262e35cec2ec8
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.10.6"
+  camera_android:
+    dependency: transitive
+    description:
+      name: camera_android
+      sha256: "6b2e240022c61bc89711717c59264a2650c569d2dd4bf513228bd1fc45e189e0"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.10.10+16"
+  camera_avfoundation:
+    dependency: transitive
+    description:
+      name: camera_avfoundation
+      sha256: "11b4aee2f5e5e038982e152b4a342c749b414aa27857899d20f4323e94cb5f0b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.9.23+2"
+  camera_platform_interface:
+    dependency: transitive
+    description:
+      name: camera_platform_interface
+      sha256: "7ac852d77699acee79f0d438b793feee26721841e50973576419ff5c6d95e9b7"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.13.0"
+  camera_web:
+    dependency: transitive
+    description:
+      name: camera_web
+      sha256: "57f49a635c8bf249d07fb95eb693d7e4dda6796dedb3777f9127fb54847beba7"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.3.5+3"
+  camerawesome:
+    dependency: transitive
+    description:
+      name: camerawesome
+      sha256: "8e7f61ac78d4e58f1b198d6baa74b8af931819843e5247262c79539fb2f9949c"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.5.0"
+  carousel_slider:
+    dependency: transitive
+    description:
+      name: carousel_slider
+      sha256: febf4b0163e0242adc13d7a863b04965351f59e7dfea56675c7c2caa7bcd7476
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.1.2"
   characters:
     dependency: transitive
     description:
@@ -97,6 +169,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.19.1"
+  colorfilter_generator:
+    dependency: transitive
+    description:
+      name: colorfilter_generator
+      sha256: ccc2995e440b1d828d55d99150e7cad64624f3cb4a1e235000de3f93cf10d35c
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.8"
+  cross_file:
+    dependency: transitive
+    description:
+      name: cross_file
+      sha256: "28bb3ae56f117b5aec029d702a90f57d285cd975c3c5c281eaca38dbc47c5937"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.3.5+2"
   crypto:
     dependency: "direct main"
     description:
@@ -169,6 +257,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.2"
+  equatable:
+    dependency: transitive
+    description:
+      name: equatable
+      sha256: "3e0141505477fd8ad55d6eb4e7776d3fe8430be8e497ccb1521370c3f21a3e2b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.8"
   fake_async:
     dependency: transitive
     description:
@@ -592,6 +688,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.6.2"
+  google_mlkit_commons:
+    dependency: transitive
+    description:
+      name: google_mlkit_commons
+      sha256: "3e69fea4211727732cc385104e675ad1e40b29f12edd492ee52fa108423a6124"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.11.1"
+  google_mlkit_face_detection:
+    dependency: transitive
+    description:
+      name: google_mlkit_face_detection
+      sha256: "7b6ddcc69dbd6fbfa313fb2d974ad0f0c3a0d1657560f0da6be465baf1889687"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.13.2"
   gsettings:
     dependency: transitive
     description:
@@ -640,6 +752,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.0.8"
+  image:
+    dependency: transitive
+    description:
+      name: image
+      sha256: f9881ff4998044947ec38d098bc7c8316ae1186fa786eddffdb867b9bc94dfce
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.8.0"
   intl:
     dependency: "direct main"
     description:
@@ -712,6 +832,21 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.0"
+  lottie:
+    dependency: transitive
+    description:
+      name: lottie
+      sha256: "8b6359a7422167014aa73ce763fa133fb832065dcc0ac4d1dec1f603a5cef7d0"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.3.3"
+  m7_livelyness_detection:
+    dependency: "direct main"
+    description:
+      path: "packages/face_detection"
+      relative: true
+    source: path
+    version: "0.0.6+4"
   matcher:
     dependency: transitive
     description:
@@ -728,6 +863,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.13.0"
+  matrix2d:
+    dependency: transitive
+    description:
+      name: matrix2d
+      sha256: "188718dd3bc2a31e372cfd0791b0f77f4f13ea76164147342cc378d9132949e7"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.4"
   meta:
     dependency: transitive
     description:
@@ -864,6 +1007,54 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.3.0"
+  permission_handler:
+    dependency: "direct main"
+    description:
+      name: permission_handler
+      sha256: "59adad729136f01ea9e35a48f5d1395e25cba6cea552249ddbe9cf950f5d7849"
+      url: "https://pub.dev"
+    source: hosted
+    version: "11.4.0"
+  permission_handler_android:
+    dependency: transitive
+    description:
+      name: permission_handler_android
+      sha256: d3971dcdd76182a0c198c096b5db2f0884b0d4196723d21a866fc4cdea057ebc
+      url: "https://pub.dev"
+    source: hosted
+    version: "12.1.0"
+  permission_handler_apple:
+    dependency: transitive
+    description:
+      name: permission_handler_apple
+      sha256: f000131e755c54cf4d84a5d8bd6e4149e262cc31c5a8b1d698de1ac85fa41023
+      url: "https://pub.dev"
+    source: hosted
+    version: "9.4.7"
+  permission_handler_html:
+    dependency: transitive
+    description:
+      name: permission_handler_html
+      sha256: "38f000e83355abb3392140f6bc3030660cfaef189e1f87824facb76300b4ff24"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.3+5"
+  permission_handler_platform_interface:
+    dependency: transitive
+    description:
+      name: permission_handler_platform_interface
+      sha256: eb99b295153abce5d683cac8c02e22faab63e50679b937fa1bf67d58bb282878
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.3.0"
+  permission_handler_windows:
+    dependency: transitive
+    description:
+      name: permission_handler_windows
+      sha256: "1a790728016f79a41216d88672dbc5df30e686e811ad4e698bfc51f76ad91f1e"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.1"
   petitparser:
     dependency: transitive
     description:
@@ -904,6 +1095,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.8"
+  posix:
+    dependency: transitive
+    description:
+      name: posix
+      sha256: "185ef7606574f789b40f289c233efa52e96dead518aed988e040a10737febb07"
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.5.0"
   pretty_dio_logger:
     dependency: "direct main"
     description:

@@ -306,6 +306,8 @@ class AppDialogs {
     required String message,
     required VoidCallback onOpenSettings,
     VoidCallback? onCancel,
+    IconData icon = Icons.notifications_off,
+    IconData? secondaryIcon,
   }) {
     Get.dialog(
       Dialog(
@@ -345,16 +347,13 @@ class AppDialogs {
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        Icon(
-                          Icons.notifications_active,
-                          size: 48.sp,
-                          color: AppColors.primary.withOpacity(0.1),
-                        ),
-                        Icon(
-                          Icons.notifications_off,
-                          size: 48.sp,
-                          color: AppColors.primary,
-                        ),
+                        if (secondaryIcon != null)
+                          Icon(
+                            secondaryIcon,
+                            size: 48.sp,
+                            color: AppColors.primary.withOpacity(0.1),
+                          ),
+                        Icon(icon, size: 48.sp, color: AppColors.primary),
                       ],
                     ),
                   ),

@@ -54,6 +54,8 @@
 	<string>Selcom Rides needs access to your location to show you on the map and find nearby drivers.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Selcom Rides needs access to your location to provide a seamless ride tracking experience.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Selcom Rides needs access to your camera to capture a selfie for identity verification.</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>tel</string>

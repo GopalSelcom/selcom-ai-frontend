@@ -46,6 +46,9 @@ dependencies:
   webview_flutter: ^4.13.1
   url_launcher: ^6.3.1
   app_settings: ^5.1.1
+  m7_livelyness_detection:
+    path: ./packages/face_detection
+  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:

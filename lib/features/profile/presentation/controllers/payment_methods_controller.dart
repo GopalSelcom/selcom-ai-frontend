@@ -1,6 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:m7_livelyness_detection/index.dart';
+import 'package:permission_handler/permission_handler.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 import '../widgets/selcom_pesa_connect_bottom_sheet.dart';
 import '../widgets/selcom_pesa_phone_input_bottom_sheet.dart';
 import '../widgets/selcom_pesa_otp_bottom_sheet.dart';
@@ -131,15 +135,72 @@ class PaymentMethodsController extends GetxController {
     );
   }
 
-  void takeSelfie() {
-    // Placeholder for selfie capture logic
-    Get.back(); // Close selfie sheet
-    Get.snackbar('Selcom Pesa', 'Selfie captured. Verifying...');
+  Future<void> takeSelfie() async {
+    final status = await Permission.camera.request();
+    if (!status.isGranted) {
+      AppDialogs.showPermissionDialog(
+        title: 'Camera Permission',
+        message:
+            'We need camera access to capture your selfie for identity verification. Please enable it in your device settings.',
+        onOpenSettings: () => openAppSettings(),
+        icon: Icons.camera_alt_outlined,
+        secondaryIcon: Icons.camera_alt,
+      );
+      return;
+    }
 
-    // Simulate verification delay
-    Future.delayed(const Duration(seconds: 2), () {
-      Get.snackbar('Selcom Pesa', 'Account linked successfully!');
-    });
+    M7LivelynessDetection.instance.configure(
+      thresholds: [
+        M7BlinkDetectionThreshold(
+          leftEyeProbability: 0.5,
+          rightEyeProbability: 0.5,
+        ),
+      ],
+      lineColor: Colors.blue.shade200,
+      dotColor: Colors.blue.shade200,
+      displayDots: true,
+      displayLines: true,
+    );
+
+    try {
+      final response = await M7LivelynessDetection.instance.detectLivelyness(
+        Get.context!,
+        config: M7DetectionConfig(
+          maxSecToDetect: 120,
+          allowAfterMaxSec: true,
+          steps: [
+            M7LivelynessStepItem(
+              step: M7LivelynessStep.smile,
+              title: 'Smile',
+              isCompleted: false,
+              detectionColor: Colors.blue.shade200,
+            ),
+            M7LivelynessStepItem(
+              step: M7LivelynessStep.blink,
+              title: 'Blink Your Eyes',
+              isCompleted: false,
+              detectionColor: Colors.blue.shade200,
+            ),
+          ],
+          captureButtonColor: AppColors.primary,
+          startWithInfoScreen: false,
+        ),
+      );
+
+      if (response != null && response.imgPath.isNotEmpty) {
+        // Just mock the success as per user request
+        if (Get.isBottomSheetOpen ?? false) {
+          Get.back(); // Close selfie sheet
+        }
+        Get.snackbar('Selcom Pesa', 'Selfie captured successfully!');
+
+        Future.delayed(const Duration(seconds: 1), () {
+          Get.snackbar('Selcom Pesa', 'Account linked successfully!');
+        });
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Selfie capture failed');
+    }
   }
 
   void addCard() {
