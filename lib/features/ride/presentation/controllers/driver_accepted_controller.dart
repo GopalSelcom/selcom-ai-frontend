@@ -80,8 +80,12 @@ class DriverAcceptedController extends GetxController {
 
   @override
   void onInit() {
+    print("BADGE DEBUG: DriverAcceptedController onInit starting");
     super.onInit();
     _parseArgs();
+    print(
+      "BADGE DEBUG: DriverAcceptedController _parseArgs done, rideId=$rideId",
+    );
     _bootstrap();
     ever(assignedDriverLocation, (_) => scheduleAssignedEtaOverlayRefresh());
     analyticsService.logEvent('driver_assigned_screen_viewed');
@@ -116,11 +120,14 @@ class DriverAcceptedController extends GetxController {
   }
 
   void _parseArgs() {
+    print("BADGE DEBUG: _parseArgs starting");
     final raw = Get.arguments;
+    print("BADGE DEBUG: raw arguments: $raw");
     final args = raw is Map
         ? Map<String, dynamic>.from(raw)
         : <String, dynamic>{};
     rideId = (args['rideId'] as String?)?.trim() ?? '';
+    print("BADGE DEBUG: parsed rideId: $rideId");
     final plat = (args['pickupLat'] as num?)?.toDouble() ?? -6.7924;
     final plng = (args['pickupLng'] as num?)?.toDouble() ?? 39.2083;
     final dlat = (args['destinationLat'] as num?)?.toDouble() ?? (plat - 0.018);
@@ -324,24 +331,31 @@ class DriverAcceptedController extends GetxController {
       _applyTrackingPayload(payload);
     });
 
+    print("BADGE DEBUG: _initRideRoomSocket for rideId=$rideId");
+    if (rideId.isEmpty) {
+      print("BADGE DEBUG: rideId is empty, skipping socket init.");
+      return;
+    }
+
+    _connectionSub = _socketService.connectionStream.listen((connected) {
+      print("BADGE DEBUG: socket connected status: $connected");
+      if (!connected) return;
+      print("BADGE DEBUG: joining ride room: $rideId");
+      _socketService.joinRideRoom(rideId: rideId);
+    });
+
     _chatSub = _socketService.chatStream.listen((data) {
       final payloadRideId =
           (data['ride_id'] ?? data['rideId'])?.toString().trim() ?? '';
-      debugPrint(
+      print(
         "BADGE DEBUG: Received chat event. payloadRideId=$payloadRideId, controller.rideId=$rideId",
       );
 
-      // If controller rideId is empty, skip but log it
-      if (rideId.isEmpty) {
-        debugPrint(
-          "BADGE DEBUG: Controller rideId is empty, skipping badge increment.",
-        );
-        return;
-      }
-
       // Log matching result
       final isIdMatch = payloadRideId == rideId;
-      debugPrint("BADGE DEBUG: isIdMatch=$isIdMatch");
+      print("BADGE DEBUG: isIdMatch=$isIdMatch");
+
+      if (!isIdMatch) return;
 
       final senderType =
           (data['sender_type'] ?? data['sender'] ?? data['role'])
@@ -358,14 +372,24 @@ class DriverAcceptedController extends GetxController {
           senderType.contains('fleet') ||
           senderType.contains('captain');
 
-      debugPrint(
+      print(
         "BADGE DEBUG: senderType=$senderType, isFromRider=$isFromRider, isExplicitDriver=$isExplicitDriver, currentRoute=${Get.currentRoute}",
       );
 
       if (!isFromRider && !Get.currentRoute.contains(AppRoutes.rideMessage)) {
         unreadCount.value++;
-        debugPrint(
-          "BADGE DEBUG: unreadCount incremented to ${unreadCount.value}",
+        print("BADGE DEBUG: unreadCount incremented to ${unreadCount.value}");
+
+        final msg = data['message'] ?? data['text'] ?? 'New message';
+        Get.snackbar(
+          'Driver',
+          msg.toString(),
+          backgroundColor: Colors.black87,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(12),
+          borderRadius: 8,
+          duration: const Duration(seconds: 4),
         );
       }
     });
@@ -387,11 +411,15 @@ class DriverAcceptedController extends GetxController {
           asset = AppAssets.imgBajaji;
         }
       }
-      assignedDriverMarkerIcon.value =
-          await MapMarkerUtils.getResizedMarker(asset, 150);
+      assignedDriverMarkerIcon.value = await MapMarkerUtils.getResizedMarker(
+        asset,
+        150,
+      );
     } catch (_) {
-      assignedDriverMarkerIcon.value =
-          await MapMarkerUtils.getResizedMarker(AppAssets.imgBoda, 150);
+      assignedDriverMarkerIcon.value = await MapMarkerUtils.getResizedMarker(
+        AppAssets.imgBoda,
+        150,
+      );
     }
   }
 
