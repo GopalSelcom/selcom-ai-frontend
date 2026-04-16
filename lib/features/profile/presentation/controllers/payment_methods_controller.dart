@@ -12,6 +12,7 @@ class PaymentMethodsController extends GetxController {
 
   // Phone input controller
   final TextEditingController selcomPhoneController = TextEditingController();
+  final RxString phoneError = ''.obs;
 
   // OTP controller
   final TextEditingController otpController = TextEditingController();
@@ -72,6 +73,7 @@ class PaymentMethodsController extends GetxController {
     if (Get.isBottomSheetOpen ?? false) {
       Get.back();
     }
+    phoneError.value = '';
     Get.bottomSheet(
       const SelcomPesaPhoneInputBottomSheet(),
       isScrollControlled: true,
@@ -80,10 +82,18 @@ class PaymentMethodsController extends GetxController {
   }
 
   void onPhoneContinue() {
-    if (selcomPhoneController.text.trim().isEmpty) {
-      Get.snackbar('Validation', 'Please enter your phone number');
+    final phone = selcomPhoneController.text.replaceAll(' ', '');
+    if (phone.isEmpty) {
+      phoneError.value = 'Please enter your phone number';
       return;
     }
+
+    if (phone.length < 9) {
+      phoneError.value = 'Please enter a valid phone number';
+      return;
+    }
+
+    phoneError.value = '';
     openOtpInput();
   }
 

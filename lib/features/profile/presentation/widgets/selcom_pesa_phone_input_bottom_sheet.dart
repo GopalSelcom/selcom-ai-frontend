@@ -61,25 +61,35 @@ class SelcomPesaPhoneInputBottomSheet
           ),
           SizedBox(height: 8.h),
 
-          AppTextField(
-            controller: controller.selcomPhoneController,
-            keyboardType: TextInputType.phone,
-            autofocus: true,
-            maxLength: 12,
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-              LengthLimitingTextInputFormatter(10),
-              TanzaniaPhoneFormatter(),
-            ],
-            prefixIcon: Container(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-              child: Text(
-                '+255',
-                style: AppTextStyles.body.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.shade1,
+          Obx(
+            () => AppTextField(
+              controller: controller.selcomPhoneController,
+              keyboardType: TextInputType.phone,
+              autofocus: true,
+              errorText: controller.phoneError.value.isEmpty
+                  ? null
+                  : controller.phoneError.value,
+              maxLength: 12,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(10),
+                TanzaniaPhoneFormatter(),
+              ],
+              prefixIcon: Container(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                child: Text(
+                  '+255',
+                  style: AppTextStyles.body.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.shade1,
+                  ),
                 ),
               ),
+              onChanged: (v) {
+                if (controller.phoneError.isNotEmpty) {
+                  controller.phoneError.value = '';
+                }
+              },
             ),
           ),
 
