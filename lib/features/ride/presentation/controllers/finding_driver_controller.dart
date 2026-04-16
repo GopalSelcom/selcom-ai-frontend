@@ -13,6 +13,7 @@ import '../../../../core/data/models/responses/nearbyRiders/response/tracking_up
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
+import '../../../../core/utils/map_marker_utils.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../widgets/cancel_ride_dialogs.dart';
 
@@ -36,8 +37,15 @@ class FindingDriverController extends GetxController {
   final Rxn<LatLng> assignedDriverLocation = Rxn<LatLng>();
   final Rxn<BitmapDescriptor> assignedDriverMarkerIcon =
       Rxn<BitmapDescriptor>();
+  final Rxn<BitmapDescriptor> pickupIcon = Rxn<BitmapDescriptor>();
+  final Rxn<BitmapDescriptor> dropIcon = Rxn<BitmapDescriptor>();
   final routeTarget = 'pick_up'.obs;
   final activeRoutePoints = <LatLng>[].obs;
+
+  final currentStatusLabel = 'Finding Your Driver'.obs;
+  final currentDescriptionLabel =
+      'The driver will pick you up as soon as possible\nafter they confirm your order'.obs;
+
   final Rxn<EventRiderStatusUpdateResponse> latestRideStatusPayload =
       Rxn<EventRiderStatusUpdateResponse>();
   final Rxn<DriverLocationSocketResponse> latestDriverLocationPayload =
@@ -65,17 +73,36 @@ class FindingDriverController extends GetxController {
     _parseArgs();
     _startCountdown();
     _initRideRoomSocket();
-    _loadMarkerIcon();
+    _loadMarkerIcons();
   }
 
-  Future<void> _loadMarkerIcon() async {
+  Future<void> _loadMarkerIcons() async {
+    pickupIcon.value = await MapMarkerUtils.createCustomCircleMarker(
+      color: const Color(0xFF4FA3FF),
+    );
+    dropIcon.value = await MapMarkerUtils.createCustomCircleMarker(
+      color: const Color(0xFFE11D48),
+    );
+    // Initial attempt to load a generic driver icon or wait for assignment
+    await _loadDriverMarkerIcon();
+  }
+
+  Future<void> _loadDriverMarkerIcon({String? vehicleType}) async {
     try {
-      await rootBundle.load(AppAssets.gariPlus);
+      String asset = AppAssets.imgCab;
+      if (vehicleType != null) {
+        final vt = vehicleType.toLowerCase();
+        if (vt.contains('boda') || vt.contains('bike')) asset = AppAssets.imgBoda;
+        else if (vt.contains('bajaj')) asset = AppAssets.imgBajaji;
+      }
+      assignedDriverMarkerIcon.value = await MapMarkerUtils.getResizedMarker(asset, 150);
+    } catch (_) {
+      // Fallback
       assignedDriverMarkerIcon.value = await BitmapDescriptor.asset(
         const ImageConfiguration(size: Size(36, 36)),
         AppAssets.gariPlus,
       );
-    } catch (_) {}
+    }
   }
 
   @override
@@ -215,15 +242,51 @@ class FindingDriverController extends GetxController {
       final status = (payload.status ?? '').toString().toLowerCase();
       _applyStatusPayload(payload);
       if (status.isEmpty) return;
-      if (status == 'driver_assigned' || status == 'accepted') {
-        _navigateToDriverAccepted();
-      } else if (status == 'cancelled' || status == 'completed') {
-        Get.offAllNamed(AppRoutes.home);
-      } else if (status == 'driver_arrived' ||
-          status == 'ride_started' ||
-          status == 'ride_in_progress') {
-        _setDropRouteFallback();
-        _fitRouteBounds();
+
+      switch (status) {
+        case 'driver_assigned':
+        case 'accepted':
+          currentStatusLabel.value = 'Driver Assigned';
+          currentDescriptionLabel.value =
+              'A driver has accepted your ride and is on the way.';
+          _loadDriverMarkerIcon(vehicleType: payload.driverSnapshot?.vehicleType);
+          _navigateToDriverAccepted();
+          break;
+        case 'driver_arrived':
+          currentStatusLabel.value = 'Driver Arrived';
+          currentDescriptionLabel.value =
+              'Your driver has arrived at the pickup location.';
+          _setDropRouteFallback();
+          _fitRouteBounds();
+          break;
+        case 'ride_started':
+        case 'ride_in_progress':
+          currentStatusLabel.value = 'Ride Started';
+          currentDescriptionLabel.value = 'You are on your way to the destination.';
+          _setDropRouteFallback();
+          _fitRouteBounds();
+          break;
+        case 'ride_completed':
+          currentStatusLabel.value = 'Ride Completed';
+          currentDescriptionLabel.value = 'You have reached your destination.';
+          Get.snackbar('Success', 'Ride completed successfully!');
+          Future.delayed(const Duration(seconds: 2), () {
+            Get.offAllNamed(AppRoutes.home);
+          });
+          break;
+        case 'cancelled':
+          currentStatusLabel.value = 'Ride Cancelled';
+          currentDescriptionLabel.value = 'The ride has been cancelled.';
+          Get.snackbar('Cancelled', 'Your ride was cancelled.');
+          Get.offAllNamed(AppRoutes.home);
+          break;
+        case 'no_driver_found':
+          currentStatusLabel.value = 'No Driver Found';
+          currentDescriptionLabel.value = 'We couldn\'t find a driver nearby.';
+          Get.snackbar('Ride Cancelled', 'No drivers nearby. Please try again later.',
+              backgroundColor: Colors.black87, colorText: Colors.white);
+          Get.offAllNamed(AppRoutes.home);
+          break;
       }
     });
 
