@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/constants/app_assets.dart';
 
 class AppDialogs {
   static bool _isErrorDialogVisible = false;
@@ -440,4 +441,97 @@ class AppDialogs {
       barrierDismissible: true,
     );
   }
+
+  /// Shows a success dialog for verification completion.
+  static void showVerificationSuccessDialog({VoidCallback? onConfirm}) {
+    Get.dialog(
+      Dialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        insetPadding: EdgeInsets.symmetric(horizontal: 24.w),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(28.r),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              children: [
+                ClipPath(
+                  clipper: SuccessHeaderClipper(),
+                  child: Container(
+                    height: 160.h,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE8F5E9),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(28.r),
+                        topRight: Radius.circular(28.r),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 40.h,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Container(
+                      padding: EdgeInsets.all(12.w),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF2E7D32),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Image.asset(
+                        AppAssets.imgSuccessTick,
+                        width: 48.w,
+                        height: 48.w,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(24.w, 32.h, 24.w, 40.h),
+              child: InkWell(
+                onTap: () {
+                  Get.back();
+                  if (onConfirm != null) onConfirm();
+                },
+                child: Text(
+                  "You're all set! Your account is verified and ready to use.",
+                  style: AppTextStyles.sectionTitle.copyWith(
+                    fontSize: 20.sp,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF222222),
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      barrierDismissible: true,
+    );
+  }
+}
+
+class SuccessHeaderClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    Path path = Path();
+    path.lineTo(0, size.height * 0.85);
+    path.lineTo(size.width / 2, size.height);
+    path.lineTo(size.width, size.height * 0.85);
+    path.lineTo(size.width, 0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }

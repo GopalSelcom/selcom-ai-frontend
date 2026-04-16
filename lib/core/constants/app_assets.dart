@@ -34,6 +34,7 @@ class AppAssets {
   // Branding
   static const String splashBgVector = '$_imagePath/splash_bg_vector.svg';
   static const String selcomGoLogo = '$_imagePath/selcom_go_logo.svg';
+  static const String imgSuccessTick = '$_imagePath/img_success_tick.png';
 
   // Profile
   static const String walletPattern = '$_imagePath/wallet_pattern.png';

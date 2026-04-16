@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:m7_livelyness_detection/index.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../widgets/selcom_pesa_connect_bottom_sheet.dart';
@@ -13,6 +14,7 @@ import '../widgets/selcom_pesa_selfie_bottom_sheet.dart';
 class PaymentMethodsController extends GetxController {
   final RxString walletBalance = '43,829'.obs;
   final RxString walletNumber = '16010 00000 034'.obs;
+  final RxBool isSelcomPesaLinked = false.obs;
 
   // Phone input controller
   final TextEditingController selcomPhoneController = TextEditingController();
@@ -136,6 +138,29 @@ class PaymentMethodsController extends GetxController {
   }
 
   Future<void> takeSelfie() async {
+    // Simulator check to allow testing flow without camera
+    bool isSimulator = false;
+    final deviceInfo = DeviceInfoPlugin();
+    if (GetPlatform.isIOS) {
+      isSimulator = !(await deviceInfo.iosInfo).isPhysicalDevice;
+    } else if (GetPlatform.isAndroid) {
+      isSimulator = !(await deviceInfo.androidInfo).isPhysicalDevice;
+    }
+
+    if (isSimulator) {
+      if (Get.isBottomSheetOpen ?? false) {
+        Get.back(); // Close selfie sheet
+      }
+      AppDialogs.showVerificationSuccessDialog();
+      Future.delayed(const Duration(seconds: 3), () {
+        if (Get.isDialogOpen ?? false) {
+          Get.back();
+        }
+        isSelcomPesaLinked.value = true;
+      });
+      return;
+    }
+
     final status = await Permission.camera.request();
     if (!status.isGranted) {
       AppDialogs.showPermissionDialog(
@@ -192,10 +217,16 @@ class PaymentMethodsController extends GetxController {
         if (Get.isBottomSheetOpen ?? false) {
           Get.back(); // Close selfie sheet
         }
-        Get.snackbar('Selcom Pesa', 'Selfie captured successfully!');
 
-        Future.delayed(const Duration(seconds: 1), () {
-          Get.snackbar('Selcom Pesa', 'Account linked successfully!');
+        AppDialogs.showVerificationSuccessDialog();
+
+        // Auto dismiss after 3 seconds and update state
+        Future.delayed(const Duration(seconds: 3), () {
+          if (Get.isDialogOpen ?? false) {
+            Get.back();
+          }
+          isSelcomPesaLinked.value = true;
+          // Refresh or navigate if needed, but since it's reactive, the UI will update
         });
       }
     } catch (e) {

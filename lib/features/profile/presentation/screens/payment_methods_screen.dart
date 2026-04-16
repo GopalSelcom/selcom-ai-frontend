@@ -40,7 +40,7 @@ class PaymentMethodsScreen extends StatelessWidget {
             // Payment methods section
             _buildSectionTitle('Payment methods'),
             SizedBox(height: 12.h),
-            _buildSelcomPesaCard(controller),
+            Obx(() => _buildSelcomPesaCard(controller)),
 
             SizedBox(height: 32.h),
 
@@ -70,6 +70,8 @@ class PaymentMethodsScreen extends StatelessWidget {
   }
 
   Widget _buildSelcomPesaCard(PaymentMethodsController controller) {
+    bool isLinked = controller.isSelcomPesaLinked.value;
+
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w),
       child: Container(
@@ -79,37 +81,72 @@ class PaymentMethodsScreen extends StatelessWidget {
           border: Border.all(color: const Color(0xFFE6E9EE), width: 0.8),
           borderRadius: BorderRadius.circular(20.r),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Selcom Pesa',
-              style: AppTextStyles.body.copyWith(
-                fontWeight: FontWeight.w700,
-                color: AppColors.shade1,
+        child: InkWell(
+          onTap: isLinked ? null : controller.linkSelcomPesa,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    'Selcom Pesa',
+                    style: AppTextStyles.body.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.shade1,
+                    ),
+                  ),
+                  if (isLinked) ...[
+                    SizedBox(width: 8.w),
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 6.w,
+                        vertical: 2.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2E7D32),
+                        borderRadius: BorderRadius.circular(4.r),
+                      ),
+                      child: Text(
+                        'Default',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 10.sp,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                  const Spacer(),
+                  Icon(
+                    Iconsax.arrow_right_3,
+                    size: 20.w,
+                    color: AppColors.shade2.withOpacity(0.5),
+                  ),
+                ],
               ),
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              'Connect your Selcom Pesa account to enable automatic, seamless ride charge deductions.',
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.shade2,
-                fontSize: 13.sp,
-                height: 1.5,
-              ),
-            ),
-            SizedBox(height: 12.h),
-            InkWell(
-              onTap: controller.linkSelcomPesa,
-              child: Text(
-                'Link Account',
-                style: AppTextStyles.body.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
+              SizedBox(height: 8.h),
+              Text(
+                isLinked
+                    ? 'Linked number +255 711 410 410'
+                    : 'Connect your Selcom Pesa account to enable automatic, seamless ride charge deductions.',
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.shade2,
+                  fontSize: 13.sp,
+                  height: 1.5,
                 ),
               ),
-            ),
-          ],
+              if (!isLinked) ...[
+                SizedBox(height: 12.h),
+                Text(
+                  'Link Account',
+                  style: AppTextStyles.body.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
@@ -192,7 +229,9 @@ class PaymentMethodsScreen extends StatelessWidget {
                     name,
                     style: AppTextStyles.body.copyWith(
                       fontWeight: FontWeight.w500,
-                      color: AppColors.shade1,
+                      color: status == 'Expired'
+                          ? AppColors.shade2
+                          : AppColors.shade1,
                     ),
                   ),
                   SizedBox(width: 8.w),
@@ -201,7 +240,9 @@ class PaymentMethodsScreen extends StatelessWidget {
                   number,
                   style: AppTextStyles.body.copyWith(
                     fontWeight: FontWeight.w500,
-                    color: AppColors.shade1,
+                    color: status == 'Expired'
+                        ? AppColors.shade2
+                        : AppColors.shade1,
                   ),
                 ),
                 if (status != null) ...[
@@ -210,7 +251,9 @@ class PaymentMethodsScreen extends StatelessWidget {
                     status,
                     style: AppTextStyles.body.copyWith(
                       fontWeight: FontWeight.w500,
-                      color: AppColors.shade1,
+                      color: status == 'Expired'
+                          ? AppColors.shade2
+                          : AppColors.shade1,
                     ),
                   ),
                 ],
