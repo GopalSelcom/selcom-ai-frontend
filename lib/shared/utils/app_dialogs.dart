@@ -448,9 +448,11 @@ class AppDialogs {
       Dialog(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
+        elevation: 20,
+        shadowColor: Colors.black.withOpacity(0.4),
         insetPadding: EdgeInsets.symmetric(horizontal: 24.w),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(28.r),
+          borderRadius: BorderRadius.circular(32.r),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -460,13 +462,13 @@ class AppDialogs {
                 ClipPath(
                   clipper: SuccessHeaderClipper(),
                   child: Container(
-                    height: 160.h,
+                    height: 140.h,
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE8F5E9),
+                      color: const Color(0xFFEBF6EE),
                       borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(28.r),
-                        topRight: Radius.circular(28.r),
+                        topLeft: Radius.circular(32.r),
+                        topRight: Radius.circular(32.r),
                       ),
                     ),
                   ),
@@ -478,14 +480,21 @@ class AppDialogs {
                   child: Center(
                     child: Container(
                       padding: EdgeInsets.all(12.w),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF2E7D32),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1B5E20),
                         shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: Image.asset(
                         AppAssets.imgSuccessTick,
-                        width: 48.w,
-                        height: 48.w,
+                        width: 38.w,
+                        height: 38.w,
                         color: Colors.white,
                       ),
                     ),
@@ -494,7 +503,7 @@ class AppDialogs {
               ],
             ),
             Padding(
-              padding: EdgeInsets.fromLTRB(24.w, 32.h, 24.w, 40.h),
+              padding: EdgeInsets.fromLTRB(32.w, 40.h, 32.w, 48.h),
               child: InkWell(
                 onTap: () {
                   Get.back();
@@ -503,10 +512,10 @@ class AppDialogs {
                 child: Text(
                   "You're all set! Your account is verified and ready to use.",
                   style: AppTextStyles.sectionTitle.copyWith(
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF222222),
-                    height: 1.4,
+                    fontSize: 22.sp,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black,
+                    height: 1.3,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -524,9 +533,13 @@ class SuccessHeaderClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
     Path path = Path();
-    path.lineTo(0, size.height * 0.85);
-    path.lineTo(size.width / 2, size.height);
-    path.lineTo(size.width, size.height * 0.85);
+    path.lineTo(0, size.height - 25.h);
+    path.quadraticBezierTo(
+      size.width / 2,
+      size.height,
+      size.width,
+      size.height - 25.h,
+    );
     path.lineTo(size.width, 0);
     path.close();
     return path;
