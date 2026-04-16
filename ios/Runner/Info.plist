@@ -42,6 +42,10 @@
 	<string>Selcom Rides needs access to your location to provide a seamless ride tracking experience.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Selcom Rides needs access to your location to show you on the map and find nearby drivers.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Selcom Rides needs access to your microphone to allow voice communication with drivers and support.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Selcom Rides needs access to your photo library to allow you to upload a profile picture.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UIBackgroundModes</key>
