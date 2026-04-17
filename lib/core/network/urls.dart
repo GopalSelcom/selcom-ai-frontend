@@ -144,5 +144,5 @@ class _NotificationEndpoints {
 
   final list = "go/notifications";
   final readAll = "go/notifications/read-all";
-  final base = "go/notifications"; // Use for /{{id}}/read
+  String readById(String notificationId) => "go/notifications/$notificationId/read";
 }
