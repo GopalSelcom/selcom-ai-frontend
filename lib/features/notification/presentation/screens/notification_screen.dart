@@ -28,25 +28,36 @@ class NotificationScreen extends StatelessWidget {
               padding: EdgeInsets.only(top: 12.h, right: 16.w),
               child: Align(
                 alignment: Alignment.centerRight,
-                child: GestureDetector(
-                  onTap: () {
-                    controller.markAllAsRead();
-                  },
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 12.w,
-                      vertical: 6.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(20.r),
-                    ),
-                    child: Text(
-                      "Mark all read",
-                      style: AppTextStyles.homeCaption.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
+                child: Obx(
+                  () => GestureDetector(
+                    onTap: controller.canMarkAllAsRead
+                        ? controller.markAllAsRead
+                        : null,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12.w,
+                        vertical: 6.h,
                       ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20.r),
+                      ),
+                      child: controller.isMarkAllLoading.value
+                          ? SizedBox(
+                              width: 14.w,
+                              height: 14.w,
+                              child: const CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              "Mark all read (${controller.unreadCount.value})",
+                              style: AppTextStyles.homeCaption.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                     ),
                   ),
                 ),
@@ -66,19 +77,44 @@ class NotificationScreen extends StatelessWidget {
                 return _buildEmptyState();
               }
 
-              return RefreshIndicator(
-                onRefresh: controller.getNotifications,
-                child: ListView.separated(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 16.w,
-                    vertical: 16.h,
+              return NotificationListener<ScrollNotification>(
+                onNotification: (notification) {
+                  if (notification.metrics.pixels >=
+                      notification.metrics.maxScrollExtent - 120) {
+                    controller.loadMoreNotifications();
+                  }
+                  return false;
+                },
+                child: RefreshIndicator(
+                  onRefresh: controller.getNotifications,
+                  child: ListView.separated(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 16.h,
+                    ),
+                    itemCount: controller.notifications.length +
+                        (controller.hasMorePages || controller.isLoadingMore.value
+                            ? 1
+                            : 0),
+                    separatorBuilder: (_, __) => SizedBox(height: 12.h),
+                    itemBuilder: (context, index) {
+                      if (index >= controller.notifications.length) {
+                        if (controller.isLoadingMore.value) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          );
+                        }
+                        return SizedBox(height: 8.h);
+                      }
+                      final notification = controller.notifications[index];
+                      return _buildNotificationItem(notification, controller);
+                    },
                   ),
-                  itemCount: controller.notifications.length,
-                  separatorBuilder: (_, __) => SizedBox(height: 12.h),
-                  itemBuilder: (context, index) {
-                    final notification = controller.notifications[index];
-                    return _buildNotificationItem(notification, controller);
-                  },
                 ),
               );
             }),
@@ -154,7 +190,7 @@ class NotificationScreen extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          notification.message,
+                          notification.text,
                           style: AppTextStyles.homeSubtitle.copyWith(
                             fontWeight: notification.isRead
                                 ? FontWeight.w500
@@ -164,7 +200,7 @@ class NotificationScreen extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        _formatDate(notification.timestamp),
+                        _formatDate(notification.createdOn),
                         style: AppTextStyles.homeCaption.copyWith(
                           fontSize: 10.sp,
                         ),
@@ -174,36 +210,27 @@ class NotificationScreen extends StatelessWidget {
 
                   SizedBox(height: 4.h),
 
-                  /// Subtitle
-                  Text(
-                    notification.title,
-                    style: AppTextStyles.homeCaption.copyWith(
-                      color: AppColors.shade2,
-                      height: 1.4,
-                    ),
-                  ),
-
                   SizedBox(height: 8.h),
 
-                  /// ID Tag
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 8.w,
-                      vertical: 4.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(4.r),
-                    ),
-                    child: Text(
-                      'NO: ${notification.id}',
-                      style: AppTextStyles.homeCaption.copyWith(
-                        fontSize: 10.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.shade1,
+                  if ((notification.orderId ?? '').isNotEmpty)
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 8.w,
+                        vertical: 4.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(4.r),
+                      ),
+                      child: Text(
+                        'Order: ${notification.orderId}',
+                        style: AppTextStyles.homeCaption.copyWith(
+                          fontSize: 10.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.shade1,
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -241,12 +268,16 @@ class NotificationScreen extends StatelessWidget {
 
   Color _getIconBackgroundColor(int? type) {
     switch (type) {
-      case 1:
+      case 500:
         return const Color(0xFFE0F2FE);
-      case 2:
+      case 501:
+        return const Color(0xFFEDE9FE);
+      case 502:
         return const Color(0xFFFEF3C7);
-      case 3:
+      case 503:
         return const Color(0xFFDCFCE7);
+      case 504:
+        return const Color(0xFFFFEDD5);
       default:
         return const Color(0xFFF1F5F9);
     }
@@ -254,12 +285,16 @@ class NotificationScreen extends StatelessWidget {
 
   Color _getIconColor(int? type) {
     switch (type) {
-      case 1:
+      case 500:
         return const Color(0xFF0284C7);
-      case 2:
+      case 501:
+        return const Color(0xFF6D28D9);
+      case 502:
         return const Color(0xFFD97706);
-      case 3:
+      case 503:
         return const Color(0xFF16A34A);
+      case 504:
+        return const Color(0xFFEA580C);
       default:
         return AppColors.shade2;
     }
@@ -267,12 +302,16 @@ class NotificationScreen extends StatelessWidget {
 
   IconData _getIcon(int? type) {
     switch (type) {
-      case 1:
+      case 500:
         return Icons.directions_car_filled_outlined;
-      case 2:
+      case 501:
+        return Icons.chat_bubble_outline;
+      case 502:
         return Icons.local_offer_outlined;
-      case 3:
+      case 503:
         return Icons.account_balance_wallet_outlined;
+      case 504:
+        return Icons.campaign_outlined;
       default:
         return Icons.notifications_outlined;
     }
