@@ -344,6 +344,13 @@ class HomeController extends GetxController {
                   'display_name': vehicle.vehicleType,
                 },
         },
+        'fareBreakdown': rideValue.fareBreakdown == null
+            ? null
+            : {
+                'ride_charge': rideValue.fareBreakdown!.rideCharge,
+                'booking_fee': rideValue.fareBreakdown!.bookingFee,
+                'total_amount': rideValue.fareBreakdown!.totalAmount,
+              },
       },
     );
   }

@@ -67,6 +67,7 @@ class RideData {
 }
 
 class Ride {
+  FareBreakdown? fareBreakdown;
   dynamic driverId;
   dynamic taskId;
   String? status;
@@ -116,6 +117,7 @@ class Ride {
   int? v;
 
   Ride({
+    this.fareBreakdown,
     this.driverId,
     this.taskId,
     this.status,
@@ -166,6 +168,7 @@ class Ride {
   });
 
   Ride copyWith({
+    FareBreakdown? fareBreakdown,
     dynamic driverId,
     dynamic taskId,
     String? status,
@@ -215,6 +218,7 @@ class Ride {
     int? v,
   }) =>
       Ride(
+        fareBreakdown: fareBreakdown ?? this.fareBreakdown,
         driverId: driverId ?? this.driverId,
         taskId: taskId ?? this.taskId,
         status: status ?? this.status,
@@ -265,6 +269,9 @@ class Ride {
       );
 
   factory Ride.fromJson(Map<String, dynamic> json) => Ride(
+    fareBreakdown: json["fare_breakdown"] == null
+        ? null
+        : FareBreakdown.fromJson(json["fare_breakdown"]),
     driverId: json["driver_id"],
     taskId: json["task_id"],
     status: json["status"],
@@ -315,6 +322,7 @@ class Ride {
   );
 
   Map<String, dynamic> toJson() => {
+    "fare_breakdown": fareBreakdown?.toJson(),
     "driver_id": driverId,
     "task_id": taskId,
     "status": status,
@@ -362,6 +370,36 @@ class Ride {
     "createdAt": createdAt?.toIso8601String(),
     "updatedAt": updatedAt?.toIso8601String(),
     "__v": v,
+  };
+}
+
+class FareBreakdown {
+  int? rideCharge;
+  int? bookingFee;
+  int? totalAmount;
+
+  FareBreakdown({this.rideCharge, this.bookingFee, this.totalAmount});
+
+  FareBreakdown copyWith({
+    int? rideCharge,
+    int? bookingFee,
+    int? totalAmount,
+  }) => FareBreakdown(
+    rideCharge: rideCharge ?? this.rideCharge,
+    bookingFee: bookingFee ?? this.bookingFee,
+    totalAmount: totalAmount ?? this.totalAmount,
+  );
+
+  factory FareBreakdown.fromJson(Map<String, dynamic> json) => FareBreakdown(
+    rideCharge: (json["ride_charge"] as num?)?.toInt(),
+    bookingFee: (json["booking_fee"] as num?)?.toInt(),
+    totalAmount: (json["total_amount"] as num?)?.toInt(),
+  );
+
+  Map<String, dynamic> toJson() => {
+    "ride_charge": rideCharge,
+    "booking_fee": bookingFee,
+    "total_amount": totalAmount,
   };
 }
 

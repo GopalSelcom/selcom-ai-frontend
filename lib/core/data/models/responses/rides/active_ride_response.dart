@@ -49,6 +49,7 @@ class Data {
 class Ride {
   String? id;
   String? status;
+  FareBreakdown? fareBreakdown;
   Destination? pickup;
   Destination? destination;
   int? fareEstimate;
@@ -63,6 +64,7 @@ class Ride {
   Ride({
     this.id,
     this.status,
+    this.fareBreakdown,
     this.pickup,
     this.destination,
     this.fareEstimate,
@@ -78,6 +80,9 @@ class Ride {
   factory Ride.fromJson(Map<String, dynamic> json) => Ride(
     id: json["_id"],
     status: json["status"],
+    fareBreakdown: json["fare_breakdown"] == null
+        ? null
+        : FareBreakdown.fromJson(json["fare_breakdown"]),
     pickup: json["pickup"] == null
         ? null
         : Destination.fromJson(json["pickup"]),
@@ -101,6 +106,7 @@ class Ride {
   Map<String, dynamic> toJson() => {
     "_id": id,
     "status": status,
+    "fare_breakdown": fareBreakdown?.toJson(),
     "pickup": pickup?.toJson(),
     "destination": destination?.toJson(),
     "fare_estimate": fareEstimate,
@@ -111,6 +117,26 @@ class Ride {
     "vehicle_snapshot": vehicleSnapshot?.toJson(),
     "pin_code": pinCode,
     "created_at": createdAt,
+  };
+}
+
+class FareBreakdown {
+  int? rideCharge;
+  int? bookingFee;
+  int? totalAmount;
+
+  FareBreakdown({this.rideCharge, this.bookingFee, this.totalAmount});
+
+  factory FareBreakdown.fromJson(Map<String, dynamic> json) => FareBreakdown(
+    rideCharge: (json["ride_charge"] as num?)?.toInt(),
+    bookingFee: (json["booking_fee"] as num?)?.toInt(),
+    totalAmount: (json["total_amount"] as num?)?.toInt(),
+  );
+
+  Map<String, dynamic> toJson() => {
+    "ride_charge": rideCharge,
+    "booking_fee": bookingFee,
+    "total_amount": totalAmount,
   };
 }
 

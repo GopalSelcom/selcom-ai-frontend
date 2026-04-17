@@ -34,6 +34,7 @@ class FindingDriverController extends GetxController {
   late final String pickupAddress;
   late final String destinationAddress;
   late final String? requestedVehicleType;
+  late final Map<String, dynamic>? fareBreakdown;
 
   final nearbyDriverCount = 0.obs;
   final driverMarkerPoints = <LatLng>[].obs;
@@ -146,6 +147,10 @@ class FindingDriverController extends GetxController {
     pickupAddress = (args['pickupAddress'] as String?)?.trim() ?? '';
     destinationAddress = (args['destinationAddress'] as String?)?.trim() ?? '';
     requestedVehicleType = args['vehicleType'] as String?;
+    final rawFareBreakdown = args['fareBreakdown'];
+    fareBreakdown = rawFareBreakdown is Map
+        ? Map<String, dynamic>.from(rawFareBreakdown)
+        : null;
     _buildDummyRoute(plat, plng, dlat, dlng);
     _setPickupRouteFallback();
   }
@@ -263,6 +268,7 @@ class FindingDriverController extends GetxController {
         'statusPayload': statusPayload?.toJson(),
         'driverLocationPayload': driverLocPayload?.toJson(),
         'trackingPayload': trackingPayload?.toJson(),
+        'fareBreakdown': fareBreakdown,
       },
     );
   }

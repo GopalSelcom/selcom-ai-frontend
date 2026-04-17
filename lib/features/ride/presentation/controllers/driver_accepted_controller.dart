@@ -44,6 +44,9 @@ class DriverAcceptedController extends GetxController {
   late final LatLng destinationLatLng;
   late final String pickupAddress;
   late final String destinationAddress;
+  int? _seedRideCharge;
+  int? _seedBookingFee;
+  int? _seedTotalAmount;
 
   final Rxn<LatLng> assignedDriverLocation = Rxn<LatLng>();
   final routePoints = <LatLng>[].obs;
@@ -132,6 +135,13 @@ class DriverAcceptedController extends GetxController {
     destinationLatLng = LatLng(dlat, dlng);
     pickupAddress = (args['pickupAddress'] as String?)?.trim() ?? '';
     destinationAddress = (args['destinationAddress'] as String?)?.trim() ?? '';
+    final rawFareBreakdown = args['fareBreakdown'];
+    if (rawFareBreakdown is Map) {
+      final fareBreakdown = Map<String, dynamic>.from(rawFareBreakdown);
+      _seedRideCharge = (fareBreakdown['ride_charge'] as num?)?.toInt();
+      _seedBookingFee = (fareBreakdown['booking_fee'] as num?)?.toInt();
+      _seedTotalAmount = (fareBreakdown['total_amount'] as num?)?.toInt();
+    }
     _setDropRouteFallback();
     _hydrateSocketSeedPayloads(args);
   }
@@ -848,12 +858,29 @@ class DriverAcceptedController extends GetxController {
     return DateFormat('dd\'th\' MMM yyyy . hh:mma').format(value.createdAt);
   }
 
-  String get rideChargeLabel => 'TZS ${ride.value?.fareEstimate ?? 100}.00';
+  String get rideChargeLabel {
+    final amount =
+        ride.value?.fareBreakdown?.rideCharge ??
+        _seedRideCharge ??
+        ride.value?.fareEstimate ??
+        100;
+    return 'TZS $amount.00';
+  }
 
-  String get bookingFeeLabel => 'TZS ${ride.value?.fareEstimate ?? 100}.00';
+  String get bookingFeeLabel {
+    final amount = ride.value?.fareBreakdown?.bookingFee ?? _seedBookingFee ?? 0;
+    return 'TZS $amount.00';
+  }
 
-  String get totalAmountLabel =>
-      'TZS ${ride.value?.finalFare ?? ride.value?.fareEstimate ?? 100}.00';
+  String get totalAmountLabel {
+    final amount =
+        ride.value?.fareBreakdown?.totalAmount ??
+        _seedTotalAmount ??
+        ride.value?.finalFare ??
+        ride.value?.fareEstimate ??
+        100;
+    return 'TZS $amount.00';
+  }
 
   String get paymentModeLabel {
     final method = ride.value?.paymentMethod.name ?? 'wallet';
