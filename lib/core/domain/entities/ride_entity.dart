@@ -58,6 +58,18 @@ class VehicleSnapshotEntity {
   });
 }
 
+class FareBreakdownEntity {
+  final int rideCharge;
+  final int bookingFee;
+  final int totalAmount;
+
+  const FareBreakdownEntity({
+    required this.rideCharge,
+    required this.bookingFee,
+    required this.totalAmount,
+  });
+}
+
 class RideEntity {
   final String id;
   final String riderId;
@@ -75,6 +87,7 @@ class RideEntity {
   final PaymentMethod paymentMethod;
   final PaymentStatus paymentStatus;
   final int? cancellationFee;
+  final FareBreakdownEntity? fareBreakdown;
   final DriverSnapshotEntity? driverSnapshot;
   final VehicleSnapshotEntity? vehicleSnapshot;
   final DateTime createdAt;
@@ -96,6 +109,7 @@ class RideEntity {
     required this.paymentMethod,
     required this.paymentStatus,
     this.cancellationFee,
+    this.fareBreakdown,
     this.driverSnapshot,
     this.vehicleSnapshot,
     required this.createdAt,

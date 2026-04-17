@@ -50,7 +50,7 @@ class RideHistoryCard extends StatelessWidget {
     final vehicleType = ride.vehicleSnapshot?.vehicleType ?? 'Boda';
     final effectiveFare = ride.status == RideStatus.cancelled
         ? (ride.cancellationFee ?? 0)
-        : (ride.finalFare ?? ride.fareEstimate);
+        : (ride.fareBreakdown?.totalAmount ?? ride.finalFare ?? ride.fareEstimate);
 
     return GestureDetector(
       onTap: onTap,

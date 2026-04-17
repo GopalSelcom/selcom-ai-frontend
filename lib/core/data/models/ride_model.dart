@@ -19,6 +19,7 @@ class RideModel extends RideEntity {
     required super.paymentMethod,
     required super.paymentStatus,
     super.cancellationFee,
+    super.fareBreakdown,
     super.driverSnapshot,
     super.vehicleSnapshot,
     required super.createdAt,
@@ -40,6 +41,14 @@ class RideModel extends RideEntity {
     final pin =
         (json['pin_code']?.toString() ?? driverSnapshot?.verificationCode ?? '')
             .trim();
+    final fareBreakdownJson = json['fare_breakdown'];
+    final fareBreakdown = fareBreakdownJson is Map<String, dynamic>
+        ? FareBreakdownModel.fromJson(fareBreakdownJson)
+        : fareBreakdownJson is Map
+            ? FareBreakdownModel.fromJson(
+                Map<String, dynamic>.from(fareBreakdownJson),
+              )
+            : null;
 
     return RideModel(
       id: json['_id'] ?? '',
@@ -67,6 +76,7 @@ class RideModel extends RideEntity {
         orElse: () => PaymentStatus.pending,
       ),
       cancellationFee: json['cancellation_fee'],
+      fareBreakdown: fareBreakdown,
       driverSnapshot: driverSnapshot,
       vehicleSnapshot: json['vehicle_snapshot'] != null
           ? VehicleSnapshotModel.fromJson(json['vehicle_snapshot'])
@@ -154,6 +164,22 @@ class VehicleSnapshotModel extends VehicleSnapshotEntity {
       vehicleModel: json['vehicle_model'] ?? '',
       vehicleColor: json['vehicle_color'] ?? '',
       plateNumber: json['plate_number'] ?? '',
+    );
+  }
+}
+
+class FareBreakdownModel extends FareBreakdownEntity {
+  const FareBreakdownModel({
+    required super.rideCharge,
+    required super.bookingFee,
+    required super.totalAmount,
+  });
+
+  factory FareBreakdownModel.fromJson(Map<String, dynamic> json) {
+    return FareBreakdownModel(
+      rideCharge: ((json['ride_charge'] ?? 0) as num).toInt(),
+      bookingFee: ((json['booking_fee'] ?? 0) as num).toInt(),
+      totalAmount: ((json['total_amount'] ?? 0) as num).toInt(),
     );
   }
 }

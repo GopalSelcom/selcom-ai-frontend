@@ -18,12 +18,14 @@ class RideDetailsBottomSheet extends StatelessWidget {
       'yyyy-MM-dd, hh:mm a',
     ).format(ride.createdAt);
     final isCancelled = ride.status.name == 'cancelled';
+    final fare = ride.fareBreakdown;
     final rideCharge = isCancelled
         ? (ride.cancellationFee ?? 0)
-        : ride.fareEstimate;
+        : (fare?.rideCharge ?? ride.fareEstimate);
+    final bookingFee = isCancelled ? 0 : (fare?.bookingFee ?? 0);
     final totalAmount = isCancelled
         ? (ride.cancellationFee ?? 0)
-        : (ride.finalFare ?? ride.fareEstimate);
+        : (fare?.totalAmount ?? ride.finalFare ?? ride.fareEstimate);
 
     return Container(
       width: double.infinity,
@@ -162,9 +164,9 @@ class RideDetailsBottomSheet extends StatelessWidget {
                           amount: 'TZS $rideCharge',
                         ),
                         SizedBox(height: 12.h),
-                        const FareBreakdownRow(
+                        FareBreakdownRow(
                           title: 'Booking Fees & Convenience Charges',
-                          amount: 'TZS 0.00',
+                          amount: 'TZS $bookingFee',
                         ),
                         SizedBox(height: 12.h),
                         FareBreakdownRow(
