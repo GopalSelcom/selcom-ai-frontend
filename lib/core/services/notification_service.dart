@@ -7,6 +7,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import '../routes/app_routes.dart';
+import '../services/storage_service.dart';
 import 'package:logger/logger.dart';
 
 class NotificationService {
@@ -28,10 +29,24 @@ class NotificationService {
   Future<void> initialize() async {
     if (_isInitialized) return;
 
-    // Fetch and cache device token once
-    _deviceToken = await getToken();
+    // Load persisted token if available (to avoid "123" on start)
+    _deviceToken = await StorageService().read(StorageKeys.fcmToken);
+    if (_deviceToken != null) {
+      _logger.d("Loaded persisted FCM token: $_deviceToken");
+    }
+
+    // Listen for token refreshes to keep the cached token updated
+    _fcm.onTokenRefresh.listen((token) async {
+      _deviceToken = token;
+      _logger.d("FCM Token Updated: $token");
+      await StorageService().write(StorageKeys.fcmToken, token);
+    });
+
+    // Fetch and cache device token (don't await to avoid blocking app startup)
+    getToken();
 
     // 1. Initialize Local Notifications
+
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
@@ -111,12 +126,27 @@ class NotificationService {
     return settings.authorizationStatus == AuthorizationStatus.denied;
   }
 
-  Future<String?> getToken() async {
+  Future<String?> getToken({int retryCount = 0}) async {
     try {
       String? token = await _fcm.getToken();
+      _deviceToken = token;
+      if (token != null) {
+        await StorageService().write(StorageKeys.fcmToken, token);
+      }
       _logger.d("FCM Token: $token");
       return token;
     } catch (e) {
+      // On iOS, sometimes the APNS token isn't ready immediately.
+      // We retry a few times after a delay to give it time to be received.
+      if (Platform.isIOS &&
+          e.toString().contains('apns-token-not-set') &&
+          retryCount < 5) {
+        _logger.w(
+          "APNS token not set, retrying in 3 seconds (Attempt $retryCount)...",
+        );
+        await Future.delayed(const Duration(seconds: 3));
+        return getToken(retryCount: retryCount + 1);
+      }
       _logger.e("Error getting FCM token: $e");
       return null;
     }

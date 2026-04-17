@@ -10,6 +10,7 @@ class Params {
 
   // ── Device / Auth ──
   static const String deviceTokenRider = "device_token_rider";
+  static const String deviceToken = "device_token";
   static const String deviceType = "device_type";
 
   static const String appUuid = "app_uuid";

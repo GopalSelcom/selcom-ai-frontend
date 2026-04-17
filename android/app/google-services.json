@@ -7,6 +7,25 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:235920604285:android:a5c3b277c04abe860ac514",
+        "android_client_info": {
+          "package_name": "com.selcom.go"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAY9TzBQJlMff1yw63gw4aQr6KfWhts1bI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:235920604285:android:d5047ac0be90be800ac514",
         "android_client_info": {
           "package_name": "com.selcomgo"

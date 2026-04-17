@@ -7,6 +7,7 @@ class StorageKeys {
   static const String refreshToken = 'refresh_token';
   static const String user = 'user_data';
   static const String isFirstTime = 'is_first_time';
+  static const String fcmToken = 'fcm_token';
 }
 
 /// A service class for handling secure data persistence using FlutterSecureStorage.
