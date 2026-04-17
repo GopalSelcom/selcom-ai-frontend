@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:selcom_rides_frontend/shared/widgets/map_widgets.dart';
@@ -15,6 +14,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_map_gps_button.dart';
 import '../../../../shared/widgets/app_map_top_header.dart';
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
+import '../../../../core/routes/app_routes.dart';
 
 class HomeScreen extends GetView<HomeController> {
   const HomeScreen({super.key});
@@ -86,7 +86,6 @@ class HomeScreen extends GetView<HomeController> {
             }
             return _buildFigmaDraggableSheet();
           }),
-
         ],
       ),
     );
@@ -364,7 +363,6 @@ class HomeScreen extends GetView<HomeController> {
                   child: Row(
                     children: [
                       _buildFigmaChip('Home', AppAssets.icHomeChip),
-                      _buildFigmaChip('Office', AppAssets.icOfficeChip),
                       _buildFigmaChip('Work', AppAssets.icWorkChip),
                       _buildFigmaChip('Other', AppAssets.icOtherChip),
                     ],
@@ -426,48 +424,67 @@ class HomeScreen extends GetView<HomeController> {
   }
 
   Widget _buildFigmaChip(String label, String iconPath) {
-    final subtitle = controller.chipSubtitleFor(label);
-    return GestureDetector(
-      onTap: () => controller.navigateToVehicleSelectionForSavedLabel(label),
-      child: Container(
-        margin: EdgeInsets.only(right: 12.w),
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: const Color(0xFFE2E8F0), width: 0.8),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SvgPicture.asset(iconPath, width: 20.w, height: 20.w),
-            SizedBox(width: 8.w),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  label,
-                  style: AppTextStyles.homeChip.copyWith(fontSize: 14.sp),
+    return Obx(() {
+      final savedPlace = controller.savedPlaces.firstWhereOrNull(
+        (p) => p.label?.toLowerCase() == label.toLowerCase(),
+      );
+      final isSaved = savedPlace != null;
+
+      return GestureDetector(
+        onTap: () {
+          if (isSaved) {
+            // For now, if saved, navigate to the selection flow or handle as per ride logic
+            // The original logic was: controller.navigateToVehicleSelectionForSavedLabel(label)
+            controller.navigateToVehicleSelectionForSavedLabel(label);
+          } else {
+            Get.toNamed(AppRoutes.selectSavedLocation, arguments: label);
+          }
+        },
+        onLongPress: isSaved
+            ? () => Get.toNamed(AppRoutes.selectSavedLocation, arguments: label)
+            : null,
+        child: Container(
+          margin: EdgeInsets.only(right: 12.w),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: const Color(0xFFE2E8F0), width: 0.8),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: EdgeInsets.all(4.w),
+                decoration: BoxDecoration(
+                  color: isSaved ? const Color(0xFFFEF3C7) : AppColors.primary,
+                  shape: BoxShape.circle,
                 ),
-                if (subtitle != null && subtitle.trim().isNotEmpty)
-                  SizedBox(
-                    width: 120.w,
-                    child: Text(
-                      subtitle,
-                      style: AppTextStyles.homeCaption.copyWith(
-                        fontSize: 11.sp,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-              ],
-            ),
-          ],
+                child: isSaved
+                    ? Icon(
+                        label.toLowerCase() == 'home'
+                            ? Icons.home_rounded
+                            : label.toLowerCase() == 'work'
+                            ? Icons.work_rounded
+                            : Icons.bookmark_rounded,
+                        color: const Color(0xFFB45309),
+                        size: 14.sp,
+                      )
+                    : Icon(Icons.add, color: Colors.white, size: 14.sp),
+              ),
+              SizedBox(width: 8.w),
+              Text(
+                label,
+                style: AppTextStyles.homeChip.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.shade1,
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 
   Widget _buildSavedPlaceItem(SavedPlace place) {
@@ -794,7 +811,10 @@ class HomeScreen extends GetView<HomeController> {
               Row(
                 children: [
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8.w,
+                      vertical: 4.h,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFCE7F3),
                       borderRadius: BorderRadius.circular(10.r),
@@ -808,7 +828,11 @@ class HomeScreen extends GetView<HomeController> {
                     ),
                   ),
                   const Spacer(),
-                  Icon(Icons.directions_car_filled, color: AppColors.primary, size: 18.sp),
+                  Icon(
+                    Icons.directions_car_filled,
+                    color: AppColors.primary,
+                    size: 18.sp,
+                  ),
                   SizedBox(width: 4.w),
                   Text(
                     ride.vehicleSnapshot?.vehicleType ?? ride.vehicleTypeId,
@@ -857,7 +881,11 @@ class HomeScreen extends GetView<HomeController> {
                     ),
                   ),
                   SizedBox(width: 4.w),
-                  Icon(Icons.arrow_forward_ios, size: 14.sp, color: AppColors.primary),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    size: 14.sp,
+                    color: AppColors.primary,
+                  ),
                 ],
               ),
             ],

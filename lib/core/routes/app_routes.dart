@@ -8,6 +8,8 @@ import '../../features/auth/presentation/bindings/auth_binding.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/home/presentation/bindings/home_binding.dart';
 import '../../features/home/presentation/screens/location_selection_screen.dart';
+import '../../features/home/presentation/screens/select_saved_location_screen.dart';
+import '../../features/home/presentation/screens/check_pickup_point_screen.dart';
 import '../../features/notification/presentation/screens/notification_screen.dart';
 import '../../features/ride/presentation/bindings/driver_accepted_binding.dart';
 import '../../features/ride/presentation/bindings/finding_driver_binding.dart';
@@ -48,6 +50,8 @@ class AppRoutes {
   static const String rideMessage = '/ride/message';
   static const String cancelDialogGallery = '/cancel-dialog-gallery';
   static const String paymentMethods = '/payment-methods';
+  static const String selectSavedLocation = '/select-saved-location';
+  static const String checkPickupPoint = '/check-pickup-point';
 
   static List<GetPage> get pages => [
     GetPage(name: splash, page: () => const SplashScreen()),
@@ -106,5 +110,15 @@ class AppRoutes {
       page: () => const CancelDialogGalleryScreen(),
     ),
     GetPage(name: paymentMethods, page: () => const PaymentMethodsScreen()),
+    GetPage(
+      name: selectSavedLocation,
+      page: () => const SelectSavedLocationScreen(),
+      binding: HomeBinding(),
+    ),
+    GetPage(
+      name: checkPickupPoint,
+      page: () => const CheckPickupPointScreen(),
+      binding: HomeBinding(),
+    ),
   ];
 }
