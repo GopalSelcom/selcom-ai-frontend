@@ -48,6 +48,9 @@ class RideHistoryCard extends StatelessWidget {
       'yyyy-MM-dd, hh:mm a',
     ).format(ride.createdAt);
     final vehicleType = ride.vehicleSnapshot?.vehicleType ?? 'Boda';
+    final effectiveFare = ride.status == RideStatus.cancelled
+        ? (ride.cancellationFee ?? 0)
+        : (ride.finalFare ?? ride.fareEstimate);
 
     return GestureDetector(
       onTap: onTap,
@@ -153,7 +156,7 @@ class RideHistoryCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'TZS ${ride.finalFare ?? ride.fareEstimate}',
+                    'TZS $effectiveFare',
                     style: TextStyle(
                       fontFamily: AppTextStyles.metropolisFont,
                       fontWeight: FontWeight.w500,

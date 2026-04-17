@@ -14,10 +14,20 @@ class RideDetailsBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final formattedDate = DateFormat('yyyy-MM-dd, hh:mm a').format(ride.createdAt);
+    final formattedDate = DateFormat(
+      'yyyy-MM-dd, hh:mm a',
+    ).format(ride.createdAt);
+    final isCancelled = ride.status.name == 'cancelled';
+    final rideCharge = isCancelled
+        ? (ride.cancellationFee ?? 0)
+        : ride.fareEstimate;
+    final totalAmount = isCancelled
+        ? (ride.cancellationFee ?? 0)
+        : (ride.finalFare ?? ride.fareEstimate);
 
     return Container(
       width: double.infinity,
+      height: MediaQuery.of(context).size.height * 0.8,
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).padding.bottom + 24.h,
       ),
@@ -148,8 +158,8 @@ class RideDetailsBottomSheet extends StatelessWidget {
                         ),
                         SizedBox(height: 16.h),
                         FareBreakdownRow(
-                          title: 'Ride Charge', 
-                          amount: 'TZS ${ride.fareEstimate}'
+                          title: 'Ride Charge',
+                          amount: 'TZS $rideCharge',
                         ),
                         SizedBox(height: 12.h),
                         const FareBreakdownRow(
@@ -159,7 +169,7 @@ class RideDetailsBottomSheet extends StatelessWidget {
                         SizedBox(height: 12.h),
                         FareBreakdownRow(
                           title: 'Total Amount',
-                          amount: 'TZS ${ride.finalFare ?? ride.fareEstimate}',
+                          amount: 'TZS $totalAmount',
                           isTotal: true,
                         ),
                       ],
@@ -199,15 +209,18 @@ class RideDetailsBottomSheet extends StatelessWidget {
 
                   // Need Help
                   const NeedHelpRow(),
-                  SizedBox(height: 24.h),
-
-                  // Done Button
-                  AppPrimaryButton(
-                    label: 'Done',
-                    onPressed: () => Navigator.pop(context),
-                  ),
                 ],
               ),
+            ),
+          ),
+          SizedBox(height: 24.h),
+
+          // Done Button
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            child: AppPrimaryButton(
+              label: 'Done',
+              onPressed: () => Navigator.pop(context),
             ),
           ),
         ],

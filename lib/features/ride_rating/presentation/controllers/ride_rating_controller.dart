@@ -86,9 +86,28 @@ class RideRatingController extends GetxController {
     final result = await getLastCompletedRideUseCase();
     result.fold(
       (failure) => _handleFailure(failure),
-      (ride) => pendingReviewRide.value = _isWithinPendingReviewWindow(ride)
-          ? ride
-          : null,
+      (ride) {
+        if (ride == null) {
+          pendingReviewRide.value = null;
+          selectedRating.value = 0;
+          return;
+        }
+
+        final isPending = _isWithinPendingReviewWindow(ride);
+        pendingReviewRide.value = isPending ? ride : null;
+
+        if (!isPending) {
+          selectedRating.value = 0;
+          return;
+        }
+
+        final initialRating = ride.riderRating;
+        selectedRating.value = (initialRating != null &&
+                initialRating >= 1 &&
+                initialRating <= 5)
+            ? initialRating
+            : 0;
+      },
     );
     isLoadingRide.value = false;
   }

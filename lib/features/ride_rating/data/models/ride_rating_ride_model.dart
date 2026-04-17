@@ -15,6 +15,7 @@ class RideRatingRideModel extends RideRatingRideEntity {
     required super.destinationLat,
     required super.destinationLng,
     required super.finalFare,
+    required super.riderRating,
     required super.rideCompletedAt,
   });
 
@@ -52,6 +53,7 @@ class RideRatingRideModel extends RideRatingRideEntity {
       destinationLat: (destination['lat'] as num?)?.toDouble(),
       destinationLng: (destination['lng'] as num?)?.toDouble(),
       finalFare: (json['final_fare'] as num?) ?? 0,
+      riderRating: (json['rider_rating'] as num?)?.toInt(),
       rideCompletedAt: DateTime.tryParse(
         (json['ride_completed_at'] as String?)?.trim() ?? '',
       ),

@@ -18,6 +18,7 @@ class RideModel extends RideEntity {
     required super.pinCode,
     required super.paymentMethod,
     required super.paymentStatus,
+    super.cancellationFee,
     super.driverSnapshot,
     super.vehicleSnapshot,
     required super.createdAt,
@@ -65,6 +66,7 @@ class RideModel extends RideEntity {
         (e) => e.name == (json['payment_status'] ?? 'pending'),
         orElse: () => PaymentStatus.pending,
       ),
+      cancellationFee: json['cancellation_fee'],
       driverSnapshot: driverSnapshot,
       vehicleSnapshot: json['vehicle_snapshot'] != null
           ? VehicleSnapshotModel.fromJson(json['vehicle_snapshot'])
@@ -144,9 +146,9 @@ class VehicleSnapshotModel extends VehicleSnapshotEntity {
   factory VehicleSnapshotModel.fromJson(Map<String, dynamic> json) {
     return VehicleSnapshotModel(
       vehicleType:
-          json['vehicle_type'] ??
-          json['vehicle_name'] ??
           json['display_name'] ??
+          json['vehicle_name'] ??
+          json['vehicle_type'] ??
           '',
       vehicleMake: json['vehicle_make'] ?? '',
       vehicleModel: json['vehicle_model'] ?? '',
