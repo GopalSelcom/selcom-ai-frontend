@@ -52,12 +52,14 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
               onMapCreated: (mapController) {
                 // Optional: handle map controller
               },
+              padding: EdgeInsets.only(bottom: 350.h),
               markers: const {},
             ),
           ),
 
-          // Custom "Pickup point" overlay precisely centered on the LatLng
+          // Custom "Pickup point" overlay precisely centered on the visible map area
           Positioned.fill(
+            bottom: 350.h, // Match the map padding to align visually
             child: IgnorePointer(
               child: Center(
                 child: Stack(
