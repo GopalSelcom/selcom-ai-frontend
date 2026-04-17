@@ -1,9 +1,11 @@
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
+
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../di/injection_container.dart';
+import '../services/notification_service.dart';
 import '../services/storage_service.dart';
 import 'api_constants.dart';
 
@@ -50,17 +52,9 @@ Future<Map<String, String>> commonHeaders({
   }
   headers[Params.appUuid] = appUuid ?? 'unknown';
 
-  // ── Device Token (FCM) ──
-  if (deviceTokenRequired) {
-    try {
-      final String? fcmToken = await FirebaseMessaging.instance.getToken();
-      headers[Params.deviceToken] = fcmToken ?? "123";
-    } catch (_) {
-      headers[Params.deviceToken] = "123";
-    }
-  } else {
-    headers[Params.deviceToken] = "123";
-  }
+  // Pass device_token_rider for all APIs as requested.
+  // The token is fetched once at app startup and cached in NotificationService.
+  headers[Params.deviceTokenRider] = sl<NotificationService>().deviceToken;
 
   // ── Encryption ──
   headers[Params.encryptionDisabled] = "true";
@@ -93,6 +87,8 @@ Future<Map<String, String>> commonHeaders({
   } catch (_) {
     // Package info might not be ready
   }
+
+  // print("API Headers: $headers"); // Temporary for verification
 
   return headers;
 }

@@ -20,9 +20,16 @@ class NotificationService {
   final Logger _logger = Logger();
 
   bool _isInitialized = false;
+  String? _deviceToken;
+
+  /// Returns the cached device token or a default value.
+  String get deviceToken => _deviceToken ?? "123";
 
   Future<void> initialize() async {
     if (_isInitialized) return;
+
+    // Fetch and cache device token once
+    _deviceToken = await getToken();
 
     // 1. Initialize Local Notifications
     const AndroidInitializationSettings initializationSettingsAndroid =
