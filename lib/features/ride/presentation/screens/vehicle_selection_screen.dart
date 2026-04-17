@@ -12,7 +12,7 @@ import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../payment/presentation/widgets/payment_bar.dart';
 import '../controllers/vehicle_selection_controller.dart';
 
-/// SCR-09 — vehicle selection, fare, payment + Book Ride (map uses dummy route + animated drivers).
+/// SCR-09 — vehicle selection, fare, payment + Book Ride.
 class VehicleSelectionScreen extends StatefulWidget {
   const VehicleSelectionScreen({super.key});
 
@@ -23,6 +23,7 @@ class VehicleSelectionScreen extends StatefulWidget {
 class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
     with TickerProviderStateMixin {
   static const double _sheetHeightFactor = 0.58;
+  bool _isMapVisualReady = false;
   // late AnimationController _polylineAnim;
   // late AnimationController _pulseAnim;
 
@@ -40,6 +41,26 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
     // _polylineAnim.dispose();
     // _pulseAnim.dispose();
     super.dispose();
+  }
+
+  void _handleMapCreated(
+    VehicleSelectionController controller,
+    GoogleMapController mapController,
+  ) {
+    controller.onMapCreated(mapController);
+    if (!_isMapVisualReady && mounted) {
+      Future.delayed(const Duration(milliseconds: 220), () {
+        if (mounted) {
+          setState(() => _isMapVisualReady = true);
+        }
+      });
+    }
+  }
+
+  void _handleMapIdle() {
+    if (!_isMapVisualReady && mounted) {
+      setState(() => _isMapVisualReady = true);
+    }
   }
 
   @override
@@ -112,11 +133,23 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
 
   Widget _buildMap(VehicleSelectionController c) {
     return Obx(() {
-      final routePts = c.routePoints.toList();
+      if (!c.isMapDataReady) {
+        if (_isMapVisualReady) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() => _isMapVisualReady = false);
+            }
+          });
+        }
+        return const ColoredBox(
+          color: AppColors.pageBackground,
+          child: SizedBox.expand(),
+        );
+      }
+
+      final points = c.routePoints.toList();
       final pickup = LatLng(c.pickupEntity.lat, c.pickupEntity.lng);
       final drop = LatLng(c.destinationEntity.lat, c.destinationEntity.lng);
-      // Never block the map on empty geometry — use pickup→drop until API polyline arrives.
-      final points = routePts.isNotEmpty ? routePts : <LatLng>[pickup, drop];
       final mid = LatLng(
         (pickup.latitude + drop.latitude) / 2,
         (pickup.longitude + drop.longitude) / 2,
@@ -130,7 +163,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
           Marker(
             markerId: MarkerId('driver_$i'),
             position: jitter,
-            icon: c.driverIcon ?? BitmapDescriptor.defaultMarker, // fallback
+            icon: c.driverIcon ?? c.pickupIcon!,
             anchor: const Offset(0.5, 0.5),
           ),
         );
@@ -140,33 +173,52 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
         Marker(
           markerId: const MarkerId('pickup'),
           position: pickup,
-          icon: c.pickupIcon ?? BitmapDescriptor.defaultMarker,
+          icon: c.pickupIcon!,
         ),
       );
       markers.add(
         Marker(
           markerId: const MarkerId('drop'),
           position: drop,
-          icon: c.dropIcon ?? BitmapDescriptor.defaultMarker,
+          icon: c.dropIcon!,
         ),
       );
 
-      return AppGoogleMap(
-        mapWidgetKey: const ValueKey('vehicle_selection_map'),
-        initialCameraPosition: CameraPosition(target: mid, zoom: 13.5),
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).size.height * _sheetHeightFactor,
-        ),
-        onMapCreated: c.onMapCreated,
-        polylines: {
-          Polyline(
-            polylineId: const PolylineId('route'),
-            points: points,
-            color: const Color(0xFF2668D2),
-            width: 5,
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          AppGoogleMap(
+            mapWidgetKey: const ValueKey('vehicle_selection_map'),
+            initialCameraPosition: CameraPosition(target: mid, zoom: 13.5),
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).size.height * _sheetHeightFactor,
+            ),
+            onMapCreated: (mapController) =>
+                _handleMapCreated(c, mapController),
+            onCameraIdle: _handleMapIdle,
+            polylines: {
+              Polyline(
+                polylineId: const PolylineId('route'),
+                points: points,
+                color: const Color(0xFF2668D2),
+                width: 5,
+              ),
+            },
+            markers: markers,
           ),
-        },
-        markers: markers,
+          IgnorePointer(
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 220),
+              opacity: _isMapVisualReady ? 0 : 1,
+              child: const ColoredBox(
+                color: AppColors.pageBackground,
+                child: Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                ),
+              ),
+            ),
+          ),
+        ],
       );
 
       // return AnimatedBuilder(

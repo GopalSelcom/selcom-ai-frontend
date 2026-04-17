@@ -14,7 +14,6 @@ import '../../../../core/data/models/responses/nearbyRiders/response/near_by_rid
 import '../../../../core/data/models/responses/payment_status_response/payment_status_response.dart';
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
-import '../../../../core/data/models/user_profile_models.dart';
 import '../../../payment/presentation/widgets/payment_status_dialog.dart';
 import '../../../../core/domain/entities/location_entity.dart';
 import '../../../../core/routes/app_routes.dart';
@@ -24,7 +23,7 @@ import '../../../payment/presentation/controllers/payment_method_controller.dart
 import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../domain/repositories/ride_repository.dart';
 
-/// SCR-09 — vehicle + fare selection. Uses estimate + payment APIs with dummy map fallbacks.
+/// SCR-09 — vehicle + fare selection.
 class VehicleSelectionController extends GetxController {
   VehicleSelectionController({
     required this.homeRepository,
@@ -48,8 +47,10 @@ class VehicleSelectionController extends GetxController {
   final nearbyDriverCount = 0.obs;
   final paymentStatus = PaymentStatus.pending.obs;
   final paymentTimerSeconds = 120.obs;
+  final isRouteReady = false.obs;
+  final isLocationIconsReady = false.obs;
 
-  /// Full route for polyline (dummy or API).
+  /// Full route for polyline (API).
   final routePoints = <LatLng>[].obs;
 
   /// Nearby “driver” markers (dummy positions along/near route).
@@ -120,26 +121,8 @@ class VehicleSelectionController extends GetxController {
         ?.trim()
         .toLowerCase();
 
-    // Show a route immediately; replaced when fare API returns geometry.
-    _buildDummyRoute(pLat, pLng, dLat, dLng);
-  }
-
-  void _buildDummyRoute(double pLat, double pLng, double dLat, double dLng) {
-    final pts = <LatLng>[];
-    const steps = 32;
-    for (var i = 0; i <= steps; i++) {
-      final t = i / steps;
-      final lat = pLat + (dLat - pLat) * t + 0.002 * (t - 0.5) * (t - 0.5);
-      final lng = pLng + (dLng - pLng) * t + 0.0015 * (t - 0.3);
-      pts.add(LatLng(lat, lng));
-    }
-    routePoints.assignAll(pts);
-    if (kDebugMode) {
-      debugPrint(
-        '[VehicleSelection] Dummy route built => '
-        'pickup=($pLat,$pLng), destination=($dLat,$dLng), points=${pts.length}',
-      );
-    }
+    routePoints.clear();
+    isRouteReady.value = false;
   }
 
   Future<void> _loadAll() async {
@@ -148,6 +131,9 @@ class VehicleSelectionController extends GetxController {
 
   Future<void> _loadEstimates() async {
     isLoadingEstimates.value = true;
+    isRouteReady.value = false;
+    routePoints.clear();
+    driverMarkerPoints.clear();
     final req = FareEstimateRequest(pickup: pickupEntity, destination: destinationEntity);
 
     final vehicleTypesResult = await homeRepository.getVehicleTypes();
@@ -156,7 +142,10 @@ class VehicleSelectionController extends GetxController {
 
     final result = await homeRepository.estimateFare(req);
     result.fold(
-      (_) => estimates.assignAll(_dummyEstimates(vehicleTypes)),
+      (_) {
+        estimates.assignAll(_dummyEstimates(vehicleTypes));
+        isRouteReady.value = false;
+      },
       (model) {
         if (model.estimates.isEmpty) {
           estimates.assignAll(_dummyEstimates(vehicleTypes));
@@ -177,6 +166,7 @@ class VehicleSelectionController extends GetxController {
                 .toList();
             if (mapped.length >= 2) {
               routePoints.assignAll(mapped);
+              isRouteReady.value = true;
               if (kDebugMode) {
                 debugPrint(
                   '[VehicleSelection] API route geometry applied => points=${mapped.length}, '
@@ -190,11 +180,14 @@ class VehicleSelectionController extends GetxController {
                 mapped[(n * 0.55).floor().clamp(0, n - 1)],
                 mapped[(n * 0.78).floor().clamp(0, n - 1)],
               ]);
+            } else {
+              isRouteReady.value = false;
             }
           } else {
+            isRouteReady.value = false;
             if (kDebugMode) {
               debugPrint(
-                '[VehicleSelection] API route geometry empty; using fallback route.',
+                '[VehicleSelection] API route geometry empty; waiting before map render.',
               );
             }
           }
@@ -226,7 +219,11 @@ class VehicleSelectionController extends GetxController {
     dropIcon = await MapMarkerUtils.createCustomCircleMarker(
       color: const Color(0xFFE11D48),
     );
+    isLocationIconsReady.value = pickupIcon != null && dropIcon != null;
   }
+
+  bool get isMapDataReady =>
+      isRouteReady.value && isLocationIconsReady.value && routePoints.length >= 2;
 
   String vehicleImage(FareEstimateItem e) {
     final n = '${e.vehicleName ?? ''} ${e.displayName ?? ''}'.toLowerCase();
@@ -638,14 +635,8 @@ class VehicleSelectionController extends GetxController {
   }
 
   Future<void> _fitBounds() async {
-    if (mapController == null) return;
-    final pts = routePoints.isNotEmpty
-        ? routePoints.toList()
-        : <LatLng>[
-            LatLng(pickupEntity.lat, pickupEntity.lng),
-            LatLng(destinationEntity.lat, destinationEntity.lng),
-          ];
-    if (pts.isEmpty) return;
+    if (mapController == null || routePoints.length < 2) return;
+    final pts = routePoints.toList();
     double minLat = pts.first.latitude;
     double maxLat = pts.first.latitude;
     double minLng = pts.first.longitude;
