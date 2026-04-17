@@ -53,46 +53,65 @@ class MyRidesScreen extends StatelessWidget {
 
               return RefreshIndicator(
                 onRefresh: controller.fetchPastRides,
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(
-                    parent: BouncingScrollPhysics(),
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 16.w,
-                      vertical: 24.h,
+                child: NotificationListener<ScrollNotification>(
+                  onNotification: (notification) {
+                    if (notification.metrics.pixels >=
+                        notification.metrics.maxScrollExtent - 120) {
+                      controller.loadMorePastRides();
+                    }
+                    return false;
+                  },
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(
+                      parent: BouncingScrollPhysics(),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8.w),
-                          child: Text(
-                            'Past',
-                            style: AppTextStyles.body.copyWith(
-                              color: AppColors.shade2,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15.sp,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 24.h,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 8.w),
+                            child: Text(
+                              'Past',
+                              style: AppTextStyles.body.copyWith(
+                                color: AppColors.shade2,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15.sp,
+                              ),
                             ),
                           ),
-                        ),
-                        SizedBox(height: 16.h),
+                          SizedBox(height: 16.h),
 
-                        // Map Dynamic Data
-                        ...controller.pastRides.map(
-                          (ride) => RideHistoryCard(
-                            ride: ride,
-                            onTap: () {
-                              Get.bottomSheet(
-                                RideDetailsBottomSheet(ride: ride),
-                                isScrollControlled: true,
-                              );
-                            },
+                          // Map Dynamic Data
+                          ...controller.pastRides.map(
+                            (ride) => RideHistoryCard(
+                              ride: ride,
+                              onTap: () {
+                                Get.bottomSheet(
+                                  RideDetailsBottomSheet(ride: ride),
+                                  isScrollControlled: true,
+                                );
+                              },
+                            ),
                           ),
-                        ),
 
-                        SizedBox(height: 40.h),
-                      ],
+                          if (controller.isLoadingMore.value)
+                            Padding(
+                              padding: EdgeInsets.symmetric(vertical: 8.h),
+                              child: const Center(
+                                child: CircularProgressIndicator(
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ),
+
+                          SizedBox(height: 40.h),
+                        ],
+                      ),
                     ),
                   ),
                 ),

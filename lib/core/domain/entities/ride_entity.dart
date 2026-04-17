@@ -15,6 +15,7 @@ enum RideStatus {
 
 enum PaymentStatus {
   pending,
+  blocked,
   completed,
   failed,
   refunded,
@@ -73,6 +74,7 @@ class RideEntity {
   final String pinCode;
   final PaymentMethod paymentMethod;
   final PaymentStatus paymentStatus;
+  final int? cancellationFee;
   final DriverSnapshotEntity? driverSnapshot;
   final VehicleSnapshotEntity? vehicleSnapshot;
   final DateTime createdAt;
@@ -93,6 +95,7 @@ class RideEntity {
     required this.pinCode,
     required this.paymentMethod,
     required this.paymentStatus,
+    this.cancellationFee,
     this.driverSnapshot,
     this.vehicleSnapshot,
     required this.createdAt,

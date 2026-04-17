@@ -13,6 +13,7 @@ class RideRatingRideEntity {
   final double? destinationLat;
   final double? destinationLng;
   final num finalFare;
+  final int? riderRating;
   final DateTime? rideCompletedAt;
 
   const RideRatingRideEntity({
@@ -29,6 +30,7 @@ class RideRatingRideEntity {
     required this.destinationLat,
     required this.destinationLng,
     required this.finalFare,
+    required this.riderRating,
     required this.rideCompletedAt,
   });
 }
