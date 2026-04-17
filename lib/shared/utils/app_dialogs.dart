@@ -444,7 +444,118 @@ class AppDialogs {
 
   /// Shows a success dialog for verification completion.
   static void showVerificationSuccessDialog({VoidCallback? onConfirm}) {
-    // ... (omitted for brevity in replacement, but I will include the whole method or just append)
+    Get.dialog(
+      Dialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        elevation: 20,
+        shadowColor: Colors.black.withOpacity(0.4),
+        insetPadding: EdgeInsets.symmetric(horizontal: 24.w),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(32.r),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              children: [
+                ClipPath(
+                  clipper: SuccessHeaderClipper(),
+                  child: Container(
+                    height: 140.h,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE8F5E9),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(32.r),
+                        topRight: Radius.circular(32.r),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 40.h,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Container(
+                      padding: EdgeInsets.all(16.w),
+                      decoration: BoxDecoration(
+                        color: Colors.green,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.green.withOpacity(0.2),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.check_circle_rounded,
+                        size: 32.w,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(32.w, 40.h, 32.w, 48.h),
+              child: Column(
+                children: [
+                  Text(
+                    "Verification Successful!",
+                    style: AppTextStyles.sectionTitle.copyWith(
+                      fontSize: 22.sp,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 12.h),
+                  Text(
+                    "Your identity has been successfully verified. You can now use Selcom Pesa.",
+                    style: AppTextStyles.body.copyWith(
+                      fontSize: 16.sp,
+                      color: AppColors.shade2,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 32.h),
+                  InkWell(
+                    onTap: () {
+                      Get.back();
+                      if (onConfirm != null) onConfirm();
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(vertical: 16.h),
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(16.r),
+                      ),
+                      child: Center(
+                        child: Text(
+                          "Got it",
+                          style: AppTextStyles.body.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      barrierDismissible: false,
+    );
   }
 
   /// Shows a PIN locked error dialog.
