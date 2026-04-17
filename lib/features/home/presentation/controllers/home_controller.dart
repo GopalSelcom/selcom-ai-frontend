@@ -79,6 +79,11 @@ class HomeController extends GetxController {
   final AppSocketService _socketService = AppSocketService();
   bool _didHandleActiveRideFlow = false;
   StreamSubscription<bool>? _homeSocketConnectionSub;
+  Timer? _activeRidePollingTimer;
+  bool _isRefreshingActiveRide = false;
+  bool _activeRideRefreshQueued = false;
+  bool _skipNextVisibleRefresh = true;
+  DateTime? _lastActiveRideRefreshAt;
 
   final pickupMarkerIcon = Rxn<BitmapDescriptor>();
 
@@ -92,6 +97,7 @@ class HomeController extends GetxController {
     _loadMapIcons();
     _getCurrentLocation();
     _addMockDrivers();
+    _startActiveRidePolling();
     _loadHomeData().whenComplete(
       rideRatingController.tryOpenRatingSheetAfterHomeLoad,
     );
@@ -234,16 +240,60 @@ class HomeController extends GetxController {
       // Handle Active Ride
       results[3].fold((_) => null, (response) {
         final activeRideResponse = response as ActiveRideResponseModel?;
-        final activeRideData = activeRideResponse?.data?.ride;
-        if (activeRideData == null) return;
-
-        final rideModel = RideModel.fromJson(activeRideData.toJson());
-        activeRide.value = rideModel;
-        _connectAndJoinActiveRideRoom(rideModel);
+        _applyActiveRideResponse(activeRideResponse);
       });
     } finally {
       isLoadingHomeData.value = false;
     }
+  }
+
+  void onHomeVisible() {
+    if (_skipNextVisibleRefresh) {
+      _skipNextVisibleRefresh = false;
+      return;
+    }
+    if (_activeRideRefreshQueued) return;
+    _activeRideRefreshQueued = true;
+    Future.microtask(() async {
+      _activeRideRefreshQueued = false;
+      await refreshActiveRide();
+    });
+  }
+
+  Future<void> refreshActiveRide({bool force = false}) async {
+    if (_isRefreshingActiveRide) return;
+    if (!force &&
+        _lastActiveRideRefreshAt != null &&
+        DateTime.now().difference(_lastActiveRideRefreshAt!) <
+            const Duration(seconds: 2)) {
+      return;
+    }
+
+    _isRefreshingActiveRide = true;
+    _lastActiveRideRefreshAt = DateTime.now();
+    final result = await rideRepository.getActiveRide();
+    result.fold((_) {}, _applyActiveRideResponse);
+    _isRefreshingActiveRide = false;
+  }
+
+  void _startActiveRidePolling() {
+    _activeRidePollingTimer?.cancel();
+    _activeRidePollingTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      refreshActiveRide(force: true);
+    });
+  }
+
+  void _applyActiveRideResponse(ActiveRideResponseModel? activeRideResponse) {
+    final activeRideData = activeRideResponse?.data?.ride;
+    if (activeRideData == null) {
+      activeRide.value = null;
+      _didHandleActiveRideFlow = false;
+      return;
+    }
+
+    final rideModel = RideModel.fromJson(activeRideData.toJson());
+    activeRide.value = rideModel;
+    _connectAndJoinActiveRideRoom(rideModel);
   }
 
   void openActiveRide() {
@@ -323,6 +373,7 @@ class HomeController extends GetxController {
 
   @override
   void onClose() {
+    _activeRidePollingTimer?.cancel();
     _homeSocketConnectionSub?.cancel();
     _socketService.dispose();
     super.onClose();

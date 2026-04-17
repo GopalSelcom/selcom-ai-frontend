@@ -22,6 +22,7 @@ class HomeScreen extends GetView<HomeController> {
 
   @override
   Widget build(BuildContext context) {
+    controller.onHomeVisible();
     return Scaffold(
       backgroundColor: AppColors.pageBackground,
       body: Stack(
