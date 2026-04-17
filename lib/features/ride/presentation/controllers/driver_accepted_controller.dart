@@ -64,6 +64,7 @@ class DriverAcceptedController extends GetxController {
   final arrivalLabel = 'Driver will arriving in 1 min...'.obs;
   final unreadCount = 0.obs;
   final rideBottomSheetState = RideBottomSheetState.driverAssigned.obs;
+  final currentRideStatus = 'driver_assigned'.obs;
   final selectedRideRating = 4.obs;
 
   final Rxn<BitmapDescriptor> assignedDriverMarkerIcon =
@@ -221,6 +222,7 @@ class DriverAcceptedController extends GetxController {
     vehicleSubtitle.value = 'Toyota corolla, White';
     otpDigits.assignAll(['2', '7', '5', '6']);
     arrivalLabel.value = 'Driver will arriving in 1 min...';
+    currentRideStatus.value = 'driver_assigned';
   }
 
   void _applyRide(RideModel r) {
@@ -286,6 +288,8 @@ class DriverAcceptedController extends GetxController {
     _rideStatusSub?.cancel();
     _driverLocSub?.cancel();
     _trackingSub?.cancel();
+    _chatSub?.cancel();
+    _didJoinRideRoom = false;
 
     _connectionSub = _socketService.connectionStream.listen((connected) {
       if (!connected) return;
@@ -295,24 +299,11 @@ class DriverAcceptedController extends GetxController {
     _rideStatusSub = _socketService.rideStatusStream.listen((payload) {
       if (_navigatedAway) return;
       final status = (payload.status ?? '').toString().toLowerCase();
+      _applyBottomSheetStateForStatus(status);
       _applyStatusPayload(payload);
-
-      if (status == 'cancelled' || status == 'completed') {
-        if (status == 'cancelled') {
-          Get.offAllNamed(AppRoutes.home);
-          return;
-        }
-        rideBottomSheetState.value = RideBottomSheetState.rideCompleted;
-        return;
+      if (status == 'cancelled') {
+        Get.offAllNamed(AppRoutes.home);
       }
-      if (status == 'ride_started' ||
-          status == 'ride_in_progress' ||
-          status == 'near_destination') {
-        rideBottomSheetState.value = RideBottomSheetState.rideStarted;
-        return;
-      }
-      rideBottomSheetState.value = RideBottomSheetState.driverAssigned;
-      _applyStatusPayload(payload);
     });
 
     _driverLocSub = _socketService.rideDriverLocationStream.listen((payload) {
@@ -328,14 +319,8 @@ class DriverAcceptedController extends GetxController {
       if (payload != null) _applyTrackingPayload(payload);
     });
 
-    if (rideId.isEmpty) return;
-
-    _connectionSub = _socketService.connectionStream.listen((connected) {
-      if (!connected) return;
-      _joinRideRoomIfNeeded();
-    });
-
-    // If already connected, join now
+    // Ensure socket is connected for the active-ride entry path too.
+    await _socketService.connect();
     if (_socketService.isConnected) {
       _joinRideRoomIfNeeded();
     }
@@ -485,6 +470,11 @@ class DriverAcceptedController extends GetxController {
   }
 
   void _applyStatusPayload(EventRiderStatusUpdateResponse payload) {
+    final status = (payload.status ?? '').toString().toLowerCase();
+    if (status.isNotEmpty) {
+      _applyBottomSheetStateForStatus(status);
+    }
+
     final d = payload.driverSnapshot;
     if (d != null) {
       if ((d.name ?? '').trim().isNotEmpty) driverName.value = d.name!.trim();
@@ -558,6 +548,72 @@ class DriverAcceptedController extends GetxController {
     }
 
     _fitRouteBounds();
+  }
+
+  void _applyBottomSheetStateForStatus(String rawStatus) {
+    final status = rawStatus.trim().toLowerCase();
+    if (status.isEmpty) return;
+    currentRideStatus.value = status;
+
+    if (status == 'cancelled') {
+      return;
+    }
+
+    if (status == 'completed' || status == 'ride_completed') {
+      rideBottomSheetState.value = RideBottomSheetState.rideCompleted;
+      return;
+    }
+
+    if (status == 'ride_started' ||
+        status == 'ride_in_progress' ||
+        status == 'near_destination') {
+      rideBottomSheetState.value = RideBottomSheetState.rideStarted;
+      return;
+    }
+
+    rideBottomSheetState.value = RideBottomSheetState.driverAssigned;
+  }
+
+  String get rideProgressTitle {
+    switch (currentRideStatus.value) {
+      case 'ride_completed':
+      case 'completed':
+        return 'You have arrived!';
+      case 'near_destination':
+        return 'Almost There';
+      case 'ride_in_progress':
+        return 'On Your Way';
+      case 'ride_started':
+        return 'Ride Started';
+      case 'driver_arrived':
+        return 'Driver Arrived';
+      case 'driver_arriving':
+        return 'Driver En Route';
+      case 'driver_assigned':
+      default:
+        return 'Driver Assigned';
+    }
+  }
+
+  String get rideProgressSubtitle {
+    switch (currentRideStatus.value) {
+      case 'near_destination':
+        return 'Approaching your destination';
+      case 'ride_in_progress':
+        return 'Heading to your destination';
+      case 'ride_started':
+        return 'Trip has started';
+      case 'driver_arrived':
+        return 'Driver has reached pickup';
+      case 'driver_arriving':
+      case 'driver_assigned':
+        return 'Driver is heading to pickup';
+      case 'ride_completed':
+      case 'completed':
+        return arrivalDateLabel;
+      default:
+        return 'Arrived in ${etaLabel.value.toLowerCase()}';
+    }
   }
 
   void _applyTrackingPayload(TrackingUpdateSocketResponse payload) {
@@ -667,6 +723,12 @@ class DriverAcceptedController extends GetxController {
   }
 
   void finishCompletedRide() {
+    if (Get.isBottomSheetOpen ?? false) {
+      Get.back();
+    }
+    if (Get.isDialogOpen ?? false) {
+      Get.back();
+    }
     Get.offAllNamed(AppRoutes.home);
   }
 

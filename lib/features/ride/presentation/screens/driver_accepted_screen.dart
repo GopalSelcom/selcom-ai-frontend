@@ -469,7 +469,7 @@ class DriverAcceptedScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          isCompleted ? 'You have arrived!' : 'Ride Started',
+          c.rideProgressTitle,
           textAlign: TextAlign.center,
           style: AppTextStyles.homeTitle.copyWith(
             fontSize: 38.sp / 2,
@@ -497,9 +497,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 2.h),
                   Text(
-                    isCompleted
-                        ? c.arrivalDateLabel
-                        : 'Arrived in ${c.etaLabel.value.toLowerCase()}',
+                    c.rideProgressSubtitle,
                     style: AppTextStyles.homeCaption.copyWith(
                       fontSize: 15.sp,
                       color: const Color(0xFF364B63),
@@ -612,45 +610,6 @@ class DriverAcceptedScreen extends StatelessWidget {
         ),
         if (isCompleted) ...[
           SizedBox(height: 12.h),
-          Container(
-            padding: EdgeInsets.all(14.w),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8F9FD),
-              border: Border.all(color: const Color(0xFFE6E9EE), width: 0.8),
-              borderRadius: BorderRadius.circular(16.r),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'How was your ride?',
-                  style: AppTextStyles.homeTitle.copyWith(
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF132235),
-                  ),
-                ),
-                SizedBox(height: 10.h),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: List.generate(5, (index) {
-                    final star = index + 1;
-                    return GestureDetector(
-                      onTap: () => c.setRideRating(star),
-                      child: Icon(
-                        Icons.star,
-                        color: star <= c.selectedRideRating.value
-                            ? const Color(0xFFFFCC00)
-                            : const Color(0xFFD9DDE3),
-                        size: 34.w,
-                      ),
-                    );
-                  }),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 14.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
