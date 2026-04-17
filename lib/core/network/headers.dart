@@ -55,7 +55,7 @@ Future<Map<String, String>> commonHeaders({
   // Pass device_token_rider for all APIs as requested.
   // The token is fetched once at app startup and cached in NotificationService.
   headers[Params.deviceTokenRider] = sl<NotificationService>().deviceToken;
-  headers[Params.deviceToken] = sl<NotificationService>().deviceToken;
+  // headers[Params.deviceToken] = sl<NotificationService>().deviceToken;
 
   // ── Encryption ──
   headers[Params.encryptionDisabled] = "true";

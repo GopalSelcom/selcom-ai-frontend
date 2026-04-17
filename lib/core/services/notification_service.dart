@@ -2,11 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:get/get.dart';
-import '../routes/app_routes.dart';
 import '../services/storage_service.dart';
 import 'package:logger/logger.dart';
 
@@ -174,7 +171,6 @@ class NotificationService {
     _logger.d("Foreground Message received: ${message.messageId}");
 
     RemoteNotification? notification = message.notification;
-    AndroidNotification? android = message.notification?.android;
 
     if (notification != null) {
       showLocalNotification(
@@ -236,50 +232,6 @@ class NotificationService {
       );
     } catch (e) {
       debugPrint("Error in _localNotifications.show: $e");
-    }
-
-    // 2. In-App Banner (Guaranteed visibility for foreground)
-    // We use Get.snackbar styled as a native notification
-    if (Get.currentRoute != AppRoutes.rideMessage) {
-      // Add sound and haptic feedback for the in-app banner
-      HapticFeedback.lightImpact();
-      SystemSound.play(SystemSoundType.click);
-
-      Get.snackbar(
-        title ?? 'New Message',
-        body ?? '',
-        backgroundColor: Colors.white,
-        colorText: Colors.black87,
-        snackPosition: SnackPosition.TOP,
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        borderRadius: 12,
-        duration: const Duration(seconds: 4),
-        isDismissible: true,
-        dismissDirection: DismissDirection.vertical,
-        boxShadows: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.12),
-            blurRadius: 15,
-            spreadRadius: 2,
-            offset: const Offset(0, 5),
-          ),
-        ],
-        mainButton: TextButton(
-          onPressed: () {
-            if (payload != null) {
-              // Handle tap logic if needed
-            }
-            Get.back();
-          },
-          child: const Text(
-            'VIEW',
-            style: TextStyle(
-              color: Colors.blueAccent,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      );
     }
   }
 }
