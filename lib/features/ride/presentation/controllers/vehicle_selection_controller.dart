@@ -15,10 +15,12 @@ import '../../../../core/data/models/responses/payment_status_response/payment_s
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/data/models/user_profile_models.dart';
+import '../../../payment/presentation/widgets/payment_status_dialog.dart';
 import '../../../../core/domain/entities/location_entity.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../home/domain/repositories/home_repository.dart';
+import '../../../payment/presentation/controllers/payment_method_controller.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../domain/repositories/ride_repository.dart';
 
@@ -28,23 +30,24 @@ class VehicleSelectionController extends GetxController {
     required this.homeRepository,
     required this.profileRepository,
     required this.rideRepository,
+    required this.paymentMethodController,
   });
 
   final HomeRepository homeRepository;
   final ProfileRepository profileRepository;
   final RideRepository rideRepository;
+  final PaymentMethodController paymentMethodController;
 
   final estimates = <FareEstimateItem>[].obs;
-  final paymentMethods = <PaymentMethodModel>[].obs;
   final selectedVehicleIndex = 0.obs;
-  final Rxn<PaymentMethodModel> selectedPayment = Rxn<PaymentMethodModel>();
   final isLoadingEstimates = true.obs;
-  final isLoadingPayments = true.obs;
   final isBooking = false.obs;
   final isLoadingNearbyDrivers = false.obs;
   final isSocketConnected = false.obs;
   final lastSocketError = ''.obs;
   final nearbyDriverCount = 0.obs;
+  final paymentStatus = PaymentStatus.pending.obs;
+  final paymentTimerSeconds = 120.obs;
 
   /// Full route for polyline (dummy or API).
   final routePoints = <LatLng>[].obs;
@@ -140,7 +143,7 @@ class VehicleSelectionController extends GetxController {
   }
 
   Future<void> _loadAll() async {
-    await Future.wait([_loadEstimates(), _loadPaymentMethods()]);
+    await _loadEstimates();
   }
 
   Future<void> _loadEstimates() async {
@@ -353,31 +356,6 @@ class VehicleSelectionController extends GetxController {
     }).toList();
   }
 
-  Future<void> _loadPaymentMethods() async {
-    isLoadingPayments.value = true;
-    final result = await profileRepository.getPaymentMethods();
-    result.fold(
-      (_) => paymentMethods.assignAll(_dummyPayments()),
-      (list) {
-        if (list.isEmpty) {
-          paymentMethods.assignAll(_dummyPayments());
-        } else {
-          paymentMethods.assignAll(list);
-        }
-      },
-    );
-    selectedPayment.value ??= paymentMethods.isNotEmpty ? paymentMethods.first : null;
-    isLoadingPayments.value = false;
-  }
-
-  List<PaymentMethodModel> _dummyPayments() {
-    return [
-      PaymentMethodModel(id: 'wallet', label: 'Wallet', type: 'wallet'),
-      PaymentMethodModel(id: 'card', label: 'Mastercard / Visa', type: 'card'),
-      PaymentMethodModel(id: 'selcom_pesa', label: 'Selcom Pesa', type: 'selcom_pesa'),
-    ];
-  }
-
   FareEstimateItem? get selectedEstimate {
     if (estimates.isEmpty) return null;
     final i = selectedVehicleIndex.value.clamp(0, estimates.length - 1);
@@ -395,13 +373,9 @@ class VehicleSelectionController extends GetxController {
     _requestNearbyDriversForCurrentSelection();
   }
 
-  void selectPaymentMethod(PaymentMethodModel m) {
-    selectedPayment.value = m;
-  }
-
   Future<void> bookRide() async {
     final est = selectedEstimate;
-    final pay = selectedPayment.value;
+    final pay = paymentMethodController.selectedPayment.value;
     if (est == null || pay == null) {
       Get.snackbar('Missing info', 'Select a vehicle and payment method.');
       return;
@@ -460,11 +434,17 @@ class VehicleSelectionController extends GetxController {
           await _socketService.connect();
         }
         _socketService.joinPaymentRoom(validationId: validationId);
-        _showPaymentPendingDialog();
+        _showPaymentStatusDialog();
         final blockOk = await _waitForPaymentBlockStatus(
           timeout: const Duration(minutes: 2),
         );
-        _closePaymentPendingDialogIfOpen();
+        
+        if (blockOk) {
+          paymentStatus.value = PaymentStatus.success;
+          await Future.delayed(const Duration(seconds: 2));
+        }
+        
+        _closePaymentStatusDialogIfOpen();
         if (!blockOk) {
           isBooking.value = false;
           Get.snackbar(
@@ -498,6 +478,7 @@ class VehicleSelectionController extends GetxController {
               AppRoutes.findingDriver,
               arguments: {
                 'rideId': rideId,
+                'vehicleType': _socketVehicleTypeForEstimate(est),
                 'pickupLat': pickupEntity.lat,
                 'pickupLng': pickupEntity.lng,
                 'pickupAddress': pickupEntity.address,
@@ -552,96 +533,43 @@ class VehicleSelectionController extends GetxController {
     return null;
   }
 
-  void _showPaymentPendingDialog() {
+  void _showPaymentStatusDialog() {
+    paymentStatus.value = PaymentStatus.pending;
+    paymentTimerSeconds.value = 120;
+
     if (Get.isDialogOpen == true) return;
+    
     Get.dialog<void>(
-      Dialog(
-        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(28),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                height: 132,
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFE6DCCD),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-                ),
-                child: Center(
-                  child: Container(
-                    width: 90,
-                    height: 90,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF59E0B),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.access_time_rounded, color: Colors.white, size: 44),
-                  ),
-                ),
-              ),
-              const Padding(
-                padding:  EdgeInsets.fromLTRB(20, 16, 20, 8),
-                child: Text(
-                  'Request sent. Please complete payment on Wallet to book your ride.',
-                  textAlign: TextAlign.center,
-                  style:  TextStyle(
-                    fontFamily: 'Metropolis',
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF132235),
-                    height: 1.3,
-                    letterSpacing: -0.4,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 18),
-                child: StreamBuilder<int>(
-                  stream: Stream<int>.periodic(
-                    const Duration(seconds: 1),
-                    (tick) => (120 - tick).clamp(0, 120),
-                  ).take(121),
-                  initialData: 120,
-                  builder: (context, snapshot) {
-                    final secLeft = snapshot.data ?? 120;
-                    return Text(
-                      'Expire in ${_formatTimer(secLeft)}',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontFamily: 'Metropolis',
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF364B63),
-                        height: 1.33,
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      Obx(() => PaymentStatusDialog(
+            status: paymentStatus.value,
+            secondsRemaining: paymentStatus.value == PaymentStatus.pending 
+                ? paymentTimerSeconds.value 
+                : null,
+          )),
       barrierDismissible: false,
     );
+
+    // Start local timer for the dialog display
+    _startPaymentTimer();
   }
 
-  void _closePaymentPendingDialogIfOpen() {
+  Timer? _paymentTimer;
+  void _startPaymentTimer() {
+    _paymentTimer?.cancel();
+    _paymentTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (paymentTimerSeconds.value <= 0) {
+        timer.cancel();
+      } else {
+        paymentTimerSeconds.value--;
+      }
+    });
+  }
+
+  void _closePaymentStatusDialogIfOpen() {
+    _paymentTimer?.cancel();
     if (Get.isDialogOpen == true) {
       Get.back();
     }
-  }
-
-  String _formatTimer(int totalSeconds) {
-    final m = (totalSeconds ~/ 60).toString();
-    final s = (totalSeconds % 60).toString().padLeft(2, '0');
-    return '$m:$s';
   }
 
   Future<void> _initNearbyDriversSocket() async {

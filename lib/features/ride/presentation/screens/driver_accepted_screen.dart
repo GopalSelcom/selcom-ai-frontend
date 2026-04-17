@@ -158,7 +158,8 @@ class DriverAcceptedScreen extends StatelessWidget {
       }
 
       // Drop Marker
-      if (c.dropIcon.value != null) {
+      if (c.dropIcon.value != null &&
+          c.rideBottomSheetState.value != RideBottomSheetState.driverAssigned) {
         markers.add(
           Marker(
             markerId: const MarkerId('drop'),

@@ -122,6 +122,18 @@ class FindingDriverScreen extends StatelessWidget {
             flat: true,
           ),
         );
+      } else {
+        // Nearby Drivers Markers (only show if no driver is assigned yet)
+        for (var i = 0; i < c.driverMarkerPoints.length; i++) {
+          markers.add(
+            Marker(
+              markerId: MarkerId('nearby_driver_$i'),
+              position: c.driverMarkerPoints[i],
+              icon: c.assignedDriverMarkerIcon.value ?? BitmapDescriptor.defaultMarker,
+              anchor: const Offset(0.5, 0.5),
+            ),
+          );
+        }
       }
       return AppGoogleMap(
         mapWidgetKey: const ValueKey('finding_driver_map'),
@@ -132,16 +144,20 @@ class FindingDriverScreen extends StatelessWidget {
         onMapCreated: c.onMapCreated,
         markers: markers,
         polylines: {
-          Polyline(
-            polylineId: const PolylineId('active_route'),
-            points: routePoints.isNotEmpty
-                ? routePoints
-                : (isPickupRoute && driver != null
-                    ? [driver, pickup]
-                    : [pickup, destination]),
-            color: const Color(0xFF3073E8),
-            width: 4,
-          ),
+          if (routePoints.isNotEmpty)
+            Polyline(
+              polylineId: const PolylineId('active_route'),
+              points: routePoints,
+              color: const Color(0xFF3073E8),
+              width: 5,
+            ),
+          if (routePoints.isEmpty && isPickupRoute && driver != null)
+            Polyline(
+              polylineId: const PolylineId('fallback_pickup_route'),
+              points: [driver, pickup],
+              color: const Color(0xFF3073E8).withOpacity(0.5),
+              width: 3,
+            ),
         },
         circles: isPickupRoute
             ? {
@@ -352,7 +368,7 @@ class FindingDriverScreen extends StatelessWidget {
                     ),
                     padding: EdgeInsets.all(12.w),
                     child: SvgPictureAsset(
-                      AppAssets.rideFindingLoaderCar,
+                      _getVehicleAsset(c.requestedVehicleType),
                       width: 32.w,
                       height: 32.w,
                       placeholderBuilder: (_) => Icon(
@@ -369,5 +385,13 @@ class FindingDriverScreen extends StatelessWidget {
         },
       );
     });
+  }
+
+  String _getVehicleAsset(String? vehicleType) {
+    if (vehicleType == null) return AppAssets.rideFindingLoaderCar;
+    final vt = vehicleType.toLowerCase();
+    if (vt.contains('boda') || vt.contains('bike')) return AppAssets.boda;
+    if (vt.contains('bajaj')) return AppAssets.bajaj;
+    return AppAssets.imgCab;
   }
 }

@@ -74,6 +74,7 @@ class DriverAcceptedController extends GetxController {
 
   GoogleMapController? mapController;
   bool _navigatedAway = false;
+  DateTime? _lastCameraUpdate;
 
   StreamSubscription<bool>? _connectionSub;
   StreamSubscription<EventRiderStatusUpdateResponse>? _rideStatusSub;
@@ -147,7 +148,7 @@ class DriverAcceptedController extends GetxController {
     } else {
       routePoints.assignAll([pickupLatLng, destinationLatLng]);
     }
-    routeTarget.value = 'pickup';
+    routeTarget.value = 'pick_up';
   }
 
   void _hydrateSocketSeedPayloads(Map<String, dynamic> args) {
@@ -412,28 +413,34 @@ class DriverAcceptedController extends GetxController {
   }
 
   void recenterMap() {
-    _fitRouteBounds();
+    _fitRouteBounds(force: true);
     scheduleAssignedEtaOverlayRefresh();
   }
 
-  Future<void> _fitRouteBounds() async {
+  Future<void> _fitRouteBounds({bool force = false}) async {
     final ctrl = mapController;
     if (ctrl == null) return;
+
+    // Throttling: prevent rapid animations unless forced (e.g. by recenter button)
+    // At most one update every 5 seconds to avoid flickering on every socket event.
+    final now = DateTime.now();
+    if (!force &&
+        _lastCameraUpdate != null &&
+        now.difference(_lastCameraUpdate!) < const Duration(seconds: 5)) {
+      return;
+    }
 
     final points = <LatLng>[];
     final assigned = assignedDriverLocation.value;
 
-    if (routeTarget.value == 'pick_up' && assigned != null) {
-      // Focus on segment: Driver -> Pickup
-      points.add(assigned);
-      points.add(pickupLatLng);
-    } else if (routeTarget.value == 'drop_off') {
-      // Focus on segment: Pickup/Current -> Destination
-      points.add(assigned ?? pickupLatLng);
-      points.add(destinationLatLng);
-    } else {
-      points.addAll([pickupLatLng, destinationLatLng]);
+    // "Show driver to pickup only" when in driverAssigned status
+    if (rideBottomSheetState.value == RideBottomSheetState.driverAssigned) {
       if (assigned != null) points.add(assigned);
+      points.add(pickupLatLng);
+    } else {
+      // Focusing on segment: Pickup/Current -> Destination
+      if (assigned != null) points.add(assigned);
+      points.add(destinationLatLng);
     }
 
     if (routePoints.isNotEmpty) {
@@ -441,6 +448,8 @@ class DriverAcceptedController extends GetxController {
     }
 
     if (points.isEmpty) return;
+
+    _lastCameraUpdate = now;
 
     double minLat = points.first.latitude;
     double maxLat = points.first.latitude;

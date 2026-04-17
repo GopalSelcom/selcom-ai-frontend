@@ -9,6 +9,7 @@ class SvgPictureAsset extends StatelessWidget {
     super.key,
     this.width,
     this.height,
+        this.color,
     this.fit = BoxFit.contain,
     this.alignment = Alignment.center,
     this.placeholderBuilder,
@@ -18,6 +19,7 @@ class SvgPictureAsset extends StatelessWidget {
   final double? width;
   final double? height;
   final BoxFit fit;
+  final Color? color;
   final AlignmentGeometry alignment;
   final WidgetBuilder? placeholderBuilder;
 
@@ -28,6 +30,7 @@ class SvgPictureAsset extends StatelessWidget {
       width: width,
       height: height,
       fit: fit,
+      color: color,
       alignment: alignment,
       placeholderBuilder: placeholderBuilder,
     );

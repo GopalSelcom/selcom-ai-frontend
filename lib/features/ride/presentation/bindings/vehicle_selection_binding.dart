@@ -10,6 +10,7 @@ import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../data/datasources/ride_remote_data_source.dart';
 import '../../data/repositories/ride_repository_impl.dart';
 import '../../domain/repositories/ride_repository.dart';
+import '../../../payment/presentation/controllers/payment_method_controller.dart';
 import '../controllers/vehicle_selection_controller.dart';
 
 class VehicleSelectionBinding extends Bindings {
@@ -30,11 +31,18 @@ class VehicleSelectionBinding extends Bindings {
       Get.lazyPut<RideRemoteDataSource>(() => RideRemoteDataSourceImpl());
       Get.lazyPut<RideRepository>(() => RideRepositoryImpl(remoteDataSource: Get.find()));
     }
+    if (!Get.isRegistered<PaymentMethodController>()) {
+      Get.lazyPut<PaymentMethodController>(
+        () => PaymentMethodController(profileRepository: Get.find()),
+        fenix: true,
+      );
+    }
     Get.lazyPut<VehicleSelectionController>(
       () => VehicleSelectionController(
         homeRepository: Get.find(),
         profileRepository: Get.find(),
         rideRepository: Get.find(),
+        paymentMethodController: Get.find(),
       ),
       fenix: true,
     );
