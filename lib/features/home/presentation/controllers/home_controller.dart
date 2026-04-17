@@ -266,6 +266,7 @@ class HomeController extends GetxController {
         'statusPayload': {
           'ride_id': rideValue.id,
           'status': rideValue.status.name,
+          'pin_code': rideValue.pinCode,
           'driver_snapshot': driver == null
               ? null
               : {

@@ -318,10 +318,10 @@ class FindingDriverController extends GetxController {
         case 'ride_completed':
           currentStatusLabel.value = 'Ride Completed';
           currentDescriptionLabel.value = 'You have reached your destination.';
-          Get.snackbar('Success', 'Ride completed successfully!');
-          Future.delayed(const Duration(seconds: 2), () {
-            Get.offAllNamed(AppRoutes.home);
-          });
+          // Get.snackbar('Success', 'Ride completed successfully!');
+          // Future.delayed(const Duration(seconds: 2), () {
+          //   Get.offAllNamed(AppRoutes.home);
+          // });
           break;
         case 'cancelled':
           currentStatusLabel.value = 'Ride Cancelled';
