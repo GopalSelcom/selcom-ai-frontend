@@ -144,7 +144,11 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   @override
   Future<WalletBalanceModel> getWalletBalance() async {
     final response = await ApiService().call(
-      request: ApiRequest(endpoint: URLS.wallet.balance, method: ApiMethod.get,errorPresentationType: ErrorPresentationType.none),
+      request: ApiRequest(
+        endpoint: URLS.wallet.balance,
+        method: ApiMethod.get,
+        errorPresentationType: ErrorPresentationType.dialog,
+      ),
     );
 
     if (response.statusCode == 200 && response.data != null) {

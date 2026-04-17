@@ -21,6 +21,7 @@ abstract class RideRemoteDataSource {
   Future<bool> rateDriver(String rideId, int rating, String comment);
   Future<bool> submitFeedback(String rideId, String category, String message);
   Future<String> validateRidePayment(ValidateRidePaymentRequest request);
+  Future<bool> walletDummyPaymentRequest(DummyPaymentRequest request);
   Future<Map<String, dynamic>> getChatMessages(
     String rideId, {
     int page = 1,
@@ -236,6 +237,20 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
         endpoint: "${URLS.ride.base}/$rideId/messages",
         method: ApiMethod.post,
         body: {'message': message},
+      ),
+    );
+    return response.statusCode == 200;
+  }
+
+  @override
+  Future<bool> walletDummyPaymentRequest(DummyPaymentRequest request)async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        customBaseUrl: "https://dukastaging.selcom.dev:7443/api/v4/go/dev/payment_callback",
+        // endpoint: "${URLS.ride.base}/$rideId/messages",
+        endpoint: "",
+        method: ApiMethod.post,
+        body: request.toJson(),
       ),
     );
     return response.statusCode == 200;

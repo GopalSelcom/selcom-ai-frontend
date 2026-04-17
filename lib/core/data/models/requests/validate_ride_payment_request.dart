@@ -17,3 +17,23 @@ class ValidateRidePaymentRequest {
     };
   }
 }
+
+class DummyPaymentRequest {
+  final String validationId;
+  final String result;
+  final String transId;
+
+  DummyPaymentRequest({
+    required this.result,
+    required this.transId,
+    required this.validationId,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'validation_id': validationId,
+      'result': "SUCCESS",
+      'transid': transId,
+    };
+  }
+}

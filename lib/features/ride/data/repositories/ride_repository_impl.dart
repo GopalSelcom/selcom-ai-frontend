@@ -161,4 +161,14 @@ class RideRepositoryImpl implements RideRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, bool>> walletDummyPaymentRequest(DummyPaymentRequest request) async{
+    try {
+      final result = await remoteDataSource.walletDummyPaymentRequest(request);
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

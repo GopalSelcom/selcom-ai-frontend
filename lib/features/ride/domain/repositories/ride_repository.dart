@@ -18,4 +18,5 @@ abstract class RideRepository {
   Future<Either<Failure, bool>> rateDriver(String rideId, int rating, String comment);
   Future<Either<Failure, bool>> submitFeedback(String rideId, String category, String message);
   Future<Either<Failure, String>> validateRidePayment(ValidateRidePaymentRequest request);
+  Future<Either<Failure, bool>> walletDummyPaymentRequest(DummyPaymentRequest request);
 }

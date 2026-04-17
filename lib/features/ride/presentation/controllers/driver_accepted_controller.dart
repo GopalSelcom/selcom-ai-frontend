@@ -619,9 +619,10 @@ class DriverAcceptedController extends GetxController {
   void _applyTrackingPayload(TrackingUpdateSocketResponse payload) {
     final eta = payload.eta;
     if (eta != null && eta > 0) {
-      etaLabel.value = '$eta Mins';
+      final convertedTime = eta/60;
+      etaLabel.value = '$convertedTime Mins';
       arrivalLabel.value =
-          'Driver will arriving in ${eta <= 1 ? '1 min' : '$eta mins'}...';
+          'Driver will arriving in ${convertedTime <= 1 ? '1 min' : '$convertedTime mins'}...';
     }
 
     final target = _normalizeRouteTarget(payload.routeTarget);

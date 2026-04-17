@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -431,7 +432,11 @@ class VehicleSelectionController extends GetxController {
           await _socketService.connect();
         }
         _socketService.joinPaymentRoom(validationId: validationId);
+        String txnId = generateTransactionId();
+        
+        rideRepository.walletDummyPaymentRequest(DummyPaymentRequest(result: "SUCCESS", transId: txnId, validationId: validationId));
         _showPaymentStatusDialog();
+
         final blockOk = await _waitForPaymentBlockStatus(
           timeout: const Duration(minutes: 2),
         );
@@ -488,6 +493,16 @@ class VehicleSelectionController extends GetxController {
         );
       },
     );
+  }
+
+  String generateTransactionId() {
+    final random = Random();
+    int randomNumber = random.nextInt(100000); // 0 to 99999
+
+    // pad with leading zeros if needed
+    String formattedNumber = randomNumber.toString().padLeft(5, '0');
+
+    return 'DEV-BLOCK-$formattedNumber';
   }
 
   Future<bool> _waitForPaymentBlockStatus({
