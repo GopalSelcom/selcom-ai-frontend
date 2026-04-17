@@ -15,6 +15,7 @@ import '../../../../shared/widgets/app_map_gps_button.dart';
 import '../../../../shared/widgets/app_map_top_header.dart';
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/widgets/svg_picture_asset.dart';
 
 class HomeScreen extends GetView<HomeController> {
   const HomeScreen({super.key});
@@ -462,14 +463,14 @@ class HomeScreen extends GetView<HomeController> {
                   shape: BoxShape.circle,
                 ),
                 child: isSaved
-                    ? Icon(
+                    ? SvgPictureAsset(
                         label.toLowerCase() == 'home'
-                            ? Icons.home_rounded
+                            ? AppAssets.icHomeChip
                             : label.toLowerCase() == 'work'
-                            ? Icons.work_rounded
-                            : Icons.bookmark_rounded,
-                        color: const Color(0xFFB45309),
-                        size: 14.sp,
+                            ? AppAssets.icWorkChip
+                            : AppAssets.icOtherChip,
+                        width: 16.w,
+                        height: 16.w,
                       )
                     : Icon(Icons.add, color: Colors.white, size: 14.sp),
               ),
