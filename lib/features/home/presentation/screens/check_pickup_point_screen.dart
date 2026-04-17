@@ -52,55 +52,67 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
               onMapCreated: (mapController) {
                 // Optional: handle map controller
               },
-              markers: {
-                Marker(
-                  markerId: const MarkerId('pickup_point'),
-                  position: LatLng(lat, lng),
-                  infoWindow: InfoWindow(title: title),
-                  icon: BitmapDescriptor.defaultMarkerWithHue(
-                    BitmapDescriptor.hueRed,
-                  ),
-                ),
-              },
+              markers: const {},
             ),
           ),
 
-          // Custom "Pickup point" overlay on map
-          Positioned(
-            left: 0,
-            right: 0,
-            top: MediaQuery.of(context).size.height * 0.35,
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 16.w,
-                      vertical: 8.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(20.r),
-                    ),
-                    child: Text(
-                      'Pickup point',
-                      style: AppTextStyles.homeCaption.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+          // Custom "Pickup point" overlay precisely centered on the LatLng
+          Positioned.fill(
+            child: IgnorePointer(
+              child: Center(
+                child: Stack(
+                  alignment: Alignment.center,
+                  clipBehavior: Clip.none,
+                  children: [
+                    // This dot is centered exactly on the map's target LatLng
+                    Container(
+                      width: 8.w,
+                      height: 8.h,
+                      decoration: const BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
                       ),
                     ),
-                  ),
-                  Container(width: 2.w, height: 12.h, color: AppColors.primary),
-                  Container(
-                    width: 8.w,
-                    height: 8.h,
-                    decoration: const BoxDecoration(
-                      color: AppColors.primary,
-                      shape: BoxShape.circle,
+                    // The rest of the UI is positioned relative to the centered dot
+                    Positioned(
+                      bottom: 4.h, // Starts from the center of the dot
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 16.w,
+                              vertical: 8.h,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(20.r),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              'Pickup point',
+                              style: AppTextStyles.homeCaption.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            width: 2.w,
+                            height: 12.h,
+                            color: AppColors.primary,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
