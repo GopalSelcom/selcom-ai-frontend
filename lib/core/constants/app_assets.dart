@@ -73,4 +73,14 @@ class AppAssets {
   /// Replace via `./scripts/fetch_figma_loader_svg.sh` + `FIGMA_TOKEN` for pixel match to Figma.
   static const String rideFindingLoaderCar =
       '$_figmaRideScr10/ic_finding_loader_car.svg';
+
+  // Payment
+  static const String _paymentPath = '$_imagePath/payment';
+  static const String icPaymentWallet = '$_paymentPath/ic_wallet.svg';
+  static const String icPaymentSelcomPesa = '$_paymentPath/ic_selcom_pesa.svg';
+  static const String icPaymentCard = '$_paymentPath/ic_card.svg';
+  static const String icPaymentArrowUp = '$_paymentPath/ic_arrow_up.svg';
+  static const String icPaymentPerson = 'assets/images/payment/ic_person.svg';
+  static const String icPaymentPending = 'assets/images/payment/ic_payment_pending.svg';
+  static const String icPaymentSuccess = 'assets/images/payment/ic_payment_success.svg';
 }

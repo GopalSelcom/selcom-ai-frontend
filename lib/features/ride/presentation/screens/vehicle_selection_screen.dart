@@ -6,10 +6,10 @@ import 'package:selcom_rides_frontend/shared/widgets/map_widgets.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
-import '../../../../core/data/models/user_profile_models.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../payment/presentation/widgets/payment_bar.dart';
 import '../controllers/vehicle_selection_controller.dart';
 
 /// SCR-09 — vehicle selection, fare, payment + Book Ride (map uses dummy route + animated drivers).
@@ -78,7 +78,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
               () => Container(
                 padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.94),
+                  color: Colors.white.withValues(alpha: 0.94),
                   borderRadius: BorderRadius.circular(12.r),
                   border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
@@ -190,7 +190,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 16,
             offset: const Offset(0, -4),
           ),
@@ -259,7 +259,11 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
               }),
             ),
             // SizedBox(height: 12.h),
-            _paymentBar(context, c),
+            Obx(() => PaymentBar(
+                  buttonLabel: 'Book Ride ${c.currency} ${c.selectedFareAmount}',
+                  isLoading: c.isBooking.value,
+                  onActionButtonPressed: c.bookRide,
+                )),
             // SizedBox(height: 8.h),
           ],
         ),
@@ -325,9 +329,10 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
                           ),
                         ),
                         SizedBox(width: 4.w),
-                        Icon(
-                          Icons.person_outline,
-                          size: 14.sp,
+                        SvgPictureAsset(
+                          AppAssets.icPaymentPerson,
+                          width: 14.w,
+                          height: 14.w,
                           color: AppColors.shade2,
                         ),
                         SizedBox(width: 4.w),
@@ -384,165 +389,6 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
           child: const Icon(Icons.directions_car, color: AppColors.shade2),
         ),
       ),
-    );
-  }
-
-  Widget _paymentBar(BuildContext context, VehicleSelectionController c) {
-    return Obx(() {
-      final pay = c.selectedPayment.value;
-      final fare = c.selectedFareAmount;
-      final currency = c.currency;
-
-      return Container(
-        width: double.infinity,
-        padding: EdgeInsets.fromLTRB(25.w, 18.h, 25.w, 18.h),
-        decoration: const BoxDecoration(
-          color: AppColors.primary,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: InkWell(
-                onTap: () => _openPaymentSheet(context, c),
-                borderRadius: BorderRadius.circular(12.r),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 4.h),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            'Pay Using',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.9),
-                              fontSize: 15.sp,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          SizedBox(width: 6.w),
-                          Icon(
-                            Icons.keyboard_arrow_up,
-                            color: Colors.white,
-                            size: 18.sp,
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        pay?.label ?? 'Select payment',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18.sp,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (pay?.type == 'card')
-                        Text(
-                          'Card on file',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.85),
-                            fontSize: 15.sp,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(width: 12.w),
-            Material(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(22.r),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(22.r),
-                onTap: c.isBooking.value ? null : c.bookRide,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 20.w,
-                    vertical: 14.h,
-                  ),
-                  child: c.isBooking.value
-                      ? SizedBox(
-                          width: 24.w,
-                          height: 24.w,
-                          child: const CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.primary,
-                          ),
-                        )
-                      : Text(
-                          'Book Ride $currency $fare',
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 15.sp,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    });
-  }
-
-  void _openPaymentSheet(BuildContext context, VehicleSelectionController c) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-      ),
-      builder: (ctx) {
-        return SafeArea(
-          bottom: false,
-          child: Obx(() {
-            if (c.isLoadingPayments.value) {
-              return const Padding(
-                padding: EdgeInsets.all(24),
-                child: Center(child: CircularProgressIndicator()),
-              );
-            }
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: EdgeInsets.all(16.w),
-                  child: Text('Pay using', style: AppTextStyles.sectionTitle),
-                ),
-                ...c.paymentMethods.map((PaymentMethodModel m) {
-                  final sel = c.selectedPayment.value?.id == m.id;
-                  return ListTile(
-                    leading: Icon(
-                      m.type == 'wallet'
-                          ? Icons.account_balance_wallet_outlined
-                          : Icons.payment,
-                      color: AppColors.shade1,
-                    ),
-                    title: Text(m.label),
-                    trailing: sel
-                        ? const Icon(Icons.check_circle, color: AppColors.primary)
-                        : null,
-                    onTap: () {
-                      c.selectPaymentMethod(m);
-                      Navigator.of(ctx).pop();
-                    },
-                  );
-                }),
-                SizedBox(height: 8.h),
-              ],
-            );
-          }),
-        );
-      },
     );
   }
 }

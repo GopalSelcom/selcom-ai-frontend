@@ -83,8 +83,7 @@ class FindingDriverScreen extends StatelessWidget {
       final destination = c.destinationLatLng;
       final driver = c.assignedDriverLocation.value;
       final routePoints = c.activeRoutePoints.toList();
-      final isPickupRoute = c.shouldShowPickupRoute;
-      final isDropRoute = c.shouldShowDropRoute;
+      final isPickupRoute = c.routeTarget.value == 'pick_up';
       final markers = <Marker>{};
 
       // Pickup Marker
@@ -100,7 +99,7 @@ class FindingDriverScreen extends StatelessWidget {
       }
 
       // Drop/Destination Marker
-      if (c.dropIcon.value != null && c.shouldShowDestinationMarker) {
+      if (c.dropIcon.value != null) {
         markers.add(
           Marker(
             markerId: const MarkerId('destination'),
@@ -112,27 +111,30 @@ class FindingDriverScreen extends StatelessWidget {
       }
 
       // Driver Marker
-      if (driver != null && c.shouldShowDriverMarker) {
+      if (driver != null) {
         markers.add(
           Marker(
             markerId: const MarkerId('assigned_driver'),
             position: driver,
-            icon:
-                c.assignedDriverMarkerIcon.value ??
-                BitmapDescriptor.defaultMarkerWithHue(
-                  BitmapDescriptor.hueGreen,
-                ),
+            icon: c.assignedDriverMarkerIcon.value ??
+                BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
             anchor: const Offset(0.5, 0.5),
             flat: true,
           ),
         );
+      } else {
+        // Nearby Drivers Markers (only show if no driver is assigned yet)
+        for (var i = 0; i < c.driverMarkerPoints.length; i++) {
+          markers.add(
+            Marker(
+              markerId: MarkerId('nearby_driver_$i'),
+              position: c.driverMarkerPoints[i],
+              icon: c.assignedDriverMarkerIcon.value ?? BitmapDescriptor.defaultMarker,
+              anchor: const Offset(0.5, 0.5),
+            ),
+          );
+        }
       }
-      final polylinePoints = routePoints.isNotEmpty
-          ? routePoints
-          : (isPickupRoute && driver != null
-                ? [driver, pickup]
-                : (isDropRoute ? [pickup, destination] : <LatLng>[]));
-
       return AppGoogleMap(
         mapWidgetKey: const ValueKey('finding_driver_map'),
         initialCameraPosition: CameraPosition(target: pickup, zoom: 15),
@@ -141,16 +143,22 @@ class FindingDriverScreen extends StatelessWidget {
         ),
         onMapCreated: c.onMapCreated,
         markers: markers,
-        polylines: polylinePoints.isEmpty
-            ? <Polyline>{}
-            : {
-                Polyline(
-                  polylineId: const PolylineId('active_route'),
-                  points: polylinePoints,
-                  color: const Color(0xFF3073E8),
-                  width: 4,
-                ),
-              },
+        polylines: {
+          if (routePoints.isNotEmpty)
+            Polyline(
+              polylineId: const PolylineId('active_route'),
+              points: routePoints,
+              color: const Color(0xFF3073E8),
+              width: 5,
+            ),
+          if (routePoints.isEmpty && isPickupRoute && driver != null)
+            Polyline(
+              polylineId: const PolylineId('fallback_pickup_route'),
+              points: [driver, pickup],
+              color: const Color(0xFF3073E8).withOpacity(0.5),
+              width: 3,
+            ),
+        },
         circles: isPickupRoute
             ? {
                 Circle(
@@ -186,30 +194,26 @@ class FindingDriverScreen extends StatelessWidget {
           ),
         ),
         SizedBox(height: 20.h),
-        Obx(
-          () => Text(
-            c.currentStatusLabel.value,
-            textAlign: TextAlign.center,
-            style: AppTextStyles.homeTitle.copyWith(
-              fontSize: 20.sp,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF132235),
-              letterSpacing: -0.4,
-            ),
-          ),
-        ),
+        Obx(() => Text(
+              c.currentStatusLabel.value,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.homeTitle.copyWith(
+                fontSize: 20.sp,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF132235),
+                letterSpacing: -0.4,
+              ),
+            )),
         SizedBox(height: 8.h),
-        Obx(
-          () => Text(
-            c.currentDescriptionLabel.value,
-            textAlign: TextAlign.center,
-            style: AppTextStyles.homeCaption.copyWith(
-              fontSize: 15.sp,
-              color: const Color(0xFF364B63),
-              height: 1.33,
-            ),
-          ),
-        ),
+        Obx(() => Text(
+              c.currentDescriptionLabel.value,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.homeCaption.copyWith(
+                fontSize: 15.sp,
+                color: const Color(0xFF364B63),
+                height: 1.33,
+              ),
+            )),
         SizedBox(height: 20.h),
         Obx(() {
           if (c.currentStatusLabel.value == 'Finding Your Driver') {
@@ -364,7 +368,7 @@ class FindingDriverScreen extends StatelessWidget {
                     ),
                     padding: EdgeInsets.all(12.w),
                     child: SvgPictureAsset(
-                      AppAssets.rideFindingLoaderCar,
+                      _getVehicleAsset(c.requestedVehicleType),
                       width: 32.w,
                       height: 32.w,
                       placeholderBuilder: (_) => Icon(
@@ -381,5 +385,13 @@ class FindingDriverScreen extends StatelessWidget {
         },
       );
     });
+  }
+
+  String _getVehicleAsset(String? vehicleType) {
+    if (vehicleType == null) return AppAssets.rideFindingLoaderCar;
+    final vt = vehicleType.toLowerCase();
+    if (vt.contains('boda') || vt.contains('bike')) return AppAssets.boda;
+    if (vt.contains('bajaj')) return AppAssets.bajaj;
+    return AppAssets.imgCab;
   }
 }

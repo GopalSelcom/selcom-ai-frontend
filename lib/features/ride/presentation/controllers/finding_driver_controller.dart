@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/near_by_rider_response.dart';
 import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/driver_location_socker_response.dart';
 
 import '../../../../core/constants/app_assets.dart';
@@ -32,6 +33,13 @@ class FindingDriverController extends GetxController {
   late final LatLng destinationLatLng;
   late final String pickupAddress;
   late final String destinationAddress;
+  late final String? requestedVehicleType;
+
+  final nearbyDriverCount = 0.obs;
+  final driverMarkerPoints = <LatLng>[].obs;
+  final isSocketConnected = false.obs;
+  final lastSocketError = ''.obs;
+  final isLoadingNearbyDrivers = false.obs;
 
   final remainingSeconds = searchTimeoutSeconds.obs;
   final Rxn<LatLng> assignedDriverLocation = Rxn<LatLng>();
@@ -65,6 +73,8 @@ class FindingDriverController extends GetxController {
   StreamSubscription<EventRiderStatusUpdateResponse>? _rideStatusSub;
   StreamSubscription<DriverLocationSocketResponse>? _driverLocSub;
   StreamSubscription<TrackingUpdateSocketResponse?>? _trackingSub;
+  StreamSubscription<List<Driver>>? _nearbyDriversSub;
+  StreamSubscription<String>? _nearbyDriversErrorSub;
 
   bool _didNavigateToAccepted = false;
 
@@ -73,6 +83,7 @@ class FindingDriverController extends GetxController {
     super.onInit();
     _parseArgs();
     _startCountdown();
+    _initNearbyDriversSocket();
     _initRideRoomSocket();
     _loadMarkerIcons();
   }
@@ -84,8 +95,8 @@ class FindingDriverController extends GetxController {
     dropIcon.value = await MapMarkerUtils.createCustomCircleMarker(
       color: const Color(0xFFE11D48),
     );
-    // Initial attempt to load a generic driver icon or wait for assignment
-    await _loadDriverMarkerIcon();
+    // Initial attempt to load the icon for the requested vehicle type
+    await _loadDriverMarkerIcon(vehicleType: requestedVehicleType);
   }
 
   Future<void> _loadDriverMarkerIcon({String? vehicleType}) async {
@@ -115,10 +126,8 @@ class FindingDriverController extends GetxController {
   void onClose() {
     _countdownTimer?.cancel();
     _mockDriverAssignTimer?.cancel();
-    _connectionSub?.cancel();
-    _rideStatusSub?.cancel();
-    _driverLocSub?.cancel();
-    _trackingSub?.cancel();
+    _nearbyDriversSub?.cancel();
+    _nearbyDriversErrorSub?.cancel();
     super.onClose();
   }
 
@@ -136,12 +145,36 @@ class FindingDriverController extends GetxController {
     destinationLatLng = LatLng(dlat, dlng);
     pickupAddress = (args['pickupAddress'] as String?)?.trim() ?? '';
     destinationAddress = (args['destinationAddress'] as String?)?.trim() ?? '';
+    requestedVehicleType = args['vehicleType'] as String?;
+    _buildDummyRoute(plat, plng, dlat, dlng);
+    _setPickupRouteFallback();
+  }
+
+  void _buildDummyRoute(double pLat, double pLng, double dLat, double dLng) {
+    // We only show the full route (pickup to destination) if the status is NOT "Finding Your Driver"
+    // or if we explicitly want to show the intent.
+    // However, per request, we should focus on Driver -> Pickup.
+    // If no driver is assigned, we'll keep activeRoutePoints empty (just show pulse).
+    activeRoutePoints.clear();
   }
 
   void _setPickupRouteFallback() {
     final driver = assignedDriverLocation.value;
     if (driver != null) {
-      activeRoutePoints.assignAll([driver, pickupLatLng]);
+      final pLat = driver.latitude;
+      final pLng = driver.longitude;
+      final dLat = pickupLatLng.latitude;
+      final dLng = pickupLatLng.longitude;
+
+      final pts = <LatLng>[];
+      const steps = 24;
+      for (var i = 0; i <= steps; i++) {
+        final t = i / steps;
+        final lat = pLat + (dLat - pLat) * t + 0.001 * (t - 0.5) * (t - 0.5);
+        final lng = pLng + (dLng - pLng) * t + 0.0008 * (t - 0.3);
+        pts.add(LatLng(lat, lng));
+      }
+      activeRoutePoints.assignAll(pts);
     } else {
       activeRoutePoints.clear();
     }
@@ -332,6 +365,55 @@ class FindingDriverController extends GetxController {
     if (_socketService.isConnected) {
       _socketService.joinRideRoom(rideId: rideId);
     }
+  }
+
+  Future<void> _initNearbyDriversSocket() async {
+    _nearbyDriversSub?.cancel();
+    _nearbyDriversErrorSub?.cancel();
+
+    _nearbyDriversSub = _socketService.nearbyDriversStream.listen((drivers) {
+      if (drivers.isEmpty) {
+        driverMarkerPoints.clear();
+      } else {
+        driverMarkerPoints.assignAll(
+          drivers
+              .map((d) => LatLng(
+                  double.parse(d.lat ?? "0"), double.parse(d.lng ?? "0")))
+              .toList(),
+        );
+      }
+      nearbyDriverCount.value = drivers.length;
+      lastSocketError.value = '';
+      isLoadingNearbyDrivers.value = false;
+    });
+
+    _nearbyDriversErrorSub = _socketService.errorStream.listen((msg) {
+      lastSocketError.value = msg;
+      isLoadingNearbyDrivers.value = false;
+    });
+
+    _socketService.connectionStream.listen((ok) {
+      isSocketConnected.value = ok;
+      if (ok) {
+        _requestNearbyDrivers();
+      }
+    });
+
+    if (_socketService.isConnected) {
+      isSocketConnected.value = true;
+      _requestNearbyDrivers();
+    }
+  }
+
+  void _requestNearbyDrivers() {
+    if (pickupLatLng.latitude == 0 || pickupLatLng.longitude == 0) return;
+    isLoadingNearbyDrivers.value = true;
+    _socketService.requestNearbyDrivers(
+      lat: pickupLatLng.latitude,
+      lng: pickupLatLng.longitude,
+      vehicleType: requestedVehicleType,
+      radiusKm: 1000,
+    );
   }
 
   /// Debug: jump to SCR-11 without waiting for socket (only in debug builds).
