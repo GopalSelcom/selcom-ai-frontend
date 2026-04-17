@@ -143,18 +143,22 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
 
   @override
   Future<WalletBalanceModel> getWalletBalance() async {
-    final response = await ApiService().call(
-      request: ApiRequest(
-        endpoint: URLS.wallet.balance,
-        method: ApiMethod.get,
-        errorPresentationType: ErrorPresentationType.dialog,
-      ),
-    );
+    try {
+      final response = await ApiService().call(
+        request: ApiRequest(
+          endpoint: URLS.wallet.balance,
+          method: ApiMethod.get,
+          errorPresentationType: ErrorPresentationType.none,
+        ),
+      );
 
-    if (response.statusCode == 200 && response.data != null) {
-      return WalletBalanceModel.fromJson(response.data['data'] ?? {});
+      if (response.statusCode == 200 && response.data != null) {
+        return WalletBalanceModel.fromJson(response.data['data'] ?? {});
+      }
+    } catch (e) {
+      debugPrint("getWalletBalance error (suppressed): $e");
     }
-    throw Exception('Failed to get wallet balance');
+    return WalletBalanceModel(balance: 0.0, currency: 'TZS');
   }
 
   @override
