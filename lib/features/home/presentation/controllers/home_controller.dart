@@ -11,6 +11,7 @@ import '../../../../core/services/notification_service.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:selcom_rides_frontend/features/home/data/models/places_models.dart';
 import 'package:selcom_rides_frontend/core/data/models/ride_model.dart';
+import 'package:selcom_rides_frontend/core/domain/entities/ride_entity.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/data/models/requests/create_saved_place_request.dart';
 import '../../../../core/utils/map_marker_utils.dart';
@@ -315,7 +316,7 @@ class HomeController extends GetxController {
         // Seed SCR-11 with active-ride data while waiting for socket updates.
         'statusPayload': {
           'ride_id': rideValue.id,
-          'status': rideValue.status.name,
+          'status': _rideStatusToApiValue(rideValue.status),
           'pin_code': rideValue.pinCode,
           'driver_snapshot': driver == null
               ? null
@@ -345,6 +346,15 @@ class HomeController extends GetxController {
         },
       },
     );
+  }
+
+  String _rideStatusToApiValue(RideStatus status) {
+    final name = status.name;
+    final withUnderscores = name.replaceAllMapped(
+      RegExp(r'([a-z0-9])([A-Z])'),
+      (m) => '${m.group(1)}_${m.group(2)}',
+    );
+    return withUnderscores.toLowerCase();
   }
 
   Future<void> _connectAndJoinActiveRideRoom(RideModel ride) async {

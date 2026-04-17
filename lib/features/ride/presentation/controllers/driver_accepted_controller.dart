@@ -106,8 +106,6 @@ class DriverAcceptedController extends GetxController {
     dropIcon.value = await MapMarkerUtils.createCustomCircleMarker(
       color: const Color(0xFFE11D48),
     );
-    // Initial load
-    await loadDriverIcon();
   }
 
   @override
@@ -228,6 +226,16 @@ class DriverAcceptedController extends GetxController {
   void _applyRide(RideModel r) {
     final d = r.driverSnapshot as DriverSnapshotModel?;
     final v = r.vehicleSnapshot;
+    final vehicleTypeHint = _resolveVehicleTypeHint(
+      driverVehicleType: d?.vehicleType,
+      driverVehicleModel: d?.vehicleModel,
+      vehicleDisplayName: v?.vehicleType,
+      vehicleName: v?.vehicleModel,
+      vehicleType: v?.vehicleType,
+    );
+    if (vehicleTypeHint.isNotEmpty) {
+      loadDriverIcon(vehicleType: vehicleTypeHint);
+    }
 
     if (d != null) {
       driverName.value = d.name;
@@ -298,10 +306,10 @@ class DriverAcceptedController extends GetxController {
 
     _rideStatusSub = _socketService.rideStatusStream.listen((payload) {
       if (_navigatedAway) return;
-      final status = (payload.status ?? '').toString().toLowerCase();
+      final status = (payload.status ?? '').toString().trim();
       _applyBottomSheetStateForStatus(status);
       _applyStatusPayload(payload);
-      if (status == 'cancelled') {
+      if (status.toLowerCase() == 'cancelled') {
         Get.offAllNamed(AppRoutes.home);
       }
     });
@@ -387,6 +395,27 @@ class DriverAcceptedController extends GetxController {
     }
   }
 
+  String _resolveVehicleTypeHint({
+    String? driverVehicleType,
+    String? vehicleDisplayName,
+    String? vehicleName,
+    String? vehicleType,
+    String? driverVehicleModel,
+  }) {
+    final parts = <String>[
+      driverVehicleType ?? '',
+      vehicleDisplayName ?? '',
+      vehicleName ?? '',
+      vehicleType ?? '',
+      driverVehicleModel ?? '',
+    ];
+    return parts
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .join(' ')
+        .toLowerCase();
+  }
+
   void onMapCreated(GoogleMapController c) {
     mapController = c;
     _fitRouteBounds();
@@ -470,12 +499,25 @@ class DriverAcceptedController extends GetxController {
   }
 
   void _applyStatusPayload(EventRiderStatusUpdateResponse payload) {
-    final status = (payload.status ?? '').toString().toLowerCase();
+    final status = (payload.status ?? '').toString().trim();
     if (status.isNotEmpty) {
       _applyBottomSheetStateForStatus(status);
+      _applyRouteFallbackForStatus(status);
     }
 
     final d = payload.driverSnapshot;
+    final v = payload.vehicleSnapshot;
+    final vehicleTypeHint = _resolveVehicleTypeHint(
+      driverVehicleType: d?.vehicleType,
+      driverVehicleModel: d?.vehicleModel,
+      vehicleDisplayName: v?.displayName,
+      vehicleName: v?.vehicleName,
+      vehicleType: v?.vehicleType,
+    );
+    if (vehicleTypeHint.isNotEmpty) {
+      loadDriverIcon(vehicleType: vehicleTypeHint);
+    }
+
     if (d != null) {
       if ((d.name ?? '').trim().isNotEmpty) driverName.value = d.name!.trim();
       if ((d.phone ?? '').trim().isNotEmpty)
@@ -483,7 +525,6 @@ class DriverAcceptedController extends GetxController {
       if ((d.lat) != null && (d.lng) != null) {
         assignedDriverLocation.value = LatLng(d.lat!, d.lng!);
       }
-      loadDriverIcon(vehicleType: d.vehicleType);
       final otp = (payload.pinCode ?? '').replaceAll(RegExp(r'\s'), '');
       if (otp.isNotEmpty) {
         otpDigits.assignAll(otp.split('').take(4).toList());
@@ -518,7 +559,6 @@ class DriverAcceptedController extends GetxController {
       }
     }
 
-    final v = payload.vehicleSnapshot;
     if (v != null) {
       final type = (v.displayName ?? v.vehicleName ?? v.vehicleType ?? '')
           .trim();
@@ -545,33 +585,92 @@ class DriverAcceptedController extends GetxController {
       } else {
         _setDropRouteFallback();
       }
+    } else if (status.isNotEmpty) {
+      // Active-ride entry can provide status without routeTarget.
+      _applyRouteFallbackForStatus(status);
     }
 
     _fitRouteBounds();
   }
 
   void _applyBottomSheetStateForStatus(String rawStatus) {
-    final status = rawStatus.trim().toLowerCase();
+    final status = rawStatus.trim();
+    final canonicalStatus = status
+        .replaceAll('ridestatus.', '')
+        .replaceAll('RideStatus.', '')
+        .replaceAllMapped(
+          RegExp(r'([a-z0-9])([A-Z])'),
+          (m) => '${m.group(1)}_${m.group(2)}',
+        )
+        .replaceAll('-', '_')
+        .replaceAll(' ', '_');
+    final normalizedStatus = canonicalStatus.toLowerCase();
     if (status.isEmpty) return;
-    currentRideStatus.value = status;
+    currentRideStatus.value = normalizedStatus;
 
-    if (status == 'cancelled') {
+    if (normalizedStatus == 'cancelled') {
       return;
     }
 
-    if (status == 'completed' || status == 'ride_completed') {
-      rideBottomSheetState.value = RideBottomSheetState.rideCompleted;
+    RideBottomSheetState nextState = RideBottomSheetState.driverAssigned;
+    if (normalizedStatus == 'completed' || normalizedStatus == 'ride_completed') {
+      nextState = RideBottomSheetState.rideCompleted;
+    } else if (normalizedStatus == 'ride_started' ||
+        normalizedStatus == 'ride_in_progress' ||
+        normalizedStatus == 'near_destination') {
+      nextState = RideBottomSheetState.rideStarted;
+    }
+
+    // Prevent stale socket events from downgrading progress state.
+    final current = rideBottomSheetState.value;
+    if (current == RideBottomSheetState.rideCompleted &&
+        nextState != RideBottomSheetState.rideCompleted) {
+      return;
+    }
+    if (current == RideBottomSheetState.rideStarted &&
+        nextState == RideBottomSheetState.driverAssigned) {
       return;
     }
 
-    if (status == 'ride_started' ||
-        status == 'ride_in_progress' ||
-        status == 'near_destination') {
-      rideBottomSheetState.value = RideBottomSheetState.rideStarted;
+    rideBottomSheetState.value = nextState;
+  }
+
+  void _applyRouteFallbackForStatus(String rawStatus) {
+    final status = rawStatus.trim();
+    final canonicalStatus = status
+        .replaceAll('ridestatus.', '')
+        .replaceAll('RideStatus.', '')
+        .replaceAllMapped(
+          RegExp(r'([a-z0-9])([A-Z])'),
+          (m) => '${m.group(1)}_${m.group(2)}',
+        )
+        .replaceAll('-', '_')
+        .replaceAll(' ', '_');
+    final normalizedStatus = canonicalStatus.toLowerCase();
+    if (status.isEmpty) return;
+
+    const pickupStatuses = {
+      'accepted',
+      'driver_assigned',
+      'driver_arriving',
+    };
+    const dropStatuses = {
+      'driver_arrived',
+      'ride_started',
+      'ride_in_progress',
+      'near_destination',
+      'ride_completed',
+      'completed',
+    };
+
+    if (pickupStatuses.contains(normalizedStatus)) {
+      _setPickupRouteFallback();
       return;
     }
 
-    rideBottomSheetState.value = RideBottomSheetState.driverAssigned;
+    if (dropStatuses.contains(normalizedStatus)) {
+      _setDropRouteFallback();
+    }
   }
 
   String get rideProgressTitle {
@@ -619,7 +718,7 @@ class DriverAcceptedController extends GetxController {
   void _applyTrackingPayload(TrackingUpdateSocketResponse payload) {
     final eta = payload.eta;
     if (eta != null && eta > 0) {
-      final convertedTime = eta/60;
+      final convertedTime = eta / 60;
       etaLabel.value = '$convertedTime Mins';
       arrivalLabel.value =
           'Driver will arriving in ${convertedTime <= 1 ? '1 min' : '$convertedTime mins'}...';
