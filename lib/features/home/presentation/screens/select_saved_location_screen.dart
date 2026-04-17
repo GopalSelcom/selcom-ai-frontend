@@ -289,14 +289,26 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
     final title = item.description?.split(',').first ?? label;
     final subtitle = item.description ?? '';
 
+    // Show loading? Maybe, but geocoding is usually fast.
+    final latLng = await controller.getLatLngFromAddress(subtitle);
+
     _showConfirmationDialog(
       title: title,
       subtitle: subtitle,
-      onConfirm: () => controller.savePlace(
-        label: label,
-        name: title,
-        placeId: item.placeId ?? '',
-      ),
+      onConfirm: () {
+        Get.back(); // Close dialog
+        Get.toNamed(
+          AppRoutes.checkPickupPoint,
+          arguments: {
+            'label': label,
+            'title': title,
+            'subtitle': subtitle,
+            'placeId': item.placeId ?? '',
+            if (latLng != null) 'lat': latLng.latitude,
+            if (latLng != null) 'lng': latLng.longitude,
+          },
+        );
+      },
     );
   }
 
@@ -307,13 +319,20 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
     _showConfirmationDialog(
       title: title,
       subtitle: subtitle,
-      onConfirm: () => controller.savePlace(
-        label: label,
-        name: title,
-        placeId: '',
-        lat: loc.lat,
-        lng: loc.lng,
-      ),
+      onConfirm: () {
+        Get.back(); // Close dialog
+        Get.toNamed(
+          AppRoutes.checkPickupPoint,
+          arguments: {
+            'label': label,
+            'title': title,
+            'subtitle': subtitle,
+            'placeId': '',
+            'lat': loc.lat,
+            'lng': loc.lng,
+          },
+        );
+      },
     );
   }
 
@@ -475,19 +494,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
                           ),
                           elevation: 0,
                         ),
-                        onPressed: () {
-                          Get.back(); // Close dialog
-                          Get.toNamed(
-                            AppRoutes.checkPickupPoint,
-                            arguments: {
-                              'label': label,
-                              'title': title,
-                              'subtitle': subtitle,
-                              // For predictions from autocomplete, coords are usually null
-                              // unless fetched separately. controller.savePlace handles it.
-                            },
-                          );
-                        },
+                        onPressed: onConfirm,
                         child: Text(
                           'Yes',
                           style: AppTextStyles.body.copyWith(
