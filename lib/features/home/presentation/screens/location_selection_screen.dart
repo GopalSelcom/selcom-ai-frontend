@@ -26,8 +26,8 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
 
   /// 0 = pickup, 1 = first destination, 2+ = extra stop at index `segment - 2`.
   final RxInt _activeSegmentIndex = 1.obs;
-  final List<TextEditingController> _extraDestinationControllers = [];
-  final List<FocusNode> _extraDestinationFocusNodes = [];
+  final _extraDestinationControllers = <TextEditingController>[].obs;
+  final _extraDestinationFocusNodes = <FocusNode>[].obs;
   final RxBool pickupEditedByUser = false.obs;
 
   /// Set when the first destination is chosen from autocomplete (required for `saved-places` on Book Ride).
@@ -107,8 +107,6 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           .trim();
     });
   }
-
-  int get _destinationCount => 1 + _extraDestinationControllers.length;
 
   void _setActiveSegment(int index) {
     if (_activeSegmentIndex.value == index) return;
@@ -205,79 +203,75 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           ),
           Padding(
             padding: EdgeInsets.fromLTRB(20.w, 16.h, 10.w, 16.h),
-            child: IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _pinColumn(),
-                  SizedBox(width: 12.w),
-                  Expanded(child: _destinationFieldsColumn()),
-                  SizedBox(width: 6.w),
-                  Align(
-                    alignment: Alignment.center,
-                    child: Opacity(
-                      opacity:
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(child: _integratedLocationFields()),
+                SizedBox(width: 6.w),
+                Material(
+                  color: Colors.transparent,
+                  child: Opacity(
+                    opacity:
+                        _extraDestinationControllers.length >= _maxExtraStops
+                        ? 0.45
+                        : 1.0,
+                    child: InkWell(
+                      onTap:
                           _extraDestinationControllers.length >= _maxExtraStops
-                          ? 0.45
-                          : 1,
-                      child: InkWell(
-                        onTap:
-                            _extraDestinationControllers.length >=
-                                _maxExtraStops
-                            ? null
-                            : _onAddDestinationStop,
-                        child: SizedBox(
-                          width: 81.28.w,
-                          height: 43.03.h,
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              SvgPictureAsset(
-                                AppAssets.locationAddPillBackground,
-                                fit: BoxFit.fill,
-                                placeholderBuilder: (_) => Container(
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFFAFAFA),
-                                    borderRadius: BorderRadius.circular(20.r),
-                                    border: Border.all(
-                                      color: const Color(0xFFEDEDED),
-                                    ),
+                          ? null
+                          : _onAddDestinationStop,
+                      borderRadius: BorderRadius.circular(20.r),
+                      child: SizedBox(
+                        width: 81.28.w,
+                        height: 43.03.h,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            SvgPictureAsset(
+                              AppAssets.locationAddPillBackground,
+                              fit: BoxFit.fill,
+                              placeholderBuilder: (_) => Container(
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFAFAFA),
+                                  borderRadius: BorderRadius.circular(20.r),
+                                  border: Border.all(
+                                    color: const Color(0xFFEDEDED),
                                   ),
                                 ),
                               ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  SvgPictureAsset(
-                                    AppAssets.locationIcAdd,
-                                    width: 21.5.w,
-                                    height: 21.5.h,
-                                    placeholderBuilder: (_) => const Icon(
-                                      Icons.add_circle_outline,
-                                      size: 16,
-                                      color: Color(0xFF656565),
-                                    ),
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SvgPictureAsset(
+                                  AppAssets.locationIcAdd,
+                                  width: 21.5.w,
+                                  height: 21.5.h,
+                                  placeholderBuilder: (_) => const Icon(
+                                    Icons.add_circle_outline,
+                                    size: 16,
+                                    color: Color(0xFF656565),
                                   ),
-                                  SizedBox(width: 4.72.w),
-                                  Text(
-                                    'Add',
-                                    style: AppTextStyles.homeCaption.copyWith(
-                                      color: const Color(0xFF656565),
-                                      fontSize: 14.34.sp,
-                                      fontWeight: FontWeight.w400,
-                                    ),
+                                ),
+                                SizedBox(width: 4.72.w),
+                                Text(
+                                  'Add',
+                                  style: AppTextStyles.homeCaption.copyWith(
+                                    color: const Color(0xFF656565),
+                                    fontSize: 14.34.sp,
+                                    fontWeight: FontWeight.w400,
                                   ),
-                                ],
-                              ),
-                            ],
-                          ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],
@@ -285,35 +279,58 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     );
   }
 
-  Widget _pinColumn() {
-    final n = _destinationCount;
+  Widget _pinFieldRow({
+    required Widget icon,
+    required Widget field,
+    bool showDivider = false,
+  }) {
     return Column(
       mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        SvgPictureAsset(
-          AppAssets.locationIcPin,
-          width: 12.6.w,
-          height: 16.4.h,
-          placeholderBuilder: (_) =>
-              const Icon(Icons.location_on, color: Color(0xFFF52D56), size: 14),
-        ),
-        SizedBox(height: 12.h),
-        Container(width: 1.w, height: 18.h, color: const Color(0xFFEDEDED)),
-        SizedBox(height: 12.h),
-        for (int i = 0; i < n; i++) ...[
-          const Icon(Icons.push_pin, color: Color(0xFF34C759), size: 14),
-          if (i < n - 1) ...[
-            SizedBox(height: 12.h),
-            Container(width: 1.w, height: 18.h, color: const Color(0xFFEDEDED)),
-            SizedBox(height: 12.h),
+        Row(
+          children: [
+            SizedBox(
+              width: 14.w,
+              child: Center(child: icon),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(child: field),
           ],
-        ],
+        ),
+        if (showDivider)
+          Row(
+            children: [
+              SizedBox(
+                width: 14.w,
+                child: Center(
+                  child: Container(
+                    width: 1.w,
+                    height: 17.h,
+                    color: const Color(0xFFEDEDED),
+                  ),
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.h),
+                  child: SvgPictureAsset(
+                    AppAssets.locationFieldDivider,
+                    fit: BoxFit.fitWidth,
+                    width: double.infinity,
+                    height: 1.h,
+                    placeholderBuilder: (_) =>
+                        Container(height: 1.h, color: const Color(0xFFEDEDED)),
+                  ),
+                ),
+              ),
+            ],
+          ),
       ],
     );
   }
 
-  Widget _destinationFieldsColumn() {
+  Widget _integratedLocationFields() {
     final fieldStyle = AppTextStyles.homeSubtitle.copyWith(
       color: AppColors.shade1,
       fontSize: 15.sp,
@@ -322,83 +339,31 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     );
     final hintStyle = fieldStyle;
 
-    Widget divider() => Padding(
-      padding: EdgeInsets.symmetric(vertical: 8.h),
-      child: SvgPictureAsset(
-        AppAssets.locationFieldDivider,
-        fit: BoxFit.fitWidth,
-        width: double.infinity,
-        height: 1.h,
-        placeholderBuilder: (_) =>
-            Container(height: 1.h, color: const Color(0xFFEDEDED)),
-      ),
-    );
+    final List<Widget> rows = [];
 
-    final children = <Widget>[
-      TextField(
-        controller: pickupController,
-        focusNode: pickupFocusNode,
-        onTap: () {
-          _setActiveSegment(0);
-          controller.searchQuery.value = pickupController.text.trim();
-        },
-        onChanged: (value) {
-          pickupEditedByUser.value = true;
-          _routePickupLat.value = null;
-          _routePickupLng.value = null;
-          controller.isPickupSelected.value = false; // reset
-          _setActiveSegment(0);
-          controller.searchQuery.value = value;
-        },
-        style: fieldStyle,
-        decoration: InputDecoration(
-          isDense: true,
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.zero,
-          hintText: 'AutoBhan Road',
-          hintStyle: hintStyle,
+    // 1. Pickup
+    rows.add(
+      _pinFieldRow(
+        icon: SvgPictureAsset(
+          AppAssets.locationIcPin,
+          width: 12.6.w,
+          height: 16.4.h,
+          placeholderBuilder: (_) =>
+              const Icon(Icons.location_on, color: Color(0xFFF52D56), size: 14),
         ),
-      ),
-      divider(),
-      TextField(
-        controller: destinationController,
-        focusNode: destinationFocusNode,
-        onTap: () {
-          _setActiveSegment(1);
-          controller.searchQuery.value = destinationController.text.trim();
-        },
-        onChanged: (value) {
-          _destinationPlaceId.value = null;
-          controller.isDestinationSelected.value = false; // reset
-          _setActiveSegment(1);
-          controller.searchQuery.value = value;
-        },
-        style: fieldStyle,
-        decoration: InputDecoration(
-          isDense: true,
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.zero,
-          hintText: 'Home',
-          hintStyle: hintStyle,
-        ),
-      ),
-    ];
-
-    for (var i = 0; i < _extraDestinationControllers.length; i++) {
-      final segment = 2 + i;
-      children.add(divider());
-      children.add(
-        TextField(
-          controller: _extraDestinationControllers[i],
-          focusNode: _extraDestinationFocusNodes[i],
+        field: TextField(
+          controller: pickupController,
+          focusNode: pickupFocusNode,
           onTap: () {
-            _setActiveSegment(segment);
-            controller.searchQuery.value = _extraDestinationControllers[i].text
-                .trim();
+            _setActiveSegment(0);
+            controller.searchQuery.value = pickupController.text.trim();
           },
           onChanged: (value) {
-            _setActiveSegment(segment);
-            controller.isDestinationSelected.value = false;
+            pickupEditedByUser.value = true;
+            _routePickupLat.value = null;
+            _routePickupLng.value = null;
+            controller.isPickupSelected.value = false;
+            _setActiveSegment(0);
             controller.searchQuery.value = value;
           },
           style: fieldStyle,
@@ -406,17 +371,82 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             isDense: true,
             border: InputBorder.none,
             contentPadding: EdgeInsets.zero,
-            hintText: 'Add stop',
+            hintText: 'AutoBhan Road',
             hintStyle: hintStyle,
           ),
+        ),
+        showDivider: true,
+      ),
+    );
+
+    // 2. Destination
+    rows.add(
+      _pinFieldRow(
+        icon: const Icon(Icons.push_pin, color: Color(0xFF34C759), size: 14),
+        field: TextField(
+          controller: destinationController,
+          focusNode: destinationFocusNode,
+          onTap: () {
+            _setActiveSegment(1);
+            controller.searchQuery.value = destinationController.text.trim();
+          },
+          onChanged: (value) {
+            _destinationPlaceId.value = null;
+            controller.isDestinationSelected.value = false;
+            _setActiveSegment(1);
+            controller.searchQuery.value = value;
+          },
+          style: fieldStyle,
+          decoration: InputDecoration(
+            isDense: true,
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.zero,
+            hintText: 'Home',
+            hintStyle: hintStyle,
+          ),
+        ),
+        showDivider: _extraDestinationControllers.isNotEmpty,
+      ),
+    );
+
+    // 3. Extra stops
+    for (var i = 0; i < _extraDestinationControllers.length; i++) {
+      final segment = 2 + i;
+      rows.add(
+        _pinFieldRow(
+          icon: const Icon(Icons.push_pin, color: Color(0xFF34C759), size: 14),
+          field: TextField(
+            controller: _extraDestinationControllers[i],
+            focusNode: _extraDestinationFocusNodes[i],
+            onTap: () {
+              _setActiveSegment(segment);
+              controller.searchQuery.value = _extraDestinationControllers[i]
+                  .text
+                  .trim();
+            },
+            onChanged: (value) {
+              _setActiveSegment(segment);
+              controller.isDestinationSelected.value = false;
+              controller.searchQuery.value = value;
+            },
+            style: fieldStyle,
+            decoration: InputDecoration(
+              isDense: true,
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.zero,
+              hintText: 'Add stop',
+              hintStyle: hintStyle,
+            ),
+          ),
+          showDivider: i < _extraDestinationControllers.length - 1,
         ),
       );
     }
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
-      children: children,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: rows,
     );
   }
 
