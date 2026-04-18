@@ -25,7 +25,7 @@ import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../widgets/cancel_ride_dialogs.dart';
 
-/// SCR-11 — Driver accepted: live map, driver details, OTP, cancel (SCR-12 flow later).
+/// SCR-11 — Driver accepted: live map, driver details, OTP.
 enum RideBottomSheetState { driverAssigned, rideStarted, rideCompleted }
 
 class DriverAcceptedController extends GetxController {

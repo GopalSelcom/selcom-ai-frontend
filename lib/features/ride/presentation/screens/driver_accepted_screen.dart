@@ -646,26 +646,6 @@ class DriverAcceptedScreen extends StatelessWidget {
           ),
           SizedBox(height: 16.h),
           AppPrimaryButton(label: 'Finish', onPressed: c.finishCompletedRide),
-        ] else ...[
-          SizedBox(height: 16.h),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.primary,
-                side: const BorderSide(color: AppColors.primary, width: 1.2),
-                padding: EdgeInsets.symmetric(vertical: 16.h),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16.r),
-                ),
-              ),
-              onPressed: c.confirmCancelRide,
-              child: Text(
-                'Cancel Ride',
-                style: TextStyle(fontSize: 17.sp, fontWeight: FontWeight.w600),
-              ),
-            ),
-          ),
         ],
       ],
     );
