@@ -8,6 +8,14 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart' hide Response, FormData, MultipartFile;
 import 'package:http_parser/http_parser.dart';
 
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+
+import '../constants/app_assets.dart';
+import '../routes/app_routes.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
 import '../services/storage_service.dart';
 import 'failed_request_queue.dart';
 import 'retry_manager.dart';
@@ -625,21 +633,89 @@ class ApiService {
   void showLogoutPopup() {
     if (AuthInterceptor.isLoggingOutDueToAuthFailure) return;
     AuthInterceptor.isLoggingOutDueToAuthFailure = true;
-    Get.defaultDialog(
-      title: 'Session Expired',
-      middleText: 'Your session has expired. Please login again to continue.',
-      textConfirm: 'Login',
+
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24.r),
+        ),
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // App Logo
+              SvgPicture.asset(
+                AppAssets.selcomGoLogo,
+                height: 48.h,
+              ),
+              SizedBox(height: 24.h),
+
+              // Title
+              Text(
+                'Session Expired',
+                style: AppTextStyles.onboardingTitle.copyWith(
+                  fontSize: 22.sp,
+                  color: AppColors.shade1,
+                  fontWeight: FontWeight.w700,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 12.h),
+
+              // Message
+              Text(
+                'Your session has expired. Please login again to continue.',
+                style: AppTextStyles.onboardingSubtitle.copyWith(
+                  fontSize: 15.sp,
+                  color: AppColors.shade2,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 32.h),
+
+              // Login Button
+              InkWell(
+                onTap: () async {
+                  // Clear tokens
+                  await StorageService().deleteAll();
+                  AuthInterceptor.isLoggingOutDueToAuthFailure = false;
+                  Get.back();
+                  // Navigate to phone input screen
+                  Get.offAllNamed(AppRoutes.phone);
+                },
+                child: Container(
+                  height: 54.h,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(16.r),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.2),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Login',
+                      style: AppTextStyles.onboardingButton.copyWith(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
       barrierDismissible: false,
-      onConfirm: () async {
-        // Clear tokens
-        await StorageService().delete(StorageKeys.authorizationToken);
-        await StorageService().delete(StorageKeys.accessToken);
-        await StorageService().delete(StorageKeys.refreshToken);
-        AuthInterceptor.isLoggingOutDueToAuthFailure = false;
-        Get.back();
-        // Navigate to login - adjust route as needed
-        Get.offAllNamed('/login');
-      },
     );
   }
 }

@@ -105,17 +105,18 @@ class HomeScreen extends GetView<HomeController> {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 320),
               curve: Curves.easeInOutCubic,
-              padding: EdgeInsets.all(12.w),
-              height: 75.h, // Matched with Profile Chip height
+              alignment: Alignment.center,
+              padding: EdgeInsets.symmetric(horizontal: 12.w),
+              height: 61.h, // Matched with Figma Frame 207:24539 height
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16.r),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: AppColors.shade5),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 2,
+                    offset: const Offset(0, 1),
                   ),
                 ],
               ),
@@ -158,19 +159,21 @@ class HomeScreen extends GetView<HomeController> {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 320),
             curve: Curves.easeInOutCubic,
-            padding: EdgeInsets.all(12.w),
-            height: isExpanded
-                ? null
-                : 75.h, // Matched with Profile Chip height
+            alignment: isExpanded ? Alignment.topCenter : Alignment.center,
+            padding: EdgeInsets.symmetric(
+              vertical: isExpanded ? 13.h : 0,
+              horizontal: 12.w,
+            ),
+            height: isExpanded ? null : 61.h, // Matched with Figma height
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: AppColors.shade5),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+                  color: Colors.black.withOpacity(0.06),
+                  blurRadius: 2,
+                  offset: const Offset(0, 1),
                 ),
               ],
             ),
@@ -216,33 +219,34 @@ class HomeScreen extends GetView<HomeController> {
                         ),
                       ),
                       child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Container(
-                            padding: EdgeInsets.all(8.w),
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFF1F5F9),
-                              shape: BoxShape.circle,
-                            ),
+                          SizedBox(
+                            width: 28.w,
+                            height: 28.w,
                             child: Icon(
                               Icons.location_on,
-                              color: AppColors.primary,
-                              size: 20.sp,
+                              color: AppColors.figmaIconGreen,
+                              size: 28.sp,
                             ),
                           ),
-                          SizedBox(width: 12.w),
+                          SizedBox(width: 4.w),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     Text(
                                       place.label ?? 'Place',
                                       style: AppTextStyles.homeSubtitle
                                           .copyWith(
-                                            fontWeight: FontWeight.bold,
-                                            color: AppColors.shade1,
+                                            fontWeight: FontWeight.w500,
+                                            color: AppColors.figmaTextPrimary,
+                                            fontSize: 15.sp,
+                                            height: 1.33,
                                           ),
                                     ),
                                     if (index == 0) ...[
@@ -256,18 +260,24 @@ class HomeScreen extends GetView<HomeController> {
                                             .addressHeaderChevronTurns,
                                         child: Icon(
                                           Icons.keyboard_arrow_down,
-                                          size: 18.sp,
-                                          color: AppColors.shade2,
+                                          size: 15.sp,
+                                          color: AppColors.figmaTextPrimary,
                                         ),
                                       ),
                                     ],
                                   ],
                                 ),
+                                SizedBox(height: 1.h),
                                 Text(
                                   place.address ??
                                       place.name ??
                                       'No address provided',
-                                  style: AppTextStyles.homeCaption,
+                                  style: AppTextStyles.homeSubtitle.copyWith(
+                                    fontSize: 15.sp,
+                                    fontWeight: FontWeight.w400,
+                                    color: AppColors.figmaTextSecondary,
+                                    height: 1.33,
+                                  ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),

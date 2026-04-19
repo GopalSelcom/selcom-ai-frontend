@@ -50,6 +50,7 @@ class VehicleSelectionController extends GetxController {
   final paymentTimerSeconds = 120.obs;
   final isRouteReady = false.obs;
   final isLocationIconsReady = false.obs;
+  final isMapVisualReady = false.obs;
 
   /// Full route for polyline (API).
   final routePoints = <LatLng>[].obs;
@@ -93,13 +94,24 @@ class VehicleSelectionController extends GetxController {
 
   void _parseArguments() {
     final raw = Get.arguments;
+    if (kDebugMode) {
+      debugPrint('[VehicleSelection] Raw Get.arguments => $raw');
+    }
+
     final args = raw is Map
         ? Map<String, dynamic>.from(raw)
         : <String, dynamic>{};
 
+    if (args.isEmpty) {
+      if (kDebugMode) {
+        debugPrint('[VehicleSelection] WARNING: Arguments are empty or not a Map.');
+      }
+    }
+
     final pickupAddr = (args['pickup'] as String?)?.trim() ?? '';
     final destAddr = (args['destination'] as String?)?.trim() ?? '';
 
+    // If coordinates are missing, we try to use defaults or at least valid numbers
     final pLat = (args['pickupLat'] as num?)?.toDouble() ?? -6.7924;
     final pLng = (args['pickupLng'] as num?)?.toDouble() ?? 39.2083;
     final dLat = (args['destinationLat'] as num?)?.toDouble() ?? (pLat - 0.018);
@@ -107,22 +119,20 @@ class VehicleSelectionController extends GetxController {
 
     pickupEntity = LocationEntity(lat: pLat, lng: pLng, address: pickupAddr);
     destinationEntity = LocationEntity(lat: dLat, lng: dLng, address: destAddr);
+
     if (kDebugMode) {
       debugPrint(
         '[VehicleSelection] Parsed args => '
         'pickup=(${pickupEntity.lat},${pickupEntity.lng}), '
         'destination=(${destinationEntity.lat},${destinationEntity.lng}), '
-        'pickupAddrLen=${pickupAddr.length}, destinationAddrLen=${destAddr.length}',
+        'pickupAddr="$pickupAddr", destinationAddr="$destAddr"',
       );
     }
 
-    _preferredVehicleTypeId = (args['preferredVehicleTypeId'] as String?)
-        ?.trim();
-    _preferredVehicleName = (args['preferredVehicleName'] as String?)
-        ?.trim()
-        .toLowerCase();
+    _preferredVehicleTypeId = (args['preferredVehicleTypeId'] as String?)?.trim();
+    _preferredVehicleName = (args['preferredVehicleName'] as String?)?.trim().toLowerCase();
 
-    routePoints.clear();
+    // routePoints.clear();
     isRouteReady.value = false;
   }
 
@@ -648,6 +658,19 @@ class VehicleSelectionController extends GetxController {
   void onMapCreated(GoogleMapController c) {
     mapController = c;
     _fitBounds();
+    
+    // Manage visual readiness with delay similar to old setState logic
+    if (!isMapVisualReady.value) {
+      Future.delayed(const Duration(milliseconds: 220), () {
+        isMapVisualReady.value = true;
+      });
+    }
+  }
+
+  void onCameraIdle() {
+    if (!isMapVisualReady.value) {
+      isMapVisualReady.value = true;
+    }
   }
 
   Future<void> _fitBounds() async {

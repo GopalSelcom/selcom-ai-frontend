@@ -15,6 +15,7 @@ import 'package:selcom_rides_frontend/core/domain/entities/ride_entity.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/data/models/requests/create_saved_place_request.dart';
 import '../../../../core/utils/map_marker_utils.dart';
+import '../../../ride/presentation/controllers/vehicle_selection_controller.dart';
 import '../../domain/repositories/home_repository.dart';
 import '../../data/models/home_models.dart';
 import '../../../ride/domain/repositories/ride_repository.dart';
@@ -596,6 +597,7 @@ class HomeController extends GetxController {
     final pickupAddr = activePickupAddress;
     final pickupLL = activePickupLatLng;
 
+    await Get.delete<VehicleSelectionController>();
     Get.toNamed(
       AppRoutes.booking,
       arguments: {
@@ -650,6 +652,7 @@ class HomeController extends GetxController {
     final pickupAddr = activePickupAddress;
     final pickupLL = activePickupLatLng;
 
+    await Get.delete<VehicleSelectionController>();
     Get.toNamed(
       AppRoutes.booking,
       arguments: {
@@ -680,6 +683,7 @@ class HomeController extends GetxController {
     final pickupAddr = activePickupAddress;
     final pickupLL = activePickupLatLng;
 
+    await Get.delete<VehicleSelectionController>();
     Get.toNamed(
       AppRoutes.booking,
       arguments: {
@@ -940,17 +944,8 @@ class HomeController extends GetxController {
     dLat ??= pLat;
     dLng ??= pLng;
 
-    final pid = destinationPlaceId?.trim();
-    if (pid != null && pid.isNotEmpty) {
-      await savePlace(
-        label: 'Destination',
-        name: destinations.first,
-        placeId: pid,
-        lat: dLat,
-        lng: dLng,
-      );
-    }
 
+    await Get.delete<VehicleSelectionController>();
     Get.toNamed(
       AppRoutes.booking,
       arguments: {

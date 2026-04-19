@@ -240,17 +240,19 @@ class DriverAcceptedScreen extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.access_time, size: 22.sp, color: Colors.black87),
-            SizedBox(width: 6.w),
-            Expanded(
-              child: Text(
-                c.arrivalLabel.value,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.homeCaption.copyWith(
-                  fontSize: 15.sp,
-                  color: const Color(0xFF364B63),
-                  fontWeight: FontWeight.w500,
-                ),
+            Icon(
+              Icons.watch_later_outlined,
+              size: 20.sp,
+              color: const Color(0xFF364B63),
+            ),
+            SizedBox(width: 2.w), // 2px gap from Figma
+            Text(
+              c.arrivalLabel.value,
+              style: AppTextStyles.homeCaption.copyWith(
+                fontSize: 15.sp,
+                color: const Color(0xFF364B63),
+                fontWeight: FontWeight.w500,
+                height: 1.33,
               ),
             ),
           ],
@@ -258,10 +260,12 @@ class DriverAcceptedScreen extends StatelessWidget {
         SizedBox(height: 2.h),
         Text(
           'Driver is heading to your location',
+          textAlign: TextAlign.center,
           style: AppTextStyles.homeTitle.copyWith(
             fontSize: 20.sp,
             color: const Color(0xFF132235),
             fontWeight: FontWeight.w600,
+            height: 1.7,
             letterSpacing: -0.4,
           ),
         ),
@@ -273,7 +277,9 @@ class DriverAcceptedScreen extends StatelessWidget {
               'OTP',
               style: AppTextStyles.homeCaption.copyWith(
                 fontWeight: FontWeight.w700,
+                fontSize: 15.sp,
                 color: const Color(0xFF364B63),
+                height: 1.33,
               ),
             ),
             SizedBox(width: 8.w),
@@ -285,14 +291,19 @@ class DriverAcceptedScreen extends StatelessWidget {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: const Color(0xFFF8F9FD),
-                  borderRadius: BorderRadius.circular(14.r),
-                  border: Border.all(color: const Color(0xFFE6E9EE), width: .8),
+                  borderRadius: BorderRadius.circular(16.r),
+                  border: Border.all(
+                    color: const Color(0xFFE6E9EE),
+                    width: 0.787,
+                  ),
                 ),
                 child: Text(
                   d,
                   style: AppTextStyles.homeCaption.copyWith(
-                    color: Colors.black,
+                    color: const Color(0xFF000000),
+                    fontSize: 12.6.sp,
                     fontWeight: FontWeight.w600,
+                    height: 1.28,
                   ),
                 ),
               ),
@@ -325,17 +336,16 @@ class DriverAcceptedScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (c.plateLinePrimary.value.isNotEmpty)
-                  Text(
-                    c.plateLinePrimary.value,
-                    style: AppTextStyles.homeTitle.copyWith(
-                      fontSize: 48.sp,
-                      height: 1,
-                      letterSpacing: 9.6,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF131D0B),
-                    ),
+                Text(
+                  c.plateLinePrimary.value,
+                  style: AppTextStyles.homeTitle.copyWith(
+                    fontSize: 48.sp,
+                    height: 1,
+                    letterSpacing: 9.6, // 20% of 48
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF131D0B),
                   ),
+                ),
                 if (c.plateLineSecondary.value.isNotEmpty)
                   Text(
                     c.plateLineSecondary.value,
@@ -343,7 +353,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                       fontSize: 48.sp,
                       height: 1,
                       letterSpacing: 9.6,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                       color: const Color(0xFF131D0B),
                     ),
                   ),
@@ -352,7 +362,9 @@ class DriverAcceptedScreen extends StatelessWidget {
                   c.vehicleSubtitle.value,
                   style: AppTextStyles.homeCaption.copyWith(
                     fontSize: 15.sp,
-                    color: Colors.black,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF000000),
+                    height: 1.33,
                   ),
                 ),
               ],
@@ -364,23 +376,19 @@ class DriverAcceptedScreen extends StatelessWidget {
         SizedBox(height: 17.h),
         Row(
           children: [
-            CircleAvatar(
-              radius: 24.r,
-              backgroundColor: const Color(0xFFD3DDE7),
-              child: Obx(() {
-                final name = c.driverName.value;
-                final initial = name.isEmpty
-                    ? '?'
-                    : String.fromCharCode(name.runes.first);
-                return Text(
-                  initial,
-                  style: AppTextStyles.homeTitle.copyWith(
-                    color: AppColors.shade1,
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.w700,
-                  ),
-                );
-              }),
+            Container(
+              width: 51.66.w,
+              height: 51.66.w,
+              decoration: const BoxDecoration(
+                color: Color(0xFFD9D9D9),
+                shape: BoxShape.circle,
+              ),
+              child: ClipOval(
+                child: Image.asset(
+                  AppAssets.imgBoda, // Placeholder for driver image
+                  fit: BoxFit.cover,
+                ),
+              ),
             ),
             SizedBox(width: 12.w),
             Expanded(
@@ -397,20 +405,24 @@ class DriverAcceptedScreen extends StatelessWidget {
                               color: const Color(0xFF132235),
                               fontSize: 20.sp,
                               fontWeight: FontWeight.w600,
+                              height: 1.7,
                             ),
                           ),
                         ),
-                        SizedBox(width: 6.w),
-                        const Icon(
+                        SizedBox(width: 9.w),
+                        Icon(
                           Icons.star,
-                          color: Color(0xFFF4C542),
-                          size: 16,
+                          color: const Color(0xFFFFD600),
+                          size: 11.sp,
                         ),
-                        SizedBox(width: 2.w),
+                        SizedBox(width: 3.w),
                         Text(
                           c.driverRating.value,
                           style: AppTextStyles.homeCaption.copyWith(
                             color: const Color(0xFF585858),
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w500,
+                            height: 1.33,
                           ),
                         ),
                       ],
@@ -420,17 +432,24 @@ class DriverAcceptedScreen extends StatelessWidget {
                       style: AppTextStyles.homeCaption.copyWith(
                         color: const Color(0xFF585858),
                         fontSize: 15.sp,
+                        fontWeight: FontWeight.w500,
+                        height: 1.33,
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-            _roundAction(icon: Icons.call, onTap: c.callDriver),
-            SizedBox(width: 8.w),
+            _roundAction(
+              icon: Icons.call,
+              color: AppColors.primary,
+              onTap: c.callDriver,
+            ),
+            SizedBox(width: 9.w),
             Obx(
               () => _roundAction(
                 icon: Icons.message_rounded,
+                color: AppColors.figmaIconGreen,
                 onTap: c.onChatTap,
                 badge: c.unreadCount.value > 0
                     ? c.unreadCount.value.toString()
@@ -653,6 +672,7 @@ class DriverAcceptedScreen extends StatelessWidget {
 
   Widget _roundAction({
     required IconData icon,
+    required Color color,
     required VoidCallback onTap,
     String? badge,
   }) {
@@ -660,15 +680,15 @@ class DriverAcceptedScreen extends StatelessWidget {
       clipBehavior: Clip.none,
       children: [
         Material(
-          color: AppColors.primary,
+          color: color,
           shape: const CircleBorder(),
           child: InkWell(
             customBorder: const CircleBorder(),
             onTap: onTap,
             child: SizedBox(
-              width: 34.w,
-              height: 34.w,
-              child: Icon(icon, size: 18.sp, color: Colors.white),
+              width: 33.81.w,
+              height: 33.81.w,
+              child: Icon(icon, size: 14.sp, color: Colors.white),
             ),
           ),
         ),
@@ -679,9 +699,12 @@ class DriverAcceptedScreen extends StatelessWidget {
             child: Container(
               width: 15.w,
               height: 15.w,
-              decoration: const BoxDecoration(
-                color: AppColors.error,
+              decoration: BoxDecoration(
+                color: (color == AppColors.primary)
+                    ? const Color(0xFF269441)
+                    : AppColors.error,
                 shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 1.5),
               ),
               alignment: Alignment.center,
               child: Text(
@@ -690,6 +713,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                   color: Colors.white,
                   fontSize: 10.sp,
                   fontWeight: FontWeight.w600,
+                  height: 1,
                 ),
               ),
             ),

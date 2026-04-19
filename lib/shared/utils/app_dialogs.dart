@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/constants/app_assets.dart';
@@ -19,83 +20,96 @@ class AppDialogs {
     Get.dialog(
       Dialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20.r),
+          borderRadius: BorderRadius.circular(24.r),
         ),
-        child: Padding(
-          padding: EdgeInsets.all(24.w),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Error Icon
-              Container(
-                padding: EdgeInsets.all(16.w),
-                decoration: BoxDecoration(
-                  color: AppColors.error.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.error_outline,
-                  color: AppColors.error,
-                  size: 32.sp,
+        backgroundColor: AppColors.pageBackground,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // App Logo
+            Container(
+              padding: EdgeInsets.all(24.h),
+              decoration: const BoxDecoration(
+                color: AppColors.textLight,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
                 ),
               ),
-              SizedBox(height: 20.h),
-
-              // Title
-              Text(
-                title,
-                style: AppTextStyles.onboardingTitle.copyWith(
-                  fontSize: 20.sp,
-                  color: AppColors.shade1,
-                ),
-                textAlign: TextAlign.center,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SvgPicture.asset(AppAssets.selcomGoLogo, height: 48.h),
+                ],
               ),
-              SizedBox(height: 12.h),
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(height: 24.h),
 
-              // Message
-              Text(
-                message,
-                style: AppTextStyles.onboardingSubtitle.copyWith(
-                  fontSize: 14.sp,
-                  color: AppColors.shade2,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 32.h),
-
-              // OK Button
-              InkWell(
-                onTap: () {
-                  _isErrorDialogVisible = false;
-                  Get.back(); // Close dialog
-                  if (onConfirm != null) onConfirm();
-                },
-                child: Container(
-                  height: 50.h,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(12.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+                  // Title
+                  Text(
+                    title,
+                    style: AppTextStyles.onboardingTitle.copyWith(
+                      fontSize: 22.sp,
+                      color: AppColors.shade1,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  child: Center(
-                    child: Text(
-                      'OK',
-                      style: AppTextStyles.onboardingButton.copyWith(
-                        fontSize: 16.sp,
+                  SizedBox(height: 12.h),
+
+                  // Message
+                  Text(
+                    message,
+                    style: AppTextStyles.onboardingSubtitle.copyWith(
+                      fontSize: 15.sp,
+                      color: AppColors.shade2,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 32.h),
+
+                  // OK Button
+                  InkWell(
+                    onTap: () {
+                      _isErrorDialogVisible = false;
+                      Get.back(); // Close dialog
+                      if (onConfirm != null) onConfirm();
+                    },
+                    child: Container(
+                      height: 54.h,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(16.r),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withOpacity(0.2),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          'OK',
+                          style: AppTextStyles.onboardingButton.copyWith(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
       barrierDismissible: false,

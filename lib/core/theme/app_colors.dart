@@ -35,4 +35,10 @@ class AppColors {
   static const Color safetyBannerBg = Color(0xFFE8F4FC);
   static const Color onlineGreen    = Color(0xFF22C55E);
   static const Color driverBubbleBg = Color(0xFFF0F2F5);
+
+  // Figma Sync (Node 207:24539)
+  static const Color shade5         = Color(0xFFD3DDE7);
+  static const Color figmaTextPrimary = Color(0xFF2A3143);
+  static const Color figmaTextSecondary = Color(0xFF586377);
+  static const Color figmaIconGreen = Color(0xFF269441);
 }

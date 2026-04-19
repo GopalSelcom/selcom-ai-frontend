@@ -13,66 +13,18 @@ import '../../../payment/presentation/widgets/payment_bar.dart';
 import '../controllers/vehicle_selection_controller.dart';
 
 /// SCR-09 — vehicle selection, fare, payment + Book Ride.
-class VehicleSelectionScreen extends StatefulWidget {
+class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
   const VehicleSelectionScreen({super.key});
 
-  @override
-  State<VehicleSelectionScreen> createState() => _VehicleSelectionScreenState();
-}
-
-class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
-    with TickerProviderStateMixin {
   static const double _sheetHeightFactor = 0.58;
-  bool _isMapVisualReady = false;
-  // late AnimationController _polylineAnim;
-  // late AnimationController _pulseAnim;
-
-  @override
-  void initState() {
-    super.initState();
-    // _polylineAnim = AnimationController(vsync: this, duration: const Duration(milliseconds: 2200))
-    //   ..forward();
-    // _pulseAnim = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400))
-    //   ..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    // _polylineAnim.dispose();
-    // _pulseAnim.dispose();
-    super.dispose();
-  }
-
-  void _handleMapCreated(
-    VehicleSelectionController controller,
-    GoogleMapController mapController,
-  ) {
-    controller.onMapCreated(mapController);
-    if (!_isMapVisualReady && mounted) {
-      Future.delayed(const Duration(milliseconds: 220), () {
-        if (mounted) {
-          setState(() => _isMapVisualReady = true);
-        }
-      });
-    }
-  }
-
-  void _handleMapIdle() {
-    if (!_isMapVisualReady && mounted) {
-      setState(() => _isMapVisualReady = true);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
-    final c = Get.find<VehicleSelectionController>();
-
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Obx(() => _buildMap(c)),
-          _buildMap(c),
+          _buildMap(context),
           Positioned(
             top: MediaQuery.paddingOf(context).top + 8.h,
             left: 16.w,
@@ -104,13 +56,13 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
                   border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
                 child: Text(
-                  c.isSocketConnected.value
-                      ? 'Socket ON • ${c.nearbyDriverCount.value} drivers'
-                      : (c.lastSocketError.value.isNotEmpty
-                            ? 'Socket OFF • ${c.lastSocketError.value}'
-                            : 'Socket OFF'),
+                  controller.isSocketConnected.value
+                      ? 'Socket ON • ${controller.nearbyDriverCount.value} drivers'
+                      : (controller.lastSocketError.value.isNotEmpty
+                          ? 'Socket OFF • ${controller.lastSocketError.value}'
+                          : 'Socket OFF'),
                   style: AppTextStyles.homeCaption.copyWith(
-                    color: c.isSocketConnected.value
+                    color: controller.isSocketConnected.value
                         ? AppColors.success
                         : AppColors.error,
                     fontWeight: FontWeight.w600,
@@ -124,21 +76,20 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
             right: 0,
             bottom: 0,
             height: _sheetHeightFactor.sh,
-            child: _bottomSheet(c),
+            child: _bottomSheet(context),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildMap(VehicleSelectionController c) {
+  Widget _buildMap(BuildContext context) {
     return Obx(() {
-      if (!c.isMapDataReady) {
-        if (_isMapVisualReady) {
+      if (!controller.isMapDataReady) {
+        // If data is lost, we reset the visual readiness
+        if (controller.isMapVisualReady.value) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              setState(() => _isMapVisualReady = false);
-            }
+            controller.isMapVisualReady.value = false;
           });
         }
         return const ColoredBox(
@@ -147,23 +98,23 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
         );
       }
 
-      final points = c.routePoints.toList();
-      final pickup = LatLng(c.pickupEntity.lat, c.pickupEntity.lng);
-      final drop = LatLng(c.destinationEntity.lat, c.destinationEntity.lng);
+      final points = controller.routePoints.toList();
+      final pickup = LatLng(controller.pickupEntity.lat, controller.pickupEntity.lng);
+      final drop =
+          LatLng(controller.destinationEntity.lat, controller.destinationEntity.lng);
       final mid = LatLng(
         (pickup.latitude + drop.latitude) / 2,
         (pickup.longitude + drop.longitude) / 2,
       );
-      final drivers = c.driverMarkerPoints.toList();
+      final drivers = controller.driverMarkerPoints.toList();
       final markers = <Marker>{};
       for (var i = 0; i < drivers.length; i++) {
-        final base = drivers[i];
-        final jitter = LatLng(base.latitude, base.longitude);
+        final jitter = drivers[i];
         markers.add(
           Marker(
             markerId: MarkerId('driver_$i'),
             position: jitter,
-            icon: c.driverIcon ?? c.pickupIcon!,
+            icon: controller.driverIcon ?? controller.pickupIcon!,
             anchor: const Offset(0.5, 0.5),
           ),
         );
@@ -173,14 +124,14 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
         Marker(
           markerId: const MarkerId('pickup'),
           position: pickup,
-          icon: c.pickupIcon!,
+          icon: controller.pickupIcon!,
         ),
       );
       markers.add(
         Marker(
           markerId: const MarkerId('drop'),
           position: drop,
-          icon: c.dropIcon!,
+          icon: controller.dropIcon!,
         ),
       );
 
@@ -193,9 +144,8 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
             padding: EdgeInsets.only(
               bottom: MediaQuery.of(context).size.height * _sheetHeightFactor,
             ),
-            onMapCreated: (mapController) =>
-                _handleMapCreated(c, mapController),
-            onCameraIdle: _handleMapIdle,
+            onMapCreated: controller.onMapCreated,
+            onCameraIdle: controller.onCameraIdle,
             polylines: {
               Polyline(
                 polylineId: const PolylineId('route'),
@@ -209,7 +159,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
           IgnorePointer(
             child: AnimatedOpacity(
               duration: const Duration(milliseconds: 220),
-              opacity: _isMapVisualReady ? 0 : 1,
+              opacity: controller.isMapVisualReady.value ? 0 : 1,
               child: const ColoredBox(
                 color: AppColors.pageBackground,
                 child: Center(
@@ -220,22 +170,10 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
           ),
         ],
       );
-
-      // return AnimatedBuilder(
-      //   animation: Listenable.merge([_polylineAnim, _pulseAnim]),
-      //   builder: (context, _) {
-      //     final t = _polylineAnim.value.clamp(0.0, 1.0);
-      //     final n = math.max(2, (points.length * t).ceil());
-      //     final visible = points.take(n).toList();
-      //
-      //     final phase = _pulseAnim.value * 2 * math.pi;
-      //
-      //   },
-      // );
     });
   }
 
-  Widget _bottomSheet(VehicleSelectionController c) {
+  Widget _bottomSheet(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -281,7 +219,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
             SizedBox(height: 12.h),
             Expanded(
               child: Obx(() {
-                if (c.isLoadingEstimates.value) {
+                if (controller.isLoadingEstimates.value) {
                   return const Padding(
                     padding: EdgeInsets.all(20),
                     child: Center(child: CircularProgressIndicator()),
@@ -293,14 +231,13 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
                     right: 16.w,
                     bottom: 16.w,
                   ),
-                  itemCount: c.estimates.length,
+                  itemCount: controller.estimates.length,
                   separatorBuilder: (_, __) => SizedBox(height: 10.h),
                   itemBuilder: (_, index) {
-                    final item = c.estimates[index];
+                    final item = controller.estimates[index];
                     return Obx(() {
-                      final selected = c.selectedVehicleIndex.value == index;
+                      final selected = controller.selectedVehicleIndex.value == index;
                       return _vehicleCard(
-                        c: c,
                         index: index,
                         item: item,
                         selected: selected,
@@ -310,13 +247,12 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
                 );
               }),
             ),
-            // SizedBox(height: 12.h),
             Obx(() => PaymentBar(
-                  buttonLabel: 'Book Ride ${c.currency} ${c.selectedFareAmount}',
-                  isLoading: c.isBooking.value,
-                  onActionButtonPressed: c.bookRide,
+                  buttonLabel:
+                      'Book Ride ${controller.currency} ${controller.selectedFareAmount}',
+                  isLoading: controller.isBooking.value,
+                  onActionButtonPressed: controller.bookRide,
                 )),
-            // SizedBox(height: 8.h),
           ],
         ),
       ),
@@ -324,12 +260,11 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
   }
 
   Widget _vehicleCard({
-    required VehicleSelectionController c,
     required int index,
     required FareEstimateItem item,
     required bool selected,
   }) {
-    final img = c.vehicleImage(item);
+    final img = controller.vehicleImage(item);
     final eta = item.durationMinutes ?? 0;
     final drop = DateTime.now().add(Duration(minutes: eta));
     final dropLabel =
@@ -340,7 +275,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen>
       borderRadius: BorderRadius.circular(16.r),
       child: InkWell(
         borderRadius: BorderRadius.circular(16.r),
-        onTap: () async => await c.selectVehicle(index),
+        onTap: () async => await controller.selectVehicle(index),
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
           decoration: BoxDecoration(

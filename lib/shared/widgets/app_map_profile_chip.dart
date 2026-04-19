@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shimmer/shimmer.dart';
+import '../../core/theme/app_colors.dart';
 
 /// Rounded profile control used on map screens (Figma ride map chrome).
 class AppMapProfileChip extends StatelessWidget {
@@ -27,7 +28,7 @@ class AppMapProfileChip extends StatelessWidget {
         highlightColor: const Color(0xFFF8FAFC),
         child: Container(
           width: 64.w,
-          constraints: BoxConstraints(minHeight: 66.h),
+          constraints: BoxConstraints(minHeight: 61.h),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16.r),
@@ -38,11 +39,11 @@ class AppMapProfileChip extends StatelessWidget {
 
     final child = Container(
       width: 64.w,
-      height: 75.h,
+      height: 61.h,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: _borderColor),
+        border: Border.all(color: AppColors.shade5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.06),

@@ -37,14 +37,13 @@ class VehicleSelectionBinding extends Bindings {
         fenix: true,
       );
     }
-    Get.lazyPut<VehicleSelectionController>(
-      () => VehicleSelectionController(
+    Get.put<VehicleSelectionController>(
+      VehicleSelectionController(
         homeRepository: Get.find(),
         profileRepository: Get.find(),
         rideRepository: Get.find(),
         paymentMethodController: Get.find(),
       ),
-      fenix: true,
     );
   }
 }
