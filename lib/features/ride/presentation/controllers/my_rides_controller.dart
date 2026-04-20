@@ -1,6 +1,8 @@
 import 'package:get/get.dart';
 import '../../../../core/data/models/ride_model.dart';
+import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../domain/usecases/ride_usecase.dart';
+import '../widgets/ride_details_bottom_sheet.dart';
 
 class MyRidesController extends GetxController {
   final RideUseCase rideUseCase;
@@ -11,6 +13,7 @@ class MyRidesController extends GetxController {
   final isLoading = true.obs;
   final isLoadingMore = false.obs;
   final hasMoreData = true.obs;
+  final isOpeningRide = false.obs;
   final _page = 1.obs;
   static const int _limit = 10;
 
@@ -40,6 +43,34 @@ class MyRidesController extends GetxController {
       Get.snackbar('Error', 'An unexpected error occurred');
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  /// Always fetch latest ride details first, then route the tap behavior.
+  /// - Ongoing (active) ride statuses -> navigate like Home active ride
+  /// - Terminal statuses -> open details bottom sheet
+  Future<void> onRideTap(RideModel ride) async {
+    if (isOpeningRide.value) return;
+    isOpeningRide.value = true;
+    try {
+      final result = await rideUseCase.getRideDetails(ride.id);
+      result.fold(
+        (failure) => Get.snackbar('Error', failure.message),
+        (freshRide) {
+          if (rideStatusIsOngoingActive(freshRide.status)) {
+            navigateToDriverAcceptedForRide(freshRide);
+            return;
+          }
+          Get.bottomSheet(
+            RideDetailsBottomSheet(ride: freshRide),
+            isScrollControlled: true,
+          );
+        },
+      );
+    } catch (_) {
+      Get.snackbar('Error', 'An unexpected error occurred');
+    } finally {
+      isOpeningRide.value = false;
     }
   }
 

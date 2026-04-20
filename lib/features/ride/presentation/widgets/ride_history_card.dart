@@ -3,7 +3,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/utils/ride_active_navigation.dart';
 import 'ride_common_widgets.dart';
 
 class RideHistoryCard extends StatelessWidget {
@@ -13,28 +15,30 @@ class RideHistoryCard extends StatelessWidget {
   const RideHistoryCard({super.key, required this.ride, this.onTap});
 
   String _getStatusText(RideStatus status) {
+    if (rideStatusIsOngoingActive(status)) {
+      return 'Ongoing';
+    }
     switch (status) {
       case RideStatus.rideCompleted:
         return 'Completed';
       case RideStatus.cancelled:
         return 'Cancelled';
-      case RideStatus.searching:
-        return 'Searching';
       case RideStatus.noDriverFound:
         return 'No Driver Found';
       default:
-        return 'Completed'; // Default for history usually shows completed/cancelled
+        return 'Completed';
     }
   }
 
   Color _getStatusColor(RideStatus status) {
+    if (rideStatusIsOngoingActive(status)) {
+      return AppColors.info;
+    }
     switch (status) {
       case RideStatus.rideCompleted:
         return const Color(0xFF0EAD36); // Green
       case RideStatus.cancelled:
         return const Color(0xFFE53935); // Red
-      case RideStatus.searching:
-        return const Color(0xFFF59E0B); // Orange
       case RideStatus.noDriverFound:
         return const Color(0xFF9CA3AF); // Grey
       default:
