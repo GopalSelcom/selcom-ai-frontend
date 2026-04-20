@@ -159,12 +159,10 @@ class HomeScreen extends GetView<HomeController> {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 320),
             curve: Curves.easeInOutCubic,
-            alignment: isExpanded ? Alignment.topCenter : Alignment.center,
-            padding: EdgeInsets.symmetric(
-              vertical: isExpanded ? 13.h : 0,
-              horizontal: 12.w,
-            ),
-            height: isExpanded ? null : 61.h, // Matched with Figma height
+            alignment: Alignment.topCenter,
+            padding: EdgeInsets.zero,
+            height: isExpanded ? null : 61.h,
+            constraints: BoxConstraints(maxHeight: isExpanded ? 320.h : 61.h),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16.r),
@@ -177,119 +175,137 @@ class HomeScreen extends GetView<HomeController> {
                 ),
               ],
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: List.generate(placesToShow.length, (index) {
-                final place = placesToShow[index];
-                final selected = controller.isSavedPlaceSelectedAsPickup(
-                  place.id,
-                );
-                return InkWell(
-                  onTap: () {
-                    if (controller.isSavedPlacesExpanded.value) {
-                      controller.selectSavedPlaceAsPickup(place);
-                    } else {
-                      controller.toggleAddressHeaderExpansion();
-                    }
-                  },
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      bottom: index == placesToShow.length - 1 ? 0 : 12.h,
-                    ),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        vertical: 4.h,
-                        horizontal: 4.w,
+            child: Scrollbar(
+              thumbVisibility: true,
+              thickness: 4.w,
+              radius: Radius.circular(10.r),
+              child: ListView.builder(
+                shrinkWrap: true,
+                padding: EdgeInsets.symmetric(
+                  vertical: isExpanded ? 8.h : 7.h,
+                  horizontal: 14.w,
+                ),
+                physics: isExpanded
+                    ? const BouncingScrollPhysics()
+                    : const NeverScrollableScrollPhysics(),
+                itemCount: placesToShow.length,
+                itemBuilder: (context, index) {
+                  final place = placesToShow[index];
+                  final selected = controller.isSavedPlaceSelectedAsPickup(
+                    place.id,
+                  );
+                  return InkWell(
+                    onTap: () {
+                      if (controller.isSavedPlacesExpanded.value) {
+                        controller.selectSavedPlaceAsPickup(place);
+                      } else {
+                        controller.toggleAddressHeaderExpansion();
+                      }
+                    },
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        bottom: index == placesToShow.length - 1
+                            ? 0
+                            : (isExpanded ? 12.h : 0),
                       ),
-                      decoration: BoxDecoration(
-                        color:
-                            selected && controller.isSavedPlacesExpanded.value
-                            ? AppColors.primaryLight.withOpacity(0.35)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(12.r),
-                        border: Border.all(
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          vertical: 4.h,
+                          horizontal: 4.w,
+                        ),
+                        decoration: BoxDecoration(
                           color:
                               selected && controller.isSavedPlacesExpanded.value
-                              ? AppColors.primary
+                              ? AppColors.primaryLight.withOpacity(0.35)
                               : Colors.transparent,
-                          width:
-                              selected && controller.isSavedPlacesExpanded.value
-                              ? 1
-                              : 0,
+                          borderRadius: BorderRadius.circular(12.r),
+                          border: Border.all(
+                            color:
+                                selected &&
+                                    controller.isSavedPlacesExpanded.value
+                                ? AppColors.primary
+                                : Colors.transparent,
+                            width:
+                                selected &&
+                                    controller.isSavedPlacesExpanded.value
+                                ? 1
+                                : 0,
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 28.w,
+                              height: 28.w,
+                              child: Icon(
+                                Icons.location_on,
+                                color: AppColors.figmaIconGreen,
+                                size: 28.sp,
+                              ),
+                            ),
+                            SizedBox(width: 4.w),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        place.label ?? 'Place',
+                                        style: AppTextStyles.homeSubtitle
+                                            .copyWith(
+                                              fontWeight: FontWeight.w500,
+                                              color: AppColors.figmaTextPrimary,
+                                              fontSize: 15.sp,
+                                              height: 1.33,
+                                            ),
+                                      ),
+                                      if (index == 0) ...[
+                                        SizedBox(width: 4.w),
+                                        AnimatedRotation(
+                                          duration: const Duration(
+                                            milliseconds: 280,
+                                          ),
+                                          curve: Curves.easeInOutCubic,
+                                          turns: controller
+                                              .addressHeaderChevronTurns,
+                                          child: Icon(
+                                            Icons.keyboard_arrow_down,
+                                            size: 15.sp,
+                                            color: AppColors.figmaTextPrimary,
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                  SizedBox(height: 1.h),
+                                  Text(
+                                    place.address ??
+                                        place.name ??
+                                        'No address provided',
+                                    style: AppTextStyles.homeSubtitle.copyWith(
+                                      fontSize: 15.sp,
+                                      fontWeight: FontWeight.w400,
+                                      color: AppColors.figmaTextSecondary,
+                                      height: 1.33,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          SizedBox(
-                            width: 28.w,
-                            height: 28.w,
-                            child: Icon(
-                              Icons.location_on,
-                              color: AppColors.figmaIconGreen,
-                              size: 28.sp,
-                            ),
-                          ),
-                          SizedBox(width: 4.w),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      place.label ?? 'Place',
-                                      style: AppTextStyles.homeSubtitle
-                                          .copyWith(
-                                            fontWeight: FontWeight.w500,
-                                            color: AppColors.figmaTextPrimary,
-                                            fontSize: 15.sp,
-                                            height: 1.33,
-                                          ),
-                                    ),
-                                    if (index == 0) ...[
-                                      SizedBox(width: 4.w),
-                                      AnimatedRotation(
-                                        duration: const Duration(
-                                          milliseconds: 280,
-                                        ),
-                                        curve: Curves.easeInOutCubic,
-                                        turns: controller
-                                            .addressHeaderChevronTurns,
-                                        child: Icon(
-                                          Icons.keyboard_arrow_down,
-                                          size: 15.sp,
-                                          color: AppColors.figmaTextPrimary,
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                                SizedBox(height: 1.h),
-                                Text(
-                                  place.address ??
-                                      place.name ??
-                                      'No address provided',
-                                  style: AppTextStyles.homeSubtitle.copyWith(
-                                    fontSize: 15.sp,
-                                    fontWeight: FontWeight.w400,
-                                    color: AppColors.figmaTextSecondary,
-                                    height: 1.33,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
-                  ),
-                );
-              }),
+                  );
+                },
+              ),
             ),
           ),
         );

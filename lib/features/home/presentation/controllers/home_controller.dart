@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:async';
+import 'dart:developer' as developer;
+
 import 'package:get/get.dart';
 import 'package:app_settings/app_settings.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -471,65 +473,110 @@ class HomeController extends GetxController {
   }
 
   Future<void> _getCurrentLocation() async {
-    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      hasLocationPermission.value = false;
-      deviceGpsLocation.value = null;
-      currentMapAddress.value = 'Enable location service';
-      return;
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        hasLocationPermission.value = false;
+        deviceGpsLocation.value = null;
+        currentMapAddress.value = 'Enable location service';
+        return;
+      }
+
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        hasLocationPermission.value = false;
+        deviceGpsLocation.value = null;
+        currentMapAddress.value = 'Location permission denied';
+        return;
+      }
+
+      hasLocationPermission.value = true;
+
+      // ── Step 1: Try Last Known Position (Quick) ──
+      final lastPos = await Geolocator.getLastKnownPosition();
+      if (lastPos != null) {
+        final target = LatLng(lastPos.latitude, lastPos.longitude);
+        deviceGpsLocation.value = target;
+        mapCenter.value = target;
+
+        if (_mapController != null) {
+          _mapController!.animateCamera(CameraUpdate.newLatLngZoom(target, 16));
+        }
+        await _reverseGeocodeAtCenter();
+      }
+
+      // ── Step 2: Fetch Fresh High-Accuracy Position with Timeout ──
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      ).timeout(const Duration(seconds: 12));
+
+      final target = LatLng(position.latitude, position.longitude);
+      deviceGpsLocation.value = target;
+      mapCenter.value = target;
+
+      if (_mapController != null) {
+        await _mapController!.animateCamera(
+          CameraUpdate.newLatLngZoom(target, 16),
+        );
+      }
+
+      await _reverseGeocodeAtCenter();
+    } catch (e) {
+      developer.log("📍 Location Fetch Error: $e", name: 'HomeController');
+      if (currentMapAddress.value == 'Locating...') {
+        currentMapAddress.value = 'Select location on map';
+      }
     }
-
-    var permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-    }
-
-    if (permission == LocationPermission.denied ||
-        permission == LocationPermission.deniedForever) {
-      hasLocationPermission.value = false;
-      deviceGpsLocation.value = null;
-      currentMapAddress.value = 'Location permission denied';
-      return;
-    }
-
-    hasLocationPermission.value = true;
-
-    final position = await Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
-    );
-    final target = LatLng(position.latitude, position.longitude);
-    deviceGpsLocation.value = target;
-    mapCenter.value = target;
-
-    if (_mapController != null) {
-      await _mapController!.animateCamera(
-        CameraUpdate.newLatLngZoom(target, 16),
-      );
-    }
-
-    await _reverseGeocodeAtCenter();
   }
 
   Future<void> _reverseGeocodeAtCenter() async {
     if (isResolvingAddress.value) return;
 
-    isResolvingAddress.value = true;
-    final target = mapCenter.value;
-    final result = await homeRepository.reverseGeocode(
-      lat: target.latitude,
-      lng: target.longitude,
-    );
+    try {
+      isResolvingAddress.value = true;
+      final target = mapCenter.value;
+      final result = await homeRepository.reverseGeocode(
+        lat: target.latitude,
+        lng: target.longitude,
+      );
 
-    result.fold((_) => null, (data) {
-      if ((data.data?.results ?? []).isNotEmpty &&
-          (data.data?.results?.first.formattedAddress ?? "")
-              .trim()
-              .isNotEmpty) {
-        currentMapAddress.value =
-            data.data?.results?.first.formattedAddress ?? "";
+      result.fold(
+        (failure) {
+          developer.log(
+            "📍 Reverse Geocode Failure: $failure",
+            name: 'HomeController',
+          );
+          if (currentMapAddress.value == 'Locating...') {
+            currentMapAddress.value = 'Select location on map';
+          }
+        },
+        (data) {
+          if ((data.data?.results ?? []).isNotEmpty &&
+              (data.data?.results?.first.formattedAddress ?? "")
+                  .trim()
+                  .isNotEmpty) {
+            currentMapAddress.value =
+                data.data?.results?.first.formattedAddress ?? "";
+          } else if (currentMapAddress.value == 'Locating...') {
+            currentMapAddress.value = 'Select location on map';
+          }
+        },
+      );
+    } catch (e) {
+      developer.log("📍 Reverse Geocode Exception: $e", name: 'HomeController');
+      if (currentMapAddress.value == 'Locating...') {
+        currentMapAddress.value = 'Select location on map';
       }
-    });
-    isResolvingAddress.value = false;
+    } finally {
+      isResolvingAddress.value = false;
+    }
   }
 
   SavedPlace? getSavedPlaceByLabel(String label) {
@@ -943,7 +990,6 @@ class HomeController extends GetxController {
     // fallback to something sensible if still null, but NOT a hardcoded offset that feels like a bug
     dLat ??= pLat;
     dLng ??= pLng;
-
 
     await Get.delete<VehicleSelectionController>();
     Get.toNamed(

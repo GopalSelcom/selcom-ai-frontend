@@ -28,6 +28,7 @@ class AppMapLocationSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      constraints: BoxConstraints(minHeight: 61.h),
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -44,11 +45,7 @@ class AppMapLocationSummaryCard extends StatelessWidget {
       child: Row(
         children: [
           leading ??
-              Icon(
-                Icons.location_on,
-                color: AppColors.primary,
-                size: 26.sp,
-              ),
+              Icon(Icons.location_on, color: AppColors.primary, size: 26.sp),
           SizedBox(width: 8.w),
           Expanded(
             child: Column(
@@ -57,7 +54,8 @@ class AppMapLocationSummaryCard extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: labelStyle ??
+                  style:
+                      labelStyle ??
                       AppTextStyles.homeSubtitle.copyWith(
                         color: const Color(0xFF2A3143),
                         fontWeight: FontWeight.w600,
@@ -65,7 +63,8 @@ class AppMapLocationSummaryCard extends StatelessWidget {
                 ),
                 Text(
                   address,
-                  style: addressStyle ??
+                  style:
+                      addressStyle ??
                       AppTextStyles.homeCaption.copyWith(
                         color: const Color(0xFF586377),
                         fontSize: 13.sp,
