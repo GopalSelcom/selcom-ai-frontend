@@ -8,8 +8,11 @@ class AppDraggableBottomSheet extends StatelessWidget {
     required this.initialChildSize,
     required this.minChildSize,
     this.maxChildSize = 0.9,
+    this.controller,
     required this.childBuilder,
   });
+
+  final DraggableScrollableController? controller;
 
   final double initialChildSize;
   final double minChildSize;
@@ -19,6 +22,7 @@ class AppDraggableBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
+      controller: controller,
       initialChildSize: initialChildSize,
       minChildSize: minChildSize,
       maxChildSize: maxChildSize,

@@ -20,8 +20,8 @@ class NotificationService {
   bool _isInitialized = false;
   String? _deviceToken;
 
-  /// Returns the cached device token or a default value.
-  String get deviceToken => _deviceToken ?? "123";
+  /// Returns the cached device token or an empty string.
+  String get deviceToken => _deviceToken ?? "";
 
   Future<void> initialize() async {
     if (_isInitialized) return;
@@ -39,7 +39,7 @@ class NotificationService {
       await StorageService().write(StorageKeys.fcmToken, token);
     });
 
-    // Fetch and cache device token (don't await to avoid blocking app startup)
+    // Fetch and cache device token (background)
     getToken();
 
     // 1. Initialize Local Notifications
@@ -125,22 +125,22 @@ class NotificationService {
 
   Future<String?> getToken({int retryCount = 0}) async {
     try {
+      // Fetch token from Firebase
       String? token = await _fcm.getToken();
-      _deviceToken = token;
-      if (token != null) {
+
+      if (token != null && token.isNotEmpty) {
+        _deviceToken = token;
         await StorageService().write(StorageKeys.fcmToken, token);
+        _logger.i("FCM Token: $token");
       }
-      _logger.d("FCM Token: $token");
+
       return token;
     } catch (e) {
       // On iOS, sometimes the APNS token isn't ready immediately.
-      // We retry a few times after a delay to give it time to be received.
       if (Platform.isIOS &&
           e.toString().contains('apns-token-not-set') &&
           retryCount < 5) {
-        _logger.w(
-          "APNS token not set, retrying in 3 seconds (Attempt $retryCount)...",
-        );
+        _logger.w("APNS token not set, retrying in 3 seconds...");
         await Future.delayed(const Duration(seconds: 3));
         return getToken(retryCount: retryCount + 1);
       }

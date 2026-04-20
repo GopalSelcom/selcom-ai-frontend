@@ -251,6 +251,7 @@ class FindingDriverController extends GetxController {
   void _navigateToDriverAccepted() {
     if (_didNavigateToAccepted) return;
     _didNavigateToAccepted = true;
+    _countdownTimer?.cancel();
     _mockDriverAssignTimer?.cancel();
     final statusPayload = latestRideStatusPayload.value;
     final driverLocPayload = latestDriverLocationPayload.value;
@@ -383,8 +384,12 @@ class FindingDriverController extends GetxController {
       } else {
         driverMarkerPoints.assignAll(
           drivers
-              .map((d) => LatLng(
-                  double.parse(d.lat ?? "0"), double.parse(d.lng ?? "0")))
+              .map(
+                (d) => LatLng(
+                  double.parse(d.lat ?? "0"),
+                  double.parse(d.lng ?? "0"),
+                ),
+              )
               .toList(),
         );
       }
@@ -553,7 +558,17 @@ class FindingDriverController extends GetxController {
 
     // 2. Reason Selection
     final String? reason = await Get.dialog<String>(
-      const CancelReasonSelectionDialog(),
+      const CancelReasonSelectionDialog(
+        reasons: [
+          'Taking Too Long To Confirm The Ride',
+          'Wait Time Too Long',
+          'Selected Wrong Pickup Location',
+          'Selected Wrong Drop Location',
+          'Booked By Mistake',
+          'Changed my mind',
+          'Others',
+        ],
+      ),
       barrierDismissible: false,
     );
 

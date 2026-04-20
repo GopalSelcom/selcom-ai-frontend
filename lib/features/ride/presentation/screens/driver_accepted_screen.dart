@@ -23,13 +23,14 @@ class DriverAcceptedScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = Get.find<DriverAcceptedController>();
     final topPad = MediaQuery.paddingOf(context).top;
+    final sheetController = DraggableScrollableController();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: Stack(
         fit: StackFit.expand,
         children: [
-          _buildMap(context, c),
+          _buildMap(context, c, sheetController),
           Positioned(
             top: 0,
             left: 0,
@@ -98,14 +99,10 @@ class DriverAcceptedScreen extends StatelessWidget {
               ),
             );
           }),
-          Positioned(
-            bottom: (MediaQuery.of(context).size.height * _sheetInitial) - 60.h,
-            right: 20.w,
-            child: AppMapGpsButton(onPressed: c.recenterMap),
-          ),
           AppDraggableBottomSheet(
+            controller: sheetController,
             initialChildSize: _sheetInitial,
-            minChildSize: 0.56,
+            minChildSize: 0.3,
             childBuilder: (scrollController) =>
                 _bottomSheet(c, scrollController),
           ),
@@ -114,7 +111,12 @@ class DriverAcceptedScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMap(BuildContext context, DriverAcceptedController c) {
+  Widget _buildMap(
+    BuildContext context,
+    DriverAcceptedController c,
+    DraggableScrollableController sheetController,
+  ) {
+    final topPad = MediaQuery.paddingOf(context).top;
     return Obx(() {
       final pickup = c.pickupLatLng;
       final destination = c.destinationLatLng;
@@ -139,6 +141,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                 BitmapDescriptor.defaultMarkerWithHue(
                   BitmapDescriptor.hueGreen,
                 ),
+            rotation: c.assignedDriverHeading.value,
             anchor: const Offset(0.5, 0.5),
             flat: true,
           ),
@@ -188,10 +191,22 @@ class DriverAcceptedScreen extends StatelessWidget {
         mapWidgetKey: const ValueKey('driver_accepted_map'),
         initialCameraPosition: CameraPosition(target: mid, zoom: 13.5),
         padding: EdgeInsets.only(
+          top: topPad + 80.h,
           bottom: MediaQuery.of(context).size.height * _sheetInitial,
         ),
         onMapCreated: c.onMapCreated,
         onCameraIdle: c.scheduleAssignedEtaOverlayRefresh,
+        showGpsButton: true,
+        onGpsPressed: c.recenterMap,
+        onUserInteraction: () {
+          if (sheetController.isAttached && sheetController.size > 0.3) {
+            sheetController.animateTo(
+              0.3,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+            );
+          }
+        },
         markers: markers,
         polylines: polylines,
       );
