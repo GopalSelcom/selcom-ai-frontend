@@ -110,6 +110,11 @@ class DriverAcceptedController extends GetxController
     _parseArgs();
     _bootstrap();
     ever(assignedDriverLocation, (_) => scheduleAssignedEtaOverlayRefresh());
+    ever(routePoints, (List<LatLng> points) {
+      if (points.length > 2) {
+        recenterMap();
+      }
+    });
     analyticsService.logEvent('driver_assigned_screen_viewed');
   }
 
