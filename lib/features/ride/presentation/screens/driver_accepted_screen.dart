@@ -18,22 +18,25 @@ import '../widgets/ride_common_widgets.dart';
 class DriverAcceptedScreen extends StatelessWidget {
   const DriverAcceptedScreen({super.key});
 
-  static const double _sheetInitial = 0.58;
+  static const double _sheetInitial = 0.3;
 
   @override
   Widget build(BuildContext context) {
     final c = Get.find<DriverAcceptedController>();
     final topPad = MediaQuery.of(context).padding.top;
-    final screenHeight = MediaQuery.of(context).size.height;
-    final bottomPad = screenHeight * _sheetInitial;
     final sheetController = DraggableScrollableController();
+
+    // Listen to sheet size changes and update controller
+    sheetController.addListener(() {
+      c.updateSheetSize(sheetController.size);
+    });
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: Stack(
         fit: StackFit.expand,
         children: [
-          _buildMap(context, c, sheetController, bottomPad),
+          _buildMap(context, c, sheetController),
           Positioned(
             top: 0,
             left: 0,
@@ -118,10 +121,13 @@ class DriverAcceptedScreen extends StatelessWidget {
     BuildContext context,
     DriverAcceptedController c,
     DraggableScrollableController sheetController,
-    double bottomPad,
   ) {
-    final topPad = MediaQuery.paddingOf(context).top;
+    final screenHeight = MediaQuery.sizeOf(context).height;
+
     return Obx(() {
+      final currentSheetSize = c.sheetSize.value;
+      final dynamicBottomPad = screenHeight * currentSheetSize;
+
       final pickup = c.pickupLatLng;
       final destination = c.destinationLatLng;
       final assigned = c.assignedDriverLocation.value;
@@ -195,14 +201,23 @@ class DriverAcceptedScreen extends StatelessWidget {
         mapWidgetKey: const ValueKey('driver_accepted_map'),
         initialCameraPosition: CameraPosition(target: mid, zoom: 13.5),
         padding: EdgeInsets.only(
-          top: bottomPad - 40.h, // Balanced with bottom sheet
-          bottom: bottomPad,
+          top: dynamicBottomPad - 40.h, // Balanced with current sheet size
+          bottom: dynamicBottomPad,
         ),
         onMapCreated: c.onMapCreated,
         onCameraIdle: c.scheduleAssignedEtaOverlayRefresh,
         showGpsButton: true,
         onGpsPressed: () {
           c.recenterMap();
+          if (sheetController.isAttached) {
+            sheetController.animateTo(
+              0.3,
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeInOut,
+            );
+          }
+        },
+        onNavigationPressed: () {
           if (sheetController.isAttached) {
             sheetController.animateTo(
               0.3,

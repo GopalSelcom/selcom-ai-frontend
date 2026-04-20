@@ -94,6 +94,12 @@ class DriverAcceptedController extends GetxController
   StreamSubscription<Map<String, dynamic>>? _chatSub;
   bool _didJoinRideRoom = false;
 
+  final RxDouble sheetSize = 0.3.obs;
+
+  void updateSheetSize(double size) {
+    sheetSize.value = size;
+  }
+
   @override
   void onInit() {
     super.onInit();
@@ -234,39 +240,39 @@ class DriverAcceptedController extends GetxController
   //   } catch (_) {}
   // }
 
-  Future<void> _fetchRideDetails() async {
-    if (rideId.isEmpty) {
-      _applyMockContent();
-      isLoadingRide.value = false;
-      assignedDriverLocation.value ??= const LatLng(-6.7921, 39.2101);
-      return;
-    }
-    final result = await rideRepository.getRideDetails(rideId);
-    result.fold(
-      (_) {
-        _applyMockContent();
-        assignedDriverLocation.value ??= const LatLng(-6.7921, 39.2101);
-      },
-      (r) {
-        ride.value = r;
-        // _applyRide(r);
-      },
-    );
-    isLoadingRide.value = false;
-  }
+  // Future<void> _fetchRideDetails() async {
+  //   if (rideId.isEmpty) {
+  //     _applyMockContent();
+  //     isLoadingRide.value = false;
+  //     assignedDriverLocation.value ??= const LatLng(-6.7921, 39.2101);
+  //     return;
+  //   }
+  //   final result = await rideRepository.getRideDetails(rideId);
+  //   result.fold(
+  //     (_) {
+  //       _applyMockContent();
+  //       assignedDriverLocation.value ??= const LatLng(-6.7921, 39.2101);
+  //     },
+  //     (r) {
+  //       ride.value = r;
+  //       // _applyRide(r);
+  //     },
+  //   );
+  //   isLoadingRide.value = false;
+  // }
 
-  void _applyMockContent() {
-    driverName.value = 'John Doe';
-    driverPhone.value = '';
-    driverRating.value = '4';
-    driverVehicleLine.value = 'Volkswagen';
-    plateLinePrimary.value = 'T 772';
-    plateLineSecondary.value = 'BBE';
-    vehicleSubtitle.value = 'Toyota corolla, White';
-    otpDigits.assignAll(['2', '7', '5', '6']);
-    arrivalLabel.value = 'Driver will arriving in 1 min...';
-    currentRideStatus.value = 'driver_assigned';
-  }
+  // void _applyMockContent() {
+  //   driverName.value = 'John Doe';
+  //   driverPhone.value = '';
+  //   driverRating.value = '4';
+  //   driverVehicleLine.value = 'Volkswagen';
+  //   plateLinePrimary.value = 'T 772';
+  //   plateLineSecondary.value = 'BBE';
+  //   vehicleSubtitle.value = 'Toyota corolla, White';
+  //   otpDigits.assignAll(['2', '7', '5', '6']);
+  //   arrivalLabel.value = 'Driver will arriving in 1 min...';
+  //   currentRideStatus.value = 'driver_assigned';
+  // }
 
   void _applyRide(RideModel r) {
     final d = r.driverSnapshot as DriverSnapshotModel?;
