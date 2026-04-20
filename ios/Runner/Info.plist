@@ -48,6 +48,8 @@
 	<string>Selcom Rides needs access to your photo library to allow you to upload a profile picture.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>

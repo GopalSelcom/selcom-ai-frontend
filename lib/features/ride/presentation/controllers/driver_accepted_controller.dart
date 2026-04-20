@@ -9,6 +9,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/driver_location_socker_response.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/services/live_activity/live_activity_manager.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
@@ -319,6 +320,7 @@ class DriverAcceptedController extends GetxController {
       final status = (payload.status ?? '').toString().trim();
       _applyBottomSheetStateForStatus(status);
       _applyStatusPayload(payload);
+      _syncLiveActivityFromStatusPayload(payload);
       if (status.toLowerCase() == 'cancelled') {
         Get.offAllNamed(AppRoutes.home);
       }
@@ -334,7 +336,10 @@ class DriverAcceptedController extends GetxController {
     });
 
     _trackingSub = _socketService.trackingUpdateStatusStream.listen((payload) {
-      if (payload != null) _applyTrackingPayload(payload);
+      if (payload != null) {
+        _applyTrackingPayload(payload);
+        _syncLiveActivityFromTrackingPayload(payload);
+      }
     });
 
     // Ensure socket is connected for the active-ride entry path too.
@@ -623,7 +628,8 @@ class DriverAcceptedController extends GetxController {
     }
 
     RideBottomSheetState nextState = RideBottomSheetState.driverAssigned;
-    if (normalizedStatus == 'completed' || normalizedStatus == 'ride_completed') {
+    if (normalizedStatus == 'completed' ||
+        normalizedStatus == 'ride_completed') {
       nextState = RideBottomSheetState.rideCompleted;
     } else if (normalizedStatus == 'ride_started' ||
         normalizedStatus == 'ride_in_progress' ||
@@ -659,11 +665,7 @@ class DriverAcceptedController extends GetxController {
     final normalizedStatus = canonicalStatus.toLowerCase();
     if (status.isEmpty) return;
 
-    const pickupStatuses = {
-      'accepted',
-      'driver_assigned',
-      'driver_arriving',
-    };
+    const pickupStatuses = {'accepted', 'driver_assigned', 'driver_arriving'};
     const dropStatuses = {
       'driver_arrived',
       'ride_started',
@@ -868,7 +870,8 @@ class DriverAcceptedController extends GetxController {
   }
 
   String get bookingFeeLabel {
-    final amount = ride.value?.fareBreakdown?.bookingFee ?? _seedBookingFee ?? 0;
+    final amount =
+        ride.value?.fareBreakdown?.bookingFee ?? _seedBookingFee ?? 0;
     return 'TZS $amount.00';
   }
 
@@ -936,5 +939,80 @@ class DriverAcceptedController extends GetxController {
         }
       },
     );
+  }
+
+  void _syncLiveActivityFromStatusPayload(
+    EventRiderStatusUpdateResponse payload,
+  ) {
+    try {
+      if (rideId.isEmpty) return;
+      final status = (payload.status ?? '').toString().toUpperCase();
+
+      int step = 2; // Usually assigned or further when reached here
+      if (status.contains('ARRIVED')) step = 3;
+      if (status.contains('STARTED') ||
+          status.contains('PROGRESS') ||
+          status.contains('NEAR'))
+        step = 4;
+      if (status.contains('COMPLETED')) step = 5;
+
+      LiveActivityManager().startActivity(
+        orderId: rideId,
+        status: status,
+        title: 'Ride tracked',
+        merchantName: payload.driverSnapshot?.name ?? 'Driver Assigned',
+        subtitle: payload.driverSnapshot?.vehicleRegistrationNumber ?? '',
+        fare: totalAmountLabel,
+        vehicleDesc:
+            '${payload.driverSnapshot?.vehicleType ?? ''} ${payload.driverSnapshot?.vehicleModel ?? ''}'
+                .trim(),
+        plateNumber: payload.driverSnapshot?.vehicleRegistrationNumber ?? '',
+        riderPhotoUrl: payload.driverSnapshot?.avatarUrl ?? '',
+        step: step,
+        totalSteps: 5,
+        isRiderDelivering:
+            status.contains('STARTED') ||
+            status.contains('PROGRESS') ||
+            status.contains('NEAR'),
+        isCompleted: status.contains('COMPLETED'),
+        pickupDistance: '0',
+        deliveryDistance: '0',
+      );
+    } catch (e) {
+      debugPrint('❌ Error syncing Live Activity from status payload: $e');
+    }
+  }
+
+  void _syncLiveActivityFromTrackingPayload(
+    TrackingUpdateSocketResponse payload,
+  ) {
+    try {
+      if (rideId.isEmpty) return;
+      final target = (payload.routeTarget ?? '').trim().toLowerCase();
+
+      // If we have tracking, it means it's either en route to pickup or en route to destination
+      int step = (target == 'pick_up' || target == 'pickup') ? 2 : 4;
+
+      LiveActivityManager().startActivity(
+        orderId: rideId,
+        status: currentRideStatus.value.toUpperCase(),
+        title: 'Ride tracked',
+        merchantName: driverName.value,
+        subtitle: plateLinePrimary.value + plateLineSecondary.value,
+        fare: totalAmountLabel,
+        vehicleDesc: driverVehicleLine.value,
+        plateNumber: plateLinePrimary.value + plateLineSecondary.value,
+        riderPhotoUrl: '', // Photo URL not in tracking payload generally
+        step: step,
+        totalSteps: 5,
+        isRiderDelivering: step == 4,
+        isCompleted: false,
+        pickupDistance: '0',
+        deliveryDistance: '0',
+        etaSeconds: (payload.eta ?? 0).toDouble(),
+      );
+    } catch (e) {
+      debugPrint('❌ Error syncing Live Activity from tracking payload: $e');
+    }
   }
 }

@@ -15,6 +15,7 @@ import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../../../core/utils/map_marker_utils.dart';
+import '../../../../core/services/live_activity/live_activity_manager.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../widgets/cancel_ride_dialogs.dart';
 
@@ -211,6 +212,34 @@ class FindingDriverController extends GetxController {
       }
       remainingSeconds.value--;
     });
+    _syncLiveActivity();
+  }
+
+  Future<void> _syncLiveActivity() async {
+    try {
+      if (rideId.isEmpty) return;
+
+      await LiveActivityManager().startActivity(
+        orderId: rideId,
+        status: 'SEARCHING',
+        title: 'Finding Your Driver',
+        merchantName: 'Searching for driver...',
+        subtitle: '',
+        fare: fareBreakdown?['total_amount']?.toString() ?? '',
+        eta: '',
+        vehicleDesc: requestedVehicleType ?? '',
+        plateNumber: '',
+        riderPhotoUrl: '',
+        step: 1,
+        totalSteps: 5,
+        isRiderDelivering: false,
+        isCompleted: false,
+        pickupDistance: '0',
+        deliveryDistance: '0',
+      );
+    } catch (e) {
+      debugPrint('❌ Error syncing Live Activity: $e');
+    }
   }
 
   Future<void> _autoCancelRide() async {
@@ -293,6 +322,7 @@ class FindingDriverController extends GetxController {
       latestRideStatusPayload.value = payload;
       final status = (payload.status ?? '').toString().toLowerCase();
       _applyStatusPayload(payload);
+      _syncLiveActivityFromPayload(payload);
       if (status.isEmpty) return;
 
       switch (status) {
@@ -367,9 +397,48 @@ class FindingDriverController extends GetxController {
       _applyTrackingPayload(payload);
     });
 
-    await _socketService.connect();
     if (_socketService.isConnected) {
       _socketService.joinRideRoom(rideId: rideId);
+      _syncLiveActivity();
+    }
+  }
+
+  void _syncLiveActivityFromPayload(EventRiderStatusUpdateResponse payload) {
+    try {
+      if (rideId.isEmpty) return;
+      final status = (payload.status ?? '').toString().toUpperCase();
+
+      int step = 1;
+      if (status.contains('ASSIGNED') || status.contains('ACCEPTED')) step = 2;
+      if (status.contains('ARRIVED')) step = 3;
+      if (status.contains('STARTED') ||
+          status.contains('PROGRESS') ||
+          status.contains('NEAR'))
+        step = 4;
+
+      LiveActivityManager().startActivity(
+        orderId: rideId,
+        status: status,
+        title: 'Ride tracked',
+        merchantName: payload.driverSnapshot?.name ?? 'Searching for driver...',
+        subtitle: payload.driverSnapshot?.vehicleRegistrationNumber ?? '',
+        vehicleDesc:
+            '${payload.driverSnapshot?.vehicleType ?? ''} ${payload.driverSnapshot?.vehicleModel ?? ''}'
+                .trim(),
+        plateNumber: payload.driverSnapshot?.vehicleRegistrationNumber ?? '',
+        riderPhotoUrl: payload.driverSnapshot?.avatarUrl ?? '',
+        step: step,
+        totalSteps: 5,
+        isRiderDelivering:
+            status.contains('STARTED') ||
+            status.contains('PROGRESS') ||
+            status.contains('NEAR'),
+        isCompleted: status.contains('COMPLETED'),
+        pickupDistance: '0',
+        deliveryDistance: '0',
+      );
+    } catch (e) {
+      debugPrint('❌ Error syncing Live Activity from payload: $e');
     }
   }
 
@@ -383,8 +452,12 @@ class FindingDriverController extends GetxController {
       } else {
         driverMarkerPoints.assignAll(
           drivers
-              .map((d) => LatLng(
-                  double.parse(d.lat ?? "0"), double.parse(d.lng ?? "0")))
+              .map(
+                (d) => LatLng(
+                  double.parse(d.lat ?? "0"),
+                  double.parse(d.lng ?? "0"),
+                ),
+              )
               .toList(),
         );
       }

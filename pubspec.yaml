@@ -49,6 +49,9 @@ dependencies:
   m7_livelyness_detection:
     path: ./packages/face_detection
   permission_handler: ^11.3.1
+  live_activities: ^2.1.0
+  path_provider: ^2.1.5
+  collection: ^1.19.1
 
 dev_dependencies:
   flutter_test:

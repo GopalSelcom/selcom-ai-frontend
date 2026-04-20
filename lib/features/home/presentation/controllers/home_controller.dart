@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:get/get.dart';
+import '../../../../core/domain/entities/ride_entity.dart';
 import 'package:app_settings/app_settings.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -31,6 +32,7 @@ import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/data/models/responses/rides/active_ride_response.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
+import '../../../../core/services/live_activity/live_activity_manager.dart';
 
 class HomeController extends GetxController {
   static const String _currentLocationPlaceId = '__current_location__';
@@ -303,6 +305,72 @@ class HomeController extends GetxController {
     final rideModel = RideModel.fromJson(activeRideData.toJson());
     activeRide.value = rideModel;
     _connectAndJoinActiveRideRoom(rideModel);
+    _syncLiveActivity(rideModel);
+  }
+
+  Future<void> _syncLiveActivity(RideModel ride) async {
+    try {
+      final status = ride.status.name;
+      final isCompleted = ride.status == RideStatus.rideCompleted;
+      final isCancelled =
+          ride.status == RideStatus.cancelled ||
+          ride.status == RideStatus.noDriverFound;
+
+      if (isCompleted || isCancelled) {
+        await LiveActivityManager().endActivity(ride.id);
+        return;
+      }
+
+      // Calculate step based on status
+      int step = 0;
+      switch (ride.status) {
+        case RideStatus.searching:
+          step = 1;
+          break;
+        case RideStatus.driverAssigned:
+        case RideStatus.driverArriving:
+          step = 2;
+          break;
+        case RideStatus.driverArrived:
+          step = 3;
+          break;
+        case RideStatus.rideStarted:
+        case RideStatus.rideInProgress:
+        case RideStatus.nearDestination:
+          step = 4;
+          break;
+        default:
+          step = 0;
+      }
+
+      await LiveActivityManager().startActivity(
+        orderId: ride.id,
+        status: status.toUpperCase(),
+        title: 'Ride tracked',
+        merchantName: ride.driverSnapshot?.name ?? 'Searching for driver...',
+        subtitle: ride.vehicleSnapshot?.plateNumber ?? '',
+        fare: 'TZS ${ride.finalFare ?? ride.fareEstimate}.00',
+        vehicleDesc:
+            '${ride.vehicleSnapshot?.vehicleMake ?? ''} ${ride.vehicleSnapshot?.vehicleModel ?? ''}'
+                .trim(),
+        plateNumber: ride.vehicleSnapshot?.plateNumber ?? '',
+        riderPhotoUrl: ride.driverSnapshot?.avatarUrl ?? '',
+        step: step,
+        totalSteps: 5,
+        isRiderDelivering:
+            ride.status == RideStatus.rideStarted ||
+            ride.status == RideStatus.rideInProgress ||
+            ride.status == RideStatus.nearDestination,
+        isCompleted: isCompleted,
+        pickupDistance: '0',
+        deliveryDistance: ride.distanceKm.toString(),
+      );
+    } catch (e) {
+      developer.log(
+        '❌ Error syncing Live Activity: $e',
+        name: 'HOME_CONTROLLER',
+      );
+    }
   }
 
   Future<void> openActiveRide() async {

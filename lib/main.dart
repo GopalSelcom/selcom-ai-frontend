@@ -15,6 +15,7 @@ import 'core/services/notification_service.dart';
 import 'core/bindings/initial_binding.dart';
 import 'core/theme/app_theme.dart';
 import 'core/routes/app_routes.dart';
+import 'core/services/live_activity/live_activity_manager.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -76,6 +77,9 @@ void main() async {
       await di.sl<NotificationService>().initialize();
 
       await di.sl<AnalyticsService>().logEvent('app_opened');
+
+      // Initialize Live Activity Service
+      await di.sl<LiveActivityManager>().init();
 
       runApp(const MyApp());
     },
