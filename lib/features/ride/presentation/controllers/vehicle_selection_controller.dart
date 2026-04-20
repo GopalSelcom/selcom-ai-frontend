@@ -63,6 +63,7 @@ class VehicleSelectionController extends GetxController {
 
   String? _preferredVehicleTypeId;
   String? _preferredVehicleName;
+  final _vehicleTypes = <VehicleTypeModel>[];
 
   AppSocketService get _socketService => Get.find<AppSocketService>();
   StreamSubscription<List<Driver>>? _nearbyDriversSub;
@@ -150,6 +151,9 @@ class VehicleSelectionController extends GetxController {
     final vehicleTypesResult = await homeRepository.getVehicleTypes();
     List<VehicleTypeModel> vehicleTypes = [];
     vehicleTypesResult.fold((_) {}, (list) => vehicleTypes = list);
+    _vehicleTypes
+      ..clear()
+      ..addAll(vehicleTypes);
 
     final result = await homeRepository.estimateFare(req);
     result.fold(
@@ -645,14 +649,17 @@ class VehicleSelectionController extends GetxController {
 
   String? _socketVehicleTypeForEstimate(FareEstimateItem? item) {
     if (item == null) return null;
-    final raw = '${item.vehicleName ?? ''} ${item.displayName ?? ''}'.toLowerCase();
-    if (raw.contains('boda') || raw.contains('bike') || raw.contains('moto')) return 'Bike';
-    if (raw.contains('bajaj') || raw.contains('auto') || raw.contains('three')) {
-      return 'Three_Wheeler';
+
+    // Pass API vehicle_types.key directly in socket event payload.
+    final estimateTypeId = (item.vehicleTypeId ?? '').trim();
+    if (estimateTypeId.isEmpty || _vehicleTypes.isEmpty) {
+      return null; // omit vehicle_type if key cannot be resolved
     }
-    if (raw.contains('van')) return 'Van';
-    if (raw.contains('cab') || raw.contains('car') || raw.contains('goride')) return 'Car';
-    return null; // omit vehicle_type => server returns all types
+
+    final matched = _vehicleTypes.firstWhereOrNull((v) => v.id == estimateTypeId);
+    final key = matched?.key.trim();
+    if (key == null || key.isEmpty) return null;
+    return key;
   }
 
   void onMapCreated(GoogleMapController c) {
