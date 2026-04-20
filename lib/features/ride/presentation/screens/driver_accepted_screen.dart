@@ -74,22 +74,22 @@ class DriverAcceptedScreen extends StatelessWidget {
             final px = c.assignedDriverEtaScreenPx.value;
             if (px == null) return const SizedBox.shrink();
             return Positioned(
-              left: px.dx - 44.w,
-              top: px.dy - 46.h,
+              left: px.dx - 40.w,
+              top: px.dy - 60.h, // Moved higher to avoid clashing with marker
               child: IgnorePointer(
                 child: Container(
                   padding: EdgeInsets.symmetric(
-                    horizontal: 10.w,
+                    horizontal: 12.w,
                     vertical: 6.h,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(8.r),
+                    color: const Color(0xFFE31E24), // Red as seen in screenshot
+                    borderRadius: BorderRadius.circular(12.r),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.12),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
                       ),
                     ],
                   ),
@@ -98,7 +98,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 12.sp,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
@@ -132,7 +132,6 @@ class DriverAcceptedScreen extends StatelessWidget {
       final destination = c.destinationLatLng;
       final assigned = c.assignedDriverLocation.value;
       final route = c.routePoints.toList();
-      final isPickupRoute = c.routeTarget.value == 'pick_up';
       final mid = LatLng(
         (pickup.latitude + destination.latitude) / 2,
         (pickup.longitude + destination.longitude) / 2,
@@ -184,61 +183,115 @@ class DriverAcceptedScreen extends StatelessWidget {
       }
 
       final polylines = <Polyline>{};
-      polylines.add(
-        Polyline(
-          polylineId: const PolylineId('active_route'),
-          points: route.isNotEmpty
-              ? route
-              : (isPickupRoute && assigned != null
-                    ? [assigned, pickup]
-                    : [pickup, destination]),
-          color: const Color(0xFF3073E8),
-          width: 5,
-        ),
-      );
+      if (route.length > 2) {
+        polylines.add(
+          Polyline(
+            polylineId: const PolylineId('active_route'),
+            points: route,
+            color: const Color(0xFF3073E8),
+            width: 5,
+          ),
+        );
+      }
 
-      return AppGoogleMap(
-        mapWidgetKey: const ValueKey('driver_accepted_map'),
-        initialCameraPosition: CameraPosition(target: mid, zoom: 13.5),
-        padding: EdgeInsets.only(
-          top: dynamicBottomPad - 40.h, // Balanced with current sheet size
-          bottom: dynamicBottomPad,
-        ),
-        onMapCreated: c.onMapCreated,
-        onCameraIdle: c.scheduleAssignedEtaOverlayRefresh,
-        showGpsButton: true,
-        onGpsPressed: () {
-          c.recenterMap();
-          if (sheetController.isAttached) {
-            sheetController.animateTo(
-              0.3,
-              duration: const Duration(milliseconds: 400),
-              curve: Curves.easeInOut,
-            );
-          }
-        },
-        onNavigationPressed: () {
-          if (sheetController.isAttached) {
-            sheetController.animateTo(
-              0.3,
-              duration: const Duration(milliseconds: 400),
-              curve: Curves.easeInOut,
-            );
-          }
-        },
-        onUserInteraction: () {
-          if (sheetController.isAttached && sheetController.size > 0.3) {
-            sheetController.animateTo(
-              0.3,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOut,
-            );
-          }
-        },
-        markers: markers,
-        polylines: polylines,
-        minMaxZoomPreference: const MinMaxZoomPreference(12, 19),
-        trackRider: false,
+      final showRouteLoading = route.length <= 2;
+      final loadingText = assigned == null
+          ? "Locating driver..."
+          : "Calculating best route...";
+
+      return Stack(
+        children: [
+          AppGoogleMap(
+            mapWidgetKey: const ValueKey('driver_accepted_map'),
+            initialCameraPosition: CameraPosition(target: mid, zoom: 13.5),
+            padding: EdgeInsets.only(
+              top: dynamicBottomPad - 40.h, // Balanced with current sheet size
+              bottom: dynamicBottomPad,
+            ),
+            onMapCreated: c.onMapCreated,
+            onCameraIdle: c.scheduleAssignedEtaOverlayRefresh,
+            showGpsButton: true,
+            onGpsPressed: () {
+              c.recenterMap();
+              if (sheetController.isAttached) {
+                sheetController.animateTo(
+                  0.3,
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeInOut,
+                );
+              }
+            },
+            onNavigationPressed: () {
+              if (sheetController.isAttached) {
+                sheetController.animateTo(
+                  0.3,
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeInOut,
+                );
+              }
+            },
+            onUserInteraction: () {
+              if (sheetController.isAttached && sheetController.size > 0.3) {
+                sheetController.animateTo(
+                  0.3,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                );
+              }
+            },
+            markers: markers,
+            polylines: polylines,
+            minMaxZoomPreference: const MinMaxZoomPreference(12, 19),
+            trackRider: false,
+          ),
+          if (showRouteLoading)
+            Positioned(
+              top: MediaQuery.paddingOf(context).top + 150.h,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 8.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.92),
+                    borderRadius: BorderRadius.circular(24.r),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 14.w,
+                        height: 14.w,
+                        child: const CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Color(0xFF3073E8),
+                        ),
+                      ),
+                      SizedBox(width: 10.w),
+                      Text(
+                        loadingText,
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF364B63),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
       );
     });
   }
