@@ -81,6 +81,8 @@ class DriverAcceptedController extends GetxController
   AnimationController? _moveAnimController;
   DateTime? _lastRouteFetch;
 
+  VoidCallback? onRecenterPressed;
+
   GoogleMapController? mapController;
   bool _navigatedAway = false;
   DateTime? _lastCameraUpdate;
@@ -358,12 +360,21 @@ class DriverAcceptedController extends GetxController
     });
 
     _driverLocSub = _socketService.rideDriverLocationStream.listen((payload) {
+      if (payload.latitude == 0 || payload.longitude == 0) return;
+      // Strict city-region validation: Dar es Salaam is approx -6.8, 39.2
+      if (payload.latitude! < -15 ||
+          payload.latitude! > 0 ||
+          payload.longitude! < 20 ||
+          payload.longitude! > 50)
+        return;
+
       final lat = payload.latitude;
       final lng = payload.longitude;
       final head = payload.heading;
       if (lat == null || lng == null) return;
 
       final targetPos = LatLng(lat, lng);
+
       double targetHeading = assignedDriverHeading.value;
       if (head != null) {
         if (head is num) {
@@ -375,18 +386,13 @@ class DriverAcceptedController extends GetxController
 
       _animateDriverMovement(targetPos, targetHeading);
 
-      // If we are currently showing a straight-line fallback (<= 2 points),
-      // try to get a better road-locked route now that we have a driver location.
       if (routeTarget.value.isNotEmpty) {
         if (routePoints.length <= 2) {
           _fetchRoadRouteFallback();
         } else {
-          // Off-track detection:
-          // If the driver is more than ~200m away from the path, it might be a detour.
           final firstPoint = routePoints.first;
           final distToPath = _calculateSimpleDist(targetPos, firstPoint);
           if (distToPath > 0.002) {
-            // ~200 meters
             final now = DateTime.now();
             if (_lastRouteFetch == null ||
                 now.difference(_lastRouteFetch!).inSeconds > 20) {
@@ -512,8 +518,8 @@ class DriverAcceptedController extends GetxController
   }
 
   void recenterMap() {
+    onRecenterPressed?.call();
     _fitRouteBounds(force: true);
-    scheduleAssignedEtaOverlayRefresh();
   }
 
   Future<void> _fitRouteBounds({bool force = false}) async {
@@ -546,8 +552,21 @@ class DriverAcceptedController extends GetxController
       points.addAll(routePoints);
     }
 
-    if (points.isEmpty) return;
+    // Sanity Filter: Remove (0,0) and extreme outliers relative to the driver.
+    if (assigned != null) {
+      final filtered = points.where((p) {
+        if (p.latitude == 0 && p.longitude == 0) return false;
+        final dLat = (p.latitude - assigned.latitude).abs();
+        final dLng = (p.longitude - assigned.longitude).abs();
+        return dLat < 0.2 && dLng < 0.2; // Approx 20km
+      }).toList();
+      points.clear();
+      points.addAll(filtered);
+    } else {
+      points.removeWhere((p) => p.latitude == 0 && p.longitude == 0);
+    }
 
+    if (points.isEmpty) return;
     _lastCameraUpdate = now;
 
     double minLat = points.first.latitude;
@@ -564,10 +583,10 @@ class DriverAcceptedController extends GetxController
     await ctrl.animateCamera(
       CameraUpdate.newLatLngBounds(
         LatLngBounds(
-          southwest: LatLng(minLat - 0.004, minLng - 0.004),
-          northeast: LatLng(maxLat + 0.004, maxLng + 0.004),
+          southwest: LatLng(minLat - 0.001, minLng - 0.001),
+          northeast: LatLng(maxLat + 0.001, maxLng + 0.001),
         ),
-        56,
+        64,
       ),
     );
   }
@@ -824,15 +843,22 @@ class DriverAcceptedController extends GetxController
     if (target == 'pick_up') {
       routeTarget.value = target;
       if (coords != null && coords.isNotEmpty) {
-        routePoints.assignAll(_toLatLngPolyline(coords));
+        final newPoints = _toLatLngPolyline(coords);
+        if (newPoints.length > 5) {
+          routePoints.assignAll(newPoints);
+        } else if (routePoints.length <= 2) {
+          _fetchRoadRouteFallback();
+        }
       }
     } else if (target == 'drop_off') {
       routeTarget.value = target;
-      if (coords != null && coords.isNotEmpty && coords.length > 2) {
-        routePoints.assignAll(_toLatLngPolyline(coords));
-      } else if (routePoints.length <= 2) {
-        // Only fetch fallback if we don't have a good route yet
-        _fetchRoadRouteFallback();
+      if (coords != null && coords.isNotEmpty) {
+        final newPoints = _toLatLngPolyline(coords);
+        if (newPoints.length > 5) {
+          routePoints.assignAll(newPoints);
+        } else if (routePoints.length <= 2) {
+          _fetchRoadRouteFallback();
+        }
       }
     }
     // _fitRouteBounds() removed from here to prevent frequent zoom-outs.

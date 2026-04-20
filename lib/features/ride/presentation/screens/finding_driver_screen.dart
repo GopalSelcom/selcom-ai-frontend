@@ -153,6 +153,7 @@ class FindingDriverScreen extends StatelessWidget {
         markers: markers,
         showGpsButton: true,
         onGpsPressed: c.recenterMap,
+        trackRider: true,
         onUserInteraction: () {
           if (sheetController.isAttached && sheetController.size > 0.3) {
             sheetController.animateTo(

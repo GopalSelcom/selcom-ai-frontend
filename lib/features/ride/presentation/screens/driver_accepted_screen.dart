@@ -22,7 +22,9 @@ class DriverAcceptedScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = Get.find<DriverAcceptedController>();
-    final topPad = MediaQuery.paddingOf(context).top;
+    final topPad = MediaQuery.of(context).padding.top;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final bottomPad = screenHeight * _sheetInitial;
     final sheetController = DraggableScrollableController();
 
     return Scaffold(
@@ -30,7 +32,7 @@ class DriverAcceptedScreen extends StatelessWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          _buildMap(context, c, sheetController),
+          _buildMap(context, c, sheetController, bottomPad),
           Positioned(
             top: 0,
             left: 0,
@@ -115,6 +117,7 @@ class DriverAcceptedScreen extends StatelessWidget {
     BuildContext context,
     DriverAcceptedController c,
     DraggableScrollableController sheetController,
+    double bottomPad,
   ) {
     final topPad = MediaQuery.paddingOf(context).top;
     return Obx(() {
@@ -191,13 +194,22 @@ class DriverAcceptedScreen extends StatelessWidget {
         mapWidgetKey: const ValueKey('driver_accepted_map'),
         initialCameraPosition: CameraPosition(target: mid, zoom: 13.5),
         padding: EdgeInsets.only(
-          top: topPad + 80.h,
-          bottom: MediaQuery.of(context).size.height * _sheetInitial,
+          top: bottomPad - 40.h, // Balanced with bottom sheet
+          bottom: bottomPad,
         ),
         onMapCreated: c.onMapCreated,
         onCameraIdle: c.scheduleAssignedEtaOverlayRefresh,
         showGpsButton: true,
-        onGpsPressed: c.recenterMap,
+        onGpsPressed: () {
+          c.recenterMap();
+          if (sheetController.isAttached) {
+            sheetController.animateTo(
+              0.3,
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeInOut,
+            );
+          }
+        },
         onUserInteraction: () {
           if (sheetController.isAttached && sheetController.size > 0.3) {
             sheetController.animateTo(
@@ -209,6 +221,8 @@ class DriverAcceptedScreen extends StatelessWidget {
         },
         markers: markers,
         polylines: polylines,
+        minMaxZoomPreference: const MinMaxZoomPreference(12, 19),
+        trackRider: false,
       );
     });
   }

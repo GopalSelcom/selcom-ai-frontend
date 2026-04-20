@@ -53,6 +53,7 @@ class AppGoogleMap extends StatefulWidget {
     this.onUserInteraction,
     this.onGpsPressed,
     this.showGpsButton = false,
+    this.trackRider = false,
   });
 
   /// Optional key on the inner [GoogleMap] (per-screen identity for rebuilds).
@@ -95,6 +96,7 @@ class AppGoogleMap extends StatefulWidget {
   final VoidCallback? onUserInteraction;
   final VoidCallback? onGpsPressed;
   final bool showGpsButton;
+  final bool trackRider;
 
   @override
   State<AppGoogleMap> createState() => _AppGoogleMapState();
@@ -102,13 +104,22 @@ class AppGoogleMap extends StatefulWidget {
 
 class _AppGoogleMapState extends State<AppGoogleMap> {
   GoogleMapController? _controller;
-  bool _isTrackingRider = true;
+  late bool _isTrackingRider;
   bool _isProgrammaticMove = false;
   bool _isUserInteracting = false;
 
   @override
+  void initState() {
+    super.initState();
+    _isTrackingRider = widget.trackRider;
+  }
+
+  @override
   void didUpdateWidget(AppGoogleMap oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.trackRider != oldWidget.trackRider) {
+      _isTrackingRider = widget.trackRider;
+    }
     if (_isTrackingRider) {
       final riderMarker = _findRiderMarker();
       if (riderMarker != null) {
