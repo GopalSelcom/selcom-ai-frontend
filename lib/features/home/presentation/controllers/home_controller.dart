@@ -82,7 +82,7 @@ class HomeController extends GetxController {
   GoogleMapController? _mapController;
   final AppSocketService _socketService = AppSocketService();
   bool _didHandleActiveRideFlow = false;
-  bool _isManualPan = true;
+  bool _ignoreSelectionReset = false;
   StreamSubscription<bool>? _homeSocketConnectionSub;
   Timer? _activeRidePollingTimer;
   bool _isRefreshingActiveRide = false;
@@ -202,7 +202,7 @@ class HomeController extends GetxController {
   }
 
   void onCameraMove(CameraPosition position) {
-    if (_isManualPan &&
+    if (!_ignoreSelectionReset &&
         selectedPickupSavedPlaceId.value != _currentLocationPlaceId) {
       selectedPickupSavedPlaceId.value = _currentLocationPlaceId;
     }
@@ -210,6 +210,7 @@ class HomeController extends GetxController {
   }
 
   Future<void> onCameraIdle() async {
+    _ignoreSelectionReset = false;
     await _reverseGeocodeAtCenter();
   }
 
@@ -769,14 +770,13 @@ class HomeController extends GetxController {
     final addr = (place.address ?? place.name ?? '').trim();
 
     if (latLng != null) {
-      _isManualPan = false;
+      _ignoreSelectionReset = true;
       mapCenter.value = latLng;
       if (_mapController != null) {
         await _mapController!.animateCamera(
           CameraUpdate.newLatLngZoom(latLng, 16),
         );
       }
-      _isManualPan = true;
       if (addr.isEmpty) await _reverseGeocodeAtCenter();
     }
   }
