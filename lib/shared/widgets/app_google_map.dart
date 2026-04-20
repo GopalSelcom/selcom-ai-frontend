@@ -52,6 +52,7 @@ class AppGoogleMap extends StatefulWidget {
     this.style,
     this.onUserInteraction,
     this.onGpsPressed,
+    this.onNavigationPressed,
     this.showGpsButton = false,
     this.trackRider = false,
   });
@@ -95,6 +96,7 @@ class AppGoogleMap extends StatefulWidget {
   final String? style;
   final VoidCallback? onUserInteraction;
   final VoidCallback? onGpsPressed;
+  final VoidCallback? onNavigationPressed;
   final bool showGpsButton;
   final bool trackRider;
 
@@ -156,6 +158,7 @@ class _AppGoogleMapState extends State<AppGoogleMap> {
       _isTrackingRider = true;
     });
     _moveToRider();
+    widget.onNavigationPressed?.call();
   }
 
   @override

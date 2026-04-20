@@ -210,6 +210,15 @@ class DriverAcceptedScreen extends StatelessWidget {
             );
           }
         },
+        onNavigationPressed: () {
+          if (sheetController.isAttached) {
+            sheetController.animateTo(
+              0.3,
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeInOut,
+            );
+          }
+        },
         onUserInteraction: () {
           if (sheetController.isAttached && sheetController.size > 0.3) {
             sheetController.animateTo(
