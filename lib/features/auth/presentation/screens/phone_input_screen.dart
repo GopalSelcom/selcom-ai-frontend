@@ -176,9 +176,9 @@ class PhoneInputScreen extends GetView<AuthController> {
                                     fontSize: 16.sp,
                                     color: AppColors.shade1,
                                   ),
-                                  onChanged: (v) => controller.email.value = v,
+                                  onChanged: controller.onEmailChanged,
                                   decoration: InputDecoration(
-                                    hintText: 'Email',
+                                    hintText: 'Email (optional)',
                                     hintStyle: AppTextStyles.body.copyWith(
                                       color: AppColors.textLight,
                                       fontFamily: AppTextStyles.metropolisFont,
@@ -193,8 +193,6 @@ class PhoneInputScreen extends GetView<AuthController> {
                             ],
                           ),
                         ),
-
-                        const Spacer(),
 
                         // Error Message
                         Obx(
@@ -211,6 +209,8 @@ class PhoneInputScreen extends GetView<AuthController> {
                                 )
                               : const SizedBox.shrink(),
                         ),
+
+                        const Spacer(),
 
                         // Legal Note
                         Padding(
@@ -229,7 +229,7 @@ class PhoneInputScreen extends GetView<AuthController> {
                           () => AppPrimaryButton(
                             label: 'Get Verification Code',
                             isLoading: controller.isLoading.value,
-                            onPressed: controller.mobileNumber.value.length >= 9
+                            onPressed: controller.canRequestOtp
                                 ? controller.sendOtpAndNavigate
                                 : null,
                           ),
