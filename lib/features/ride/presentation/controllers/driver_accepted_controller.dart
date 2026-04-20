@@ -94,6 +94,12 @@ class DriverAcceptedController extends GetxController
   StreamSubscription<Map<String, dynamic>>? _chatSub;
   bool _didJoinRideRoom = false;
 
+  final RxDouble sheetSize = 0.3.obs;
+
+  void updateSheetSize(double size) {
+    sheetSize.value = size;
+  }
+
   @override
   void onInit() {
     super.onInit();
@@ -234,26 +240,26 @@ class DriverAcceptedController extends GetxController
   //   } catch (_) {}
   // }
 
-  Future<void> _fetchRideDetails() async {
-    if (rideId.isEmpty) {
-      _applyMockContent();
-      isLoadingRide.value = false;
-      assignedDriverLocation.value ??= const LatLng(-6.7921, 39.2101);
-      return;
-    }
-    final result = await rideRepository.getRideDetails(rideId);
-    result.fold(
-      (_) {
-        _applyMockContent();
-        assignedDriverLocation.value ??= const LatLng(-6.7921, 39.2101);
-      },
-      (r) {
-        ride.value = r;
-        // _applyRide(r);
-      },
-    );
-    isLoadingRide.value = false;
-  }
+  // Future<void> _fetchRideDetails() async {
+  //   if (rideId.isEmpty) {
+  //     _applyMockContent();
+  //     isLoadingRide.value = false;
+  //     assignedDriverLocation.value ??= const LatLng(-6.7921, 39.2101);
+  //     return;
+  //   }
+  //   final result = await rideRepository.getRideDetails(rideId);
+  //   result.fold(
+  //     (_) {
+  //       _applyMockContent();
+  //       assignedDriverLocation.value ??= const LatLng(-6.7921, 39.2101);
+  //     },
+  //     (r) {
+  //       ride.value = r;
+  //       // _applyRide(r);
+  //     },
+  //   );
+  //   isLoadingRide.value = false;
+  // }
 
   void _applyMockContent() {
     driverName.value = 'John Doe';
