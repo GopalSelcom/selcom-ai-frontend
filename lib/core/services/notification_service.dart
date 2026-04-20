@@ -90,7 +90,16 @@ class NotificationService {
       await _createAndroidNotificationChannel();
     }
 
-    // 4. Listeners
+    // 4. iOS Foreground Notification Options
+    if (Platform.isIOS) {
+      await _fcm.setForegroundNotificationPresentationOptions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+    }
+
+    // 5. Listeners
     FirebaseMessaging.onMessage.listen(_onForegroundMessage);
     FirebaseMessaging.onMessageOpenedApp.listen(_onMessageOpenedApp);
 
