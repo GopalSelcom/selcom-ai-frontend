@@ -119,7 +119,19 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       ),
     );
 
-    return FareEstimateResponseModel.fromJson(response.data);
+    if (response.statusCode == 200 && response.data != null) {
+      return FareEstimateResponseModel.fromJson(response.data);
+    }
+
+    final data = response.data;
+    if (data is Map<String, dynamic>) {
+      final message = (data['message'] as String?)?.trim();
+      if (message != null && message.isNotEmpty) {
+        throw Exception(message);
+      }
+    }
+
+    throw Exception('Unable to estimate fare for this route.');
   }
 
   @override

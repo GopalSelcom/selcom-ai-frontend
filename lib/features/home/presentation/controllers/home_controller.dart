@@ -24,12 +24,14 @@ import '../../../ride/data/models/ride_management_models.dart';
 import '../../../ride_rating/presentation/controllers/ride_rating_controller.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
+import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/data/models/responses/rides/active_ride_response.dart';
+import '../../../../core/domain/entities/location_entity.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 
 class HomeController extends GetxController {
@@ -536,6 +538,53 @@ class HomeController extends GetxController {
     return value;
   }
 
+  Future<bool> _validateEstimateBeforeBookingNavigation({
+    required String pickupAddress,
+    required double pickupLat,
+    required double pickupLng,
+    required String destinationAddress,
+    required double destinationLat,
+    required double destinationLng,
+  }) async {
+    final req = FareEstimateRequest(
+      pickup: LocationEntity(
+        lat: pickupLat,
+        lng: pickupLng,
+        address: pickupAddress,
+      ),
+      destination: LocationEntity(
+        lat: destinationLat,
+        lng: destinationLng,
+        address: destinationAddress,
+      ),
+    );
+
+    final result = await homeRepository.estimateFare(req);
+    bool canProceed = false;
+    result.fold(
+      (failure) {
+        Get.snackbar(
+          'Error',
+          _extractEstimateErrorMessage(failure.message),
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      },
+      (_) => canProceed = true,
+    );
+    return canProceed;
+  }
+
+  String _extractEstimateErrorMessage(String rawMessage) {
+    final message = rawMessage
+        .replaceFirst('Exception:', '')
+        .replaceFirst('Failure:', '')
+        .trim();
+    if (message.isEmpty) {
+      return 'Unable to estimate fare for this route.';
+    }
+    return message;
+  }
+
   /// Pickup = current map center; destination = saved place for [label] (Home / Office / Work / Other).
   Future<void> navigateToVehicleSelectionForSavedLabel(String label) async {
     final place = getSavedPlaceByLabel(label);
@@ -584,6 +633,15 @@ class HomeController extends GetxController {
 
     final pickupAddr = activePickupAddress;
     final pickupLL = activePickupLatLng;
+    final canProceed = await _validateEstimateBeforeBookingNavigation(
+      pickupAddress: pickupAddr,
+      pickupLat: pickupLL.latitude,
+      pickupLng: pickupLL.longitude,
+      destinationAddress: destAddr,
+      destinationLat: dLat,
+      destinationLng: dLng,
+    );
+    if (!canProceed) return;
 
     await Get.delete<VehicleSelectionController>();
     Get.toNamed(
@@ -639,6 +697,15 @@ class HomeController extends GetxController {
 
     final pickupAddr = activePickupAddress;
     final pickupLL = activePickupLatLng;
+    final canProceed = await _validateEstimateBeforeBookingNavigation(
+      pickupAddress: pickupAddr,
+      pickupLat: pickupLL.latitude,
+      pickupLng: pickupLL.longitude,
+      destinationAddress: destAddr,
+      destinationLat: dLat,
+      destinationLng: dLng,
+    );
+    if (!canProceed) return;
 
     await Get.delete<VehicleSelectionController>();
     Get.toNamed(
@@ -670,6 +737,15 @@ class HomeController extends GetxController {
 
     final pickupAddr = activePickupAddress;
     final pickupLL = activePickupLatLng;
+    final canProceed = await _validateEstimateBeforeBookingNavigation(
+      pickupAddress: pickupAddr,
+      pickupLat: pickupLL.latitude,
+      pickupLng: pickupLL.longitude,
+      destinationAddress: destAddr,
+      destinationLat: loc.lat,
+      destinationLng: loc.lng,
+    );
+    if (!canProceed) return;
 
     await Get.delete<VehicleSelectionController>();
     Get.toNamed(
@@ -930,6 +1006,17 @@ class HomeController extends GetxController {
     // fallback to something sensible if still null, but NOT a hardcoded offset that feels like a bug
     dLat ??= pLat;
     dLng ??= pLng;
+
+    final destinationText = destinations.isNotEmpty ? destinations.first : '';
+    final canProceed = await _validateEstimateBeforeBookingNavigation(
+      pickupAddress: pickup,
+      pickupLat: pLat,
+      pickupLng: pLng,
+      destinationAddress: destinationText,
+      destinationLat: dLat,
+      destinationLng: dLng,
+    );
+    if (!canProceed) return;
 
     await Get.delete<VehicleSelectionController>();
     Get.toNamed(
