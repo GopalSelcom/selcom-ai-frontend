@@ -65,7 +65,7 @@ class HomeController extends GetxController {
   final activeRide = Rxn<RideModel>();
 
   /// Picked saved address for pickup (header dropdown). Map + chips use this when set.
-  final Rxn<String> selectedPickupSavedPlaceId = Rxn<String>();
+  final selectedPickupSavedPlaceId = Rxn<String>(_currentLocationPlaceId);
   final isSavedPlacesExpanded = false.obs;
   final isLoadingHomeData = false.obs;
   final mapCenter = const LatLng(-6.7924, 39.2083).obs;
@@ -82,6 +82,7 @@ class HomeController extends GetxController {
   GoogleMapController? _mapController;
   final AppSocketService _socketService = AppSocketService();
   bool _didHandleActiveRideFlow = false;
+  bool _isManualPan = true;
   StreamSubscription<bool>? _homeSocketConnectionSub;
   Timer? _activeRidePollingTimer;
   bool _isRefreshingActiveRide = false;
@@ -201,6 +202,10 @@ class HomeController extends GetxController {
   }
 
   void onCameraMove(CameraPosition position) {
+    if (_isManualPan &&
+        selectedPickupSavedPlaceId.value != _currentLocationPlaceId) {
+      selectedPickupSavedPlaceId.value = _currentLocationPlaceId;
+    }
     mapCenter.value = position.target;
   }
 
@@ -711,7 +716,9 @@ class HomeController extends GetxController {
     final stillValid =
         current != null && savedPlaces.any((p) => p.id == current);
     if (!stillValid) {
-      selectedPickupSavedPlaceId.value = savedPlaces.first.id;
+      selectedPickupSavedPlaceId.value = savedPlaces.isNotEmpty
+          ? savedPlaces.first.id
+          : _currentLocationPlaceId;
     }
   }
 
@@ -732,16 +739,13 @@ class HomeController extends GetxController {
   }
 
   SavedPlace? get activePickupSavedPlace {
-    if (selectedPickupSavedPlaceId.value == _currentLocationPlaceId)
-      return null;
-    if (savedPlaces.isEmpty) return null;
     final id = selectedPickupSavedPlaceId.value;
-    if (id != null) {
-      for (final p in savedPlaces) {
-        if (p.id == id) return p;
-      }
+    if (id == null || id == _currentLocationPlaceId) return null;
+    if (savedPlaces.isEmpty) return null;
+    for (final p in savedPlaces) {
+      if (p.id == id) return p;
     }
-    return savedPlaces.first;
+    return null;
   }
 
   LatLng get activePickupLatLng {
@@ -774,15 +778,16 @@ class HomeController extends GetxController {
 
     final latLng = _latLngFromSavedPlace(place);
     final addr = (place.address ?? place.name ?? '').trim();
-    if (addr.isNotEmpty) currentMapAddress.value = addr;
 
     if (latLng != null) {
+      _isManualPan = false;
       mapCenter.value = latLng;
       if (_mapController != null) {
         await _mapController!.animateCamera(
           CameraUpdate.newLatLngZoom(latLng, 16),
         );
       }
+      _isManualPan = true;
       if (addr.isEmpty) await _reverseGeocodeAtCenter();
     }
   }
