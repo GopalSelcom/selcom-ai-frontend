@@ -6,6 +6,11 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../services/storage_service.dart';
 import 'package:logger/logger.dart';
+import 'package:get/get.dart';
+import '../di/injection_container.dart';
+import '../../features/ride/domain/repositories/ride_repository.dart';
+import '../../shared/utils/ride_active_navigation.dart';
+import '../data/models/notification_model.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -85,7 +90,16 @@ class NotificationService {
       await _createAndroidNotificationChannel();
     }
 
-    // 4. Listeners
+    // 4. iOS Foreground Notification Options
+    if (Platform.isIOS) {
+      await _fcm.setForegroundNotificationPresentationOptions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+    }
+
+    // 5. Listeners
     FirebaseMessaging.onMessage.listen(_onForegroundMessage);
     FirebaseMessaging.onMessageOpenedApp.listen(_onMessageOpenedApp);
 
@@ -169,32 +183,73 @@ class NotificationService {
 
   void _onForegroundMessage(RemoteMessage message) {
     _logger.d("Foreground Message received: ${message.messageId}");
-    _logger.d("Foreground Message Data: ${message.data}");
+    final data = FCMNotificationData.fromJson(message.data);
 
-    RemoteNotification? notification = message.notification;
+    String? title = message.notification?.title ?? data.title;
+    String? body = message.notification?.body ?? data.body;
 
-    if (notification != null) {
-      _logger.d(
-        "Foreground Message Notification: ${notification.title} - ${notification.body}",
-      );
+    if (title != null || body != null) {
+      _logger.d("Showing local notification for foreground message");
       showLocalNotification(
-        id: notification.hashCode,
-        title: notification.title,
-        body: notification.body,
-        payload: jsonEncode(message.data),
+        id: message.notification?.hashCode ?? message.messageId.hashCode,
+        title: title,
+        body: body,
+        payload: jsonEncode(data.toJson()),
       );
     }
   }
 
   void _onMessageOpenedApp(RemoteMessage message) {
     _logger.d("Message opened app: ${message.messageId}");
-    // Handle navigation or state updates based on message.data
+    final data = FCMNotificationData.fromJson(message.data);
+    _handleNotificationNavigation(data);
   }
 
   void _onDidReceiveNotificationResponse(NotificationResponse response) {
     _logger.d("Local notification clicked: ${response.payload}");
     if (response.payload != null) {
-      // Map payload back to data and handle navigation
+      try {
+        final Map<String, dynamic> rawData = jsonDecode(response.payload!);
+        final data = FCMNotificationData.fromJson(rawData);
+        _handleNotificationNavigation(data);
+      } catch (e) {
+        _logger.e("Error decoding notification payload: $e");
+      }
+    }
+  }
+
+  Future<void> _handleNotificationNavigation(FCMNotificationData data) async {
+    final rideId = data.rideId;
+    if (rideId == null || rideId.isEmpty) {
+      _logger.w("No ride_id found in notification data");
+      return;
+    }
+
+    try {
+      _logger.i("Navigating to ride $rideId from notification");
+
+      Get.dialog(
+        const Center(child: CircularProgressIndicator()),
+        barrierDismissible: false,
+      );
+
+      final rideRepo = sl<RideRepository>();
+      final result = await rideRepo.getRideDetails(rideId);
+
+      if (Get.isDialogOpen ?? false) Get.back();
+
+      result.fold(
+        (failure) {
+          _logger.e("Error fetching ride details: ${failure.message}");
+          Get.snackbar('Error', 'Unable to open ride details');
+        },
+        (ride) {
+          navigateToDriverAcceptedForRide(ride);
+        },
+      );
+    } catch (e) {
+      if (Get.isDialogOpen ?? false) Get.back();
+      _logger.e("Exception in _handleNotificationNavigation: $e");
     }
   }
 
