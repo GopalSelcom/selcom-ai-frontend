@@ -32,7 +32,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
 
   /// Set when the first destination is chosen from autocomplete (required for `saved-places` on Book Ride).
   final RxnString _destinationPlaceId = RxnString();
-  static const int _maxExtraStops = 6;
+  static const int _maxExtraStops = 2;
 
   /// From route args (home / explore vehicle); used for Book Ride pickup coords.
   final RxnDouble _routePickupLat = RxnDouble();

@@ -5,6 +5,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:selcom_rides_frontend/shared/widgets/map_widgets.dart';
 
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
@@ -303,7 +304,7 @@ class DriverAcceptedScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'OTP',
+              'PIN',
               style: AppTextStyles.homeCaption.copyWith(
                 fontWeight: FontWeight.w700,
                 fontSize: 15.sp,
@@ -667,12 +668,15 @@ class DriverAcceptedScreen extends StatelessWidget {
                 size: 18.sp,
               ),
               SizedBox(width: 6.w),
-              Text(
-                'Need Help?',
-                style: AppTextStyles.homeCaption.copyWith(
-                  color: const Color(0xFF364B63),
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
+              GestureDetector(
+                onTap: () => Get.toNamed(AppRoutes.contactUs),
+                child: Text(
+                  'Need Help?',
+                  style: AppTextStyles.homeCaption.copyWith(
+                    color: const Color(0xFF364B63),
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               SizedBox(width: 20.w),
