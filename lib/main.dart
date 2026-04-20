@@ -19,9 +19,13 @@ import 'core/routes/app_routes.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  // Optional: You could show a local notification here if needed,
-  // but FCM usually handles background notifications automatically
-  // if the 'notification' block is present.
+  debugPrint("Handling a background message: ${message.messageId}");
+  debugPrint("Background Message Data: ${message.data}");
+  if (message.notification != null) {
+    debugPrint(
+      "Background Message Notification: ${message.notification?.title} - ${message.notification?.body}",
+    );
+  }
 }
 
 void main() async {

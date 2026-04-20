@@ -169,10 +169,14 @@ class NotificationService {
 
   void _onForegroundMessage(RemoteMessage message) {
     _logger.d("Foreground Message received: ${message.messageId}");
+    _logger.d("Foreground Message Data: ${message.data}");
 
     RemoteNotification? notification = message.notification;
 
     if (notification != null) {
+      _logger.d(
+        "Foreground Message Notification: ${notification.title} - ${notification.body}",
+      );
       showLocalNotification(
         id: notification.hashCode,
         title: notification.title,
