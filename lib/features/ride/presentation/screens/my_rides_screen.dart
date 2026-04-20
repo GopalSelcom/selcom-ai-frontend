@@ -8,7 +8,6 @@ import '../../../../shared/widgets/app_profile_header.dart';
 
 import '../controllers/my_rides_controller.dart';
 import '../widgets/ride_history_card.dart';
-import '../widgets/ride_details_bottom_sheet.dart';
 
 class MyRidesScreen extends StatelessWidget {
   const MyRidesScreen({super.key});
@@ -90,12 +89,7 @@ class MyRidesScreen extends StatelessWidget {
                           ...controller.pastRides.map(
                             (ride) => RideHistoryCard(
                               ride: ride,
-                              onTap: () {
-                                Get.bottomSheet(
-                                  RideDetailsBottomSheet(ride: ride),
-                                  isScrollControlled: true,
-                                );
-                              },
+                              onTap: () => controller.onRideTap(ride),
                             ),
                           ),
 

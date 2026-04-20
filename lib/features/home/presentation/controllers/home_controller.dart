@@ -13,7 +13,6 @@ import '../../../../core/services/notification_service.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:selcom_rides_frontend/features/home/data/models/places_models.dart';
 import 'package:selcom_rides_frontend/core/data/models/ride_model.dart';
-import 'package:selcom_rides_frontend/core/domain/entities/ride_entity.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/data/models/requests/create_saved_place_request.dart';
 import '../../../../core/utils/map_marker_utils.dart';
@@ -27,6 +26,7 @@ import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/data/models/responses/rides/active_ride_response.dart';
@@ -300,71 +300,17 @@ class HomeController extends GetxController {
     _connectAndJoinActiveRideRoom(rideModel);
   }
 
-  void openActiveRide() {
+  Future<void> openActiveRide() async {
     final rideValue = activeRide.value;
     if (rideValue == null) return;
-    final driver = rideValue.driverSnapshot;
-    final vehicle = rideValue.vehicleSnapshot;
+    final rideId = rideValue.id.trim();
+    if (rideId.isEmpty) return;
 
-    Get.toNamed(
-      AppRoutes.driverAccepted,
-      arguments: {
-        'rideId': rideValue.id,
-        'pickupLat': rideValue.pickup.lat,
-        'pickupLng': rideValue.pickup.lng,
-        'pickupAddress': rideValue.pickup.address,
-        'destinationLat': rideValue.destination.lat,
-        'destinationLng': rideValue.destination.lng,
-        'destinationAddress': rideValue.destination.address,
-        // Seed SCR-11 with active-ride data while waiting for socket updates.
-        'statusPayload': {
-          'ride_id': rideValue.id,
-          'status': _rideStatusToApiValue(rideValue.status),
-          'pin_code': rideValue.pinCode,
-          'driver_snapshot': driver == null
-              ? null
-              : {
-                  'name': driver.name,
-                  'phone': driver.phone,
-                  'avatar_url': driver.avatarUrl,
-                  if (driver is DriverSnapshotModel)
-                    'vehicle_color': driver.vehicleColor,
-                  if (driver is DriverSnapshotModel)
-                    'vehicle_model': driver.vehicleModel,
-                  if (driver is DriverSnapshotModel)
-                    'vehicle_registration_number':
-                        driver.vehicleRegistrationNumber,
-                  if (driver is DriverSnapshotModel)
-                    'vehicle_type': driver.vehicleType,
-                  if (driver is DriverSnapshotModel)
-                    'verification_code': driver.verificationCode,
-                },
-          'vehicle_snapshot': vehicle == null
-              ? null
-              : {
-                  'vehicle_type': vehicle.vehicleType,
-                  'vehicle_name': vehicle.vehicleModel,
-                  'display_name': vehicle.vehicleType,
-                },
-        },
-        'fareBreakdown': rideValue.fareBreakdown == null
-            ? null
-            : {
-                'ride_charge': rideValue.fareBreakdown!.rideCharge,
-                'booking_fee': rideValue.fareBreakdown!.bookingFee,
-                'total_amount': rideValue.fareBreakdown!.totalAmount,
-              },
-      },
+    final detailsResult = await rideRepository.getRideDetails(rideId);
+    detailsResult.fold(
+      (failure) => Get.snackbar('Error', failure.message),
+      (freshRide) => navigateToDriverAcceptedForRide(freshRide),
     );
-  }
-
-  String _rideStatusToApiValue(RideStatus status) {
-    final name = status.name;
-    final withUnderscores = name.replaceAllMapped(
-      RegExp(r'([a-z0-9])([A-Z])'),
-      (m) => '${m.group(1)}_${m.group(2)}',
-    );
-    return withUnderscores.toLowerCase();
   }
 
   Future<void> _connectAndJoinActiveRideRoom(RideModel ride) async {
