@@ -261,18 +261,18 @@ class DriverAcceptedController extends GetxController
   //   isLoadingRide.value = false;
   // }
 
-  void _applyMockContent() {
-    driverName.value = 'John Doe';
-    driverPhone.value = '';
-    driverRating.value = '4';
-    driverVehicleLine.value = 'Volkswagen';
-    plateLinePrimary.value = 'T 772';
-    plateLineSecondary.value = 'BBE';
-    vehicleSubtitle.value = 'Toyota corolla, White';
-    otpDigits.assignAll(['2', '7', '5', '6']);
-    arrivalLabel.value = 'Driver will arriving in 1 min...';
-    currentRideStatus.value = 'driver_assigned';
-  }
+  // void _applyMockContent() {
+  //   driverName.value = 'John Doe';
+  //   driverPhone.value = '';
+  //   driverRating.value = '4';
+  //   driverVehicleLine.value = 'Volkswagen';
+  //   plateLinePrimary.value = 'T 772';
+  //   plateLineSecondary.value = 'BBE';
+  //   vehicleSubtitle.value = 'Toyota corolla, White';
+  //   otpDigits.assignAll(['2', '7', '5', '6']);
+  //   arrivalLabel.value = 'Driver will arriving in 1 min...';
+  //   currentRideStatus.value = 'driver_assigned';
+  // }
 
   void _applyRide(RideModel r) {
     final d = r.driverSnapshot as DriverSnapshotModel?;
