@@ -1212,6 +1212,10 @@ class DriverAcceptedController extends GetxController
         deliveryDistance: '0',
       );
     } catch (e) {
+      developer.log(
+        "❌ Error in DriverAcceptedController._syncLiveActivityFromStatusPayload: $e",
+        name: 'ORDER_TRACKING',
+      );
       debugPrint('❌ Error syncing Live Activity from status payload: $e');
     }
   }
@@ -1245,6 +1249,10 @@ class DriverAcceptedController extends GetxController
         etaSeconds: (payload.eta ?? 0).toDouble(),
       );
     } catch (e) {
+      developer.log(
+        "❌ Error in DriverAcceptedController._syncLiveActivityFromTrackingPayload: $e",
+        name: 'ORDER_TRACKING',
+      );
       debugPrint('❌ Error syncing Live Activity from tracking payload: $e');
     }
   }

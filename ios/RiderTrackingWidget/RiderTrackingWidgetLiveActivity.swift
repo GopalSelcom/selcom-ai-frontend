@@ -17,7 +17,6 @@ struct LiveActivitiesAppAttributes: ActivityAttributes, Identifiable {
         public var eta: String?
         public var vehicle_desc: String?
         public var plate_number: String?
-        public var rider_photo_url: String?
         public var step: Int?
         public var total_steps: Int?
         public var is_completed: Bool?
@@ -29,7 +28,7 @@ struct LiveActivitiesAppAttributes: ActivityAttributes, Identifiable {
 
         enum CodingKeys: String, CodingKey {
             case order_id, ride_id, app_group_id, status, title, subtitle, merchant_name, driver_name, fare, eta
-            case vehicle_desc, vehicle_name, plate_number, rider_photo_url, driver_avatar_url
+            case vehicle_desc, vehicle_name, plate_number
             case step, total_steps, is_completed, is_rider_delivering
             case delivery_start_date, eta_seconds, pickup_distance, delivery_distance
         }
@@ -37,6 +36,12 @@ struct LiveActivitiesAppAttributes: ActivityAttributes, Identifiable {
         public init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
 
+            func decodeAsString(_ key: CodingKeys) -> String? {
+                if let val = try? container.decode(String.self, forKey: key) { return val }
+                if let val = try? container.decode(Int.self, forKey: key) { return String(val) }
+                if let val = try? container.decode(Double.self, forKey: key) { return String(val) }
+                return nil
+            }
             func decodeAsDouble(_ key: CodingKeys) -> Double? {
                 if let val = try? container.decode(Double.self, forKey: key) { return val }
                 if let val = try? container.decode(Int.self, forKey: key) { return Double(val) }
@@ -56,30 +61,26 @@ struct LiveActivitiesAppAttributes: ActivityAttributes, Identifiable {
                 return nil
             }
 
-            let o_id = try? container.decodeIfPresent(String.self, forKey: .order_id)
-            let r_id = try? container.decodeIfPresent(String.self, forKey: .ride_id)
+            let o_id = decodeAsString(.order_id)
+            let r_id = decodeAsString(.ride_id)
             order_id = o_id ?? r_id
             ride_id = r_id
-            app_group_id = try? container.decodeIfPresent(String.self, forKey: .app_group_id)
-            status = try? container.decodeIfPresent(String.self, forKey: .status)
-            title = try? container.decodeIfPresent(String.self, forKey: .title)
-            subtitle = try? container.decodeIfPresent(String.self, forKey: .subtitle)
-            let m_name = try? container.decodeIfPresent(String.self, forKey: .merchant_name)
-            let d_name = try? container.decodeIfPresent(String.self, forKey: .driver_name)
+            app_group_id = decodeAsString(.app_group_id)
+            status = decodeAsString(.status)
+            title = decodeAsString(.title)
+            subtitle = decodeAsString(.subtitle)
+            let m_name = decodeAsString(.merchant_name)
+            let d_name = decodeAsString(.driver_name)
             merchant_name = m_name ?? d_name
             
-            fare = try? container.decodeIfPresent(String.self, forKey: .fare)
-            eta = try? container.decodeIfPresent(String.self, forKey: .eta)
+            fare = decodeAsString(.fare)
+            eta = decodeAsString(.eta)
             
-            let v_desc = try? container.decodeIfPresent(String.self, forKey: .vehicle_desc)
-            let v_name = try? container.decodeIfPresent(String.self, forKey: .vehicle_name)
+            let v_desc = decodeAsString(.vehicle_desc)
+            let v_name = decodeAsString(.vehicle_name)
             vehicle_desc = v_desc ?? v_name
             
-            plate_number = try? container.decodeIfPresent(String.self, forKey: .plate_number)
-            
-            let r_photo = try? container.decodeIfPresent(String.self, forKey: .rider_photo_url)
-            let d_avatar = try? container.decodeIfPresent(String.self, forKey: .driver_avatar_url)
-            rider_photo_url = r_photo ?? d_avatar
+            plate_number = decodeAsString(.plate_number)
             
             is_completed = decodeAsBool(.is_completed)
             is_rider_delivering = decodeAsBool(.is_rider_delivering)
@@ -89,17 +90,13 @@ struct LiveActivitiesAppAttributes: ActivityAttributes, Identifiable {
             delivery_start_date = decodeAsDouble(.delivery_start_date)
             eta_seconds = decodeAsDouble(.eta_seconds)
 
-            if let val = try? container.decode(String.self, forKey: .pickup_distance) { pickup_distance = val }
-            else if let val = try? container.decode(Double.self, forKey: .pickup_distance) { pickup_distance = String(val) }
-            else if let val = try? container.decode(Int.self, forKey: .pickup_distance) { pickup_distance = String(val) }
-            else { pickup_distance = "0" }
-
-            if let val = try? container.decode(String.self, forKey: .delivery_distance) { delivery_distance = val }
-            else if let val = try? container.decode(Double.self, forKey: .delivery_distance) { delivery_distance = String(val) }
-            else if let val = try? container.decode(Int.self, forKey: .delivery_distance) { delivery_distance = String(val) }
-            else { delivery_distance = "0" }
+            pickup_distance = decodeAsString(.pickup_distance) ?? "0"
+            delivery_distance = decodeAsString(.delivery_distance) ?? "0"
             
-            print("[Widget] Decoded status: \(status ?? "nil"), merchant: \(merchant_name ?? "nil")")
+            let allKeys = container.allKeys.map { "\($0.stringValue)" }.joined(separator: ", ")
+            print("[Widget] RECV payload with keys: \(allKeys)")
+            
+            print("[Widget] Decoded ID: \(order_id ?? "nil"), status: \(status ?? "nil"), merchant: \(merchant_name ?? "nil")")
         }
 
         public func encode(to encoder: Encoder) throws {
@@ -117,7 +114,6 @@ struct LiveActivitiesAppAttributes: ActivityAttributes, Identifiable {
             try container.encodeIfPresent(total_steps, forKey: .total_steps)
             try container.encodeIfPresent(vehicle_desc, forKey: .vehicle_desc)
             try container.encodeIfPresent(plate_number, forKey: .plate_number)
-            try container.encodeIfPresent(rider_photo_url, forKey: .rider_photo_url)
             try container.encodeIfPresent(is_completed, forKey: .is_completed)
             try container.encodeIfPresent(is_rider_delivering, forKey: .is_rider_delivering)
             try container.encodeIfPresent(delivery_start_date, forKey: .delivery_start_date)
@@ -145,7 +141,6 @@ struct TrackingViewModel {
     let eta: String
     let progressRatio: Double
     let isRiderDelivering: Bool
-    let riderPhotoUrl: String
     
     init(context: ActivityViewContext<LiveActivitiesAppAttributes>) {
         let state = context.state
@@ -170,13 +165,11 @@ struct TrackingViewModel {
         if state.status != nil { ud?.set(state.status, forKey: attributes.prefixedKey("status")) }
         
         self.merchantName      = getOrPersist("merchant_name", state.merchant_name)
-        if self.merchantName.isEmpty { self.merchantName = "Selcom Go" }
 
         self.subtitle          = getOrPersist("subtitle", state.subtitle)
         self.fare              = getOrPersist("fare", state.fare)
         self.vehicleDesc       = getOrPersist("vehicle_desc", state.vehicle_desc)
         self.plateNumber       = getOrPersist("plate_number", state.plate_number)
-        self.riderPhotoUrl     = getOrPersist("rider_photo_url", state.rider_photo_url)
         self.isRiderDelivering = state.is_rider_delivering ?? (ud?.integer(forKey: attributes.prefixedKey("is_rider_delivering")) == 1)
         
         func formatDuration(_ totalMinutes: Int) -> String {
@@ -248,7 +241,7 @@ struct LockScreenView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Selcom Go Rider").font(.system(size: 14, weight: .bold)).foregroundColor(.white.opacity(0.7))
+                    Text(vm.title).font(.system(size: 14, weight: .bold)).foregroundColor(.white.opacity(0.8))
                     HStack(spacing: 4) {
                         Text(vm.status).font(.system(size: 18, weight: .bold)).foregroundColor(.white)
                         if !vm.merchantName.isEmpty {
@@ -261,24 +254,6 @@ struct LockScreenView: View {
                 
                 Spacer()
                 
-                if !vm.merchantName.isEmpty || !vm.riderPhotoUrl.isEmpty {
-                    HStack(spacing: -12) {
-                        ZStack {
-                            if !vm.riderPhotoUrl.isEmpty, let img = UIImage(contentsOfFile: vm.riderPhotoUrl) {
-                                Image(uiImage: img).resizable().scaledToFill().frame(width: 44, height: 44).clipShape(Circle()).overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 1))
-                            } else {
-                                Circle().fill(Color.gray).frame(width: 44, height: 44)
-                            }
-                        }
-                        
-                        Image(systemName: "bicycle") // Placeholder for vehicle type
-                            .font(.system(size: 12))
-                            .padding(4)
-                            .background(Color.white)
-                            .clipShape(Circle())
-                            .offset(x: 8, y: -16)
-                    }
-                }
             }
             
             if !vm.plateNumber.isEmpty {
@@ -321,7 +296,7 @@ struct DynamicIslandExpandedView: View {
                         .foregroundColor(.white)
                     VStack(alignment: .leading) {
                         Text(vm.vehicleDesc).font(.system(size: 12)).foregroundColor(.gray)
-                        Text("Selcom Go Rider").font(.system(size: 16, weight: .bold)).foregroundColor(.white)
+                        Text(vm.title).font(.system(size: 16, weight: .bold)).foregroundColor(.white)
                     }
                 }
                 Spacer()
@@ -356,11 +331,7 @@ struct DynamicIslandExpandedView: View {
             HStack {
                 if !vm.merchantName.isEmpty {
                     HStack(spacing: 12) {
-                        if !vm.riderPhotoUrl.isEmpty, let img = UIImage(contentsOfFile: vm.riderPhotoUrl) {
-                            Image(uiImage: img).resizable().scaledToFill().frame(width: 48, height: 48).clipShape(Circle())
-                        } else {
-                            Circle().fill(Color.gray).frame(width: 48, height: 48)
-                        }
+                        // Removed photo
                         VStack(alignment: .leading, spacing: 2) {
                             Text(vm.merchantName).font(.system(size: 14, weight: .medium)).foregroundColor(.white)
                             Text(vm.eta).font(.system(size: 18, weight: .bold)).foregroundColor(selcomColor)

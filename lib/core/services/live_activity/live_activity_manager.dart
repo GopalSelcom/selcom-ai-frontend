@@ -2,12 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:live_activities/live_activities.dart';
 import 'package:live_activities/models/activity_update.dart';
-import 'package:collection/collection.dart';
-import 'package:dio/dio.dart';
-import 'package:path_provider/path_provider.dart';
 import 'dart:developer' as developer;
 
 import '../storage_service.dart';
@@ -20,14 +16,11 @@ class LiveActivityManager {
   factory LiveActivityManager() => _instance;
   LiveActivityManager._internal();
 
-  static const _appGroupChannel = MethodChannel('com.selcom.go/app_group');
-
   final LiveActivities _liveActivitiesPlugin = LiveActivities();
 
   Map<String, String> _orderToActivityId = {};
   Map<String, String> _orderToMerchantName = {};
   final Map<String, DateTime> _lastUpdateTime = {};
-  final Map<String, String> _urlToLocalPath = {};
   final Map<String, String> _lastSyncedTokens = {};
   final Map<String, Future<String?>> _inProgressStarts = {};
 
@@ -41,25 +34,13 @@ class LiveActivityManager {
   static const String _merchantNameKey = 'live_activity_order_to_merchant';
 
   Future<void> init() async {
-    developer.log(
-      "🎬 LiveActivityManager.init() starting",
-      name: 'ORDER_TRACKING',
-    );
+    developer.log("🎬 LiveActivityManager.init()", name: 'ORDER_TRACKING');
     try {
       final String? activitiesData = await StorageService().read(
         _activityIdKey,
       );
       final String? merchantsData = await StorageService().read(
         _merchantNameKey,
-      );
-
-      developer.log(
-        "📝 Loaded activities string: $activitiesData",
-        name: 'ORDER_TRACKING',
-      );
-      developer.log(
-        "📝 Loaded merchants string: $merchantsData",
-        name: 'ORDER_TRACKING',
       );
 
       if (activitiesData != null && activitiesData.isNotEmpty) {
@@ -72,22 +53,23 @@ class LiveActivityManager {
       }
     } catch (e) {
       developer.log(
-        "❌ Error loading persisted tracking state: $e",
+        "❌ Error loading persisted state: $e",
         name: 'ORDER_TRACKING',
       );
     }
 
     if (_isIOS) {
       try {
-        // MATCH THIS WITH THE APP GROUP CREATED IN PORTAL
         await _liveActivitiesPlugin.init(appGroupId: 'group.com.selcom.go');
 
-        // 🧹 Prune stale activities that iOS no longer recognizes
+        _liveActivitiesPlugin.activityUpdateStream.listen((event) {
+          developer.log(
+            "📢 RECEIVED activity update from plugin: ${event.activityId}",
+            name: 'ORDER_TRACKING',
+          );
+        });
+
         final activeIds = await _liveActivitiesPlugin.getAllActivitiesIds();
-        developer.log(
-          "🧹 iOS reports active activity IDs: $activeIds",
-          name: 'ORDER_TRACKING',
-        );
 
         final List<String> staleOrderIds = [];
         _orderToActivityId.forEach((orderId, activityId) {
@@ -98,7 +80,7 @@ class LiveActivityManager {
 
         if (staleOrderIds.isNotEmpty) {
           developer.log(
-            "🧹 Pruning ${staleOrderIds.length} stale activities: $staleOrderIds",
+            "🧹 Pruning ${staleOrderIds.length} stale activities",
             name: 'ORDER_TRACKING',
           );
           for (final id in staleOrderIds) {
@@ -108,29 +90,14 @@ class LiveActivityManager {
           await _saveState();
         }
 
-        developer.log(
-          "🛰️ Triggering _syncAllActiveTokens",
-          name: 'ORDER_TRACKING',
-        );
-        // Non-blocking sync
         _syncAllActiveTokens();
-
-        // 🛰️ Periodically sync all tokens to handle rotations
-        Timer.periodic(const Duration(minutes: 5), (_) {
-          _syncAllActiveTokens();
-        });
-
-        // 🔔 Listen for system-level Live Activity updates (including APNs)
-        _liveActivitiesPlugin.activityUpdateStream.listen((update) {
-          developer.log(
-            "🔔 Live Activity Update Event: ${update.activityId}",
-            name: 'ORDER_TRACKING',
-            error: update.toString(),
-          );
-        });
+        Timer.periodic(
+          const Duration(minutes: 5),
+          (_) => _syncAllActiveTokens(),
+        );
       } catch (e) {
         developer.log(
-          "❌ Error initializing LiveActivities: $e",
+          "❌ Error initializing ActivityKit: $e",
           name: 'ORDER_TRACKING',
         );
       }
@@ -148,10 +115,7 @@ class LiveActivityManager {
         jsonEncode(_orderToMerchantName),
       );
     } catch (e) {
-      developer.log(
-        "❌ Error saving tracking state: $e",
-        name: 'ORDER_TRACKING',
-      );
+      developer.log("❌ Error saving state: $e", name: 'ORDER_TRACKING');
     }
   }
 
@@ -162,79 +126,25 @@ class LiveActivityManager {
     await _saveState();
   }
 
-  String? getOrderIdByActivityId(String activityId) {
-    return _orderToActivityId.entries
-        .firstWhereOrNull((e) => e.value == activityId)
-        ?.key;
-  }
-
   Future<Map<String, String>> getAllActivityTokens() async {
     if (!_isIOS) return {};
     final Map<String, String> tokens = {};
-    developer.log(
-      "🔦 getAllActivityTokens: _orderToActivityId entries: ${_orderToActivityId}",
-      name: 'ORDER_TRACKING',
-    );
-    if (_orderToActivityId.isEmpty) {
-      developer.log(
-        "🔦 getAllActivityTokens: _orderToActivityId is EMPTY, returning",
-        name: 'ORDER_TRACKING',
-      );
-      return tokens;
-    }
-
-    final List<String> rideIds = _orderToActivityId.keys.toList();
-    developer.log("🔦 rideIds to process: $rideIds", name: 'ORDER_TRACKING');
-
-    for (final orderId in rideIds) {
+    for (final orderId in _orderToActivityId.keys.toList()) {
       final activityId = _orderToActivityId[orderId];
-      developer.log(
-        "🔦 Processing ride $orderId with activityId $activityId",
-        name: 'ORDER_TRACKING',
-      );
-
-      if (activityId == null || activityId == 'android') {
-        developer.log(
-          "🔦 Skipping ride $orderId (activityId: $activityId)",
-          name: 'ORDER_TRACKING',
-        );
-        continue;
-      }
-
-      developer.log(
-        "⏳ Fetching ActivityKit push token for ride $orderId (activity: $activityId)...",
-        name: 'ORDER_TRACKING',
-      );
+      if (activityId == null || activityId == 'android') continue;
 
       String? token;
-      for (int i = 0; i < 5; i++) {
-        try {
-          // Add a hard timeout to prevent hanging the whole app start
-          token = await _liveActivitiesPlugin
-              .getPushToken(activityId)
-              .timeout(const Duration(seconds: 3));
-          if (token != null && token.isNotEmpty) break;
-        } catch (e) {
-          developer.log(
-            "⚠️ Error fetching push token for ride $orderId: $e",
-            name: 'ORDER_TRACKING',
-          );
-        }
-        await Future.delayed(Duration(seconds: 1 << i));
-      }
-
-      if (token != null && token.isNotEmpty) {
+      try {
+        token = await _liveActivitiesPlugin
+            .getPushToken(activityId)
+            .timeout(const Duration(seconds: 3));
+      } catch (e) {
         developer.log(
-          "✅ Got push token for ride $orderId",
-          name: 'ORDER_TRACKING',
-        );
-        tokens[orderId] = token;
-      } else {
-        developer.log(
-          "❌ No push token found for ride $orderId after retries",
+          "⚠️ Error fetching token for $orderId: $e",
           name: 'ORDER_TRACKING',
         );
       }
+      if (token != null && token.isNotEmpty) tokens[orderId] = token;
     }
     return tokens;
   }
@@ -263,14 +173,8 @@ class LiveActivityManager {
     String pickupDistance = '0',
     String deliveryDistance = '0',
   }) async {
-    developer.log("🚀 startActivity for $orderId", name: 'ORDER_TRACKING');
-    if (_inProgressStarts.containsKey(orderId)) {
-      developer.log(
-        "⏳ Activity start already in progress for $orderId, awaiting existing future...",
-        name: 'ORDER_TRACKING',
-      );
+    if (_inProgressStarts.containsKey(orderId))
       return _inProgressStarts[orderId];
-    }
 
     final work = _startActivityInternal(
       orderId: orderId,
@@ -282,7 +186,6 @@ class LiveActivityManager {
       eta: eta,
       vehicleDesc: vehicleDesc,
       plateNumber: plateNumber,
-      riderPhotoUrl: riderPhotoUrl,
       step: step,
       totalSteps: totalSteps,
       isRiderDelivering: isRiderDelivering,
@@ -294,7 +197,6 @@ class LiveActivityManager {
     );
 
     _inProgressStarts[orderId] = work;
-
     try {
       return await work;
     } finally {
@@ -312,7 +214,6 @@ class LiveActivityManager {
     String? eta,
     String vehicleDesc = '',
     String plateNumber = '',
-    String riderPhotoUrl = '',
     int step = 0,
     int totalSteps = 6,
     bool isRiderDelivering = false,
@@ -322,18 +223,11 @@ class LiveActivityManager {
     String pickupDistance = '0',
     String deliveryDistance = '0',
   }) async {
-    developer.log(
-      "🔍 _startActivityInternal for $orderId (status: $status)",
-      name: 'ORDER_TRACKING',
-    );
     try {
-      final String? existingActivityId = _orderToActivityId[orderId];
-
-      if (_isIOS &&
-          existingActivityId != null &&
-          existingActivityId != 'android') {
+      final String? existingId = _orderToActivityId[orderId];
+      if (_isIOS && existingId != null && existingId != 'android') {
         final activeIds = await _liveActivitiesPlugin.getAllActivitiesIds();
-        if (!activeIds.contains(existingActivityId)) {
+        if (!activeIds.contains(existingId)) {
           _orderToActivityId.remove(orderId);
         } else {
           await updateActivity(
@@ -346,7 +240,6 @@ class LiveActivityManager {
             eta: eta,
             vehicleDesc: vehicleDesc,
             plateNumber: plateNumber,
-            riderPhotoUrl: riderPhotoUrl,
             step: step,
             totalSteps: totalSteps,
             isRiderDelivering: isRiderDelivering,
@@ -355,36 +248,8 @@ class LiveActivityManager {
             pickupDistance: pickupDistance,
             deliveryDistance: deliveryDistance,
           );
-          return existingActivityId;
+          return existingId;
         }
-      } else if (_isAndroid && existingActivityId == 'android') {
-        await updateActivity(
-          orderId: orderId,
-          status: status,
-          title: title,
-          subtitle: subtitle,
-          fare: fare,
-          eta: eta,
-          vehicleDesc: vehicleDesc,
-          plateNumber: plateNumber,
-          riderPhotoUrl: riderPhotoUrl,
-          step: step,
-          totalSteps: totalSteps,
-          isRiderDelivering: isRiderDelivering,
-          deliveryStartDate: deliveryStartDate,
-          etaSeconds: etaSeconds,
-          pickupDistance: pickupDistance,
-          deliveryDistance: deliveryDistance,
-        );
-        return 'android';
-      }
-
-      // 🖼️ Remote Image Support
-      String localRiderPhoto = riderPhotoUrl;
-      if (riderPhotoUrl.isNotEmpty && riderPhotoUrl.startsWith('http')) {
-        localRiderPhoto = await _maybeDownloadImage(riderPhotoUrl);
-      } else if (riderPhotoUrl.isEmpty) {
-        localRiderPhoto = '';
       }
 
       _orderToMerchantName[orderId] = merchantName;
@@ -404,7 +269,7 @@ class LiveActivityManager {
           plateNumber: plateNumber,
           eta: eta ?? '',
           isCompleted: isCompleted,
-          riderPhotoUrl: localRiderPhoto,
+          riderPhotoUrl: '',
           pickupDistance: pickupDistance,
           deliveryDistance: deliveryDistance,
         );
@@ -414,14 +279,12 @@ class LiveActivityManager {
       }
 
       if (_isIOS) {
-        if (!await _liveActivitiesPlugin.areActivitiesEnabled()) {
+        if (!await _liveActivitiesPlugin.areActivitiesEnabled())
           return "disabled";
-        }
-        if (_iosActivityCount >= _maxConcurrentIOSActivities) {
+        if (_iosActivityCount >= _maxConcurrentIOSActivities)
           return "limit_reached";
-        }
 
-        final Map<String, dynamic> activityModel = {
+        final activityModel = {
           'order_id': orderId,
           'merchant_name': merchantName,
           'status': status,
@@ -431,7 +294,7 @@ class LiveActivityManager {
           'eta': eta ?? '',
           'vehicle_desc': vehicleDesc,
           'plate_number': plateNumber,
-          'rider_photo_url': localRiderPhoto,
+          'rider_photo_url': '',
           'step': step,
           'total_steps': totalSteps,
           'is_completed': isCompleted,
@@ -449,10 +312,7 @@ class LiveActivityManager {
         if (activityId != null) {
           _orderToActivityId[orderId] = activityId;
           await _saveState();
-
-          // 🛰️ Sync Push Token with Backend (iOS only)
           _syncPushTokenWithBackend(orderId, activityId);
-
           return activityId;
         }
       }
@@ -464,36 +324,18 @@ class LiveActivityManager {
 
   Future<void> _syncAllActiveTokens() async {
     if (!_isIOS) return;
-
-    developer.log(
-      "🛰️ Starting _syncAllActiveTokens bulk scan",
-      name: 'ORDER_TRACKING',
-    );
     final tokens = await getAllActivityTokens();
-    developer.log(
-      "🛰️ Bulk scan found ${tokens.length} tokens to sync",
-      name: 'ORDER_TRACKING',
-    );
-
     for (final entry in tokens.entries) {
       try {
-        developer.log(
-          "🛰️ Syncing token for active activity: ${entry.key}",
-          name: 'ORDER_TRACKING',
-        );
         await sl<RideRepository>().updateActivityToken(entry.key, entry.value);
         _lastSyncedTokens[entry.key] = entry.value;
       } catch (e) {
         developer.log(
-          "⚠️ Periodic sync error for ${entry.key}: $e",
+          "⚠️ Token sync error for ${entry.key}: $e",
           name: 'ORDER_TRACKING',
         );
       }
     }
-    developer.log(
-      "🛰️ _syncAllActiveTokens bulk scan complete",
-      name: 'ORDER_TRACKING',
-    );
   }
 
   Future<void> _syncPushTokenWithBackend(
@@ -501,54 +343,19 @@ class LiveActivityManager {
     String activityId,
   ) async {
     if (!_isIOS) return;
-
-    developer.log(
-      "⏳ Fetching ActivityKit push token for ride $orderId...",
-      name: 'ORDER_TRACKING',
-    );
-
     String? token;
     for (int i = 0; i < 10; i++) {
       try {
         token = await _liveActivitiesPlugin.getPushToken(activityId);
         if (token != null && token.isNotEmpty) break;
-      } catch (e) {
-        developer.log(
-          "⚠️ Error fetching push token for ride $orderId (attempt ${i + 1}): $e",
-          name: 'ORDER_TRACKING',
-        );
-      }
-      developer.log(
-        "⏳ Push token not ready yet for $orderId, retrying in 3s... (attempt ${i + 1})",
-        name: 'ORDER_TRACKING',
-      );
+      } catch (e) {}
       await Future.delayed(const Duration(seconds: 3));
     }
-
-    developer.log(
-      "📡 ActivityKit Push Token for ride $orderId: $token",
-      name: 'ORDER_TRACKING',
-    );
-
     if (token != null && token.isNotEmpty) {
       try {
-        developer.log(
-          "🚀 Syncing Activity Token for ride $orderId",
-          name: 'ORDER_TRACKING',
-        );
         await sl<RideRepository>().updateActivityToken(orderId, token);
         _lastSyncedTokens[orderId] = token;
-      } catch (e) {
-        developer.log(
-          "⚠️ Token sync error for $orderId: $e",
-          name: 'ORDER_TRACKING',
-        );
-      }
-    } else {
-      developer.log(
-        "⚠️ Failed to get ActivityKit push token for $orderId after retries",
-        name: 'ORDER_TRACKING',
-      );
+      } catch (e) {}
     }
   }
 
@@ -572,17 +379,6 @@ class LiveActivityManager {
     String pickupDistance = '0',
     String deliveryDistance = '0',
   }) async {
-    final now = DateTime.now();
-    final lastUpdate = _lastUpdateTime[orderId];
-    if (lastUpdate != null &&
-        now.difference(lastUpdate).inMilliseconds < 1000 &&
-        !isCompleted) {
-      // Still log tracking updates but don't push to system if too frequent
-      // unless it's a terminal state like completion
-      return;
-    }
-    _lastUpdateTime[orderId] = now;
-
     developer.log(
       "🔄 updateActivity for $orderId (status: $status)",
       name: 'ORDER_TRACKING',
@@ -593,53 +389,26 @@ class LiveActivityManager {
         await _saveState();
       }
 
-      String localRiderPhoto = riderPhotoUrl;
-      if (riderPhotoUrl.isNotEmpty && riderPhotoUrl.startsWith('http')) {
-        localRiderPhoto = await _maybeDownloadImage(riderPhotoUrl);
-      } else if (riderPhotoUrl.isEmpty) {
-        localRiderPhoto = '';
-      }
-
-      final String? effectiveMerchantName = _orderToMerchantName[orderId];
+      final String? effMerchant = _orderToMerchantName[orderId];
       final String? activityId = _orderToActivityId[orderId];
+
       developer.log(
-        "🔍 Activity ID for $orderId: $activityId",
+        "🔍 Status: $status, ActivityID: $activityId, merchant: $effMerchant",
         name: 'ORDER_TRACKING',
       );
 
       if (activityId == null) {
         developer.log(
-          "⚠️ No activity ID found for ride $orderId. Ignoring update.",
+          "⚠️ No activity ID found for ride $orderId. Skipping update.",
           name: 'ORDER_TRACKING',
         );
         return;
       }
 
-      if (_isAndroid && activityId == 'android') {
-        await AndroidOrderTrackingManager().show(
-          orderId: orderId,
-          title: title,
-          merchantName: effectiveMerchantName ?? '',
-          status: status,
-          subtitle: subtitle,
-          step: step,
-          totalSteps: totalSteps,
-          isRiderDelivering: isRiderDelivering,
-          vehicleDesc: vehicleDesc,
-          plateNumber: plateNumber,
-          eta: eta ?? '',
-          isCompleted: isCompleted,
-          riderPhotoUrl: localRiderPhoto,
-          pickupDistance: pickupDistance,
-          deliveryDistance: deliveryDistance,
-        );
-        return;
-      }
-
       if (_isIOS && activityId != 'android') {
-        final Map<String, dynamic> updateData = {
+        final updateData = {
           'order_id': orderId,
-          'merchant_name': effectiveMerchantName ?? '',
+          'merchant_name': effMerchant ?? '',
           'status': status,
           'title': title,
           'subtitle': subtitle,
@@ -647,7 +416,7 @@ class LiveActivityManager {
           'eta': eta ?? '',
           'vehicle_desc': vehicleDesc,
           'plate_number': plateNumber,
-          'rider_photo_url': localRiderPhoto,
+          'rider_photo_url': '',
           'step': step,
           'total_steps': totalSteps,
           'is_completed': isCompleted,
@@ -657,19 +426,24 @@ class LiveActivityManager {
           'pickup_distance': pickupDistance,
           'delivery_distance': deliveryDistance,
         };
+
         developer.log(
-          "📡 Sending update to ActivityKit: ID=$activityId",
-          name: 'ORDER_TRACKING',
-          error: jsonEncode(updateData),
-        );
-        await _liveActivitiesPlugin.updateActivity(activityId, updateData);
-        developer.log(
-          "✅ ActivityKit update sent successfully",
+          "📡 Pushing update to ActivityKit: ID=$activityId PAYLOAD: ${jsonEncode(updateData)}",
           name: 'ORDER_TRACKING',
         );
+
+        try {
+          await _liveActivitiesPlugin.updateActivity(activityId, updateData);
+          developer.log("✅ ActivityKit push SUCCESS", name: 'ORDER_TRACKING');
+        } catch (e) {
+          developer.log(
+            "❌ ActivityKit push FAILED: $e",
+            name: 'ORDER_TRACKING',
+          );
+        }
       }
     } catch (e) {
-      developer.log("❌ Error updating tracking: $e", name: 'ORDER_TRACKING');
+      developer.log("❌ Error in updateActivity: $e", name: 'ORDER_TRACKING');
     }
   }
 
@@ -677,7 +451,6 @@ class LiveActivityManager {
     try {
       final String? activityId = _orderToActivityId[orderId];
       if (activityId == null) return;
-
       if (_isAndroid && activityId == 'android') {
         await AndroidOrderTrackingManager().dismiss(orderId);
       } else if (_isIOS) {
@@ -685,59 +458,14 @@ class LiveActivityManager {
       }
       await _clearState(orderId);
     } catch (e) {
-      developer.log("❌ Error ending tracking: $e", name: 'ORDER_TRACKING');
       await _clearState(orderId);
     }
   }
 
   Future<void> endAllTracking() async {
-    try {
-      final orderIds = _orderToActivityId.keys.toList();
-      for (final id in orderIds) {
-        await endActivity(id);
-      }
-    } catch (e) {
-      developer.log("❌ Error ending all tracking: $e", name: 'ORDER_TRACKING');
-    }
-  }
-
-  Future<String> _maybeDownloadImage(String url) async {
-    if (!url.startsWith('http')) return url;
-    if (_urlToLocalPath.containsKey(url)) {
-      final cachedFile = File(_urlToLocalPath[url]!);
-      if (await cachedFile.exists()) return _urlToLocalPath[url]!;
-    }
-
-    try {
-      final dio = Dio();
-      String baseDir;
-      if (_isIOS) {
-        try {
-          final String? appGroupPath = await _appGroupChannel
-              .invokeMethod<String>('getAppGroupDirectory');
-          baseDir =
-              appGroupPath ?? (await getApplicationDocumentsDirectory()).path;
-        } catch (e) {
-          developer.log(
-            "⚠️ Error getting app group path: $e",
-            name: 'ORDER_TRACKING',
-          );
-          baseDir = (await getApplicationDocumentsDirectory()).path;
-        }
-      } else {
-        baseDir = (await getApplicationDocumentsDirectory()).path;
-      }
-
-      final String fileName = "rider_${url.hashCode}.jpg";
-      final String path = "$baseDir/$fileName";
-
-      await dio.download(url, path);
-      _urlToLocalPath[url] = path;
-      developer.log("📸 Saved rider photo to: $path", name: 'ORDER_TRACKING');
-      return path;
-    } catch (e) {
-      developer.log("⚠️ Error downloading image: $e", name: 'ORDER_TRACKING');
-      return url;
+    final ids = _orderToActivityId.keys.toList();
+    for (final id in ids) {
+      await endActivity(id);
     }
   }
 }

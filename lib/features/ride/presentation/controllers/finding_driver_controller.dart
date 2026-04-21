@@ -223,9 +223,9 @@ class FindingDriverController extends GetxController {
 
       await LiveActivityManager().startActivity(
         orderId: rideId,
-        status: 'SEARCHING',
-        title: 'Finding Your Driver',
-        merchantName: 'Searching for driver...',
+        status: 'Searching',
+        title: 'Selcom Go',
+        merchantName: 'Finding Your Driver',
         subtitle: '',
         fare: fareBreakdown?['total_amount']?.toString() ?? '',
         eta: '',
@@ -240,6 +240,10 @@ class FindingDriverController extends GetxController {
         deliveryDistance: '0',
       );
     } catch (e) {
+      developer.log(
+        "❌ Error in FindingDriverController._syncLiveActivity: $e",
+        name: 'ORDER_TRACKING',
+      );
       debugPrint('❌ Error syncing Live Activity: $e');
     }
   }
