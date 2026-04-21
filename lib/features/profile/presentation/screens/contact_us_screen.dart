@@ -47,7 +47,7 @@ class ContactUsScreen extends GetView<ContactUsController> {
                       SizedBox(height: 8.h),
                       AppTextField(
                         controller: controller.messageController,
-                        hintText: 'Type your message here...',
+                        hintText: 'How can we help you?',
                         maxLines: 5,
                       ),
                     ],

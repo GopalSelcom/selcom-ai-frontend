@@ -131,4 +131,11 @@ class AppTextStyles {
     color: AppColors.shade2,
     fontFamily: metropolisFont,
   );
+
+  static TextStyle hint = TextStyle(
+    fontSize: 15.sp,
+    fontWeight: FontWeight.w400,
+    color: const Color(0xFF94A3B8),
+    fontFamily: metropolisFont,
+  );
 }

@@ -45,7 +45,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                           Obx(
                             () => AppTextField(
                               label: 'Full Name',
-                              hintText: 'Type here..',
+                              hintText: 'e.g. John Doe',
                               controller: controller.cardHolderController,
                               focusNode: controller.fullNameFocus,
                               textInputAction: TextInputAction.next,
@@ -58,7 +58,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                           Obx(
                             () => AppTextField(
                               label: 'Card Number',
-                              hintText: 'Type here..',
+                              hintText: '0000 0000 0000 0000',
                               controller: controller.cardNumberController,
                               focusNode: controller.cardNumberFocus,
                               keyboardType: TextInputType.number,
@@ -86,7 +86,8 @@ class _AddCardScreenState extends State<AddCardScreen> {
                                     keyboardType: TextInputType.number,
                                     textInputAction: TextInputAction.next,
                                     onSubmitted: (_) => controller.focusCvv(),
-                                    onChanged: (_) => controller.onFieldChanged(),
+                                    onChanged: (_) =>
+                                        controller.onFieldChanged(),
                                     errorText: controller.expiryError.value,
                                     inputFormatters: [
                                       FilteringTextInputFormatter.digitsOnly,
@@ -101,13 +102,14 @@ class _AddCardScreenState extends State<AddCardScreen> {
                                 child: Obx(
                                   () => AppTextField(
                                     label: 'CVV',
-                                    hintText: 'Type here..',
+                                    hintText: 'e.g. 123',
                                     controller: controller.cvvController,
                                     focusNode: controller.cvvFocus,
                                     keyboardType: TextInputType.number,
                                     textInputAction: TextInputAction.done,
                                     onSubmitted: (_) => controller.submitCard(),
-                                    onChanged: (_) => controller.onFieldChanged(),
+                                    onChanged: (_) =>
+                                        controller.onFieldChanged(),
                                     errorText: controller.cvvError.value,
                                     isPassword: controller.isCvvHidden.value,
                                     suffixIcon: IconButton(
@@ -116,7 +118,9 @@ class _AddCardScreenState extends State<AddCardScreen> {
                                         controller.isCvvHidden.value
                                             ? Icons.visibility_off_outlined
                                             : Icons.visibility_outlined,
-                                        color: AppColors.shade2.withOpacity(0.7),
+                                        color: AppColors.shade2.withOpacity(
+                                          0.7,
+                                        ),
                                         size: 20.w,
                                       ),
                                     ),
