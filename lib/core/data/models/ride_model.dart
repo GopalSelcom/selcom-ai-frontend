@@ -16,6 +16,7 @@ class RideModel extends RideEntity {
     required super.distanceKm,
     required super.durationMinutes,
     required super.pinCode,
+    required super.pinRequired,
     required super.paymentMethod,
     required super.paymentStatus,
     super.cancellationFee,
@@ -43,6 +44,13 @@ class RideModel extends RideEntity {
     final pin =
         (json['pin_code']?.toString() ?? driverSnapshot?.verificationCode ?? '')
             .trim();
+    final pinRequiredRaw = json['pin_required'];
+    final bool pinRequired =
+        pinRequiredRaw == null
+        ? true
+        : (pinRequiredRaw == true ||
+              pinRequiredRaw == 1 ||
+              pinRequiredRaw.toString().toLowerCase() == 'true');
     final fareBreakdownJson = json['fare_breakdown'];
     final fareBreakdown = fareBreakdownJson is Map<String, dynamic>
         ? FareBreakdownModel.fromJson(fareBreakdownJson)
@@ -69,6 +77,7 @@ class RideModel extends RideEntity {
       distanceKm: (json['distance_km'] ?? 0.0).toDouble(),
       durationMinutes: json['duration_minutes'] ?? 0,
       pinCode: pin,
+      pinRequired: pinRequired,
       paymentMethod: PaymentMethod.values.firstWhere(
         (e) => e.name == _toCamelCase(json['payment_method'] ?? 'wallet'),
         orElse: () => PaymentMethod.wallet,

@@ -63,9 +63,28 @@ class SettingsToggleTile extends StatelessWidget {
                 Switch(
                   value: value,
                   onChanged: enabled ? onChanged : null,
-                  activeColor: AppColors.primary,
-                  inactiveThumbColor: AppColors.shade2,
-                  inactiveTrackColor: AppColors.divider,
+                  thumbColor: WidgetStateProperty.resolveWith((states) {
+                    final selected = states.contains(WidgetState.selected);
+                    final disabled = states.contains(WidgetState.disabled);
+
+                    if (selected && disabled) {
+                      return AppColors.primary.withOpacity(0.9);
+                    }
+                    if (selected) return AppColors.primary;
+                    if (disabled) return AppColors.shade2.withOpacity(0.6);
+                    return AppColors.shade2;
+                  }),
+                  trackColor: WidgetStateProperty.resolveWith((states) {
+                    final selected = states.contains(WidgetState.selected);
+                    final disabled = states.contains(WidgetState.disabled);
+
+                    if (selected && disabled) {
+                      return AppColors.primary.withOpacity(0.35);
+                    }
+                    if (selected) return AppColors.primary.withOpacity(0.45);
+                    if (disabled) return AppColors.divider.withOpacity(0.8);
+                    return AppColors.divider;
+                  }),
                 ),
               ],
             ),

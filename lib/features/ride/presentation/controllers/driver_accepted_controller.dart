@@ -65,6 +65,7 @@ class DriverAcceptedController extends GetxController
   final plateLineSecondary = ''.obs;
   final vehicleSubtitle = ''.obs;
   final otpDigits = <String>[].obs;
+  final isPinRequired = true.obs;
   final etaLabel = '10 Mins'.obs;
   final arrivalLabel = 'Driver will arriving in 1 min...'.obs;
   final unreadCount = 0.obs;
@@ -280,6 +281,7 @@ class DriverAcceptedController extends GetxController
   // }
 
   void _applyRide(RideModel r) {
+    isPinRequired.value = r.pinRequired;
     final d = r.driverSnapshot as DriverSnapshotModel?;
     final v = r.vehicleSnapshot;
     final vehicleTypeHint = _resolveVehicleTypeHint(
@@ -323,17 +325,25 @@ class DriverAcceptedController extends GetxController
         ].where((e) => e.isNotEmpty).join(', ').trim();
       }
 
-      final otp = (d.verificationCode ?? '').replaceAll(RegExp(r'\s'), '');
-      if (otp.isNotEmpty) {
-        otpDigits.assignAll(otp.split('').take(4).toList());
+      if (isPinRequired.value) {
+        final otp = (d.verificationCode ?? '').replaceAll(RegExp(r'\s'), '');
+        if (otp.isNotEmpty) {
+          otpDigits.assignAll(otp.split('').take(4).toList());
+        } else {
+          otpDigits.assignAll(['—', '—', '—', '—']);
+        }
       } else {
-        otpDigits.assignAll(['—', '—', '—', '—']);
+        otpDigits.clear();
       }
     } else {
       driverName.value = 'Driver';
       driverPhone.value = '';
       driverRating.value = '—';
-      otpDigits.assignAll(['—', '—', '—', '—']);
+      if (isPinRequired.value) {
+        otpDigits.assignAll(['—', '—', '—', '—']);
+      } else {
+        otpDigits.clear();
+      }
     }
 
     if (v != null && vehicleSubtitle.value.isEmpty) {
@@ -622,6 +632,10 @@ class DriverAcceptedController extends GetxController
       loadDriverIcon(vehicleType: vehicleTypeHint);
     }
 
+    if (payload.pinRequired != null) {
+      isPinRequired.value = payload.pinRequired == true;
+    }
+
     if (d != null) {
       if ((d.name ?? '').trim().isNotEmpty) driverName.value = d.name!.trim();
       if ((d.phone ?? '').trim().isNotEmpty)
@@ -629,9 +643,15 @@ class DriverAcceptedController extends GetxController
       if ((d.lat) != null && (d.lng) != null) {
         assignedDriverLocation.value = LatLng(d.lat!, d.lng!);
       }
-      final otp = (payload.pinCode ?? '').replaceAll(RegExp(r'\s'), '');
-      if (otp.isNotEmpty) {
-        otpDigits.assignAll(otp.split('').take(4).toList());
+      if (isPinRequired.value) {
+        final otp = (payload.pinCode ?? '').replaceAll(RegExp(r'\s'), '');
+        if (otp.isNotEmpty) {
+          otpDigits.assignAll(otp.split('').take(4).toList());
+        } else if (otpDigits.isEmpty) {
+          otpDigits.assignAll(['—', '—', '—', '—']);
+        }
+      } else {
+        otpDigits.clear();
       }
       final vehicleModel = (d.vehicleModel ?? '').trim();
       final vehicleColor = (d.vehicleColor ?? '').trim();
@@ -670,6 +690,10 @@ class DriverAcceptedController extends GetxController
         final suffix = plateLinePrimary.value + plateLineSecondary.value;
         driverVehicleLine.value = suffix.isNotEmpty ? '$type - $suffix' : type;
       }
+    }
+
+    if (!isPinRequired.value) {
+      otpDigits.clear();
     }
 
     final oldStatus = currentRideStatus.value;

@@ -15,6 +15,10 @@ class SettingsController extends GetxController {
   final effectiveRequiredRidePin = false.obs;
 
   bool get canToggleRidePin => !adminRequiredRidePin.value;
+  bool get ridePinSwitchValue =>
+      adminRequiredRidePin.value
+          ? effectiveRequiredRidePin.value
+          : userEnabledRidePin.value;
 
   @override
   void onInit() {

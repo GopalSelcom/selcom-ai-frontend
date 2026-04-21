@@ -22,6 +22,7 @@ class EventRiderStatusUpdateResponse {
   EventRouteGeometry? routeGeometry;
   String? routeTarget;
   String? pinCode;
+  bool? pinRequired;
 
   EventRiderStatusUpdateResponse({
     this.rideId,
@@ -33,6 +34,7 @@ class EventRiderStatusUpdateResponse {
     this.routeGeometry,
     this.routeTarget,
     this.pinCode,
+    this.pinRequired,
   });
 
   factory EventRiderStatusUpdateResponse.fromJson(Map<String, dynamic> json) =>
@@ -52,6 +54,7 @@ class EventRiderStatusUpdateResponse {
             : EventRouteGeometry.fromJson(json["route_geometry"]),
         routeTarget: json["route_target"],
         pinCode: json["pin_code"],
+        pinRequired: json["pin_required"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -64,6 +67,7 @@ class EventRiderStatusUpdateResponse {
     "route_geometry": routeGeometry?.toJson(),
     "route_target": routeTarget,
     "pin_code": pinCode,
+    "pin_required": pinRequired,
   };
 }
 

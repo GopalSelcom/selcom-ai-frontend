@@ -368,47 +368,49 @@ class DriverAcceptedScreen extends StatelessWidget {
           ),
         ),
         SizedBox(height: 17.h),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'PIN',
-              style: AppTextStyles.homeCaption.copyWith(
-                fontWeight: FontWeight.w700,
-                fontSize: 15.sp,
-                color: const Color(0xFF364B63),
-                height: 1.33,
-              ),
-            ),
-            SizedBox(width: 8.w),
-            ...c.otpDigits.map(
-              (d) => Container(
-                margin: EdgeInsets.only(right: 4.w),
-                width: 28.w,
-                height: 28.w,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8F9FD),
-                  borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(
-                    color: const Color(0xFFE6E9EE),
-                    width: 0.787,
-                  ),
-                ),
-                child: Text(
-                  d,
-                  style: AppTextStyles.homeCaption.copyWith(
-                    color: const Color(0xFF000000),
-                    fontSize: 12.6.sp,
-                    fontWeight: FontWeight.w600,
-                    height: 1.28,
-                  ),
+        if (c.isPinRequired.value && c.otpDigits.isNotEmpty) ...[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'PIN',
+                style: AppTextStyles.homeCaption.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15.sp,
+                  color: const Color(0xFF364B63),
+                  height: 1.33,
                 ),
               ),
-            ),
-          ],
-        ),
-        SizedBox(height: 17.h),
+              SizedBox(width: 8.w),
+              ...c.otpDigits.map(
+                (d) => Container(
+                  margin: EdgeInsets.only(right: 4.w),
+                  width: 28.w,
+                  height: 28.w,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8F9FD),
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(
+                      color: const Color(0xFFE6E9EE),
+                      width: 0.787,
+                    ),
+                  ),
+                  child: Text(
+                    d,
+                    style: AppTextStyles.homeCaption.copyWith(
+                      color: const Color(0xFF000000),
+                      fontSize: 12.6.sp,
+                      fontWeight: FontWeight.w600,
+                      height: 1.28,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 17.h),
+        ],
         Container(
           width: 221.w,
           padding: EdgeInsets.symmetric(vertical: 8.h),

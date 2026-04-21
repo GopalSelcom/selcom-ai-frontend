@@ -84,6 +84,7 @@ class RideEntity {
   final double distanceKm;
   final int durationMinutes;
   final String pinCode;
+  final bool pinRequired;
   final PaymentMethod paymentMethod;
   final PaymentStatus paymentStatus;
   final int? cancellationFee;
@@ -108,6 +109,7 @@ class RideEntity {
     required this.distanceKm,
     required this.durationMinutes,
     required this.pinCode,
+    this.pinRequired = true,
     required this.paymentMethod,
     required this.paymentStatus,
     this.cancellationFee,

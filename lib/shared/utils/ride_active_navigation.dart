@@ -44,6 +44,7 @@ void navigateToDriverAcceptedForRide(RideModel rideValue) {
         'ride_id': rideValue.id,
         'status': rideStatusToApiValue(rideValue.status),
         'pin_code': rideValue.pinCode,
+        'pin_required': rideValue.pinRequired,
         'driver_snapshot': driver == null
             ? null
             : {

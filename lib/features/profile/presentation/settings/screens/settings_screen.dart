@@ -54,7 +54,7 @@ class SettingsScreen extends GetView<SettingsController> {
                               statusText: controller.effectiveRequiredRidePin.value
                                   ? 'Current status: required'
                                   : 'Current status: optional',
-                              value: controller.userEnabledRidePin.value,
+                              value: controller.ridePinSwitchValue,
                               enabled: controller.canToggleRidePin,
                               isSaving: controller.isSaving.value,
                               onChanged: controller.onToggleRidePin,
