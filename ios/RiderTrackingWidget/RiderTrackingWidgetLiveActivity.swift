@@ -7,6 +7,7 @@ struct LiveActivitiesAppAttributes: ActivityAttributes, Identifiable {
     public typealias LiveDeliveryData = ContentState
     public struct ContentState: Codable, Hashable {
         var order_id: String?
+        var ride_id: String?
         var app_group_id: String?
         var status: String?
         var title: String?
@@ -27,7 +28,7 @@ struct LiveActivitiesAppAttributes: ActivityAttributes, Identifiable {
         var delivery_distance: String?
 
         enum CodingKeys: String, CodingKey {
-            case order_id, app_group_id, status, title, subtitle, merchant_name, fare, eta, step, total_steps, is_completed
+            case order_id, ride_id, app_group_id, status, title, subtitle, merchant_name, fare, eta, step, total_steps, is_completed
             case vehicle_desc, plate_number, rider_photo_url, is_rider_delivering
             case delivery_start_date, eta_seconds, pickup_distance, delivery_distance
         }
@@ -53,7 +54,10 @@ struct LiveActivitiesAppAttributes: ActivityAttributes, Identifiable {
                 return nil
             }
 
-            order_id = try? container.decodeIfPresent(String.self, forKey: .order_id)
+            let o_id = try? container.decodeIfPresent(String.self, forKey: .order_id)
+            let r_id = try? container.decodeIfPresent(String.self, forKey: .ride_id)
+            order_id = o_id ?? r_id
+            ride_id = r_id
             app_group_id = try? container.decodeIfPresent(String.self, forKey: .app_group_id)
             status = try? container.decodeIfPresent(String.self, forKey: .status)
             title = try? container.decodeIfPresent(String.self, forKey: .title)
@@ -82,6 +86,30 @@ struct LiveActivitiesAppAttributes: ActivityAttributes, Identifiable {
             else if let val = try? container.decode(Double.self, forKey: .delivery_distance) { delivery_distance = String(val) }
             else if let val = try? container.decode(Int.self, forKey: .delivery_distance) { delivery_distance = String(val) }
             else { delivery_distance = "0" }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encodeIfPresent(order_id, forKey: .order_id)
+            try container.encodeIfPresent(ride_id, forKey: .ride_id)
+            try container.encodeIfPresent(app_group_id, forKey: .app_group_id)
+            try container.encodeIfPresent(status, forKey: .status)
+            try container.encodeIfPresent(title, forKey: .title)
+            try container.encodeIfPresent(subtitle, forKey: .subtitle)
+            try container.encodeIfPresent(merchant_name, forKey: .merchant_name)
+            try container.encodeIfPresent(fare, forKey: .fare)
+            try container.encodeIfPresent(eta, forKey: .eta)
+            try container.encodeIfPresent(step, forKey: .step)
+            try container.encodeIfPresent(total_steps, forKey: .total_steps)
+            try container.encodeIfPresent(vehicle_desc, forKey: .vehicle_desc)
+            try container.encodeIfPresent(plate_number, forKey: .plate_number)
+            try container.encodeIfPresent(rider_photo_url, forKey: .rider_photo_url)
+            try container.encodeIfPresent(is_completed, forKey: .is_completed)
+            try container.encodeIfPresent(is_rider_delivering, forKey: .is_rider_delivering)
+            try container.encodeIfPresent(delivery_start_date, forKey: .delivery_start_date)
+            try container.encodeIfPresent(eta_seconds, forKey: .eta_seconds)
+            try container.encodeIfPresent(pickup_distance, forKey: .pickup_distance)
+            try container.encodeIfPresent(delivery_distance, forKey: .delivery_distance)
         }
     }
     var id = UUID()
@@ -112,7 +140,8 @@ struct TrackingViewModel {
         let ud = UserDefaults(suiteName: appGroupId)
 
         self.title             = state.title ?? ud?.string(forKey: attributes.prefixedKey("title")) ?? "Selcom Go Rider"
-        self.status            = state.status ?? ud?.string(forKey: attributes.prefixedKey("status")) ?? "Finding Driver"
+        let rawStatus = state.status ?? ud?.string(forKey: attributes.prefixedKey("status")) ?? "Finding Driver"
+        self.status = rawStatus.replacingOccurrences(of: "_", with: " ").capitalized
         self.merchantName      = state.merchant_name ?? ud?.string(forKey: attributes.prefixedKey("merchant_name")) ?? "John Doe"
         self.subtitle          = state.subtitle ?? ud?.string(forKey: attributes.prefixedKey("subtitle")) ?? ""
         self.fare              = state.fare ?? ud?.string(forKey: attributes.prefixedKey("fare")) ?? ""
