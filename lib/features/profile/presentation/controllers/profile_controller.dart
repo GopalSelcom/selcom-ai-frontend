@@ -60,7 +60,7 @@ class ProfileController extends GetxController {
   }
 
   void syncSettingsVisibility() {
-    showSettingsOption.value = appSettingsService.hasAnyFeature;
+    showSettingsOption.value = appSettingsService.hasAnyFeatureEnabled;
   }
 
   Future<void> loadUserFromStorage() async {

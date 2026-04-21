@@ -20,7 +20,8 @@ class SettingsController extends GetxController {
   final effectiveRequiredRidePin = false.obs;
 
   bool get canToggleRidePin => !adminRequiredRidePin.value;
-  bool get hasRidePinFeature => features.containsKey('ride_pin_admin_required');
+  bool get hasRidePinFeature =>
+      appSettingsService.featureEnabled('ride_pin_admin_required');
   bool get ridePinSwitchValue =>
       adminRequiredRidePin.value
           ? effectiveRequiredRidePin.value
