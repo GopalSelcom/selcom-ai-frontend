@@ -46,8 +46,8 @@ class _RideEndpoints {
   String cancelRide(String rideId) => "$base/$rideId/cancel";
   String rateRide(String rideId) => "$base/$rideId/rate";
   String skipRideRating(String rideId) => "$base/$rideId/skip-review";
-  final base =
-      "go/rides"; // Use for /{{id}}, /{{id}}/cancel, /{{id}}/rate, etc.
+  String activityToken(String rideId) => "$base/$rideId/activity-token";
+  final base = "go/rides";
 }
 
 /// ─────────────────────────────────
@@ -144,5 +144,6 @@ class _NotificationEndpoints {
 
   final list = "go/notifications";
   final readAll = "go/notifications/read-all";
-  String readById(String notificationId) => "go/notifications/$notificationId/read";
+  String readById(String notificationId) =>
+      "go/notifications/$notificationId/read";
 }

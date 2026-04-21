@@ -28,6 +28,7 @@ abstract class RideRemoteDataSource {
     int limit = 50,
   });
   Future<bool> sendChatMessage(String rideId, String message);
+  Future<bool> updateActivityToken(String rideId, String token);
 }
 
 class RideRemoteDataSourceImpl implements RideRemoteDataSource {
@@ -243,14 +244,27 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   }
 
   @override
-  Future<bool> walletDummyPaymentRequest(DummyPaymentRequest request)async {
+  Future<bool> walletDummyPaymentRequest(DummyPaymentRequest request) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        customBaseUrl: "https://dukastaging.selcom.dev:7443/api/v4/go/dev/payment_callback",
+        customBaseUrl:
+            "https://dukastaging.selcom.dev:7443/api/v4/go/dev/payment_callback",
         // endpoint: "${URLS.ride.base}/$rideId/messages",
         endpoint: "",
         method: ApiMethod.post,
         body: request.toJson(),
+      ),
+    );
+    return response.statusCode == 200;
+  }
+
+  @override
+  Future<bool> updateActivityToken(String rideId, String token) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.ride.activityToken(rideId),
+        method: ApiMethod.patch,
+        body: {'ios_activity_token': token},
       ),
     );
     return response.statusCode == 200;

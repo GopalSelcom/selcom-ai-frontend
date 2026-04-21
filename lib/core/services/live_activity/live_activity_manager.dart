@@ -11,6 +11,8 @@ import 'dart:developer' as developer;
 
 import '../storage_service.dart';
 import 'android_order_tracking_manager.dart';
+import '../../../features/ride/domain/repositories/ride_repository.dart';
+import '../../di/injection_container.dart';
 
 class LiveActivityManager {
   static final LiveActivityManager _instance = LiveActivityManager._internal();
@@ -323,6 +325,10 @@ class LiveActivityManager {
         if (activityId != null) {
           _orderToActivityId[orderId] = activityId;
           await _saveState();
+
+          // 🛰️ Sync Push Token with Backend (iOS only)
+          _syncPushTokenWithBackend(orderId, activityId);
+
           return activityId;
         }
       }
@@ -330,6 +336,24 @@ class LiveActivityManager {
       developer.log("❌ Error starting tracking: $e", name: 'ORDER_TRACKING');
     }
     return null;
+  }
+
+  Future<void> _syncPushTokenWithBackend(
+    String orderId,
+    String activityId,
+  ) async {
+    try {
+      final token = await _liveActivitiesPlugin.getPushToken(activityId);
+      if (token != null && token.isNotEmpty) {
+        developer.log(
+          "📡 registering Live Activity push token for $orderId",
+          name: 'ORDER_TRACKING',
+        );
+        await sl<RideRepository>().updateActivityToken(orderId, token);
+      }
+    } catch (e) {
+      developer.log("⚠️ Error syncing push token: $e", name: 'ORDER_TRACKING');
+    }
   }
 
   Future<void> updateActivity({
