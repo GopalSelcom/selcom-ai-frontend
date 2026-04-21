@@ -259,11 +259,12 @@ class FindingDriverController extends GetxController {
       'Search timeout: no driver found',
     );
     result.fold(
-      (failure) {
-        // If it fails, we still go home because the search is technically over
+      (failure) async {
+        await LiveActivityManager().endActivity(rideId);
         Get.offAllNamed(AppRoutes.home);
       },
-      (success) {
+      (success) async {
+        await LiveActivityManager().endActivity(rideId);
         Get.offAllNamed(AppRoutes.home);
       },
     );
@@ -319,7 +320,7 @@ class FindingDriverController extends GetxController {
       _socketService.joinRideRoom(rideId: rideId);
     });
 
-    _rideStatusSub = _socketService.rideStatusStream.listen((payload) {
+    _rideStatusSub = _socketService.rideStatusStream.listen((payload) async {
       latestRideStatusPayload.value = payload;
       final status = (payload.status ?? '').toString().toLowerCase();
       _applyStatusPayload(payload);
@@ -363,12 +364,14 @@ class FindingDriverController extends GetxController {
         case 'cancelled':
           currentStatusLabel.value = 'Ride Cancelled';
           currentDescriptionLabel.value = 'The ride has been cancelled.';
+          await LiveActivityManager().endActivity(rideId);
           Get.snackbar('Cancelled', 'Your ride was cancelled.');
           Get.offAllNamed(AppRoutes.home);
           break;
         case 'no_driver_found':
           currentStatusLabel.value = 'No Driver Found';
           currentDescriptionLabel.value = 'We couldn\'t find a driver nearby.';
+          await LiveActivityManager().endActivity(rideId);
           Get.snackbar(
             'Ride Cancelled',
             'No drivers nearby. Please try again later.',
@@ -652,8 +655,9 @@ class FindingDriverController extends GetxController {
     final result = await rideRepository.cancelRide(rideId, reason);
     result.fold(
       (_) => Get.snackbar('Cancel failed', 'Could not cancel. Try again.'),
-      (success) {
+      (success) async {
         if (success) {
+          await LiveActivityManager().endActivity(rideId);
           Get.offAllNamed(AppRoutes.home);
         } else {
           Get.snackbar('Cancel failed', 'Please try again.');

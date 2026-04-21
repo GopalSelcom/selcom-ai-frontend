@@ -361,13 +361,14 @@ class DriverAcceptedController extends GetxController
       _joinRideRoomIfNeeded();
     });
 
-    _rideStatusSub = _socketService.rideStatusStream.listen((payload) {
+    _rideStatusSub = _socketService.rideStatusStream.listen((payload) async {
       if (_navigatedAway) return;
       final status = (payload.status ?? '').toString().trim();
       _applyBottomSheetStateForStatus(status);
       _applyStatusPayload(payload);
       _syncLiveActivityFromStatusPayload(payload);
       if (status.toLowerCase() == 'cancelled') {
+        await LiveActivityManager().endActivity(rideId);
         Get.offAllNamed(AppRoutes.home);
       }
     });
@@ -1137,9 +1138,10 @@ class DriverAcceptedController extends GetxController
     final result = await rideRepository.cancelRide(rideId, 'rider_cancelled');
     result.fold(
       (_) => Get.snackbar('Cancel failed', 'Could not cancel. Try again.'),
-      (success) {
+      (success) async {
         if (success) {
           _navigatedAway = true;
+          await LiveActivityManager().endActivity(rideId);
           Get.offAllNamed(AppRoutes.home);
         } else {
           Get.snackbar('Cancel failed', 'Please try again.');
@@ -1155,13 +1157,19 @@ class DriverAcceptedController extends GetxController
       if (rideId.isEmpty) return;
       final status = (payload.status ?? '').toString().toUpperCase();
 
+      if (status.contains('COMPLETED') ||
+          status.contains('CANCELLED') ||
+          status.contains('NO_DRIVER_FOUND')) {
+        LiveActivityManager().endActivity(rideId);
+        return;
+      }
+
       int step = 2; // Usually assigned or further when reached here
       if (status.contains('ARRIVED')) step = 3;
       if (status.contains('STARTED') ||
           status.contains('PROGRESS') ||
           status.contains('NEAR'))
         step = 4;
-      if (status.contains('COMPLETED')) step = 5;
 
       LiveActivityManager().startActivity(
         orderId: rideId,
@@ -1181,7 +1189,7 @@ class DriverAcceptedController extends GetxController
             status.contains('STARTED') ||
             status.contains('PROGRESS') ||
             status.contains('NEAR'),
-        isCompleted: status.contains('COMPLETED'),
+        isCompleted: false,
         pickupDistance: '0',
         deliveryDistance: '0',
       );
