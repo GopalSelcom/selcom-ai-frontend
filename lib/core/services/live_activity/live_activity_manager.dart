@@ -68,6 +68,15 @@ class LiveActivityManager {
         Timer.periodic(const Duration(minutes: 5), (_) {
           _syncAllActiveTokens();
         });
+
+        // 🔔 Listen for system-level Live Activity updates (including APNs)
+        _liveActivitiesPlugin.activityUpdateStream.listen((update) {
+          developer.log(
+            "🔔 Live Activity Update Event: ${update.activityId}",
+            name: 'ORDER_TRACKING',
+            error: update.toString(),
+          );
+        });
       } catch (e) {
         developer.log(
           "❌ Error initializing LiveActivities: $e",
@@ -152,6 +161,7 @@ class LiveActivityManager {
     String pickupDistance = '0',
     String deliveryDistance = '0',
   }) async {
+    developer.log("🚀 startActivity for $orderId", name: 'ORDER_TRACKING');
     if (_inProgressStarts.containsKey(orderId)) {
       developer.log(
         "⏳ Activity start already in progress for $orderId, awaiting existing future...",
@@ -210,6 +220,10 @@ class LiveActivityManager {
     String pickupDistance = '0',
     String deliveryDistance = '0',
   }) async {
+    developer.log(
+      "🔍 _startActivityInternal for $orderId (status: $status)",
+      name: 'ORDER_TRACKING',
+    );
     try {
       final String? existingActivityId = _orderToActivityId[orderId];
 
@@ -436,6 +450,10 @@ class LiveActivityManager {
     String pickupDistance = '0',
     String deliveryDistance = '0',
   }) async {
+    developer.log(
+      "🔄 updateActivity for $orderId (status: $status)",
+      name: 'ORDER_TRACKING',
+    );
     try {
       if (merchantName != null && merchantName.isNotEmpty) {
         _orderToMerchantName[orderId] = merchantName;
@@ -451,8 +469,18 @@ class LiveActivityManager {
 
       final String? effectiveMerchantName = _orderToMerchantName[orderId];
       final String? activityId = _orderToActivityId[orderId];
+      developer.log(
+        "🔍 Activity ID for $orderId: $activityId",
+        name: 'ORDER_TRACKING',
+      );
 
-      if (activityId == null) return;
+      if (activityId == null) {
+        developer.log(
+          "⚠️ No activity ID found for ride $orderId. Ignoring update.",
+          name: 'ORDER_TRACKING',
+        );
+        return;
+      }
 
       if (_isAndroid && activityId == 'android') {
         await AndroidOrderTrackingManager().show(
@@ -496,7 +524,15 @@ class LiveActivityManager {
           'pickup_distance': pickupDistance,
           'delivery_distance': deliveryDistance,
         };
+        developer.log(
+          "📡 Sending update to ActivityKit: ID=$activityId, Status=$status, Merchant=$effectiveMerchantName",
+          name: 'ORDER_TRACKING',
+        );
         await _liveActivitiesPlugin.updateActivity(activityId, updateData);
+        developer.log(
+          "✅ ActivityKit update sent successfully",
+          name: 'ORDER_TRACKING',
+        );
       }
     } catch (e) {
       developer.log("❌ Error updating tracking: $e", name: 'ORDER_TRACKING');

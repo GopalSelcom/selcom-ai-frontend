@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -362,6 +363,11 @@ class DriverAcceptedController extends GetxController
     });
 
     _rideStatusSub = _socketService.rideStatusStream.listen((payload) async {
+      developer.log(
+        "📥 Socket Event: ride_status_stream - Status: ${payload.status} for ride $rideId",
+        name: 'ORDER_TRACKING',
+        error: jsonEncode(payload.toJson()),
+      );
       if (_navigatedAway) return;
       final status = (payload.status ?? '').toString().trim();
       _applyBottomSheetStateForStatus(status);
@@ -421,6 +427,11 @@ class DriverAcceptedController extends GetxController
       payload,
     ) async {
       if (payload != null) {
+        developer.log(
+          "📥 Socket Event: tracking_update_socket - Target: ${payload.routeTarget} for ride $rideId",
+          name: 'ORDER_TRACKING',
+          error: jsonEncode(payload.toJson()),
+        );
         _applyTrackingPayload(payload);
         await _syncLiveActivityFromTrackingPayload(payload);
       }

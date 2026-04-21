@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:developer' as developer;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -321,6 +323,11 @@ class FindingDriverController extends GetxController {
     });
 
     _rideStatusSub = _socketService.rideStatusStream.listen((payload) async {
+      developer.log(
+        "📥 Socket Event: ride_status_stream - Status: ${payload.status} for ride $rideId",
+        name: 'ORDER_TRACKING',
+        error: jsonEncode(payload.toJson()),
+      );
       latestRideStatusPayload.value = payload;
       final status = (payload.status ?? '').toString().toLowerCase();
       _applyStatusPayload(payload);

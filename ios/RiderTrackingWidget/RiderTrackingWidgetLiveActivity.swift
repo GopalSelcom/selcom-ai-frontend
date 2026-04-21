@@ -6,36 +6,37 @@ import SwiftUI
 struct LiveActivitiesAppAttributes: ActivityAttributes, Identifiable {
     public typealias LiveDeliveryData = ContentState
     public struct ContentState: Codable, Hashable {
-        var order_id: String?
-        var ride_id: String?
-        var app_group_id: String?
-        var status: String?
-        var title: String?
-        var subtitle: String?
-        var merchant_name: String?
-        var fare: String?
-        var eta: String?
-        var step: Int?
-        var total_steps: Int?
-        var vehicle_desc: String?
-        var plate_number: String?
-        var rider_photo_url: String?
-        var is_completed: Bool?
-        var is_rider_delivering: Bool?
-        var delivery_start_date: Double?
-        var eta_seconds: Double?
-        var pickup_distance: String?
-        var delivery_distance: String?
+        public var order_id: String?
+        public var ride_id: String?
+        public var app_group_id: String?
+        public var status: String?
+        public var title: String?
+        public var subtitle: String?
+        public var merchant_name: String?
+        public var fare: String?
+        public var eta: String?
+        public var vehicle_desc: String?
+        public var plate_number: String?
+        public var rider_photo_url: String?
+        public var step: Int?
+        public var total_steps: Int?
+        public var is_completed: Bool?
+        public var is_rider_delivering: Bool?
+        public var delivery_start_date: Double?
+        public var eta_seconds: Double?
+        public var pickup_distance: String?
+        public var delivery_distance: String?
 
         enum CodingKeys: String, CodingKey {
-            case order_id, ride_id, app_group_id, status, title, subtitle, merchant_name, fare, eta, step, total_steps, is_completed
-            case vehicle_desc, plate_number, rider_photo_url, is_rider_delivering
+            case order_id, ride_id, app_group_id, status, title, subtitle, merchant_name, fare, eta
+            case vehicle_desc, plate_number, rider_photo_url
+            case step, total_steps, is_completed, is_rider_delivering
             case delivery_start_date, eta_seconds, pickup_distance, delivery_distance
         }
 
         public init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
-            
+
             func decodeAsDouble(_ key: CodingKeys) -> Double? {
                 if let val = try? container.decode(Double.self, forKey: key) { return val }
                 if let val = try? container.decode(Int.self, forKey: key) { return Double(val) }
@@ -51,6 +52,7 @@ struct LiveActivitiesAppAttributes: ActivityAttributes, Identifiable {
             func decodeAsBool(_ key: CodingKeys) -> Bool? {
                 if let val = try? container.decode(Bool.self, forKey: key) { return val }
                 if let val = try? container.decode(Int.self, forKey: key) { return val == 1 }
+                if let str = try? container.decode(String.self, forKey: key) { return str.lowercased() == "true" || str == "1" }
                 return nil
             }
 
@@ -86,6 +88,8 @@ struct LiveActivitiesAppAttributes: ActivityAttributes, Identifiable {
             else if let val = try? container.decode(Double.self, forKey: .delivery_distance) { delivery_distance = String(val) }
             else if let val = try? container.decode(Int.self, forKey: .delivery_distance) { delivery_distance = String(val) }
             else { delivery_distance = "0" }
+            
+            print("[Widget] Decoded status: \(status ?? "nil"), merchant: \(merchant_name ?? "nil")")
         }
 
         public func encode(to encoder: Encoder) throws {
