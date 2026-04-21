@@ -208,6 +208,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
           title: loc.address.split(',').first,
           subtitle: loc.address,
           onTap: () => _handleRecentSelection(loc),
+          onFavorite: () => controller.toggleFavoriteForRecent(loc),
         );
       },
     );
@@ -217,6 +218,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
     required String title,
     required String subtitle,
     required VoidCallback onTap,
+    VoidCallback? onFavorite,
   }) {
     return InkWell(
       onTap: onTap,
@@ -279,6 +281,15 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
                 ],
               ),
             ),
+            if (onFavorite != null)
+              IconButton(
+                icon: Icon(
+                  Icons.favorite_border,
+                  color: AppColors.primary,
+                  size: 22.sp,
+                ),
+                onPressed: onFavorite,
+              ),
           ],
         ),
       ),

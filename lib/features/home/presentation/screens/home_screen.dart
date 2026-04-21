@@ -573,7 +573,7 @@ class HomeScreen extends GetView<HomeController> {
               final savedPlace = controller.getSavedPlaceFor(loc.address, null);
               final isFavorite = savedPlace?.isFavourite ?? false;
               return IconButton(
-                onPressed: () => controller.toggleFavorite(loc.address, null),
+                onPressed: () => controller.toggleFavoriteForRecent(loc),
                 icon: Icon(
                   isFavorite ? Icons.favorite : Icons.favorite_border,
                   color: isFavorite
