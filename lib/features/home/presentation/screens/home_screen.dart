@@ -12,8 +12,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_map_gps_button.dart';
 import '../../../../shared/widgets/app_map_top_header.dart';
-import '../../../../core/data/models/responses/get_saved_places_response.dart';
 import '../../../../core/routes/app_routes.dart';
+
 import '../../../../core/widgets/svg_picture_asset.dart';
 
 class HomeScreen extends GetView<HomeController> {
@@ -375,20 +375,6 @@ class HomeScreen extends GetView<HomeController> {
                   SizedBox(height: 16.h),
                   _buildVehicleHorizontalList(),
                 ],
-                if (controller.savedPlaces.isNotEmpty) ...[
-                  SizedBox(height: 28.h),
-                  Text(
-                    'Saved Places',
-                    style: AppTextStyles.homeSubtitle.copyWith(
-                      fontSize: 15.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 16.h),
-                  ...controller.savedPlaces.map(
-                    (place) => _buildSavedPlaceItem(place),
-                  ),
-                ],
                 SizedBox(height: 40.h),
               ],
             ),
@@ -460,95 +446,6 @@ class HomeScreen extends GetView<HomeController> {
         ),
       );
     });
-  }
-
-  Widget _buildSavedPlaceItem(SavedPlace place) {
-    final label =
-        (place.label ?? 'Saved Place').capitalizeFirst ?? 'Saved Place';
-    final isFavorite = place.isFavourite ?? false;
-
-    return Padding(
-      padding: EdgeInsets.only(bottom: 24.h),
-      child: InkWell(
-        onTap: () => controller.navigateToVehicleSelectionForSavedPlace(place),
-        borderRadius: BorderRadius.circular(12.r),
-        child: Row(
-          children: [
-            Obx(() {
-              final distance = controller.calculateDistanceKm(
-                place.lat,
-                place.lng,
-              );
-              return Container(
-                constraints: BoxConstraints(minWidth: 52.w),
-                padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 8.h),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.access_time,
-                      size: 20.sp,
-                      color: AppColors.shade2,
-                    ),
-                    SizedBox(height: 4.h),
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        distance.isEmpty ? 'SAVED' : distance,
-                        style: AppTextStyles.homeCaption.copyWith(
-                          fontSize: 10.sp,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.shade2,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-            SizedBox(width: 16.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: AppTextStyles.homeSubtitle.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.shade1,
-                      fontSize: 15.sp,
-                    ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    place.address ?? 'No address',
-                    style: AppTextStyles.homeCaption.copyWith(
-                      color: AppColors.shade2,
-                      fontSize: 13.sp,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            IconButton(
-              onPressed: () =>
-                  controller.toggleFavorite(place.address ?? '', null),
-              icon: Icon(
-                isFavorite ? Icons.favorite : Icons.favorite_border,
-                color: isFavorite ? AppColors.primary : const Color(0xFFE2E8F0),
-                size: 24.sp,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   Widget _buildRecentLocationItem(RecentDestinationModel loc) {
@@ -623,7 +520,7 @@ class HomeScreen extends GetView<HomeController> {
               final savedPlace = controller.getSavedPlaceFor(loc.address, null);
               final isFavorite = savedPlace?.isFavourite ?? false;
               return IconButton(
-                onPressed: () => controller.toggleFavorite(loc.address, null),
+                onPressed: () => controller.toggleFavoriteForRecent(loc),
                 icon: Icon(
                   isFavorite ? Icons.favorite : Icons.favorite_border,
                   color: isFavorite

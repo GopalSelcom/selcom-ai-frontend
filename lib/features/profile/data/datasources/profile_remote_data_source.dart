@@ -3,6 +3,7 @@ import '../../../../core/data/models/user_profile_models.dart';
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/data/models/requests/create_saved_place_request.dart';
+import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
 import '../../../../core/data/models/responses/create_saved_place_response.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/urls.dart';
@@ -23,6 +24,8 @@ abstract class ProfileRemoteDataSource {
   Future<GetSavedPlacesResponseModel?> getFavoritePlaces();
 
   Future<bool> addSavedPlace(CreateSavedPlaceRequest request);
+
+  Future<bool> saveRecentAsFavorite(SaveRecentAsFavoriteRequest request);
 
   Future<bool> deleteSavedPlace(String id);
 
@@ -127,6 +130,18 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       );
       return createResponse.isSuccess;
     }
+    return response.statusCode == 200;
+  }
+
+  @override
+  Future<bool> saveRecentAsFavorite(SaveRecentAsFavoriteRequest request) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.address.saveRecentAsFavorite,
+        method: ApiMethod.post,
+        body: request.toJson(),
+      ),
+    );
     return response.statusCode == 200;
   }
 

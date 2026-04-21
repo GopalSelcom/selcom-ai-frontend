@@ -63,7 +63,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      final List data = response.data['data'] ?? [];
+      final List data = response.data['data']?['destinations'] ?? [];
       return data.map((e) => RecentDestinationModel.fromJson(e)).toList();
     }
     return [];

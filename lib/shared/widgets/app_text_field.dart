@@ -21,6 +21,10 @@ class AppTextField extends StatelessWidget {
   final bool showCounter;
   final List<TextInputFormatter>? inputFormatters;
   final bool autofocus;
+  final FocusNode? focusNode;
+  final TextInputAction? textInputAction;
+  final ValueChanged<String>? onSubmitted;
+  final bool readOnly;
 
   const AppTextField({
     super.key,
@@ -39,6 +43,10 @@ class AppTextField extends StatelessWidget {
     this.showCounter = false,
     this.inputFormatters,
     this.autofocus = false,
+    this.focusNode,
+    this.textInputAction,
+    this.onSubmitted,
+    this.readOnly = false,
   });
 
   @override
@@ -52,9 +60,13 @@ class AppTextField extends StatelessWidget {
         ],
         TextField(
           controller: controller,
+          focusNode: focusNode,
           keyboardType: keyboardType,
+          textInputAction: textInputAction,
           obscureText: isPassword,
           onChanged: onChanged,
+          onSubmitted: onSubmitted,
+          readOnly: readOnly,
           enabled: enabled,
           maxLines: maxLines,
           maxLength: maxLength,

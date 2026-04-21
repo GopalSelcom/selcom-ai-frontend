@@ -80,7 +80,11 @@ class AppAssets {
   static const String icPaymentSelcomPesa = '$_paymentPath/ic_selcom_pesa.svg';
   static const String icPaymentCard = '$_paymentPath/ic_card.svg';
   static const String icPaymentArrowUp = '$_paymentPath/ic_arrow_up.svg';
-  static const String icPaymentPerson = 'assets/images/payment/ic_person.svg';
-  static const String icPaymentPending = 'assets/images/payment/ic_payment_pending.svg';
-  static const String icPaymentSuccess = 'assets/images/payment/ic_payment_success.svg';
+  static const String icPaymentPerson = '$_paymentPath/ic_person.svg';
+  static const String icPaymentPending = '$_paymentPath/ic_payment_pending.svg';
+  static const String icPaymentSuccess = '$_paymentPath/ic_payment_success.svg';
+  static const String imgPaymentAddCardSuccess =
+      '$_paymentPath/add_card_success.png';
+  static const String imgPaymentDeleteCardConfirm =
+      '$_paymentPath/delete_card_confirm.png';
 }

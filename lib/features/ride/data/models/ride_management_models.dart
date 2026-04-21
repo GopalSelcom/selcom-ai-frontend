@@ -17,8 +17,12 @@ class BookingResponseModel {
     return BookingResponseModel(
       id: json['_id'] ?? '',
       status: json['status'] ?? '',
-      pinCode: (json['pin_code'] is int) ? json['pin_code'] : int.parse(json['pin_code'].toString()),
-      fare: (json['fare'] is int) ? json['fare'] : int.parse(json['fare'].toString()),
+      pinCode: (json['pin_code'] is int)
+          ? json['pin_code']
+          : int.parse(json['pin_code'].toString()),
+      fare: (json['fare'] is int)
+          ? json['fare']
+          : int.parse(json['fare'].toString()),
       currency: json['currency'] ?? 'TZS',
     );
   }
@@ -28,22 +32,23 @@ class RecentDestinationModel {
   final String address;
   final double lat;
   final double lng;
-  final DateTime timestamp;
+  final DateTime lastUsed;
 
   RecentDestinationModel({
     required this.address,
     required this.lat,
     required this.lng,
-    required this.timestamp,
+    required this.lastUsed,
   });
 
   factory RecentDestinationModel.fromJson(Map<String, dynamic> json) {
-    final coords = json['location']?['coordinates'] as List?;
     return RecentDestinationModel(
       address: json['address'] ?? '',
-      lat: (coords != null && coords.length > 1) ? coords[1].toDouble() : 0.0,
-      lng: (coords != null && coords.isNotEmpty) ? coords[0].toDouble() : 0.0,
-      timestamp: DateTime.parse(json['timestamp'] ?? DateTime.now().toIso8601String()),
+      lat: (json['lat'] ?? 0.0).toDouble(),
+      lng: (json['lng'] ?? 0.0).toDouble(),
+      lastUsed: DateTime.parse(
+        json['last_used'] ?? DateTime.now().toIso8601String(),
+      ),
     );
   }
 }

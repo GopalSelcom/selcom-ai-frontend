@@ -11,6 +11,7 @@ class AppPrimaryButton extends StatelessWidget {
   final double? width;
   final double? height;
   final IconData? icon;
+  final IconData? trailingIcon;
 
   const AppPrimaryButton({
     super.key,
@@ -20,6 +21,7 @@ class AppPrimaryButton extends StatelessWidget {
     this.width,
     this.height,
     this.icon,
+    this.trailingIcon,
   });
 
   @override
@@ -56,6 +58,10 @@ class AppPrimaryButton extends StatelessWidget {
                     SizedBox(width: 8.w),
                   ],
                   Text(label, style: AppTextStyles.button),
+                  if (trailingIcon != null) ...[
+                    SizedBox(width: 8.w),
+                    Icon(trailingIcon, size: 18.w),
+                  ],
                 ],
               ),
       ),

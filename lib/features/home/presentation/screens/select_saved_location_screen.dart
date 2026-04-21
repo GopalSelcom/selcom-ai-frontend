@@ -31,8 +31,11 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
     searchController = TextEditingController();
 
     // Clear previous suggestions and search query
-    controller.searchQuery.value = '';
-    controller.suggestions.clear();
+    // Wrapped in addPostFrameCallback to avoid "setState() called during build" exception
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.searchQuery.value = '';
+      controller.suggestions.clear();
+    });
   }
 
   @override
@@ -208,6 +211,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
           title: loc.address.split(',').first,
           subtitle: loc.address,
           onTap: () => _handleRecentSelection(loc),
+          onFavorite: () => controller.toggleFavoriteForRecent(loc),
         );
       },
     );
@@ -217,6 +221,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
     required String title,
     required String subtitle,
     required VoidCallback onTap,
+    VoidCallback? onFavorite,
   }) {
     return InkWell(
       onTap: onTap,
@@ -279,6 +284,15 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
                 ],
               ),
             ),
+            if (onFavorite != null)
+              IconButton(
+                icon: Icon(
+                  Icons.favorite_border,
+                  color: AppColors.primary,
+                  size: 22.sp,
+                ),
+                onPressed: onFavorite,
+              ),
           ],
         ),
       ),
@@ -292,22 +306,15 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
     // Show loading? Maybe, but geocoding is usually fast.
     final latLng = await controller.getLatLngFromAddress(subtitle);
 
-    _showConfirmationDialog(
-      title: title,
-      subtitle: subtitle,
-      onConfirm: () {
-        Get.back(); // Close dialog
-        Get.toNamed(
-          AppRoutes.checkPickupPoint,
-          arguments: {
-            'label': label,
-            'title': title,
-            'subtitle': subtitle,
-            'placeId': item.placeId ?? '',
-            if (latLng != null) 'lat': latLng.latitude,
-            if (latLng != null) 'lng': latLng.longitude,
-          },
-        );
+    Get.toNamed(
+      AppRoutes.checkPickupPoint,
+      arguments: {
+        'label': label,
+        'title': title,
+        'subtitle': subtitle,
+        'placeId': item.placeId ?? '',
+        if (latLng != null) 'lat': latLng.latitude,
+        if (latLng != null) 'lng': latLng.longitude,
       },
     );
   }
@@ -316,239 +323,16 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
     final title = loc.address.split(',').first;
     final subtitle = loc.address;
 
-    _showConfirmationDialog(
-      title: title,
-      subtitle: subtitle,
-      onConfirm: () {
-        Get.back(); // Close dialog
-        Get.toNamed(
-          AppRoutes.checkPickupPoint,
-          arguments: {
-            'label': label,
-            'title': title,
-            'subtitle': subtitle,
-            'placeId': '',
-            'lat': loc.lat,
-            'lng': loc.lng,
-          },
-        );
+    Get.toNamed(
+      AppRoutes.checkPickupPoint,
+      arguments: {
+        'label': label,
+        'title': title,
+        'subtitle': subtitle,
+        'placeId': '',
+        'lat': loc.lat,
+        'lng': loc.lng,
       },
-    );
-  }
-
-  void _showConfirmationDialog({
-    required String title,
-    required String subtitle,
-    required VoidCallback onConfirm,
-  }) {
-    Get.dialog(
-      Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24.r),
-        ),
-        insetPadding: EdgeInsets.symmetric(horizontal: 24.w),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24.r),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header with Green Circle and Label Badge
-              Stack(
-                alignment: Alignment.center,
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    height: 120.h,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFECFDF5),
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(24.r),
-                      ),
-                    ),
-                  ),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(12.w),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF10B981),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.check,
-                          color: Colors.white,
-                          size: 40.sp,
-                        ),
-                      ),
-                      SizedBox(height: 8.h),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 12.w,
-                          vertical: 6.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20.r),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _getLabelIcon(),
-                            SizedBox(width: 8.w),
-                            Text(
-                              label,
-                              style: AppTextStyles.homeSubtitle.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.shade1,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              Padding(
-                padding: EdgeInsets.all(24.w),
-                child: Column(
-                  children: [
-                    Text(
-                      'Are you sure you want to add this address as a $label?',
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.homeTitle.copyWith(
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 24.h),
-                    // Address Card
-                    Container(
-                      padding: EdgeInsets.all(16.w),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16.r),
-                        border: Border.all(color: const Color(0xFFF1F5F9)),
-                      ),
-                      child: Row(
-                        children: [
-                          SvgPicture.asset(
-                            AppAssets.locationIcPin,
-                            width: 16.w,
-                            colorFilter: const ColorFilter.mode(
-                              AppColors.primary,
-                              BlendMode.srcIn,
-                            ),
-                          ),
-                          SizedBox(width: 12.w),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  title,
-                                  style: AppTextStyles.homeSubtitle.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.shade1,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                SizedBox(height: 4.h),
-                                Text(
-                                  subtitle,
-                                  style: AppTextStyles.homeCaption.copyWith(
-                                    color: AppColors.shade2,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 24.h),
-                    // Action Buttons
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50.h,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(25.r),
-                          ),
-                          elevation: 0,
-                        ),
-                        onPressed: onConfirm,
-                        child: Text(
-                          'Yes',
-                          style: AppTextStyles.body.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 12.h),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50.h,
-                      child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Color(0xFFE2E8F0)),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(25.r),
-                          ),
-                        ),
-                        onPressed: () => Get.back(),
-                        child: Text(
-                          'Change Location',
-                          style: AppTextStyles.body.copyWith(
-                            color: AppColors.shade2,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      barrierDismissible: false,
-    );
-  }
-
-  Widget _getLabelIcon() {
-    String asset = AppAssets.icHomeChip;
-    if (label.toLowerCase() == 'work') asset = AppAssets.icWorkChip;
-    if (label.toLowerCase() == 'office') asset = AppAssets.icOfficeChip;
-    if (label.toLowerCase() == 'other') asset = AppAssets.icOtherChip;
-
-    return SvgPicture.asset(
-      asset,
-      width: 16.w,
-      colorFilter: const ColorFilter.mode(
-        Color(0xFFB45309), // Amber-ish color for icons in the image
-        BlendMode.srcIn,
-      ),
     );
   }
 }

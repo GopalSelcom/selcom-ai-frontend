@@ -114,6 +114,7 @@ class _AddressEndpoints {
   const _AddressEndpoints();
 
   final savedPlaces = "go/user/saved-places";
+  final saveRecentAsFavorite = "go/user/saved-places/from-recent";
 }
 
 /// ─────────────────────────────────
