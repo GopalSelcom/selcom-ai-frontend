@@ -31,8 +31,11 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
     searchController = TextEditingController();
 
     // Clear previous suggestions and search query
-    controller.searchQuery.value = '';
-    controller.suggestions.clear();
+    // Wrapped in addPostFrameCallback to avoid "setState() called during build" exception
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.searchQuery.value = '';
+      controller.suggestions.clear();
+    });
   }
 
   @override
