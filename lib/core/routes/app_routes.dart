@@ -26,6 +26,8 @@ import '../../features/ride/presentation/bindings/ride_message_binding.dart';
 import '../../features/ride/presentation/screens/ride_message_screen.dart';
 import '../../features/ride/presentation/screens/cancel_dialog_gallery_screen.dart';
 import '../../features/profile/presentation/screens/payment_methods_screen.dart';
+import '../../features/profile/presentation/settings/bindings/settings_binding.dart';
+import '../../features/profile/presentation/settings/screens/settings_screen.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -50,6 +52,7 @@ class AppRoutes {
   static const String rideMessage = '/ride/message';
   static const String cancelDialogGallery = '/cancel-dialog-gallery';
   static const String paymentMethods = '/payment-methods';
+  static const String settings = '/settings';
   static const String selectSavedLocation = '/select-saved-location';
   static const String checkPickupPoint = '/check-pickup-point';
 
@@ -110,6 +113,11 @@ class AppRoutes {
       page: () => const CancelDialogGalleryScreen(),
     ),
     GetPage(name: paymentMethods, page: () => const PaymentMethodsScreen()),
+    GetPage(
+      name: settings,
+      page: () => const SettingsScreen(),
+      binding: SettingsBinding(),
+    ),
     GetPage(
       name: selectSavedLocation,
       page: () => const SelectSavedLocationScreen(),

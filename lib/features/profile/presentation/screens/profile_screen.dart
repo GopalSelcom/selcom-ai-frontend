@@ -369,7 +369,12 @@ class ProfileScreen extends StatelessWidget {
             icon: Iconsax.reserve,
             title: 'Notification',
             onTap: controller.openNotifications,
-            showDivider: false, // Last item has no divider
+          ),
+          MenuItemWidget(
+            icon: Iconsax.setting_2,
+            title: 'Settings',
+            onTap: controller.openSettings,
+            showDivider: false,
           ),
         ],
       ),

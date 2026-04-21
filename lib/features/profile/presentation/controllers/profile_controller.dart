@@ -198,6 +198,10 @@ class ProfileController extends GetxController {
     Get.toNamed(AppRoutes.notifications);
   }
 
+  void openSettings() {
+    Get.toNamed(AppRoutes.settings);
+  }
+
   void logout() {
     AppDialogs.showConfirmationDialog(
       title: 'Logout',

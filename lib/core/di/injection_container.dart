@@ -16,6 +16,10 @@ import '../../features/profile/data/repositories/profile_repository_impl.dart';
 import '../../features/profile/domain/repositories/profile_repository.dart';
 import '../../features/profile/domain/usecases/profile_usecase.dart';
 import '../../features/profile/presentation/controllers/profile_controller.dart';
+import '../../features/settings/data/datasources/settings_remote_data_source.dart';
+import '../../features/settings/data/repositories/settings_repository_impl.dart';
+import '../../features/settings/domain/repositories/settings_repository.dart';
+import '../../features/settings/domain/usecases/settings_usecase.dart';
 import '../services/nearby_drivers_socket_service.dart';
 import '../../features/ride/data/datasources/ride_remote_data_source.dart';
 import '../../features/ride/data/repositories/ride_repository_impl.dart';
@@ -83,10 +87,17 @@ Future<void> init() async {
   sl.registerLazySingleton<ProfileRepository>(
     () => ProfileRepositoryImpl(remoteDataSource: sl()),
   );
+  sl.registerLazySingleton<SettingsRemoteDataSource>(
+    () => SettingsRemoteDataSourceImpl(),
+  );
+  sl.registerLazySingleton<SettingsRepository>(
+    () => SettingsRepositoryImpl(remoteDataSource: sl()),
+  );
 
   // Use Cases
   sl.registerLazySingleton(() => RideUseCase(sl()));
   sl.registerLazySingleton(() => ProfileUseCase(sl()));
+  sl.registerLazySingleton(() => SettingsUseCase(sl()));
 
   // BLoCs / Controllers
   sl.registerFactory(() => MyRidesController(rideUseCase: sl()));
