@@ -142,11 +142,11 @@ struct TrackingViewModel {
         self.title             = state.title ?? ud?.string(forKey: attributes.prefixedKey("title")) ?? "Selcom Go Rider"
         let rawStatus = state.status ?? ud?.string(forKey: attributes.prefixedKey("status")) ?? "Finding Driver"
         self.status = rawStatus.replacingOccurrences(of: "_", with: " ").capitalized
-        self.merchantName      = state.merchant_name ?? ud?.string(forKey: attributes.prefixedKey("merchant_name")) ?? "John Doe"
+        self.merchantName      = state.merchant_name ?? ud?.string(forKey: attributes.prefixedKey("merchant_name")) ?? ""
         self.subtitle          = state.subtitle ?? ud?.string(forKey: attributes.prefixedKey("subtitle")) ?? ""
         self.fare              = state.fare ?? ud?.string(forKey: attributes.prefixedKey("fare")) ?? ""
-        self.vehicleDesc       = state.vehicle_desc ?? ud?.string(forKey: attributes.prefixedKey("vehicle_desc")) ?? "Silver Motorbike"
-        self.plateNumber       = state.plate_number ?? ud?.string(forKey: attributes.prefixedKey("plate_number")) ?? "T772 BBE"
+        self.vehicleDesc       = state.vehicle_desc ?? ud?.string(forKey: attributes.prefixedKey("vehicle_desc")) ?? ""
+        self.plateNumber       = state.plate_number ?? ud?.string(forKey: attributes.prefixedKey("plate_number")) ?? ""
         self.riderPhotoUrl     = state.rider_photo_url ?? ud?.string(forKey: attributes.prefixedKey("rider_photo_url")) ?? ""
         self.isRiderDelivering = state.is_rider_delivering ?? (ud?.integer(forKey: attributes.prefixedKey("is_rider_delivering")) == 1)
         
@@ -222,37 +222,43 @@ struct LockScreenView: View {
                     Text("Selcom Go Rider").font(.system(size: 14, weight: .bold)).foregroundColor(.white.opacity(0.7))
                     HStack(spacing: 4) {
                         Text(vm.status).font(.system(size: 18, weight: .bold)).foregroundColor(.white)
-                        Text("•").foregroundColor(.white.opacity(0.7))
-                        Text(vm.merchantName).font(.system(size: 18, weight: .bold)).foregroundColor(.white)
+                        if !vm.merchantName.isEmpty {
+                            Text("•").foregroundColor(.white.opacity(0.7))
+                            Text(vm.merchantName).font(.system(size: 18, weight: .bold)).foregroundColor(.white)
+                        }
                     }
                     Text(vm.vehicleDesc).font(.system(size: 14)).foregroundColor(.white.opacity(0.5))
                 }
                 
                 Spacer()
                 
-                HStack(spacing: -12) {
-                    ZStack {
-                        if !vm.riderPhotoUrl.isEmpty, let img = UIImage(contentsOfFile: vm.riderPhotoUrl) {
-                            Image(uiImage: img).resizable().scaledToFill().frame(width: 44, height: 44).clipShape(Circle()).overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 1))
-                        } else {
-                            Circle().fill(Color.gray).frame(width: 44, height: 44)
+                if !vm.merchantName.isEmpty || !vm.riderPhotoUrl.isEmpty {
+                    HStack(spacing: -12) {
+                        ZStack {
+                            if !vm.riderPhotoUrl.isEmpty, let img = UIImage(contentsOfFile: vm.riderPhotoUrl) {
+                                Image(uiImage: img).resizable().scaledToFill().frame(width: 44, height: 44).clipShape(Circle()).overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 1))
+                            } else {
+                                Circle().fill(Color.gray).frame(width: 44, height: 44)
+                            }
                         }
+                        
+                        Image(systemName: "bicycle") // Placeholder for vehicle type
+                            .font(.system(size: 12))
+                            .padding(4)
+                            .background(Color.white)
+                            .clipShape(Circle())
+                            .offset(x: 8, y: -16)
                     }
-                    
-                    Image(systemName: "bicycle") // Placeholder for vehicle type
-                        .font(.system(size: 12))
-                        .padding(4)
-                        .background(Color.white)
-                        .clipShape(Circle())
-                        .offset(x: 8, y: -16)
                 }
             }
             
-            HStack {
-                Spacer()
-                PlateTag(text: vm.plateNumber)
+            if !vm.plateNumber.isEmpty {
+                HStack {
+                    Spacer()
+                    PlateTag(text: vm.plateNumber)
+                }
+                .padding(.top, -20)
             }
-            .padding(.top, -20)
 
             ZStack(alignment: .leading) {
                 Capsule().fill(Color.white.opacity(0.15)).frame(height: 6)
@@ -319,16 +325,20 @@ struct DynamicIslandExpandedView: View {
             
             // Bottom Row
             HStack {
-                HStack(spacing: 12) {
-                    if !vm.riderPhotoUrl.isEmpty, let img = UIImage(contentsOfFile: vm.riderPhotoUrl) {
-                        Image(uiImage: img).resizable().scaledToFill().frame(width: 48, height: 48).clipShape(Circle())
-                    } else {
-                        Circle().fill(Color.gray).frame(width: 48, height: 48)
+                if !vm.merchantName.isEmpty {
+                    HStack(spacing: 12) {
+                        if !vm.riderPhotoUrl.isEmpty, let img = UIImage(contentsOfFile: vm.riderPhotoUrl) {
+                            Image(uiImage: img).resizable().scaledToFill().frame(width: 48, height: 48).clipShape(Circle())
+                        } else {
+                            Circle().fill(Color.gray).frame(width: 48, height: 48)
+                        }
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(vm.merchantName).font(.system(size: 14, weight: .medium)).foregroundColor(.white)
+                            Text(vm.eta).font(.system(size: 18, weight: .bold)).foregroundColor(selcomColor)
+                        }
                     }
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(vm.merchantName).font(.system(size: 14, weight: .medium)).foregroundColor(.white)
-                        Text(vm.eta).font(.system(size: 18, weight: .bold)).foregroundColor(selcomColor)
-                    }
+                } else {
+                    Text(vm.eta).font(.system(size: 18, weight: .bold)).foregroundColor(selcomColor)
                 }
                 
                 Spacer()

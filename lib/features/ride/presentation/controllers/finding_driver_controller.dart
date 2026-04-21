@@ -63,8 +63,8 @@ class FindingDriverController extends GetxController {
       Rxn<DriverLocationSocketResponse>();
   final Rxn<TrackingUpdateSocketResponse> latestTrackingPayload =
       Rxn<TrackingUpdateSocketResponse>();
-  final driverName = 'John Doe'.obs;
-  final driverPhone = '+255 700 000 000'.obs;
+  final driverName = ''.obs;
+  final driverPhone = ''.obs;
   final selectedRideIndex = 0.obs;
 
   GoogleMapController? mapController;
