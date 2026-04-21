@@ -93,6 +93,23 @@ class OtpScreen extends GetView<AuthController> {
                             ),
                           ),
                         ),
+                        Obx(
+                          () => controller.shouldShowGeneratedOtp &&
+                                  controller.generatedOtp.value.isNotEmpty
+                              ? Padding(
+                                  padding: EdgeInsets.only(top: 8.h),
+                                  child: Center(
+                                    child: Text(
+                                      'OTP: ${controller.generatedOtp.value}',
+                                      style: AppTextStyles.body.copyWith(
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : const SizedBox.shrink(),
+                        ),
                         SizedBox(height: 32.h),
 
                         // Resend Option
