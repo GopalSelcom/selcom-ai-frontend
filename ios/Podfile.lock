@@ -90,6 +90,8 @@ PODS:
     - nanopb (~> 3.30910.0)
     - PromisesSwift (~> 2.1)
   - Flutter (1.0.0)
+  - flutter_app_group_directory (0.0.1):
+    - Flutter
   - flutter_local_notifications (0.0.1):
     - Flutter
   - flutter_secure_storage_darwin (10.0.0):
@@ -184,6 +186,8 @@ PODS:
     - GoogleUtilities/Logger
     - GoogleUtilities/Privacy
   - GTMSessionFetcher/Core (3.5.0)
+  - live_activities (0.0.1):
+    - Flutter
   - m7_livelyness_detection (0.0.1):
     - Flutter
   - MLImage (1.0.0-beta8)
@@ -234,6 +238,7 @@ DEPENDENCIES:
   - firebase_crashlytics (from `.symlinks/plugins/firebase_crashlytics/ios`)
   - firebase_messaging (from `.symlinks/plugins/firebase_messaging/ios`)
   - Flutter (from `Flutter`)
+  - flutter_app_group_directory (from `.symlinks/plugins/flutter_app_group_directory/ios`)
   - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
   - flutter_secure_storage_darwin (from `.symlinks/plugins/flutter_secure_storage_darwin/darwin`)
   - geocoding_ios (from `.symlinks/plugins/geocoding_ios/ios`)
@@ -241,6 +246,7 @@ DEPENDENCIES:
   - google_maps_flutter_ios (from `.symlinks/plugins/google_maps_flutter_ios/ios`)
   - google_mlkit_commons (from `.symlinks/plugins/google_mlkit_commons/ios`)
   - google_mlkit_face_detection (from `.symlinks/plugins/google_mlkit_face_detection/ios`)
+  - live_activities (from `.symlinks/plugins/live_activities/ios`)
   - m7_livelyness_detection (from `.symlinks/plugins/m7_livelyness_detection/ios`)
   - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
@@ -296,6 +302,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/firebase_messaging/ios"
   Flutter:
     :path: Flutter
+  flutter_app_group_directory:
+    :path: ".symlinks/plugins/flutter_app_group_directory/ios"
   flutter_local_notifications:
     :path: ".symlinks/plugins/flutter_local_notifications/ios"
   flutter_secure_storage_darwin:
@@ -310,6 +318,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/google_mlkit_commons/ios"
   google_mlkit_face_detection:
     :path: ".symlinks/plugins/google_mlkit_face_detection/ios"
+  live_activities:
+    :path: ".symlinks/plugins/live_activities/ios"
   m7_livelyness_detection:
     :path: ".symlinks/plugins/m7_livelyness_detection/ios"
   package_info_plus:
@@ -343,6 +353,7 @@ SPEC CHECKSUMS:
   FirebaseRemoteConfigInterop: 765ee19cd2bfa8e54937c8dae901eb634ad6787d
   FirebaseSessions: a2d06fd980431fda934c7a543901aca05fc4edcc
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  flutter_app_group_directory: d2c3337f424828558953172f9378d00df9b7756d
   flutter_local_notifications: 4cde75091f6327eb8517fa068a0a5950212d2086
   flutter_secure_storage_darwin: 557817588b80e60213cbecb573c45c76b788018d
   geocoding_ios: eafacae6ad11a1eb56681f7d11df602a5fd49416
@@ -359,6 +370,7 @@ SPEC CHECKSUMS:
   GoogleToolboxForMac: d1a2cbf009c453f4d6ded37c105e2f67a32206d8
   GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
   GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
+  live_activities: 5a5313d5bf801bbbbe80d51eab80aed6d6df376b
   m7_livelyness_detection: f526ad83b24f183b778e92abf57d2b2810799d1b
   MLImage: 0de5c6c2bf9e93b80ef752e2797f0836f03b58c0
   MLKitCommon: 47d47b50a031d00db62f1b0efe5a1d8b09a3b2e6
