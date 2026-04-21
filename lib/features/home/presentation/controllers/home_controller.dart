@@ -73,7 +73,7 @@ class HomeController extends GetxController {
   final isSavedPlacesExpanded = false.obs;
   final isLoadingHomeData = false.obs;
   final mapCenter = const LatLng(-6.7924, 39.2083).obs;
-  final currentMapAddress = 'Posta, Dar es Salaam CBD'.obs;
+  final currentMapAddress = 'Locating...'.obs;
   final isMapReady = false.obs;
   final isResolvingAddress = false.obs;
   final hasLocationPermission = false.obs;
@@ -571,15 +571,34 @@ class HomeController extends GetxController {
       result.fold(
         (failure) {
           developer.log(
-            "📍 Reverse Geocode Failure: $failure",
+            "📍 Reverse Geocode Failure: ${failure.message}",
             name: 'HomeController',
           );
+          if (currentMapAddress.value == 'Locating...') {
+            currentMapAddress.value = 'Current location';
+          }
         },
         (data) {
+          developer.log(
+            "📍 Reverse Geocode Success. Status: ${data.data?.status}, Results: ${data.data?.results?.length}",
+            name: 'HomeController',
+          );
           final firstResult = data.data?.results?.firstOrNull;
           final formatted = (firstResult?.formattedAddress ?? "").trim();
           if (formatted.isNotEmpty) {
+            developer.log(
+              "📍 Resolved Address: $formatted",
+              name: 'HomeController',
+            );
             currentMapAddress.value = formatted;
+          } else {
+            developer.log(
+              "📍 Resolved Address is EMPTY",
+              name: 'HomeController',
+            );
+            if (currentMapAddress.value == 'Locating...') {
+              currentMapAddress.value = 'Current location';
+            }
           }
         },
       );
@@ -629,16 +648,13 @@ class HomeController extends GetxController {
 
     final result = await homeRepository.estimateFare(req);
     bool canProceed = false;
-    result.fold(
-      (failure) {
-        Get.snackbar(
-          'Error',
-          _extractEstimateErrorMessage(failure.message),
-          snackPosition: SnackPosition.BOTTOM,
-        );
-      },
-      (_) => canProceed = true,
-    );
+    result.fold((failure) {
+      Get.snackbar(
+        'Error',
+        _extractEstimateErrorMessage(failure.message),
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }, (_) => canProceed = true);
     return canProceed;
   }
 
@@ -979,7 +995,9 @@ class HomeController extends GetxController {
   }
 
   void toggleAddressHeaderExpansion() {
-    isSavedPlacesExpanded.toggle();
+    if (savedPlaces.isNotEmpty) {
+      isSavedPlacesExpanded.toggle();
+    }
   }
 
   double get addressHeaderChevronTurns =>

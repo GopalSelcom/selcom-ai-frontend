@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:selcom_rides_frontend/shared/widgets/map_widgets.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/data/models/ride_model.dart';
@@ -96,58 +95,6 @@ class HomeScreen extends GetView<HomeController> {
   Widget _buildModernAddressBox() {
     return Expanded(
       child: Obx(() {
-        if (controller.savedPlaces.isEmpty) {
-          return AnimatedSize(
-            duration: const Duration(milliseconds: 320),
-            curve: Curves.easeInOutCubic,
-            alignment: Alignment.topCenter,
-            clipBehavior: Clip.hardEdge,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 320),
-              curve: Curves.easeInOutCubic,
-              alignment: Alignment.center,
-              padding: EdgeInsets.symmetric(horizontal: 12.w),
-              height: 61.h, // Matched with Figma Frame 207:24539 height
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16.r),
-                border: Border.all(color: AppColors.shade5),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
-                    blurRadius: 2,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: controller.isLoadingHomeData.value
-                    ? Shimmer.fromColors(
-                        baseColor: const Color(0xFFE2E8F0),
-                        highlightColor: const Color(0xFFF8FAFC),
-                        child: Container(
-                          width: 200.w,
-                          height: 16.h,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(4.r),
-                          ),
-                        ),
-                      )
-                    : Text(
-                        controller.currentMapAddress.value,
-                        style: AppTextStyles.homeSubtitle.copyWith(
-                          color: AppColors.shade2,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                      ),
-              ),
-            ),
-          );
-        }
-
         final placesToShow = controller.addressHeaderPlacesToShow;
         final bool isExpanded = controller.isSavedPlacesExpanded.value;
 
