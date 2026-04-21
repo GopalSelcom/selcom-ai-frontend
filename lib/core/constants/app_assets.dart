@@ -85,4 +85,6 @@ class AppAssets {
   static const String icPaymentSuccess = '$_paymentPath/ic_payment_success.svg';
   static const String imgPaymentAddCardSuccess =
       '$_paymentPath/add_card_success.png';
+  static const String imgPaymentDeleteCardConfirm =
+      '$_paymentPath/delete_card_confirm.png';
 }

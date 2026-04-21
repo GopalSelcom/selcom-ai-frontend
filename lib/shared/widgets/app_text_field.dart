@@ -24,6 +24,7 @@ class AppTextField extends StatelessWidget {
   final FocusNode? focusNode;
   final TextInputAction? textInputAction;
   final ValueChanged<String>? onSubmitted;
+  final bool readOnly;
 
   const AppTextField({
     super.key,
@@ -45,6 +46,7 @@ class AppTextField extends StatelessWidget {
     this.focusNode,
     this.textInputAction,
     this.onSubmitted,
+    this.readOnly = false,
   });
 
   @override
@@ -64,6 +66,7 @@ class AppTextField extends StatelessWidget {
           obscureText: isPassword,
           onChanged: onChanged,
           onSubmitted: onSubmitted,
+          readOnly: readOnly,
           enabled: enabled,
           maxLines: maxLines,
           maxLength: maxLength,

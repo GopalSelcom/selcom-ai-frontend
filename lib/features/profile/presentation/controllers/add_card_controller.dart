@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../domain/entities/payment_card.dart';
 
 class AddCardController extends GetxController {
   final cardHolderController = TextEditingController();
@@ -65,7 +66,15 @@ class AddCardController extends GetxController {
       // TODO(api): Replace this with AddCard use case + repository call.
       // For now we return success and let caller show success bottom sheet.
       await Future.delayed(const Duration(seconds: 3));
-      Get.back(result: true);
+      Get.back<PaymentCard>(
+        result: PaymentCard(
+          brand: 'VISA',
+          fullNumber: cardNumberController.text.trim(),
+          expiry: expiryController.text.trim(),
+          cvv: cvvController.text.trim(),
+          nickName: cardHolderController.text.trim(),
+        ),
+      );
     } finally {
       isSubmitting.value = false;
     }
