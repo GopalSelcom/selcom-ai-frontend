@@ -263,7 +263,10 @@ class HomeScreen extends GetView<HomeController> {
                                               height: 1.33,
                                             ),
                                       ),
-                                      if (index == 0) ...[
+                                      if (index == 0 &&
+                                          controller
+                                              .savedPlaces
+                                              .isNotEmpty) ...[
                                         SizedBox(width: 4.w),
                                         AnimatedRotation(
                                           duration: const Duration(
