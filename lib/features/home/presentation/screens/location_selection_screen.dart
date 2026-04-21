@@ -340,7 +340,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       fontWeight: FontWeight.w500,
       height: 20 / 15,
     );
-    final hintStyle = fieldStyle;
+    final hintStyle = AppTextStyles.hint;
 
     final List<Widget> rows = [];
 
@@ -374,7 +374,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             isDense: true,
             border: InputBorder.none,
             contentPadding: EdgeInsets.zero,
-            hintText: 'AutoBhan Road',
+            hintText: 'Search pickup location',
             hintStyle: hintStyle,
           ),
         ),
@@ -404,7 +404,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             isDense: true,
             border: InputBorder.none,
             contentPadding: EdgeInsets.zero,
-            hintText: 'Home',
+            hintText: 'Search destination',
             hintStyle: hintStyle,
           ),
         ),
@@ -437,7 +437,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
               isDense: true,
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
-              hintText: 'Add stop',
+              hintText: 'Search stop location',
               hintStyle: hintStyle,
             ),
           ),

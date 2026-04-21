@@ -133,10 +133,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
               ),
             ),
             hintText: 'Search location...',
-            hintStyle: AppTextStyles.homeSubtitle.copyWith(
-              color: const Color(0xFF94A3B8),
-              fontWeight: FontWeight.w400,
-            ),
+            hintStyle: AppTextStyles.hint,
             border: InputBorder.none,
             suffixIconConstraints: BoxConstraints(minWidth: 40.w, minHeight: 0),
             suffixIcon: Obx(

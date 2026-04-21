@@ -123,15 +123,14 @@ class PhoneInputScreen extends GetView<AuthController> {
                                   ),
                                   maxLength: 11,
                                   onChanged: (v) {
-                                    controller.mobileNumber.value =
-                                        v.replaceAll(' ', '');
+                                    controller.mobileNumber.value = v
+                                        .replaceAll(' ', '');
                                   },
                                   decoration: InputDecoration(
-                                    hintText: '7XX XX XXX',
+                                    hintText: 'e.g. 7XX XXX XXX',
                                     counterText: "",
-                                    hintStyle: AppTextStyles.body.copyWith(
-                                      color: AppColors.textLight,
-                                      fontFamily: AppTextStyles.metropolisFont,
+                                    hintStyle: AppTextStyles.hint.copyWith(
+                                      fontSize: 18.sp,
                                     ),
                                     border: InputBorder.none,
                                     contentPadding: EdgeInsets.symmetric(
@@ -178,10 +177,9 @@ class PhoneInputScreen extends GetView<AuthController> {
                                   ),
                                   onChanged: controller.onEmailChanged,
                                   decoration: InputDecoration(
-                                    hintText: 'Email (optional)',
-                                    hintStyle: AppTextStyles.body.copyWith(
-                                      color: AppColors.textLight,
-                                      fontFamily: AppTextStyles.metropolisFont,
+                                    hintText: 'e.g. name@email.com (optional)',
+                                    hintStyle: AppTextStyles.hint.copyWith(
+                                      fontSize: 16.sp,
                                     ),
                                     border: InputBorder.none,
                                     contentPadding: EdgeInsets.symmetric(

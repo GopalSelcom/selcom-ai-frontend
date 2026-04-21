@@ -90,11 +90,8 @@ class PromocodeScreen extends StatelessWidget {
               child: TextField(
                 controller: controller.promoCodeTextController,
                 decoration: InputDecoration(
-                  hintText: 'TestCode',
-                  hintStyle: AppTextStyles.body.copyWith(
-                    color: AppColors.shade1,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  hintText: 'Enter promo code',
+                  hintStyle: AppTextStyles.hint,
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.symmetric(vertical: 16.h),
                 ),
