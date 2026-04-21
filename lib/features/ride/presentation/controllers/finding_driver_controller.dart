@@ -324,7 +324,7 @@ class FindingDriverController extends GetxController {
       latestRideStatusPayload.value = payload;
       final status = (payload.status ?? '').toString().toLowerCase();
       _applyStatusPayload(payload);
-      _syncLiveActivityFromPayload(payload);
+      await _syncLiveActivityFromPayload(payload);
       if (status.isEmpty) return;
 
       switch (status) {
@@ -407,7 +407,9 @@ class FindingDriverController extends GetxController {
     }
   }
 
-  void _syncLiveActivityFromPayload(EventRiderStatusUpdateResponse payload) {
+  Future<void> _syncLiveActivityFromPayload(
+    EventRiderStatusUpdateResponse payload,
+  ) async {
     try {
       if (rideId.isEmpty) return;
       final status = (payload.status ?? '').toString().toUpperCase();
@@ -420,7 +422,7 @@ class FindingDriverController extends GetxController {
           status.contains('NEAR'))
         step = 4;
 
-      LiveActivityManager().startActivity(
+      await LiveActivityManager().startActivity(
         orderId: rideId,
         status: status,
         title: 'Ride tracked',

@@ -366,7 +366,7 @@ class DriverAcceptedController extends GetxController
       final status = (payload.status ?? '').toString().trim();
       _applyBottomSheetStateForStatus(status);
       _applyStatusPayload(payload);
-      _syncLiveActivityFromStatusPayload(payload);
+      await _syncLiveActivityFromStatusPayload(payload);
       if (status.toLowerCase() == 'cancelled') {
         await LiveActivityManager().endActivity(rideId);
         Get.offAllNamed(AppRoutes.home);
@@ -417,10 +417,12 @@ class DriverAcceptedController extends GetxController
       }
     });
 
-    _trackingSub = _socketService.trackingUpdateStatusStream.listen((payload) {
+    _trackingSub = _socketService.trackingUpdateStatusStream.listen((
+      payload,
+    ) async {
       if (payload != null) {
         _applyTrackingPayload(payload);
-        _syncLiveActivityFromTrackingPayload(payload);
+        await _syncLiveActivityFromTrackingPayload(payload);
       }
     });
 
@@ -1150,9 +1152,9 @@ class DriverAcceptedController extends GetxController
     );
   }
 
-  void _syncLiveActivityFromStatusPayload(
+  Future<void> _syncLiveActivityFromStatusPayload(
     EventRiderStatusUpdateResponse payload,
-  ) {
+  ) async {
     try {
       if (rideId.isEmpty) return;
       final status = (payload.status ?? '').toString().toUpperCase();
@@ -1160,7 +1162,7 @@ class DriverAcceptedController extends GetxController
       if (status.contains('COMPLETED') ||
           status.contains('CANCELLED') ||
           status.contains('NO_DRIVER_FOUND')) {
-        LiveActivityManager().endActivity(rideId);
+        await LiveActivityManager().endActivity(rideId);
         return;
       }
 
@@ -1171,7 +1173,7 @@ class DriverAcceptedController extends GetxController
           status.contains('NEAR'))
         step = 4;
 
-      LiveActivityManager().startActivity(
+      await LiveActivityManager().startActivity(
         orderId: rideId,
         status: status,
         title: 'Ride tracked',
@@ -1198,9 +1200,9 @@ class DriverAcceptedController extends GetxController
     }
   }
 
-  void _syncLiveActivityFromTrackingPayload(
+  Future<void> _syncLiveActivityFromTrackingPayload(
     TrackingUpdateSocketResponse payload,
-  ) {
+  ) async {
     try {
       if (rideId.isEmpty) return;
       final target = (payload.routeTarget ?? '').trim().toLowerCase();
@@ -1208,7 +1210,7 @@ class DriverAcceptedController extends GetxController
       // If we have tracking, it means it's either en route to pickup or en route to destination
       int step = (target == 'pick_up' || target == 'pickup') ? 2 : 4;
 
-      LiveActivityManager().startActivity(
+      await LiveActivityManager().startActivity(
         orderId: rideId,
         status: currentRideStatus.value.toUpperCase(),
         title: 'Ride tracked',

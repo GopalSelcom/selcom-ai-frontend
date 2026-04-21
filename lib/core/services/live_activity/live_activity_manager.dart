@@ -224,6 +224,7 @@ class LiveActivityManager {
             orderId: orderId,
             status: status,
             title: title,
+            merchantName: merchantName,
             subtitle: subtitle,
             fare: fare,
             eta: eta,
@@ -419,6 +420,7 @@ class LiveActivityManager {
     required String orderId,
     required String status,
     required String title,
+    String? merchantName,
     String subtitle = '',
     String? fare,
     String? eta,
@@ -435,6 +437,11 @@ class LiveActivityManager {
     String deliveryDistance = '0',
   }) async {
     try {
+      if (merchantName != null && merchantName.isNotEmpty) {
+        _orderToMerchantName[orderId] = merchantName;
+        await _saveState();
+      }
+
       String localRiderPhoto = riderPhotoUrl;
       if (riderPhotoUrl.isNotEmpty && riderPhotoUrl.startsWith('http')) {
         localRiderPhoto = await _maybeDownloadImage(riderPhotoUrl);
@@ -442,7 +449,7 @@ class LiveActivityManager {
         localRiderPhoto = '';
       }
 
-      final String? merchantName = _orderToMerchantName[orderId];
+      final String? effectiveMerchantName = _orderToMerchantName[orderId];
       final String? activityId = _orderToActivityId[orderId];
 
       if (activityId == null) return;
@@ -451,7 +458,7 @@ class LiveActivityManager {
         await AndroidOrderTrackingManager().show(
           orderId: orderId,
           title: title,
-          merchantName: merchantName ?? '',
+          merchantName: effectiveMerchantName ?? '',
           status: status,
           subtitle: subtitle,
           step: step,
@@ -471,7 +478,7 @@ class LiveActivityManager {
       if (_isIOS && activityId != 'android') {
         final Map<String, dynamic> updateData = {
           'order_id': orderId,
-          'merchant_name': merchantName ?? '',
+          'merchant_name': effectiveMerchantName ?? '',
           'status': status,
           'title': title,
           'subtitle': subtitle,
