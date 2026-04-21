@@ -28,8 +28,8 @@ struct LiveActivitiesAppAttributes: ActivityAttributes, Identifiable {
         public var delivery_distance: String?
 
         enum CodingKeys: String, CodingKey {
-            case order_id, ride_id, app_group_id, status, title, subtitle, merchant_name, fare, eta
-            case vehicle_desc, plate_number, rider_photo_url
+            case order_id, ride_id, app_group_id, status, title, subtitle, merchant_name, driver_name, fare, eta
+            case vehicle_desc, vehicle_name, plate_number, rider_photo_url, driver_avatar_url
             case step, total_steps, is_completed, is_rider_delivering
             case delivery_start_date, eta_seconds, pickup_distance, delivery_distance
         }
@@ -64,12 +64,22 @@ struct LiveActivitiesAppAttributes: ActivityAttributes, Identifiable {
             status = try? container.decodeIfPresent(String.self, forKey: .status)
             title = try? container.decodeIfPresent(String.self, forKey: .title)
             subtitle = try? container.decodeIfPresent(String.self, forKey: .subtitle)
-            merchant_name = try? container.decodeIfPresent(String.self, forKey: .merchant_name)
+            let m_name = try? container.decodeIfPresent(String.self, forKey: .merchant_name)
+            let d_name = try? container.decodeIfPresent(String.self, forKey: .driver_name)
+            merchant_name = m_name ?? d_name
+            
             fare = try? container.decodeIfPresent(String.self, forKey: .fare)
             eta = try? container.decodeIfPresent(String.self, forKey: .eta)
-            vehicle_desc = try? container.decodeIfPresent(String.self, forKey: .vehicle_desc)
+            
+            let v_desc = try? container.decodeIfPresent(String.self, forKey: .vehicle_desc)
+            let v_name = try? container.decodeIfPresent(String.self, forKey: .vehicle_name)
+            vehicle_desc = v_desc ?? v_name
+            
             plate_number = try? container.decodeIfPresent(String.self, forKey: .plate_number)
-            rider_photo_url = try? container.decodeIfPresent(String.self, forKey: .rider_photo_url)
+            
+            let r_photo = try? container.decodeIfPresent(String.self, forKey: .rider_photo_url)
+            let d_avatar = try? container.decodeIfPresent(String.self, forKey: .driver_avatar_url)
+            rider_photo_url = r_photo ?? d_avatar
             
             is_completed = decodeAsBool(.is_completed)
             is_rider_delivering = decodeAsBool(.is_rider_delivering)
@@ -125,8 +135,8 @@ extension LiveActivitiesAppAttributes {
 
 // MARK: - View Model
 struct TrackingViewModel {
-    let title: String
-    let merchantName: String
+    var title: String
+    var merchantName: String
     let status: String
     let subtitle: String
     let fare: String
@@ -143,15 +153,30 @@ struct TrackingViewModel {
         let appGroupId = "group.com.selcom.go"
         let ud = UserDefaults(suiteName: appGroupId)
 
-        self.title             = state.title ?? ud?.string(forKey: attributes.prefixedKey("title")) ?? "Selcom Go Rider"
+        func getOrPersist(_ key: String, _ newValue: String?) -> String {
+            let prefKey = attributes.prefixedKey(key)
+            if let val = newValue, !val.isEmpty {
+                ud?.set(val, forKey: prefKey)
+                return val
+            }
+            return ud?.string(forKey: prefKey) ?? ""
+        }
+
+        self.title             = getOrPersist("title", state.title)
+        if self.title.isEmpty { self.title = "Selcom Go" }
+        
         let rawStatus = state.status ?? ud?.string(forKey: attributes.prefixedKey("status")) ?? "Finding Driver"
         self.status = rawStatus.replacingOccurrences(of: "_", with: " ").capitalized
-        self.merchantName      = state.merchant_name ?? ud?.string(forKey: attributes.prefixedKey("merchant_name")) ?? ""
-        self.subtitle          = state.subtitle ?? ud?.string(forKey: attributes.prefixedKey("subtitle")) ?? ""
-        self.fare              = state.fare ?? ud?.string(forKey: attributes.prefixedKey("fare")) ?? ""
-        self.vehicleDesc       = state.vehicle_desc ?? ud?.string(forKey: attributes.prefixedKey("vehicle_desc")) ?? ""
-        self.plateNumber       = state.plate_number ?? ud?.string(forKey: attributes.prefixedKey("plate_number")) ?? ""
-        self.riderPhotoUrl     = state.rider_photo_url ?? ud?.string(forKey: attributes.prefixedKey("rider_photo_url")) ?? ""
+        if state.status != nil { ud?.set(state.status, forKey: attributes.prefixedKey("status")) }
+        
+        self.merchantName      = getOrPersist("merchant_name", state.merchant_name)
+        if self.merchantName.isEmpty { self.merchantName = "Selcom Go" }
+
+        self.subtitle          = getOrPersist("subtitle", state.subtitle)
+        self.fare              = getOrPersist("fare", state.fare)
+        self.vehicleDesc       = getOrPersist("vehicle_desc", state.vehicle_desc)
+        self.plateNumber       = getOrPersist("plate_number", state.plate_number)
+        self.riderPhotoUrl     = getOrPersist("rider_photo_url", state.rider_photo_url)
         self.isRiderDelivering = state.is_rider_delivering ?? (ud?.integer(forKey: attributes.prefixedKey("is_rider_delivering")) == 1)
         
         func formatDuration(_ totalMinutes: Int) -> String {

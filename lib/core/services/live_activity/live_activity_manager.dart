@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:live_activities/live_activities.dart';
 import 'package:live_activities/models/activity_update.dart';
 import 'package:collection/collection.dart';
@@ -18,6 +19,8 @@ class LiveActivityManager {
   static final LiveActivityManager _instance = LiveActivityManager._internal();
   factory LiveActivityManager() => _instance;
   LiveActivityManager._internal();
+
+  static const _appGroupChannel = MethodChannel('com.selcom.go/app_group');
 
   final LiveActivities _liveActivitiesPlugin = LiveActivities();
 
@@ -707,12 +710,30 @@ class LiveActivityManager {
 
     try {
       final dio = Dio();
-      final baseDir = (await getApplicationDocumentsDirectory()).path;
+      String baseDir;
+      if (_isIOS) {
+        try {
+          final String? appGroupPath = await _appGroupChannel
+              .invokeMethod<String>('getAppGroupDirectory');
+          baseDir =
+              appGroupPath ?? (await getApplicationDocumentsDirectory()).path;
+        } catch (e) {
+          developer.log(
+            "⚠️ Error getting app group path: $e",
+            name: 'ORDER_TRACKING',
+          );
+          baseDir = (await getApplicationDocumentsDirectory()).path;
+        }
+      } else {
+        baseDir = (await getApplicationDocumentsDirectory()).path;
+      }
+
       final String fileName = "rider_${url.hashCode}.jpg";
       final String path = "$baseDir/$fileName";
 
       await dio.download(url, path);
       _urlToLocalPath[url] = path;
+      developer.log("📸 Saved rider photo to: $path", name: 'ORDER_TRACKING');
       return path;
     } catch (e) {
       developer.log("⚠️ Error downloading image: $e", name: 'ORDER_TRACKING');
