@@ -198,6 +198,8 @@ class AppDialogs {
   }) {
     Get.dialog(
       Dialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20.r),
         ),
