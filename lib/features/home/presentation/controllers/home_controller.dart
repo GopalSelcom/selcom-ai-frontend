@@ -561,16 +561,13 @@ class HomeController extends GetxController {
 
     final result = await homeRepository.estimateFare(req);
     bool canProceed = false;
-    result.fold(
-      (failure) {
-        Get.snackbar(
-          'Error',
-          _extractEstimateErrorMessage(failure.message),
-          snackPosition: SnackPosition.BOTTOM,
-        );
-      },
-      (_) => canProceed = true,
-    );
+    result.fold((failure) {
+      Get.snackbar(
+        'Error',
+        _extractEstimateErrorMessage(failure.message),
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }, (_) => canProceed = true);
     return canProceed;
   }
 

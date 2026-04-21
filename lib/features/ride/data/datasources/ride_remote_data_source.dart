@@ -60,7 +60,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      final List data = response.data['data'] ?? [];
+      final List data = response.data['data']?['destinations'] ?? [];
       return data.map((e) => RecentDestinationModel.fromJson(e)).toList();
     }
     return [];
@@ -243,10 +243,11 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   }
 
   @override
-  Future<bool> walletDummyPaymentRequest(DummyPaymentRequest request)async {
+  Future<bool> walletDummyPaymentRequest(DummyPaymentRequest request) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        customBaseUrl: "https://dukastaging.selcom.dev:7443/api/v4/go/dev/payment_callback",
+        customBaseUrl:
+            "https://dukastaging.selcom.dev:7443/api/v4/go/dev/payment_callback",
         // endpoint: "${URLS.ride.base}/$rideId/messages",
         endpoint: "",
         method: ApiMethod.post,
