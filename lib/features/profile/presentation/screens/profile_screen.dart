@@ -333,50 +333,54 @@ class ProfileScreen extends StatelessWidget {
         border: Border.all(color: AppColors.divider),
         borderRadius: BorderRadius.circular(16.r),
       ),
-      child: Column(
-        children: [
-          MenuItemWidget(
-            icon: Iconsax.clock,
-            title: 'My Rides',
-            onTap: controller.openMyRides,
-          ),
-          MenuItemWidget(
-            icon: Iconsax.card,
-            title: 'Payment',
-            onTap: controller.openPaymentMethods,
-          ),
-          MenuItemWidget(
-            icon: Iconsax.gift,
-            title: 'Promotions',
-            onTap: controller.openPromotions,
-          ),
-          MenuItemWidget(
-            icon: Iconsax.message_question,
-            title: 'Help',
-            onTap: controller.openContactUs,
-          ),
-          MenuItemWidget(
-            icon: Iconsax.shield_tick,
-            title: 'Safety & Privacy',
-            onTap: controller.openPrivacyPolicy,
-          ),
-          MenuItemWidget(
-            icon: Iconsax.heart,
-            title: 'Favourite Locations',
-            onTap: controller.openFavoriteLocations,
-          ),
-          MenuItemWidget(
-            icon: Iconsax.reserve,
-            title: 'Notification',
-            onTap: controller.openNotifications,
-          ),
-          MenuItemWidget(
-            icon: Iconsax.setting_2,
-            title: 'Settings',
-            onTap: controller.openSettings,
-            showDivider: false,
-          ),
-        ],
+      child: Obx(
+        () => Column(
+          children: [
+            MenuItemWidget(
+              icon: Iconsax.clock,
+              title: 'My Rides',
+              onTap: controller.openMyRides,
+            ),
+            MenuItemWidget(
+              icon: Iconsax.card,
+              title: 'Payment',
+              onTap: controller.openPaymentMethods,
+            ),
+            MenuItemWidget(
+              icon: Iconsax.gift,
+              title: 'Promotions',
+              onTap: controller.openPromotions,
+            ),
+            MenuItemWidget(
+              icon: Iconsax.message_question,
+              title: 'Help',
+              onTap: controller.openContactUs,
+            ),
+            MenuItemWidget(
+              icon: Iconsax.shield_tick,
+              title: 'Safety & Privacy',
+              onTap: controller.openPrivacyPolicy,
+            ),
+            MenuItemWidget(
+              icon: Iconsax.heart,
+              title: 'Favourite Locations',
+              onTap: controller.openFavoriteLocations,
+            ),
+            MenuItemWidget(
+              icon: Iconsax.reserve,
+              title: 'Notification',
+              onTap: controller.openNotifications,
+              showDivider: controller.showSettingsOption.value,
+            ),
+            if (controller.showSettingsOption.value)
+              MenuItemWidget(
+                icon: Iconsax.setting_2,
+                title: 'Settings',
+                onTap: controller.openSettings,
+                showDivider: false,
+              ),
+          ],
+        ),
       ),
     );
   }

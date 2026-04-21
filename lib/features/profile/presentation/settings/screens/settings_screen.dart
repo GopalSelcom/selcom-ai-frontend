@@ -44,22 +44,38 @@ class SettingsScreen extends GetView<SettingsController> {
                             ),
                           ),
                           SizedBox(height: 14.h),
-                          Obx(
-                            () => SettingsToggleTile(
-                              icon: Iconsax.shield_security,
-                              title: 'Ride PIN Protection',
-                              subtitle: controller.canToggleRidePin
-                                  ? 'Require a verification PIN before starting a ride.'
-                                  : 'Ride PIN is required by admin and cannot be turned off.',
-                              statusText: controller.effectiveRequiredRidePin.value
-                                  ? 'Current status: required'
-                                  : 'Current status: optional',
-                              value: controller.ridePinSwitchValue,
-                              enabled: controller.canToggleRidePin,
-                              isSaving: controller.isSaving.value,
-                              onChanged: controller.onToggleRidePin,
+                          if (!controller.hasRidePinFeature)
+                            Container(
+                              padding: EdgeInsets.all(16.w),
+                              decoration: BoxDecoration(
+                                color: AppColors.cardBackground,
+                                border: Border.all(color: AppColors.divider),
+                                borderRadius: BorderRadius.circular(16.r),
+                              ),
+                              child: Text(
+                                'No configurable settings are available right now.',
+                                style: AppTextStyles.body.copyWith(
+                                  color: AppColors.shade2,
+                                ),
+                              ),
+                            )
+                          else
+                            Obx(
+                              () => SettingsToggleTile(
+                                icon: Iconsax.shield_security,
+                                title: 'Ride PIN Protection',
+                                subtitle: controller.canToggleRidePin
+                                    ? 'Require a verification PIN before starting a ride.'
+                                    : 'Ride PIN is required by admin and cannot be turned off.',
+                                statusText: controller.effectiveRequiredRidePin.value
+                                    ? 'Current status: required'
+                                    : 'Current status: optional',
+                                value: controller.ridePinSwitchValue,
+                                enabled: controller.canToggleRidePin,
+                                isSaving: controller.isSaving.value,
+                                onChanged: controller.onToggleRidePin,
+                              ),
                             ),
-                          ),
                         ],
                       ),
                     ),

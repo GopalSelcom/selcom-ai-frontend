@@ -1,11 +1,16 @@
 import 'package:get/get.dart';
+import '../../../../../core/services/app_settings_service.dart';
 import '../../../../../shared/utils/app_dialogs.dart';
 import '../../../../../features/settings/domain/usecases/settings_usecase.dart';
 
 class SettingsController extends GetxController {
   final SettingsUseCase settingsUseCase;
+  final AppSettingsService appSettingsService;
 
-  SettingsController({required this.settingsUseCase});
+  SettingsController({
+    required this.settingsUseCase,
+    required this.appSettingsService,
+  });
 
   final isLoading = false.obs;
   final isSaving = false.obs;
@@ -15,6 +20,7 @@ class SettingsController extends GetxController {
   final effectiveRequiredRidePin = false.obs;
 
   bool get canToggleRidePin => !adminRequiredRidePin.value;
+  bool get hasRidePinFeature => features.containsKey('ride_pin_admin_required');
   bool get ridePinSwitchValue =>
       adminRequiredRidePin.value
           ? effectiveRequiredRidePin.value
@@ -29,16 +35,18 @@ class SettingsController extends GetxController {
   Future<void> loadSettings() async {
     isLoading.value = true;
 
-    final appSettingsResult = await settingsUseCase.getAppSettings();
-    appSettingsResult.fold(
-      (_) => null,
-      (settings) {
-        features.assignAll(settings.features);
-        adminRequiredRidePin.value = settings.featureEnabled(
-          'ride_pin_admin_required',
-        );
-      },
+    await appSettingsService.preload();
+    features.assignAll(appSettingsService.features);
+    adminRequiredRidePin.value = appSettingsService.featureEnabled(
+      'ride_pin_admin_required',
     );
+
+    if (!hasRidePinFeature) {
+      userEnabledRidePin.value = false;
+      effectiveRequiredRidePin.value = false;
+      isLoading.value = false;
+      return;
+    }
 
     final preferenceResult = await settingsUseCase.getRidePinPreference();
     preferenceResult.fold(

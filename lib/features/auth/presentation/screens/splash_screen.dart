@@ -6,6 +6,8 @@ import '../../../../core/services/storage_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/di/injection_container.dart';
+import '../../../../core/services/app_settings_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -22,6 +24,8 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void _navigateToNext() async {
+    // Preload app-level settings/features once at startup.
+    await sl<AppSettingsService>().preload();
     await Future.delayed(const Duration(milliseconds: 2500));
 
     // Check for existing valid session token

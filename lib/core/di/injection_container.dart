@@ -33,6 +33,7 @@ import '../../features/promotions/presentation/controllers/promocode_controller.
 import '../../features/payment/presentation/controllers/payment_method_controller.dart';
 import '../config/app_config.dart';
 import '../services/analytics_service.dart';
+import '../services/app_settings_service.dart';
 import '../services/notification_service.dart';
 import '../network/api_service.dart';
 import '../network/headers.dart';
@@ -98,10 +99,13 @@ Future<void> init() async {
   sl.registerLazySingleton(() => RideUseCase(sl()));
   sl.registerLazySingleton(() => ProfileUseCase(sl()));
   sl.registerLazySingleton(() => SettingsUseCase(sl()));
+  sl.registerLazySingleton(() => AppSettingsService(settingsUseCase: sl()));
 
   // BLoCs / Controllers
   sl.registerFactory(() => MyRidesController(rideUseCase: sl()));
-  sl.registerFactory(() => ProfileController(profileUseCase: sl()));
+  sl.registerFactory(
+    () => ProfileController(profileUseCase: sl(), appSettingsService: sl()),
+  );
   sl.registerFactory(() => PromocodeController());
   sl.registerFactory(() => PaymentMethodController(profileRepository: sl()));
 
