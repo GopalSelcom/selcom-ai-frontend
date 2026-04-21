@@ -51,7 +51,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyAY9TzBQJlMff1yw63gw4aQr6KfWhts1bI',
-    appId: '1:235920604285:android:2390cbd1d7f7e55b0ac514',
+    appId: '1:235920604285:android:a5c3b277c04abe860ac514',
     messagingSenderId: '235920604285',
     projectId: 'selcom-rides',
     storageBucket: 'selcom-rides.firebasestorage.app',
@@ -59,10 +59,10 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyDAmghVkR6abI1En6cT7XwDCyLiRvsMD_8',
-    appId: '1:235920604285:ios:8a1a696424c1977e0ac514',
+    appId: '1:235920604285:ios:7d4d1a32ea9cc2450ac514',
     messagingSenderId: '235920604285',
     projectId: 'selcom-rides',
     storageBucket: 'selcom-rides.firebasestorage.app',
-    iosBundleId: 'com.example.selcomRidesFrontend',
+    iosBundleId: 'com.selcom.go',
   );
 }

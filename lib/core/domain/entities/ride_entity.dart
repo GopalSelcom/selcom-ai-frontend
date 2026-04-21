@@ -87,6 +87,8 @@ class RideEntity {
   final PaymentMethod paymentMethod;
   final PaymentStatus paymentStatus;
   final int? cancellationFee;
+  final int? riderRating;
+  final bool showReviewUi;
   final FareBreakdownEntity? fareBreakdown;
   final DriverSnapshotEntity? driverSnapshot;
   final VehicleSnapshotEntity? vehicleSnapshot;
@@ -109,6 +111,8 @@ class RideEntity {
     required this.paymentMethod,
     required this.paymentStatus,
     this.cancellationFee,
+    this.riderRating,
+    this.showReviewUi = true,
     this.fareBreakdown,
     this.driverSnapshot,
     this.vehicleSnapshot,

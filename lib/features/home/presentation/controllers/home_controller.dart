@@ -25,12 +25,14 @@ import '../../../ride/data/models/ride_management_models.dart';
 import '../../../ride_rating/presentation/controllers/ride_rating_controller.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
+import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/data/models/responses/rides/active_ride_response.dart';
+import '../../../../core/domain/entities/location_entity.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
 
@@ -71,7 +73,7 @@ class HomeController extends GetxController {
   final isSavedPlacesExpanded = false.obs;
   final isLoadingHomeData = false.obs;
   final mapCenter = const LatLng(-6.7924, 39.2083).obs;
-  final currentMapAddress = 'Locating...'.obs;
+  final currentMapAddress = 'Posta, Dar es Salaam CBD'.obs;
   final isMapReady = false.obs;
   final isResolvingAddress = false.obs;
   final hasLocationPermission = false.obs;
@@ -84,7 +86,7 @@ class HomeController extends GetxController {
   GoogleMapController? _mapController;
   final AppSocketService _socketService = AppSocketService();
   bool _didHandleActiveRideFlow = false;
-  bool _isManualPan = true;
+  bool _ignoreSelectionReset = false;
   StreamSubscription<bool>? _homeSocketConnectionSub;
   Timer? _activeRidePollingTimer;
   bool _isRefreshingActiveRide = false;
@@ -204,7 +206,7 @@ class HomeController extends GetxController {
   }
 
   void onCameraMove(CameraPosition position) {
-    if (_isManualPan &&
+    if (!_ignoreSelectionReset &&
         selectedPickupSavedPlaceId.value != _currentLocationPlaceId) {
       selectedPickupSavedPlaceId.value = _currentLocationPlaceId;
     }
@@ -212,6 +214,7 @@ class HomeController extends GetxController {
   }
 
   Future<void> onCameraIdle() async {
+    _ignoreSelectionReset = false;
     await _reverseGeocodeAtCenter();
   }
 
@@ -526,7 +529,6 @@ class HomeController extends GetxController {
         if (_mapController != null) {
           _mapController!.animateCamera(CameraUpdate.newLatLngZoom(target, 16));
         }
-        await _reverseGeocodeAtCenter();
       }
 
       // ── Step 2: Fetch Fresh High-Accuracy Position with Timeout ──
@@ -534,7 +536,7 @@ class HomeController extends GetxController {
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
         ),
-      ).timeout(const Duration(seconds: 12));
+      ).timeout(const Duration(seconds: 20));
 
       final target = LatLng(position.latitude, position.longitude);
       deviceGpsLocation.value = target;
@@ -546,12 +548,12 @@ class HomeController extends GetxController {
         );
       }
 
+      // Final attempt to geocode the fresh position.
       await _reverseGeocodeAtCenter();
     } catch (e) {
       developer.log("📍 Location Fetch Error: $e", name: 'HomeController');
-      if (currentMapAddress.value == 'Locating...') {
-        currentMapAddress.value = 'Select location on map';
-      }
+      // Even if GPS fails, try geocoding the current map center (which might be the default Dar Lat/Lng)
+      await _reverseGeocodeAtCenter();
     }
   }
 
@@ -561,10 +563,10 @@ class HomeController extends GetxController {
     try {
       isResolvingAddress.value = true;
       final target = mapCenter.value;
-      final result = await homeRepository.reverseGeocode(
-        lat: target.latitude,
-        lng: target.longitude,
-      );
+
+      final result = await homeRepository
+          .reverseGeocode(lat: target.latitude, lng: target.longitude)
+          .timeout(const Duration(seconds: 10));
 
       result.fold(
         (failure) {
@@ -572,27 +574,17 @@ class HomeController extends GetxController {
             "📍 Reverse Geocode Failure: $failure",
             name: 'HomeController',
           );
-          if (currentMapAddress.value == 'Locating...') {
-            currentMapAddress.value = 'Select location on map';
-          }
         },
         (data) {
-          if ((data.data?.results ?? []).isNotEmpty &&
-              (data.data?.results?.first.formattedAddress ?? "")
-                  .trim()
-                  .isNotEmpty) {
-            currentMapAddress.value =
-                data.data?.results?.first.formattedAddress ?? "";
-          } else if (currentMapAddress.value == 'Locating...') {
-            currentMapAddress.value = 'Select location on map';
+          final firstResult = data.data?.results?.firstOrNull;
+          final formatted = (firstResult?.formattedAddress ?? "").trim();
+          if (formatted.isNotEmpty) {
+            currentMapAddress.value = formatted;
           }
         },
       );
     } catch (e) {
       developer.log("📍 Reverse Geocode Exception: $e", name: 'HomeController');
-      if (currentMapAddress.value == 'Locating...') {
-        currentMapAddress.value = 'Select location on map';
-      }
     } finally {
       isResolvingAddress.value = false;
     }
@@ -612,6 +604,53 @@ class HomeController extends GetxController {
     final value = place?.address?.trim();
     if (value == null || value.isEmpty) return null;
     return value;
+  }
+
+  Future<bool> _validateEstimateBeforeBookingNavigation({
+    required String pickupAddress,
+    required double pickupLat,
+    required double pickupLng,
+    required String destinationAddress,
+    required double destinationLat,
+    required double destinationLng,
+  }) async {
+    final req = FareEstimateRequest(
+      pickup: LocationEntity(
+        lat: pickupLat,
+        lng: pickupLng,
+        address: pickupAddress,
+      ),
+      destination: LocationEntity(
+        lat: destinationLat,
+        lng: destinationLng,
+        address: destinationAddress,
+      ),
+    );
+
+    final result = await homeRepository.estimateFare(req);
+    bool canProceed = false;
+    result.fold(
+      (failure) {
+        Get.snackbar(
+          'Error',
+          _extractEstimateErrorMessage(failure.message),
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      },
+      (_) => canProceed = true,
+    );
+    return canProceed;
+  }
+
+  String _extractEstimateErrorMessage(String rawMessage) {
+    final message = rawMessage
+        .replaceFirst('Exception:', '')
+        .replaceFirst('Failure:', '')
+        .trim();
+    if (message.isEmpty) {
+      return 'Unable to estimate fare for this route.';
+    }
+    return message;
   }
 
   /// Pickup = current map center; destination = saved place for [label] (Home / Office / Work / Other).
@@ -662,6 +701,15 @@ class HomeController extends GetxController {
 
     final pickupAddr = activePickupAddress;
     final pickupLL = activePickupLatLng;
+    final canProceed = await _validateEstimateBeforeBookingNavigation(
+      pickupAddress: pickupAddr,
+      pickupLat: pickupLL.latitude,
+      pickupLng: pickupLL.longitude,
+      destinationAddress: destAddr,
+      destinationLat: dLat,
+      destinationLng: dLng,
+    );
+    if (!canProceed) return;
 
     await Get.delete<VehicleSelectionController>();
     Get.toNamed(
@@ -717,6 +765,15 @@ class HomeController extends GetxController {
 
     final pickupAddr = activePickupAddress;
     final pickupLL = activePickupLatLng;
+    final canProceed = await _validateEstimateBeforeBookingNavigation(
+      pickupAddress: pickupAddr,
+      pickupLat: pickupLL.latitude,
+      pickupLng: pickupLL.longitude,
+      destinationAddress: destAddr,
+      destinationLat: dLat,
+      destinationLng: dLng,
+    );
+    if (!canProceed) return;
 
     await Get.delete<VehicleSelectionController>();
     Get.toNamed(
@@ -748,6 +805,15 @@ class HomeController extends GetxController {
 
     final pickupAddr = activePickupAddress;
     final pickupLL = activePickupLatLng;
+    final canProceed = await _validateEstimateBeforeBookingNavigation(
+      pickupAddress: pickupAddr,
+      pickupLat: pickupLL.latitude,
+      pickupLng: pickupLL.longitude,
+      destinationAddress: destAddr,
+      destinationLat: loc.lat,
+      destinationLng: loc.lng,
+    );
+    if (!canProceed) return;
 
     await Get.delete<VehicleSelectionController>();
     Get.toNamed(
@@ -848,14 +914,13 @@ class HomeController extends GetxController {
     final addr = (place.address ?? place.name ?? '').trim();
 
     if (latLng != null) {
-      _isManualPan = false;
+      _ignoreSelectionReset = true;
       mapCenter.value = latLng;
       if (_mapController != null) {
         await _mapController!.animateCamera(
           CameraUpdate.newLatLngZoom(latLng, 16),
         );
       }
-      _isManualPan = true;
       if (addr.isEmpty) await _reverseGeocodeAtCenter();
     }
   }
@@ -1009,6 +1074,17 @@ class HomeController extends GetxController {
     // fallback to something sensible if still null, but NOT a hardcoded offset that feels like a bug
     dLat ??= pLat;
     dLng ??= pLng;
+
+    final destinationText = destinations.isNotEmpty ? destinations.first : '';
+    final canProceed = await _validateEstimateBeforeBookingNavigation(
+      pickupAddress: pickup,
+      pickupLat: pLat,
+      pickupLng: pLng,
+      destinationAddress: destinationText,
+      destinationLat: dLat,
+      destinationLng: dLng,
+    );
+    if (!canProceed) return;
 
     await Get.delete<VehicleSelectionController>();
     Get.toNamed(

@@ -5,6 +5,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:selcom_rides_frontend/shared/widgets/map_widgets.dart';
 
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
@@ -17,19 +18,25 @@ import '../widgets/ride_common_widgets.dart';
 class DriverAcceptedScreen extends StatelessWidget {
   const DriverAcceptedScreen({super.key});
 
-  static const double _sheetInitial = 0.58;
+  static const double _sheetInitial = 0.3;
 
   @override
   Widget build(BuildContext context) {
     final c = Get.find<DriverAcceptedController>();
-    final topPad = MediaQuery.paddingOf(context).top;
+    final topPad = MediaQuery.of(context).padding.top;
+    final sheetController = DraggableScrollableController();
+
+    // Listen to sheet size changes and update controller
+    sheetController.addListener(() {
+      c.updateSheetSize(sheetController.size);
+    });
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: Stack(
         fit: StackFit.expand,
         children: [
-          _buildMap(context, c),
+          _buildMap(context, c, sheetController),
           Positioned(
             top: 0,
             left: 0,
@@ -67,22 +74,22 @@ class DriverAcceptedScreen extends StatelessWidget {
             final px = c.assignedDriverEtaScreenPx.value;
             if (px == null) return const SizedBox.shrink();
             return Positioned(
-              left: px.dx - 44.w,
-              top: px.dy - 46.h,
+              left: px.dx - 40.w,
+              top: px.dy - 60.h, // Moved higher to avoid clashing with marker
               child: IgnorePointer(
                 child: Container(
                   padding: EdgeInsets.symmetric(
-                    horizontal: 10.w,
+                    horizontal: 12.w,
                     vertical: 6.h,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(8.r),
+                    color: const Color(0xFFE31E24), // Red as seen in screenshot
+                    borderRadius: BorderRadius.circular(12.r),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.12),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
                       ),
                     ],
                   ),
@@ -91,21 +98,17 @@ class DriverAcceptedScreen extends StatelessWidget {
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 12.sp,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
               ),
             );
           }),
-          Positioned(
-            bottom: (MediaQuery.of(context).size.height * _sheetInitial) - 60.h,
-            right: 20.w,
-            child: AppMapGpsButton(onPressed: c.recenterMap),
-          ),
           AppDraggableBottomSheet(
+            controller: sheetController,
             initialChildSize: _sheetInitial,
-            minChildSize: 0.56,
+            minChildSize: 0.3,
             childBuilder: (scrollController) =>
                 _bottomSheet(c, scrollController),
           ),
@@ -114,13 +117,21 @@ class DriverAcceptedScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMap(BuildContext context, DriverAcceptedController c) {
+  Widget _buildMap(
+    BuildContext context,
+    DriverAcceptedController c,
+    DraggableScrollableController sheetController,
+  ) {
+    final screenHeight = MediaQuery.sizeOf(context).height;
+
     return Obx(() {
+      final currentSheetSize = c.sheetSize.value;
+      final dynamicBottomPad = screenHeight * currentSheetSize;
+
       final pickup = c.pickupLatLng;
       final destination = c.destinationLatLng;
       final assigned = c.assignedDriverLocation.value;
       final route = c.routePoints.toList();
-      final isPickupRoute = c.routeTarget.value == 'pick_up';
       final mid = LatLng(
         (pickup.latitude + destination.latitude) / 2,
         (pickup.longitude + destination.longitude) / 2,
@@ -139,6 +150,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                 BitmapDescriptor.defaultMarkerWithHue(
                   BitmapDescriptor.hueGreen,
                 ),
+            rotation: c.assignedDriverHeading.value,
             anchor: const Offset(0.5, 0.5),
             flat: true,
           ),
@@ -171,29 +183,115 @@ class DriverAcceptedScreen extends StatelessWidget {
       }
 
       final polylines = <Polyline>{};
-      polylines.add(
-        Polyline(
-          polylineId: const PolylineId('active_route'),
-          points: route.isNotEmpty
-              ? route
-              : (isPickupRoute && assigned != null
-                    ? [assigned, pickup]
-                    : [pickup, destination]),
-          color: const Color(0xFF3073E8),
-          width: 5,
-        ),
-      );
+      if (route.length > 2) {
+        polylines.add(
+          Polyline(
+            polylineId: const PolylineId('active_route'),
+            points: route,
+            color: const Color(0xFF3073E8),
+            width: 5,
+          ),
+        );
+      }
 
-      return AppGoogleMap(
-        mapWidgetKey: const ValueKey('driver_accepted_map'),
-        initialCameraPosition: CameraPosition(target: mid, zoom: 13.5),
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).size.height * _sheetInitial,
-        ),
-        onMapCreated: c.onMapCreated,
-        onCameraIdle: c.scheduleAssignedEtaOverlayRefresh,
-        markers: markers,
-        polylines: polylines,
+      final showRouteLoading = route.length <= 2;
+      final loadingText = assigned == null
+          ? "Locating driver..."
+          : "Calculating best route...";
+
+      return Stack(
+        children: [
+          AppGoogleMap(
+            mapWidgetKey: const ValueKey('driver_accepted_map'),
+            initialCameraPosition: CameraPosition(target: mid, zoom: 13.5),
+            padding: EdgeInsets.only(
+              top: dynamicBottomPad - 40.h, // Balanced with current sheet size
+              bottom: dynamicBottomPad,
+            ),
+            onMapCreated: c.onMapCreated,
+            onCameraIdle: c.scheduleAssignedEtaOverlayRefresh,
+            showGpsButton: true,
+            onGpsPressed: () {
+              c.recenterMap();
+              if (sheetController.isAttached) {
+                sheetController.animateTo(
+                  0.3,
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeInOut,
+                );
+              }
+            },
+            onNavigationPressed: () {
+              if (sheetController.isAttached) {
+                sheetController.animateTo(
+                  0.3,
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeInOut,
+                );
+              }
+            },
+            onUserInteraction: () {
+              if (sheetController.isAttached && sheetController.size > 0.3) {
+                sheetController.animateTo(
+                  0.3,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                );
+              }
+            },
+            markers: markers,
+            polylines: polylines,
+            minMaxZoomPreference: const MinMaxZoomPreference(12, 19),
+            trackRider: false,
+          ),
+          if (showRouteLoading)
+            Positioned(
+              top: MediaQuery.paddingOf(context).top + 150.h,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 8.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.92),
+                    borderRadius: BorderRadius.circular(24.r),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 14.w,
+                        height: 14.w,
+                        child: const CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Color(0xFF3073E8),
+                        ),
+                      ),
+                      SizedBox(width: 10.w),
+                      Text(
+                        loadingText,
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF364B63),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
       );
     });
   }
@@ -274,7 +372,7 @@ class DriverAcceptedScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'OTP',
+              'PIN',
               style: AppTextStyles.homeCaption.copyWith(
                 fontWeight: FontWeight.w700,
                 fontSize: 15.sp,
@@ -638,12 +736,15 @@ class DriverAcceptedScreen extends StatelessWidget {
                 size: 18.sp,
               ),
               SizedBox(width: 6.w),
-              Text(
-                'Need Help?',
-                style: AppTextStyles.homeCaption.copyWith(
-                  color: const Color(0xFF364B63),
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
+              GestureDetector(
+                onTap: () => Get.toNamed(AppRoutes.contactUs),
+                child: Text(
+                  'Need Help?',
+                  style: AppTextStyles.homeCaption.copyWith(
+                    color: const Color(0xFF364B63),
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               SizedBox(width: 20.w),

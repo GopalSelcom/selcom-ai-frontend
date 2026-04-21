@@ -11,11 +11,7 @@ class NotificationResponseModel {
   final String? message;
   final NotificationPayloadModel? data;
 
-  NotificationResponseModel({
-    this.statusCode,
-    this.message,
-    this.data,
-  });
+  NotificationResponseModel({this.statusCode, this.message, this.data});
 
   NotificationResponseModel copyWith({
     int? statusCode,
@@ -60,12 +56,12 @@ class NotificationPayloadModel {
     final rawNotifications = json["notifications"];
     final parsedNotifications = rawNotifications is List
         ? rawNotifications
-            .map(
-              (item) => NotificationModel.fromJson(
-                Map<String, dynamic>.from(item as Map),
-              ),
-            )
-            .toList()
+              .map(
+                (item) => NotificationModel.fromJson(
+                  Map<String, dynamic>.from(item as Map),
+                ),
+              )
+              .toList()
         : <NotificationModel>[];
 
     return NotificationPayloadModel(
@@ -187,5 +183,47 @@ class NotificationModel {
     "ride_id": rideId,
     "order_id": orderId,
     "type": type,
+  };
+}
+
+class FCMNotificationData {
+  final String? status;
+  final String? rideId;
+  final String? title;
+  final String? body;
+  final bool? sound;
+  final int? type;
+  final String? clickAction;
+
+  FCMNotificationData({
+    this.status,
+    this.rideId,
+    this.title,
+    this.body,
+    this.sound,
+    this.type,
+    this.clickAction,
+  });
+
+  factory FCMNotificationData.fromJson(Map<String, dynamic> json) {
+    return FCMNotificationData(
+      status: json['status']?.toString(),
+      rideId: json['ride_id']?.toString(),
+      title: json['title']?.toString(),
+      body: json['body']?.toString(),
+      sound: json['sound']?.toString() == 'true',
+      type: int.tryParse(json['type']?.toString() ?? ''),
+      clickAction: json['click_action']?.toString(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'status': status,
+    'ride_id': rideId,
+    'title': title,
+    'body': body,
+    'sound': sound,
+    'type': type,
+    'click_action': clickAction,
   };
 }

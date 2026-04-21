@@ -19,6 +19,8 @@ class RideModel extends RideEntity {
     required super.paymentMethod,
     required super.paymentStatus,
     super.cancellationFee,
+    super.riderRating,
+    super.showReviewUi,
     super.fareBreakdown,
     super.driverSnapshot,
     super.vehicleSnapshot,
@@ -76,6 +78,10 @@ class RideModel extends RideEntity {
         orElse: () => PaymentStatus.pending,
       ),
       cancellationFee: json['cancellation_fee'],
+      riderRating: (json['rider_rating'] as num?)?.toInt(),
+      showReviewUi: json['show_review_ui'] is bool
+          ? json['show_review_ui'] as bool
+          : true,
       fareBreakdown: fareBreakdown,
       driverSnapshot: driverSnapshot,
       vehicleSnapshot: json['vehicle_snapshot'] != null

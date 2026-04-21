@@ -81,6 +81,32 @@ class RideRatingController extends GetxController {
     }
   }
 
+  /// Prepares controller state for rendering rating UI in another sheet/screen.
+  Future<void> prepareRatingForRide(RideRatingRideEntity ride) async {
+    _resetSheetState(clearPendingRide: true);
+    pendingReviewRide.value = ride;
+    final initialRating = ride.riderRating;
+    selectedRating.value =
+        (initialRating != null && initialRating >= 1 && initialRating <= 5)
+            ? initialRating
+            : 0;
+    if (selectedRating.value > 0) {
+      await _loadReviewTagsForRating(selectedRating.value);
+    }
+  }
+
+  /// Opens the rating flow for a specific ride source (e.g. My Rides details).
+  void openRatingForRide(RideRatingRideEntity ride) {
+    _resetSheetState(clearPendingRide: true);
+    pendingReviewRide.value = ride;
+    final initialRating = ride.riderRating;
+    selectedRating.value =
+        (initialRating != null && initialRating >= 1 && initialRating <= 5)
+            ? initialRating
+            : 0;
+    _openRatingBottomSheet();
+  }
+
   Future<void> _loadPendingReviewRide() async {
     isLoadingRide.value = true;
     final result = await getLastCompletedRideUseCase();

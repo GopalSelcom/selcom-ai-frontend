@@ -75,10 +75,49 @@ class AuthController extends GetxController {
   }
 
   Future<void> sendOtpAndNavigate() async {
+    if (!isEmailValidOrEmpty) {
+      errorMessage.value = invalidEmailMessage;
+      return;
+    }
+
     final success = await sendOtp();
     if (!success) return;
     startResendTimer();
     Get.toNamed(AppRoutes.otp);
+  }
+
+  bool _isValidEmail(String value) {
+    final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+    return emailRegex.hasMatch(value);
+  }
+
+  bool get isEmailValidOrEmpty {
+    final normalized = email.value.trim();
+    if (normalized.isEmpty) return true;
+    return _isValidEmail(normalized);
+  }
+
+  bool get canRequestOtp =>
+      mobileNumber.value.length >= 9 && isEmailValidOrEmpty && !isLoading.value;
+
+  String get invalidEmailMessage => 'Please enter a valid email address';
+
+  void onEmailChanged(String value) {
+    email.value = value;
+    final normalized = value.trim();
+    if (normalized.isEmpty) {
+      if (errorMessage.value == invalidEmailMessage) {
+        errorMessage.value = '';
+      }
+      return;
+    }
+    if (_isValidEmail(normalized)) {
+      if (errorMessage.value == invalidEmailMessage) {
+        errorMessage.value = '';
+      }
+      return;
+    }
+    errorMessage.value = invalidEmailMessage;
   }
 
   Future<bool> resendOtp() async {

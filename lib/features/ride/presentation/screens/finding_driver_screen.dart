@@ -21,13 +21,14 @@ class FindingDriverScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = Get.find<FindingDriverController>();
     final topPad = MediaQuery.paddingOf(context).top;
+    final sheetController = DraggableScrollableController();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: Stack(
         fit: StackFit.expand,
         children: [
-          _buildMap(context, c),
+          _buildMap(context, c, sheetController),
           Positioned(
             top: 0,
             left: 0,
@@ -61,14 +62,10 @@ class FindingDriverScreen extends StatelessWidget {
               ),
             ),
           ),
-          Positioned(
-            bottom: (MediaQuery.of(context).size.height * _sheetInitial) - 60.h,
-            right: 20.w,
-            child: AppMapGpsButton(onPressed: c.recenterMap),
-          ),
           AppDraggableBottomSheet(
+            controller: sheetController,
             initialChildSize: _sheetInitial,
-            minChildSize: 0.48,
+            minChildSize: 0.3,
             childBuilder: (scrollController) =>
                 _bottomSheet(c, scrollController),
           ),
@@ -77,7 +74,12 @@ class FindingDriverScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMap(BuildContext context, FindingDriverController c) {
+  Widget _buildMap(
+    BuildContext context,
+    FindingDriverController c,
+    DraggableScrollableController sheetController,
+  ) {
+    final topPad = MediaQuery.paddingOf(context).top;
     return Obx(() {
       final pickup = c.pickupLatLng;
       final destination = c.destinationLatLng;
@@ -116,8 +118,11 @@ class FindingDriverScreen extends StatelessWidget {
           Marker(
             markerId: const MarkerId('assigned_driver'),
             position: driver,
-            icon: c.assignedDriverMarkerIcon.value ??
-                BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+            icon:
+                c.assignedDriverMarkerIcon.value ??
+                BitmapDescriptor.defaultMarkerWithHue(
+                  BitmapDescriptor.hueGreen,
+                ),
             anchor: const Offset(0.5, 0.5),
             flat: true,
           ),
@@ -129,7 +134,9 @@ class FindingDriverScreen extends StatelessWidget {
             Marker(
               markerId: MarkerId('nearby_driver_$i'),
               position: c.driverMarkerPoints[i],
-              icon: c.assignedDriverMarkerIcon.value ?? BitmapDescriptor.defaultMarker,
+              icon:
+                  c.assignedDriverMarkerIcon.value ??
+                  BitmapDescriptor.defaultMarker,
               anchor: const Offset(0.5, 0.5),
             ),
           );
@@ -139,10 +146,23 @@ class FindingDriverScreen extends StatelessWidget {
         mapWidgetKey: const ValueKey('finding_driver_map'),
         initialCameraPosition: CameraPosition(target: pickup, zoom: 15),
         padding: EdgeInsets.only(
+          top: topPad + 80.h,
           bottom: MediaQuery.of(context).size.height * _sheetInitial,
         ),
         onMapCreated: c.onMapCreated,
         markers: markers,
+        showGpsButton: true,
+        onGpsPressed: c.recenterMap,
+        trackRider: true,
+        onUserInteraction: () {
+          if (sheetController.isAttached && sheetController.size > 0.3) {
+            sheetController.animateTo(
+              0.3,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+            );
+          }
+        },
         polylines: {
           if (routePoints.isNotEmpty)
             Polyline(
@@ -194,26 +214,30 @@ class FindingDriverScreen extends StatelessWidget {
           ),
         ),
         SizedBox(height: 20.h),
-        Obx(() => Text(
-              c.currentStatusLabel.value,
-              textAlign: TextAlign.center,
-              style: AppTextStyles.homeTitle.copyWith(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF132235),
-                letterSpacing: -0.4,
-              ),
-            )),
+        Obx(
+          () => Text(
+            c.currentStatusLabel.value,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.homeTitle.copyWith(
+              fontSize: 20.sp,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF132235),
+              letterSpacing: -0.4,
+            ),
+          ),
+        ),
         SizedBox(height: 8.h),
-        Obx(() => Text(
-              c.currentDescriptionLabel.value,
-              textAlign: TextAlign.center,
-              style: AppTextStyles.homeCaption.copyWith(
-                fontSize: 15.sp,
-                color: const Color(0xFF364B63),
-                height: 1.33,
-              ),
-            )),
+        Obx(
+          () => Text(
+            c.currentDescriptionLabel.value,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.homeCaption.copyWith(
+              fontSize: 15.sp,
+              color: const Color(0xFF364B63),
+              height: 1.33,
+            ),
+          ),
+        ),
         SizedBox(height: 20.h),
         Obx(() {
           if (c.currentStatusLabel.value == 'Finding Your Driver') {

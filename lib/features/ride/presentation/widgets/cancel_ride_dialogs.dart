@@ -127,7 +127,9 @@ class CancelAssignmentWarningDialog extends StatelessWidget {
 }
 
 class CancelReasonSelectionDialog extends StatefulWidget {
-  const CancelReasonSelectionDialog({super.key});
+  final List<String>? reasons;
+
+  const CancelReasonSelectionDialog({super.key, this.reasons});
 
   @override
   State<CancelReasonSelectionDialog> createState() =>
@@ -136,16 +138,24 @@ class CancelReasonSelectionDialog extends StatefulWidget {
 
 class _CancelReasonSelectionDialogState
     extends State<CancelReasonSelectionDialog> {
-  final List<String> _reasons = [
-    'Selected Wrong Pickup Location',
-    'Selected Wrong Drop Location',
-    'Booked By Mistake',
-    'Selected Different Service/Vehicle',
-    'Driver Asked To Pay Offline',
-    'Driver Asked To Cancel',
-    'Taking Too Long To Confirm The Ride',
-    'Others',
-  ];
+  late final List<String> _reasons;
+
+  @override
+  void initState() {
+    super.initState();
+    _reasons =
+        widget.reasons ??
+        [
+          'Selected Wrong Pickup Location',
+          'Selected Wrong Drop Location',
+          'Booked By Mistake',
+          'Selected Different Service/Vehicle',
+          'Driver Asked To Pay Offline',
+          'Driver Asked To Cancel',
+          'Taking Too Long To Arrive',
+          'Others',
+        ];
+  }
 
   String? _selectedReason;
 

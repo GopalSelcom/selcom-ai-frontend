@@ -5,8 +5,8 @@ import 'package:get/get.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
-import '../../../../shared/widgets/app_text_field.dart';
 import '../controllers/ride_rating_controller.dart';
+import 'ride_rating_input_section.dart';
 
 class RideRatingBottomSheet extends GetView<RideRatingController> {
   const RideRatingBottomSheet({super.key});
@@ -116,24 +116,8 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
                                       ),
                                     ),
                                     SizedBox(height: 14.h),
-                                    _ratingCard(),
-                                    Obx(
-                                      () => AnimatedSwitcher(
-                                        duration: const Duration(milliseconds: 250),
-                                        child: controller.hasSelectedRating
-                                            ? Column(
-                                                key: const ValueKey('details'),
-                                                children: [
-                                                  SizedBox(height: 12.h),
-                                                  _tagCard(),
-                                                  if (controller.selectedRating.value <= 2) ...[
-                                                    SizedBox(height: 12.h),
-                                                    _commentCard(),
-                                                  ],
-                                                ],
-                                              )
-                                            : const SizedBox.shrink(),
-                                      ),
+                                    RideRatingInputSection(
+                                      controller: controller,
                                     ),
                                     SizedBox(height: 14.h),
                                     Row(
@@ -204,159 +188,6 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
     );
   }
 
-  Widget _ratingCard() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(14.w),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8F9FD),
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFFE6E9EE), width: 0.8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'How was your ride?',
-            style: AppTextStyles.homeTitle.copyWith(
-              fontSize: 15.sp,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF132235),
-            ),
-          ),
-          SizedBox(height: 10.h),
-          Obx(
-            () => Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: List.generate(5, (index) {
-                final star = index + 1;
-                return GestureDetector(
-                  onTap: () => controller.onRatingSelected(star),
-                  child: Icon(
-                    Icons.star,
-                    size: 42.w,
-                    color: star <= controller.selectedRating.value
-                        ? const Color(0xFFFFCC00)
-                        : const Color(0xFFD9DDE3),
-                  ),
-                );
-              }),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _tagCard() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(14.w),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8F9FD),
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFFE6E9EE), width: 0.8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'What stood out?',
-            style: AppTextStyles.homeTitle.copyWith(
-              fontSize: 15.sp,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF132235),
-            ),
-          ),
-          SizedBox(height: 6.h),
-          Text(
-            'Pick any tags that match this trip.',
-            style: AppTextStyles.homeCaption.copyWith(
-              color: const Color(0xFF364B63),
-              fontSize: 13.sp,
-            ),
-          ),
-          SizedBox(height: 10.h),
-          Obx(() {
-            if (controller.isLoadingTags.value) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (controller.availableTags.isEmpty) {
-              return const SizedBox.shrink();
-            }
-            return Wrap(
-              spacing: 8.w,
-              runSpacing: 8.h,
-              children: controller.availableTags.map((tag) {
-                final isSelected = controller.isTagSelected(tag.key);
-                return GestureDetector(
-                  onTap: () => controller.onTagToggled(tag.key),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 14.w,
-                      vertical: 10.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected ? AppColors.primaryLight : Colors.white,
-                      borderRadius: BorderRadius.circular(999.r),
-                      border: Border.all(
-                        color: isSelected
-                            ? AppColors.primary
-                            : const Color(0xFFD9DDE3),
-                      ),
-                    ),
-                    child: Text(
-                      tag.label,
-                      style: AppTextStyles.homeCaption.copyWith(
-                        color: isSelected
-                            ? AppColors.primary
-                            : const Color(0xFF364B63),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _commentCard() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(14.w),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8F9FD),
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFFE6E9EE), width: 0.8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Please tell us what went wrong or how we can improve.',
-            style: AppTextStyles.homeTitle.copyWith(
-              fontSize: 15.sp,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF132235),
-            ),
-          ),
-          SizedBox(height: 10.h),
-          AppTextField(
-            controller: controller.commentController,
-            onChanged: controller.onCommentChanged,
-            hintText: 'Type here',
-            maxLines: 2,
-            maxLength: 120,
-            showCounter: true,
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _routeSummaryCard() {
     final ride = controller.pendingReviewRide.value;

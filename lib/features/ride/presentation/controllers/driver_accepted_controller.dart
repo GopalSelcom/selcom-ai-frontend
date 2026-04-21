@@ -19,6 +19,7 @@ import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/app_map_service.dart';
+import '../../../../core/services/direction_service.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/utils/map_marker_utils.dart';
@@ -29,7 +30,8 @@ import '../widgets/cancel_ride_dialogs.dart';
 /// SCR-11 — Driver accepted: live map, driver details, OTP.
 enum RideBottomSheetState { driverAssigned, rideStarted, rideCompleted }
 
-class DriverAcceptedController extends GetxController {
+class DriverAcceptedController extends GetxController
+    with GetSingleTickerProviderStateMixin {
   DriverAcceptedController({
     required this.rideRepository,
     required this.analyticsService,
@@ -76,6 +78,11 @@ class DriverAcceptedController extends GetxController {
   final Rxn<BitmapDescriptor> pickupIcon = Rxn<BitmapDescriptor>();
   final Rxn<BitmapDescriptor> dropIcon = Rxn<BitmapDescriptor>();
   final Rxn<Offset> assignedDriverEtaScreenPx = Rxn<Offset>();
+  final assignedDriverHeading = 0.0.obs;
+  AnimationController? _moveAnimController;
+  DateTime? _lastRouteFetch;
+
+  VoidCallback? onRecenterPressed;
 
   GoogleMapController? mapController;
   bool _navigatedAway = false;
@@ -88,12 +95,27 @@ class DriverAcceptedController extends GetxController {
   StreamSubscription<Map<String, dynamic>>? _chatSub;
   bool _didJoinRideRoom = false;
 
+  final RxDouble sheetSize = 0.3.obs;
+
+  void updateSheetSize(double size) {
+    sheetSize.value = size;
+  }
+
   @override
   void onInit() {
     super.onInit();
+    _moveAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    );
     _parseArgs();
     _bootstrap();
     ever(assignedDriverLocation, (_) => scheduleAssignedEtaOverlayRefresh());
+    ever(routePoints, (List<LatLng> points) {
+      if (points.length > 2) {
+        recenterMap();
+      }
+    });
     analyticsService.logEvent('driver_assigned_screen_viewed');
   }
 
@@ -160,6 +182,30 @@ class DriverAcceptedController extends GetxController {
       routePoints.assignAll([pickupLatLng, destinationLatLng]);
     }
     routeTarget.value = 'pick_up';
+    _fetchRoadRouteFallback();
+  }
+
+  Future<void> _fetchRoadRouteFallback() async {
+    final target = routeTarget.value;
+    final origin = assignedDriverLocation.value;
+    final pickup = pickupLatLng;
+    final destination = destinationLatLng;
+
+    if (target == 'pick_up' && origin != null) {
+      final roadPoints = await DirectionService.getRoute(origin, pickup);
+      _lastRouteFetch = DateTime.now();
+      if (roadPoints.length > 2 && routeTarget.value == 'pick_up') {
+        routePoints.assignAll(roadPoints);
+      }
+    } else if (target == 'drop_off') {
+      // Use driver location as current origin if available, fallback to pickup.
+      final start = origin ?? pickup;
+      final roadPoints = await DirectionService.getRoute(start, destination);
+      _lastRouteFetch = DateTime.now();
+      if (roadPoints.length > 2 && routeTarget.value == 'drop_off') {
+        routePoints.assignAll(roadPoints);
+      }
+    }
   }
 
   void _hydrateSocketSeedPayloads(Map<String, dynamic> args) {
@@ -200,39 +246,39 @@ class DriverAcceptedController extends GetxController {
   //   } catch (_) {}
   // }
 
-  Future<void> _fetchRideDetails() async {
-    if (rideId.isEmpty) {
-      _applyMockContent();
-      isLoadingRide.value = false;
-      assignedDriverLocation.value ??= const LatLng(-6.7921, 39.2101);
-      return;
-    }
-    final result = await rideRepository.getRideDetails(rideId);
-    result.fold(
-      (_) {
-        _applyMockContent();
-        assignedDriverLocation.value ??= const LatLng(-6.7921, 39.2101);
-      },
-      (r) {
-        ride.value = r;
-        // _applyRide(r);
-      },
-    );
-    isLoadingRide.value = false;
-  }
+  // Future<void> _fetchRideDetails() async {
+  //   if (rideId.isEmpty) {
+  //     _applyMockContent();
+  //     isLoadingRide.value = false;
+  //     assignedDriverLocation.value ??= const LatLng(-6.7921, 39.2101);
+  //     return;
+  //   }
+  //   final result = await rideRepository.getRideDetails(rideId);
+  //   result.fold(
+  //     (_) {
+  //       _applyMockContent();
+  //       assignedDriverLocation.value ??= const LatLng(-6.7921, 39.2101);
+  //     },
+  //     (r) {
+  //       ride.value = r;
+  //       // _applyRide(r);
+  //     },
+  //   );
+  //   isLoadingRide.value = false;
+  // }
 
-  void _applyMockContent() {
-    driverName.value = 'John Doe';
-    driverPhone.value = '';
-    driverRating.value = '4';
-    driverVehicleLine.value = 'Volkswagen';
-    plateLinePrimary.value = 'T 772';
-    plateLineSecondary.value = 'BBE';
-    vehicleSubtitle.value = 'Toyota corolla, White';
-    otpDigits.assignAll(['2', '7', '5', '6']);
-    arrivalLabel.value = 'Driver will arriving in 1 min...';
-    currentRideStatus.value = 'driver_assigned';
-  }
+  // void _applyMockContent() {
+  //   driverName.value = 'John Doe';
+  //   driverPhone.value = '';
+  //   driverRating.value = '4';
+  //   driverVehicleLine.value = 'Volkswagen';
+  //   plateLinePrimary.value = 'T 772';
+  //   plateLineSecondary.value = 'BBE';
+  //   vehicleSubtitle.value = 'Toyota corolla, White';
+  //   otpDigits.assignAll(['2', '7', '5', '6']);
+  //   arrivalLabel.value = 'Driver will arriving in 1 min...';
+  //   currentRideStatus.value = 'driver_assigned';
+  // }
 
   void _applyRide(RideModel r) {
     final d = r.driverSnapshot as DriverSnapshotModel?;
@@ -327,12 +373,47 @@ class DriverAcceptedController extends GetxController {
     });
 
     _driverLocSub = _socketService.rideDriverLocationStream.listen((payload) {
+      if (payload.latitude == 0 || payload.longitude == 0) return;
+      // Strict city-region validation: Dar es Salaam is approx -6.8, 39.2
+      if (payload.latitude! < -15 ||
+          payload.latitude! > 0 ||
+          payload.longitude! < 20 ||
+          payload.longitude! > 50)
+        return;
+
       final lat = payload.latitude;
       final lng = payload.longitude;
+      final head = payload.heading;
       if (lat == null || lng == null) return;
-      assignedDriverLocation.value = LatLng(lat, lng);
-      _setPickupRouteFallback();
-      _fitRouteBounds();
+
+      final targetPos = LatLng(lat, lng);
+
+      double targetHeading = assignedDriverHeading.value;
+      if (head != null) {
+        if (head is num) {
+          targetHeading = head.toDouble();
+        } else if (head is String) {
+          targetHeading = double.tryParse(head) ?? targetHeading;
+        }
+      }
+
+      _animateDriverMovement(targetPos, targetHeading);
+
+      if (routeTarget.value.isNotEmpty) {
+        if (routePoints.length <= 2) {
+          _fetchRoadRouteFallback();
+        } else {
+          final firstPoint = routePoints.first;
+          final distToPath = _calculateSimpleDist(targetPos, firstPoint);
+          if (distToPath > 0.002) {
+            final now = DateTime.now();
+            if (_lastRouteFetch == null ||
+                now.difference(_lastRouteFetch!).inSeconds > 20) {
+              _fetchRoadRouteFallback();
+            }
+          }
+        }
+      }
     });
 
     _trackingSub = _socketService.trackingUpdateStatusStream.listen((payload) {
@@ -453,8 +534,8 @@ class DriverAcceptedController extends GetxController {
   }
 
   void recenterMap() {
+    onRecenterPressed?.call();
     _fitRouteBounds(force: true);
-    scheduleAssignedEtaOverlayRefresh();
   }
 
   Future<void> _fitRouteBounds({bool force = false}) async {
@@ -487,8 +568,21 @@ class DriverAcceptedController extends GetxController {
       points.addAll(routePoints);
     }
 
-    if (points.isEmpty) return;
+    // Sanity Filter: Remove (0,0) and extreme outliers relative to the driver.
+    if (assigned != null) {
+      final filtered = points.where((p) {
+        if (p.latitude == 0 && p.longitude == 0) return false;
+        final dLat = (p.latitude - assigned.latitude).abs();
+        final dLng = (p.longitude - assigned.longitude).abs();
+        return dLat < 0.2 && dLng < 0.2; // Approx 20km
+      }).toList();
+      points.clear();
+      points.addAll(filtered);
+    } else {
+      points.removeWhere((p) => p.latitude == 0 && p.longitude == 0);
+    }
 
+    if (points.isEmpty) return;
     _lastCameraUpdate = now;
 
     double minLat = points.first.latitude;
@@ -505,10 +599,10 @@ class DriverAcceptedController extends GetxController {
     await ctrl.animateCamera(
       CameraUpdate.newLatLngBounds(
         LatLngBounds(
-          southwest: LatLng(minLat - 0.004, minLng - 0.004),
-          northeast: LatLng(maxLat + 0.004, maxLng + 0.004),
+          southwest: LatLng(minLat - 0.001, minLng - 0.001),
+          northeast: LatLng(maxLat + 0.001, maxLng + 0.001),
         ),
-        56,
+        64,
       ),
     );
   }
@@ -583,29 +677,37 @@ class DriverAcceptedController extends GetxController {
       }
     }
 
+    final oldStatus = currentRideStatus.value;
+    final oldTarget = routeTarget.value;
+
     final target = _normalizeRouteTarget(payload.routeTarget);
     if (target == 'pick_up') {
       routeTarget.value = target;
       final coords = payload.routeGeometry?.coordinates;
-      if (coords != null && coords.isNotEmpty) {
+      if (coords != null && coords.isNotEmpty && coords.length > 2) {
         routePoints.assignAll(_toLatLngPolyline(coords));
       } else {
-        _setPickupRouteFallback();
+        _fetchRoadRouteFallback();
       }
     } else if (target == 'drop_off') {
       routeTarget.value = target;
       final coords = payload.routeGeometry?.coordinates;
-      if (coords != null && coords.isNotEmpty) {
+      if (coords != null && coords.isNotEmpty && coords.length > 2) {
         routePoints.assignAll(_toLatLngPolyline(coords));
       } else {
-        _setDropRouteFallback();
+        _fetchRoadRouteFallback();
       }
     } else if (status.isNotEmpty) {
       // Active-ride entry can provide status without routeTarget.
       _applyRouteFallbackForStatus(status);
     }
 
-    _fitRouteBounds();
+    // Only re-fit camera if status or route target actually changed.
+    // This prevents frequent zoom-outs on every location update.
+    if (currentRideStatus.value != oldStatus ||
+        routeTarget.value != oldTarget) {
+      _fitRouteBounds();
+    }
   }
 
   void _applyBottomSheetStateForStatus(String rawStatus) {
@@ -652,6 +754,9 @@ class DriverAcceptedController extends GetxController {
   }
 
   void _applyRouteFallbackForStatus(String rawStatus) {
+    // Only apply fallback if we don't already have points.
+    if (routePoints.isNotEmpty) return;
+
     final status = rawStatus.trim();
     final canonicalStatus = status
         .replaceAll('ridestatus.', '')
@@ -677,11 +782,13 @@ class DriverAcceptedController extends GetxController {
 
     if (pickupStatuses.contains(normalizedStatus)) {
       _setPickupRouteFallback();
+      _fetchRoadRouteFallback();
       return;
     }
 
     if (dropStatuses.contains(normalizedStatus)) {
       _setDropRouteFallback();
+      _fetchRoadRouteFallback();
     }
   }
 
@@ -736,25 +843,116 @@ class DriverAcceptedController extends GetxController {
           'Driver will arriving in ${convertedTime <= 1 ? '1 min' : '$convertedTime mins'}...';
     }
 
-    final target = _normalizeRouteTarget(payload.routeTarget);
+    String target = _normalizeRouteTarget(payload.routeTarget);
+    final coords = payload.routeGeometry?.coordinates;
+
+    // If target is missing, infer it from the status
+    if (target.isEmpty) {
+      final status = (payload.status ?? '').toLowerCase();
+      if (status.contains('progress') || status.contains('started')) {
+        target = 'drop_off';
+      } else if (status.contains('assigned') || status.contains('arriving')) {
+        target = 'pick_up';
+      }
+    }
+
     if (target == 'pick_up') {
       routeTarget.value = target;
-      final coords = payload.routeGeometry?.coordinates;
       if (coords != null && coords.isNotEmpty) {
-        routePoints.assignAll(_toLatLngPolyline(coords));
-      } else {
-        _setPickupRouteFallback();
+        final newPoints = _toLatLngPolyline(coords);
+        if (newPoints.length > 5) {
+          routePoints.assignAll(newPoints);
+        } else if (routePoints.length <= 2) {
+          _fetchRoadRouteFallback();
+        }
       }
     } else if (target == 'drop_off') {
       routeTarget.value = target;
-      final coords = payload.routeGeometry?.coordinates;
       if (coords != null && coords.isNotEmpty) {
-        routePoints.assignAll(_toLatLngPolyline(coords));
-      } else {
-        _setDropRouteFallback();
+        final newPoints = _toLatLngPolyline(coords);
+        if (newPoints.length > 5) {
+          routePoints.assignAll(newPoints);
+        } else if (routePoints.length <= 2) {
+          _fetchRoadRouteFallback();
+        }
       }
     }
-    _fitRouteBounds();
+    // _fitRouteBounds() removed from here to prevent frequent zoom-outs.
+  }
+
+  void _animateDriverMovement(LatLng targetPos, double targetHeading) {
+    if (assignedDriverLocation.value == null) {
+      assignedDriverLocation.value = targetPos;
+      assignedDriverHeading.value = targetHeading;
+      return;
+    }
+
+    final startPos = assignedDriverLocation.value!;
+    final startHeading = assignedDriverHeading.value;
+
+    _moveAnimController?.stop();
+    _moveAnimController?.reset();
+
+    final Animation<double> curve = CurvedAnimation(
+      parent: _moveAnimController!,
+      curve: Curves.linear,
+    );
+
+    _moveAnimController?.addListener(() {
+      final t = curve.value;
+      final currentPos = _interpolateLatLng(startPos, targetPos, t);
+      assignedDriverLocation.value = currentPos;
+      assignedDriverHeading.value = _interpolateAngle(
+        startHeading,
+        targetHeading,
+        t,
+      );
+
+      // Perform real-time trimming for visual smoothness
+      _trimRoutePoints(currentPos);
+    });
+
+    _moveAnimController?.forward();
+  }
+
+  void _trimRoutePoints(LatLng currentPos) {
+    if (routePoints.length < 3) return;
+
+    int closestIndex = -1;
+    // ~50m threshold for trimming
+    const double trimThreshold = 0.0005;
+
+    // Check upcoming segments for progress
+    int checkCount = routePoints.length > 8 ? 8 : routePoints.length;
+    for (int i = 0; i < checkCount; i++) {
+      final dist = _calculateSimpleDist(currentPos, routePoints[i]);
+      if (dist < trimThreshold) {
+        closestIndex = i;
+        break;
+      }
+    }
+
+    if (closestIndex > 0) {
+      routePoints.removeRange(0, closestIndex);
+      // Ensure the line starts exactly at the driver for a clean look
+      routePoints[0] = currentPos;
+    }
+  }
+
+  double _calculateSimpleDist(LatLng a, LatLng b) {
+    return (a.latitude - b.latitude).abs() + (a.longitude - b.longitude).abs();
+  }
+
+  LatLng _interpolateLatLng(LatLng a, LatLng b, double t) {
+    final lat = a.latitude + (b.latitude - a.latitude) * t;
+    final lng = a.longitude + (b.longitude - a.longitude) * t;
+    return LatLng(lat, lng);
+  }
+
+  double _interpolateAngle(double a, double b, double t) {
+    // Basic linear interpolation for heading.
+    // In a production app, you might want to handle the 0/360 wrap-around smoothly.
+    return a + (b - a) * t;
   }
 
   String _normalizeRouteTarget(String? target) {
@@ -916,7 +1114,16 @@ class DriverAcceptedController extends GetxController {
 
     // 2. Reason Selection
     final String? reason = await Get.dialog<String>(
-      const CancelReasonSelectionDialog(),
+      const CancelReasonSelectionDialog(
+        reasons: [
+          'Driver Asked To Cancel',
+          'Driver Asked To Pay Offline',
+          'Taking Too Long To Arrive',
+          'Selected Wrong Pickup Location',
+          'Booked By Mistake',
+          'Others',
+        ],
+      ),
       barrierDismissible: false,
     );
 
