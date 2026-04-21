@@ -355,7 +355,7 @@ class RideMessageScreen extends GetView<RideMessageController> {
                               hintText: allowed
                                   ? 'Write a message...'
                                   : 'Chat unavailable',
-                              hintStyle: TextStyle(color: Colors.grey[400]),
+                              hintStyle: AppTextStyles.hint,
                               border: InputBorder.none,
                             ),
                           ),

@@ -6,6 +6,7 @@ import '../../../../core/data/models/responses/get_saved_places_response.dart';
 import '../../../../core/data/models/user_profile_models.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/data/models/requests/create_saved_place_request.dart';
+import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
 import '../models/contact_us_models.dart';
 
 class ProfileRepositoryImpl implements ProfileRepository {
@@ -65,6 +66,18 @@ class ProfileRepositoryImpl implements ProfileRepository {
   ) async {
     try {
       final result = await remoteDataSource.addSavedPlace(request);
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> saveRecentAsFavorite(
+    SaveRecentAsFavoriteRequest request,
+  ) async {
+    try {
+      final result = await remoteDataSource.saveRecentAsFavorite(request);
       return Right(result);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

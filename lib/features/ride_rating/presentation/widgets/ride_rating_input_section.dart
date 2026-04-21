@@ -90,7 +90,9 @@ class RideRatingInputSection extends StatelessWidget {
                           vertical: 10.h,
                         ),
                         decoration: BoxDecoration(
-                          color: isSelected ? AppColors.primaryLight : Colors.white,
+                          color: isSelected
+                              ? AppColors.primaryLight
+                              : Colors.white,
                           borderRadius: BorderRadius.circular(999.r),
                           border: Border.all(
                             color: isSelected
@@ -125,7 +127,7 @@ class RideRatingInputSection extends StatelessWidget {
                 AppTextField(
                   controller: controller.commentController,
                   onChanged: controller.onCommentChanged,
-                  hintText: 'Type here',
+                  hintText: 'Tell us more about your experience...',
                   maxLines: 2,
                   maxLength: 120,
                   showCounter: true,

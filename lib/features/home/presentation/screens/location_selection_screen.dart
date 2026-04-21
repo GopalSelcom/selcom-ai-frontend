@@ -8,6 +8,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../controllers/home_controller.dart';
 import '../../data/models/places_models.dart';
+import '../../../../core/routes/app_routes.dart';
 
 class LocationSelectionScreen extends StatefulWidget {
   const LocationSelectionScreen({super.key});
@@ -75,7 +76,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     pickupFocusNode = FocusNode();
     destinationFocusNode = FocusNode();
     if (_routePickupLat.value != null) {
-      controller.isPickupSelected.value = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        controller.isPickupSelected.value = true;
+      });
     }
   }
 
@@ -337,7 +340,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       fontWeight: FontWeight.w500,
       height: 20 / 15,
     );
-    final hintStyle = fieldStyle;
+    final hintStyle = AppTextStyles.hint;
 
     final List<Widget> rows = [];
 
@@ -371,7 +374,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             isDense: true,
             border: InputBorder.none,
             contentPadding: EdgeInsets.zero,
-            hintText: 'AutoBhan Road',
+            hintText: 'Search pickup location',
             hintStyle: hintStyle,
           ),
         ),
@@ -401,7 +404,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             isDense: true,
             border: InputBorder.none,
             contentPadding: EdgeInsets.zero,
-            hintText: 'Home',
+            hintText: 'Search destination',
             hintStyle: hintStyle,
           ),
         ),
@@ -434,7 +437,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
               isDense: true,
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
-              hintText: 'Add stop',
+              hintText: 'Search stop location',
               hintStyle: hintStyle,
             ),
           ),
@@ -456,51 +459,74 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       child: Row(
         children: [
           _chip('Home', AppAssets.icHomeChip),
-          _chip('Office', AppAssets.icOfficeChip),
-          _chip('Other', AppAssets.icOtherChip),
           _chip('Work', AppAssets.icWorkChip),
+          _chip('Other', AppAssets.icOtherChip),
         ],
       ),
     );
   }
 
   Widget _chip(String label, String iconPath) {
+    final savedPlace = controller.savedPlaces.firstWhereOrNull(
+      (p) => p.label?.toLowerCase() == label.toLowerCase(),
+    );
+    final isSaved = savedPlace != null;
+
     return Padding(
       padding: EdgeInsets.only(right: 8.w),
       child: InkWell(
         onTap: () {
-          controller.applySavedLabelToLocationSelection(
-            label: label,
-            destinationController: destinationController,
-            activeSegmentIndex: _activeSegmentIndex,
-            routeDestinationLat: _routeDestinationLat,
-            routeDestinationLng: _routeDestinationLng,
-            destinationPlaceId: _destinationPlaceId,
-          );
+          if (isSaved) {
+            controller.applySavedLabelToLocationSelection(
+              label: label,
+              destinationController: destinationController,
+              activeSegmentIndex: _activeSegmentIndex,
+              routeDestinationLat: _routeDestinationLat,
+              routeDestinationLng: _routeDestinationLng,
+              destinationPlaceId: _destinationPlaceId,
+            );
+          } else {
+            Get.toNamed(AppRoutes.selectSavedLocation, arguments: label);
+          }
         },
+        onLongPress: isSaved
+            ? () => Get.toNamed(AppRoutes.selectSavedLocation, arguments: label)
+            : null,
+        borderRadius: BorderRadius.circular(12.r),
         child: Container(
-          height: 36.h,
-          padding: EdgeInsets.symmetric(horizontal: 18.36.w, vertical: 2.36.h),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: const Color(0xFFE6E9EE), width: 0.787),
+            border: Border.all(color: const Color(0xFFE2E8F0), width: 0.8),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SvgPictureAsset(
-                iconPath,
-                width: 15.w,
-                height: 15.w,
-                placeholderBuilder: (_) => const Icon(Icons.place, size: 13),
+              Container(
+                padding: EdgeInsets.all(4.w),
+                decoration: BoxDecoration(
+                  color: isSaved ? const Color(0xFFFEF3C7) : AppColors.primary,
+                  shape: BoxShape.circle,
+                ),
+                child: isSaved
+                    ? SvgPictureAsset(
+                        label.toLowerCase() == 'home'
+                            ? AppAssets.icHomeChip
+                            : label.toLowerCase() == 'work'
+                            ? AppAssets.icWorkChip
+                            : AppAssets.icOtherChip,
+                        width: 16.w,
+                        height: 16.w,
+                      )
+                    : Icon(Icons.add, color: Colors.white, size: 14.sp),
               ),
-              SizedBox(width: 4.72.w),
+              SizedBox(width: 8.w),
               Text(
                 label,
                 style: AppTextStyles.homeChip.copyWith(
-                  color: const Color(0xFF2A3143),
-                  height: 1.0,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.shade1,
                 ),
               ),
             ],

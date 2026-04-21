@@ -31,8 +31,11 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
     searchController = TextEditingController();
 
     // Clear previous suggestions and search query
-    controller.searchQuery.value = '';
-    controller.suggestions.clear();
+    // Wrapped in addPostFrameCallback to avoid "setState() called during build" exception
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.searchQuery.value = '';
+      controller.suggestions.clear();
+    });
   }
 
   @override
@@ -130,10 +133,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
               ),
             ),
             hintText: 'Search location...',
-            hintStyle: AppTextStyles.homeSubtitle.copyWith(
-              color: const Color(0xFF94A3B8),
-              fontWeight: FontWeight.w400,
-            ),
+            hintStyle: AppTextStyles.hint,
             border: InputBorder.none,
             suffixIconConstraints: BoxConstraints(minWidth: 40.w, minHeight: 0),
             suffixIcon: Obx(
@@ -208,6 +208,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
           title: loc.address.split(',').first,
           subtitle: loc.address,
           onTap: () => _handleRecentSelection(loc),
+          onFavorite: () => controller.toggleFavoriteForRecent(loc),
         );
       },
     );
@@ -217,6 +218,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
     required String title,
     required String subtitle,
     required VoidCallback onTap,
+    VoidCallback? onFavorite,
   }) {
     return InkWell(
       onTap: onTap,
@@ -279,6 +281,15 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
                 ],
               ),
             ),
+            if (onFavorite != null)
+              IconButton(
+                icon: Icon(
+                  Icons.favorite_border,
+                  color: AppColors.primary,
+                  size: 22.sp,
+                ),
+                onPressed: onFavorite,
+              ),
           ],
         ),
       ),

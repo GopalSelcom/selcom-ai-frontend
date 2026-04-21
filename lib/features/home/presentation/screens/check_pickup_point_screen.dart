@@ -8,6 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/map_widgets.dart';
 import '../controllers/home_controller.dart';
+import '../../../../core/routes/app_routes.dart';
 
 class CheckPickupPointScreen extends StatefulWidget {
   const CheckPickupPointScreen({super.key});
@@ -20,11 +21,13 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
   late final HomeController controller;
   late final Map<String, dynamic> args;
   late final String label;
-  late final String title;
-  late final String subtitle;
-  late final double lat;
-  late final double lng;
   late final String placeId;
+
+  // Reactive state for map-driven location
+  final RxString _title = ''.obs;
+  final RxString _subtitle = ''.obs;
+  final RxDouble _lat = 0.0.obs;
+  final RxDouble _lng = 0.0.obs;
 
   @override
   void initState() {
@@ -32,11 +35,17 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
     controller = Get.find<HomeController>();
     args = Get.arguments as Map<String, dynamic>? ?? {};
     label = args['label'] ?? 'Home';
-    title = args['title'] ?? '';
-    subtitle = args['subtitle'] ?? '';
-    lat = args['lat'] ?? controller.mapCenter.value.latitude;
-    lng = args['lng'] ?? controller.mapCenter.value.longitude;
+    _title.value = args['title'] ?? '';
+    _subtitle.value = args['subtitle'] ?? '';
+    _lat.value = args['lat'] ?? controller.mapCenter.value.latitude;
+    _lng.value = args['lng'] ?? controller.mapCenter.value.longitude;
     placeId = args['placeId'] ?? '';
+
+    // Sync controller's map center to prevent auto-jump in onMapCreated
+    // Wrapped in addPostFrameCallback to avoid "setState() called during build" exception
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.mapCenter.value = LatLng(_lat.value, _lng.value);
+    });
   }
 
   @override
@@ -48,11 +57,19 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
           Positioned.fill(
             child: AppGoogleMap(
               initialCameraPosition: CameraPosition(
-                target: LatLng(lat, lng),
+                target: LatLng(_lat.value, _lng.value),
                 zoom: 16,
               ),
               onMapCreated: (mapController) {
-                // Optional: handle map controller
+                controller.onMapCreated(mapController);
+              },
+              onCameraMove: (position) {
+                _lat.value = position.target.latitude;
+                _lng.value = position.target.longitude;
+              },
+              onCameraIdle: () async {
+                await controller.onCameraIdle();
+                _subtitle.value = controller.currentMapAddress.value;
               },
               padding: EdgeInsets.only(bottom: 350.h),
               markers: const {},
@@ -229,29 +246,31 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                       ),
                       SizedBox(width: 12.w),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              title,
-                              style: AppTextStyles.homeSubtitle.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.shade1,
+                        child: Obx(
+                          () => Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _title.value,
+                                style: AppTextStyles.homeSubtitle.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.shade1,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            SizedBox(height: 4.h),
-                            Text(
-                              subtitle,
-                              style: AppTextStyles.homeCaption.copyWith(
-                                color: AppColors.shade2,
-                                fontSize: 13.sp,
+                              SizedBox(height: 4.h),
+                              Text(
+                                _subtitle.value,
+                                style: AppTextStyles.homeCaption.copyWith(
+                                  color: AppColors.shade2,
+                                  fontSize: 13.sp,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -271,20 +290,23 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                     ),
                     onPressed: () {
                       _showConfirmationDialog(
-                        title: title,
-                        subtitle: subtitle,
+                        title: _title.value,
+                        subtitle: _subtitle.value,
                         onConfirm: () async {
                           await controller.savePlace(
                             label: label,
-                            name: title,
+                            name: _title.value,
                             placeId: placeId,
-                            lat: lat,
-                            lng: lng,
+                            lat: _lat.value,
+                            lng: _lng.value,
                           );
-                          // Navigate back to Home
+                          // Navigate back to the most relevant previous screen
                           Get.until(
                             (route) =>
-                                route.settings.name == '/home' || route.isFirst,
+                                route.settings.name ==
+                                    AppRoutes.locationSelection ||
+                                route.settings.name == AppRoutes.home ||
+                                route.isFirst,
                           );
                         },
                       );

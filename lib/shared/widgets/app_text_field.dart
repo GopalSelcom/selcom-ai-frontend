@@ -75,7 +75,7 @@ class AppTextField extends StatelessWidget {
           style: AppTextStyles.body,
           decoration: InputDecoration(
             hintText: hintText,
-            hintStyle: AppTextStyles.bodySecondary,
+            hintStyle: AppTextStyles.hint,
             errorText: errorText,
             prefixIcon: prefixIcon,
             suffixIcon: suffixIcon,

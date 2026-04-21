@@ -15,6 +15,7 @@ import 'package:selcom_rides_frontend/features/home/data/models/places_models.da
 import 'package:selcom_rides_frontend/core/data/models/ride_model.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/data/models/requests/create_saved_place_request.dart';
+import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../ride/presentation/controllers/vehicle_selection_controller.dart';
 import '../../domain/repositories/home_repository.dart';
@@ -392,30 +393,45 @@ class HomeController extends GetxController {
     );
 
     final result = await profileRepository.addSavedPlace(request);
-    result.fold(
-      (_) => Get.snackbar(
-        'Unable to save',
-        'Could not save this location right now.',
-        snackPosition: SnackPosition.BOTTOM,
-      ),
-      (ok) async {
-        if (!ok) {
-          Get.snackbar(
-            'Unable to save',
-            'Could not save this location right now.',
-            snackPosition: SnackPosition.BOTTOM,
-          );
-        } else {
-          await loadSavedPlaces();
-          Get.snackbar(
-            'Saved',
-            '$label location has been saved.',
-            snackPosition: SnackPosition.BOTTOM,
-          );
-        }
-      },
-    );
+    result.fold((_) => null, (ok) async {
+      if (ok) {
+        await loadSavedPlaces();
+      }
+    });
     isSavingPlace.value = false;
+  }
+
+  Future<void> saveRecentAsFavorite({
+    required RecentDestinationModel loc,
+    required String label,
+  }) async {
+    if (isSavingPlace.value) return;
+    isSavingPlace.value = true;
+
+    final request = SaveRecentAsFavoriteRequest(
+      label: label.toLowerCase(),
+      name: loc.address.split(',').first,
+      address: loc.address,
+      lat: loc.lat,
+      lng: loc.lng,
+    );
+
+    final result = await profileRepository.saveRecentAsFavorite(request);
+    result.fold((failure) => null, (success) async {
+      if (success) {
+        await loadSavedPlaces();
+      }
+    });
+    isSavingPlace.value = false;
+  }
+
+  Future<void> toggleFavoriteForRecent(RecentDestinationModel loc) async {
+    final saved = getSavedPlaceFor(loc.address, null);
+    if (saved != null && saved.id != null) {
+      await toggleFavorite(loc.address, null);
+    } else {
+      await saveRecentAsFavorite(loc: loc, label: 'other');
+    }
   }
 
   Future<void> refreshCurrentLocationAddress() async {
@@ -640,7 +656,7 @@ class HomeController extends GetxController {
     );
     if (!canProceed) return;
 
-    await Get.delete<VehicleSelectionController>();
+    // GetX lifecycle managed via AppRoutes and VehicleSelectionBinding.
     Get.toNamed(
       AppRoutes.booking,
       arguments: {
@@ -704,7 +720,7 @@ class HomeController extends GetxController {
     );
     if (!canProceed) return;
 
-    await Get.delete<VehicleSelectionController>();
+    // GetX lifecycle managed via AppRoutes and VehicleSelectionBinding.
     Get.toNamed(
       AppRoutes.booking,
       arguments: {
@@ -744,7 +760,7 @@ class HomeController extends GetxController {
     );
     if (!canProceed) return;
 
-    await Get.delete<VehicleSelectionController>();
+    // GetX lifecycle managed via AppRoutes and VehicleSelectionBinding.
     Get.toNamed(
       AppRoutes.booking,
       arguments: {
@@ -1015,7 +1031,7 @@ class HomeController extends GetxController {
     );
     if (!canProceed) return;
 
-    await Get.delete<VehicleSelectionController>();
+    // GetX lifecycle managed via AppRoutes and VehicleSelectionBinding.
     Get.toNamed(
       AppRoutes.booking,
       arguments: {
@@ -1293,7 +1309,6 @@ class HomeController extends GetxController {
   Future<void> toggleFavorite(String address, String? placeId) async {
     final saved = getSavedPlaceFor(address, placeId);
     if (saved == null || saved.id == null) {
-      Get.snackbar('Note', 'Only saved places can be favourited.');
       return;
     }
 
@@ -1317,7 +1332,6 @@ class HomeController extends GetxController {
           );
           savedPlaces.refresh();
         }
-        Get.snackbar('Error', 'Could not update favorite status');
       },
       (success) {
         if (!success) {

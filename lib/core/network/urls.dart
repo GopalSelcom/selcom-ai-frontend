@@ -125,6 +125,7 @@ class _AddressEndpoints {
   const _AddressEndpoints();
 
   final savedPlaces = "go/user/saved-places";
+  final saveRecentAsFavorite = "go/user/saved-places/from-recent";
 }
 
 /// ─────────────────────────────────
@@ -155,5 +156,6 @@ class _NotificationEndpoints {
 
   final list = "go/notifications";
   final readAll = "go/notifications/read-all";
-  String readById(String notificationId) => "go/notifications/$notificationId/read";
+  String readById(String notificationId) =>
+      "go/notifications/$notificationId/read";
 }
