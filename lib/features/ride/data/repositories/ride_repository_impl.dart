@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'dart:developer' as developer;
 import '../../../../core/data/models/responses/rides/active_ride_response.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/repositories/ride_repository.dart';
@@ -183,6 +184,10 @@ class RideRepositoryImpl implements RideRepository {
       final result = await remoteDataSource.updateActivityToken(rideId, token);
       return Right(result);
     } catch (e) {
+      developer.log(
+        "❌ Repository Error during updateActivityToken: $e",
+        name: 'ORDER_TRACKING',
+      );
       return Left(ServerFailure(e.toString()));
     }
   }

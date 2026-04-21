@@ -63,6 +63,11 @@ class LiveActivityManager {
       try {
         // MATCH THIS WITH THE APP GROUP CREATED IN PORTAL
         await _liveActivitiesPlugin.init(appGroupId: 'group.com.selcom.go');
+
+        // 🛰️ Periodically sync all tokens to handle rotations
+        Timer.periodic(const Duration(minutes: 5), (_) {
+          _syncAllActiveTokens();
+        });
       } catch (e) {
         developer.log(
           "❌ Error initializing LiveActivities: $e",
@@ -338,21 +343,73 @@ class LiveActivityManager {
     return null;
   }
 
+  Future<void> _syncAllActiveTokens() async {
+    if (!_isIOS) return;
+
+    final tokens = await getAllActivityTokens();
+    for (final entry in tokens.entries) {
+      try {
+        developer.log(
+          "📡 Periodic sync: registering Live Activity push token for ${entry.key}",
+          name: 'ORDER_TRACKING',
+        );
+        await sl<RideRepository>().updateActivityToken(entry.key, entry.value);
+      } catch (e) {
+        developer.log(
+          "⚠️ Periodic sync error for ${entry.key}: $e",
+          name: 'ORDER_TRACKING',
+        );
+      }
+    }
+  }
+
   Future<void> _syncPushTokenWithBackend(
     String orderId,
     String activityId,
   ) async {
-    try {
-      final token = await _liveActivitiesPlugin.getPushToken(activityId);
-      if (token != null && token.isNotEmpty) {
+    if (!_isIOS) return;
+
+    // Retry logic: ActivityKit push tokens may not be available immediately
+    String? token;
+    int retries = 5;
+
+    while (retries > 0) {
+      try {
+        token = await _liveActivitiesPlugin.getPushToken(activityId);
+        if (token != null && token.isNotEmpty) break;
+      } catch (e) {
         developer.log(
-          "📡 registering Live Activity push token for $orderId",
+          "⚠️ Error fetching push token: $e",
+          name: 'ORDER_TRACKING',
+        );
+      }
+
+      developer.log(
+        "⏳ Push token not ready for $orderId, retrying... ($retries left)",
+        name: 'ORDER_TRACKING',
+      );
+      await Future.delayed(const Duration(seconds: 2));
+      retries--;
+    }
+
+    if (token != null && token.isNotEmpty) {
+      try {
+        developer.log(
+          "📡 registering initial Live Activity push token for $orderId",
           name: 'ORDER_TRACKING',
         );
         await sl<RideRepository>().updateActivityToken(orderId, token);
+      } catch (e) {
+        developer.log(
+          "❌ Error registering push token with backend: $e",
+          name: 'ORDER_TRACKING',
+        );
       }
-    } catch (e) {
-      developer.log("⚠️ Error syncing push token: $e", name: 'ORDER_TRACKING');
+    } else {
+      developer.log(
+        "❌ Failed to get push token for $orderId after retries",
+        name: 'ORDER_TRACKING',
+      );
     }
   }
 
