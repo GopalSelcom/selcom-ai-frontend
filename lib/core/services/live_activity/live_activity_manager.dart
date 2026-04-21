@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
@@ -21,6 +22,7 @@ class LiveActivityManager {
   Map<String, String> _orderToActivityId = {};
   Map<String, String> _orderToMerchantName = {};
   final Map<String, String> _urlToLocalPath = {};
+  final Map<String, Future<String?>> _inProgressStarts = {};
 
   Stream<ActivityUpdate> get activityUpdateStream =>
       _liveActivitiesPlugin.activityUpdateStream;
@@ -124,6 +126,64 @@ class LiveActivityManager {
       _orderToActivityId.values.where((v) => v != 'android').length;
 
   Future<String?> startActivity({
+    required String orderId,
+    required String status,
+    required String title,
+    String merchantName = '',
+    String subtitle = '',
+    String? fare,
+    String? eta,
+    String vehicleDesc = '',
+    String plateNumber = '',
+    String riderPhotoUrl = '',
+    int step = 0,
+    int totalSteps = 6,
+    bool isRiderDelivering = false,
+    bool isCompleted = false,
+    double deliveryStartDate = 0,
+    double etaSeconds = 0,
+    String pickupDistance = '0',
+    String deliveryDistance = '0',
+  }) async {
+    if (_inProgressStarts.containsKey(orderId)) {
+      developer.log(
+        "⏳ Activity start already in progress for $orderId, awaiting existing future...",
+        name: 'ORDER_TRACKING',
+      );
+      return _inProgressStarts[orderId];
+    }
+
+    final work = _startActivityInternal(
+      orderId: orderId,
+      status: status,
+      title: title,
+      merchantName: merchantName,
+      subtitle: subtitle,
+      fare: fare,
+      eta: eta,
+      vehicleDesc: vehicleDesc,
+      plateNumber: plateNumber,
+      riderPhotoUrl: riderPhotoUrl,
+      step: step,
+      totalSteps: totalSteps,
+      isRiderDelivering: isRiderDelivering,
+      isCompleted: isCompleted,
+      deliveryStartDate: deliveryStartDate,
+      etaSeconds: etaSeconds,
+      pickupDistance: pickupDistance,
+      deliveryDistance: deliveryDistance,
+    );
+
+    _inProgressStarts[orderId] = work;
+
+    try {
+      return await work;
+    } finally {
+      _inProgressStarts.remove(orderId);
+    }
+  }
+
+  Future<String?> _startActivityInternal({
     required String orderId,
     required String status,
     required String title,
