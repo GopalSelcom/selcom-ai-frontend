@@ -656,7 +656,7 @@ class HomeController extends GetxController {
     );
     if (!canProceed) return;
 
-    await Get.delete<VehicleSelectionController>();
+    // GetX lifecycle managed via AppRoutes and VehicleSelectionBinding.
     Get.toNamed(
       AppRoutes.booking,
       arguments: {
@@ -720,7 +720,7 @@ class HomeController extends GetxController {
     );
     if (!canProceed) return;
 
-    await Get.delete<VehicleSelectionController>();
+    // GetX lifecycle managed via AppRoutes and VehicleSelectionBinding.
     Get.toNamed(
       AppRoutes.booking,
       arguments: {
@@ -760,7 +760,7 @@ class HomeController extends GetxController {
     );
     if (!canProceed) return;
 
-    await Get.delete<VehicleSelectionController>();
+    // GetX lifecycle managed via AppRoutes and VehicleSelectionBinding.
     Get.toNamed(
       AppRoutes.booking,
       arguments: {
@@ -1031,7 +1031,7 @@ class HomeController extends GetxController {
     );
     if (!canProceed) return;
 
-    await Get.delete<VehicleSelectionController>();
+    // GetX lifecycle managed via AppRoutes and VehicleSelectionBinding.
     Get.toNamed(
       AppRoutes.booking,
       arguments: {
