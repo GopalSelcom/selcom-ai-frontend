@@ -7,6 +7,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../screens/add_card_screen.dart';
+import '../widgets/card_added_success_bottom_sheet.dart';
 import '../widgets/selcom_pesa_connect_bottom_sheet.dart';
 import '../widgets/selcom_pesa_linked_bottom_sheet.dart';
 import '../widgets/selcom_pesa_phone_input_bottom_sheet.dart';
@@ -259,9 +261,16 @@ class PaymentMethodsController extends GetxController {
     }
   }
 
-  void addCard() {
-    // Placeholder for adding card
-    Get.snackbar('Cards', 'Add card functionality coming soon.');
+  Future<void> addCard() async {
+    final result = await Get.to<bool>(() => const AddCardScreen());
+
+    if (result == true) {
+      Get.bottomSheet(
+        const CardAddedSuccessBottomSheet(),
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+      );
+    }
   }
 
   void openPaymentMethods() {
