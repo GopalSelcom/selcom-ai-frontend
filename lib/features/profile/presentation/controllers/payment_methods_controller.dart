@@ -5,10 +5,13 @@ import 'package:get/get.dart';
 import 'package:m7_livelyness_detection/index.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:selcom_rides_frontend/core/constants/app_assets.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../domain/entities/payment_card.dart';
 import '../screens/add_card_screen.dart';
-import '../widgets/card_added_success_bottom_sheet.dart';
+import '../screens/card_details_screen.dart';
+import '../widgets/payment_card_action_bottom_sheet.dart';
 import '../widgets/selcom_pesa_connect_bottom_sheet.dart';
 import '../widgets/selcom_pesa_linked_bottom_sheet.dart';
 import '../widgets/selcom_pesa_phone_input_bottom_sheet.dart';
@@ -262,15 +265,31 @@ class PaymentMethodsController extends GetxController {
   }
 
   Future<void> addCard() async {
-    final result = await Get.to<bool>(() => const AddCardScreen());
+    final result = await Get.to<PaymentCard>(() => const AddCardScreen());
 
-    if (result == true) {
+    if (result != null) {
       Get.bottomSheet(
-        const CardAddedSuccessBottomSheet(),
+        PaymentCardActionBottomSheet(
+          title: 'Your card has been\nadded successfully.',
+          description:
+              'Now ready to use for payments. You can manage or remove this card anytime from your payment settings.',
+          cardNumber: result.fullNumber,
+          imageAssetPath: AppAssets.imgPaymentAddCardSuccess,
+          primaryButtonLabel: 'Okay',
+          onPrimaryPressed: Get.back,
+        ),
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
       );
     }
+  }
+
+  void openCardDetails(PaymentCard card) {
+    Get.to(
+      () => CardDetailsScreen(
+        card: card,
+      ),
+    );
   }
 
   void openPaymentMethods() {

@@ -5,11 +5,29 @@ import 'package:iconsax/iconsax.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
+import '../../domain/entities/payment_card.dart';
 import '../controllers/payment_methods_controller.dart';
 import '../widgets/wallet_summary_card.dart';
 
 class PaymentMethodsScreen extends StatelessWidget {
   const PaymentMethodsScreen({super.key});
+
+  static const PaymentCard _activeCard = PaymentCard(
+    brand: 'VISA',
+    fullNumber: '4233 5054 0234 1920',
+    expiry: '09/26',
+    cvv: '123',
+    nickName: 'John deo',
+  );
+
+  static const PaymentCard _expiredCard = PaymentCard(
+    brand: 'VISA',
+    fullNumber: '4233 5054 0234 5455',
+    expiry: '08/21',
+    cvv: '123',
+    nickName: 'John deo',
+    isExpired: true,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -169,23 +187,23 @@ class PaymentMethodsScreen extends StatelessWidget {
           children: [
             _buildCardTile(
               icon: Icons.credit_card, // Replace with Visa icon if available
-              brand: 'VISA',
-              number: '**** 2232',
-              onTap: () {},
+              brand: _activeCard.brand,
+              number: _activeCard.maskedNumber,
+              onTap: () => controller.openCardDetails(_activeCard),
             ),
             _buildCardTile(
               icon: Icons.credit_card,
-              brand: 'VISA',
-              name: 'John deo',
-              number: '**** 2232',
-              onTap: () {},
+              brand: _activeCard.brand,
+              name: _activeCard.nickName,
+              number: _activeCard.maskedNumber,
+              onTap: () => controller.openCardDetails(_activeCard),
             ),
             _buildCardTile(
               icon: Icons.credit_card,
-              brand: 'VISA',
-              number: '**** 5455',
+              brand: _expiredCard.brand,
+              number: _expiredCard.maskedNumber,
               status: 'Expired',
-              onTap: () {},
+              onTap: () => controller.openCardDetails(_expiredCard),
               showDivider: false,
             ),
             Divider(color: const Color(0xFFE6E9EE), height: 1),
