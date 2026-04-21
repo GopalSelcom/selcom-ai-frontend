@@ -264,8 +264,10 @@ class LiveActivityManager {
 
       // 🖼️ Remote Image Support
       String localRiderPhoto = riderPhotoUrl;
-      if (riderPhotoUrl.startsWith('http')) {
+      if (riderPhotoUrl.isNotEmpty && riderPhotoUrl.startsWith('http')) {
         localRiderPhoto = await _maybeDownloadImage(riderPhotoUrl);
+      } else if (riderPhotoUrl.isEmpty) {
+        localRiderPhoto = '';
       }
 
       _orderToMerchantName[orderId] = merchantName;
@@ -434,8 +436,10 @@ class LiveActivityManager {
   }) async {
     try {
       String localRiderPhoto = riderPhotoUrl;
-      if (riderPhotoUrl.startsWith('http')) {
+      if (riderPhotoUrl.isNotEmpty && riderPhotoUrl.startsWith('http')) {
         localRiderPhoto = await _maybeDownloadImage(riderPhotoUrl);
+      } else if (riderPhotoUrl.isEmpty) {
+        localRiderPhoto = '';
       }
 
       final String? merchantName = _orderToMerchantName[orderId];

@@ -383,10 +383,23 @@ class HomeController extends GetxController {
     if (rideId.isEmpty) return;
 
     final detailsResult = await rideRepository.getRideDetails(rideId);
-    detailsResult.fold(
-      (failure) => Get.snackbar('Error', failure.message),
-      (freshRide) => navigateToDriverAcceptedForRide(freshRide),
-    );
+    detailsResult.fold((failure) => Get.snackbar('Error', failure.message), (
+      freshRide,
+    ) {
+      // 🛰️ Sync Live Activity view when user taps "View Trip"
+      LiveActivityManager().updateActivity(
+        orderId: freshRide.id,
+        status: freshRide.status.name,
+        title: freshRide.status.name,
+        subtitle: freshRide.status.name,
+        vehicleDesc: freshRide.vehicleSnapshot?.vehicleType ?? '',
+        plateNumber: freshRide.vehicleSnapshot?.plateNumber ?? '',
+        riderPhotoUrl: freshRide.driverSnapshot?.avatarUrl ?? '',
+        fare: freshRide.fareEstimate.toString(),
+        isCompleted: freshRide.status == RideStatus.rideCompleted,
+      );
+      navigateToDriverAcceptedForRide(freshRide);
+    });
   }
 
   Future<void> _connectAndJoinActiveRideRoom(RideModel ride) async {
