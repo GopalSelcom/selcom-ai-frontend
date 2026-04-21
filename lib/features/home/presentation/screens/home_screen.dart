@@ -159,7 +159,6 @@ class HomeScreen extends GetView<HomeController> {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 320),
             curve: Curves.easeInOutCubic,
-            alignment: Alignment.topCenter,
             padding: EdgeInsets.zero,
             height: isExpanded ? null : 61.h,
             constraints: BoxConstraints(maxHeight: isExpanded ? 320.h : 61.h),
