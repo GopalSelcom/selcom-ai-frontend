@@ -210,6 +210,11 @@ class DriverAcceptedController extends GetxController
   }
 
   void _hydrateSocketSeedPayloads(Map<String, dynamic> args) {
+    developer.log(
+      "💧 Hydrating socket seed payloads from args",
+      name: 'ORDER_TRACKING',
+      error: jsonEncode(args),
+    );
     final statusRaw = args['statusPayload'];
     if (statusRaw is Map) {
       final payload = EventRiderStatusUpdateResponse.fromJson(

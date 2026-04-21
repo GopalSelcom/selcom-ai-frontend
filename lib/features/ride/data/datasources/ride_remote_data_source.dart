@@ -271,7 +271,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
         request: ApiRequest(
           endpoint: URLS.ride.activityToken(rideId),
           method: ApiMethod.patch,
-          body: {'activity_token': token},
+          body: {'ios_activity_token': token},
         ),
       );
       developer.log(
