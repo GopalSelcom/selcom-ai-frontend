@@ -4,15 +4,10 @@ import SwiftUI
 
 // MARK: - Required by live_activities plugin
 struct LiveActivitiesAppAttributes: ActivityAttributes {
-    public typealias LiveDeliveryData = ContentState
     public struct ContentState: Codable, Hashable {
-        public var order_id: String?
-        public var ride_id: String?
-        public var app_group_id: String?
         public var status: String?
         public var title: String?
         public var subtitle: String?
-        public var merchant_name: String?
         public var fare: String?
         public var eta: String?
         public var vehicle_desc: String?
@@ -21,114 +16,15 @@ struct LiveActivitiesAppAttributes: ActivityAttributes {
         public var total_steps: Int?
         public var is_completed: Bool?
         public var is_rider_delivering: Bool?
-        public var delivery_start_date: Double?
         public var eta_seconds: Double?
-        public var pickup_distance: String?
         public var delivery_distance: String?
         public var driver_latitude: Double?
         public var driver_longitude: Double?
-
-        enum CodingKeys: String, CodingKey {
-            case order_id, ride_id, app_group_id, status, title, subtitle, merchant_name, driver_name, fare, eta
-            case vehicle_desc, vehicle_name, plate_number
-            case step, total_steps, is_completed, is_rider_delivering
-            case delivery_start_date, eta_seconds, pickup_distance, delivery_distance
-            case driver_latitude, driver_longitude
-        }
-
-        public init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-
-            func decodeAsString(_ key: CodingKeys) -> String? {
-                if let val = try? container.decode(String.self, forKey: key) { return val }
-                if let val = try? container.decode(Int.self, forKey: key) { return String(val) }
-                if let val = try? container.decode(Double.self, forKey: key) { return String(val) }
-                return nil
-            }
-            func decodeAsDouble(_ key: CodingKeys) -> Double? {
-                if let val = try? container.decode(Double.self, forKey: key) { return val }
-                if let val = try? container.decode(Int.self, forKey: key) { return Double(val) }
-                if let str = try? container.decode(String.self, forKey: key), let val = Double(str) { return val }
-                return nil
-            }
-            func decodeAsInt(_ key: CodingKeys) -> Int? {
-                if let val = try? container.decode(Int.self, forKey: key) { return val }
-                if let val = try? container.decode(Double.self, forKey: key) { return Int(val) }
-                if let str = try? container.decode(String.self, forKey: key), let val = Int(str) { return val }
-                return nil
-            }
-            func decodeAsBool(_ key: CodingKeys) -> Bool? {
-                if let val = try? container.decode(Bool.self, forKey: key) { return val }
-                if let val = try? container.decode(Int.self, forKey: key) { return val == 1 }
-                if let str = try? container.decode(String.self, forKey: key) { return str.lowercased() == "true" || str == "1" }
-                return nil
-            }
-
-            let o_id = decodeAsString(.order_id)
-            let r_id = decodeAsString(.ride_id)
-            order_id = o_id ?? r_id
-            ride_id = r_id
-            app_group_id = decodeAsString(.app_group_id)
-            status = decodeAsString(.status)
-            title = decodeAsString(.title)
-            subtitle = decodeAsString(.subtitle)
-            let m_name = decodeAsString(.merchant_name)
-            let d_name = decodeAsString(.driver_name)
-            merchant_name = m_name ?? d_name
-            
-            fare = decodeAsString(.fare)
-            eta = decodeAsString(.eta)
-            
-            let v_desc = decodeAsString(.vehicle_desc)
-            let v_name = decodeAsString(.vehicle_name)
-            vehicle_desc = v_desc ?? v_name
-            
-            plate_number = decodeAsString(.plate_number)
-            
-            is_completed = decodeAsBool(.is_completed)
-            is_rider_delivering = decodeAsBool(.is_rider_delivering)
-            
-            step = decodeAsInt(.step)
-            total_steps = decodeAsInt(.total_steps)
-            delivery_start_date = decodeAsDouble(.delivery_start_date)
-            eta_seconds = decodeAsDouble(.eta_seconds)
-
-            delivery_distance = decodeAsString(.delivery_distance) ?? "0"
-            pickup_distance = decodeAsString(.pickup_distance) ?? "0"
-            driver_latitude = decodeAsDouble(.driver_latitude)
-            driver_longitude = decodeAsDouble(.driver_longitude)
-            
-            let allKeys = container.allKeys.map { "\($0.stringValue)" }.joined(separator: ", ")
-            print("[Widget] RECV payload with keys: \(allKeys)")
-            
-            print("[Widget] Decoded ID: \(order_id ?? "nil"), status: \(status ?? "nil"), merchant: \(merchant_name ?? "nil")")
-        }
-
-        public func encode(to encoder: Encoder) throws {
-            var container = encoder.container(keyedBy: CodingKeys.self)
-            try container.encodeIfPresent(order_id, forKey: .order_id)
-            try container.encodeIfPresent(ride_id, forKey: .ride_id)
-            try container.encodeIfPresent(app_group_id, forKey: .app_group_id)
-            try container.encodeIfPresent(status, forKey: .status)
-            try container.encodeIfPresent(title, forKey: .title)
-            try container.encodeIfPresent(subtitle, forKey: .subtitle)
-            try container.encodeIfPresent(merchant_name, forKey: .merchant_name)
-            try container.encodeIfPresent(fare, forKey: .fare)
-            try container.encodeIfPresent(eta, forKey: .eta)
-            try container.encodeIfPresent(step, forKey: .step)
-            try container.encodeIfPresent(total_steps, forKey: .total_steps)
-            try container.encodeIfPresent(vehicle_desc, forKey: .vehicle_desc)
-            try container.encodeIfPresent(plate_number, forKey: .plate_number)
-            try container.encodeIfPresent(is_completed, forKey: .is_completed)
-            try container.encodeIfPresent(is_rider_delivering, forKey: .is_rider_delivering)
-            try container.encodeIfPresent(delivery_start_date, forKey: .delivery_start_date)
-            try container.encodeIfPresent(eta_seconds, forKey: .eta_seconds)
-            try container.encodeIfPresent(pickup_distance, forKey: .pickup_distance)
-            try container.encodeIfPresent(delivery_distance, forKey: .delivery_distance)
-            try container.encodeIfPresent(driver_latitude, forKey: .driver_latitude)
-            try container.encodeIfPresent(driver_longitude, forKey: .driver_longitude)
-        }
     }
+
+    // Static data (doesn't change during the activity)
+    var order_id: String?
+    var merchant_name: String?
 }
 
 extension LiveActivitiesAppAttributes {
@@ -155,71 +51,42 @@ struct TrackingViewModel {
         let appGroupId = "group.com.selcom.go"
         let ud = UserDefaults(suiteName: appGroupId)
 
-        func getOrPersist(_ key: String, _ newValue: String?) -> String {
-            let prefKey = attributes.prefixedKey(key)
-            if let val = newValue, !val.isEmpty {
-                ud?.set(val, forKey: prefKey)
-                return val
-            }
-            return ud?.string(forKey: prefKey) ?? ""
-        }
-
-        self.title             = getOrPersist("title", state.title)
-        if self.title.isEmpty { self.title = "Selcom Go" }
+        self.title             = state.title ?? ud?.string(forKey: attributes.prefixedKey("title")) ?? "Selcom Go"
+        self.merchantName      = attributes.merchant_name ?? ud?.string(forKey: attributes.prefixedKey("merchant_name")) ?? "Selcom Go"
         
-        let rawStatus = state.status ?? ud?.string(forKey: attributes.prefixedKey("status")) ?? "Finding Driver"
-        self.status = rawStatus.replacingOccurrences(of: "_", with: " ").capitalized
-        if state.status != nil { ud?.set(state.status, forKey: attributes.prefixedKey("status")) }
+        let rawStatus          = state.status ?? ud?.string(forKey: attributes.prefixedKey("status")) ?? "Finding Driver"
+        self.status            = rawStatus.replacingOccurrences(of: "_", with: " ").capitalized
         
-        self.merchantName      = getOrPersist("merchant_name", state.merchant_name)
-
-        self.subtitle          = getOrPersist("subtitle", state.subtitle)
-        self.fare              = getOrPersist("fare", state.fare)
-        self.vehicleDesc       = getOrPersist("vehicle_desc", state.vehicle_desc)
-        self.plateNumber       = getOrPersist("plate_number", state.plate_number)
-        self.isRiderDelivering = state.is_rider_delivering ?? (ud?.integer(forKey: attributes.prefixedKey("is_rider_delivering")) == 1)
+        self.subtitle          = state.subtitle ?? ud?.string(forKey: attributes.prefixedKey("subtitle")) ?? ""
+        self.fare              = state.fare ?? ud?.string(forKey: attributes.prefixedKey("fare")) ?? ""
+        self.eta               = state.eta ?? ud?.string(forKey: attributes.prefixedKey("eta")) ?? ""
+        self.vehicleDesc       = state.vehicle_desc ?? ud?.string(forKey: attributes.prefixedKey("vehicle_desc")) ?? ""
+        self.plateNumber       = state.plate_number ?? ud?.string(forKey: attributes.prefixedKey("plate_number")) ?? ""
+        self.isRiderDelivering = state.is_rider_delivering ?? ud?.bool(forKey: attributes.prefixedKey("is_rider_delivering")) ?? false
         
-        func formatDuration(_ totalMinutes: Int) -> String {
-            if totalMinutes >= 60 {
-                let h = totalMinutes / 60
-                let m = totalMinutes % 60
-                return "\(h)h \(m)m"
-            }
-            return "\(totalMinutes) min"
-        }
-
-        let pD_str             = state.pickup_distance ?? ud?.string(forKey: attributes.prefixedKey("pickup_distance")) ?? "0"
-        let dD_str             = state.delivery_distance ?? ud?.string(forKey: attributes.prefixedKey("delivery_distance")) ?? "0"
-        let pickupVal          = Double(pD_str) ?? 0.0
-        let deliveryVal        = Double(dD_str) ?? 0.0
-
         let stepVal            = Double(state.step ?? ud?.integer(forKey: attributes.prefixedKey("step")) ?? 0)
         let totalStepsVal      = max(Double(state.total_steps ?? ud?.integer(forKey: attributes.prefixedKey("total_steps")) ?? 5), 5.0)
-
-        if stepVal >= totalStepsVal || (state.is_completed ?? (ud?.integer(forKey: attributes.prefixedKey("is_completed")) == 1)) {
-            self.eta = "Arrived"
-            self.arrivalDate = nil
-        } else {
-            let etaSec = state.eta_seconds ?? Double(ud?.integer(forKey: attributes.prefixedKey("eta_seconds")) ?? 0)
-            if etaSec > 0 {
-                self.eta = formatDuration(Int(ceil(etaSec / 60.0)))
-                self.arrivalDate = Date().addingTimeInterval(etaSec)
-                ud?.set(etaSec, forKey: attributes.prefixedKey("eta_seconds"))
-            } else {
-                self.arrivalDate = nil
-                let totalDist = (stepVal < totalStepsVal - 1) ? (pickupVal + deliveryVal) : deliveryVal
-                let calcMin   = Int(ceil(totalDist / 35.0 * 60.0))
-                
-                if calcMin > 0 {
-                    self.eta = formatDuration(calcMin)
-                } else {
-                    let be_eta = state.eta ?? ud?.string(forKey: attributes.prefixedKey("eta")) ?? "Soon"
-                    self.eta = be_eta.lowercased().replacingOccurrences(of: " min", with: " min")
-                }
-            }
-        }
-
+        
         self.progressRatio     = min(max(stepVal / totalStepsVal, 0.0), 1.0)
+        if let etaSec = state.eta_seconds, etaSec > 0 {
+            self.arrivalDate = Date().addingTimeInterval(etaSec)
+        } else {
+            self.arrivalDate = nil
+        }
+        
+        // Cache for partial updates
+        if let ud = ud {
+            if let s = state.status { ud.set(s, forKey: attributes.prefixedKey("status")) }
+            if let t = state.title { ud.set(t, forKey: attributes.prefixedKey("title")) }
+            if let sub = state.subtitle { ud.set(sub, forKey: attributes.prefixedKey("subtitle")) }
+            if let f = state.fare { ud.set(f, forKey: attributes.prefixedKey("fare")) }
+            if let e = state.eta { ud.set(e, forKey: attributes.prefixedKey("eta")) }
+            if let v = state.vehicle_desc { ud.set(v, forKey: attributes.prefixedKey("vehicle_desc")) }
+            if let p = state.plate_number { ud.set(p, forKey: attributes.prefixedKey("plate_number")) }
+            if let s = state.step { ud.set(s, forKey: attributes.prefixedKey("step")) }
+            if let ts = state.total_steps { ud.set(ts, forKey: attributes.prefixedKey("total_steps")) }
+            if let rd = state.is_rider_delivering { ud.set(rd, forKey: attributes.prefixedKey("is_rider_delivering")) }
+        }
     }
 }
 

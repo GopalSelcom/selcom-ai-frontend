@@ -302,14 +302,11 @@ class LiveActivityManager {
           'eta': eta ?? '',
           'vehicle_desc': vehicleDesc,
           'plate_number': plateNumber,
-          'rider_photo_url': '',
           'step': step,
           'total_steps': totalSteps,
           'is_completed': isCompleted,
           'is_rider_delivering': isRiderDelivering,
-          'delivery_start_date': deliveryStartDate,
           'eta_seconds': etaSeconds,
-          'pickup_distance': pickupDistance,
           'delivery_distance': deliveryDistance,
         };
 
@@ -324,10 +321,18 @@ class LiveActivityManager {
           error: jsonEncode(activityModel),
         );
 
-        final activityId = await _liveActivitiesPlugin.createActivity(
-          orderId,
-          activityModel,
-        );
+        final activityId = await _liveActivitiesPlugin
+            .createActivity(orderId, activityModel)
+            .timeout(
+              const Duration(seconds: 4),
+              onTimeout: () {
+                developer.log(
+                  "🚨 createActivity TIMEOUT after 4s",
+                  name: 'ORDER_TRACKING',
+                );
+                return null;
+              },
+            );
         if (activityId != null) {
           _orderToActivityId[orderId] = activityId;
           await _saveState();
@@ -427,26 +432,23 @@ class LiveActivityManager {
       }
 
       if (_isIOS && activityId != 'android') {
-        final updateData = {
+        final updateData = <String, dynamic>{
           'order_id': orderId,
-          'merchant_name': effMerchant ?? '',
           'status': status,
           'title': title,
           'subtitle': subtitle,
+          'merchant_name': effMerchant ?? '',
           'fare': fare,
           'eta': eta ?? '',
           'vehicle_desc': vehicleDesc,
           'plate_number': plateNumber,
-          'rider_photo_url': '',
           'step': step,
           'total_steps': totalSteps,
           'is_completed': isCompleted,
           'is_rider_delivering': isRiderDelivering,
-          'delivery_start_date': deliveryStartDate,
           'eta_seconds': etaSeconds,
           'driver_latitude': driverLatitude,
           'driver_longitude': driverLongitude,
-          'pickup_distance': pickupDistance,
           'delivery_distance': deliveryDistance,
         };
 
@@ -456,7 +458,17 @@ class LiveActivityManager {
         );
 
         try {
-          await _liveActivitiesPlugin.updateActivity(activityId, updateData);
+          await _liveActivitiesPlugin
+              .updateActivity(activityId, updateData)
+              .timeout(
+                const Duration(seconds: 4),
+                onTimeout: () {
+                  developer.log(
+                    "🚨 updateActivity TIMEOUT after 4s",
+                    name: 'ORDER_TRACKING',
+                  );
+                },
+              );
           developer.log("✅ ActivityKit push SUCCESS", name: 'ORDER_TRACKING');
         } catch (e) {
           developer.log(
@@ -477,7 +489,17 @@ class LiveActivityManager {
       if (_isAndroid && activityId == 'android') {
         await AndroidOrderTrackingManager().dismiss(orderId);
       } else if (_isIOS) {
-        await _liveActivitiesPlugin.endActivity(activityId);
+        await _liveActivitiesPlugin
+            .endActivity(activityId)
+            .timeout(
+              const Duration(seconds: 4),
+              onTimeout: () {
+                developer.log(
+                  "🚨 endActivity TIMEOUT after 4s",
+                  name: 'ORDER_TRACKING',
+                );
+              },
+            );
       }
       await _clearState(orderId);
     } catch (e) {

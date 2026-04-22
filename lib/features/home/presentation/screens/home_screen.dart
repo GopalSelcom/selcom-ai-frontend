@@ -12,7 +12,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/routes/app_routes.dart';
 import 'package:shimmer/shimmer.dart';
-import '../../../../core/data/models/responses/get_saved_places_response.dart';
 
 import '../../../../core/widgets/svg_picture_asset.dart';
 

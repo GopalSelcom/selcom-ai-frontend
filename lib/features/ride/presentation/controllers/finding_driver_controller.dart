@@ -132,6 +132,10 @@ class FindingDriverController extends GetxController {
   void onClose() {
     _countdownTimer?.cancel();
     _mockDriverAssignTimer?.cancel();
+    _connectionSub?.cancel();
+    _rideStatusSub?.cancel();
+    _driverLocSub?.cancel();
+    _trackingSub?.cancel();
     _nearbyDriversSub?.cancel();
     _nearbyDriversErrorSub?.cancel();
     super.onClose();
