@@ -349,7 +349,13 @@ class DriverAcceptedController extends GetxController
       }
 
       if (isPinRequired.value) {
-        final otp = (d.verificationCode ?? '').replaceAll(RegExp(r'\s'), '');
+        final pin = r.pinCode.trim();
+        final vCode = (d.verificationCode ?? '').trim();
+        final otp = (pin.isNotEmpty ? pin : vCode).replaceAll(
+          RegExp(r'\s'),
+          '',
+        );
+
         if (otp.isNotEmpty) {
           otpDigits.assignAll(otp.split('').take(4).toList());
         } else {
@@ -692,7 +698,13 @@ class DriverAcceptedController extends GetxController
         assignedDriverLocation.value = LatLng(d.lat!, d.lng!);
       }
       if (isPinRequired.value) {
-        final otp = (payload.pinCode ?? '').replaceAll(RegExp(r'\s'), '');
+        final pin = (payload.pinCode ?? '').trim();
+        final vCode = (payload.driverSnapshot?.verificationCode ?? '').trim();
+        final otp = (pin.isNotEmpty ? pin : vCode).replaceAll(
+          RegExp(r'\s'),
+          '',
+        );
+
         if (otp.isNotEmpty) {
           otpDigits.assignAll(otp.split('').take(4).toList());
         } else if (otpDigits.isEmpty) {
