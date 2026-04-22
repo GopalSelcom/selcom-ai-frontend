@@ -179,8 +179,9 @@ class VehicleSelectionController extends GetxController {
     final result = await homeRepository.estimateFare(req);
     result.fold(
       (f) {
-        if (kDebugMode)
+        if (kDebugMode) {
           debugPrint('[VehicleSelection] Fare estimate error: $f');
+        }
         estimates.assignAll(_dummyEstimates(vehicleTypes));
         isRouteReady.value = false;
       },
@@ -314,8 +315,9 @@ class VehicleSelectionController extends GetxController {
         );
       }
     } catch (e) {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint('[VehicleSelection] Error loading markers: $e');
+      }
     }
     isLocationIconsReady.value =
         pickupIcon != null && dropIcon != null && stopIcons.isNotEmpty;

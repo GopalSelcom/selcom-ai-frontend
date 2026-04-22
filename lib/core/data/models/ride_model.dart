@@ -141,7 +141,7 @@ class RideModel extends RideEntity {
       pickup: pickup ?? this.pickup,
       destination: destination ?? this.destination,
       stops: stops ?? this.stops,
-      pinRequired: pinRequired ?? this.pinRequired,
+      pinRequired: pinRequired ?? pinRequired,
       isMultiStop: isMultiStop ?? this.isMultiStop,
       currentStopIndex: currentStopIndex ?? this.currentStopIndex,
       fareEstimate: fareEstimate ?? this.fareEstimate,
