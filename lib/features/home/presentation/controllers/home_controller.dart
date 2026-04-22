@@ -163,8 +163,8 @@ class HomeController extends GetxController {
         circleId: const CircleId('pickup_200m_radius'),
         center: center,
         radius: 200,
-        fillColor: AppColors.inputBorderActive.withOpacity(0.08),
-        strokeColor: AppColors.inputBorderActive.withOpacity(0.4),
+        fillColor: AppColors.inputBorderActive.withValues(alpha: 0.08),
+        strokeColor: AppColors.inputBorderActive.withValues(alpha: 0.4),
         strokeWidth: 2,
       ),
     };

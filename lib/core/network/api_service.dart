@@ -646,10 +646,7 @@ class ApiService {
             mainAxisSize: MainAxisSize.min,
             children: [
               // App Logo
-              SvgPicture.asset(
-                AppAssets.selcomGoLogo,
-                height: 48.h,
-              ),
+              SvgPicture.asset(AppAssets.selcomGoLogo, height: 48.h),
               SizedBox(height: 24.h),
 
               // Title
@@ -694,7 +691,7 @@ class ApiService {
                     borderRadius: BorderRadius.circular(16.r),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primary.withOpacity(0.2),
+                        color: AppColors.primary.withValues(alpha: 0.2),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),

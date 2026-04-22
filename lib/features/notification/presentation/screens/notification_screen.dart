@@ -39,7 +39,7 @@ class NotificationScreen extends StatelessWidget {
                         vertical: 6.h,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20.r),
                       ),
                       child: controller.isMarkAllLoading.value
@@ -92,8 +92,10 @@ class NotificationScreen extends StatelessWidget {
                       horizontal: 16.w,
                       vertical: 16.h,
                     ),
-                    itemCount: controller.notifications.length +
-                        (controller.hasMorePages || controller.isLoadingMore.value
+                    itemCount:
+                        controller.notifications.length +
+                        (controller.hasMorePages ||
+                                controller.isLoadingMore.value
                             ? 1
                             : 0),
                     separatorBuilder: (_, __) => SizedBox(height: 12.h),
@@ -139,10 +141,10 @@ class NotificationScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(16.r),
           border: notification.isRead
               ? null
-              : Border.all(color: AppColors.primary.withOpacity(0.2)),
+              : Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -248,7 +250,7 @@ class NotificationScreen extends StatelessWidget {
           Icon(
             Icons.notifications_none_outlined,
             size: 80.sp,
-            color: AppColors.shade2.withOpacity(0.2),
+            color: AppColors.shade2.withValues(alpha: 0.2),
           ),
           SizedBox(height: 16.h),
           Text(

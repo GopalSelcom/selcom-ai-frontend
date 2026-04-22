@@ -226,7 +226,7 @@ class ProfileScreen extends StatelessWidget {
               Text(
                 mobile,
                 style: AppTextStyles.body.copyWith(
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                 ),
               ),
             ],
@@ -313,7 +313,7 @@ class ProfileScreen extends StatelessWidget {
             contentPadding: EdgeInsets.only(bottom: 8.h),
             enabledBorder: UnderlineInputBorder(
               borderSide: BorderSide(
-                color: Colors.white.withOpacity(0.3),
+                color: Colors.white.withValues(alpha: 0.3),
                 width: 1.0,
               ),
             ),

@@ -31,7 +31,7 @@ class FavoriteLocationsScreen extends GetView<FavoriteLocationsController> {
                       Icon(
                         Icons.favorite_border,
                         size: 64.sp,
-                        color: AppColors.shade2.withOpacity(0.5),
+                        color: AppColors.shade2.withValues(alpha: 0.5),
                       ),
                       SizedBox(height: 16.h),
                       Text(

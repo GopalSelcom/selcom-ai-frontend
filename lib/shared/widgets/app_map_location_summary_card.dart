@@ -36,7 +36,7 @@ class AppMapLocationSummaryCard extends StatelessWidget {
         border: Border.all(color: _borderColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 2,
             offset: const Offset(0, 1),
           ),

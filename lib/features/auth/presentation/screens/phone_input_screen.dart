@@ -217,7 +217,7 @@ class PhoneInputScreen extends GetView<AuthController> {
                             'Note: By proceeding, you consent to get calls, WhatsApp or SMS messages, including by automated means, from GoChauffeur and its affiliates to the number provided.',
                             style: AppTextStyles.onboardingFooter.copyWith(
                               fontSize: 11.sp,
-                              color: AppColors.shade2.withOpacity(0.7),
+                              color: AppColors.shade2.withValues(alpha: 0.7),
                             ),
                           ),
                         ),

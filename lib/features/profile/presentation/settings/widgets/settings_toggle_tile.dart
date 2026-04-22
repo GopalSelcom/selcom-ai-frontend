@@ -68,10 +68,12 @@ class SettingsToggleTile extends StatelessWidget {
                     final disabled = states.contains(WidgetState.disabled);
 
                     if (selected && disabled) {
-                      return AppColors.primary.withOpacity(0.9);
+                      return AppColors.primary.withValues(alpha: 0.9);
                     }
                     if (selected) return AppColors.primary;
-                    if (disabled) return AppColors.shade2.withOpacity(0.6);
+                    if (disabled) {
+                      return AppColors.shade2.withValues(alpha: 0.6);
+                    }
                     return AppColors.shade2;
                   }),
                   trackColor: WidgetStateProperty.resolveWith((states) {
@@ -79,10 +81,14 @@ class SettingsToggleTile extends StatelessWidget {
                     final disabled = states.contains(WidgetState.disabled);
 
                     if (selected && disabled) {
-                      return AppColors.primary.withOpacity(0.35);
+                      return AppColors.primary.withValues(alpha: 0.35);
                     }
-                    if (selected) return AppColors.primary.withOpacity(0.45);
-                    if (disabled) return AppColors.divider.withOpacity(0.8);
+                    if (selected) {
+                      return AppColors.primary.withValues(alpha: 0.45);
+                    }
+                    if (disabled) {
+                      return AppColors.divider.withValues(alpha: 0.8);
+                    }
                     return AppColors.divider;
                   }),
                 ),
@@ -103,7 +109,11 @@ class SettingsToggleTile extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(Iconsax.info_circle, size: 14.w, color: AppColors.shade2),
+                  Icon(
+                    Iconsax.info_circle,
+                    size: 14.w,
+                    color: AppColors.shade2,
+                  ),
                   SizedBox(width: 8.w),
                   Expanded(
                     child: Text(
@@ -128,7 +138,9 @@ class SettingsToggleTile extends StatelessWidget {
                   SizedBox(width: 8.w),
                   Text(
                     'Saving changes...',
-                    style: AppTextStyles.caption.copyWith(color: AppColors.shade2),
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.shade2,
+                    ),
                   ),
                 ],
               ),

@@ -16,21 +16,21 @@ class ProfileLoadingScreen extends StatefulWidget {
   State<ProfileLoadingScreen> createState() => _ProfileLoadingScreenState();
 }
 
-class _ProfileLoadingScreenState extends State<ProfileLoadingScreen> with SingleTickerProviderStateMixin {
+class _ProfileLoadingScreenState extends State<ProfileLoadingScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _progressController;
   bool _isSuccess = false;
 
   @override
   void initState() {
     super.initState();
-    _progressController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..forward().then((_) {
-        setState(() {
-          _isSuccess = true;
-        });
-      });
+    _progressController =
+        AnimationController(vsync: this, duration: const Duration(seconds: 2))
+          ..forward().then((_) {
+            setState(() {
+              _isSuccess = true;
+            });
+          });
   }
 
   @override
@@ -79,7 +79,9 @@ class _ProfileLoadingScreenState extends State<ProfileLoadingScreen> with Single
                             borderRadius: BorderRadius.circular(5.r),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primary.withOpacity(0.25),
+                                color: AppColors.primary.withValues(
+                                  alpha: 0.25,
+                                ),
                                 blurRadius: 4,
                                 spreadRadius: 2,
                               ),
@@ -100,7 +102,7 @@ class _ProfileLoadingScreenState extends State<ProfileLoadingScreen> with Single
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 7, sigmaY: 7),
                 child: Container(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   child: Center(
                     child: Container(
                       width: 327.w,
@@ -111,7 +113,9 @@ class _ProfileLoadingScreenState extends State<ProfileLoadingScreen> with Single
                         borderRadius: BorderRadius.circular(24.r),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF242E49).withOpacity(0.05),
+                            color: const Color(
+                              0xFF242E49,
+                            ).withValues(alpha: 0.05),
                             blurRadius: 21,
                             offset: const Offset(0, 9),
                           ),
@@ -134,7 +138,7 @@ class _ProfileLoadingScreenState extends State<ProfileLoadingScreen> with Single
                             ),
                           ),
                           SizedBox(height: 24.h),
-                          
+
                           // Text Content
                           Text(
                             'Verification Successfully',
@@ -159,7 +163,8 @@ class _ProfileLoadingScreenState extends State<ProfileLoadingScreen> with Single
                           InkWell(
                             onTap: () {
                               if (Get.isRegistered<AuthController>()) {
-                                Get.find<AuthController>().completeProfileLoading();
+                                Get.find<AuthController>()
+                                    .completeProfileLoading();
                                 return;
                               }
                               Get.offAllNamed(AppRoutes.home);
@@ -179,7 +184,8 @@ class _ProfileLoadingScreenState extends State<ProfileLoadingScreen> with Single
                                     style: AppTextStyles.onboardingButton.copyWith(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16.sp,
-                                      fontFamily: 'Plus Jakarta Sans', // Based on Figma
+                                      fontFamily:
+                                          'Plus Jakarta Sans', // Based on Figma
                                     ),
                                   ),
                                   SizedBox(width: 4.w),
@@ -187,7 +193,10 @@ class _ProfileLoadingScreenState extends State<ProfileLoadingScreen> with Single
                                     AppAssets.icTickCircle,
                                     height: 24.h,
                                     width: 24.w,
-                                    colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                                    colorFilter: const ColorFilter.mode(
+                                      Colors.white,
+                                      BlendMode.srcIn,
+                                    ),
                                   ),
                                 ],
                               ),

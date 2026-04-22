@@ -20,8 +20,18 @@ class RideDateFormatter {
       final time = parts[1].replaceAll(' ', ''); // 08:08PM
 
       const months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
       ];
 
       String daySuffix = 'th';
@@ -29,10 +39,17 @@ class RideDateFormatter {
         daySuffix = 'th';
       } else {
         switch (day % 10) {
-          case 1: daySuffix = 'st'; break;
-          case 2: daySuffix = 'nd'; break;
-          case 3: daySuffix = 'rd'; break;
-          default: daySuffix = 'th';
+          case 1:
+            daySuffix = 'st';
+            break;
+          case 2:
+            daySuffix = 'nd';
+            break;
+          case 3:
+            daySuffix = 'rd';
+            break;
+          default:
+            daySuffix = 'th';
         }
       }
 
@@ -69,13 +86,19 @@ class RideLocationsTimeline extends StatelessWidget {
             children: [
               Column(
                 children: [
-                  Icon(Icons.location_on, color: const Color(0xFFF3004C), size: 22.w),
+                  Icon(
+                    Icons.location_on,
+                    color: const Color(0xFFF3004C),
+                    size: 22.w,
+                  ),
                   Expanded(
                     child: Container(
                       width: 1.w,
                       margin: EdgeInsets.symmetric(vertical: 2.h),
                       child: CustomPaint(
-                        painter: DashedLinePainter(color: Colors.black.withOpacity(0.5)),
+                        painter: DashedLinePainter(
+                          color: Colors.black.withValues(alpha: 0.5),
+                        ),
                       ),
                     ),
                   ),
@@ -118,7 +141,11 @@ class RideLocationsTimeline extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(CupertinoIcons.pin_fill, color: const Color(0xFF34C759), size: 22.w),
+            Icon(
+              CupertinoIcons.pin_fill,
+              color: const Color(0xFF34C759),
+              size: 22.w,
+            ),
             SizedBox(width: 12.w),
             Expanded(
               child: Column(
@@ -154,10 +181,14 @@ class RideLocationsTimeline extends StatelessWidget {
 
 class DashedLinePainter extends CustomPainter {
   final Color color;
+
   DashedLinePainter({required this.color});
+
   @override
   void paint(Canvas canvas, Size size) {
-    var paint = Paint()..color = color..strokeWidth = 0.5;
+    var paint = Paint()
+      ..color = color
+      ..strokeWidth = 0.5;
     var max = size.height;
     var dashHeight = 2.0;
     var dashSpace = 2.0;
@@ -167,6 +198,7 @@ class DashedLinePainter extends CustomPainter {
       startY += dashHeight + dashSpace;
     }
   }
+
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
@@ -242,11 +274,7 @@ class RideRatingStars extends StatelessWidget {
   final double? rating;
   final double starSize;
 
-  const RideRatingStars({
-    super.key,
-    this.rating,
-    this.starSize = 44,
-  });
+  const RideRatingStars({super.key, this.rating, this.starSize = 44});
 
   @override
   Widget build(BuildContext context) {

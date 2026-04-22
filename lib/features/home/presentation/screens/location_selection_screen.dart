@@ -845,7 +845,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                               height: 24.w,
                               placeholderBuilder: (_) => Icon(
                                 Icons.favorite_border,
-                                color: const Color(0xFF292D32).withOpacity(0.5),
+                                color: const Color(
+                                  0xFF292D32,
+                                ).withValues(alpha: 0.5),
                                 size: 20,
                               ),
                             ),

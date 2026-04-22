@@ -72,7 +72,7 @@ class PromocodeScreen extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
-          color: AppColors.inputBorderDefault.withOpacity(0.5),
+          color: AppColors.inputBorderDefault.withValues(alpha: 0.5),
         ),
       ),
       child: IntrinsicHeight(
@@ -127,7 +127,7 @@ class PromocodeScreen extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
-          color: AppColors.inputBorderDefault.withOpacity(0.5),
+          color: AppColors.inputBorderDefault.withValues(alpha: 0.5),
         ),
       ),
       child: Column(

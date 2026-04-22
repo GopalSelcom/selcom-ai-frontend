@@ -108,7 +108,7 @@ class AppDialogs {
                           borderRadius: BorderRadius.circular(16.r),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primary.withOpacity(0.2),
+                              color: AppColors.primary.withValues(alpha: 0.2),
                               blurRadius: 12,
                               offset: const Offset(0, 4),
                             ),
@@ -155,7 +155,7 @@ class AppDialogs {
               Container(
                 padding: EdgeInsets.all(16.w),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
+                  color: Colors.green.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -232,7 +232,9 @@ class AppDialogs {
               Container(
                 padding: EdgeInsets.all(16.w),
                 decoration: BoxDecoration(
-                  color: (confirmColor ?? AppColors.primary).withOpacity(0.1),
+                  color: (confirmColor ?? AppColors.primary).withValues(
+                    alpha: 0.1,
+                  ),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -310,7 +312,7 @@ class AppDialogs {
                           boxShadow: [
                             BoxShadow(
                               color: (confirmColor ?? AppColors.primary)
-                                  .withOpacity(0.3),
+                                  .withValues(alpha: 0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 4),
                             ),
@@ -375,7 +377,7 @@ class AppDialogs {
                       borderRadius: BorderRadius.circular(16.r),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -388,7 +390,7 @@ class AppDialogs {
                           Icon(
                             secondaryIcon,
                             size: 48.sp,
-                            color: AppColors.primary.withOpacity(0.1),
+                            color: AppColors.primary.withValues(alpha: 0.1),
                           ),
                         Icon(icon, size: 48.sp, color: AppColors.primary),
                       ],
@@ -485,7 +487,7 @@ class AppDialogs {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         elevation: 20,
-        shadowColor: Colors.black.withOpacity(0.4),
+        shadowColor: Colors.black.withValues(alpha: 0.4),
         insetPadding: EdgeInsets.symmetric(horizontal: 24.w),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(32.r),
@@ -521,7 +523,7 @@ class AppDialogs {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.green.withOpacity(0.2),
+                            color: Colors.green.withValues(alpha: 0.2),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -608,7 +610,7 @@ class AppDialogs {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         elevation: 20,
-        shadowColor: Colors.black.withOpacity(0.4),
+        shadowColor: Colors.black.withValues(alpha: 0.4),
         insetPadding: EdgeInsets.symmetric(horizontal: 24.w),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(32.r),
@@ -644,7 +646,7 @@ class AppDialogs {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.error.withOpacity(0.2),
+                            color: AppColors.error.withValues(alpha: 0.2),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),

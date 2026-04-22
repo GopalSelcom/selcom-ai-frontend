@@ -141,7 +141,7 @@ class PaymentMethodsScreen extends StatelessWidget {
                     Icon(
                       Iconsax.arrow_right_3,
                       size: 20.w,
-                      color: AppColors.shade2.withOpacity(0.5),
+                      color: AppColors.shade2.withValues(alpha: 0.5),
                     ),
                   ],
                 ],
@@ -283,7 +283,7 @@ class PaymentMethodsScreen extends StatelessWidget {
                 Icon(
                   Iconsax.arrow_right_3,
                   size: 20.w,
-                  color: AppColors.shade2.withOpacity(0.5),
+                  color: AppColors.shade2.withValues(alpha: 0.5),
                 ),
               ],
             ),

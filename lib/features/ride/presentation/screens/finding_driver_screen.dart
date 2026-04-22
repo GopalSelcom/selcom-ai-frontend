@@ -41,8 +41,8 @@ class FindingDriverScreen extends StatelessWidget {
                   end: Alignment.bottomCenter,
                   colors: [
                     Colors.white,
-                    Colors.white.withOpacity(0.92),
-                    Colors.white.withOpacity(0),
+                    Colors.white.withValues(alpha: 0.92),
+                    Colors.white.withValues(alpha: 0),
                   ],
                 ),
               ),
@@ -175,7 +175,7 @@ class FindingDriverScreen extends StatelessWidget {
             Polyline(
               polylineId: const PolylineId('fallback_pickup_route'),
               points: [driver, pickup],
-              color: const Color(0xFF3073E8).withOpacity(0.5),
+              color: const Color(0xFF3073E8).withValues(alpha: 0.5),
               width: 3,
             ),
         },
@@ -185,8 +185,8 @@ class FindingDriverScreen extends StatelessWidget {
                   circleId: const CircleId('search_pulse'),
                   center: pickup,
                   radius: _searchCircleRadiusM,
-                  fillColor: const Color(0xFF2668D2).withOpacity(0.12),
-                  strokeColor: const Color(0xFF2668D2).withOpacity(0.35),
+                  fillColor: const Color(0xFF2668D2).withValues(alpha: 0.12),
+                  strokeColor: const Color(0xFF2668D2).withValues(alpha: 0.35),
                   strokeWidth: 2,
                 ),
               }
@@ -384,7 +384,7 @@ class FindingDriverScreen extends StatelessWidget {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),

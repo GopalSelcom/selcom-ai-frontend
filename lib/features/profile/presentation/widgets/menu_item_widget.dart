@@ -47,7 +47,7 @@ class MenuItemWidget extends StatelessWidget {
                 Icon(
                   Iconsax.arrow_right_3,
                   size: 18.w,
-                  color: AppColors.textDark.withOpacity(0.5),
+                  color: AppColors.textDark.withValues(alpha: 0.5),
                 ),
               ],
             ),

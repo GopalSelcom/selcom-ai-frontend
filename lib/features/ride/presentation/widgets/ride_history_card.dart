@@ -54,7 +54,9 @@ class RideHistoryCard extends StatelessWidget {
     final vehicleType = ride.vehicleSnapshot?.vehicleType ?? 'Boda';
     final effectiveFare = ride.status == RideStatus.cancelled
         ? (ride.cancellationFee ?? 0)
-        : (ride.fareBreakdown?.totalAmount ?? ride.finalFare ?? ride.fareEstimate);
+        : (ride.fareBreakdown?.totalAmount ??
+              ride.finalFare ??
+              ride.fareEstimate);
 
     return GestureDetector(
       onTap: onTap,
@@ -121,7 +123,7 @@ class RideHistoryCard extends StatelessWidget {
 
             // Top Divider
             Divider(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               height: 1,
               thickness: 0.5,
             ),
@@ -139,7 +141,7 @@ class RideHistoryCard extends StatelessWidget {
 
             // Bottom Divider
             Divider(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               height: 1,
               thickness: 0.5,
             ),
