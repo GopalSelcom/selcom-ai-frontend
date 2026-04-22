@@ -6,41 +6,34 @@ import SwiftUI
 struct LiveActivitiesAppAttributes: ActivityAttributes {
     public typealias LiveDeliveryData = ContentState
     public struct ContentState: Codable, Hashable {
-        public var order_id: String?
-        public var merchant_name: String?
         public var status: String?
-        public var title: String?
-        public var subtitle: String?
-        public var fare: String?
-        public var eta: String?
-        public var vehicle_desc: String?
+        public var driver_name: String?
+        public var driver_avatar_url: String?
+        public var vehicle_name: String?
         public var plate_number: String?
-        public var step: Int?
-        public var total_steps: Int?
-        public var is_completed: Bool?
-        public var is_rider_delivering: Bool?
         public var eta_seconds: Double?
-        public var delivery_distance: String?
         public var driver_latitude: Double?
         public var driver_longitude: Double?
+        public var is_completed: Bool?
     }
 
-    // Static data (doesn't change during the activity)
+    // Static data
     var order_id: String?
-    var merchant_name: String?
 }
 
 extension LiveActivitiesAppAttributes {
-    func prefixedKey(_ key: String) -> String { "tracking_\(key)" }
+    func prefixedKey(_ key: String) -> String { 
+        let id = order_id ?? "default"
+        return "tracking_\(id)_\(key)" 
+    }
 }
 
 // MARK: - Optimized View Model
 struct TrackingViewModel {
-    let title: String
-    let merchantName: String
     let status: String
-    let subtitle: String
-    let vehicleDesc: String
+    let driverName: String
+    let driverAvatarUrl: String
+    let vehicleName: String
     let plateNumber: String
     let eta: String
     let progressRatio: Double
@@ -48,51 +41,80 @@ struct TrackingViewModel {
     
     init(context: ActivityViewContext<LiveActivitiesAppAttributes>) {
         let state = context.state
-        let attributes = context.attributes
+        let activityId = context.activityID
         let appGroupId = "group.com.selcom.go"
         let ud = UserDefaults(suiteName: appGroupId)
+        
+        func cacheKey(_ key: String) -> String { "tracking_\(activityId)_\(key)" }
 
-        self.title             = state.title ?? ud?.string(forKey: attributes.prefixedKey("title")) ?? "Selcom Go"
-        self.merchantName      = state.merchant_name ?? attributes.merchant_name ?? ud?.string(forKey: attributes.prefixedKey("merchant_name")) ?? "Selcom Go"
+        let rawStatus          = state.status ?? ud?.string(forKey: cacheKey("status")) ?? "finding_driver"
+        let normalizedStatus   = rawStatus.lowercased()
+        let etaSeconds         = state.eta_seconds ?? ud?.double(forKey: cacheKey("eta_seconds")) ?? 0
         
-        let rawStatus          = state.status ?? ud?.string(forKey: attributes.prefixedKey("status")) ?? "Finding Driver"
-        self.status            = (rawStatus.replacingOccurrences(of: "_", with: " ")).capitalized
-        
-        self.subtitle          = state.subtitle ?? ud?.string(forKey: attributes.prefixedKey("subtitle")) ?? ""
-        self.vehicleDesc       = state.vehicle_desc ?? ud?.string(forKey: attributes.prefixedKey("vehicle_desc")) ?? ""
-        self.plateNumber       = state.plate_number ?? ud?.string(forKey: attributes.prefixedKey("plate_number")) ?? ""
-        self.isRiderDelivering = state.is_rider_delivering ?? ud?.bool(forKey: attributes.prefixedKey("is_rider_delivering")) ?? false
-        
-        // 📏 Progress Logic
-        let stepVal            = Double(state.step ?? ud?.integer(forKey: attributes.prefixedKey("step")) ?? 0)
-        let totalStepsVal      = max(Double(state.total_steps ?? ud?.integer(forKey: attributes.prefixedKey("total_steps")) ?? 5), 5.0)
-        self.progressRatio     = min(max(stepVal / totalStepsVal, 0.0), 1.0)
-
-        // 🕰️ ETA Logic
-        if self.progressRatio >= 1.0 || (state.is_completed ?? ud?.bool(forKey: attributes.prefixedKey("is_completed")) ?? false) {
-            self.eta = "Arrived"
-        } else {
-            let be_eta = state.eta ?? ud?.string(forKey: attributes.prefixedKey("eta")) ?? ""
-            if be_eta.isEmpty {
-                self.eta = "Soon"
-            } else {
-                // Ensure it says "mins" if needed, but usually backend provides "2 min"
-                self.eta = be_eta.lowercased().replacingOccurrences(of: " min", with: " mins")
-            }
+        switch normalizedStatus {
+            case "ride_completed", "completed":
+                self.status = "You have arrived!"
+            case "near_destination":
+                self.status = "Almost There"
+            case "ride_in_progress":
+                self.status = "On Your Way"
+            case "ride_started":
+                self.status = "Ride Started"
+            case "driver_arrived":
+                self.status = "Driver Arrived"
+            case "driver_arriving":
+                self.status = "Driver En Route"
+            case "searching", "finding driver", "finding_driver":
+                self.status = "Finding Driver"
+            case "driver_assigned", "assigned":
+                self.status = "Driver Assigned"
+            default:
+                self.status = rawStatus.replacingOccurrences(of: "_", with: " ").capitalized
         }
         
-        // Cache updates for partial data packets
+        self.driverName        = state.driver_name ?? ud?.string(forKey: cacheKey("driver_name")) ?? ""
+        self.driverAvatarUrl   = state.driver_avatar_url ?? ud?.string(forKey: cacheKey("driver_avatar_url")) ?? ""
+        self.vehicleName       = state.vehicle_name ?? ud?.string(forKey: cacheKey("vehicle_name")) ?? ""
+        self.plateNumber       = state.plate_number ?? ud?.string(forKey: cacheKey("plate_number")) ?? ""
+        
+        let isCompleted        = state.is_completed ?? ud?.bool(forKey: cacheKey("is_completed")) ?? false
+        
+        // 📏 Inferring state from status
+        self.isRiderDelivering = normalizedStatus.contains("ride_started") || 
+                                normalizedStatus.contains("progress") || 
+                                normalizedStatus.contains("near") || 
+                                normalizedStatus.contains("destination")
+
+        // 🕰️ ETA Logic from eta_seconds
+        if isCompleted || normalizedStatus.contains("completed") {
+            self.eta = "Arrived"
+            self.progressRatio = 1.0
+        } else if etaSeconds > 0 {
+            let mins = Int(ceil(etaSeconds / 60.0))
+            self.eta = mins <= 1 ? "1 min" : "\(mins) mins"
+            
+            // Artificial progress mapping for the capsule bar
+            if isRiderDelivering {
+                // Mapping Arrival (drop-off) from 60% to 100%
+                self.progressRatio = 0.6 + (0.4 * (1.0 - min(etaSeconds / 1200.0, 1.0)))
+            } else {
+                // Mapping Pickup from 0% to 50%
+                self.progressRatio = 0.1 + (0.4 * (1.0 - min(etaSeconds / 1200.0, 1.0)))
+            }
+        } else {
+            self.eta = "Soon"
+            self.progressRatio = isRiderDelivering ? 0.8 : 0.2
+        }
+        
+        // Cache updates
         if let ud = ud {
-            if let s = state.status { ud.set(s, forKey: attributes.prefixedKey("status")) }
-            if let t = state.title { ud.set(t, forKey: attributes.prefixedKey("title")) }
-            if let m = state.merchant_name { ud.set(m, forKey: attributes.prefixedKey("merchant_name")) }
-            if let sub = state.subtitle { ud.set(sub, forKey: attributes.prefixedKey("subtitle")) }
-            if let e = state.eta { ud.set(e, forKey: attributes.prefixedKey("eta")) }
-            if let v = state.vehicle_desc { ud.set(v, forKey: attributes.prefixedKey("vehicle_desc")) }
-            if let p = state.plate_number { ud.set(p, forKey: attributes.prefixedKey("plate_number")) }
-            if let s = state.step { ud.set(s, forKey: attributes.prefixedKey("step")) }
-            if let ts = state.total_steps { ud.set(ts, forKey: attributes.prefixedKey("total_steps")) }
-            if let rd = state.is_rider_delivering { ud.set(rd, forKey: attributes.prefixedKey("is_rider_delivering")) }
+            if let s = state.status { ud.set(s, forKey: cacheKey("status")) }
+            if let dn = state.driver_name { ud.set(dn, forKey: cacheKey("driver_name")) }
+            if let dau = state.driver_avatar_url { ud.set(dau, forKey: cacheKey("driver_avatar_url")) }
+            if let vn = state.vehicle_name { ud.set(vn, forKey: cacheKey("vehicle_name")) }
+            if let pn = state.plate_number { ud.set(pn, forKey: cacheKey("plate_number")) }
+            if let es = state.eta_seconds { ud.set(es, forKey: cacheKey("eta_seconds")) }
+            if let ic = state.is_completed { ud.set(ic, forKey: cacheKey("is_completed")) }
         }
     }
 }
@@ -128,7 +150,8 @@ struct MainDashboardView: View {
                         Text(vm.status).font(.system(size: 16, weight: .medium)).foregroundColor(.white.opacity(0.8))
                         
                         let isSoon = vm.eta.lowercased().contains("soon") || vm.eta.isEmpty
-                        let prefix = isSoon ? "Arriving" : "Arriving in"
+                        let term = vm.isRiderDelivering ? "Arrival" : "Pickup"
+                        let prefix = isSoon ? term : "\(term) in"
                         let displayEta = isSoon ? "soon" : vm.eta.lowercased()
 
                         HStack(alignment: .firstTextBaseline, spacing: 4) {
@@ -138,7 +161,7 @@ struct MainDashboardView: View {
                         .minimumScaleFactor(0.7)
                         .lineLimit(1)
                         
-                        if !vm.plateNumber.isEmpty || !vm.vehicleDesc.isEmpty {
+                        if !vm.plateNumber.isEmpty || !vm.vehicleName.isEmpty {
                             HStack(spacing: 6) {
                                 if !vm.plateNumber.isEmpty {
                                     Text(vm.plateNumber.uppercased())
@@ -148,7 +171,7 @@ struct MainDashboardView: View {
                                         .background(Color.white.opacity(0.2))
                                         .cornerRadius(3)
                                 }
-                                Text(vm.vehicleDesc)
+                                Text(vm.vehicleName)
                                     .font(.system(size: 12))
                                     .foregroundColor(.white.opacity(0.5))
                                     .lineLimit(1)
@@ -178,11 +201,17 @@ struct MainDashboardView: View {
                     .fill(Color.white.opacity(0.1))
                     .frame(width: 80, height: 80)
                     .overlay(
-                        Image(systemName: "person.fill")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 40)
-                            .foregroundColor(.white.opacity(0.3))
+                        Group {
+                            if !vm.driverAvatarUrl.isEmpty, let img = UIImage(contentsOfFile: vm.driverAvatarUrl) {
+                                Image(uiImage: img).resizable().scaledToFill().clipShape(Circle())
+                            } else {
+                                Image(systemName: "person.fill")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 40)
+                                    .foregroundColor(.white.opacity(0.3))
+                            }
+                        }
                     )
             }
         }

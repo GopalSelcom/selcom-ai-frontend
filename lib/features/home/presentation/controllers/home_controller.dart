@@ -325,49 +325,18 @@ class HomeController extends GetxController {
         return;
       }
 
-      // Calculate step based on status
-      int step = 0;
-      switch (ride.status) {
-        case RideStatus.searching:
-          step = 1;
-          break;
-        case RideStatus.driverAssigned:
-        case RideStatus.driverArriving:
-          step = 2;
-          break;
-        case RideStatus.driverArrived:
-          step = 3;
-          break;
-        case RideStatus.rideStarted:
-        case RideStatus.rideInProgress:
-        case RideStatus.nearDestination:
-          step = 4;
-          break;
-        default:
-          step = 0;
-      }
+      // Sync Live Activity
 
       await LiveActivityManager().startActivity(
         orderId: ride.id,
         status: status.toUpperCase(),
-        title: 'Ride tracked',
-        merchantName: ride.driverSnapshot?.name ?? 'Searching for driver...',
-        subtitle: ride.vehicleSnapshot?.plateNumber ?? '',
-        fare: 'TZS ${ride.finalFare ?? ride.fareEstimate}.00',
-        vehicleDesc:
+        driverName: ride.driverSnapshot?.name ?? 'Searching for driver...',
+        vehicleName:
             '${ride.vehicleSnapshot?.vehicleMake ?? ''} ${ride.vehicleSnapshot?.vehicleModel ?? ''}'
                 .trim(),
+        driverAvatarUrl: ride.driverSnapshot?.avatarUrl ?? '',
         plateNumber: ride.vehicleSnapshot?.plateNumber ?? '',
-        riderPhotoUrl: ride.driverSnapshot?.avatarUrl ?? '',
-        step: step,
-        totalSteps: 5,
-        isRiderDelivering:
-            ride.status == RideStatus.rideStarted ||
-            ride.status == RideStatus.rideInProgress ||
-            ride.status == RideStatus.nearDestination,
         isCompleted: isCompleted,
-        pickupDistance: '0',
-        deliveryDistance: ride.distanceKm.toString(),
       );
     } catch (e) {
       developer.log(
@@ -391,13 +360,11 @@ class HomeController extends GetxController {
       LiveActivityManager().startActivity(
         orderId: freshRide.id,
         status: freshRide.status.name,
-        title: freshRide.status.name,
-        subtitle: freshRide.status.name,
-        vehicleDesc: freshRide.vehicleSnapshot?.vehicleType ?? '',
+        driverName: freshRide.driverSnapshot?.name ?? '',
+        vehicleName: freshRide.vehicleSnapshot?.vehicleType ?? '',
         plateNumber: freshRide.vehicleSnapshot?.plateNumber ?? '',
-        fare: freshRide.fareEstimate.toString(),
         isCompleted: freshRide.status == RideStatus.rideCompleted,
-        updateIfExists: false,
+        updateIfExists: true,
       );
       navigateToDriverAcceptedForRide(freshRide);
     });

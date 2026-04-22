@@ -229,21 +229,10 @@ class FindingDriverController extends GetxController {
 
       await LiveActivityManager().startActivity(
         orderId: rideId,
-        status: 'Searching',
-        title: 'Selcom Go',
-        merchantName: 'Finding Your Driver',
-        subtitle: '',
-        fare: fareBreakdown?['total_amount']?.toString() ?? '',
-        eta: '',
-        vehicleDesc: requestedVehicleType ?? '',
-        plateNumber: '',
-        riderPhotoUrl: '',
-        step: 1,
-        totalSteps: 5,
-        isRiderDelivering: false,
+        status: 'SEARCHING',
+        driverName: 'Finding Your Driver',
+        vehicleName: requestedVehicleType ?? '',
         isCompleted: false,
-        pickupDistance: '0',
-        deliveryDistance: '0',
       );
     } catch (e) {
       developer.log(
@@ -437,34 +426,18 @@ class FindingDriverController extends GetxController {
       if (rideId.isEmpty) return;
       final status = (payload.status ?? '').toString().toUpperCase();
 
-      int step = 1;
-      if (status.contains('ASSIGNED') || status.contains('ACCEPTED')) step = 2;
-      if (status.contains('ARRIVED')) step = 3;
-      if (status.contains('STARTED') ||
-          status.contains('PROGRESS') ||
-          status.contains('NEAR'))
-        step = 4;
+      // Sync Live Activity
 
       await LiveActivityManager().startActivity(
         orderId: rideId,
-        status: status,
-        title: 'Ride tracked',
-        merchantName: payload.driverSnapshot?.name ?? 'Searching for driver...',
-        subtitle: payload.driverSnapshot?.vehicleRegistrationNumber ?? '',
-        vehicleDesc:
+        status: status.toUpperCase(),
+        driverName: payload.driverSnapshot?.name ?? 'Driver Assigned',
+        vehicleName:
             '${payload.driverSnapshot?.vehicleType ?? ''} ${payload.driverSnapshot?.vehicleModel ?? ''}'
                 .trim(),
         plateNumber: payload.driverSnapshot?.vehicleRegistrationNumber ?? '',
-        riderPhotoUrl: payload.driverSnapshot?.avatarUrl ?? '',
-        step: step,
-        totalSteps: 5,
-        isRiderDelivering:
-            status.contains('STARTED') ||
-            status.contains('PROGRESS') ||
-            status.contains('NEAR'),
+        driverAvatarUrl: payload.driverSnapshot?.avatarUrl ?? '',
         isCompleted: status.contains('COMPLETED'),
-        pickupDistance: '0',
-        deliveryDistance: '0',
       );
     } catch (e) {
       debugPrint('❌ Error syncing Live Activity from payload: $e');

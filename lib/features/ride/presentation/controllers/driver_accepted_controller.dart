@@ -1267,34 +1267,20 @@ class DriverAcceptedController extends GetxController
         return;
       }
 
-      int step = 2; // Usually assigned or further when reached here
-      if (status.contains('ARRIVED')) step = 3;
-      if (status.contains('STARTED') ||
-          status.contains('PROGRESS') ||
-          status.contains('NEAR'))
-        step = 4;
+      // Sync Live Activity
 
       await LiveActivityManager().startActivity(
         orderId: rideId,
         status: status,
-        title: 'Ride tracked',
-        merchantName: payload.driverSnapshot?.name ?? 'Driver Assigned',
-        subtitle: payload.driverSnapshot?.vehicleRegistrationNumber ?? '',
-        fare: totalAmountLabel,
-        vehicleDesc:
+        driverName: payload.driverSnapshot?.name ?? 'Driver Assigned',
+        vehicleName:
             '${payload.driverSnapshot?.vehicleType ?? ''} ${payload.driverSnapshot?.vehicleModel ?? ''}'
                 .trim(),
+        driverAvatarUrl: payload.driverSnapshot?.avatarUrl ?? '',
         plateNumber: payload.driverSnapshot?.vehicleRegistrationNumber ?? '',
-        riderPhotoUrl: payload.driverSnapshot?.avatarUrl ?? '',
-        step: step,
-        totalSteps: 5,
-        isRiderDelivering:
-            status.contains('STARTED') ||
-            status.contains('PROGRESS') ||
-            status.contains('NEAR'),
         isCompleted: false,
-        pickupDistance: '0',
-        deliveryDistance: '0',
+        driverLatitude: payload.driverSnapshot?.lat,
+        driverLongitude: payload.driverSnapshot?.lng,
       );
     } catch (e) {
       developer.log(
@@ -1310,27 +1296,18 @@ class DriverAcceptedController extends GetxController
   ) async {
     try {
       if (rideId.isEmpty) return;
-      final target = (payload.routeTarget ?? '').trim().toLowerCase();
+      // Sync Live Activity
 
       // If we have tracking, it means it's either en route to pickup or en route to destination
-      int step = (target == 'pick_up' || target == 'pickup') ? 2 : 4;
+      // Sync Live Activity
 
       await LiveActivityManager().startActivity(
         orderId: rideId,
         status: currentRideStatus.value.toUpperCase(),
-        title: 'Ride tracked',
-        merchantName: driverName.value,
-        subtitle: plateLinePrimary.value + plateLineSecondary.value,
-        fare: totalAmountLabel,
-        vehicleDesc: driverVehicleLine.value,
+        driverName: driverName.value,
+        vehicleName: driverVehicleLine.value,
         plateNumber: plateLinePrimary.value + plateLineSecondary.value,
-        riderPhotoUrl: '', // Photo URL not in tracking payload generally
-        step: step,
-        totalSteps: 5,
-        isRiderDelivering: step == 4,
         isCompleted: false,
-        pickupDistance: '0',
-        deliveryDistance: '0',
         etaSeconds: (payload.eta ?? 0).toDouble(),
       );
     } catch (e) {

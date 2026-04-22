@@ -61,14 +61,6 @@ class LiveActivityManager {
     if (_isIOS) {
       try {
         await _liveActivitiesPlugin.init(appGroupId: 'group.com.selcom.go');
-
-        _liveActivitiesPlugin.activityUpdateStream.listen((event) {
-          developer.log(
-            "📢 RECEIVED activity update from plugin: ${event.activityId}",
-            name: 'ORDER_TRACKING',
-          );
-        });
-
         final activeIds = await _liveActivitiesPlugin.getAllActivitiesIds();
 
         final List<String> staleOrderIds = [];
@@ -79,15 +71,22 @@ class LiveActivityManager {
         });
 
         if (staleOrderIds.isNotEmpty) {
-          developer.log(
-            "🧹 Pruning ${staleOrderIds.length} stale activities",
-            name: 'ORDER_TRACKING',
-          );
           for (final id in staleOrderIds) {
             _orderToActivityId.remove(id);
             _orderToMerchantName.remove(id);
           }
           await _saveState();
+        }
+        for (final activeId in activeIds) {
+          if (!_orderToActivityId.values.contains(activeId)) {
+            developer.log(
+              "🧹 Ending dangling activity: $activeId",
+              name: 'ORDER_TRACKING',
+            );
+            await _liveActivitiesPlugin
+                .endActivity(activeId)
+                .catchError((_) {});
+          }
         }
 
         _syncAllActiveTokens();
@@ -138,12 +137,7 @@ class LiveActivityManager {
         token = await _liveActivitiesPlugin
             .getPushToken(activityId)
             .timeout(const Duration(seconds: 3));
-      } catch (e) {
-        developer.log(
-          "⚠️ Error fetching token for $orderId: $e",
-          name: 'ORDER_TRACKING',
-        );
-      }
+      } catch (e) {}
       if (token != null && token.isNotEmpty) tokens[orderId] = token;
     }
     return tokens;
@@ -156,27 +150,16 @@ class LiveActivityManager {
   Future<String?> startActivity({
     required String orderId,
     required String status,
-    required String title,
-    String merchantName = '',
-    String subtitle = '',
-    String? fare,
-    String? eta,
-    String vehicleDesc = '',
+    String driverName = '',
+    String vehicleName = '',
+    String driverAvatarUrl = '',
     String plateNumber = '',
-    String riderPhotoUrl = '',
-    int step = 0,
-    int totalSteps = 6,
-    bool isRiderDelivering = false,
-    bool isCompleted = false,
-    double deliveryStartDate = 0,
     double etaSeconds = 0,
+    bool isCompleted = false,
     double? driverLatitude,
     double? driverLongitude,
-    String pickupDistance = '0',
-    String deliveryDistance = '0',
     bool updateIfExists = true,
   }) async {
-    // 🛡️ SYNC LOCK CHECK: Block re-entry immediately for the same orderId
     if (_inProgressStarts.containsKey(orderId)) {
       return _inProgressStarts[orderId]!.future;
     }
@@ -188,23 +171,14 @@ class LiveActivityManager {
       final result = await _startActivityInternal(
         orderId: orderId,
         status: status,
-        title: title,
-        merchantName: merchantName,
-        subtitle: subtitle,
-        fare: fare,
-        eta: eta,
-        vehicleDesc: vehicleDesc,
+        driverName: driverName,
+        vehicleName: vehicleName,
+        driverAvatarUrl: driverAvatarUrl,
         plateNumber: plateNumber,
-        step: step,
-        totalSteps: totalSteps,
-        isRiderDelivering: isRiderDelivering,
-        isCompleted: isCompleted,
-        deliveryStartDate: deliveryStartDate,
         etaSeconds: etaSeconds,
+        isCompleted: isCompleted,
         driverLatitude: driverLatitude,
         driverLongitude: driverLongitude,
-        pickupDistance: pickupDistance,
-        deliveryDistance: deliveryDistance,
         updateIfExists: updateIfExists,
       );
       completer.complete(result);
@@ -220,75 +194,56 @@ class LiveActivityManager {
   Future<String?> _startActivityInternal({
     required String orderId,
     required String status,
-    required String title,
-    String merchantName = '',
-    String subtitle = '',
-    String? fare,
-    String? eta,
-    String vehicleDesc = '',
+    String driverName = '',
+    String vehicleName = '',
+    String driverAvatarUrl = '',
     String plateNumber = '',
-    int step = 0,
-    int totalSteps = 6,
-    bool isRiderDelivering = false,
-    bool isCompleted = false,
-    double deliveryStartDate = 0,
     double etaSeconds = 0,
+    bool isCompleted = false,
     double? driverLatitude,
     double? driverLongitude,
-    String pickupDistance = '0',
-    String deliveryDistance = '0',
     bool updateIfExists = true,
   }) async {
     try {
       final String? existingId = _orderToActivityId[orderId];
       if (_isIOS && existingId != null && existingId != 'android') {
-        // 🚀 OPTIMIZATION: Skip expensive getAllActivitiesIds() call if we have a cached ID.
-        // For foreground socket updates, assume the cached ID is valid.
         if (updateIfExists) {
           await updateActivity(
             orderId: orderId,
             status: status,
-            title: title,
-            merchantName: merchantName,
-            subtitle: subtitle,
-            fare: fare,
-            eta: eta,
-            vehicleDesc: vehicleDesc,
+            driverName: driverName,
+            vehicleName: vehicleName,
+            driverAvatarUrl: driverAvatarUrl,
             plateNumber: plateNumber,
-            step: step,
-            totalSteps: totalSteps,
-            isRiderDelivering: isRiderDelivering,
-            deliveryStartDate: deliveryStartDate,
             etaSeconds: etaSeconds,
+            isCompleted: isCompleted,
             driverLatitude: driverLatitude,
             driverLongitude: driverLongitude,
-            pickupDistance: pickupDistance,
-            deliveryDistance: deliveryDistance,
           );
           return existingId;
         }
       }
 
-      _orderToMerchantName[orderId] = merchantName;
+      _orderToMerchantName[orderId] = driverName;
       await _saveState();
 
       if (_isAndroid) {
         await AndroidOrderTrackingManager().show(
           orderId: orderId,
-          title: title,
-          merchantName: merchantName,
+          title: 'Ride tracked',
+          merchantName: driverName,
           status: status,
-          subtitle: subtitle,
-          step: step,
-          totalSteps: totalSteps,
-          isRiderDelivering: isRiderDelivering,
-          vehicleDesc: vehicleDesc,
+          subtitle: plateNumber,
+          step: isCompleted ? 5 : 2,
+          totalSteps: 5,
+          isRiderDelivering: false,
+          vehicleDesc: vehicleName,
           plateNumber: plateNumber,
-          eta: eta ?? '',
+          eta: '',
           isCompleted: isCompleted,
-          riderPhotoUrl: '',
-          pickupDistance: pickupDistance,
-          deliveryDistance: deliveryDistance,
+          riderPhotoUrl: driverAvatarUrl,
+          pickupDistance: '0',
+          deliveryDistance: '0',
         );
         _orderToActivityId[orderId] = 'android';
         await _saveState();
@@ -302,49 +257,23 @@ class LiveActivityManager {
           return "limit_reached";
 
         final activityModel = <String, dynamic>{
-          'order_id': orderId,
-          'merchant_name': merchantName,
           'status': status,
-          'title': title,
-          'subtitle': subtitle,
-          'fare': fare,
-          'eta': eta ?? '',
-          'vehicle_desc': vehicleDesc,
+          'driver_name': driverName,
+          'driver_avatar_url': driverAvatarUrl,
+          'vehicle_name': vehicleName,
           'plate_number': plateNumber,
-          'step': step,
-          'total_steps': totalSteps,
-          'is_completed': isCompleted,
-          'is_rider_delivering': isRiderDelivering,
           'eta_seconds': etaSeconds,
-          'delivery_distance': deliveryDistance,
+          'driver_latitude': driverLatitude,
+          'driver_longitude': driverLongitude,
+          'is_completed': isCompleted,
         };
 
-        if (driverLatitude != null)
-          activityModel['driver_latitude'] = driverLatitude;
-        if (driverLongitude != null)
-          activityModel['driver_longitude'] = driverLongitude;
-
-        // Harden: remove any null values that can cause decoding issues on native side
         activityModel.removeWhere((key, value) => value == null);
-
-        developer.log(
-          "🚀 Creating Live Activity: $orderId",
-          name: 'LIVE_ACTIVITY',
-          error: jsonEncode(activityModel),
-        );
 
         final activityId = await _liveActivitiesPlugin
             .createActivity(orderId, activityModel)
-            .timeout(
-              const Duration(seconds: 4),
-              onTimeout: () {
-                developer.log(
-                  "🚨 createActivity TIMEOUT after 4s",
-                  name: 'ORDER_TRACKING',
-                );
-                return null;
-              },
-            );
+            .timeout(const Duration(seconds: 4), onTimeout: () => null);
+
         if (activityId != null) {
           _orderToActivityId[orderId] = activityId;
           await _saveState();
@@ -365,12 +294,7 @@ class LiveActivityManager {
       try {
         await sl<RideRepository>().updateActivityToken(entry.key, entry.value);
         _lastSyncedTokens[entry.key] = entry.value;
-      } catch (e) {
-        developer.log(
-          "⚠️ Token sync error for ${entry.key}: $e",
-          name: 'ORDER_TRACKING',
-        );
-      }
+      } catch (e) {}
     }
   }
 
@@ -398,112 +322,48 @@ class LiveActivityManager {
   Future<void> updateActivity({
     required String orderId,
     required String status,
-    required String title,
-    String? merchantName,
-    String subtitle = '',
-    String? fare,
-    String? eta,
-    String vehicleDesc = '',
+    String driverName = '',
+    String vehicleName = '',
+    String driverAvatarUrl = '',
     String plateNumber = '',
-    String riderPhotoUrl = '',
-    int step = 0,
-    int totalSteps = 6,
-    bool isRiderDelivering = false,
-    bool isCompleted = false,
-    double deliveryStartDate = 0,
     double etaSeconds = 0,
+    bool isCompleted = false,
     double? driverLatitude,
     double? driverLongitude,
-    String pickupDistance = '0',
-    String deliveryDistance = '0',
   }) async {
-    developer.log(
-      "🔄 updateActivity for $orderId (status: $status)",
-      name: 'ORDER_TRACKING',
-    );
     try {
-      // 🛡️ THROTTLING: Prevent updating Live Activity more than once every 1.5 seconds per order.
-      // High-frequency socket tracking events can overwhelm the system and cause bottlenecks.
       final now = DateTime.now();
       final lastUpdate = _lastUpdateTime[orderId];
       if (lastUpdate != null &&
-          now.difference(lastUpdate).inMilliseconds < 1500) {
-        developer.log(
-          "⏭️ Throttling update for $orderId (last update was too recent)",
-          name: 'ORDER_TRACKING',
-        );
+          now.difference(lastUpdate).inMilliseconds < 1500)
         return;
-      }
       _lastUpdateTime[orderId] = now;
-      if (merchantName != null && merchantName.isNotEmpty) {
-        _orderToMerchantName[orderId] = merchantName;
+
+      if (driverName.isNotEmpty) {
+        _orderToMerchantName[orderId] = driverName;
         await _saveState();
       }
 
-      final String? effMerchant = _orderToMerchantName[orderId];
       final String? activityId = _orderToActivityId[orderId];
+      if (activityId == null || activityId == 'android') return;
 
-      developer.log(
-        "🔍 Status: $status, ActivityID: $activityId, merchant: $effMerchant",
-        name: 'ORDER_TRACKING',
-      );
+      final updateData = <String, dynamic>{
+        'status': status,
+        'driver_name': driverName,
+        'driver_avatar_url': driverAvatarUrl,
+        'vehicle_name': vehicleName,
+        'plate_number': plateNumber,
+        'eta_seconds': etaSeconds,
+        'driver_latitude': driverLatitude,
+        'driver_longitude': driverLongitude,
+        'is_completed': isCompleted,
+      };
 
-      if (activityId == null) {
-        developer.log(
-          "⚠️ No activity ID found for ride $orderId. Skipping update.",
-          name: 'ORDER_TRACKING',
-        );
-        return;
-      }
+      updateData.removeWhere((key, value) => value == null);
 
-      if (_isIOS && activityId != 'android') {
-        final updateData = <String, dynamic>{
-          'order_id': orderId,
-          'status': status,
-          'title': title,
-          'subtitle': subtitle,
-          'merchant_name': effMerchant ?? '',
-          'fare': fare,
-          'eta': eta ?? '',
-          'vehicle_desc': vehicleDesc,
-          'plate_number': plateNumber,
-          'step': step,
-          'total_steps': totalSteps,
-          'is_completed': isCompleted,
-          'is_rider_delivering': isRiderDelivering,
-          'eta_seconds': etaSeconds,
-          'driver_latitude': driverLatitude,
-          'delivery_distance': deliveryDistance,
-        };
-
-        // Harden: remove any null values that can cause decoding issues on native side
-        updateData.removeWhere((key, value) => value == null);
-
-        developer.log(
-          "📡 Pushing update to ActivityKit: ID=$activityId PAYLOAD: ${jsonEncode(updateData)}",
-          name: 'ORDER_TRACKING',
-        );
-
-        try {
-          await _liveActivitiesPlugin
-              .updateActivity(activityId, updateData)
-              .timeout(
-                const Duration(seconds: 4),
-                onTimeout: () {
-                  developer.log(
-                    "🚨 updateActivity TIMEOUT after 4s",
-                    name: 'ORDER_TRACKING',
-                  );
-                },
-              );
-          developer.log("✅ ActivityKit push SUCCESS", name: 'ORDER_TRACKING');
-        } catch (e) {
-          developer.log(
-            "❌ ActivityKit push FAILED: $e",
-            name: 'ORDER_TRACKING',
-          );
-        }
-      }
+      await _liveActivitiesPlugin
+          .updateActivity(activityId, updateData)
+          .timeout(const Duration(seconds: 4), onTimeout: () {});
     } catch (e) {
       developer.log("❌ Error in updateActivity: $e", name: 'ORDER_TRACKING');
     }
@@ -518,15 +378,7 @@ class LiveActivityManager {
       } else if (_isIOS) {
         await _liveActivitiesPlugin
             .endActivity(activityId)
-            .timeout(
-              const Duration(seconds: 4),
-              onTimeout: () {
-                developer.log(
-                  "🚨 endActivity TIMEOUT after 4s",
-                  name: 'ORDER_TRACKING',
-                );
-              },
-            );
+            .timeout(const Duration(seconds: 4), onTimeout: () {});
       }
       await _clearState(orderId);
     } catch (e) {
