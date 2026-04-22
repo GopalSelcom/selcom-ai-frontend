@@ -87,16 +87,18 @@ class RideLocationsTimeline extends StatelessWidget {
       return stopAddr != endAddr;
     }).toList();
 
+    final bool isMulti = filteredStops.isNotEmpty;
+    const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+
     return Column(
       children: [
         // Start Location Row
         _buildLocationRow(
           title: startLocation,
           address: startAddress,
-          icon: Icon(
-            Icons.location_on,
-            color: const Color(0xFFF3004C),
-            size: 22.w,
+          icon: _buildLetterIcon(
+            isMulti ? 'A' : 'P',
+            color: const Color(0xFF4FA3FF),
           ),
           showBottomLine: true,
         ),
@@ -106,7 +108,10 @@ class RideLocationsTimeline extends StatelessWidget {
           _buildLocationRow(
             title: filteredStops[i].address.split(',').first,
             address: filteredStops[i].address,
-            icon: _buildStopIcon(i + 1),
+            icon: _buildLetterIcon(
+              letters[i + 1],
+              color: const Color(0xFFE11D48),
+            ),
             showBottomLine: true,
           ),
 
@@ -114,10 +119,9 @@ class RideLocationsTimeline extends StatelessWidget {
         _buildLocationRow(
           title: endLocation,
           address: endAddress,
-          icon: Icon(
-            CupertinoIcons.pin_fill,
-            color: const Color(0xFF34C759),
-            size: 22.w,
+          icon: _buildLetterIcon(
+            isMulti ? letters[filteredStops.length + 1] : 'D',
+            color: const Color(0xFF34C759), // Green
           ),
           showBottomLine: false,
         ),
@@ -125,21 +129,18 @@ class RideLocationsTimeline extends StatelessWidget {
     );
   }
 
-  Widget _buildStopIcon(int number) {
+  Widget _buildLetterIcon(String label, {required Color color}) {
     return Container(
       width: 22.w,
       height: 22.w,
-      decoration: const BoxDecoration(
-        color: Color(0xFFE11D48),
-        shape: BoxShape.circle,
-      ),
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
       alignment: Alignment.center,
       child: Text(
-        number.toString(),
+        label,
         style: TextStyle(
           color: Colors.white,
           fontSize: 12.sp,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w800,
         ),
       ),
     );

@@ -272,24 +272,46 @@ class VehicleSelectionController extends GetxController {
 
   Future<void> loadLocationIcons() async {
     try {
-      // 1. Pickup: Standard Blue Circle
-      pickupIcon = await MapMarkerUtils.createCustomCircleMarker(
-        color: const Color(0xFF4FA3FF),
-      );
+      final bool isMulti = destinations.length > 1;
 
-      // 2. Final Destination: Standard Red Circle
-      dropIcon = await MapMarkerUtils.createCustomCircleMarker(
-        color: const Color(0xFFE11D48),
-      );
-
-      // 3. Intermediate Stops: Numbered Red Circles (1, 2, 3...)
-      stopIcons.clear();
-      for (int i = 1; i <= 3; i++) {
-        final icon = await MapMarkerUtils.createNumberedMarker(
-          number: i,
-          color: const Color(0xFFE11D48),
+      if (!isMulti) {
+        // Single Stop: P (Blue) and D (Green)
+        pickupIcon = await MapMarkerUtils.createTextMarker(
+          text: 'P',
+          color: const Color(0xFF4FA3FF),
         );
-        stopIcons.add(icon);
+        dropIcon = await MapMarkerUtils.createTextMarker(
+          text: 'D',
+          color: const Color(0xFF34C759), // Green for Destination
+        );
+        stopIcons.clear();
+      } else {
+        // Multi Stop: A (Blue), B, C... (Red), Last Letter (Green)
+        const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+        pickupIcon = await MapMarkerUtils.createTextMarker(
+          text: 'A',
+          color: const Color(0xFF4FA3FF),
+        );
+
+        stopIcons.clear();
+        // Generate all possible intermediate letters as Red
+        for (int i = 1; i < letters.length; i++) {
+          final icon = await MapMarkerUtils.createTextMarker(
+            text: letters[i],
+            color: const Color(0xFFE11D48), // Red for Intermediate Stops
+          );
+          stopIcons.add(icon);
+        }
+
+        // Destination letter (Green)
+        final destIndex = destinations.length; // If 2 drops, index is 2 (C)
+        final label = (destIndex < letters.length)
+            ? letters[destIndex]
+            : letters.last;
+        dropIcon = await MapMarkerUtils.createTextMarker(
+          text: label,
+          color: const Color(0xFF34C759), // Green for Destination
+        );
       }
     } catch (e) {
       if (kDebugMode)
@@ -541,16 +563,28 @@ class VehicleSelectionController extends GetxController {
           );
           final result = await homeRepository.bookRide(request);
           result.fold(
-            (f) => Get.snackbar(
-              'Booking failed',
-              'Could not complete booking. Try again.',
-            ),
+            (f) {
+              // Clean the message if it contains "Exception: "
+              String msg = f.message;
+              if (msg.startsWith('Exception: ')) {
+                msg = msg.replaceFirst('Exception: ', '');
+              }
+              Get.snackbar(
+                'Booking failed',
+                msg,
+                backgroundColor: Colors.black87,
+                colorText: Colors.white,
+              );
+            },
             (data) {
               final rideId = data.data?.ride?.id;
               if (rideId == null || rideId.isEmpty) {
                 Get.snackbar(
                   'Booking',
-                  'Ride was created but ride id is missing from the response.',
+                  data.message ??
+                      'Ride was created but ride id is missing from the response.',
+                  backgroundColor: Colors.black87,
+                  colorText: Colors.white,
                 );
                 return;
               }

@@ -125,21 +125,48 @@ class DriverAcceptedController extends GetxController
   }
 
   Future<void> _loadMarkerIcons() async {
-    pickupIcon.value = await MapMarkerUtils.createCustomCircleMarker(
-      color: const Color(0xFF4FA3FF),
-    );
-    dropIcon.value = await MapMarkerUtils.createCustomCircleMarker(
-      color: const Color(0xFFE11D48),
-    );
+    final bool isMulti = ride.value?.isMultiStop ?? false;
+    const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
-    // Numbered stops for multi-stop rides
-    stopIcons.clear();
-    for (int i = 1; i <= 3; i++) {
-      final icon = await MapMarkerUtils.createNumberedMarker(
-        number: i,
-        color: const Color(0xFFE11D48),
+    if (!isMulti) {
+      // Single Stop: P (Blue) and D (Green)
+      pickupIcon.value = await MapMarkerUtils.createTextMarker(
+        text: 'P',
+        color: const Color(0xFF4FA3FF),
       );
-      stopIcons.add(icon);
+      dropIcon.value = await MapMarkerUtils.createTextMarker(
+        text: 'D',
+        color: const Color(0xFF34C759), // Green
+      );
+      stopIcons.clear();
+    } else {
+      // Multi Stop: A (Blue), B, C... (Red), Last (Green)
+      pickupIcon.value = await MapMarkerUtils.createTextMarker(
+        text: 'A',
+        color: const Color(0xFF4FA3FF),
+      );
+
+      stopIcons.clear();
+      // Intermediate stops are Red
+      for (int i = 1; i < letters.length; i++) {
+        final icon = await MapMarkerUtils.createTextMarker(
+          text: letters[i],
+          color: const Color(0xFFE11D48),
+        );
+        stopIcons.add(icon);
+      }
+
+      // Final destination icon (Green)
+      final sList = ride.value?.stops ?? [];
+      final destIndex = sList.length + 1; // 1 for pickup + number of stops
+      final label = (destIndex < letters.length)
+          ? letters[destIndex]
+          : letters.last;
+
+      dropIcon.value = await MapMarkerUtils.createTextMarker(
+        text: label,
+        color: const Color(0xFF34C759), // Green
+      );
     }
   }
 
@@ -249,6 +276,7 @@ class DriverAcceptedController extends GetxController
       (r) {
         ride.value = r;
         _applyRide(r);
+        _loadMarkerIcons(); // Refresh icons with new ride context
       },
     );
     isLoadingRide.value = false;

@@ -176,16 +176,12 @@ class DriverAcceptedScreen extends StatelessWidget {
       if (isMultiStop && stops.isNotEmpty) {
         for (var i = 0; i < stops.length; i++) {
           final stop = stops[i];
-          final isLast = i == stops.length - 1;
 
-          BitmapDescriptor icon;
-          if (isLast) {
-            icon = c.dropIcon.value ?? BitmapDescriptor.defaultMarker;
-          } else {
-            icon = (i < c.stopIcons.length)
-                ? c.stopIcons[i]
-                : (c.dropIcon.value ?? BitmapDescriptor.defaultMarker);
-          }
+          // Use stopIcons[i] which corresponds to B, C, D...
+          // because stopIcons index 0 is 'B', 1 is 'C' etc.
+          final icon = (i < c.stopIcons.length)
+              ? c.stopIcons[i]
+              : (c.dropIcon.value ?? BitmapDescriptor.defaultMarker);
 
           markers.add(
             Marker(
