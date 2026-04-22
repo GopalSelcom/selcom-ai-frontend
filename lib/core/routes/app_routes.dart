@@ -14,9 +14,11 @@ import '../../features/notification/presentation/screens/notification_screen.dar
 import '../../features/ride/presentation/bindings/driver_accepted_binding.dart';
 import '../../features/ride/presentation/bindings/finding_driver_binding.dart';
 import '../../features/ride/presentation/bindings/vehicle_selection_binding.dart';
+import '../../features/ride/presentation/bindings/confirm_pickup_binding.dart';
 import '../../features/ride/presentation/screens/driver_accepted_screen.dart';
 import '../../features/ride/presentation/screens/finding_driver_screen.dart';
 import '../../features/ride/presentation/screens/vehicle_selection_screen.dart';
+import '../../features/ride/presentation/screens/confirm_pickup_screen.dart';
 import '../../features/profile/presentation/screens/contact_us_screen.dart';
 import '../../features/profile/presentation/bindings/contact_us_binding.dart';
 import '../../features/promotions/presentation/screens/promocode_screen.dart';
@@ -39,6 +41,7 @@ class AppRoutes {
   static const String locationSelection = '/location-selection';
   static const String search = '/search';
   static const String booking = '/booking';
+  static const String confirmPickup = '/confirm-pickup';
   static const String findingDriver = '/finding-driver';
 
   /// SCR-11 — driver accepted (heading to pickup).
@@ -80,6 +83,11 @@ class AppRoutes {
       name: booking,
       page: () => const VehicleSelectionScreen(),
       binding: VehicleSelectionBinding(),
+    ),
+    GetPage(
+      name: confirmPickup,
+      page: () => const ConfirmPickupScreen(),
+      binding: ConfirmPickupBinding(),
     ),
     GetPage(
       name: findingDriver,

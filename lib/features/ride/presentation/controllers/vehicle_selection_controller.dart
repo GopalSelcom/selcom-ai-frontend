@@ -483,7 +483,7 @@ class VehicleSelectionController extends GetxController {
 
     isBooking.value = true;
     try {
-      final resolvedVehicleTypeId = (est.vehicleTypeId ?? '').trim();
+      var resolvedVehicleTypeId = (est.vehicleTypeId ?? '').trim();
       if (resolvedVehicleTypeId.isEmpty ||
           !_looksLikeBackendVehicleTypeId(resolvedVehicleTypeId)) {
         Get.snackbar(
@@ -493,9 +493,119 @@ class VehicleSelectionController extends GetxController {
         return;
       }
 
+      final confirmResult = await Get.toNamed(
+        AppRoutes.confirmPickup,
+        arguments: {
+          'pickupLat': pickupEntity.lat,
+          'pickupLng': pickupEntity.lng,
+          'pickupAddress': pickupEntity.address,
+        },
+      );
+
+      if (confirmResult is! Map) {
+        return;
+      }
+
+      final confirmed = Map<String, dynamic>.from(confirmResult);
+      final confirmedLat = (confirmed['pickupLat'] as num?)?.toDouble();
+      final confirmedLng = (confirmed['pickupLng'] as num?)?.toDouble();
+      final confirmedAddress = (confirmed['pickupAddress'] as String?)?.trim();
+      if (confirmedLat == null || confirmedLng == null) {
+        Get.snackbar('Pickup', 'Please confirm pickup point to continue.');
+        return;
+      }
+
+      pickupEntity = LocationEntity(
+        lat: confirmedLat,
+        lng: confirmedLng,
+        address: (confirmedAddress == null || confirmedAddress.isEmpty)
+            ? pickupEntity.address
+            : confirmedAddress,
+      );
+
+      // Re-estimate fare/route after pickup confirmation so pricing and ETA are fresh.
+      final refreshedEstimateResult = await homeRepository.estimateFare(
+        FareEstimateRequest(
+          pickup: pickupEntity,
+          destinations: destinations.toList(),
+        ),
+      );
+
+      final refreshedOk = await refreshedEstimateResult.fold<Future<bool>>(
+        (failure) async {
+          String msg = failure.message;
+          if (msg.startsWith('Exception: ')) {
+            msg = msg.replaceFirst('Exception: ', '');
+          }
+          Get.snackbar(
+            'Estimate failed',
+            msg.isEmpty
+                ? 'Could not refresh fare after pickup confirmation.'
+                : msg,
+          );
+          return false;
+        },
+        (model) async {
+          if (model.estimates.isEmpty) {
+            Get.snackbar(
+              'Estimate failed',
+              'No fare estimate returned for the updated pickup location.',
+            );
+            return false;
+          }
+
+          final normalized = model.estimates
+              .map((e) => _withResolvedVehicleTypeId(e, _vehicleTypes))
+              .toList();
+          estimates.assignAll(normalized);
+
+          final keepIndex = normalized.indexWhere(
+            (e) => (e.vehicleTypeId ?? '').trim() == resolvedVehicleTypeId,
+          );
+          if (keepIndex >= 0) {
+            selectedVehicleIndex.value = keepIndex;
+          } else {
+            selectedVehicleIndex.value = selectedVehicleIndex.value.clamp(
+              0,
+              normalized.length - 1,
+            );
+          }
+
+          final selectedNow = selectedEstimate;
+          final selectedNowId = (selectedNow?.vehicleTypeId ?? '').trim();
+          if (selectedNowId.isNotEmpty) {
+            resolvedVehicleTypeId = selectedNowId;
+          }
+
+          if (model.routeGeometry?.coordinates != null &&
+              model.routeGeometry!.coordinates!.isNotEmpty) {
+            final mapped = model.routeGeometry!.coordinates!
+                .map((c) => c.length >= 2 ? LatLng(c[1], c[0]) : null)
+                .whereType<LatLng>()
+                .toList();
+            if (mapped.length >= 2) {
+              routePoints.assignAll(mapped);
+              isRouteReady.value = true;
+            } else {
+              _useStraightLineFallback();
+            }
+          } else {
+            _useStraightLineFallback();
+          }
+
+          await loadDriverIcon();
+          _requestNearbyDriversForCurrentSelection();
+          Future.microtask(_fitBounds);
+          return true;
+        },
+      );
+      if (!refreshedOk) return;
+
       // 1) Validate payment first (Validate Ride Payment - Block).
+      final refreshedSelectedEstimate = selectedEstimate;
       final validateRequest = ValidateRidePaymentRequest(
-        fareEstimate: est.fareEstimate ?? selectedFareAmount,
+        fareEstimate:
+            refreshedSelectedEstimate?.fareEstimate ?? est.fareEstimate ?? selectedFareAmount,
         paymentMethod: pay.type,
         vehicleTypeId: resolvedVehicleTypeId,
       );
@@ -563,8 +673,8 @@ class VehicleSelectionController extends GetxController {
             paymentMethod: pay.type,
           );
           final result = await homeRepository.bookRide(request);
-          result.fold(
-            (f) {
+          await result.fold<Future<void>>(
+            (f) async {
               // Clean the message if it contains "Exception: "
               String msg = f.message;
               if (msg.startsWith('Exception: ')) {
@@ -577,7 +687,7 @@ class VehicleSelectionController extends GetxController {
                 colorText: Colors.white,
               );
             },
-            (data) {
+            (data) async {
               final rideId = data.data?.ride?.id;
               if (rideId == null || rideId.isEmpty) {
                 Get.snackbar(
@@ -589,6 +699,7 @@ class VehicleSelectionController extends GetxController {
                 );
                 return;
               }
+
               Get.offNamed(
                 AppRoutes.findingDriver,
                 arguments: {
