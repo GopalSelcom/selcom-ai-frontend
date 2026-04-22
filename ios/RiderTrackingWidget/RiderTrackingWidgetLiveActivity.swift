@@ -4,6 +4,7 @@ import SwiftUI
 
 // MARK: - Required by live_activities plugin
 struct LiveActivitiesAppAttributes: ActivityAttributes {
+    public typealias LiveDeliveryData = ContentState
     public struct ContentState: Codable, Hashable {
         public var order_id: String?
         public var merchant_name: String?
@@ -33,17 +34,15 @@ extension LiveActivitiesAppAttributes {
     func prefixedKey(_ key: String) -> String { "tracking_\(key)" }
 }
 
-// MARK: - View Model
+// MARK: - Optimized View Model
 struct TrackingViewModel {
-    var title: String
-    var merchantName: String
+    let title: String
+    let merchantName: String
     let status: String
     let subtitle: String
-    let fare: String
     let vehicleDesc: String
     let plateNumber: String
     let eta: String
-    let arrivalDate: Date?
     let progressRatio: Double
     let isRiderDelivering: Bool
     
@@ -57,32 +56,37 @@ struct TrackingViewModel {
         self.merchantName      = state.merchant_name ?? attributes.merchant_name ?? ud?.string(forKey: attributes.prefixedKey("merchant_name")) ?? "Selcom Go"
         
         let rawStatus          = state.status ?? ud?.string(forKey: attributes.prefixedKey("status")) ?? "Finding Driver"
-        self.status            = rawStatus.replacingOccurrences(of: "_", with: " ").capitalized
+        self.status            = (rawStatus.replacingOccurrences(of: "_", with: " ")).capitalized
         
         self.subtitle          = state.subtitle ?? ud?.string(forKey: attributes.prefixedKey("subtitle")) ?? ""
-        self.fare              = state.fare ?? ud?.string(forKey: attributes.prefixedKey("fare")) ?? ""
-        self.eta               = state.eta ?? ud?.string(forKey: attributes.prefixedKey("eta")) ?? ""
         self.vehicleDesc       = state.vehicle_desc ?? ud?.string(forKey: attributes.prefixedKey("vehicle_desc")) ?? ""
         self.plateNumber       = state.plate_number ?? ud?.string(forKey: attributes.prefixedKey("plate_number")) ?? ""
         self.isRiderDelivering = state.is_rider_delivering ?? ud?.bool(forKey: attributes.prefixedKey("is_rider_delivering")) ?? false
         
+        // 📏 Progress Logic
         let stepVal            = Double(state.step ?? ud?.integer(forKey: attributes.prefixedKey("step")) ?? 0)
         let totalStepsVal      = max(Double(state.total_steps ?? ud?.integer(forKey: attributes.prefixedKey("total_steps")) ?? 5), 5.0)
-        
         self.progressRatio     = min(max(stepVal / totalStepsVal, 0.0), 1.0)
-        if let etaSec = state.eta_seconds, etaSec > 0 {
-            self.arrivalDate = Date().addingTimeInterval(etaSec)
+
+        // 🕰️ ETA Logic
+        if self.progressRatio >= 1.0 || (state.is_completed ?? ud?.bool(forKey: attributes.prefixedKey("is_completed")) ?? false) {
+            self.eta = "Arrived"
         } else {
-            self.arrivalDate = nil
+            let be_eta = state.eta ?? ud?.string(forKey: attributes.prefixedKey("eta")) ?? ""
+            if be_eta.isEmpty {
+                self.eta = "Soon"
+            } else {
+                // Ensure it says "mins" if needed, but usually backend provides "2 min"
+                self.eta = be_eta.lowercased().replacingOccurrences(of: " min", with: " mins")
+            }
         }
         
-        // Cache for partial updates
+        // Cache updates for partial data packets
         if let ud = ud {
             if let s = state.status { ud.set(s, forKey: attributes.prefixedKey("status")) }
             if let t = state.title { ud.set(t, forKey: attributes.prefixedKey("title")) }
             if let m = state.merchant_name { ud.set(m, forKey: attributes.prefixedKey("merchant_name")) }
             if let sub = state.subtitle { ud.set(sub, forKey: attributes.prefixedKey("subtitle")) }
-            if let f = state.fare { ud.set(f, forKey: attributes.prefixedKey("fare")) }
             if let e = state.eta { ud.set(e, forKey: attributes.prefixedKey("eta")) }
             if let v = state.vehicle_desc { ud.set(v, forKey: attributes.prefixedKey("vehicle_desc")) }
             if let p = state.plate_number { ud.set(p, forKey: attributes.prefixedKey("plate_number")) }
@@ -94,249 +98,134 @@ struct TrackingViewModel {
 }
 
 // MARK: - Components
-struct PlateTag: View {
-    let text: String
-    var body: some View {
-        HStack(spacing: 4) {
-            Text(text)
-                .font(.system(size: 14, weight: .bold))
-                .foregroundColor(.black)
-            Image(systemName: "flag.fill") // Placeholder for Tanzanian flag
-                .resizable()
-                .frame(width: 14, height: 10)
-                .foregroundColor(.blue)
-        }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .background(Color(red: 255/255.0, green: 214/255.0, blue: 0/255.0))
-        .cornerRadius(4)
-    }
-}
-
-// MARK: - Views
-struct LockScreenView: View {
+struct MainDashboardView: View {
     let vm: TrackingViewModel
-    let selcomColor = Color(red: 243/255.0, green: 0/255.0, blue: 76/255.0)
+    let selcomRed = Color(red: 243/255.0, green: 0/255.0, blue: 76/255.0)
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(vm.title.uppercased())
-                        .font(.system(size: 11, weight: .black))
-                        .foregroundColor(selcomColor)
-                        .tracking(1)
-                    
-                    HStack(spacing: 6) {
-                        Text(vm.status)
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(.white)
-                        if !vm.merchantName.isEmpty {
-                            Text("•")
-                                .foregroundColor(.white.opacity(0.3))
-                            Text(vm.merchantName)
-                                .font(.system(size: 20, weight: .bold))
-                                .foregroundColor(.white)
-                        }
-                    }
-                    
-                    HStack(spacing: 8) {
-                        Text(vm.vehicleDesc)
-                            .font(.system(size: 14))
-                            .foregroundColor(.white.opacity(0.6))
-                        if !vm.plateNumber.isEmpty {
-                            Text(vm.plateNumber)
-                                .font(.system(size: 12, weight: .bold))
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color.white.opacity(0.1))
-                                .cornerRadius(4)
-                        }
-                    }
-                }
-                
-                Spacer()
-                
-                VStack(alignment: .trailing, spacing: 4) {
-                    if !vm.fare.isEmpty {
-                        Text(vm.fare)
-                            .font(.system(size: 22, weight: .bold))
-                            .foregroundColor(.white)
-                    }
-                    if let arrivalDate = vm.arrivalDate {
-                        Text(timerInterval: Date()...arrivalDate, countsDown: true)
-                            .font(.system(size: 14, weight: .bold).monospacedDigit())
-                            .foregroundColor(selcomColor)
-                    } else {
-                        Text(vm.eta)
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(selcomColor)
-                    }
-                }
-            }
-            
-            // Progress Bar
-            ZStack(alignment: .leading) {
-                Capsule()
-                    .fill(Color.white.opacity(0.1))
-                    .frame(height: 6)
-                Capsule()
-                    .fill(selcomColor)
-                    .frame(width: 320 * CGFloat(vm.progressRatio), height: 6)
-                
-                Circle()
-                    .fill(.white)
-                    .frame(width: 10, height: 10)
-                    .offset(x: 320 * CGFloat(vm.progressRatio) - 5)
-                    .shadow(radius: 2)
-            }
-        }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 16)
-        .background(Color.black.opacity(0.8))
-    }
-}
-
-struct DynamicIslandExpandedView: View {
-    let vm: TrackingViewModel
-    let selcomColor = Color(red: 243/255.0, green: 0/255.0, blue: 76/255.0)
-
-    var body: some View {
-        VStack(spacing: 8) {
-            // Header Row
-            HStack {
+        HStack(alignment: .center, spacing: 16) {
+            VStack(alignment: .leading, spacing: 2) {
+                // 🏷️ Brand Header
                 HStack(spacing: 6) {
-                    Image(systemName: "car.fill")
-                        .font(.system(size: 14))
-                        .foregroundColor(selcomColor)
-                    Text(vm.title.uppercased())
-                        .font(.system(size: 10, weight: .black))
-                        .foregroundColor(.white.opacity(0.6))
-                        .tracking(1)
+                    Circle()
+                        .fill(selcomRed)
+                        .frame(width: 18, height: 18)
+                        .overlay(Text("S").foregroundColor(.white).font(.system(size: 10, weight: .black)))
+                    Text("selcom.go").font(.system(size: 16, weight: .black)).foregroundColor(.white)
                 }
-                Spacer()
-                if !vm.fare.isEmpty {
-                    Text(vm.fare)
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.white)
-                }
-            }
-            .padding(.top, 4)
-            
-            // Info Row
-            HStack(alignment: .center) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(vm.merchantName)
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.white)
-                    Text(vm.vehicleDesc)
-                        .font(.system(size: 12))
-                        .foregroundColor(.gray)
-                }
-                Spacer()
-                
-                // Plate Tag
-                if !vm.plateNumber.isEmpty {
-                    PlateTag(text: vm.plateNumber)
-                }
-            }
-            
-            // Status & Progress Row
-            VStack(spacing: 6) {
-                HStack {
-                    Text(vm.status)
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.white)
-                    Spacer()
-                    if !vm.eta.isEmpty {
-                        if let arrivalDate = vm.arrivalDate {
-                            Text(timerInterval: Date()...arrivalDate, countsDown: true)
-                                .font(.system(size: 14, weight: .bold).monospacedDigit())
-                                .foregroundColor(selcomColor)
-                        } else {
-                            Text(vm.eta)
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundColor(selcomColor)
+                .padding(.bottom, 6)
+
+                if vm.eta == "Arrived" {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Thank you for your ride!").font(.system(size: 15, weight: .medium)).foregroundColor(.white.opacity(0.8))
+                        HStack {
+                            Text("Ride arrived").font(.system(size: 26, weight: .bold)).foregroundColor(.white)
+                            Text("✅").font(.system(size: 24))
                         }
                     }
-                }
-                
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(Color.white.opacity(0.1))
-                        .frame(height: 6)
-                    Capsule()
-                        .fill(selcomColor)
-                        .frame(width: 320 * CGFloat(vm.progressRatio), height: 6)
+                } else {
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(vm.status).font(.system(size: 16, weight: .medium)).foregroundColor(.white.opacity(0.8))
+                        
+                        let isSoon = vm.eta.lowercased().contains("soon") || vm.eta.isEmpty
+                        let prefix = isSoon ? "Arriving" : "Arriving in"
+                        let displayEta = isSoon ? "soon" : vm.eta.lowercased()
+
+                        HStack(alignment: .firstTextBaseline, spacing: 4) {
+                            Text(prefix).font(.system(size: 28, weight: .bold)).foregroundColor(.white)
+                            Text(displayEta).font(.system(size: 28, weight: .bold)).foregroundColor(.white)
+                        }
+                        .minimumScaleFactor(0.7)
+                        .lineLimit(1)
+                        
+                        if !vm.plateNumber.isEmpty || !vm.vehicleDesc.isEmpty {
+                            HStack(spacing: 6) {
+                                if !vm.plateNumber.isEmpty {
+                                    Text(vm.plateNumber.uppercased())
+                                        .font(.system(size: 10, weight: .black))
+                                        .padding(.horizontal, 4)
+                                        .padding(.vertical, 1)
+                                        .background(Color.white.opacity(0.2))
+                                        .cornerRadius(3)
+                                }
+                                Text(vm.vehicleDesc)
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.white.opacity(0.5))
+                                    .lineLimit(1)
+                            }
+                            .padding(.top, 4)
+                        }
+                    }
                     
-                    // Progress Indicator Dot
-                    Circle()
-                        .fill(.white)
-                        .frame(width: 10, height: 10)
-                        .offset(x: 320 * CGFloat(vm.progressRatio) - 5)
-                        .shadow(radius: 2)
+                    Spacer(minLength: 12)
+                    
+                    // Capsule Progress Bar
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(Color.white.opacity(0.15)).frame(height: 10)
+                        Capsule()
+                            .fill(selcomRed)
+                            .frame(width: 220 * CGFloat(vm.progressRatio), height: 10)
+                    }
+                    .frame(maxWidth: 220)
                 }
             }
-            // Actions Row
-            HStack(spacing: 16) {
-                Spacer()
-                Button(action: {}) {
-                    Image(systemName: "message.fill")
-                        .foregroundColor(.white)
-                        .frame(width: 44, height: 44)
-                        .background(Color.white.opacity(0.05))
-                        .clipShape(Circle())
-                        .overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 1))
-                }
-                Button(action: {}) {
-                    Image(systemName: "phone.fill")
-                        .foregroundColor(.white)
-                        .frame(width: 44, height: 44)
-                        .background(Color.white.opacity(0.05))
-                        .clipShape(Circle())
-                        .overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 1))
-                }
+            
+            Spacer()
+            
+            // Photo Area
+            ZStack {
+                Circle()
+                    .fill(Color.white.opacity(0.1))
+                    .frame(width: 80, height: 80)
+                    .overlay(
+                        Image(systemName: "person.fill")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 40)
+                            .foregroundColor(.white.opacity(0.3))
+                    )
             }
-            .padding(.top, 4)
         }
-        .padding(.horizontal, 22)
-        .padding(.bottom, 12)
     }
 }
 
 // MARK: - Widget Implementation
 struct RiderTrackingWidgetLiveActivity: Widget {
-    let selcomColor = Color(red: 243/255.0, green: 0/255.0, blue: 76/255.0)
+    let selcomRed = Color(red: 243/255.0, green: 0/255.0, blue: 76/255.0)
 
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: LiveActivitiesAppAttributes.self) { context in
-            LockScreenView(vm: TrackingViewModel(context: context))
+            MainDashboardView(vm: TrackingViewModel(context: context))
+                .padding(.horizontal, 20).padding(.vertical, 16)
+                .background(Color.black)
         } dynamicIsland: { context in
             let vm = TrackingViewModel(context: context)
             return DynamicIsland {
                 DynamicIslandExpandedRegion(.bottom) {
-                    DynamicIslandExpandedView(vm: vm)
+                    MainDashboardView(vm: vm)
+                        .padding(.horizontal, 16).padding(.top, 10).padding(.bottom, 12)
                 }
             } compactLeading: {
                 HStack(spacing: 4) {
-                    Circle().fill(selcomColor).frame(width: 15, height: 15)
+                    Circle().fill(selcomRed).frame(width: 15, height: 15)
                     Text("selcom").font(.system(size: 13, weight: .bold)).foregroundColor(.white)
                 }
                 .padding(.leading, 4)
             } compactTrailing: {
-                if let arrivalDate = vm.arrivalDate {
-                    Text(timerInterval: Date()...arrivalDate, countsDown: true)
-                        .font(.system(size: 10, weight: .bold).monospacedDigit())
-                        .foregroundColor(selcomColor)
-                } else {
-                    Text(vm.eta)
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundColor(selcomColor)
+                ZStack {
+                    Capsule()
+                        .stroke(selcomRed.opacity(0.5), lineWidth: 2)
+                        .frame(width: 54, height: 22)
+
+                    Text(vm.eta == "Arrived" ? "Done" : vm.eta.lowercased())
+                        .font(.system(size: 9.5, weight: .bold))
+                        .foregroundColor(.white)
                 }
+                .padding(.leading, 6)
             } minimal: {
-                Circle().fill(selcomColor).frame(width: 22, height: 22)
+                Circle().fill(selcomRed).frame(width: 22, height: 22)
             }
-            .keylineTint(selcomColor)
+            .keylineTint(selcomRed)
         }
     }
 }
