@@ -787,8 +787,15 @@ class DriverAcceptedController extends GetxController
       nextState = RideBottomSheetState.rideStarted;
     }
 
-    // Allow state to move backwards if the status explicitly matches an earlier phase.
-    // This fixes "sticky" UI bugs where the app gets stuck in 'rideCompleted'.
+    // Only allow state to move backwards if we are currently in 'rideCompleted'.
+    // This maintains the fix for the "sticky finish button" while preventing
+    // accidental regressions from 'rideStarted' back to 'driverAssigned'.
+    final currentState = rideBottomSheetState.value;
+    if (currentState == RideBottomSheetState.rideStarted &&
+        nextState == RideBottomSheetState.driverAssigned) {
+      return; // Block regression while trip is in progress
+    }
+
     rideBottomSheetState.value = nextState;
   }
 
@@ -874,7 +881,14 @@ class DriverAcceptedController extends GetxController
   void _applyTrackingPayload(TrackingUpdateSocketResponse payload) {
     final status = (payload.status ?? '').toString().trim().toLowerCase();
     if (status.isNotEmpty) {
-      _applyBottomSheetStateForStatus(status);
+      // Only trigger state updates from tracking payloads if it's a major transition.
+      // High-frequency tracking often contains stale 'assigned' statuses.
+      if (status.contains('started') ||
+          status.contains('progress') ||
+          status.contains('complete') ||
+          status.contains('arrived')) {
+        _applyBottomSheetStateForStatus(status);
+      }
     }
 
     if (status == 'cancelled' || status == 'no_driver_found') {
