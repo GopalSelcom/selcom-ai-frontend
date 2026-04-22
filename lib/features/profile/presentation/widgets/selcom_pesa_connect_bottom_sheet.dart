@@ -79,7 +79,7 @@ class SelcomPesaConnectBottomSheet extends GetView<PaymentMethodsController> {
   }
 
   Widget _buildStepper() {
-    return Column(
+    return const Column(
       children: [
         _StepperItem(
           step: '1',

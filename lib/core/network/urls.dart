@@ -9,6 +9,7 @@ abstract class URLS {
   static const profile = _ProfileEndpoints();
   static const common = _CommonEndpoints();
   static const payment = _PaymentEndpoints();
+  static const settings = _SettingsEndpoints();
   static const address = _AddressEndpoints();
   static const places = _PlacesEndpoints();
   static const wallet = _WalletEndpoints();
@@ -81,6 +82,16 @@ class _ProfileEndpoints {
   final paymentMethods = "go/user/payment-methods";
   final getEmailSubject = "go/get_email_subject";
   final sendEmail = "go/send_email";
+}
+
+/// ─────────────────────────────────
+/// SETTINGS ENDPOINTS
+/// ─────────────────────────────────
+class _SettingsEndpoints {
+  const _SettingsEndpoints();
+
+  final appSettings = "go/settings";
+  final ridePinPreference = "go/user/ride-pin-preference";
 }
 
 /// ─────────────────────────────────

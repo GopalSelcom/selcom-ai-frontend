@@ -16,6 +16,10 @@ import '../../features/profile/data/repositories/profile_repository_impl.dart';
 import '../../features/profile/domain/repositories/profile_repository.dart';
 import '../../features/profile/domain/usecases/profile_usecase.dart';
 import '../../features/profile/presentation/controllers/profile_controller.dart';
+import '../../features/settings/data/datasources/settings_remote_data_source.dart';
+import '../../features/settings/data/repositories/settings_repository_impl.dart';
+import '../../features/settings/domain/repositories/settings_repository.dart';
+import '../../features/settings/domain/usecases/settings_usecase.dart';
 import '../services/nearby_drivers_socket_service.dart';
 import '../services/live_activity/live_activity_manager.dart';
 import '../../features/ride/data/datasources/ride_remote_data_source.dart';
@@ -30,6 +34,7 @@ import '../../features/promotions/presentation/controllers/promocode_controller.
 import '../../features/payment/presentation/controllers/payment_method_controller.dart';
 import '../config/app_config.dart';
 import '../services/analytics_service.dart';
+import '../services/app_settings_service.dart';
 import '../services/notification_service.dart';
 import '../network/api_service.dart';
 import '../network/headers.dart';
@@ -85,14 +90,24 @@ Future<void> init() async {
   sl.registerLazySingleton<ProfileRepository>(
     () => ProfileRepositoryImpl(remoteDataSource: sl()),
   );
+  sl.registerLazySingleton<SettingsRemoteDataSource>(
+    () => SettingsRemoteDataSourceImpl(),
+  );
+  sl.registerLazySingleton<SettingsRepository>(
+    () => SettingsRepositoryImpl(remoteDataSource: sl()),
+  );
 
   // Use Cases
   sl.registerLazySingleton(() => RideUseCase(sl()));
   sl.registerLazySingleton(() => ProfileUseCase(sl()));
+  sl.registerLazySingleton(() => SettingsUseCase(sl()));
+  sl.registerLazySingleton(() => AppSettingsService(settingsUseCase: sl()));
 
   // BLoCs / Controllers
   sl.registerFactory(() => MyRidesController(rideUseCase: sl()));
-  sl.registerFactory(() => ProfileController(profileUseCase: sl()));
+  sl.registerFactory(
+    () => ProfileController(profileUseCase: sl(), appSettingsService: sl()),
+  );
   sl.registerFactory(() => PromocodeController());
   sl.registerFactory(() => PaymentMethodController(profileRepository: sl()));
 

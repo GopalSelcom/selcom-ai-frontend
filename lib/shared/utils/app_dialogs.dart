@@ -5,6 +5,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/constants/app_assets.dart';
+import '../../core/routes/app_routes.dart';
+import '../../core/services/storage_service.dart';
 
 class AppDialogs {
   static bool _isErrorDialogVisible = false;
@@ -17,99 +19,117 @@ class AppDialogs {
   }) {
     if (_isErrorDialogVisible) return;
     _isErrorDialogVisible = true;
+    final normalizedMessage = message.toLowerCase();
+    final isSessionExpiredError =
+        normalizedMessage.contains('session expired') ||
+        normalizedMessage.contains('login again') ||
+        normalizedMessage.contains('unauthorized');
+
     Get.dialog(
       Dialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24.r),
         ),
-        backgroundColor: AppColors.pageBackground,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // App Logo
-            Container(
-              padding: EdgeInsets.all(24.h),
-              decoration: const BoxDecoration(
-                color: AppColors.textLight,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24.r),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // App Logo
+              Container(
+                padding: EdgeInsets.all(24.h),
+                decoration: const BoxDecoration(
+                  color: AppColors.textLight,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SvgPicture.asset(AppAssets.selcomGoLogo, height: 48.h),
+                  ],
                 ),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SvgPicture.asset(AppAssets.selcomGoLogo, height: 48.h),
-                ],
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(height: 24.h),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(height: 24.h),
 
-                  // Title
-                  Text(
-                    title,
-                    style: AppTextStyles.onboardingTitle.copyWith(
-                      fontSize: 22.sp,
-                      color: AppColors.shade1,
-                      fontWeight: FontWeight.w700,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 12.h),
-
-                  // Message
-                  Text(
-                    message,
-                    style: AppTextStyles.onboardingSubtitle.copyWith(
-                      fontSize: 15.sp,
-                      color: AppColors.shade2,
-                      height: 1.5,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 32.h),
-
-                  // OK Button
-                  InkWell(
-                    onTap: () {
-                      _isErrorDialogVisible = false;
-                      Get.back(); // Close dialog
-                      if (onConfirm != null) onConfirm();
-                    },
-                    child: Container(
-                      height: 54.h,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(16.r),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withOpacity(0.2),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
+                    // Title
+                    Text(
+                      title,
+                      style: AppTextStyles.onboardingTitle.copyWith(
+                        fontSize: 22.sp,
+                        color: AppColors.shade1,
+                        fontWeight: FontWeight.w700,
                       ),
-                      child: Center(
-                        child: Text(
-                          'OK',
-                          style: AppTextStyles.onboardingButton.copyWith(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w600,
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 12.h),
+
+                    // Message
+                    Text(
+                      message,
+                      style: AppTextStyles.onboardingSubtitle.copyWith(
+                        fontSize: 15.sp,
+                        color: AppColors.shade2,
+                        height: 1.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 32.h),
+
+                    // OK Button
+                    InkWell(
+                      onTap: () async {
+                        _isErrorDialogVisible = false;
+                        if (onConfirm != null) onConfirm();
+                        if (isSessionExpiredError) {
+                          await StorageService().deleteAll();
+                          Get.offAllNamed(AppRoutes.phone);
+                          return;
+                        }
+                        Get.back(); // Close dialog
+                      },
+                      child: Container(
+                        height: 54.h,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(16.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.2),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Text(
+                            'OK',
+                            style: AppTextStyles.onboardingButton.copyWith(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       barrierDismissible: false,
@@ -135,7 +155,7 @@ class AppDialogs {
               Container(
                 padding: EdgeInsets.all(16.w),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
+                  color: Colors.green.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -198,6 +218,8 @@ class AppDialogs {
   }) {
     Get.dialog(
       Dialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20.r),
         ),
@@ -210,7 +232,9 @@ class AppDialogs {
               Container(
                 padding: EdgeInsets.all(16.w),
                 decoration: BoxDecoration(
-                  color: (confirmColor ?? AppColors.primary).withOpacity(0.1),
+                  color: (confirmColor ?? AppColors.primary).withValues(
+                    alpha: 0.1,
+                  ),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -288,7 +312,7 @@ class AppDialogs {
                           boxShadow: [
                             BoxShadow(
                               color: (confirmColor ?? AppColors.primary)
-                                  .withOpacity(0.3),
+                                  .withValues(alpha: 0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 4),
                             ),
@@ -353,7 +377,7 @@ class AppDialogs {
                       borderRadius: BorderRadius.circular(16.r),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -366,7 +390,7 @@ class AppDialogs {
                           Icon(
                             secondaryIcon,
                             size: 48.sp,
-                            color: AppColors.primary.withOpacity(0.1),
+                            color: AppColors.primary.withValues(alpha: 0.1),
                           ),
                         Icon(icon, size: 48.sp, color: AppColors.primary),
                       ],
@@ -463,7 +487,7 @@ class AppDialogs {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         elevation: 20,
-        shadowColor: Colors.black.withOpacity(0.4),
+        shadowColor: Colors.black.withValues(alpha: 0.4),
         insetPadding: EdgeInsets.symmetric(horizontal: 24.w),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(32.r),
@@ -499,7 +523,7 @@ class AppDialogs {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.green.withOpacity(0.2),
+                            color: Colors.green.withValues(alpha: 0.2),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -586,7 +610,7 @@ class AppDialogs {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         elevation: 20,
-        shadowColor: Colors.black.withOpacity(0.4),
+        shadowColor: Colors.black.withValues(alpha: 0.4),
         insetPadding: EdgeInsets.symmetric(horizontal: 24.w),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(32.r),
@@ -622,7 +646,7 @@ class AppDialogs {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.error.withOpacity(0.2),
+                            color: AppColors.error.withValues(alpha: 0.2),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),

@@ -34,6 +34,7 @@ class RideMessageController extends GetxController {
   String driverPhone = '';
 
   final rideStatus = RideStatus.searching.obs;
+
   bool get canChat => [
     RideStatus.driverAssigned,
     RideStatus.driverArriving,
@@ -307,7 +308,7 @@ class RideMessageController extends GetxController {
           'Calling Driver',
           'Initiating call to $driverPhone...',
           snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.white.withOpacity(0.9),
+          backgroundColor: Colors.white.withValues(alpha: 0.9),
         );
         await launchUrl(uri);
       } else {

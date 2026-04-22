@@ -42,7 +42,7 @@ class RideMessageScreen extends GetView<RideMessageController> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
+                      color: Colors.black.withValues(alpha: 0.08),
                       blurRadius: 20,
                       offset: const Offset(0, -4),
                     ),
@@ -266,7 +266,7 @@ class RideMessageScreen extends GetView<RideMessageController> {
                   child: Text(
                     _formatTime(m.sentAt),
                     style: AppTextStyles.homeCaption.copyWith(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                       fontSize: 10.sp,
                     ),
                   ),
@@ -286,7 +286,7 @@ class RideMessageScreen extends GetView<RideMessageController> {
           radius: 18.r,
           backgroundImage: url != null ? NetworkImage(url) : null,
           backgroundColor: isRider
-              ? Colors.white.withOpacity(0.2)
+              ? Colors.white.withValues(alpha: 0.2)
               : const Color(0xFFF3F4F6),
           child: url == null
               ? Icon(
@@ -325,7 +325,7 @@ class RideMessageScreen extends GetView<RideMessageController> {
         decoration: BoxDecoration(
           color: Colors.white,
           border: Border(
-            top: BorderSide(color: Colors.black.withOpacity(0.06)),
+            top: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
           ),
         ),
         child: Opacity(

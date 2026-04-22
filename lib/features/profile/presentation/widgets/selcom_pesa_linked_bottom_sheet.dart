@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -44,7 +43,7 @@ class SelcomPesaLinkedBottomSheet extends GetView<PaymentMethodsController> {
             ),
           ),
           SizedBox(height: 12.h),
-          Divider(color: AppColors.divider, thickness: 1),
+          const Divider(color: AppColors.divider, thickness: 1),
           SizedBox(height: 24.h),
 
           _buildReadOnlyField(label: 'Name', value: 'Chirag panchal'),

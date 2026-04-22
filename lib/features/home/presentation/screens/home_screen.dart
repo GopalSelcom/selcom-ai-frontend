@@ -10,14 +10,13 @@ import '../../../ride/data/models/ride_management_models.dart';
 import '../controllers/home_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../shared/widgets/app_map_gps_button.dart';
-import '../../../../shared/widgets/app_map_top_header.dart';
 import '../../../../core/routes/app_routes.dart';
 
 import '../../../../core/widgets/svg_picture_asset.dart';
 
 class HomeScreen extends GetView<HomeController> {
   const HomeScreen({super.key});
+
   static const double _homeSheetInitialSize = 0.45;
 
   @override
@@ -95,6 +94,57 @@ class HomeScreen extends GetView<HomeController> {
   Widget _buildModernAddressBox() {
     return Expanded(
       child: Obx(() {
+        if (controller.savedPlaces.isEmpty) {
+          return AnimatedSize(
+            duration: const Duration(milliseconds: 320),
+            curve: Curves.easeInOutCubic,
+            alignment: Alignment.topCenter,
+            clipBehavior: Clip.hardEdge,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 320),
+              curve: Curves.easeInOutCubic,
+              alignment: Alignment.center,
+              padding: EdgeInsets.symmetric(horizontal: 12.w),
+              height: 61.h, // Matched with Figma Frame 207:24539 height
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16.r),
+                border: Border.all(color: AppColors.shade5),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.06),
+                    blurRadius: 2,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: controller.isLoadingHomeData.value
+                    ? Shimmer.fromColors(
+                        baseColor: const Color(0xFFE2E8F0),
+                        highlightColor: const Color(0xFFF8FAFC),
+                        child: Container(
+                          width: 200.w,
+                          height: 16.h,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(4.r),
+                          ),
+                        ),
+                      )
+                    : Text(
+                        controller.currentMapAddress.value,
+                        style: AppTextStyles.homeSubtitle.copyWith(
+                          color: AppColors.shade2,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                      ),
+              ),
+            ),
+          );
+        }
         final placesToShow = controller.addressHeaderPlacesToShow;
         final bool isExpanded = controller.isSavedPlacesExpanded.value;
 
@@ -115,7 +165,7 @@ class HomeScreen extends GetView<HomeController> {
               border: Border.all(color: AppColors.shade5),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
+                  color: Colors.black.withValues(alpha: 0.06),
                   blurRadius: 2,
                   offset: const Offset(0, 1),
                 ),
@@ -162,7 +212,7 @@ class HomeScreen extends GetView<HomeController> {
                         decoration: BoxDecoration(
                           color:
                               selected && controller.isSavedPlacesExpanded.value
-                              ? AppColors.primaryLight.withOpacity(0.35)
+                              ? AppColors.primaryLight.withValues(alpha: 0.35)
                               : Colors.transparent,
                           borderRadius: BorderRadius.circular(12.r),
                           border: Border.all(
@@ -268,7 +318,7 @@ class HomeScreen extends GetView<HomeController> {
       minChildSize: _homeSheetInitialSize,
       maxChildSize: 0.9,
       snap: true,
-      snapSizes: [_homeSheetInitialSize, 0.9],
+      snapSizes: const [_homeSheetInitialSize, 0.9],
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(
@@ -276,7 +326,7 @@ class HomeScreen extends GetView<HomeController> {
             borderRadius: BorderRadius.vertical(top: Radius.circular(40.r)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.08),
+                color: Colors.black.withValues(alpha: 0.08),
                 blurRadius: 20,
                 offset: const Offset(0, -4),
               ),

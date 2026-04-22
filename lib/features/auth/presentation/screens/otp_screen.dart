@@ -93,6 +93,24 @@ class OtpScreen extends GetView<AuthController> {
                             ),
                           ),
                         ),
+                        Obx(
+                          () =>
+                              controller.shouldShowGeneratedOtp &&
+                                  controller.generatedOtp.value.isNotEmpty
+                              ? Padding(
+                                  padding: EdgeInsets.only(top: 8.h),
+                                  child: Center(
+                                    child: Text(
+                                      'OTP: ${controller.generatedOtp.value}',
+                                      style: AppTextStyles.body.copyWith(
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : const SizedBox.shrink(),
+                        ),
                         SizedBox(height: 32.h),
 
                         // Resend Option
@@ -158,10 +176,14 @@ class OtpScreen extends GetView<AuthController> {
                                       vertical: 12.h,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: AppColors.error.withOpacity(0.1),
+                                      color: AppColors.error.withValues(
+                                        alpha: 0.1,
+                                      ),
                                       borderRadius: BorderRadius.circular(8.r),
                                       border: Border.all(
-                                        color: AppColors.error.withOpacity(0.5),
+                                        color: AppColors.error.withValues(
+                                          alpha: 0.5,
+                                        ),
                                       ),
                                     ),
                                     child: Row(

@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/network/urls.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/services/app_settings_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../shared/utils/phone_formatter.dart';
 import '../../../../shared/widgets/web_view_screen.dart';
@@ -16,12 +17,17 @@ import '../../../../shared/utils/app_dialogs.dart';
 
 class ProfileController extends GetxController {
   final ProfileUseCase profileUseCase;
+  final AppSettingsService appSettingsService;
 
-  ProfileController({required this.profileUseCase});
+  ProfileController({
+    required this.profileUseCase,
+    required this.appSettingsService,
+  });
 
   // Observables for state
   final RxBool isEditing = false.obs;
   final RxBool isLoading = false.obs;
+  final RxBool showSettingsOption = false.obs;
 
   // User Data
   final Rxn<UserModel> userModel = Rxn<UserModel>();
@@ -47,6 +53,14 @@ class ProfileController extends GetxController {
 
     loadUserFromStorage();
     fetchWalletBalance();
+    syncSettingsVisibility();
+    ever<Map<String, bool>>(appSettingsService.features, (_) {
+      syncSettingsVisibility();
+    });
+  }
+
+  void syncSettingsVisibility() {
+    showSettingsOption.value = appSettingsService.hasAnyFeatureEnabled;
   }
 
   Future<void> loadUserFromStorage() async {
@@ -196,6 +210,10 @@ class ProfileController extends GetxController {
 
   void openNotifications() {
     Get.toNamed(AppRoutes.notifications);
+  }
+
+  void openSettings() {
+    Get.toNamed(AppRoutes.settings);
   }
 
   void logout() {

@@ -49,8 +49,8 @@ class DriverAcceptedScreen extends StatelessWidget {
                   end: Alignment.bottomCenter,
                   colors: [
                     Colors.white,
-                    Colors.white.withOpacity(0.92),
-                    Colors.white.withOpacity(0),
+                    Colors.white.withValues(alpha: 0.92),
+                    Colors.white.withValues(alpha: 0),
                   ],
                 ),
               ),
@@ -87,7 +87,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12.r),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
+                        color: Colors.black.withValues(alpha: 0.15),
                         blurRadius: 8,
                         offset: const Offset(0, 3),
                       ),
@@ -169,17 +169,43 @@ class DriverAcceptedScreen extends StatelessWidget {
         );
       }
 
-      // Drop Marker
-      if (c.dropIcon.value != null &&
-          c.rideBottomSheetState.value != RideBottomSheetState.driverAssigned) {
-        markers.add(
-          Marker(
-            markerId: const MarkerId('drop'),
-            position: destination,
-            icon: c.dropIcon.value!,
-            anchor: const Offset(0.5, 0.5),
-          ),
-        );
+      // Destinations/Stops Markers
+      final stops = c.ride.value?.stops ?? [];
+      final isMultiStop = c.ride.value?.isMultiStop ?? false;
+
+      if (isMultiStop && stops.isNotEmpty) {
+        for (var i = 0; i < stops.length; i++) {
+          final stop = stops[i];
+
+          // Use stopIcons[i] which corresponds to B, C, D...
+          // because stopIcons index 0 is 'B', 1 is 'C' etc.
+          final icon = (i < c.stopIcons.length)
+              ? c.stopIcons[i]
+              : (c.dropIcon.value ?? BitmapDescriptor.defaultMarker);
+
+          markers.add(
+            Marker(
+              markerId: MarkerId('stop_$i'),
+              position: LatLng(stop.lat, stop.lng),
+              icon: icon,
+              anchor: const Offset(0.5, 0.5),
+            ),
+          );
+        }
+      } else {
+        // Standard Single-Stop Ride logic
+        if (c.dropIcon.value != null &&
+            c.rideBottomSheetState.value !=
+                RideBottomSheetState.driverAssigned) {
+          markers.add(
+            Marker(
+              markerId: const MarkerId('drop'),
+              position: destination,
+              icon: c.dropIcon.value!,
+              anchor: const Offset(0.5, 0.5),
+            ),
+          );
+        }
       }
 
       final polylines = <Polyline>{};
@@ -256,11 +282,11 @@ class DriverAcceptedScreen extends StatelessWidget {
                     vertical: 8.h,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.92),
+                    color: Colors.white.withValues(alpha: 0.92),
                     borderRadius: BorderRadius.circular(24.r),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
+                        color: Colors.black.withValues(alpha: 0.08),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -368,47 +394,49 @@ class DriverAcceptedScreen extends StatelessWidget {
           ),
         ),
         SizedBox(height: 17.h),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'PIN',
-              style: AppTextStyles.homeCaption.copyWith(
-                fontWeight: FontWeight.w700,
-                fontSize: 15.sp,
-                color: const Color(0xFF364B63),
-                height: 1.33,
-              ),
-            ),
-            SizedBox(width: 8.w),
-            ...c.otpDigits.map(
-              (d) => Container(
-                margin: EdgeInsets.only(right: 4.w),
-                width: 28.w,
-                height: 28.w,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8F9FD),
-                  borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(
-                    color: const Color(0xFFE6E9EE),
-                    width: 0.787,
-                  ),
-                ),
-                child: Text(
-                  d,
-                  style: AppTextStyles.homeCaption.copyWith(
-                    color: const Color(0xFF000000),
-                    fontSize: 12.6.sp,
-                    fontWeight: FontWeight.w600,
-                    height: 1.28,
-                  ),
+        if (c.isPinRequired.value && c.otpDigits.isNotEmpty) ...[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'PIN',
+                style: AppTextStyles.homeCaption.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15.sp,
+                  color: const Color(0xFF364B63),
+                  height: 1.33,
                 ),
               ),
-            ),
-          ],
-        ),
-        SizedBox(height: 17.h),
+              SizedBox(width: 8.w),
+              ...c.otpDigits.map(
+                (d) => Container(
+                  margin: EdgeInsets.only(right: 4.w),
+                  width: 28.w,
+                  height: 28.w,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8F9FD),
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(
+                      color: const Color(0xFFE6E9EE),
+                      width: 0.787,
+                    ),
+                  ),
+                  child: Text(
+                    d,
+                    style: AppTextStyles.homeCaption.copyWith(
+                      color: const Color(0xFF000000),
+                      fontSize: 12.6.sp,
+                      fontWeight: FontWeight.w600,
+                      height: 1.28,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 17.h),
+        ],
         Container(
           width: 221.w,
           padding: EdgeInsets.symmetric(vertical: 8.h),
@@ -581,7 +609,9 @@ class DriverAcceptedScreen extends StatelessWidget {
 
   Widget _rideProgressSheet(DriverAcceptedController c) {
     final isCompleted =
-        c.rideBottomSheetState.value == RideBottomSheetState.rideCompleted;
+        c.rideBottomSheetState.value == RideBottomSheetState.rideCompleted &&
+        (c.currentRideStatus.value == 'completed' ||
+            c.currentRideStatus.value == 'ride_completed');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -651,6 +681,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                 startAddress: c.pickupAddress,
                 endLocation: c.destinationTitle,
                 endAddress: c.destinationAddress,
+                stops: c.ride.value?.stops,
               ),
               if (!isCompleted) ...[
                 SizedBox(height: 6.h),

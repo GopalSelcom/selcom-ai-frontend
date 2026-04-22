@@ -10,13 +10,13 @@ import './payment_method_bottom_sheet.dart';
 class PaymentBar extends StatelessWidget {
   final String buttonLabel;
   final VoidCallback onActionButtonPressed;
-  final bool isLoading;
+  final RxBool? isLoading;
 
   const PaymentBar({
     super.key,
     required this.buttonLabel,
     required this.onActionButtonPressed,
-    this.isLoading = false,
+    this.isLoading,
   });
 
   @override
@@ -25,6 +25,7 @@ class PaymentBar extends StatelessWidget {
 
     return Obx(() {
       final pay = controller.selectedPayment.value;
+      final loading = isLoading?.value ?? false;
 
       return Container(
         width: double.infinity,
@@ -51,7 +52,7 @@ class PaymentBar extends StatelessWidget {
                           Text(
                             'Pay Using',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white.withValues(alpha: 0.9),
                               fontSize: 15.sp,
                               fontWeight: FontWeight.w500,
                             ),
@@ -79,7 +80,7 @@ class PaymentBar extends StatelessWidget {
                         Text(
                           'Card ending in XX1234', // Mock descriptive text from Figma
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.85),
+                            color: Colors.white.withValues(alpha: 0.85),
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w400,
                           ),
@@ -95,13 +96,13 @@ class PaymentBar extends StatelessWidget {
               borderRadius: BorderRadius.circular(25.r),
               child: InkWell(
                 borderRadius: BorderRadius.circular(25.r),
-                onTap: isLoading ? null : onActionButtonPressed,
+                onTap: loading ? null : onActionButtonPressed,
                 child: Container(
                   padding: EdgeInsets.symmetric(
                     horizontal: 24.w,
                     vertical: 14.h,
                   ),
-                  child: isLoading
+                  child: loading
                       ? SizedBox(
                           width: 20.w,
                           height: 20.w,

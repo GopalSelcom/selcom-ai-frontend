@@ -18,7 +18,6 @@ import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/data/models/requests/create_saved_place_request.dart';
 import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
 import '../../../../core/utils/map_marker_utils.dart';
-import '../../../ride/presentation/controllers/vehicle_selection_controller.dart';
 import '../../domain/repositories/home_repository.dart';
 import '../../data/models/home_models.dart';
 import '../../../ride/domain/repositories/ride_repository.dart';
@@ -62,6 +61,7 @@ class HomeController extends GetxController {
   final recentSearches = <String>[].obs;
   final isSearching = false.obs;
   final isSavingPlace = false.obs;
+  final isProceedingToBooking = false.obs;
 
   // Home Data
   final vehicleTypes = <VehicleTypeModel>[].obs;
@@ -166,8 +166,8 @@ class HomeController extends GetxController {
         circleId: const CircleId('pickup_200m_radius'),
         center: center,
         radius: 200,
-        fillColor: AppColors.inputBorderActive.withOpacity(0.08),
-        strokeColor: AppColors.inputBorderActive.withOpacity(0.4),
+        fillColor: AppColors.inputBorderActive.withValues(alpha: 0.08),
+        strokeColor: AppColors.inputBorderActive.withValues(alpha: 0.4),
         strokeWidth: 2,
       ),
     };
@@ -658,9 +658,7 @@ class HomeController extends GetxController {
     required String pickupAddress,
     required double pickupLat,
     required double pickupLng,
-    required String destinationAddress,
-    required double destinationLat,
-    required double destinationLng,
+    required List<LocationEntity> destinations,
   }) async {
     final req = FareEstimateRequest(
       pickup: LocationEntity(
@@ -668,11 +666,7 @@ class HomeController extends GetxController {
         lng: pickupLng,
         address: pickupAddress,
       ),
-      destination: LocationEntity(
-        lat: destinationLat,
-        lng: destinationLng,
-        address: destinationAddress,
-      ),
+      destinations: destinations,
     );
 
     final result = await homeRepository.estimateFare(req);
@@ -750,9 +744,7 @@ class HomeController extends GetxController {
       pickupAddress: pickupAddr,
       pickupLat: pickupLL.latitude,
       pickupLng: pickupLL.longitude,
-      destinationAddress: destAddr,
-      destinationLat: dLat,
-      destinationLng: dLng,
+      destinations: [LocationEntity(lat: dLat, lng: dLng, address: destAddr)],
     );
     if (!canProceed) return;
 
@@ -814,9 +806,7 @@ class HomeController extends GetxController {
       pickupAddress: pickupAddr,
       pickupLat: pickupLL.latitude,
       pickupLng: pickupLL.longitude,
-      destinationAddress: destAddr,
-      destinationLat: dLat,
-      destinationLng: dLng,
+      destinations: [LocationEntity(lat: dLat, lng: dLng, address: destAddr)],
     );
     if (!canProceed) return;
 
@@ -854,9 +844,9 @@ class HomeController extends GetxController {
       pickupAddress: pickupAddr,
       pickupLat: pickupLL.latitude,
       pickupLng: pickupLL.longitude,
-      destinationAddress: destAddr,
-      destinationLat: loc.lat,
-      destinationLng: loc.lng,
+      destinations: [
+        LocationEntity(lat: loc.lat, lng: loc.lng, address: destAddr),
+      ],
     );
     if (!canProceed) return;
 
@@ -1092,70 +1082,99 @@ class HomeController extends GetxController {
         'destinationPlaceIdPresent=${(destinationPlaceId ?? '').trim().isNotEmpty}',
       );
     }
-    double? pLat = routePickupLat;
-    double? pLng = routePickupLng;
-
-    // Resolve pickup if missing
-    if ((pLat == null || pLng == null) && pickup.trim().isNotEmpty) {
-      final resolvedPickup = await getLatLngFromAddress(pickup.trim());
-      if (resolvedPickup != null) {
-        pLat = resolvedPickup.latitude;
-        pLng = resolvedPickup.longitude;
-      }
-    }
-    pLat ??= mapCenter.value.latitude;
-    pLng ??= mapCenter.value.longitude;
-
-    double? dLat = routeDestinationLat;
-    double? dLng = routeDestinationLng;
-
-    // Resolve destination if missing
-    if ((dLat == null || dLng == null) && destinations.isNotEmpty) {
-      final resolved = await getLatLngFromAddress(destinations.first);
-      if (resolved != null) {
-        dLat = resolved.latitude;
-        dLng = resolved.longitude;
-      }
+    final List<String> items = destinations
+        .map((d) => d.trim())
+        .where((d) => d.isNotEmpty)
+        .toList();
+    if (items.isEmpty) {
+      Get.snackbar('Error', 'Please enter at least one destination.');
+      return;
     }
 
-    // fallback to something sensible if still null, but NOT a hardcoded offset that feels like a bug
-    dLat ??= pLat;
-    dLng ??= pLng;
+    if (isProceedingToBooking.value) return;
+    isProceedingToBooking.value = true;
 
-    final destinationText = destinations.isNotEmpty ? destinations.first : '';
-    final canProceed = await _validateEstimateBeforeBookingNavigation(
-      pickupAddress: pickup,
-      pickupLat: pLat,
-      pickupLng: pLng,
-      destinationAddress: destinationText,
-      destinationLat: dLat,
-      destinationLng: dLng,
-    );
-    if (!canProceed) return;
+    try {
+      double? pLat = routePickupLat;
+      double? pLng = routePickupLng;
 
-    // GetX lifecycle managed via AppRoutes and VehicleSelectionBinding.
-    Get.toNamed(
-      AppRoutes.booking,
-      arguments: {
-        'pickup': pickup,
-        'destination': destinations.first,
-        'destinations': destinations,
-        'pickupLat': pLat,
-        'pickupLng': pLng,
-        'destinationLat': dLat,
-        'destinationLng': dLng,
-        if (preferredVehicleTypeId != null && preferredVehicleTypeId.isNotEmpty)
-          'preferredVehicleTypeId': preferredVehicleTypeId,
-        if (preferredVehicleName != null && preferredVehicleName.isNotEmpty)
-          'preferredVehicleName': preferredVehicleName,
-      },
-    );
-    if (kDebugMode) {
-      debugPrint(
-        '[LocationSelection] Navigate booking args => '
-        'pickup=($pLat,$pLng), destination=($dLat,$dLng), '
-        'preferredVehicleTypeId=${preferredVehicleTypeId ?? ''}',
+      // Resolve pickup if missing
+      if ((pLat == null || pLng == null) && pickup.trim().isNotEmpty) {
+        final resolvedPickup = await getLatLngFromAddress(pickup.trim());
+        if (resolvedPickup != null) {
+          pLat = resolvedPickup.latitude;
+          pLng = resolvedPickup.longitude;
+        }
+      }
+      pLat ??= mapCenter.value.latitude;
+      pLng ??= mapCenter.value.longitude;
+
+      final List<LocationEntity> resolvedDestinations = [];
+      for (int i = 0; i < items.length; i++) {
+        final addr = items[i];
+        double? dLat;
+        double? dLng;
+
+        if (i == 0) {
+          dLat = routeDestinationLat;
+          dLng = routeDestinationLng;
+        }
+
+        if (dLat == null || dLng == null) {
+          final resolved = await getLatLngFromAddress(addr);
+          if (resolved != null) {
+            dLat = resolved.latitude;
+            dLng = resolved.longitude;
+          }
+        }
+
+        // Final fallback if resolution failed
+        dLat ??= pLat;
+        dLng ??= pLng;
+
+        resolvedDestinations.add(
+          LocationEntity(lat: dLat, lng: dLng, address: addr),
+        );
+      }
+
+      if (resolvedDestinations.isEmpty) {
+        Get.snackbar('Error', 'Please select at least one destination.');
+        return;
+      }
+
+      final canProceed = await _validateEstimateBeforeBookingNavigation(
+        pickupAddress: pickup,
+        pickupLat: pLat,
+        pickupLng: pLng,
+        destinations: resolvedDestinations,
       );
+      if (!canProceed) return;
+
+      if (kDebugMode) {
+        debugPrint(
+          '[LocationSelection] Navigate booking args => '
+          'pickup=($pLat,$pLng), destinationsCount=${resolvedDestinations.length}, '
+          'preferredVehicleTypeId=${preferredVehicleTypeId ?? ''}',
+        );
+      }
+
+      // GetX lifecycle managed via AppRoutes and VehicleSelectionBinding.
+      Get.toNamed(
+        AppRoutes.booking,
+        arguments: {
+          'pickup': pickup,
+          'destinations': resolvedDestinations,
+          'pickupLat': pLat,
+          'pickupLng': pLng,
+          if (preferredVehicleTypeId != null &&
+              preferredVehicleTypeId.isNotEmpty)
+            'preferredVehicleTypeId': preferredVehicleTypeId,
+          if (preferredVehicleName != null && preferredVehicleName.isNotEmpty)
+            'preferredVehicleName': preferredVehicleName,
+        },
+      );
+    } finally {
+      isProceedingToBooking.value = false;
     }
   }
 
@@ -1293,8 +1312,13 @@ class HomeController extends GetxController {
 
   void applySavedLabelToLocationSelection({
     required String label,
+    required int activeSegmentIndex,
+    required TextEditingController pickupController,
     required TextEditingController destinationController,
-    required RxInt activeSegmentIndex,
+    required List<TextEditingController> extraDestinationControllers,
+    required RxBool pickupEditedByUser,
+    required RxnDouble routePickupLat,
+    required RxnDouble routePickupLng,
     required RxnDouble routeDestinationLat,
     required RxnDouble routeDestinationLng,
     required RxnString destinationPlaceId,
@@ -1302,6 +1326,7 @@ class HomeController extends GetxController {
     final savedPlace = getSavedPlaceByLabel(label);
     final saved = savedPlace?.address?.trim();
     if (saved == null || saved.isEmpty) return;
+
     final coords = savedPlace?.location?.coordinates;
     final lat =
         savedPlace?.lat ??
@@ -1310,13 +1335,35 @@ class HomeController extends GetxController {
         savedPlace?.lng ??
         ((coords != null && coords.length >= 2) ? coords[0] : null);
 
-    destinationController.text = saved;
-    routeDestinationLat.value = lat;
-    routeDestinationLng.value = lng;
-    destinationPlaceId.value = null;
-    activeSegmentIndex.value = 1;
+    // Apply text to the correct field
+    applyLocationSelectionTextToSegment(
+      activeSegmentIndex: activeSegmentIndex,
+      text: saved,
+      pickupController: pickupController,
+      destinationController: destinationController,
+      extraDestinationControllers: extraDestinationControllers,
+      pickupEditedByUser: pickupEditedByUser,
+      routePickupLat: routePickupLat,
+      routePickupLng: routePickupLng,
+      routeDestinationLat: routeDestinationLat,
+      routeDestinationLng: routeDestinationLng,
+      destinationPlaceId: destinationPlaceId,
+    );
+
+    // Apply coordinates if they exist
+    if (lat != null && lng != null) {
+      if (activeSegmentIndex == 0) {
+        routePickupLat.value = lat;
+        routePickupLng.value = lng;
+      } else if (activeSegmentIndex == 1) {
+        routeDestinationLat.value = lat;
+        routeDestinationLng.value = lng;
+        destinationPlaceId.value =
+            null; // Saved places don't always have placeId
+      }
+    }
+
     searchQuery.value = '';
-    isDestinationSelected.value = true;
   }
 
   void applyRecentDestinationToLocationSelection({

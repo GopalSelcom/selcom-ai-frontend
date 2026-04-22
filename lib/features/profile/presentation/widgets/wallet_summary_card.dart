@@ -37,7 +37,8 @@ class WalletSummaryCard extends StatelessWidget {
                 width: 51.w,
                 height: 51.h,
                 fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => SizedBox(width: 51.w, height: 51.h),
+                errorBuilder: (context, error, stackTrace) =>
+                    SizedBox(width: 51.w, height: 51.h),
               ),
               SizedBox(width: 12.w),
               Column(
@@ -67,13 +68,15 @@ class WalletSummaryCard extends StatelessWidget {
                         onTap: () {
                           Clipboard.setData(ClipboardData(text: walletNumber));
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Wallet number copied')),
+                            const SnackBar(
+                              content: Text('Wallet number copied'),
+                            ),
                           );
                         },
                         child: Icon(
                           Iconsax.copy,
                           size: 14.w,
-                          color: AppColors.textDark.withOpacity(0.5),
+                          color: AppColors.textDark.withValues(alpha: 0.5),
                         ),
                       ),
                     ],
@@ -82,7 +85,7 @@ class WalletSummaryCard extends StatelessWidget {
               ),
             ],
           ),
-          
+
           // Right Side: Amount + Arrow
           Row(
             children: [
@@ -98,7 +101,7 @@ class WalletSummaryCard extends StatelessWidget {
               Icon(
                 Iconsax.arrow_right_3,
                 size: 24.w,
-                color: AppColors.textDark.withOpacity(0.5),
+                color: AppColors.textDark.withValues(alpha: 0.5),
               ),
             ],
           ),
@@ -107,4 +110,3 @@ class WalletSummaryCard extends StatelessWidget {
     );
   }
 }
-

@@ -60,6 +60,7 @@ class VehicleSelectionController extends GetxController {
 
   late LocationEntity pickupEntity;
   late LocationEntity destinationEntity;
+  final destinations = <LocationEntity>[].obs;
 
   String? _preferredVehicleTypeId;
   String? _preferredVehicleName;
@@ -75,6 +76,7 @@ class VehicleSelectionController extends GetxController {
   BitmapDescriptor? driverIcon;
   BitmapDescriptor? pickupIcon;
   BitmapDescriptor? dropIcon;
+  final stopIcons = <BitmapDescriptor>[].obs;
 
   @override
   void onInit() {
@@ -105,35 +107,51 @@ class VehicleSelectionController extends GetxController {
 
     if (args.isEmpty) {
       if (kDebugMode) {
-        debugPrint('[VehicleSelection] WARNING: Arguments are empty or not a Map.');
+        debugPrint(
+          '[VehicleSelection] WARNING: Arguments are empty or not a Map.',
+        );
       }
     }
 
     final pickupAddr = (args['pickup'] as String?)?.trim() ?? '';
-    final destAddr = (args['destination'] as String?)?.trim() ?? '';
-
-    // If coordinates are missing, we try to use defaults or at least valid numbers
     final pLat = (args['pickupLat'] as num?)?.toDouble() ?? -6.7924;
     final pLng = (args['pickupLng'] as num?)?.toDouble() ?? 39.2083;
-    final dLat = (args['destinationLat'] as num?)?.toDouble() ?? (pLat - 0.018);
-    final dLng = (args['destinationLng'] as num?)?.toDouble() ?? (pLng + 0.014);
-
     pickupEntity = LocationEntity(lat: pLat, lng: pLng, address: pickupAddr);
-    destinationEntity = LocationEntity(lat: dLat, lng: dLng, address: destAddr);
+
+    final List<dynamic>? ds = args['destinations'];
+    if (ds != null && ds.isNotEmpty) {
+      destinations.assignAll(ds.cast<LocationEntity>());
+      destinationEntity = destinations.last;
+    } else {
+      // Legacy support
+      final destAddr = (args['destination'] as String?)?.trim() ?? '';
+      final dLat =
+          (args['destinationLat'] as num?)?.toDouble() ?? (pLat - 0.018);
+      final dLng =
+          (args['destinationLng'] as num?)?.toDouble() ?? (pLng + 0.014);
+      destinationEntity = LocationEntity(
+        lat: dLat,
+        lng: dLng,
+        address: destAddr,
+      );
+      destinations.assignAll([destinationEntity]);
+    }
 
     if (kDebugMode) {
       debugPrint(
         '[VehicleSelection] Parsed args => '
         'pickup=(${pickupEntity.lat},${pickupEntity.lng}), '
-        'destination=(${destinationEntity.lat},${destinationEntity.lng}), '
-        'pickupAddr="$pickupAddr", destinationAddr="$destAddr"',
+        'destinationsCount=${destinations.length}, '
+        'finalDestination=(${destinationEntity.lat},${destinationEntity.lng})',
       );
     }
 
-    _preferredVehicleTypeId = (args['preferredVehicleTypeId'] as String?)?.trim();
-    _preferredVehicleName = (args['preferredVehicleName'] as String?)?.trim().toLowerCase();
+    _preferredVehicleTypeId = (args['preferredVehicleTypeId'] as String?)
+        ?.trim();
+    _preferredVehicleName = (args['preferredVehicleName'] as String?)
+        ?.trim()
+        .toLowerCase();
 
-    // routePoints.clear();
     isRouteReady.value = false;
   }
 
@@ -146,7 +164,10 @@ class VehicleSelectionController extends GetxController {
     isRouteReady.value = false;
     routePoints.clear();
     driverMarkerPoints.clear();
-    final req = FareEstimateRequest(pickup: pickupEntity, destination: destinationEntity);
+    final req = FareEstimateRequest(
+      pickup: pickupEntity,
+      destinations: destinations.toList(),
+    );
 
     final vehicleTypesResult = await homeRepository.getVehicleTypes();
     List<VehicleTypeModel> vehicleTypes = [];
@@ -157,11 +178,21 @@ class VehicleSelectionController extends GetxController {
 
     final result = await homeRepository.estimateFare(req);
     result.fold(
-      (_) {
+      (f) {
+        if (kDebugMode)
+          debugPrint('[VehicleSelection] Fare estimate error: $f');
         estimates.assignAll(_dummyEstimates(vehicleTypes));
         isRouteReady.value = false;
       },
       (model) {
+        if (kDebugMode) {
+          debugPrint(
+            '[VehicleSelection] Fare estimate success => '
+            'estimates=${model.estimates.length}, '
+            'routeGeometry=${model.routeGeometry != null}, '
+            'points=${model.routeGeometry?.coordinates?.length ?? 0}',
+          );
+        }
         if (model.estimates.isEmpty) {
           estimates.assignAll(_dummyEstimates(vehicleTypes));
         } else {
@@ -169,6 +200,7 @@ class VehicleSelectionController extends GetxController {
               .map((e) => _withResolvedVehicleTypeId(e, vehicleTypes))
               .toList();
           estimates.assignAll(normalized);
+
           if (model.routeGeometry?.coordinates != null &&
               model.routeGeometry!.coordinates!.isNotEmpty) {
             final coords = model.routeGeometry!.coordinates!;
@@ -179,14 +211,16 @@ class VehicleSelectionController extends GetxController {
                 })
                 .whereType<LatLng>()
                 .toList();
+
             if (mapped.length >= 2) {
               routePoints.assignAll(mapped);
               isRouteReady.value = true;
               if (kDebugMode) {
                 debugPrint(
-                  '[VehicleSelection] API route geometry applied => points=${mapped.length}, '
-                  'first=(${mapped.first.latitude},${mapped.first.longitude}), '
-                  'last=(${mapped.last.latitude},${mapped.last.longitude})',
+                  '[VehicleSelection] API route geometry applied => '
+                  'points=${mapped.length}, '
+                  'first=${mapped.first.latitude},${mapped.first.longitude}, '
+                  'last=${mapped.last.latitude},${mapped.last.longitude}',
                 );
               }
               final n = mapped.length;
@@ -196,15 +230,10 @@ class VehicleSelectionController extends GetxController {
                 mapped[(n * 0.78).floor().clamp(0, n - 1)],
               ]);
             } else {
-              isRouteReady.value = false;
+              _useStraightLineFallback();
             }
           } else {
-            isRouteReady.value = false;
-            if (kDebugMode) {
-              debugPrint(
-                '[VehicleSelection] API route geometry empty; waiting before map render.',
-              );
-            }
+            _useStraightLineFallback();
           }
         }
       },
@@ -220,6 +249,20 @@ class VehicleSelectionController extends GetxController {
     Future.microtask(_fitBounds);
   }
 
+  void _useStraightLineFallback() {
+    final list = [
+      LatLng(pickupEntity.lat, pickupEntity.lng),
+      ...destinations.map((d) => LatLng(d.lat, d.lng)),
+    ];
+    routePoints.assignAll(list);
+    isRouteReady.value = true;
+    if (kDebugMode) {
+      debugPrint(
+        '[VehicleSelection] Using straight-line fallback for routePoints.',
+      );
+    }
+  }
+
   Future<void> loadDriverIcon() async {
     driverIcon = await MapMarkerUtils.getResizedMarker(
       vehicleImage(estimates[selectedVehicleIndex.value]),
@@ -228,22 +271,63 @@ class VehicleSelectionController extends GetxController {
   }
 
   Future<void> loadLocationIcons() async {
-    pickupIcon = await MapMarkerUtils.createCustomCircleMarker(
-      color: const Color(0xFF4FA3FF),
-    );
-    dropIcon = await MapMarkerUtils.createCustomCircleMarker(
-      color: const Color(0xFFE11D48),
-    );
-    isLocationIconsReady.value = pickupIcon != null && dropIcon != null;
+    try {
+      final bool isMulti = destinations.length > 1;
+
+      if (!isMulti) {
+        // Single Stop: P (Blue) and D (Green)
+        pickupIcon = await MapMarkerUtils.createTextMarker(
+          text: 'P',
+          color: const Color(0xFF4FA3FF),
+        );
+        dropIcon = await MapMarkerUtils.createTextMarker(
+          text: 'D',
+          color: const Color(0xFF34C759), // Green for Destination
+        );
+        stopIcons.clear();
+      } else {
+        // Multi Stop: A (Blue), B, C... (Red), Last Letter (Green)
+        const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+        pickupIcon = await MapMarkerUtils.createTextMarker(
+          text: 'A',
+          color: const Color(0xFF4FA3FF),
+        );
+
+        stopIcons.clear();
+        // Generate all possible intermediate letters as Red
+        for (int i = 1; i < letters.length; i++) {
+          final icon = await MapMarkerUtils.createTextMarker(
+            text: letters[i],
+            color: const Color(0xFFE11D48), // Red for Intermediate Stops
+          );
+          stopIcons.add(icon);
+        }
+
+        // Destination letter (Green)
+        final destIndex = destinations.length; // If 2 drops, index is 2 (C)
+        final label = (destIndex < letters.length)
+            ? letters[destIndex]
+            : letters.last;
+        dropIcon = await MapMarkerUtils.createTextMarker(
+          text: label,
+          color: const Color(0xFF34C759), // Green for Destination
+        );
+      }
+    } catch (e) {
+      if (kDebugMode)
+        debugPrint('[VehicleSelection] Error loading markers: $e');
+    }
+    isLocationIconsReady.value =
+        pickupIcon != null && dropIcon != null && stopIcons.isNotEmpty;
   }
 
-  bool get isMapDataReady =>
-      isRouteReady.value && isLocationIconsReady.value && routePoints.length >= 2;
+  bool get isMapDataReady => isRouteReady.value && routePoints.length >= 2;
 
   String vehicleImage(FareEstimateItem e) {
     final n = '${e.vehicleName ?? ''} ${e.displayName ?? ''}'.toLowerCase();
-    if (n.contains('boda') || n.contains('bike') || n.contains('moto'))
+    if (n.contains('boda') || n.contains('bike') || n.contains('moto')) {
       return AppAssets.imgBoda;
+    }
     if (n.contains('bajaj') || n.contains('auto')) return AppAssets.imgBajaji;
     return AppAssets.imgCab;
   }
@@ -266,7 +350,9 @@ class VehicleSelectionController extends GetxController {
     final dn = (e.displayName ?? '').trim().toLowerCase();
     for (final vt in types) {
       if (id.isNotEmpty && vt.id == id) return vt;
-      if (id.isNotEmpty && vt.id.isNotEmpty && vt.key.toLowerCase() == id.toLowerCase()) {
+      if (id.isNotEmpty &&
+          vt.id.isNotEmpty &&
+          vt.key.toLowerCase() == id.toLowerCase()) {
         return vt;
       }
       if (id.isNotEmpty && vt.name.toLowerCase() == id.toLowerCase()) return vt;
@@ -337,7 +423,7 @@ class VehicleSelectionController extends GetxController {
   /// Fallback rows when estimate API fails; uses real `VehicleTypeModel.id` from `getVehicleTypes()`.
   List<FareEstimateItem> _dummyEstimates(List<VehicleTypeModel> types) {
     final sorted = (types.where((t) => t.isActive).toList()
-          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)));
+      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)));
     final list = sorted.isNotEmpty ? sorted : types;
     if (list.isEmpty) {
       return [
@@ -386,6 +472,8 @@ class VehicleSelectionController extends GetxController {
   }
 
   Future<void> bookRide() async {
+    if (isBooking.value) return;
+
     final est = selectedEstimate;
     final pay = paymentMethodController.selectedPayment.value;
     if (est == null || pay == null) {
@@ -394,120 +482,136 @@ class VehicleSelectionController extends GetxController {
     }
 
     isBooking.value = true;
-
-    final resolvedVehicleTypeId = (est.vehicleTypeId ?? '').trim();
-    if (resolvedVehicleTypeId.isEmpty || !_looksLikeBackendVehicleTypeId(resolvedVehicleTypeId)) {
-      isBooking.value = false;
-      Get.snackbar(
-        'Vehicle type',
-        'Could not resolve vehicle type id. Please try again.',
-      );
-      return;
-    }
-
-    // 1) Validate payment first (Validate Ride Payment - Block).
-    final validateRequest = ValidateRidePaymentRequest(
-      fareEstimate: est.fareEstimate ?? selectedFareAmount,
-      paymentMethod: pay.type,
-      vehicleTypeId: resolvedVehicleTypeId,
-    );
-    final validationResult = await rideRepository.validateRidePayment(validateRequest);
-
-    await validationResult.fold(
-      (f) async {
-        isBooking.value = false;
-        // Get.offNamed(
-        //   AppRoutes.findingDriver,
-        //   arguments: {
-        //     'rideId': "1234",
-        //     'pickupLat': pickupEntity.lat,
-        //     'pickupLng': pickupEntity.lng,
-        //     'pickupAddress': pickupEntity.address,
-        //     'destinationAddress': destinationEntity.address,
-        //   },
-        // );
+    try {
+      final resolvedVehicleTypeId = (est.vehicleTypeId ?? '').trim();
+      if (resolvedVehicleTypeId.isEmpty ||
+          !_looksLikeBackendVehicleTypeId(resolvedVehicleTypeId)) {
         Get.snackbar(
-          'Payment validation failed',
-          'Could not validate payment. Please try again.',
+          'Vehicle type',
+          'Could not resolve vehicle type id. Please try again.',
         );
-      },
-      (validationId) async {
-        if (validationId.trim().isEmpty) {
-          isBooking.value = false;
+        return;
+      }
+
+      // 1) Validate payment first (Validate Ride Payment - Block).
+      final validateRequest = ValidateRidePaymentRequest(
+        fareEstimate: est.fareEstimate ?? selectedFareAmount,
+        paymentMethod: pay.type,
+        vehicleTypeId: resolvedVehicleTypeId,
+      );
+      final validationResult = await rideRepository.validateRidePayment(
+        validateRequest,
+      );
+
+      await validationResult.fold(
+        (f) async {
           Get.snackbar(
             'Payment validation failed',
-            'Validation id missing from server response.',
+            'Could not validate payment. Please try again.',
           );
-          return;
-        }
-
-        // Join payment room and wait for block callback before booking.
-        if (!_socketService.isConnected) {
-          await _socketService.connect();
-        }
-        _socketService.joinPaymentRoom(validationId: validationId);
-        String txnId = generateTransactionId();
-        
-        rideRepository.walletDummyPaymentRequest(DummyPaymentRequest(result: "SUCCESS", transId: txnId, validationId: validationId));
-        _showPaymentStatusDialog();
-
-        final blockOk = await _waitForPaymentBlockStatus(
-          timeout: const Duration(minutes: 2),
-        );
-        
-        if (blockOk) {
-          paymentStatus.value = PaymentStatus.success;
-          await Future.delayed(const Duration(seconds: 2));
-        }
-        
-        _closePaymentStatusDialogIfOpen();
-        if (!blockOk) {
-          isBooking.value = false;
-          Get.snackbar(
-            'Payment not confirmed',
-            'We could not confirm your payment block. Please try again.',
-          );
-          return;
-        }
-
-        // 2) Only after validation, submit ride booking.
-        final request = BookRideRequest(
-          validationId: validationId,
-          idempotencyKey: 'idem_${DateTime.now().millisecondsSinceEpoch}',
-          pickup: pickupEntity,
-          destination: destinationEntity,
-          vehicleTypeId: resolvedVehicleTypeId,
-          paymentMethod: pay.type,
-        );
-        final result = await homeRepository.bookRide(request);
-        isBooking.value = false;
-        result.fold(
-          (f) => Get.snackbar('Booking failed', 'Could not complete booking. Try again.'),
-          (data) {
-            final rideId = data.data?.ride?.id;
-            if (rideId == null || rideId.isEmpty) {
-              Get.snackbar('Booking', 'Ride was created but ride id is missing from the response.');
-              Get.back();
-              return;
-            }
-            Get.offNamed(
-              AppRoutes.findingDriver,
-              arguments: {
-                'rideId': rideId,
-                'vehicleType': _socketVehicleTypeForEstimate(est),
-                'pickupLat': pickupEntity.lat,
-                'pickupLng': pickupEntity.lng,
-                'pickupAddress': pickupEntity.address,
-                'destinationLat': destinationEntity.lat,
-                'destinationLng': destinationEntity.lng,
-                'destinationAddress': destinationEntity.address,
-                'fareBreakdown': data.data?.ride?.fareBreakdown?.toJson(),
-              },
+        },
+        (validationId) async {
+          if (validationId.trim().isEmpty) {
+            Get.snackbar(
+              'Payment validation failed',
+              'Validation id missing from server response.',
             );
-          },
-        );
-      },
-    );
+            return;
+          }
+
+          // Join payment room and wait for block callback before booking.
+          if (!_socketService.isConnected) {
+            await _socketService.connect();
+          }
+          _socketService.joinPaymentRoom(validationId: validationId);
+          String txnId = generateTransactionId();
+
+          rideRepository.walletDummyPaymentRequest(
+            DummyPaymentRequest(
+              result: "SUCCESS",
+              transId: txnId,
+              validationId: validationId,
+            ),
+          );
+          _showPaymentStatusDialog();
+
+          final blockOk = await _waitForPaymentBlockStatus(
+            timeout: const Duration(minutes: 2),
+          );
+
+          if (blockOk) {
+            paymentStatus.value = PaymentStatus.success;
+            await Future.delayed(const Duration(seconds: 2));
+          }
+
+          _closePaymentStatusDialogIfOpen();
+          if (!blockOk) {
+            Get.snackbar(
+              'Payment not confirmed',
+              'We could not confirm your payment block. Please try again.',
+            );
+            return;
+          }
+
+          // 2) Only after validation, submit ride booking.
+          final request = BookRideRequest(
+            validationId: validationId,
+            idempotencyKey: 'idem_${DateTime.now().millisecondsSinceEpoch}',
+            pickup: pickupEntity,
+            destinations: destinations.toList(),
+            vehicleTypeId: resolvedVehicleTypeId,
+            paymentMethod: pay.type,
+          );
+          final result = await homeRepository.bookRide(request);
+          result.fold(
+            (f) {
+              // Clean the message if it contains "Exception: "
+              String msg = f.message;
+              if (msg.startsWith('Exception: ')) {
+                msg = msg.replaceFirst('Exception: ', '');
+              }
+              Get.snackbar(
+                'Booking failed',
+                msg,
+                backgroundColor: Colors.black87,
+                colorText: Colors.white,
+              );
+            },
+            (data) {
+              final rideId = data.data?.ride?.id;
+              if (rideId == null || rideId.isEmpty) {
+                Get.snackbar(
+                  'Booking',
+                  data.message ??
+                      'Ride was created but ride id is missing from the response.',
+                  backgroundColor: Colors.black87,
+                  colorText: Colors.white,
+                );
+                return;
+              }
+              Get.offNamed(
+                AppRoutes.findingDriver,
+                arguments: {
+                  'rideId': rideId,
+                  'vehicleType': _socketVehicleTypeForEstimate(est),
+                  'pickupLat': pickupEntity.lat,
+                  'pickupLng': pickupEntity.lng,
+                  'pickupAddress': pickupEntity.address,
+                  'destinationLat': destinationEntity.lat,
+                  'destinationLng': destinationEntity.lng,
+                  'destinationAddress': destinationEntity.address,
+                  'fareBreakdown': data.data?.ride?.fareBreakdown?.toJson(),
+                },
+              );
+            },
+          );
+        },
+      );
+    } finally {
+      // Small delay to ensure snackbars or navigation have time to settle if needed,
+      // but primarily just reset the booking state.
+      isBooking.value = false;
+    }
   }
 
   String generateTransactionId() {
@@ -533,10 +637,7 @@ class VehicleSelectionController extends GetxController {
     });
 
     try {
-      return await completer.future.timeout(
-        timeout,
-        onTimeout: () => false,
-      );
+      return await completer.future.timeout(timeout, onTimeout: () => false);
     } finally {
       await sub.cancel();
     }
@@ -565,14 +666,16 @@ class VehicleSelectionController extends GetxController {
     paymentTimerSeconds.value = 120;
 
     if (Get.isDialogOpen == true) return;
-    
+
     Get.dialog<void>(
-      Obx(() => PaymentStatusDialog(
-            status: paymentStatus.value,
-            secondsRemaining: paymentStatus.value == PaymentStatus.pending 
-                ? paymentTimerSeconds.value 
-                : null,
-          )),
+      Obx(
+        () => PaymentStatusDialog(
+          status: paymentStatus.value,
+          secondsRemaining: paymentStatus.value == PaymentStatus.pending
+              ? paymentTimerSeconds.value
+              : null,
+        ),
+      ),
       barrierDismissible: false,
     );
 
@@ -581,6 +684,7 @@ class VehicleSelectionController extends GetxController {
   }
 
   Timer? _paymentTimer;
+
   void _startPaymentTimer() {
     _paymentTimer?.cancel();
     _paymentTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -609,7 +713,9 @@ class VehicleSelectionController extends GetxController {
         driverMarkerPoints.clear();
       } else {
         driverMarkerPoints.assignAll(
-          drivers.map((d) => LatLng(double.parse(d.lat??""), double.parse(d.lng??""))),
+          drivers.map(
+            (d) => LatLng(double.parse(d.lat ?? ""), double.parse(d.lng ?? "")),
+          ),
         );
       }
       nearbyDriverCount.value = drivers.length;
@@ -656,7 +762,9 @@ class VehicleSelectionController extends GetxController {
       return null; // omit vehicle_type if key cannot be resolved
     }
 
-    final matched = _vehicleTypes.firstWhereOrNull((v) => v.id == estimateTypeId);
+    final matched = _vehicleTypes.firstWhereOrNull(
+      (v) => v.id == estimateTypeId,
+    );
     final key = matched?.key.trim();
     if (key == null || key.isEmpty) return null;
     return key;
@@ -665,7 +773,7 @@ class VehicleSelectionController extends GetxController {
   void onMapCreated(GoogleMapController c) {
     mapController = c;
     _fitBounds();
-    
+
     // Manage visual readiness with delay similar to old setState logic
     if (!isMapVisualReady.value) {
       Future.delayed(const Duration(milliseconds: 220), () {

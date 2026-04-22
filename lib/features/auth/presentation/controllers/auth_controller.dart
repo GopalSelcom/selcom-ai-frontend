@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:get/get.dart';
+import '../../../../core/config/app_config.dart';
 import '../../../../core/data/models/requests/send_otp_request.dart';
 import '../../../../core/data/models/requests/verify_otp_request.dart';
 import '../../../../core/routes/app_routes.dart';
@@ -21,6 +22,7 @@ class AuthController extends GetxController {
   final email = ''.obs;
   final countryCode = '+255'.obs;
   final otp = ''.obs;
+  final generatedOtp = ''.obs;
   final isLoading = false.obs;
   final errorMessage = ''.obs;
 
@@ -61,13 +63,16 @@ class AuthController extends GetxController {
     return result.fold(
       (failure) {
         errorMessage.value = failure.message;
+        generatedOtp.value = '';
         return false;
       },
       (response) {
         if (response?.isSuccess == true) {
+          generatedOtp.value = response?.response?.otp ?? '';
           return true;
         } else {
           errorMessage.value = response?.message ?? 'Failed to send OTP';
+          generatedOtp.value = '';
           return false;
         }
       },
@@ -99,6 +104,9 @@ class AuthController extends GetxController {
 
   bool get canRequestOtp =>
       mobileNumber.value.length >= 9 && isEmailValidOrEmpty && !isLoading.value;
+  bool get shouldShowGeneratedOtp =>
+      AppConfig.environment == Environment.dev ||
+      AppConfig.environment == Environment.staging;
 
   String get invalidEmailMessage => 'Please enter a valid email address';
 
@@ -139,6 +147,7 @@ class AuthController extends GetxController {
     return result.fold(
       (failure) {
         errorMessage.value = failure.message;
+        generatedOtp.value = '';
         // If it failed, we might want to stop the timer, but usually keeping it 
         // prevents spamming. If you want to allow retry immediately on error:
         // resendTimer.value = 0;
@@ -146,10 +155,12 @@ class AuthController extends GetxController {
       },
       (response) {
         if (response?.isSuccess == true) {
+          generatedOtp.value = response?.response?.otp ?? '';
           return true;
         } else {
           errorMessage.value = response?.message ?? 'Failed to resend OTP';
           resendTimer.value = 0; // Show resend button again if API specifically failed
+          generatedOtp.value = '';
           return false;
         }
       },

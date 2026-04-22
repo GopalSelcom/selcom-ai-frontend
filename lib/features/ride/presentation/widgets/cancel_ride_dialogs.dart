@@ -248,7 +248,7 @@ class _CancelReasonSelectionDialogState
               title: 'Continue',
               color: isSelected
                   ? const Color(0xFFFF0050)
-                  : const Color(0xFFFF0050).withOpacity(0.5),
+                  : const Color(0xFFFF0050).withValues(alpha: 0.5),
               textColor: Colors.white,
               onTap: _selectedReason == null
                   ? null
@@ -296,7 +296,7 @@ class _ActionButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(100.r),
           ),
-          disabledBackgroundColor: color.withOpacity(0.4),
+          disabledBackgroundColor: color.withValues(alpha: 0.4),
           padding: EdgeInsets.zero,
         ),
         onPressed: onTap,

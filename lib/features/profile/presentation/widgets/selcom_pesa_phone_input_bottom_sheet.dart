@@ -46,7 +46,7 @@ class SelcomPesaPhoneInputBottomSheet
             ),
           ),
           SizedBox(height: 12.h),
-          Divider(color: AppColors.divider, thickness: 1),
+          const Divider(color: AppColors.divider, thickness: 1),
           SizedBox(height: 24.h),
 
           Align(

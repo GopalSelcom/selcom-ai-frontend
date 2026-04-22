@@ -100,7 +100,7 @@ class Ride {
         ? null
         : VehicleSnapshot.fromJson(json["vehicle_snapshot"]),
     pinCode: json["pin_code"],
-    createdAt: json["created_at"] == null ? null : json["created_at"],
+    createdAt: json["created_at"],
   );
 
   Map<String, dynamic> toJson() => {
