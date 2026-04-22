@@ -242,17 +242,9 @@ class LiveActivityManager {
     try {
       final String? existingId = _orderToActivityId[orderId];
       if (_isIOS && existingId != null && existingId != 'android') {
-        final activeIds = await _liveActivitiesPlugin.getAllActivitiesIds();
-
-        // 🚨 ATOMIC CHECK: Verify if activity was created by another concurrent call while we were awaiting getAllActivitiesIds
-        final String? doubleCheckId = _orderToActivityId[orderId];
-        if (doubleCheckId != null && doubleCheckId != existingId) {
-          return doubleCheckId;
-        }
-
-        if (!activeIds.contains(existingId)) {
-          _orderToActivityId.remove(orderId);
-        } else if (updateIfExists) {
+        // 🚀 OPTIMIZATION: Skip expensive getAllActivitiesIds() call if we have a cached ID.
+        // For foreground socket updates, assume the cached ID is valid.
+        if (updateIfExists) {
           await updateActivity(
             orderId: orderId,
             status: status,
@@ -430,6 +422,19 @@ class LiveActivityManager {
       name: 'ORDER_TRACKING',
     );
     try {
+      // 🛡️ THROTTLING: Prevent updating Live Activity more than once every 1.5 seconds per order.
+      // High-frequency socket tracking events can overwhelm the system and cause bottlenecks.
+      final now = DateTime.now();
+      final lastUpdate = _lastUpdateTime[orderId];
+      if (lastUpdate != null &&
+          now.difference(lastUpdate).inMilliseconds < 1500) {
+        developer.log(
+          "⏭️ Throttling update for $orderId (last update was too recent)",
+          name: 'ORDER_TRACKING',
+        );
+        return;
+      }
+      _lastUpdateTime[orderId] = now;
       if (merchantName != null && merchantName.isNotEmpty) {
         _orderToMerchantName[orderId] = merchantName;
         await _saveState();
