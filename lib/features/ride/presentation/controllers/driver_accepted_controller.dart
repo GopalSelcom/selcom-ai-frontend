@@ -763,17 +763,8 @@ class DriverAcceptedController extends GetxController
       nextState = RideBottomSheetState.rideStarted;
     }
 
-    // Prevent stale socket events from downgrading progress state.
-    final current = rideBottomSheetState.value;
-    if (current == RideBottomSheetState.rideCompleted &&
-        nextState != RideBottomSheetState.rideCompleted) {
-      return;
-    }
-    if (current == RideBottomSheetState.rideStarted &&
-        nextState == RideBottomSheetState.driverAssigned) {
-      return;
-    }
-
+    // Allow state to move backwards if the status explicitly matches an earlier phase.
+    // This fixes "sticky" UI bugs where the app gets stuck in 'rideCompleted'.
     rideBottomSheetState.value = nextState;
   }
 
@@ -858,6 +849,10 @@ class DriverAcceptedController extends GetxController
 
   void _applyTrackingPayload(TrackingUpdateSocketResponse payload) {
     final status = (payload.status ?? '').toString().trim().toLowerCase();
+    if (status.isNotEmpty) {
+      _applyBottomSheetStateForStatus(status);
+    }
+
     if (status == 'cancelled' || status == 'no_driver_found') {
       _navigatedAway = true;
       if (status == 'no_driver_found') {

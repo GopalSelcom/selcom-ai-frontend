@@ -607,7 +607,9 @@ class DriverAcceptedScreen extends StatelessWidget {
 
   Widget _rideProgressSheet(DriverAcceptedController c) {
     final isCompleted =
-        c.rideBottomSheetState.value == RideBottomSheetState.rideCompleted;
+        c.rideBottomSheetState.value == RideBottomSheetState.rideCompleted &&
+        (c.currentRideStatus.value == 'completed' ||
+            c.currentRideStatus.value == 'ride_completed');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

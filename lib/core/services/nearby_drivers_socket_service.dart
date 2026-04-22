@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:flutter/foundation.dart';
 import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/driver_location_socker_response.dart';
@@ -181,9 +182,7 @@ class AppSocketService {
       if (data != null) _rideStopUpdateController.add(data);
     });
     _socket!.on(trackingDriverLocation, (payload) {
-      print(
-        "this is the call back ---driver_location:->${jsonEncode(payload)}",
-      );
+      log("this is the call back ---driver_location:->${jsonEncode(payload)}");
       final data = trackingUpdateSocketResponseFromJson(jsonEncode(payload));
       if (data != null) {
         _trackingUpdateStatusController.add(
