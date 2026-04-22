@@ -388,16 +388,16 @@ class HomeController extends GetxController {
       freshRide,
     ) {
       // 🛰️ Sync Live Activity view when user taps "View Trip"
-      LiveActivityManager().updateActivity(
+      LiveActivityManager().startActivity(
         orderId: freshRide.id,
         status: freshRide.status.name,
         title: freshRide.status.name,
         subtitle: freshRide.status.name,
         vehicleDesc: freshRide.vehicleSnapshot?.vehicleType ?? '',
         plateNumber: freshRide.vehicleSnapshot?.plateNumber ?? '',
-        riderPhotoUrl: freshRide.driverSnapshot?.avatarUrl ?? '',
         fare: freshRide.fareEstimate.toString(),
         isCompleted: freshRide.status == RideStatus.rideCompleted,
+        updateIfExists: false,
       );
       navigateToDriverAcceptedForRide(freshRide);
     });

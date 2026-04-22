@@ -174,6 +174,7 @@ class LiveActivityManager {
     double? driverLongitude,
     String pickupDistance = '0',
     String deliveryDistance = '0',
+    bool updateIfExists = true,
   }) async {
     if (_inProgressStarts.containsKey(orderId))
       return _inProgressStarts[orderId];
@@ -198,6 +199,7 @@ class LiveActivityManager {
       driverLongitude: driverLongitude,
       pickupDistance: pickupDistance,
       deliveryDistance: deliveryDistance,
+      updateIfExists: updateIfExists,
     );
 
     _inProgressStarts[orderId] = work;
@@ -228,6 +230,7 @@ class LiveActivityManager {
     double? driverLongitude,
     String pickupDistance = '0',
     String deliveryDistance = '0',
+    bool updateIfExists = true,
   }) async {
     try {
       final String? existingId = _orderToActivityId[orderId];
@@ -235,7 +238,7 @@ class LiveActivityManager {
         final activeIds = await _liveActivitiesPlugin.getAllActivitiesIds();
         if (!activeIds.contains(existingId)) {
           _orderToActivityId.remove(orderId);
-        } else {
+        } else if (updateIfExists) {
           await updateActivity(
             orderId: orderId,
             status: status,
