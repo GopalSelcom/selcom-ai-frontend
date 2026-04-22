@@ -22,7 +22,7 @@ class LiveActivityManager {
   Map<String, String> _orderToMerchantName = {};
   final Map<String, DateTime> _lastUpdateTime = {};
   final Map<String, String> _lastSyncedTokens = {};
-  final Map<String, Future<String?>> _inProgressStarts = {};
+  final Map<String, Completer<String?>> _inProgressStarts = {};
 
   Stream<ActivityUpdate> get activityUpdateStream =>
       _liveActivitiesPlugin.activityUpdateStream;
@@ -176,35 +176,42 @@ class LiveActivityManager {
     String deliveryDistance = '0',
     bool updateIfExists = true,
   }) async {
-    if (_inProgressStarts.containsKey(orderId))
-      return _inProgressStarts[orderId];
+    // 🛡️ SYNC LOCK CHECK: Block re-entry immediately for the same orderId
+    if (_inProgressStarts.containsKey(orderId)) {
+      return _inProgressStarts[orderId]!.future;
+    }
 
-    final work = _startActivityInternal(
-      orderId: orderId,
-      status: status,
-      title: title,
-      merchantName: merchantName,
-      subtitle: subtitle,
-      fare: fare,
-      eta: eta,
-      vehicleDesc: vehicleDesc,
-      plateNumber: plateNumber,
-      step: step,
-      totalSteps: totalSteps,
-      isRiderDelivering: isRiderDelivering,
-      isCompleted: isCompleted,
-      deliveryStartDate: deliveryStartDate,
-      etaSeconds: etaSeconds,
-      driverLatitude: driverLatitude,
-      driverLongitude: driverLongitude,
-      pickupDistance: pickupDistance,
-      deliveryDistance: deliveryDistance,
-      updateIfExists: updateIfExists,
-    );
+    final completer = Completer<String?>();
+    _inProgressStarts[orderId] = completer;
 
-    _inProgressStarts[orderId] = work;
     try {
-      return await work;
+      final result = await _startActivityInternal(
+        orderId: orderId,
+        status: status,
+        title: title,
+        merchantName: merchantName,
+        subtitle: subtitle,
+        fare: fare,
+        eta: eta,
+        vehicleDesc: vehicleDesc,
+        plateNumber: plateNumber,
+        step: step,
+        totalSteps: totalSteps,
+        isRiderDelivering: isRiderDelivering,
+        isCompleted: isCompleted,
+        deliveryStartDate: deliveryStartDate,
+        etaSeconds: etaSeconds,
+        driverLatitude: driverLatitude,
+        driverLongitude: driverLongitude,
+        pickupDistance: pickupDistance,
+        deliveryDistance: deliveryDistance,
+        updateIfExists: updateIfExists,
+      );
+      completer.complete(result);
+      return result;
+    } catch (e) {
+      completer.completeError(e);
+      rethrow;
     } finally {
       _inProgressStarts.remove(orderId);
     }
@@ -236,6 +243,13 @@ class LiveActivityManager {
       final String? existingId = _orderToActivityId[orderId];
       if (_isIOS && existingId != null && existingId != 'android') {
         final activeIds = await _liveActivitiesPlugin.getAllActivitiesIds();
+
+        // 🚨 ATOMIC CHECK: Verify if activity was created by another concurrent call while we were awaiting getAllActivitiesIds
+        final String? doubleCheckId = _orderToActivityId[orderId];
+        if (doubleCheckId != null && doubleCheckId != existingId) {
+          return doubleCheckId;
+        }
+
         if (!activeIds.contains(existingId)) {
           _orderToActivityId.remove(orderId);
         } else if (updateIfExists) {

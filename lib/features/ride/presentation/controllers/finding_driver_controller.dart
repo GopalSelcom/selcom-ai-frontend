@@ -295,6 +295,12 @@ class FindingDriverController extends GetxController {
     _didNavigateToAccepted = true;
     _countdownTimer?.cancel();
     _mockDriverAssignTimer?.cancel();
+    _connectionSub?.cancel();
+    _rideStatusSub?.cancel();
+    _driverLocSub?.cancel();
+    _trackingSub?.cancel();
+    _nearbyDriversSub?.cancel();
+    _nearbyDriversErrorSub?.cancel();
     final statusPayload = latestRideStatusPayload.value;
     final driverLocPayload = latestDriverLocationPayload.value;
     final trackingPayload = latestTrackingPayload.value;
