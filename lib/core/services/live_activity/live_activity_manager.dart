@@ -170,6 +170,8 @@ class LiveActivityManager {
     bool isCompleted = false,
     double deliveryStartDate = 0,
     double etaSeconds = 0,
+    double? driverLatitude,
+    double? driverLongitude,
     String pickupDistance = '0',
     String deliveryDistance = '0',
   }) async {
@@ -192,6 +194,8 @@ class LiveActivityManager {
       isCompleted: isCompleted,
       deliveryStartDate: deliveryStartDate,
       etaSeconds: etaSeconds,
+      driverLatitude: driverLatitude,
+      driverLongitude: driverLongitude,
       pickupDistance: pickupDistance,
       deliveryDistance: deliveryDistance,
     );
@@ -220,6 +224,8 @@ class LiveActivityManager {
     bool isCompleted = false,
     double deliveryStartDate = 0,
     double etaSeconds = 0,
+    double? driverLatitude,
+    double? driverLongitude,
     String pickupDistance = '0',
     String deliveryDistance = '0',
   }) async {
@@ -245,6 +251,8 @@ class LiveActivityManager {
             isRiderDelivering: isRiderDelivering,
             deliveryStartDate: deliveryStartDate,
             etaSeconds: etaSeconds,
+            driverLatitude: driverLatitude,
+            driverLongitude: driverLongitude,
             pickupDistance: pickupDistance,
             deliveryDistance: deliveryDistance,
           );
@@ -284,7 +292,7 @@ class LiveActivityManager {
         if (_iosActivityCount >= _maxConcurrentIOSActivities)
           return "limit_reached";
 
-        final activityModel = {
+        final activityModel = <String, dynamic>{
           'order_id': orderId,
           'merchant_name': merchantName,
           'status': status,
@@ -304,6 +312,17 @@ class LiveActivityManager {
           'pickup_distance': pickupDistance,
           'delivery_distance': deliveryDistance,
         };
+
+        if (driverLatitude != null)
+          activityModel['driver_latitude'] = driverLatitude;
+        if (driverLongitude != null)
+          activityModel['driver_longitude'] = driverLongitude;
+
+        developer.log(
+          "🚀 Creating Live Activity: $orderId",
+          name: 'LIVE_ACTIVITY',
+          error: jsonEncode(activityModel),
+        );
 
         final activityId = await _liveActivitiesPlugin.createActivity(
           orderId,
@@ -376,6 +395,8 @@ class LiveActivityManager {
     bool isCompleted = false,
     double deliveryStartDate = 0,
     double etaSeconds = 0,
+    double? driverLatitude,
+    double? driverLongitude,
     String pickupDistance = '0',
     String deliveryDistance = '0',
   }) async {
@@ -423,6 +444,8 @@ class LiveActivityManager {
           'is_rider_delivering': isRiderDelivering,
           'delivery_start_date': deliveryStartDate,
           'eta_seconds': etaSeconds,
+          'driver_latitude': driverLatitude,
+          'driver_longitude': driverLongitude,
           'pickup_distance': pickupDistance,
           'delivery_distance': deliveryDistance,
         };

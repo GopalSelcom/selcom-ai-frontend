@@ -3,7 +3,7 @@ import WidgetKit
 import SwiftUI
 
 // MARK: - Required by live_activities plugin
-struct LiveActivitiesAppAttributes: ActivityAttributes, Identifiable {
+struct LiveActivitiesAppAttributes: ActivityAttributes {
     public typealias LiveDeliveryData = ContentState
     public struct ContentState: Codable, Hashable {
         public var order_id: String?
@@ -25,12 +25,15 @@ struct LiveActivitiesAppAttributes: ActivityAttributes, Identifiable {
         public var eta_seconds: Double?
         public var pickup_distance: String?
         public var delivery_distance: String?
+        public var driver_latitude: Double?
+        public var driver_longitude: Double?
 
         enum CodingKeys: String, CodingKey {
             case order_id, ride_id, app_group_id, status, title, subtitle, merchant_name, driver_name, fare, eta
             case vehicle_desc, vehicle_name, plate_number
             case step, total_steps, is_completed, is_rider_delivering
             case delivery_start_date, eta_seconds, pickup_distance, delivery_distance
+            case driver_latitude, driver_longitude
         }
 
         public init(from decoder: Decoder) throws {
@@ -90,8 +93,10 @@ struct LiveActivitiesAppAttributes: ActivityAttributes, Identifiable {
             delivery_start_date = decodeAsDouble(.delivery_start_date)
             eta_seconds = decodeAsDouble(.eta_seconds)
 
-            pickup_distance = decodeAsString(.pickup_distance) ?? "0"
             delivery_distance = decodeAsString(.delivery_distance) ?? "0"
+            pickup_distance = decodeAsString(.pickup_distance) ?? "0"
+            driver_latitude = decodeAsDouble(.driver_latitude)
+            driver_longitude = decodeAsDouble(.driver_longitude)
             
             let allKeys = container.allKeys.map { "\($0.stringValue)" }.joined(separator: ", ")
             print("[Widget] RECV payload with keys: \(allKeys)")
@@ -120,13 +125,14 @@ struct LiveActivitiesAppAttributes: ActivityAttributes, Identifiable {
             try container.encodeIfPresent(eta_seconds, forKey: .eta_seconds)
             try container.encodeIfPresent(pickup_distance, forKey: .pickup_distance)
             try container.encodeIfPresent(delivery_distance, forKey: .delivery_distance)
+            try container.encodeIfPresent(driver_latitude, forKey: .driver_latitude)
+            try container.encodeIfPresent(driver_longitude, forKey: .driver_longitude)
         }
     }
-    var id = UUID()
 }
 
 extension LiveActivitiesAppAttributes {
-    func prefixedKey(_ key: String) -> String { "\(id)_\(key)" }
+    func prefixedKey(_ key: String) -> String { "tracking_\(key)" }
 }
 
 // MARK: - View Model
@@ -139,6 +145,7 @@ struct TrackingViewModel {
     let vehicleDesc: String
     let plateNumber: String
     let eta: String
+    let arrivalDate: Date?
     let progressRatio: Double
     let isRiderDelivering: Bool
     
@@ -191,11 +198,15 @@ struct TrackingViewModel {
 
         if stepVal >= totalStepsVal || (state.is_completed ?? (ud?.integer(forKey: attributes.prefixedKey("is_completed")) == 1)) {
             self.eta = "Arrived"
+            self.arrivalDate = nil
         } else {
             let etaSec = state.eta_seconds ?? Double(ud?.integer(forKey: attributes.prefixedKey("eta_seconds")) ?? 0)
             if etaSec > 0 {
                 self.eta = formatDuration(Int(ceil(etaSec / 60.0)))
+                self.arrivalDate = Date().addingTimeInterval(etaSec)
+                ud?.set(etaSec, forKey: attributes.prefixedKey("eta_seconds"))
             } else {
+                self.arrivalDate = nil
                 let totalDist = (stepVal < totalStepsVal - 1) ? (pickupVal + deliveryVal) : deliveryVal
                 let calcMin   = Int(ceil(totalDist / 35.0 * 60.0))
                 
@@ -238,48 +249,81 @@ struct LockScreenView: View {
     let selcomColor = Color(red: 243/255.0, green: 0/255.0, blue: 76/255.0)
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(vm.title).font(.system(size: 14, weight: .bold)).foregroundColor(.white.opacity(0.8))
-                    HStack(spacing: 4) {
-                        Text(vm.status).font(.system(size: 18, weight: .bold)).foregroundColor(.white)
+                    Text(vm.title.uppercased())
+                        .font(.system(size: 11, weight: .black))
+                        .foregroundColor(selcomColor)
+                        .tracking(1)
+                    
+                    HStack(spacing: 6) {
+                        Text(vm.status)
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(.white)
                         if !vm.merchantName.isEmpty {
-                            Text("•").foregroundColor(.white.opacity(0.7))
-                            Text(vm.merchantName).font(.system(size: 18, weight: .bold)).foregroundColor(.white)
+                            Text("•")
+                                .foregroundColor(.white.opacity(0.3))
+                            Text(vm.merchantName)
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundColor(.white)
                         }
                     }
-                    Text(vm.vehicleDesc).font(.system(size: 14)).foregroundColor(.white.opacity(0.5))
+                    
+                    HStack(spacing: 8) {
+                        Text(vm.vehicleDesc)
+                            .font(.system(size: 14))
+                            .foregroundColor(.white.opacity(0.6))
+                        if !vm.plateNumber.isEmpty {
+                            Text(vm.plateNumber)
+                                .font(.system(size: 12, weight: .bold))
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.white.opacity(0.1))
+                                .cornerRadius(4)
+                        }
+                    }
                 }
                 
                 Spacer()
                 
+                VStack(alignment: .trailing, spacing: 4) {
+                    if !vm.fare.isEmpty {
+                        Text(vm.fare)
+                            .font(.system(size: 22, weight: .bold))
+                            .foregroundColor(.white)
+                    }
+                    if let arrivalDate = vm.arrivalDate {
+                        Text(timerInterval: Date()...arrivalDate, countsDown: true)
+                            .font(.system(size: 14, weight: .bold).monospacedDigit())
+                            .foregroundColor(selcomColor)
+                    } else {
+                        Text(vm.eta)
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(selcomColor)
+                    }
+                }
             }
             
-            if !vm.plateNumber.isEmpty {
-                HStack {
-                    Spacer()
-                    PlateTag(text: vm.plateNumber)
-                }
-                .padding(.top, -20)
-            }
-
+            // Progress Bar
             ZStack(alignment: .leading) {
-                Capsule().fill(Color.white.opacity(0.15)).frame(height: 6)
+                Capsule()
+                    .fill(Color.white.opacity(0.1))
+                    .frame(height: 6)
                 Capsule()
                     .fill(selcomColor)
                     .frame(width: 320 * CGFloat(vm.progressRatio), height: 6)
                 
                 Circle()
-                    .stroke(selcomColor, lineWidth: 2)
-                    .background(Circle().fill(Color.black))
+                    .fill(.white)
                     .frame(width: 10, height: 10)
                     .offset(x: 320 * CGFloat(vm.progressRatio) - 5)
+                    .shadow(radius: 2)
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background(Color(white: 0.15).opacity(0.9))
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
+        .background(Color.black.opacity(0.8))
     }
 }
 
@@ -288,83 +332,105 @@ struct DynamicIslandExpandedView: View {
     let selcomColor = Color(red: 243/255.0, green: 0/255.0, blue: 76/255.0)
 
     var body: some View {
-        VStack(spacing: 16) {
-            // Top Row
+        VStack(spacing: 8) {
+            // Header Row
             HStack {
-                HStack(spacing: 8) {
-                    Image(systemName: "bicycle") // Placeholder
-                        .foregroundColor(.white)
-                    VStack(alignment: .leading) {
-                        Text(vm.vehicleDesc).font(.system(size: 12)).foregroundColor(.gray)
-                        Text(vm.title).font(.system(size: 16, weight: .bold)).foregroundColor(.white)
-                    }
+                HStack(spacing: 6) {
+                    Image(systemName: "car.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(selcomColor)
+                    Text(vm.title.uppercased())
+                        .font(.system(size: 10, weight: .black))
+                        .foregroundColor(.white.opacity(0.6))
+                        .tracking(1)
                 }
                 Spacer()
                 if !vm.fare.isEmpty {
-                    Text(vm.fare).font(.system(size: 20, weight: .bold)).foregroundColor(.white)
+                    Text(vm.fare)
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(.white)
                 }
             }
+            .padding(.top, 4)
             
-            // Progress Bar
-            VStack(spacing: 4) {
-                ZStack(alignment: .leading) {
-                    Capsule().fill(Color.white.opacity(0.2)).frame(height: 4)
-                    Capsule().fill(selcomColor).frame(width: 280 * CGFloat(vm.progressRatio), height: 4)
-                    
-                    HStack(spacing: 0) {
-                        Circle().fill(selcomColor).frame(width: 12, height: 12)
-                        Spacer()
-                        Circle().fill(Color.white).frame(width: 12, height: 12)
-                        Spacer()
-                        Circle().fill(Color(white: 0.4)).frame(width: 12, height: 12)
-                    }
-                    .frame(width: 280)
+            // Info Row
+            HStack(alignment: .center) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(vm.merchantName)
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(.white)
+                    Text(vm.vehicleDesc)
+                        .font(.system(size: 12))
+                        .foregroundColor(.gray)
                 }
-                HStack {
-                    Text("Ride Starting").font(.system(size: 10)).foregroundColor(.gray)
-                    Spacer()
-                    Text("Arrived").font(.system(size: 10)).foregroundColor(.gray)
-                }
-            }
-            
-            // Bottom Row
-            HStack {
-                if !vm.merchantName.isEmpty {
-                    HStack(spacing: 12) {
-                        // Removed photo
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(vm.merchantName).font(.system(size: 14, weight: .medium)).foregroundColor(.white)
-                            Text(vm.eta).font(.system(size: 18, weight: .bold)).foregroundColor(selcomColor)
-                        }
-                    }
-                } else {
-                    Text(vm.eta).font(.system(size: 18, weight: .bold)).foregroundColor(selcomColor)
-                }
-                
                 Spacer()
                 
-                HStack(spacing: 16) {
-                    Button(action: {}) {
-                        Image(systemName: "message.fill")
-                            .foregroundColor(.white)
-                            .frame(width: 44, height: 44)
-                            .background(Color(white: 0.1))
-                            .clipShape(Circle())
-                            .overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 1))
-                    }
-                    
-                    Button(action: {}) {
-                        Image(systemName: "phone.fill")
-                            .foregroundColor(.white)
-                            .frame(width: 54, height: 54)
-                            .background(selcomColor)
-                            .clipShape(Circle())
-                    }
+                // Plate Tag
+                if !vm.plateNumber.isEmpty {
+                    PlateTag(text: vm.plateNumber)
                 }
             }
+            
+            // Status & Progress Row
+            VStack(spacing: 6) {
+                HStack {
+                    Text(vm.status)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.white)
+                    Spacer()
+                    if !vm.eta.isEmpty {
+                        if let arrivalDate = vm.arrivalDate {
+                            Text(timerInterval: Date()...arrivalDate, countsDown: true)
+                                .font(.system(size: 14, weight: .bold).monospacedDigit())
+                                .foregroundColor(selcomColor)
+                        } else {
+                            Text(vm.eta)
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(selcomColor)
+                        }
+                    }
+                }
+                
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(Color.white.opacity(0.1))
+                        .frame(height: 6)
+                    Capsule()
+                        .fill(selcomColor)
+                        .frame(width: 320 * CGFloat(vm.progressRatio), height: 6)
+                    
+                    // Progress Indicator Dot
+                    Circle()
+                        .fill(.white)
+                        .frame(width: 10, height: 10)
+                        .offset(x: 320 * CGFloat(vm.progressRatio) - 5)
+                        .shadow(radius: 2)
+                }
+            }
+            // Actions Row
+            HStack(spacing: 16) {
+                Spacer()
+                Button(action: {}) {
+                    Image(systemName: "message.fill")
+                        .foregroundColor(.white)
+                        .frame(width: 44, height: 44)
+                        .background(Color.white.opacity(0.05))
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 1))
+                }
+                Button(action: {}) {
+                    Image(systemName: "phone.fill")
+                        .foregroundColor(.white)
+                        .frame(width: 44, height: 44)
+                        .background(Color.white.opacity(0.05))
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 1))
+                }
+            }
+            .padding(.top, 4)
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 20)
+        .padding(.horizontal, 22)
+        .padding(.bottom, 12)
     }
 }
 
@@ -388,7 +454,15 @@ struct RiderTrackingWidgetLiveActivity: Widget {
                 }
                 .padding(.leading, 4)
             } compactTrailing: {
-                Text(vm.eta).font(.system(size: 10, weight: .bold)).foregroundColor(selcomColor)
+                if let arrivalDate = vm.arrivalDate {
+                    Text(timerInterval: Date()...arrivalDate, countsDown: true)
+                        .font(.system(size: 10, weight: .bold).monospacedDigit())
+                        .foregroundColor(selcomColor)
+                } else {
+                    Text(vm.eta)
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(selcomColor)
+                }
             } minimal: {
                 Circle().fill(selcomColor).frame(width: 22, height: 22)
             }
