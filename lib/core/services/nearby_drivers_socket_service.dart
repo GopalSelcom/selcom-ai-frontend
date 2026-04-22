@@ -52,6 +52,7 @@ class AppSocketService {
   // Ride
   static const String evtJoinRideRoom = 'join_ride_room';
   static const String evtRideStatusUpdate = 'ride:status_update';
+  static const String evtRideStopUpdate = 'ride:stop_update';
   static const String evtRideDriverLocation = 'ride:driver_location';
   static const String trackingDriverLocation = 'ride:tracking_update';
 
@@ -72,6 +73,8 @@ class AppSocketService {
       StreamController<EventRiderStatusUpdateResponse>.broadcast();
   final _rideDriverLocationController =
       StreamController<DriverLocationSocketResponse>.broadcast();
+  final _rideStopUpdateController =
+      StreamController<EventRiderStatusUpdateResponse>.broadcast();
   final _paymentStatusController =
       StreamController<PaymentStatusUpdateResponse>.broadcast();
   final _trackingUpdateStatusController =
@@ -95,6 +98,8 @@ class AppSocketService {
 
   Stream<DriverLocationSocketResponse> get rideDriverLocationStream =>
       _rideDriverLocationController.stream;
+  Stream<EventRiderStatusUpdateResponse> get rideStopUpdateStream =>
+      _rideStopUpdateController.stream;
   Stream<PaymentStatusUpdateResponse> get paymentStatusStream =>
       _paymentStatusController.stream;
 
@@ -169,6 +174,11 @@ class AppSocketService {
       final data = eventRiderStatusUpdateResponseFromJson(jsonEncode(payload));
 
       if (data != null) _rideStatusController.add(data);
+    });
+    _socket!.on(evtRideStopUpdate, (payload) {
+      print("this is the evtRideStopUpdate----->$payload");
+      final data = eventRiderStatusUpdateResponseFromJson(jsonEncode(payload));
+      if (data != null) _rideStopUpdateController.add(data);
     });
     _socket!.on(trackingDriverLocation, (payload) {
       print(

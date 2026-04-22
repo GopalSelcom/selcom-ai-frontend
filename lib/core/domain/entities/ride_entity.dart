@@ -13,20 +13,9 @@ enum RideStatus {
   noDriverFound,
 }
 
-enum PaymentStatus {
-  pending,
-  blocked,
-  completed,
-  failed,
-  refunded,
-}
+enum PaymentStatus { pending, blocked, completed, failed, refunded }
 
-enum PaymentMethod {
-  wallet,
-  selcomPesa,
-  mobileMoney,
-  card,
-}
+enum PaymentMethod { wallet, selcomPesa, mobileMoney, card }
 
 class DriverSnapshotEntity {
   final String name;
@@ -70,6 +59,26 @@ class FareBreakdownEntity {
   });
 }
 
+class RideStopEntity {
+  final int index;
+  final double lat;
+  final double lng;
+  final String address;
+  final String status;
+  final DateTime? arrivedAt;
+  final DateTime? completedAt;
+
+  const RideStopEntity({
+    required this.index,
+    required this.lat,
+    required this.lng,
+    required this.address,
+    required this.status,
+    this.arrivedAt,
+    this.completedAt,
+  });
+}
+
 class RideEntity {
   final String id;
   final String riderId;
@@ -78,7 +87,9 @@ class RideEntity {
   final RideStatus status;
   final LocationEntity pickup;
   final LocationEntity destination;
-  final List<dynamic> stops;
+  final List<RideStopEntity> stops;
+  final bool isMultiStop;
+  final int currentStopIndex;
   final int fareEstimate;
   final int? finalFare;
   final double distanceKm;
@@ -103,6 +114,8 @@ class RideEntity {
     required this.pickup,
     required this.destination,
     required this.stops,
+    this.isMultiStop = false,
+    this.currentStopIndex = 0,
     required this.fareEstimate,
     this.finalFare,
     required this.distanceKm,

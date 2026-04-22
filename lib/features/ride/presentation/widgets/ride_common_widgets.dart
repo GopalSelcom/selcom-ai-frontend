@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconsax/iconsax.dart';
+import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/theme/app_text_styles.dart';
 
 class RideDateFormatter {
@@ -20,8 +21,18 @@ class RideDateFormatter {
       final time = parts[1].replaceAll(' ', ''); // 08:08PM
 
       const months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
       ];
 
       String daySuffix = 'th';
@@ -29,10 +40,17 @@ class RideDateFormatter {
         daySuffix = 'th';
       } else {
         switch (day % 10) {
-          case 1: daySuffix = 'st'; break;
-          case 2: daySuffix = 'nd'; break;
-          case 3: daySuffix = 'rd'; break;
-          default: daySuffix = 'th';
+          case 1:
+            daySuffix = 'st';
+            break;
+          case 2:
+            daySuffix = 'nd';
+            break;
+          case 3:
+            daySuffix = 'rd';
+            break;
+          default:
+            daySuffix = 'th';
         }
       }
 
@@ -49,6 +67,7 @@ class RideLocationsTimeline extends StatelessWidget {
   final String startAddress;
   final String endLocation;
   final String endAddress;
+  final List<RideStopEntity>? stops;
 
   const RideLocationsTimeline({
     super.key,
@@ -56,76 +75,112 @@ class RideLocationsTimeline extends StatelessWidget {
     required this.startAddress,
     required this.endLocation,
     required this.endAddress,
+    this.stops,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Filter stops to avoid duplicating final destination
+    final filteredStops = (stops ?? []).where((s) {
+      final stopAddr = s.address.trim().toLowerCase();
+      final endAddr = endAddress.trim().toLowerCase();
+      return stopAddr != endAddr;
+    }).toList();
+
     return Column(
       children: [
         // Start Location Row
-        IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+        _buildLocationRow(
+          title: startLocation,
+          address: startAddress,
+          icon: Icon(
+            Icons.location_on,
+            color: const Color(0xFFF3004C),
+            size: 22.w,
+          ),
+          showBottomLine: true,
+        ),
+
+        // Intermediate Stops
+        for (int i = 0; i < filteredStops.length; i++)
+          _buildLocationRow(
+            title: filteredStops[i].address.split(',').first,
+            address: filteredStops[i].address,
+            icon: _buildStopIcon(i + 1),
+            showBottomLine: true,
+          ),
+
+        // End Location Row
+        _buildLocationRow(
+          title: endLocation,
+          address: endAddress,
+          icon: Icon(
+            CupertinoIcons.pin_fill,
+            color: const Color(0xFF34C759),
+            size: 22.w,
+          ),
+          showBottomLine: false,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStopIcon(int number) {
+    return Container(
+      width: 22.w,
+      height: 22.w,
+      decoration: const BoxDecoration(
+        color: Color(0xFFE11D48),
+        shape: BoxShape.circle,
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        number.toString(),
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 12.sp,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLocationRow({
+    required String title,
+    required String address,
+    required Widget icon,
+    required bool showBottomLine,
+  }) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Column(
             children: [
-              Column(
-                children: [
-                  Icon(Icons.location_on, color: const Color(0xFFF3004C), size: 22.w),
-                  Expanded(
-                    child: Container(
-                      width: 1.w,
-                      margin: EdgeInsets.symmetric(vertical: 2.h),
-                      child: CustomPaint(
-                        painter: DashedLinePainter(color: Colors.black.withOpacity(0.5)),
+              icon,
+              if (showBottomLine)
+                Expanded(
+                  child: Container(
+                    width: 1.w,
+                    margin: EdgeInsets.symmetric(vertical: 2.h),
+                    child: CustomPaint(
+                      painter: DashedLinePainter(
+                        color: Colors.black.withOpacity(0.5),
                       ),
                     ),
                   ),
-                ],
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(bottom: 16.h),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        startLocation,
-                        style: TextStyle(
-                          fontFamily: AppTextStyles.metropolisFont,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black,
-                          fontSize: 16.sp,
-                        ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        startAddress,
-                        style: TextStyle(
-                          fontFamily: AppTextStyles.metropolisFont,
-                          color: const Color(0xFF364B63),
-                          fontSize: 13.sp,
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
-              ),
             ],
           ),
-        ),
-
-        // End Location Row
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(CupertinoIcons.pin_fill, color: const Color(0xFF34C759), size: 22.w),
-            SizedBox(width: 12.w),
-            Expanded(
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: showBottomLine ? 16.h : 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    endLocation,
+                    title,
                     style: TextStyle(
                       fontFamily: AppTextStyles.metropolisFont,
                       fontWeight: FontWeight.w600,
@@ -135,19 +190,21 @@ class RideLocationsTimeline extends StatelessWidget {
                   ),
                   SizedBox(height: 4.h),
                   Text(
-                    endAddress,
+                    address,
                     style: TextStyle(
                       fontFamily: AppTextStyles.metropolisFont,
                       color: const Color(0xFF364B63),
                       fontSize: 13.sp,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
             ),
-          ],
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -157,7 +214,9 @@ class DashedLinePainter extends CustomPainter {
   DashedLinePainter({required this.color});
   @override
   void paint(Canvas canvas, Size size) {
-    var paint = Paint()..color = color..strokeWidth = 0.5;
+    var paint = Paint()
+      ..color = color
+      ..strokeWidth = 0.5;
     var max = size.height;
     var dashHeight = 2.0;
     var dashSpace = 2.0;
@@ -167,6 +226,7 @@ class DashedLinePainter extends CustomPainter {
       startY += dashHeight + dashSpace;
     }
   }
+
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
@@ -242,11 +302,7 @@ class RideRatingStars extends StatelessWidget {
   final double? rating;
   final double starSize;
 
-  const RideRatingStars({
-    super.key,
-    this.rating,
-    this.starSize = 44,
-  });
+  const RideRatingStars({super.key, this.rating, this.starSize = 44});
 
   @override
   Widget build(BuildContext context) {

@@ -286,6 +286,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     required Widget icon,
     required Widget field,
     bool showDivider = false,
+    Widget? trailing,
   }) {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -298,6 +299,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             ),
             SizedBox(width: 12.w),
             Expanded(child: field),
+            if (trailing != null) ...[SizedBox(width: 8.w), trailing],
           ],
         ),
         if (showDivider)
@@ -418,6 +420,14 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       rows.add(
         _pinFieldRow(
           icon: const Icon(Icons.push_pin, color: Color(0xFF34C759), size: 14),
+          trailing: InkWell(
+            onTap: () => _onRemoveDestinationStop(i),
+            child: Icon(
+              Icons.close,
+              color: const Color(0xFF94A3B8),
+              size: 16.sp,
+            ),
+          ),
           field: TextField(
             controller: _extraDestinationControllers[i],
             focusNode: _extraDestinationFocusNodes[i],
@@ -453,6 +463,21 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     );
   }
 
+  void _onRemoveDestinationStop(int index) {
+    if (index >= 0 && index < _extraDestinationControllers.length) {
+      _extraDestinationControllers.removeAt(index);
+      _extraDestinationFocusNodes[index].dispose();
+      _extraDestinationFocusNodes.removeAt(index);
+      // Reset search if we removed the active segment
+      if (_activeSegmentIndex.value == 2 + index) {
+        _setActiveSegment(1); // Set to main destination
+        controller.searchQuery.value = '';
+      } else if (_activeSegmentIndex.value > 2 + index) {
+        _setActiveSegment(_activeSegmentIndex.value - 1);
+      }
+    }
+  }
+
   Widget _chipsRow() {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -479,12 +504,18 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           if (isSaved) {
             controller.applySavedLabelToLocationSelection(
               label: label,
+              activeSegmentIndex: _activeSegmentIndex.value,
+              pickupController: pickupController,
               destinationController: destinationController,
-              activeSegmentIndex: _activeSegmentIndex,
+              extraDestinationControllers: _extraDestinationControllers,
+              pickupEditedByUser: pickupEditedByUser,
+              routePickupLat: _routePickupLat,
+              routePickupLng: _routePickupLng,
               routeDestinationLat: _routeDestinationLat,
               routeDestinationLng: _routeDestinationLng,
               destinationPlaceId: _destinationPlaceId,
             );
+            controller.isDestinationSelected.value = true;
           } else {
             Get.toNamed(AppRoutes.selectSavedLocation, arguments: label);
           }
@@ -714,8 +745,13 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           onTap: () {
             controller.applySavedLabelToLocationSelection(
               label: label,
+              activeSegmentIndex: _activeSegmentIndex.value,
+              pickupController: pickupController,
               destinationController: destinationController,
-              activeSegmentIndex: _activeSegmentIndex,
+              extraDestinationControllers: _extraDestinationControllers,
+              pickupEditedByUser: pickupEditedByUser,
+              routePickupLat: _routePickupLat,
+              routePickupLng: _routePickupLng,
               routeDestinationLat: _routeDestinationLat,
               routeDestinationLng: _routeDestinationLng,
               destinationPlaceId: _destinationPlaceId,
@@ -868,7 +904,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         color: isReady ? AppColors.primary : const Color(0xFFCBD5E1),
         borderRadius: BorderRadius.circular(16.r),
         child: InkWell(
-          onTap: isReady
+          onTap: (isReady && !controller.isProceedingToBooking.value)
               ? () {
                   final destinations = <String>[];
                   destinations.add(destinationController.text.trim());
@@ -895,22 +931,33 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                Text(
-                  'Book Ride',
-                  style: AppTextStyles.homeTitle.copyWith(
-                    color: isReady ? Colors.white : const Color(0xFF94A3B8),
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.w600,
+                if (controller.isProceedingToBooking.value)
+                  SizedBox(
+                    width: 24.w,
+                    height: 24.w,
+                    child: const CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                else
+                  Text(
+                    'Book Ride',
+                    style: AppTextStyles.homeTitle.copyWith(
+                      color: isReady ? Colors.white : const Color(0xFF94A3B8),
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                Positioned(
-                  right: 20.w,
-                  child: Icon(
-                    Icons.arrow_forward,
-                    color: isReady ? Colors.white : const Color(0xFF94A3B8),
-                    size: 20.sp,
+                if (!controller.isProceedingToBooking.value)
+                  Positioned(
+                    right: 20.w,
+                    child: Icon(
+                      Icons.arrow_forward,
+                      color: isReady ? Colors.white : const Color(0xFF94A3B8),
+                      size: 20.sp,
+                    ),
                   ),
-                ),
               ],
             ),
           ),

@@ -169,17 +169,47 @@ class DriverAcceptedScreen extends StatelessWidget {
         );
       }
 
-      // Drop Marker
-      if (c.dropIcon.value != null &&
-          c.rideBottomSheetState.value != RideBottomSheetState.driverAssigned) {
-        markers.add(
-          Marker(
-            markerId: const MarkerId('drop'),
-            position: destination,
-            icon: c.dropIcon.value!,
-            anchor: const Offset(0.5, 0.5),
-          ),
-        );
+      // Destinations/Stops Markers
+      final stops = c.ride.value?.stops ?? [];
+      final isMultiStop = c.ride.value?.isMultiStop ?? false;
+
+      if (isMultiStop && stops.isNotEmpty) {
+        for (var i = 0; i < stops.length; i++) {
+          final stop = stops[i];
+          final isLast = i == stops.length - 1;
+
+          BitmapDescriptor icon;
+          if (isLast) {
+            icon = c.dropIcon.value ?? BitmapDescriptor.defaultMarker;
+          } else {
+            icon = (i < c.stopIcons.length)
+                ? c.stopIcons[i]
+                : (c.dropIcon.value ?? BitmapDescriptor.defaultMarker);
+          }
+
+          markers.add(
+            Marker(
+              markerId: MarkerId('stop_$i'),
+              position: LatLng(stop.lat, stop.lng),
+              icon: icon,
+              anchor: const Offset(0.5, 0.5),
+            ),
+          );
+        }
+      } else {
+        // Standard Single-Stop Ride logic
+        if (c.dropIcon.value != null &&
+            c.rideBottomSheetState.value !=
+                RideBottomSheetState.driverAssigned) {
+          markers.add(
+            Marker(
+              markerId: const MarkerId('drop'),
+              position: destination,
+              icon: c.dropIcon.value!,
+              anchor: const Offset(0.5, 0.5),
+            ),
+          );
+        }
       }
 
       final polylines = <Polyline>{};
@@ -651,6 +681,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                 startAddress: c.pickupAddress,
                 endLocation: c.destinationTitle,
                 endAddress: c.destinationAddress,
+                stops: c.ride.value?.stops,
               ),
               if (!isCompleted) ...[
                 SizedBox(height: 6.h),
