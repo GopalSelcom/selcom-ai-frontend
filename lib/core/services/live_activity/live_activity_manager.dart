@@ -315,6 +315,9 @@ class LiveActivityManager {
         if (driverLongitude != null)
           activityModel['driver_longitude'] = driverLongitude;
 
+        // Harden: remove any null values that can cause decoding issues on native side
+        activityModel.removeWhere((key, value) => value == null);
+
         developer.log(
           "🚀 Creating Live Activity: $orderId",
           name: 'LIVE_ACTIVITY',
@@ -448,9 +451,11 @@ class LiveActivityManager {
           'is_rider_delivering': isRiderDelivering,
           'eta_seconds': etaSeconds,
           'driver_latitude': driverLatitude,
-          'driver_longitude': driverLongitude,
           'delivery_distance': deliveryDistance,
         };
+
+        // Harden: remove any null values that can cause decoding issues on native side
+        updateData.removeWhere((key, value) => value == null);
 
         developer.log(
           "📡 Pushing update to ActivityKit: ID=$activityId PAYLOAD: ${jsonEncode(updateData)}",

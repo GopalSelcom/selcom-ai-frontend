@@ -5,6 +5,8 @@ import SwiftUI
 // MARK: - Required by live_activities plugin
 struct LiveActivitiesAppAttributes: ActivityAttributes {
     public struct ContentState: Codable, Hashable {
+        public var order_id: String?
+        public var merchant_name: String?
         public var status: String?
         public var title: String?
         public var subtitle: String?
@@ -52,7 +54,7 @@ struct TrackingViewModel {
         let ud = UserDefaults(suiteName: appGroupId)
 
         self.title             = state.title ?? ud?.string(forKey: attributes.prefixedKey("title")) ?? "Selcom Go"
-        self.merchantName      = attributes.merchant_name ?? ud?.string(forKey: attributes.prefixedKey("merchant_name")) ?? "Selcom Go"
+        self.merchantName      = state.merchant_name ?? attributes.merchant_name ?? ud?.string(forKey: attributes.prefixedKey("merchant_name")) ?? "Selcom Go"
         
         let rawStatus          = state.status ?? ud?.string(forKey: attributes.prefixedKey("status")) ?? "Finding Driver"
         self.status            = rawStatus.replacingOccurrences(of: "_", with: " ").capitalized
@@ -78,6 +80,7 @@ struct TrackingViewModel {
         if let ud = ud {
             if let s = state.status { ud.set(s, forKey: attributes.prefixedKey("status")) }
             if let t = state.title { ud.set(t, forKey: attributes.prefixedKey("title")) }
+            if let m = state.merchant_name { ud.set(m, forKey: attributes.prefixedKey("merchant_name")) }
             if let sub = state.subtitle { ud.set(sub, forKey: attributes.prefixedKey("subtitle")) }
             if let f = state.fare { ud.set(f, forKey: attributes.prefixedKey("fare")) }
             if let e = state.eta { ud.set(e, forKey: attributes.prefixedKey("eta")) }
