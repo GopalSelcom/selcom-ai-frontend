@@ -89,11 +89,13 @@ class FindingDriverController extends GetxController {
   }
 
   Future<void> _loadMarkerIcons() async {
-    pickupIcon.value = await MapMarkerUtils.createCustomCircleMarker(
-      color: const Color(0xFF4FA3FF),
+    pickupIcon.value = await MapMarkerUtils.createTextMarker(
+      text: 'P',
+      color: const Color(0xFF4FA3FF), // Blue for Pickup
     );
-    dropIcon.value = await MapMarkerUtils.createCustomCircleMarker(
-      color: const Color(0xFFE11D48),
+    dropIcon.value = await MapMarkerUtils.createTextMarker(
+      text: 'D',
+      color: const Color(0xFF34C759), // Green for Destination
     );
     // Initial attempt to load the icon for the requested vehicle type
     await _loadDriverMarkerIcon(vehicleType: requestedVehicleType);

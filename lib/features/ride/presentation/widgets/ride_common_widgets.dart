@@ -2,12 +2,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconsax/iconsax.dart';
+import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/theme/app_text_styles.dart';
 
 class RideDateFormatter {
   static String formatDate(String apiDate) {
     try {
-      // Expected Input: 2026-03-05, 08:08 PM
       final parts = apiDate.split(', ');
       if (parts.length < 2) return apiDate;
 
@@ -66,6 +66,7 @@ class RideLocationsTimeline extends StatelessWidget {
   final String startAddress;
   final String endLocation;
   final String endAddress;
+  final List<RideStopEntity>? stops;
 
   const RideLocationsTimeline({
     super.key,
@@ -73,86 +74,113 @@ class RideLocationsTimeline extends StatelessWidget {
     required this.startAddress,
     required this.endLocation,
     required this.endAddress,
+    this.stops,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Filter stops to avoid duplicating final destination
+    final filteredStops = (stops ?? []).where((s) {
+      final stopAddr = s.address.trim().toLowerCase();
+      final endAddr = endAddress.trim().toLowerCase();
+      return stopAddr != endAddr;
+    }).toList();
+
+    final bool isMulti = filteredStops.isNotEmpty;
+    const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+
     return Column(
       children: [
         // Start Location Row
-        IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+        _buildLocationRow(
+          title: startLocation,
+          address: startAddress,
+          icon: _buildLetterIcon(
+            isMulti ? 'A' : 'P',
+            color: const Color(0xFF4FA3FF),
+          ),
+          showBottomLine: true,
+        ),
+
+        // Intermediate Stops
+        for (int i = 0; i < filteredStops.length; i++)
+          _buildLocationRow(
+            title: filteredStops[i].address.split(',').first,
+            address: filteredStops[i].address,
+            icon: _buildLetterIcon(
+              letters[i + 1],
+              color: const Color(0xFFE11D48),
+            ),
+            showBottomLine: true,
+          ),
+
+        // End Location Row
+        _buildLocationRow(
+          title: endLocation,
+          address: endAddress,
+          icon: _buildLetterIcon(
+            isMulti ? letters[filteredStops.length + 1] : 'D',
+            color: const Color(0xFF34C759), // Green
+          ),
+          showBottomLine: false,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLetterIcon(String label, {required Color color}) {
+    return Container(
+      width: 22.w,
+      height: 22.w,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      alignment: Alignment.center,
+      child: Text(
+        label,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 12.sp,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLocationRow({
+    required String title,
+    required String address,
+    required Widget icon,
+    required bool showBottomLine,
+  }) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Column(
             children: [
-              Column(
-                children: [
-                  Icon(
-                    Icons.location_on,
-                    color: const Color(0xFFF3004C),
-                    size: 22.w,
-                  ),
-                  Expanded(
-                    child: Container(
-                      width: 1.w,
-                      margin: EdgeInsets.symmetric(vertical: 2.h),
-                      child: CustomPaint(
-                        painter: DashedLinePainter(
-                          color: Colors.black.withValues(alpha: 0.5),
-                        ),
+              icon,
+              if (showBottomLine)
+                Expanded(
+                  child: Container(
+                    width: 1.w,
+                    margin: EdgeInsets.symmetric(vertical: 2.h),
+                    child: CustomPaint(
+                      painter: DashedLinePainter(
+                        color: Colors.black.withOpacity(0.5),
                       ),
                     ),
                   ),
-                ],
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(bottom: 16.h),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        startLocation,
-                        style: TextStyle(
-                          fontFamily: AppTextStyles.metropolisFont,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black,
-                          fontSize: 16.sp,
-                        ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        startAddress,
-                        style: TextStyle(
-                          fontFamily: AppTextStyles.metropolisFont,
-                          color: const Color(0xFF364B63),
-                          fontSize: 13.sp,
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
-              ),
             ],
           ),
-        ),
-
-        // End Location Row
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              CupertinoIcons.pin_fill,
-              color: const Color(0xFF34C759),
-              size: 22.w,
-            ),
-            SizedBox(width: 12.w),
-            Expanded(
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: showBottomLine ? 16.h : 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    endLocation,
+                    title,
                     style: TextStyle(
                       fontFamily: AppTextStyles.metropolisFont,
                       fontWeight: FontWeight.w600,
@@ -162,7 +190,7 @@ class RideLocationsTimeline extends StatelessWidget {
                   ),
                   SizedBox(height: 4.h),
                   Text(
-                    endAddress,
+                    address,
                     style: TextStyle(
                       fontFamily: AppTextStyles.metropolisFont,
                       color: const Color(0xFF364B63),
@@ -172,9 +200,9 @@ class RideLocationsTimeline extends StatelessWidget {
                 ],
               ),
             ),
-          ],
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -186,16 +214,22 @@ class DashedLinePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    var paint = Paint()
+    final paint = Paint()
       ..color = color
-      ..strokeWidth = 0.5;
-    var max = size.height;
-    var dashHeight = 2.0;
-    var dashSpace = 2.0;
-    double startY = 0.0;
-    while (startY < max) {
-      canvas.drawLine(Offset(0, startY), Offset(0, startY + dashHeight), paint);
-      startY += dashHeight + dashSpace;
+      ..strokeWidth = 1.w
+      ..style = PaintingStyle.stroke;
+
+    const double dashWidth = 4.0;
+    const double dashSpace = 4.0;
+    double currentY = 0;
+
+    while (currentY < size.height) {
+      canvas.drawLine(
+        Offset(0, currentY),
+        Offset(0, currentY + dashWidth),
+        paint,
+      );
+      currentY += dashWidth + dashSpace;
     }
   }
 

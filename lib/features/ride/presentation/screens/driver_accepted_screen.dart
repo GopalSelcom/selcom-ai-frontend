@@ -169,17 +169,43 @@ class DriverAcceptedScreen extends StatelessWidget {
         );
       }
 
-      // Drop Marker
-      if (c.dropIcon.value != null &&
-          c.rideBottomSheetState.value != RideBottomSheetState.driverAssigned) {
-        markers.add(
-          Marker(
-            markerId: const MarkerId('drop'),
-            position: destination,
-            icon: c.dropIcon.value!,
-            anchor: const Offset(0.5, 0.5),
-          ),
-        );
+      // Destinations/Stops Markers
+      final stops = c.ride.value?.stops ?? [];
+      final isMultiStop = c.ride.value?.isMultiStop ?? false;
+
+      if (isMultiStop && stops.isNotEmpty) {
+        for (var i = 0; i < stops.length; i++) {
+          final stop = stops[i];
+
+          // Use stopIcons[i] which corresponds to B, C, D...
+          // because stopIcons index 0 is 'B', 1 is 'C' etc.
+          final icon = (i < c.stopIcons.length)
+              ? c.stopIcons[i]
+              : (c.dropIcon.value ?? BitmapDescriptor.defaultMarker);
+
+          markers.add(
+            Marker(
+              markerId: MarkerId('stop_$i'),
+              position: LatLng(stop.lat, stop.lng),
+              icon: icon,
+              anchor: const Offset(0.5, 0.5),
+            ),
+          );
+        }
+      } else {
+        // Standard Single-Stop Ride logic
+        if (c.dropIcon.value != null &&
+            c.rideBottomSheetState.value !=
+                RideBottomSheetState.driverAssigned) {
+          markers.add(
+            Marker(
+              markerId: const MarkerId('drop'),
+              position: destination,
+              icon: c.dropIcon.value!,
+              anchor: const Offset(0.5, 0.5),
+            ),
+          );
+        }
       }
 
       final polylines = <Polyline>{};
@@ -583,7 +609,9 @@ class DriverAcceptedScreen extends StatelessWidget {
 
   Widget _rideProgressSheet(DriverAcceptedController c) {
     final isCompleted =
-        c.rideBottomSheetState.value == RideBottomSheetState.rideCompleted;
+        c.rideBottomSheetState.value == RideBottomSheetState.rideCompleted &&
+        (c.currentRideStatus.value == 'completed' ||
+            c.currentRideStatus.value == 'ride_completed');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -653,6 +681,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                 startAddress: c.pickupAddress,
                 endLocation: c.destinationTitle,
                 endAddress: c.destinationAddress,
+                stops: c.ride.value?.stops,
               ),
               if (!isCompleted) ...[
                 SizedBox(height: 6.h),

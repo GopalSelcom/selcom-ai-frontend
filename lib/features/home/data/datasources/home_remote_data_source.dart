@@ -23,9 +23,7 @@ abstract class HomeRemoteDataSource {
     required double lng,
   });
 
-  Future<GeocodeResponse> getGeocode({
-    required String address,
-  });
+  Future<GeocodeResponse> getGeocode({required String address});
 
   Future<FareEstimateResponseModel> estimateFare(FareEstimateRequest request);
 
@@ -90,9 +88,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   }
 
   @override
-  Future<GeocodeResponse> getGeocode({
-    required String address,
-  }) async {
+  Future<GeocodeResponse> getGeocode({required String address}) async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.places.geocode,
@@ -144,6 +140,18 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       ),
     );
 
-    return BookRideResponse.fromJson(response.data);
+    if (response.statusCode == 200 && response.data != null) {
+      return BookRideResponse.fromJson(response.data);
+    }
+
+    final data = response.data;
+    if (data is Map<String, dynamic>) {
+      final message = (data['message'] as String?)?.trim();
+      if (message != null && message.isNotEmpty) {
+        throw Exception(message);
+      }
+    }
+
+    throw Exception('Unable to complete your booking at this time.');
   }
 }

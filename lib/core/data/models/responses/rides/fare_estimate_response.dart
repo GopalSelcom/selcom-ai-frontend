@@ -29,8 +29,15 @@ class FareEstimateResponseModel {
 class FareEstimateData {
   final List<FareEstimateItem>? estimates;
   final RouteGeometry? routeGeometry;
+  final List<FareLeg>? legs;
+  final bool? isMultiStop;
 
-  FareEstimateData({this.estimates, this.routeGeometry});
+  FareEstimateData({
+    this.estimates,
+    this.routeGeometry,
+    this.legs,
+    this.isMultiStop,
+  });
 
   factory FareEstimateData.fromJson(Map<String, dynamic> json) {
     return FareEstimateData(
@@ -42,6 +49,10 @@ class FareEstimateData {
       routeGeometry: json['route_geometry'] != null
           ? RouteGeometry.fromJson(json['route_geometry'])
           : null,
+      legs: json['legs'] != null
+          ? (json['legs'] as List).map((e) => FareLeg.fromJson(e)).toList()
+          : null,
+      isMultiStop: json['is_multi_stop'],
     );
   }
 
@@ -49,7 +60,27 @@ class FareEstimateData {
     return {
       'estimates': estimates?.map((e) => e.toJson()).toList(),
       'route_geometry': routeGeometry?.toJson(),
+      'legs': legs?.map((e) => e.toJson()).toList(),
+      'is_multi_stop': isMultiStop,
     };
+  }
+}
+
+class FareLeg {
+  final double? distance;
+  final int? duration;
+
+  FareLeg({this.distance, this.duration});
+
+  factory FareLeg.fromJson(Map<String, dynamic> json) {
+    return FareLeg(
+      distance: (json['distance'] as num?)?.toDouble(),
+      duration: (json['duration'] as num?)?.toInt(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'distance': distance, 'duration': duration};
   }
 }
 
@@ -64,6 +95,7 @@ class FareEstimateItem {
   final int? perKmCharge;
   final int? perMinCharge;
   final int? minimumFare;
+  final int? waypointCharge;
   final int? maxPassengers;
   final String? currency;
 
@@ -78,6 +110,7 @@ class FareEstimateItem {
     this.perKmCharge,
     this.perMinCharge,
     this.minimumFare,
+    this.waypointCharge,
     this.maxPassengers,
     this.currency,
   });
@@ -94,6 +127,7 @@ class FareEstimateItem {
       perKmCharge: (json['per_km_charge'] as num?)?.toInt(),
       perMinCharge: (json['per_min_charge'] as num?)?.toInt(),
       minimumFare: (json['minimum_fare'] as num?)?.toInt(),
+      waypointCharge: (json['waypoint_charge'] as num?)?.toInt(),
       maxPassengers: (json['max_passengers'] as num?)?.toInt(),
       currency: json['currency'],
     );
@@ -111,6 +145,7 @@ class FareEstimateItem {
       'per_km_charge': perKmCharge,
       'per_min_charge': perMinCharge,
       'minimum_fare': minimumFare,
+      'waypoint_charge': waypointCharge,
       'max_passengers': maxPassengers,
       'currency': currency,
     };

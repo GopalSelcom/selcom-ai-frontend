@@ -59,8 +59,8 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
                   controller.isSocketConnected.value
                       ? 'Socket ON • ${controller.nearbyDriverCount.value} drivers'
                       : (controller.lastSocketError.value.isNotEmpty
-                          ? 'Socket OFF • ${controller.lastSocketError.value}'
-                          : 'Socket OFF'),
+                            ? 'Socket OFF • ${controller.lastSocketError.value}'
+                            : 'Socket OFF'),
                   style: AppTextStyles.homeCaption.copyWith(
                     color: controller.isSocketConnected.value
                         ? AppColors.success
@@ -99,9 +99,14 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
       }
 
       final points = controller.routePoints.toList();
-      final pickup = LatLng(controller.pickupEntity.lat, controller.pickupEntity.lng);
-      final drop =
-          LatLng(controller.destinationEntity.lat, controller.destinationEntity.lng);
+      final pickup = LatLng(
+        controller.pickupEntity.lat,
+        controller.pickupEntity.lng,
+      );
+      final drop = LatLng(
+        controller.destinationEntity.lat,
+        controller.destinationEntity.lng,
+      );
       final mid = LatLng(
         (pickup.latitude + drop.latitude) / 2,
         (pickup.longitude + drop.longitude) / 2,
@@ -124,16 +129,32 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
         Marker(
           markerId: const MarkerId('pickup'),
           position: pickup,
-          icon: controller.pickupIcon!,
+          icon: controller.pickupIcon ?? BitmapDescriptor.defaultMarker,
         ),
       );
-      markers.add(
-        Marker(
-          markerId: const MarkerId('drop'),
-          position: drop,
-          icon: controller.dropIcon!,
-        ),
-      );
+
+      for (var i = 0; i < controller.destinations.length; i++) {
+        final d = controller.destinations[i];
+        final isLast = i == controller.destinations.length - 1;
+
+        BitmapDescriptor icon;
+        if (isLast) {
+          icon = controller.dropIcon ?? BitmapDescriptor.defaultMarker;
+        } else {
+          // Use numbered icons for intermediate stops
+          icon = (i < controller.stopIcons.length)
+              ? controller.stopIcons[i]
+              : (controller.dropIcon ?? BitmapDescriptor.defaultMarker);
+        }
+
+        markers.add(
+          Marker(
+            markerId: MarkerId('drop_$i'),
+            position: LatLng(d.lat, d.lng),
+            icon: icon,
+          ),
+        );
+      }
 
       return Stack(
         fit: StackFit.expand,
@@ -236,7 +257,8 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
                   itemBuilder: (_, index) {
                     final item = controller.estimates[index];
                     return Obx(() {
-                      final selected = controller.selectedVehicleIndex.value == index;
+                      final selected =
+                          controller.selectedVehicleIndex.value == index;
                       return _vehicleCard(
                         index: index,
                         item: item,
@@ -247,12 +269,14 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
                 );
               }),
             ),
-            Obx(() => PaymentBar(
-                  buttonLabel:
-                      'Book Ride ${controller.currency} ${controller.selectedFareAmount}',
-                  isLoading: controller.isBooking.value,
-                  onActionButtonPressed: controller.bookRide,
-                )),
+            Obx(() {
+              return PaymentBar(
+                buttonLabel:
+                    'Book Ride ${controller.currency} ${controller.selectedFareAmount}',
+                isLoading: controller.isBooking,
+                onActionButtonPressed: controller.bookRide,
+              );
+            }),
           ],
         ),
       ),
@@ -332,7 +356,6 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 4.h),
                     Text(
                       '$eta min away • Drop $dropLabel',
                       style: AppTextStyles.homeCaption.copyWith(
@@ -340,6 +363,18 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
+                    if ((item.waypointCharge ?? 0) > 0 ||
+                        controller.destinations.length > 1) ...[
+                      SizedBox(height: 2.h),
+                      Text(
+                        'Includes Stop fee',
+                        style: AppTextStyles.homeCaption.copyWith(
+                          color: AppColors.primary,
+                          fontSize: 10.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
