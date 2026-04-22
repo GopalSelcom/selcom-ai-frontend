@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:m7_livelyness_detection/index.dart';
@@ -32,12 +31,6 @@ class PaymentMethodsController extends GetxController {
   final RxInt resendTimer = 60.obs;
   final RxString otpError = ''.obs;
   Timer? _timer;
-
-  @override
-  void onInit() {
-    super.onInit();
-    // In a real app, we would fetch data here
-  }
 
   @override
   void onClose() {
@@ -285,11 +278,7 @@ class PaymentMethodsController extends GetxController {
   }
 
   void openCardDetails(PaymentCard card) {
-    Get.to(
-      () => CardDetailsScreen(
-        card: card,
-      ),
-    );
+    Get.to(() => CardDetailsScreen(card: card));
   }
 
   void openPaymentMethods() {

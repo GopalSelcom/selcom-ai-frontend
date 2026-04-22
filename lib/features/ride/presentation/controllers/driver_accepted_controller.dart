@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
@@ -386,8 +384,9 @@ class DriverAcceptedController extends GetxController
       if (payload.latitude! < -15 ||
           payload.latitude! > 0 ||
           payload.longitude! < 20 ||
-          payload.longitude! > 50)
+          payload.longitude! > 50) {
         return;
+      }
 
       final lat = payload.latitude;
       final lng = payload.longitude;
@@ -638,8 +637,9 @@ class DriverAcceptedController extends GetxController
 
     if (d != null) {
       if ((d.name ?? '').trim().isNotEmpty) driverName.value = d.name!.trim();
-      if ((d.phone ?? '').trim().isNotEmpty)
+      if ((d.phone ?? '').trim().isNotEmpty) {
         driverPhone.value = d.phone!.trim();
+      }
       if ((d.lat) != null && (d.lng) != null) {
         assignedDriverLocation.value = LatLng(d.lat!, d.lng!);
       }
@@ -1125,7 +1125,7 @@ class DriverAcceptedController extends GetxController
   Future<void> confirmCancelRide() async {
     // 1. Initial Confirmation
     final dynamic confirmResult = await Get.dialog(
-      CancelConfirmationDialog(),
+      const CancelConfirmationDialog(),
       barrierDismissible: false,
     );
 

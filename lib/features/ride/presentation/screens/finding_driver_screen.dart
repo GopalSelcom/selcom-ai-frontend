@@ -297,7 +297,7 @@ class FindingDriverScreen extends StatelessWidget {
 
   Widget _searchingSlider(FindingDriverController c) {
     return Obx(() {
-      final total = FindingDriverController.searchTimeoutSeconds;
+      const total = FindingDriverController.searchTimeoutSeconds;
       final rem = c.remainingSeconds.value.clamp(0, total);
       final elapsed = total - rem;
       final t = total > 0 ? (elapsed / total).clamp(0.0, 1.0) : 1.0;

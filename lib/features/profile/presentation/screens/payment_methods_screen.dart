@@ -206,7 +206,7 @@ class PaymentMethodsScreen extends StatelessWidget {
               onTap: () => controller.openCardDetails(_expiredCard),
               showDivider: false,
             ),
-            Divider(color: const Color(0xFFE6E9EE), height: 1),
+            const Divider(color: Color(0xFFE6E9EE), height: 1),
             _buildAddCardTile(controller),
           ],
         ),
@@ -291,7 +291,7 @@ class PaymentMethodsScreen extends StatelessWidget {
           if (showDivider)
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: Divider(color: const Color(0xFFE6E9EE), height: 1),
+              child: const Divider(color: Color(0xFFE6E9EE), height: 1),
             ),
         ],
       ),

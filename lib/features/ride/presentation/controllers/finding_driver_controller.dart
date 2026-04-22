@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/near_by_rider_response.dart';
@@ -105,10 +104,11 @@ class FindingDriverController extends GetxController {
       String asset = AppAssets.imgCab;
       if (vehicleType != null) {
         final vt = vehicleType.toLowerCase();
-        if (vt.contains('boda') || vt.contains('bike'))
+        if (vt.contains('boda') || vt.contains('bike')) {
           asset = AppAssets.imgBoda;
-        else if (vt.contains('bajaj'))
+        } else if (vt.contains('bajaj')) {
           asset = AppAssets.imgBajaji;
+        }
       }
       assignedDriverMarkerIcon.value = await MapMarkerUtils.getResizedMarker(
         asset,
@@ -550,7 +550,7 @@ class FindingDriverController extends GetxController {
       /*isAssigned
           ? const CancelAssignmentWarningDialog()
           : const */
-      CancelConfirmationDialog(),
+      const CancelConfirmationDialog(),
       barrierDismissible: false,
     );
 

@@ -11,14 +11,13 @@ import '../../../ride/data/models/ride_management_models.dart';
 import '../controllers/home_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../shared/widgets/app_map_gps_button.dart';
-import '../../../../shared/widgets/app_map_top_header.dart';
 import '../../../../core/routes/app_routes.dart';
 
 import '../../../../core/widgets/svg_picture_asset.dart';
 
 class HomeScreen extends GetView<HomeController> {
   const HomeScreen({super.key});
+
   static const double _homeSheetInitialSize = 0.45;
 
   @override
@@ -321,7 +320,7 @@ class HomeScreen extends GetView<HomeController> {
       minChildSize: _homeSheetInitialSize,
       maxChildSize: 0.9,
       snap: true,
-      snapSizes: [_homeSheetInitialSize, 0.9],
+      snapSizes: const [_homeSheetInitialSize, 0.9],
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(

@@ -105,7 +105,9 @@ class VehicleSelectionController extends GetxController {
 
     if (args.isEmpty) {
       if (kDebugMode) {
-        debugPrint('[VehicleSelection] WARNING: Arguments are empty or not a Map.');
+        debugPrint(
+          '[VehicleSelection] WARNING: Arguments are empty or not a Map.',
+        );
       }
     }
 
@@ -130,8 +132,11 @@ class VehicleSelectionController extends GetxController {
       );
     }
 
-    _preferredVehicleTypeId = (args['preferredVehicleTypeId'] as String?)?.trim();
-    _preferredVehicleName = (args['preferredVehicleName'] as String?)?.trim().toLowerCase();
+    _preferredVehicleTypeId = (args['preferredVehicleTypeId'] as String?)
+        ?.trim();
+    _preferredVehicleName = (args['preferredVehicleName'] as String?)
+        ?.trim()
+        .toLowerCase();
 
     // routePoints.clear();
     isRouteReady.value = false;
@@ -146,7 +151,10 @@ class VehicleSelectionController extends GetxController {
     isRouteReady.value = false;
     routePoints.clear();
     driverMarkerPoints.clear();
-    final req = FareEstimateRequest(pickup: pickupEntity, destination: destinationEntity);
+    final req = FareEstimateRequest(
+      pickup: pickupEntity,
+      destination: destinationEntity,
+    );
 
     final vehicleTypesResult = await homeRepository.getVehicleTypes();
     List<VehicleTypeModel> vehicleTypes = [];
@@ -238,12 +246,15 @@ class VehicleSelectionController extends GetxController {
   }
 
   bool get isMapDataReady =>
-      isRouteReady.value && isLocationIconsReady.value && routePoints.length >= 2;
+      isRouteReady.value &&
+      isLocationIconsReady.value &&
+      routePoints.length >= 2;
 
   String vehicleImage(FareEstimateItem e) {
     final n = '${e.vehicleName ?? ''} ${e.displayName ?? ''}'.toLowerCase();
-    if (n.contains('boda') || n.contains('bike') || n.contains('moto'))
+    if (n.contains('boda') || n.contains('bike') || n.contains('moto')) {
       return AppAssets.imgBoda;
+    }
     if (n.contains('bajaj') || n.contains('auto')) return AppAssets.imgBajaji;
     return AppAssets.imgCab;
   }
@@ -266,7 +277,9 @@ class VehicleSelectionController extends GetxController {
     final dn = (e.displayName ?? '').trim().toLowerCase();
     for (final vt in types) {
       if (id.isNotEmpty && vt.id == id) return vt;
-      if (id.isNotEmpty && vt.id.isNotEmpty && vt.key.toLowerCase() == id.toLowerCase()) {
+      if (id.isNotEmpty &&
+          vt.id.isNotEmpty &&
+          vt.key.toLowerCase() == id.toLowerCase()) {
         return vt;
       }
       if (id.isNotEmpty && vt.name.toLowerCase() == id.toLowerCase()) return vt;
@@ -337,7 +350,7 @@ class VehicleSelectionController extends GetxController {
   /// Fallback rows when estimate API fails; uses real `VehicleTypeModel.id` from `getVehicleTypes()`.
   List<FareEstimateItem> _dummyEstimates(List<VehicleTypeModel> types) {
     final sorted = (types.where((t) => t.isActive).toList()
-          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)));
+      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)));
     final list = sorted.isNotEmpty ? sorted : types;
     if (list.isEmpty) {
       return [
@@ -396,7 +409,8 @@ class VehicleSelectionController extends GetxController {
     isBooking.value = true;
 
     final resolvedVehicleTypeId = (est.vehicleTypeId ?? '').trim();
-    if (resolvedVehicleTypeId.isEmpty || !_looksLikeBackendVehicleTypeId(resolvedVehicleTypeId)) {
+    if (resolvedVehicleTypeId.isEmpty ||
+        !_looksLikeBackendVehicleTypeId(resolvedVehicleTypeId)) {
       isBooking.value = false;
       Get.snackbar(
         'Vehicle type',
@@ -411,7 +425,9 @@ class VehicleSelectionController extends GetxController {
       paymentMethod: pay.type,
       vehicleTypeId: resolvedVehicleTypeId,
     );
-    final validationResult = await rideRepository.validateRidePayment(validateRequest);
+    final validationResult = await rideRepository.validateRidePayment(
+      validateRequest,
+    );
 
     await validationResult.fold(
       (f) async {
@@ -447,19 +463,25 @@ class VehicleSelectionController extends GetxController {
         }
         _socketService.joinPaymentRoom(validationId: validationId);
         String txnId = generateTransactionId();
-        
-        rideRepository.walletDummyPaymentRequest(DummyPaymentRequest(result: "SUCCESS", transId: txnId, validationId: validationId));
+
+        rideRepository.walletDummyPaymentRequest(
+          DummyPaymentRequest(
+            result: "SUCCESS",
+            transId: txnId,
+            validationId: validationId,
+          ),
+        );
         _showPaymentStatusDialog();
 
         final blockOk = await _waitForPaymentBlockStatus(
           timeout: const Duration(minutes: 2),
         );
-        
+
         if (blockOk) {
           paymentStatus.value = PaymentStatus.success;
           await Future.delayed(const Duration(seconds: 2));
         }
-        
+
         _closePaymentStatusDialogIfOpen();
         if (!blockOk) {
           isBooking.value = false;
@@ -482,11 +504,17 @@ class VehicleSelectionController extends GetxController {
         final result = await homeRepository.bookRide(request);
         isBooking.value = false;
         result.fold(
-          (f) => Get.snackbar('Booking failed', 'Could not complete booking. Try again.'),
+          (f) => Get.snackbar(
+            'Booking failed',
+            'Could not complete booking. Try again.',
+          ),
           (data) {
             final rideId = data.data?.ride?.id;
             if (rideId == null || rideId.isEmpty) {
-              Get.snackbar('Booking', 'Ride was created but ride id is missing from the response.');
+              Get.snackbar(
+                'Booking',
+                'Ride was created but ride id is missing from the response.',
+              );
               Get.back();
               return;
             }
@@ -533,10 +561,7 @@ class VehicleSelectionController extends GetxController {
     });
 
     try {
-      return await completer.future.timeout(
-        timeout,
-        onTimeout: () => false,
-      );
+      return await completer.future.timeout(timeout, onTimeout: () => false);
     } finally {
       await sub.cancel();
     }
@@ -565,14 +590,16 @@ class VehicleSelectionController extends GetxController {
     paymentTimerSeconds.value = 120;
 
     if (Get.isDialogOpen == true) return;
-    
+
     Get.dialog<void>(
-      Obx(() => PaymentStatusDialog(
-            status: paymentStatus.value,
-            secondsRemaining: paymentStatus.value == PaymentStatus.pending 
-                ? paymentTimerSeconds.value 
-                : null,
-          )),
+      Obx(
+        () => PaymentStatusDialog(
+          status: paymentStatus.value,
+          secondsRemaining: paymentStatus.value == PaymentStatus.pending
+              ? paymentTimerSeconds.value
+              : null,
+        ),
+      ),
       barrierDismissible: false,
     );
 
@@ -581,6 +608,7 @@ class VehicleSelectionController extends GetxController {
   }
 
   Timer? _paymentTimer;
+
   void _startPaymentTimer() {
     _paymentTimer?.cancel();
     _paymentTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -609,7 +637,9 @@ class VehicleSelectionController extends GetxController {
         driverMarkerPoints.clear();
       } else {
         driverMarkerPoints.assignAll(
-          drivers.map((d) => LatLng(double.parse(d.lat??""), double.parse(d.lng??""))),
+          drivers.map(
+            (d) => LatLng(double.parse(d.lat ?? ""), double.parse(d.lng ?? "")),
+          ),
         );
       }
       nearbyDriverCount.value = drivers.length;
@@ -656,7 +686,9 @@ class VehicleSelectionController extends GetxController {
       return null; // omit vehicle_type if key cannot be resolved
     }
 
-    final matched = _vehicleTypes.firstWhereOrNull((v) => v.id == estimateTypeId);
+    final matched = _vehicleTypes.firstWhereOrNull(
+      (v) => v.id == estimateTypeId,
+    );
     final key = matched?.key.trim();
     if (key == null || key.isEmpty) return null;
     return key;
@@ -665,7 +697,7 @@ class VehicleSelectionController extends GetxController {
   void onMapCreated(GoogleMapController c) {
     mapController = c;
     _fitBounds();
-    
+
     // Manage visual readiness with delay similar to old setState logic
     if (!isMapVisualReady.value) {
       Future.delayed(const Duration(milliseconds: 220), () {
