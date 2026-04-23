@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:developer' as developer;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +18,7 @@ import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../../../core/utils/map_marker_utils.dart';
+import '../../../../core/services/live_activity/live_activity_manager.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../widgets/cancel_ride_dialogs.dart';
 
@@ -57,14 +60,15 @@ class FindingDriverController extends GetxController {
       'The driver will pick you up as soon as possible\nafter they confirm your order'
           .obs;
 
+  final currentEtaSeconds = 0.0.obs;
   final Rxn<EventRiderStatusUpdateResponse> latestRideStatusPayload =
       Rxn<EventRiderStatusUpdateResponse>();
   final Rxn<DriverLocationSocketResponse> latestDriverLocationPayload =
       Rxn<DriverLocationSocketResponse>();
   final Rxn<TrackingUpdateSocketResponse> latestTrackingPayload =
       Rxn<TrackingUpdateSocketResponse>();
-  final driverName = 'John Doe'.obs;
-  final driverPhone = '+255 700 000 000'.obs;
+  final driverName = ''.obs;
+  final driverPhone = ''.obs;
   final selectedRideIndex = 0.obs;
 
   GoogleMapController? mapController;
@@ -131,6 +135,10 @@ class FindingDriverController extends GetxController {
   void onClose() {
     _countdownTimer?.cancel();
     _mockDriverAssignTimer?.cancel();
+    _connectionSub?.cancel();
+    _rideStatusSub?.cancel();
+    _driverLocSub?.cancel();
+    _trackingSub?.cancel();
     _nearbyDriversSub?.cancel();
     _nearbyDriversErrorSub?.cancel();
     super.onClose();
@@ -215,6 +223,29 @@ class FindingDriverController extends GetxController {
       }
       remainingSeconds.value--;
     });
+    _syncLiveActivity();
+  }
+
+  Future<void> _syncLiveActivity() async {
+    try {
+      if (rideId.isEmpty) return;
+
+      await LiveActivityManager().startActivity(
+        orderId: rideId,
+        status: 'SEARCHING',
+        driverName: 'Finding Your Driver',
+        vehicleName: requestedVehicleType ?? '',
+        plateNumber: '',
+        isCompleted: false,
+        etaSeconds: currentEtaSeconds.value,
+      );
+    } catch (e) {
+      developer.log(
+        "❌ Error in FindingDriverController._syncLiveActivity: $e",
+        name: 'ORDER_TRACKING',
+      );
+      debugPrint('❌ Error syncing Live Activity: $e');
+    }
   }
 
   Future<void> _autoCancelRide() async {
@@ -225,12 +256,14 @@ class FindingDriverController extends GetxController {
       'Search timeout: no driver found',
     );
     result.fold(
-      (failure) {
+      (failure) async {
+        await LiveActivityManager().endActivity(rideId);
         _showCancelDialogThenGoHome(
           'No drivers found within 9 minutes. Please try again.',
         );
       },
-      (success) {
+      (success) async {
+        await LiveActivityManager().endActivity(rideId);
         _showCancelDialogThenGoHome(
           'No drivers found within 9 minutes. Please try again.',
         );
@@ -251,6 +284,12 @@ class FindingDriverController extends GetxController {
     _didNavigateToAccepted = true;
     _countdownTimer?.cancel();
     _mockDriverAssignTimer?.cancel();
+    _connectionSub?.cancel();
+    _rideStatusSub?.cancel();
+    _driverLocSub?.cancel();
+    _trackingSub?.cancel();
+    _nearbyDriversSub?.cancel();
+    _nearbyDriversErrorSub?.cancel();
     final statusPayload = latestRideStatusPayload.value;
     final driverLocPayload = latestDriverLocationPayload.value;
     final trackingPayload = latestTrackingPayload.value;
@@ -288,10 +327,16 @@ class FindingDriverController extends GetxController {
       _socketService.joinRideRoom(rideId: rideId);
     });
 
-    _rideStatusSub = _socketService.rideStatusStream.listen((payload) {
+    _rideStatusSub = _socketService.rideStatusStream.listen((payload) async {
+      developer.log(
+        "📥 Socket Event: ride_status_stream - Status: ${payload.status} for ride $rideId",
+        name: 'ORDER_TRACKING',
+        error: jsonEncode(payload.toJson()),
+      );
       latestRideStatusPayload.value = payload;
       final status = (payload.status ?? '').toString().toLowerCase();
       _applyStatusPayload(payload);
+      // Removed _syncLiveActivityFromPayload(payload) to respect 'APNs-only' update model
       if (status.isEmpty) return;
 
       switch (status) {
@@ -327,11 +372,13 @@ class FindingDriverController extends GetxController {
         case 'cancelled':
           currentStatusLabel.value = 'Ride Cancelled';
           currentDescriptionLabel.value = 'The ride has been cancelled.';
+          await LiveActivityManager().endActivity(rideId);
           _showCancelDialogThenGoHome('Your ride was cancelled.');
           break;
         case 'no_driver_found':
           currentStatusLabel.value = 'No Driver Found';
           currentDescriptionLabel.value = 'We couldn\'t find a driver nearby.';
+          await LiveActivityManager().endActivity(rideId);
           _showCancelDialogThenGoHome(
             'No drivers nearby. Please try again later.',
           );
@@ -357,11 +404,13 @@ class FindingDriverController extends GetxController {
       _applyTrackingPayload(payload);
     });
 
-    await _socketService.connect();
     if (_socketService.isConnected) {
       _socketService.joinRideRoom(rideId: rideId);
+      // Removed redundant _syncLiveActivity() call to respect 'APNs-only' update model
     }
   }
+
+  // Removed _syncLiveActivityFromPayload to respect 'APNs-only' update model
 
   Future<void> _initNearbyDriversSocket() async {
     _nearbyDriversSub?.cancel();
@@ -510,6 +559,10 @@ class FindingDriverController extends GetxController {
         _setDropRouteFallback();
       }
     }
+    if ((payload.eta ?? 0) > 0) {
+      currentEtaSeconds.value = (payload.eta ?? 0).toDouble();
+      // Removed redundant _syncLiveActivity() call to respect 'APNs-only' update model
+    }
     _fitRouteBounds();
   }
 
@@ -580,12 +633,14 @@ class FindingDriverController extends GetxController {
         title: 'Cancel failed',
         message: 'Could not cancel. Try again.',
       ),
-      (success) {
+      (success) async {
         if (!success) {
           AppDialogs.showErrorDialog(
             title: 'Cancel failed',
             message: 'Please try again.',
           );
+        } else {
+          await LiveActivityManager().endActivity(rideId);
         }
       },
     );

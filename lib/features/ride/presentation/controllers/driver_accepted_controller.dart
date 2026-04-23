@@ -1,14 +1,17 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/driver_location_socker_response.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/services/live_activity/live_activity_manager.dart';
 
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
 import '../../../../core/data/models/ride_model.dart';
@@ -66,6 +69,7 @@ class DriverAcceptedController extends GetxController
   final otpDigits = <String>[].obs;
   final isPinRequired = true.obs;
   final etaLabel = '10 Mins'.obs;
+  final currentEtaSeconds = 0.0.obs;
   final arrivalLabel = 'Driver will arriving in 1 min...'.obs;
   final unreadCount = 0.obs;
   final rideBottomSheetState = RideBottomSheetState.driverAssigned.obs;
@@ -223,6 +227,11 @@ class DriverAcceptedController extends GetxController
   }
 
   void _hydrateSocketSeedPayloads(Map<String, dynamic> args) {
+    developer.log(
+      "💧 Hydrating socket seed payloads from args",
+      name: 'ORDER_TRACKING',
+      error: jsonEncode(args),
+    );
     final statusRaw = args['statusPayload'];
     if (statusRaw is Map) {
       final payload = EventRiderStatusUpdateResponse.fromJson(
@@ -277,6 +286,7 @@ class DriverAcceptedController extends GetxController
       (r) {
         ride.value = r;
         _applyRide(r);
+        _syncLiveActivityFromDetails(r);
         _loadMarkerIcons(); // Refresh icons with new ride context
       },
     );
@@ -343,7 +353,13 @@ class DriverAcceptedController extends GetxController
       }
 
       if (isPinRequired.value) {
-        final otp = (d.verificationCode ?? '').replaceAll(RegExp(r'\s'), '');
+        final pin = r.pinCode.trim();
+        final vCode = (d.verificationCode ?? '').trim();
+        final otp = (pin.isNotEmpty ? pin : vCode).replaceAll(
+          RegExp(r'\s'),
+          '',
+        );
+
         if (otp.isNotEmpty) {
           otpDigits.assignAll(otp.split('').take(4).toList());
         } else {
@@ -387,14 +403,21 @@ class DriverAcceptedController extends GetxController
       _joinRideRoomIfNeeded();
     });
 
-    _rideStatusSub = _socketService.rideStatusStream.listen((payload) {
+    _rideStatusSub = _socketService.rideStatusStream.listen((payload) async {
+      developer.log(
+        "📥 Socket Event: ride_status_stream - Status: ${payload.status} for ride $rideId",
+        name: 'ORDER_TRACKING',
+        error: jsonEncode(payload.toJson()),
+      );
       if (_navigatedAway) return;
       final status = (payload.status ?? '').toString().trim();
       _applyBottomSheetStateForStatus(status);
       _applyStatusPayload(payload);
       final normalized = status.toLowerCase();
+      await _syncLiveActivityFromStatusPayload(payload);
       if (normalized == 'cancelled' || normalized == 'no_driver_found') {
         _navigatedAway = true;
+        await LiveActivityManager().endActivity(rideId);
         _showCancelDialogThenGoHome(
           normalized == 'no_driver_found'
               ? 'No driver found for your request. Please try again.'
@@ -437,8 +460,17 @@ class DriverAcceptedController extends GetxController
       _animateDriverMovement(targetPos, targetHeading);
     });
 
-    _trackingSub = _socketService.trackingUpdateStatusStream.listen((payload) {
-      if (payload != null) _applyTrackingPayload(payload);
+    _trackingSub = _socketService.trackingUpdateStatusStream.listen((
+      payload,
+    ) async {
+      if (payload != null) {
+        developer.log(
+          "📥 Socket Event: tracking_update_socket - Target: ${payload.routeTarget} for ride $rideId",
+          name: 'ORDER_TRACKING',
+          error: jsonEncode(payload.toJson()),
+        );
+        _applyTrackingPayload(payload);
+      }
     });
 
     // Ensure socket is connected for the active-ride entry path too.
@@ -664,7 +696,13 @@ class DriverAcceptedController extends GetxController
         assignedDriverLocation.value = LatLng(d.lat!, d.lng!);
       }
       if (isPinRequired.value) {
-        final otp = (payload.pinCode ?? '').replaceAll(RegExp(r'\s'), '');
+        final pin = (payload.pinCode ?? '').trim();
+        final vCode = (payload.driverSnapshot?.verificationCode ?? '').trim();
+        final otp = (pin.isNotEmpty ? pin : vCode).replaceAll(
+          RegExp(r'\s'),
+          '',
+        );
+
         if (otp.isNotEmpty) {
           otpDigits.assignAll(otp.split('').take(4).toList());
         } else if (otpDigits.isEmpty) {
@@ -900,10 +938,11 @@ class DriverAcceptedController extends GetxController
 
     final eta = payload.eta;
     if (eta != null && eta > 0) {
+      currentEtaSeconds.value = eta.toDouble();
       final convertedTime = eta / 60;
-      etaLabel.value = '$convertedTime Mins';
+      etaLabel.value = '${convertedTime.toInt()} Mins';
       arrivalLabel.value =
-          'Driver will arriving in ${convertedTime <= 1 ? '1 min' : '$convertedTime mins'}...';
+          'Driver will arriving in ${convertedTime.toInt() <= 1 ? '1 min' : '${convertedTime.toInt()} mins'}...';
     }
 
     String target = _normalizeRouteTarget(payload.routeTarget);
@@ -1210,9 +1249,10 @@ class DriverAcceptedController extends GetxController
         title: 'Cancel failed',
         message: 'Could not cancel. Try again.',
       ),
-      (success) {
+      (success) async {
         if (success) {
           _navigatedAway = true;
+          await LiveActivityManager().endActivity(rideId);
           AppDialogs.showSuccessDialog(
             message: 'Ride cancelled successfully.',
             onConfirm: () => Get.offAllNamed(AppRoutes.home),
@@ -1225,5 +1265,61 @@ class DriverAcceptedController extends GetxController
         }
       },
     );
+  }
+
+  Future<void> _syncLiveActivityFromStatusPayload(
+    EventRiderStatusUpdateResponse payload,
+  ) async {
+    try {
+      if (rideId.isEmpty) return;
+      final status = (payload.status ?? '').toString().toUpperCase();
+
+      if (status.contains('COMPLETED') ||
+          status.contains('CANCELLED') ||
+          status.contains('NO_DRIVER_FOUND')) {
+        await LiveActivityManager().endActivity(rideId);
+        return;
+      }
+
+      // startActivity call removed to respect 'APNs-only' update model
+    } catch (e) {
+      developer.log(
+        "❌ Error in DriverAcceptedController._syncLiveActivityFromStatusPayload: $e",
+        name: 'ORDER_TRACKING',
+      );
+    }
+  }
+
+  // _syncLiveActivityFromTrackingPayload removed to respect 'APNs-only' update model
+
+  Future<void> _syncLiveActivityFromDetails(RideModel r) async {
+    try {
+      if (rideId.isEmpty) return;
+
+      // Convert enum status (e.g. driverAssigned) to backend-style (e.g. DRIVER_ASSIGNED)
+      final statusStr = r.status.name
+          .replaceAllMapped(
+            RegExp(r'([a-z0-9])([A-Z])'),
+            (m) => '${m.group(1)}_${m.group(2)}',
+          )
+          .toUpperCase();
+
+      await LiveActivityManager().startActivity(
+        orderId: rideId,
+        status: statusStr,
+        driverName: r.driverSnapshot?.name ?? 'Driver Assigned',
+        vehicleName:
+            '${r.vehicleSnapshot?.vehicleType ?? ''} ${r.vehicleSnapshot?.vehicleModel ?? ''}'
+                .trim(),
+        driverAvatarUrl: r.driverSnapshot?.avatarUrl ?? '',
+        plateNumber: r.vehicleSnapshot?.plateNumber ?? '',
+        isCompleted: r.status == RideStatus.rideCompleted,
+        etaSeconds: currentEtaSeconds.value,
+        driverLatitude: assignedDriverLocation.value?.latitude,
+        driverLongitude: assignedDriverLocation.value?.longitude,
+      );
+    } catch (e) {
+      debugPrint('❌ Error syncing Live Activity from Details: $e');
+    }
   }
 }

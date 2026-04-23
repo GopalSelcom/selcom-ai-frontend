@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:get/get.dart';
+import '../../../../core/domain/entities/ride_entity.dart';
 import 'package:app_settings/app_settings.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -33,6 +34,7 @@ import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/data/models/responses/rides/active_ride_response.dart';
 import '../../../../core/domain/entities/location_entity.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
+import '../../../../core/services/live_activity/live_activity_manager.dart';
 
 class HomeController extends GetxController {
   static const String _currentLocationPlaceId = '__current_location__';
@@ -72,7 +74,7 @@ class HomeController extends GetxController {
   final isSavedPlacesExpanded = false.obs;
   final isLoadingHomeData = false.obs;
   final mapCenter = const LatLng(-6.7924, 39.2083).obs;
-  final currentMapAddress = 'Posta, Dar es Salaam CBD'.obs;
+  final currentMapAddress = 'Locating...'.obs;
   final isMapReady = false.obs;
   final isResolvingAddress = false.obs;
   final hasLocationPermission = false.obs;
@@ -307,6 +309,41 @@ class HomeController extends GetxController {
     final rideModel = RideModel.fromJson(activeRideData.toJson());
     activeRide.value = rideModel;
     _connectAndJoinActiveRideRoom(rideModel);
+    _syncLiveActivity(rideModel);
+  }
+
+  Future<void> _syncLiveActivity(RideModel ride) async {
+    try {
+      final status = ride.status.name;
+      final isCompleted = ride.status == RideStatus.rideCompleted;
+      final isCancelled =
+          ride.status == RideStatus.cancelled ||
+          ride.status == RideStatus.noDriverFound;
+
+      if (isCompleted || isCancelled) {
+        await LiveActivityManager().endActivity(ride.id);
+        return;
+      }
+
+      // Sync Live Activity
+
+      await LiveActivityManager().startActivity(
+        orderId: ride.id,
+        status: status.toUpperCase(),
+        driverName: ride.driverSnapshot?.name ?? 'Searching for driver...',
+        vehicleName:
+            '${ride.vehicleSnapshot?.vehicleMake ?? ''} ${ride.vehicleSnapshot?.vehicleModel ?? ''}'
+                .trim(),
+        driverAvatarUrl: ride.driverSnapshot?.avatarUrl ?? '',
+        plateNumber: ride.vehicleSnapshot?.plateNumber ?? '',
+        isCompleted: isCompleted,
+      );
+    } catch (e) {
+      developer.log(
+        '❌ Error syncing Live Activity: $e',
+        name: 'HOME_CONTROLLER',
+      );
+    }
   }
 
   Future<void> openActiveRide() async {
@@ -318,7 +355,19 @@ class HomeController extends GetxController {
     final detailsResult = await rideRepository.getRideDetails(rideId);
     detailsResult.fold(
       (failure) => AppDialogs.showErrorDialog(message: failure.message),
-      (freshRide) => navigateToDriverAcceptedForRide(freshRide),
+      (freshRide) {
+        // 🛰️ Sync Live Activity view when user taps "View Trip"
+        LiveActivityManager().startActivity(
+          orderId: freshRide.id,
+          status: freshRide.status.name,
+          driverName: freshRide.driverSnapshot?.name ?? '',
+          vehicleName: freshRide.vehicleSnapshot?.vehicleType ?? '',
+          plateNumber: freshRide.vehicleSnapshot?.plateNumber ?? '',
+          isCompleted: freshRide.status == RideStatus.rideCompleted,
+          updateIfExists: true,
+        );
+        navigateToDriverAcceptedForRide(freshRide);
+      },
     );
   }
 
@@ -519,15 +568,34 @@ class HomeController extends GetxController {
       result.fold(
         (failure) {
           developer.log(
-            "📍 Reverse Geocode Failure: $failure",
+            "📍 Reverse Geocode Failure: ${failure.message}",
             name: 'HomeController',
           );
+          if (currentMapAddress.value == 'Locating...') {
+            currentMapAddress.value = 'Current location';
+          }
         },
         (data) {
+          developer.log(
+            "📍 Reverse Geocode Success. Status: ${data.data?.status}, Results: ${data.data?.results?.length}",
+            name: 'HomeController',
+          );
           final firstResult = data.data?.results?.firstOrNull;
           final formatted = (firstResult?.formattedAddress ?? "").trim();
           if (formatted.isNotEmpty) {
+            developer.log(
+              "📍 Resolved Address: $formatted",
+              name: 'HomeController',
+            );
             currentMapAddress.value = formatted;
+          } else {
+            developer.log(
+              "📍 Resolved Address is EMPTY",
+              name: 'HomeController',
+            );
+            if (currentMapAddress.value == 'Locating...') {
+              currentMapAddress.value = 'Current location';
+            }
           }
         },
       );
@@ -614,7 +682,8 @@ class HomeController extends GetxController {
     if (dLat == null || dLng == null) {
       AppDialogs.showErrorDialog(
         title: 'Location unavailable',
-        message: 'This saved place is missing coordinates. Try saving it again.',
+        message:
+            'This saved place is missing coordinates. Try saving it again.',
       );
       return;
     }
@@ -907,7 +976,9 @@ class HomeController extends GetxController {
   }
 
   void toggleAddressHeaderExpansion() {
-    isSavedPlacesExpanded.toggle();
+    if (savedPlaces.isNotEmpty) {
+      isSavedPlacesExpanded.toggle();
+    }
   }
 
   double get addressHeaderChevronTurns =>

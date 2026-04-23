@@ -1,0 +1,79 @@
+Analyzing selcom_go_app...                                      
+
+warning • Dead code • lib/core/data/models/ride_model.dart:144:32 • dead_code
+   info • Unnecessary 'this.' qualifier • lib/core/data/models/ride_model.dart:144:35 • unnecessary_this
+warning • The left operand can't be null, so the right operand is never executed • lib/core/data/models/ride_model.dart:144:35 • dead_null_aware_expression
+   info • The type parameter name 'Type' matches a visible type name • lib/core/domain/usecases/usecase.dart:4:24 • avoid_types_as_parameter_names
+   info • The constant name 'SUCCESS' isn't a lowerCamelCase identifier • lib/core/network/api_constants.dart:62:20 • constant_identifier_names
+   info • The constant name 'CREATED' isn't a lowerCamelCase identifier • lib/core/network/api_constants.dart:63:20 • constant_identifier_names
+   info • The constant name 'BAD_REQUEST' isn't a lowerCamelCase identifier • lib/core/network/api_constants.dart:64:20 • constant_identifier_names
+   info • The constant name 'UNAUTHORIZED' isn't a lowerCamelCase identifier • lib/core/network/api_constants.dart:65:20 • constant_identifier_names
+   info • The constant name 'FORBIDDEN' isn't a lowerCamelCase identifier • lib/core/network/api_constants.dart:66:20 • constant_identifier_names
+   info • The constant name 'NOT_FOUND' isn't a lowerCamelCase identifier • lib/core/network/api_constants.dart:67:20 • constant_identifier_names
+   info • The constant name 'TIMEOUT' isn't a lowerCamelCase identifier • lib/core/network/api_constants.dart:68:20 • constant_identifier_names
+   info • The constant name 'CONFLICT' isn't a lowerCamelCase identifier • lib/core/network/api_constants.dart:69:20 • constant_identifier_names
+   info • The constant name 'UNPROCESSABLE' isn't a lowerCamelCase identifier • lib/core/network/api_constants.dart:70:20 • constant_identifier_names
+   info • The constant name 'SERVER_ERROR' isn't a lowerCamelCase identifier • lib/core/network/api_constants.dart:71:20 • constant_identifier_names
+   info • The constant name 'SERVICE_UNAVAILABLE' isn't a lowerCamelCase identifier • lib/core/network/api_constants.dart:72:20 • constant_identifier_names
+   info • Statements in an if should be enclosed in a block • lib/core/services/live_activity/live_activity_manager.dart:179:7 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/core/services/live_activity/live_activity_manager.dart:291:11 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/core/services/live_activity/live_activity_manager.dart:293:11 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/core/services/live_activity/live_activity_manager.dart:317:11 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/core/services/live_activity/live_activity_manager.dart:319:11 • curly_braces_in_flow_control_structures
+   info • Empty catch block • lib/core/services/live_activity/live_activity_manager.dart:370:19 • empty_catches
+   info • Empty catch block • lib/core/services/live_activity/live_activity_manager.dart:377:19 • empty_catches
+   info • Don't invoke 'print' in production code • lib/core/services/nearby_drivers_socket_service.dart:174:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/core/services/nearby_drivers_socket_service.dart:180:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/core/services/nearby_drivers_socket_service.dart:194:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/core/services/nearby_drivers_socket_service.dart:207:7 • avoid_print
+   info • The type parameter name 'Type' matches a visible type name • lib/core/usecases/usecase.dart:4:24 • avoid_types_as_parameter_names
+   info • 'fromBytes' is deprecated and shouldn't be used. Use BitmapDescriptor.bytes method instead • lib/core/utils/map_marker_utils.dart:21:29 • deprecated_member_use
+   info • 'fromBytes' is deprecated and shouldn't be used. Use BitmapDescriptor.bytes method instead • lib/core/utils/map_marker_utils.dart:49:29 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/core/utils/map_marker_utils.dart:64:30 • deprecated_member_use
+   info • 'fromBytes' is deprecated and shouldn't be used. Use BitmapDescriptor.bytes method instead • lib/core/utils/map_marker_utils.dart:108:29 • deprecated_member_use
+   info • 'color' is deprecated and shouldn't be used. Use colorFilter instead • lib/core/widgets/svg_picture_asset.dart:33:7 • deprecated_member_use
+   info • The constant name 'APPROXIMATE' isn't a lowerCamelCase identifier • lib/features/home/data/models/places_models.dart:385:21 • constant_identifier_names
+   info • The constant name 'GEOMETRIC_CENTER' isn't a lowerCamelCase identifier • lib/features/home/data/models/places_models.dart:385:34 • constant_identifier_names
+   info • The constant name 'ROOFTOP' isn't a lowerCamelCase identifier • lib/features/home/data/models/places_models.dart:385:52 • constant_identifier_names
+   info • Statements in an if should be enclosed in a block • lib/features/ride/presentation/controllers/driver_accepted_controller.dart:1263:9 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/features/ride/presentation/controllers/finding_driver_controller.dart:436:9 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/features/ride/presentation/controllers/vehicle_selection_controller.dart:183:11 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/features/ride/presentation/controllers/vehicle_selection_controller.dart:318:9 • curly_braces_in_flow_control_structures
+   info • The import of 'package:flutter/cupertino.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' • lib/features/ride/presentation/widgets/ride_common_widgets.dart:1:8 • unnecessary_import
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/ride/presentation/widgets/ride_common_widgets.dart:168:45 • deprecated_member_use
+   info • 'cloudMapId' is deprecated and shouldn't be used. cloudMapId is deprecated. Use mapId instead • lib/shared/widgets/app_google_map.dart:222:13 • deprecated_member_use
+warning • The value of the field '_borderColor' isn't used • lib/shared/widgets/app_map_profile_chip.dart:21:22 • unused_field
+   info • 'WillPopScope' is deprecated and shouldn't be used. Use PopScope instead. The Android predictive back feature will not work with WillPopScope. This feature was deprecated after v3.12.0-1.0.pre • lib/shared/widgets/web_view_screen.dart:88:12 • deprecated_member_use
+warning • The library 'package:rxdart/rxdart.dart' doesn't export a member with the hidden name 'Notification' • packages/face_detection/lib/index.dart:16:42 • undefined_hidden_name
+   info • Use 'const' with the constructor to improve performance • packages/face_detection/lib/src/core/custom_painters/android_face_detector_painter.dart:35:25 • prefer_const_constructors
+warning • The value of the local variable 'paths' isn't used • packages/face_detection/lib/src/core/custom_painters/android_face_detector_painter.dart:189:34 • unused_local_variable
+warning • The value of the local variable 'leftEyebrowTop' isn't used • packages/face_detection/lib/src/core/custom_painters/android_face_detector_painter.dart:259:30 • unused_local_variable
+warning • The value of the local variable 'rightEyebrowTop' isn't used • packages/face_detection/lib/src/core/custom_painters/android_face_detector_painter.dart:267:30 • unused_local_variable
+warning • The value of the local variable 'upperLipBottom' isn't used • packages/face_detection/lib/src/core/custom_painters/android_face_detector_painter.dart:285:30 • unused_local_variable
+warning • The value of the local variable 'lowerLipTop' isn't used • packages/face_detection/lib/src/core/custom_painters/android_face_detector_painter.dart:287:30 • unused_local_variable
+warning • The value of the local variable 'noseBottom1' isn't used • packages/face_detection/lib/src/core/custom_painters/android_face_detector_painter.dart:330:24 • unused_local_variable
+   info • Don't invoke 'print' in production code • packages/face_detection/lib/src/core/custom_painters/android_face_detector_painter.dart:348:9 • avoid_print
+   info • Statements in an if should be enclosed in a block • packages/face_detection/lib/src/core/custom_painters/android_face_detector_painter.dart:348:9 • curly_braces_in_flow_control_structures
+   info • Don't invoke 'print' in production code • packages/face_detection/lib/src/core/custom_painters/android_face_detector_painter.dart:350:9 • avoid_print
+   info • Statements in an if should be enclosed in a block • packages/face_detection/lib/src/core/custom_painters/android_face_detector_painter.dart:350:9 • curly_braces_in_flow_control_structures
+   info • Don't invoke 'print' in production code • packages/face_detection/lib/src/core/custom_painters/android_face_detector_painter.dart:352:9 • avoid_print
+   info • Statements in an if should be enclosed in a block • packages/face_detection/lib/src/core/custom_painters/android_face_detector_painter.dart:352:9 • curly_braces_in_flow_control_structures
+   info • Don't invoke 'print' in production code • packages/face_detection/lib/src/core/custom_painters/android_face_detector_painter.dart:354:9 • avoid_print
+   info • Statements in an if should be enclosed in a block • packages/face_detection/lib/src/core/custom_painters/android_face_detector_painter.dart:354:9 • curly_braces_in_flow_control_structures
+   info • Don't invoke 'print' in production code • packages/face_detection/lib/src/core/custom_painters/android_face_detector_painter.dart:356:9 • avoid_print
+   info • Statements in an if should be enclosed in a block • packages/face_detection/lib/src/core/custom_painters/android_face_detector_painter.dart:356:9 • curly_braces_in_flow_control_structures
+warning • The declaration '_getDashedPath' isn't referenced • packages/face_detection/lib/src/core/custom_painters/android_face_detector_painter.dart:1809:8 • unused_element
+warning • The value of the local variable 'leftEyebrowTop' isn't used • packages/face_detection/lib/src/core/custom_painters/m7_face_detector_painter.dart:30:28 • unused_local_variable
+warning • The value of the local variable 'rightEyebrowTop' isn't used • packages/face_detection/lib/src/core/custom_painters/m7_face_detector_painter.dart:39:28 • unused_local_variable
+warning • The value of the local variable 'upperLipBottom' isn't used • packages/face_detection/lib/src/core/custom_painters/m7_face_detector_painter.dart:59:28 • unused_local_variable
+warning • The value of the local variable 'lowerLipTop' isn't used • packages/face_detection/lib/src/core/custom_painters/m7_face_detector_painter.dart:62:28 • unused_local_variable
+warning • The value of the local variable 'faceContour' isn't used • packages/face_detection/lib/src/core/custom_painters/m7_face_detector_painter.dart:83:13 • unused_local_variable
+warning • The value of the local variable 'noseBottom1' isn't used • packages/face_detection/lib/src/core/custom_painters/m7_face_detector_painter.dart:298:22 • unused_local_variable
+   info • 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion • packages/face_detection/lib/src/core/models/m7_livelyness_step_item.dart:45:56 • deprecated_member_use
+   info • Don't invoke 'print' in production code • packages/face_detection/lib/src/screens/components/m7_livelyness_detection_steps_overlay.dart:177:5 • avoid_print
+   info • Don't use 'BuildContext's across async gaps • packages/face_detection/lib/src/screens/m7_livelyness_detection_screen.dart:259:34 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • packages/face_detection/lib/src/screens/m7_livelyness_detection_screen.dart:260:37 • use_build_context_synchronously
+   info • 'setMockMethodCallHandler' is deprecated and shouldn't be used. Use tester.binding.defaultBinaryMessenger.setMockMethodCallHandler or TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler instead. Pass the channel as the first argument. This feature was deprecated after v3.9.0-19.0.pre • packages/face_detection/test/m7_livelyness_detection_method_channel_test.dart:13:13 • deprecated_member_use
+   info • 'setMockMethodCallHandler' is deprecated and shouldn't be used. Use tester.binding.defaultBinaryMessenger.setMockMethodCallHandler or TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler instead. Pass the channel as the first argument. This feature was deprecated after v3.9.0-19.0.pre • packages/face_detection/test/m7_livelyness_detection_method_channel_test.dart:19:13 • deprecated_member_use
+
+75 issues found. (ran in 15.1s)

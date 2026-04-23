@@ -80,7 +80,9 @@ class RideModel extends RideEntity {
       id: json['_id'] ?? '',
       riderId: json['rider_id'] ?? '',
       driverId: json['driver_id'],
-      vehicleTypeId: vehicleTypeId,
+      vehicleTypeId: json['vehicle_type_id'] is Map
+          ? (json['vehicle_type_id']['_id'] ?? '').toString()
+          : (json['vehicle_type_id'] ?? '').toString(),
       vehicleKey: vehicleTypeKey,
       vehicleDisplayName: vehicleTypeDisplayName,
       status: RideStatus.values.firstWhere(

@@ -4,6 +4,8 @@ import '../../../../core/data/models/requests/validate_ride_payment_request.dart
 import '../models/ride_management_models.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/urls.dart';
+import 'dart:developer' as developer;
+import 'package:dio/dio.dart';
 
 abstract class RideRemoteDataSource {
   Future<ActiveRideResponseModel?> getActiveRide();
@@ -28,6 +30,7 @@ abstract class RideRemoteDataSource {
     int limit = 50,
   });
   Future<bool> sendChatMessage(String rideId, String message);
+  Future<bool> updateActivityToken(String rideId, String token);
 }
 
 class RideRemoteDataSourceImpl implements RideRemoteDataSource {
@@ -255,5 +258,40 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       ),
     );
     return response.statusCode == 200;
+  }
+
+  @override
+  Future<bool> updateActivityToken(String rideId, String token) async {
+    try {
+      developer.log(
+        "🚀 API Request: PATCH /v4/go/rides/$rideId/activity-token",
+        name: 'ORDER_TRACKING',
+      );
+      final response = await ApiService().call(
+        request: ApiRequest(
+          endpoint: URLS.ride.activityToken(rideId),
+          method: ApiMethod.patch,
+          body: {'ios_activity_token': token},
+        ),
+      );
+      developer.log(
+        "✅ API Response: ${response.statusCode} for ride $rideId",
+        name: 'ORDER_TRACKING',
+      );
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      if (e is DioException) {
+        developer.log(
+          "❌ API Error: ${e.response?.statusCode} - ${e.response?.data} while updating token for ride $rideId",
+          name: 'ORDER_TRACKING',
+        );
+      } else {
+        developer.log(
+          "❌ Unexpected Error: $e while updating token for ride $rideId",
+          name: 'ORDER_TRACKING',
+        );
+      }
+      return false;
+    }
   }
 }

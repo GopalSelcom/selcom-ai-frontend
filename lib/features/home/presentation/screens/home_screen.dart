@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:selcom_rides_frontend/shared/widgets/map_widgets.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/data/models/ride_model.dart';
@@ -12,6 +11,7 @@ import '../controllers/home_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/routes/app_routes.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/widgets/svg_picture_asset.dart';
 
@@ -113,7 +113,7 @@ class HomeScreen extends GetView<HomeController> {
                 border: Border.all(color: AppColors.shade5),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.06),
+                    color: Colors.black.withOpacity(0.06),
                     blurRadius: 2,
                     offset: const Offset(0, 1),
                   ),
@@ -146,7 +146,6 @@ class HomeScreen extends GetView<HomeController> {
             ),
           );
         }
-
         final placesToShow = controller.addressHeaderPlacesToShow;
         final bool isExpanded = controller.isSavedPlacesExpanded.value;
 
@@ -167,7 +166,7 @@ class HomeScreen extends GetView<HomeController> {
               border: Border.all(color: AppColors.shade5),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
+                  color: Colors.black.withOpacity(0.06),
                   blurRadius: 2,
                   offset: const Offset(0, 1),
                 ),
@@ -214,7 +213,7 @@ class HomeScreen extends GetView<HomeController> {
                         decoration: BoxDecoration(
                           color:
                               selected && controller.isSavedPlacesExpanded.value
-                              ? AppColors.primaryLight.withValues(alpha: 0.35)
+                              ? AppColors.primaryLight.withOpacity(0.35)
                               : Colors.transparent,
                           borderRadius: BorderRadius.circular(12.r),
                           border: Border.all(
@@ -328,7 +327,7 @@ class HomeScreen extends GetView<HomeController> {
             borderRadius: BorderRadius.vertical(top: Radius.circular(40.r)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
+                color: Colors.black.withOpacity(0.08),
                 blurRadius: 20,
                 offset: const Offset(0, -4),
               ),

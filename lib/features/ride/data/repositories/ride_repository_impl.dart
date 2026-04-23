@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'dart:developer' as developer;
 import '../../../../core/data/models/responses/rides/active_ride_response.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/repositories/ride_repository.dart';
@@ -163,11 +164,30 @@ class RideRepositoryImpl implements RideRepository {
   }
 
   @override
-  Future<Either<Failure, bool>> walletDummyPaymentRequest(DummyPaymentRequest request) async{
+  Future<Either<Failure, bool>> walletDummyPaymentRequest(
+    DummyPaymentRequest request,
+  ) async {
     try {
       final result = await remoteDataSource.walletDummyPaymentRequest(request);
       return Right(result);
     } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> updateActivityToken(
+    String rideId,
+    String token,
+  ) async {
+    try {
+      final result = await remoteDataSource.updateActivityToken(rideId, token);
+      return Right(result);
+    } catch (e) {
+      developer.log(
+        "❌ Repository Error during updateActivityToken: $e",
+        name: 'ORDER_TRACKING',
+      );
       return Left(ServerFailure(e.toString()));
     }
   }
