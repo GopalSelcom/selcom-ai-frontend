@@ -25,6 +25,13 @@ class LiveActivityManager {
   final Map<String, String> _lastSyncedTokens = {};
   final Map<String, Completer<String?>> _inProgressStarts = {};
 
+  // 📝 Telemetry Cache: Stores last known good values to prevent "empty-payload" flickering
+  final Map<String, String> _cacheVehicleName = {};
+  final Map<String, String> _cachePlateNumber = {};
+  final Map<String, String> _cacheDriverName = {};
+  final Map<String, String> _cacheDriverAvatarUrl = {};
+  final Map<String, double> _cacheEtaSeconds = {};
+
   Stream<ActivityUpdate> get activityUpdateStream =>
       _liveActivitiesPlugin.activityUpdateStream;
 
@@ -124,6 +131,14 @@ class LiveActivityManager {
     _orderToMerchantName.remove(orderId);
     _lastUpdateTime.remove(orderId);
     _lastStatus.remove(orderId);
+
+    // Clear telemetry caches
+    _cacheVehicleName.remove(orderId);
+    _cachePlateNumber.remove(orderId);
+    _cacheDriverName.remove(orderId);
+    _cacheDriverAvatarUrl.remove(orderId);
+    _cacheEtaSeconds.remove(orderId);
+
     await _saveState();
   }
 
@@ -208,6 +223,15 @@ class LiveActivityManager {
   }) async {
     try {
       final String? existingId = _orderToActivityId[orderId];
+
+      // Update Cache with incoming data
+      if (driverName.isNotEmpty) _cacheDriverName[orderId] = driverName;
+      if (vehicleName.isNotEmpty) _cacheVehicleName[orderId] = vehicleName;
+      if (plateNumber.isNotEmpty) _cachePlateNumber[orderId] = plateNumber;
+      if (driverAvatarUrl.isNotEmpty)
+        _cacheDriverAvatarUrl[orderId] = driverAvatarUrl;
+      if (etaSeconds > 0) _cacheEtaSeconds[orderId] = etaSeconds;
+
       if (_isIOS && existingId != null && existingId != 'android') {
         if (updateIfExists) {
           await updateActivity(
@@ -408,26 +432,48 @@ class LiveActivityManager {
 
       if (driverName.isNotEmpty) {
         _orderToMerchantName[orderId] = driverName;
+        _cacheDriverName[orderId] = driverName;
         await _saveState();
       }
+
+      // Update other caches with incoming fresh data
+      if (vehicleName.isNotEmpty) _cacheVehicleName[orderId] = vehicleName;
+      if (plateNumber.isNotEmpty) _cachePlateNumber[orderId] = plateNumber;
+      if (driverAvatarUrl.isNotEmpty) {
+        _cacheDriverAvatarUrl[orderId] = driverAvatarUrl;
+      }
+      if (etaSeconds > 0) _cacheEtaSeconds[orderId] = etaSeconds;
 
       final String? activityId = _orderToActivityId[orderId];
       if (activityId == null || activityId == 'android') return;
 
       final updateData = <String, dynamic>{
         'status': status,
-        'driver_name': driverName,
-        'driver_avatar_url': driverAvatarUrl,
-        'vehicle_name': vehicleName,
-        'plate_number': plateNumber,
-        'eta_seconds': etaSeconds.toString(),
+        'driver_name': driverName.isNotEmpty
+            ? driverName
+            : (_cacheDriverName[orderId] ?? ''),
+        'driver_avatar_url': driverAvatarUrl.isNotEmpty
+            ? driverAvatarUrl
+            : (_cacheDriverAvatarUrl[orderId] ?? ''),
+        'vehicle_name': vehicleName.isNotEmpty
+            ? vehicleName
+            : (_cacheVehicleName[orderId] ?? ''),
+        'plate_number': plateNumber.isNotEmpty
+            ? plateNumber
+            : (_cachePlateNumber[orderId] ?? ''),
+        'eta_seconds':
+            (etaSeconds > 0 ? etaSeconds : (_cacheEtaSeconds[orderId] ?? 0.0))
+                .toString(),
         'driver_latitude': driverLatitude?.toString(),
         'driver_longitude': driverLongitude?.toString(),
         'is_completed': isCompleted.toString(),
       };
 
       updateData.removeWhere((key, value) => value == null);
-      developer.log("📦 Update Payload: $updateData", name: 'LIVE_ACTIVITY');
+      developer.log(
+        "📦 Update Payload (Merged): $updateData",
+        name: 'LIVE_ACTIVITY',
+      );
 
       await _liveActivitiesPlugin
           .updateActivity(activityId, updateData)

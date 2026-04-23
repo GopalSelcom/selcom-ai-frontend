@@ -58,6 +58,7 @@ class FindingDriverController extends GetxController {
       'The driver will pick you up as soon as possible\nafter they confirm your order'
           .obs;
 
+  final currentEtaSeconds = 0.0.obs;
   final Rxn<EventRiderStatusUpdateResponse> latestRideStatusPayload =
       Rxn<EventRiderStatusUpdateResponse>();
   final Rxn<DriverLocationSocketResponse> latestDriverLocationPayload =
@@ -232,7 +233,9 @@ class FindingDriverController extends GetxController {
         status: 'SEARCHING',
         driverName: 'Finding Your Driver',
         vehicleName: requestedVehicleType ?? '',
+        plateNumber: '',
         isCompleted: false,
+        etaSeconds: currentEtaSeconds.value,
       );
     } catch (e) {
       developer.log(
@@ -438,6 +441,7 @@ class FindingDriverController extends GetxController {
         plateNumber: payload.driverSnapshot?.vehicleRegistrationNumber ?? '',
         driverAvatarUrl: payload.driverSnapshot?.avatarUrl ?? '',
         isCompleted: status.contains('COMPLETED'),
+        etaSeconds: currentEtaSeconds.value,
       );
     } catch (e) {
       debugPrint('❌ Error syncing Live Activity from payload: $e');
@@ -590,6 +594,10 @@ class FindingDriverController extends GetxController {
       } else {
         _setDropRouteFallback();
       }
+    }
+    if ((payload.eta ?? 0) > 0) {
+      currentEtaSeconds.value = (payload.eta ?? 0).toDouble();
+      _syncLiveActivity();
     }
     _fitRouteBounds();
   }

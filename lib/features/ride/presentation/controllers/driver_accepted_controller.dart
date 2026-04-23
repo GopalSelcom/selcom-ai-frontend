@@ -67,6 +67,7 @@ class DriverAcceptedController extends GetxController
   final otpDigits = <String>[].obs;
   final isPinRequired = true.obs;
   final etaLabel = '10 Mins'.obs;
+  final currentEtaSeconds = 0.0.obs;
   final arrivalLabel = 'Driver will arriving in 1 min...'.obs;
   final unreadCount = 0.obs;
   final rideBottomSheetState = RideBottomSheetState.driverAssigned.obs;
@@ -946,10 +947,11 @@ class DriverAcceptedController extends GetxController
 
     final eta = payload.eta;
     if (eta != null && eta > 0) {
+      currentEtaSeconds.value = eta.toDouble();
       final convertedTime = eta / 60;
-      etaLabel.value = '$convertedTime Mins';
+      etaLabel.value = '${convertedTime.toInt()} Mins';
       arrivalLabel.value =
-          'Driver will arriving in ${convertedTime <= 1 ? '1 min' : '$convertedTime mins'}...';
+          'Driver will arriving in ${convertedTime.toInt() <= 1 ? '1 min' : '${convertedTime.toInt()} mins'}...';
     }
 
     String target = _normalizeRouteTarget(payload.routeTarget);
@@ -1280,6 +1282,7 @@ class DriverAcceptedController extends GetxController
         driverAvatarUrl: payload.driverSnapshot?.avatarUrl ?? '',
         plateNumber: payload.driverSnapshot?.vehicleRegistrationNumber ?? '',
         isCompleted: false,
+        etaSeconds: currentEtaSeconds.value,
         driverLatitude: payload.driverSnapshot?.lat,
         driverLongitude: payload.driverSnapshot?.lng,
       );
@@ -1309,7 +1312,7 @@ class DriverAcceptedController extends GetxController
         vehicleName: driverVehicleLine.value,
         plateNumber: plateLinePrimary.value + plateLineSecondary.value,
         isCompleted: false,
-        etaSeconds: (payload.eta ?? 0).toDouble(),
+        etaSeconds: currentEtaSeconds.value,
       );
     } catch (e) {
       developer.log(
@@ -1342,6 +1345,7 @@ class DriverAcceptedController extends GetxController
         driverAvatarUrl: r.driverSnapshot?.avatarUrl ?? '',
         plateNumber: r.vehicleSnapshot?.plateNumber ?? '',
         isCompleted: r.status == RideStatus.rideCompleted,
+        etaSeconds: currentEtaSeconds.value,
         driverLatitude: assignedDriverLocation.value?.latitude,
         driverLongitude: assignedDriverLocation.value?.longitude,
       );
