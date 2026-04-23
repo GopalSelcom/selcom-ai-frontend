@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/constants/app_assets.dart';
@@ -16,7 +17,8 @@ class AppDialogs {
     String title = 'Error',
     required String message,
     VoidCallback? onConfirm,
-  }) {
+  })
+  {
     if (_isErrorDialogVisible) return;
     _isErrorDialogVisible = true;
     final normalizedMessage = message.toLowerCase();
@@ -130,7 +132,7 @@ class AppDialogs {
                           ),
                           child: Center(
                             child: Text(
-                              'OK',
+                              AppStrings.ok.tr,
                               style: AppTextStyles.onboardingButton.copyWith(
                                 fontSize: 16.sp,
                                 fontWeight: FontWeight.w600,
@@ -159,7 +161,8 @@ class AppDialogs {
     String title = 'Success',
     required String message,
     VoidCallback? onConfirm,
-  }) {
+  })
+  {
     var didHandleAction = false;
     void handleAction() {
       if (didHandleAction) return;
@@ -169,7 +172,6 @@ class AppDialogs {
       }
       if (onConfirm != null) onConfirm();
     }
-
     Get.dialog(
       PopScope(
         canPop: false,
@@ -228,7 +230,7 @@ class AppDialogs {
                     ),
                     child: Center(
                       child: Text(
-                        'Continue',
+                        AppStrings.continueLabel.tr,
                         style: AppTextStyles.onboardingButton,
                       ),
                     ),
@@ -253,7 +255,8 @@ class AppDialogs {
     Color? confirmColor,
     required VoidCallback onConfirm,
     VoidCallback? onCancel,
-  }) {
+  })
+  {
     var didHandleAction = false;
     void handleCancel() {
       if (didHandleAction) return;
@@ -263,7 +266,6 @@ class AppDialogs {
       }
       if (onCancel != null) onCancel();
     }
-
     Get.dialog(
       PopScope(
         canPop: false,
@@ -400,7 +402,8 @@ class AppDialogs {
     VoidCallback? onCancel,
     IconData icon = Icons.notifications_off,
     IconData? secondaryIcon,
-  }) {
+  })
+  {
     Get.dialog(
       Dialog(
         backgroundColor: Colors.white,
@@ -494,7 +497,7 @@ class AppDialogs {
                   elevation: 0,
                 ),
                 child: Text(
-                  'Open Settings',
+                  AppStrings.openSettings.tr,
                   style: TextStyle(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w700,
@@ -517,7 +520,7 @@ class AppDialogs {
                   ),
                 ),
                 child: Text(
-                  'Maybe Later',
+                  AppStrings.maybeLater.tr,
                   style: TextStyle(
                     fontSize: 16.sp,
                     color: const Color(0xFF9E9E9E),
@@ -597,7 +600,7 @@ class AppDialogs {
               child: Column(
                 children: [
                   Text(
-                    "Verification Successful!",
+                    AppStrings.verificationSuccessful.tr,
                     style: AppTextStyles.sectionTitle.copyWith(
                       fontSize: 22.sp,
                       fontWeight: FontWeight.w800,
@@ -607,7 +610,9 @@ class AppDialogs {
                   ),
                   SizedBox(height: 12.h),
                   Text(
-                    "Your identity has been successfully verified. You can now use Selcom Pesa.",
+                    AppStrings
+                        .yourIdentityHasBeenSuccessfullyVerifiedYouCanNowUseSelcomPesa
+                        .tr,
                     style: AppTextStyles.body.copyWith(
                       fontSize: 16.sp,
                       color: AppColors.shade2,
@@ -630,7 +635,7 @@ class AppDialogs {
                       ),
                       child: Center(
                         child: Text(
-                          "Got it",
+                          AppStrings.gotIt.tr,
                           style: AppTextStyles.body.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
@@ -720,7 +725,7 @@ class AppDialogs {
               child: Column(
                 children: [
                   Text(
-                    "PIN Locked",
+                    AppStrings.pinLocked.tr,
                     style: AppTextStyles.sectionTitle.copyWith(
                       fontSize: 22.sp,
                       fontWeight: FontWeight.w800,
@@ -753,7 +758,7 @@ class AppDialogs {
                       ),
                       child: Center(
                         child: Text(
-                          "Got it",
+                          AppStrings.gotIt.tr,
                           style: AppTextStyles.body.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,

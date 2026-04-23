@@ -6,6 +6,7 @@ import 'package:selcom_rides_frontend/shared/widgets/map_widgets.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
@@ -57,10 +58,14 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
                 ),
                 child: Text(
                   controller.isSocketConnected.value
-                      ? 'Socket ON • ${controller.nearbyDriverCount.value} drivers'
+                      ? AppStrings.socketOnDrivers.trParams({
+                          'count': '${controller.nearbyDriverCount.value}',
+                        })
                       : (controller.lastSocketError.value.isNotEmpty
-                            ? 'Socket OFF • ${controller.lastSocketError.value}'
-                            : 'Socket OFF'),
+                            ? AppStrings.socketOffError.trParams({
+                                'error': controller.lastSocketError.value,
+                              })
+                            : AppStrings.socketOff.tr),
                   style: AppTextStyles.homeCaption.copyWith(
                     color: controller.isSocketConnected.value
                         ? AppColors.success
@@ -227,7 +232,7 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'Choose a ride',
+                  AppStrings.chooseRide.tr,
                   style: AppTextStyles.homeTitle.copyWith(
                     fontSize: 20.sp,
                     fontWeight: FontWeight.w600,
@@ -271,8 +276,10 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
             ),
             Obx(() {
               return PaymentBar(
-                buttonLabel:
-                    'Book Ride ${controller.currency} ${controller.selectedFareAmount}',
+                buttonLabel: AppStrings.bookRideWithFare.trParams({
+                  'currency': controller.currency,
+                  'amount': '${controller.selectedFareAmount}',
+                }),
                 isLoading: controller.isBooking,
                 onActionButtonPressed: controller.bookRide,
               );
@@ -321,7 +328,9 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
                       children: [
                         Flexible(
                           child: Text(
-                            item.displayName ?? item.vehicleName ?? 'Ride',
+                            item.displayName ??
+                                item.vehicleName ??
+                                AppStrings.fallbackRideName.tr,
                             style: AppTextStyles.homeSubtitle.copyWith(
                               fontSize: 16.sp,
                               fontWeight: FontWeight.w500,
@@ -357,7 +366,10 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
                       ],
                     ),
                     Text(
-                      '$eta min away • Drop $dropLabel',
+                      AppStrings.etaMinutesAwayDropTime.trParams({
+                        'minutes': '$eta',
+                        'time': dropLabel,
+                      }),
                       style: AppTextStyles.homeCaption.copyWith(
                         color: AppColors.shade2,
                         fontWeight: FontWeight.w500,
@@ -367,7 +379,7 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
                         controller.destinations.length > 1) ...[
                       SizedBox(height: 2.h),
                       Text(
-                        'Includes Stop fee',
+                        AppStrings.includesStopFee.tr,
                         style: AppTextStyles.homeCaption.copyWith(
                           color: AppColors.primary,
                           fontSize: 10.sp,
@@ -379,7 +391,7 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
                 ),
               ),
               Text(
-                '${item.currency ?? 'TZS'} ${item.fareEstimate ?? 0}',
+                '${item.currency ?? AppStrings.defaultCurrencyTzs.tr} ${item.fareEstimate ?? 0}',
                 style: TextStyle(
                   fontFamily: 'Metropolis',
                   fontSize: 16.sp,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -132,7 +133,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
                       ),
               ),
             ),
-            hintText: 'Search location...',
+            hintText: AppStrings.searchLocation.tr,
             hintStyle: AppTextStyles.hint,
             border: InputBorder.none,
             suffixIconConstraints: BoxConstraints(minWidth: 40.w, minHeight: 0),
@@ -163,7 +164,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
     if (controller.suggestions.isEmpty) {
       return Center(
         child: Text(
-          'No locations found',
+          AppStrings.noLocationsFound.tr,
           style: AppTextStyles.homeCaption.copyWith(color: AppColors.shade2),
         ),
       );
@@ -191,7 +192,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
         controller.savedPlaces.isEmpty) {
       return Center(
         child: Text(
-          'No recent locations',
+          AppStrings.noRecentLocations.tr,
           style: AppTextStyles.homeCaption.copyWith(color: AppColors.shade2),
         ),
       );

@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:selcom_rides_frontend/core/constants/app_assets.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
@@ -14,10 +15,7 @@ import '../widgets/payment_card_action_bottom_sheet.dart';
 class CardDetailsScreen extends StatefulWidget {
   final PaymentCard card;
 
-  const CardDetailsScreen({
-    super.key,
-    required this.card,
-  });
+  const CardDetailsScreen({super.key, required this.card});
 
   @override
   State<CardDetailsScreen> createState() => _CardDetailsScreenState();
@@ -32,11 +30,7 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    controller = Get.put(
-      CardDetailsController(
-        card: widget.card,
-      ),
-    );
+    controller = Get.put(CardDetailsController(card: widget.card));
     _nickNameController = TextEditingController(text: widget.card.nickName);
     _expiryController = TextEditingController(text: widget.card.expiry);
     _cvvController = TextEditingController(text: widget.card.cvv);
@@ -55,7 +49,7 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
     Get.bottomSheet(
       Obx(
         () => PaymentCardActionBottomSheet(
-          title: 'Are you sure want to add\nDelete this card?',
+          title: AppStrings.areYouSureWantToAddNdeleteThisCard.tr,
           description:
               'This action will remove the card from your account, and you will need to add it again if you want to use it in the future.',
           cardNumber: widget.card.fullNumber,
@@ -85,7 +79,7 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
       backgroundColor: AppColors.pageBackground,
       body: Column(
         children: [
-          const AppProfileHeader(title: 'Card Detail'),
+          AppProfileHeader(title: AppStrings.cardDetail.tr),
           Expanded(
             child: SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 24.h),
@@ -94,7 +88,10 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                 children: [
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 18.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 18.h,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF1F3F7),
                       borderRadius: BorderRadius.circular(16.r),
@@ -103,7 +100,7 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                     child: Row(
                       children: [
                         Text(
-                          'VISA',
+                          AppStrings.visa.tr,
                           style: AppTextStyles.sectionTitle.copyWith(
                             color: const Color(0xFF0057A0),
                             fontWeight: FontWeight.w900,
@@ -181,8 +178,10 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                   ),
                 ),
                 child: Text(
-                  'Delete card',
-                  style: AppTextStyles.button.copyWith(color: AppColors.primary),
+                  AppStrings.deleteCard.tr,
+                  style: AppTextStyles.button.copyWith(
+                    color: AppColors.primary,
+                  ),
                 ),
               ),
             ),

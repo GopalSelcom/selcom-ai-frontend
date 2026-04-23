@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:pinput/pinput.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/utils/phone_formatter.dart';
@@ -63,7 +64,7 @@ class SelcomPesaOtpBottomSheet extends GetView<PaymentMethodsController> {
           SizedBox(height: 24.h),
 
           Text(
-            'Enter OTP',
+            AppStrings.enterOtp.tr,
             style: AppTextStyles.sectionTitle.copyWith(
               fontSize: 20.sp,
               fontWeight: FontWeight.w700,
@@ -133,7 +134,7 @@ class SelcomPesaOtpBottomSheet extends GetView<PaymentMethodsController> {
                     return InkWell(
                       onTap: controller.resendOtp,
                       child: Text(
-                        'Resend OTP',
+                        AppStrings.resendOtp.tr,
                         style: AppTextStyles.body.copyWith(
                           color: AppColors.primary,
                           fontWeight: FontWeight.w600,
@@ -145,7 +146,7 @@ class SelcomPesaOtpBottomSheet extends GetView<PaymentMethodsController> {
                 InkWell(
                   onTap: controller.openPhoneInput,
                   child: Text(
-                    'Change phone number',
+                    AppStrings.changePhoneNumber.tr,
                     style: AppTextStyles.body.copyWith(
                       color: AppColors.shade1,
                       fontWeight: FontWeight.w500,

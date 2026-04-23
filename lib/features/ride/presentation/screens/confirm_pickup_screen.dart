@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' hide Marker;
 
 import '../../../../core/theme/app_colors.dart';
@@ -64,7 +65,7 @@ class ConfirmPickupScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(20.r),
                             ),
                             child: Text(
-                              'Pickup point',
+                              AppStrings.pickupPoint.tr,
                               style: AppTextStyles.homeCaption.copyWith(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w700,
@@ -130,7 +131,7 @@ class ConfirmPickupScreen extends StatelessWidget {
                       ),
                       SizedBox(height: 16.h),
                       Text(
-                        'Check your pickup point',
+                        AppStrings.checkYourPickupPoint.tr,
                         style: AppTextStyles.homeTitle.copyWith(
                           fontSize: 28.sp / 2,
                           fontWeight: FontWeight.w700,
@@ -139,7 +140,7 @@ class ConfirmPickupScreen extends StatelessWidget {
                       ),
                       SizedBox(height: 4.h),
                       Text(
-                        'Select a nearby point for easier pickup',
+                        AppStrings.selectANearbyPointForEasierPickup.tr,
                         style: AppTextStyles.homeCaption.copyWith(
                           color: AppColors.shade2,
                         ),
@@ -188,7 +189,7 @@ class ConfirmPickupScreen extends StatelessWidget {
                                     ),
                                     SizedBox(width: 8.w),
                                     Text(
-                                      'Updating address...',
+                                      AppStrings.updatingAddress.tr,
                                       style: AppTextStyles.homeCaption.copyWith(
                                         color: AppColors.shade2,
                                       ),
@@ -226,7 +227,7 @@ class ConfirmPickupScreen extends StatelessWidget {
                                     ),
                                   )
                                 : Text(
-                                    'Confirm pickup',
+                                    AppStrings.confirmPickup.tr,
                                     style: AppTextStyles.button.copyWith(
                                       color: Colors.white,
                                     ),

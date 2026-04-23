@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
@@ -18,7 +19,7 @@ class PromocodeScreen extends StatelessWidget {
       backgroundColor: AppColors.pageBackground,
       body: Column(
         children: [
-          const AppProfileHeader(title: 'Apply Promo code'),
+          AppProfileHeader(title: AppStrings.applyPromoCode.tr),
           Expanded(
             child: SingleChildScrollView(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
@@ -26,7 +27,7 @@ class PromocodeScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Enter Promocode',
+                    AppStrings.enterPromocode.tr,
                     style: AppTextStyles.bodySecondary.copyWith(
                       fontSize: 15.sp,
                       color: AppColors.shade2,
@@ -36,7 +37,7 @@ class PromocodeScreen extends StatelessWidget {
                   _buildPromoInputField(controller),
                   SizedBox(height: 32.h),
                   Text(
-                    'Promocode list',
+                    AppStrings.promocodeList.tr,
                     style: AppTextStyles.bodySecondary.copyWith(
                       fontSize: 15.sp,
                       color: AppColors.shade2,
@@ -90,7 +91,7 @@ class PromocodeScreen extends StatelessWidget {
               child: TextField(
                 controller: controller.promoCodeTextController,
                 decoration: InputDecoration(
-                  hintText: 'Enter promo code',
+                  hintText: AppStrings.enterPromoCode.tr,
                   hintStyle: AppTextStyles.hint,
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.symmetric(vertical: 16.h),
@@ -107,7 +108,7 @@ class PromocodeScreen extends StatelessWidget {
             TextButton(
               onPressed: controller.applyPromoCode,
               child: Text(
-                'APPLY',
+                AppStrings.apply.tr,
                 style: AppTextStyles.button.copyWith(
                   color: AppColors.primary,
                   fontSize: 14.sp,
@@ -190,7 +191,7 @@ class PromocodeScreen extends StatelessWidget {
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   child: Text(
-                    'APPLY',
+                    AppStrings.apply.tr,
                     style: AppTextStyles.button.copyWith(
                       color: AppColors.primary,
                       fontSize: 14.sp,

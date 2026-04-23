@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -50,7 +51,7 @@ class OtpScreen extends GetView<AuthController> {
 
                         // Title
                         Text(
-                          'Verify Phone Number',
+                          AppStrings.verifyPhoneNumber.tr,
                           style: AppTextStyles.onboardingTitle.copyWith(
                             fontSize: 24.sp,
                           ),
@@ -68,7 +69,7 @@ class OtpScreen extends GetView<AuthController> {
                         InkWell(
                           onTap: () => Get.back(),
                           child: Text(
-                            'Edit your phone number?',
+                            AppStrings.editYourPhoneNumber.tr,
                             style: AppTextStyles.body.copyWith(
                               color: AppColors.info,
                               // Blue color as per generic design commonalities
@@ -150,7 +151,7 @@ class OtpScreen extends GetView<AuthController> {
                                     onTap: () async =>
                                         await controller.resendOtp(),
                                     child: Text(
-                                      'Resend Code',
+                                      AppStrings.resendCode.tr,
                                       style: AppTextStyles.onboardingButton
                                           .copyWith(
                                             color: AppColors.primary,

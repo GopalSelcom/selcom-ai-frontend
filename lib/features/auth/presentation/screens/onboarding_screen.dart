@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -122,7 +123,7 @@ class OnboardingScreen extends GetView<OnboardingController> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                'Get Started',
+                                AppStrings.getStarted.tr,
                                 style: AppTextStyles.onboardingButton,
                               ),
                               SizedBox(width: 12.w),
@@ -144,7 +145,9 @@ class OnboardingScreen extends GetView<OnboardingController> {
                     Padding(
                       padding: EdgeInsets.only(bottom: 16.h),
                       child: Text(
-                        'By continuing, you agree that you have read and accept our T&Cs and Privacy Policy',
+                        AppStrings
+                            .byContinuingYouAgreeThatYouHaveReadAndAcceptOurTAndCsAndPrivacyPolicy
+                            .tr,
                         textAlign: TextAlign.center,
                         style: AppTextStyles.onboardingFooter,
                       ),

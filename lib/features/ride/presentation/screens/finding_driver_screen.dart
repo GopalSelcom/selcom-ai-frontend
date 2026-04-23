@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:selcom_rides_frontend/shared/widgets/map_widgets.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -56,10 +57,11 @@ class FindingDriverScreen extends StatelessWidget {
             onProfileTap: c.openProfile,
             addressWidget: Expanded(
               child: AppMapLocationSummaryCard(
-                label: 'Home',
+                label: 'Current location',
                 address: c.pickupAddress.isEmpty
                     ? 'Selected location'
                     : c.pickupAddress,
+                maxAddressLines: 1,
               ),
             ),
           ),
@@ -287,7 +289,7 @@ class FindingDriverScreen extends StatelessWidget {
             ),
             onPressed: c.confirmCancelRide,
             child: Text(
-              'Cancel Ride',
+              AppStrings.cancelRide.tr,
               style: TextStyle(fontSize: 17.sp, fontWeight: FontWeight.w600),
             ),
           ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -168,7 +169,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                 right: 0,
                 child: Center(
                   child: Text(
-                    'Location Selection',
+                    AppStrings.locationSelection.tr,
                     textAlign: TextAlign.center,
                     style: AppTextStyles.homeTitle.copyWith(
                       fontWeight: FontWeight.w600,
@@ -259,7 +260,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                                 ),
                                 SizedBox(width: 4.72.w),
                                 Text(
-                                  'Add',
+                                  AppStrings.add.tr,
                                   style: AppTextStyles.homeCaption.copyWith(
                                     color: const Color(0xFF656565),
                                     fontSize: 14.34.sp,
@@ -376,7 +377,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             isDense: true,
             border: InputBorder.none,
             contentPadding: EdgeInsets.zero,
-            hintText: 'Search pickup location',
+            hintText: AppStrings.searchPickupLocation.tr,
             hintStyle: hintStyle,
           ),
         ),
@@ -406,7 +407,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             isDense: true,
             border: InputBorder.none,
             contentPadding: EdgeInsets.zero,
-            hintText: 'Search destination',
+            hintText: AppStrings.searchDestination.tr,
             hintStyle: hintStyle,
           ),
         ),
@@ -447,7 +448,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
               isDense: true,
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
-              hintText: 'Search stop location',
+              hintText: AppStrings.searchStopLocation.tr,
               hintStyle: hintStyle,
             ),
           ),
@@ -571,7 +572,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     if (controller.suggestions.isEmpty) {
       return Center(
         child: Text(
-          'No locations found',
+          AppStrings.noLocationsFound.tr,
           style: AppTextStyles.homeCaption.copyWith(color: AppColors.shade2),
         ),
       );
@@ -615,7 +616,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           controller.recentDestinations.isEmpty) {
         return Center(
           child: Text(
-            'Start typing destination',
+            AppStrings.startTypingDestination.tr,
             style: AppTextStyles.homeCaption.copyWith(color: AppColors.shade2),
           ),
         );
@@ -944,7 +945,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                   )
                 else
                   Text(
-                    'Book Ride',
+                    AppStrings.bookRide.tr,
                     style: AppTextStyles.homeTitle.copyWith(
                       color: isReady ? Colors.white : const Color(0xFF94A3B8),
                       fontSize: 18.sp,

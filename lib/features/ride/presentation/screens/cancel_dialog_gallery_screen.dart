@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 
 import '../widgets/cancel_ride_dialogs.dart';
 
@@ -11,7 +12,7 @@ class CancelDialogGalleryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Cancel Dialogs Gallery'),
+        title: Text(AppStrings.cancelDialogsGallery.tr),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0.5,
@@ -21,17 +22,17 @@ class CancelDialogGalleryScreen extends StatelessWidget {
         child: Column(
           children: [
             _buildTestButton(
-              title: '1. Standard Confirmation',
+              title: AppStrings.value1StandardConfirmation.tr,
               onTap: () => Get.dialog(const CancelConfirmationDialog()),
             ),
             SizedBox(height: 16.h),
             _buildTestButton(
-              title: '2. Assignment Warning (Fee)',
+              title: AppStrings.value2AssignmentWarningFee.tr,
               onTap: () => Get.dialog(const CancelAssignmentWarningDialog()),
             ),
             SizedBox(height: 16.h),
             _buildTestButton(
-              title: '3. Reason Selection',
+              title: AppStrings.value3ReasonSelection.tr,
               onTap: () async {
                 final reason = await Get.dialog<String>(
                   const CancelReasonSelectionDialog(),
@@ -41,7 +42,7 @@ class CancelDialogGalleryScreen extends StatelessWidget {
             ),
             const Spacer(),
             Text(
-              'Tap each button to preview the popup UI',
+              AppStrings.tapEachButtonToPreviewThePopupUi.tr,
               style: TextStyle(color: Colors.grey, fontSize: 13.sp),
             ),
           ],

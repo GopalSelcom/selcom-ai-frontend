@@ -28,8 +28,8 @@ class AppMapLocationSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: BoxConstraints(minHeight: 61.h),
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
+      height: 61.h,
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16.r),

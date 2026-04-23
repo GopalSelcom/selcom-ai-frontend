@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -10,6 +11,10 @@ import 'package:get/get.dart';
 import 'firebase_options.dart';
 import 'core/config/app_config.dart';
 import 'core/di/injection_container.dart' as di;
+import 'core/localization/delegate.dart';
+import 'core/localization/getx_languages_translations.dart';
+import 'core/localization/localization.dart';
+import 'core/localization/app_strings.dart';
 import 'core/services/analytics_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/bindings/initial_binding.dart';
@@ -115,8 +120,39 @@ void main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  static void setLocale(BuildContext context, Locale locale) {
+    final state = context.findAncestorStateOfType<_MyAppState>();
+    state?.setLocale(locale);
+  }
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  Locale _locale = const Locale('en');
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_loadSavedLocale());
+  }
+
+  Future<void> _loadSavedLocale() async {
+    final locale = await Localization.instance.getLocale();
+    setLocale(locale);
+  }
+
+  void setLocale(Locale locale) {
+    if (!mounted) return;
+    setState(() {
+      _locale = locale;
+    });
+    Get.updateLocale(locale);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -132,6 +168,16 @@ class MyApp extends StatelessWidget {
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: ThemeMode.system,
+          locale: _locale,
+          fallbackLocale: const Locale('en'),
+          supportedLocales: const [Locale('en'), Locale('sw')],
+          localizationsDelegates: const [
+            AppLocalizationsDelegate(),
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          translations: GetxLanguagesTranslations(),
           initialBinding: InitialBinding(),
           initialRoute: AppRoutes.splash,
           getPages: AppRoutes.pages,

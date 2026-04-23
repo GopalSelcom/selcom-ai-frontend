@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/constants/app_assets.dart';
@@ -36,7 +37,7 @@ class SelcomPesaSelfieBottomSheet extends GetView<PaymentMethodsController> {
           SizedBox(height: 24.h),
 
           Text(
-            'Verify your Selfie',
+            AppStrings.verifyYourSelfie.tr,
             style: AppTextStyles.sectionTitle.copyWith(
               fontSize: 20.sp,
               fontWeight: FontWeight.w700,
@@ -59,7 +60,9 @@ class SelcomPesaSelfieBottomSheet extends GetView<PaymentMethodsController> {
 
           // Description
           Text(
-            'Your selfie will be captured to help us validate you against your ID. Please hold your phone steady, ensure your face is within the circular frame, and follow the prompts.',
+            AppStrings
+                .yourSelfieWillBeCapturedToHelpUsValidateYouAgainstYourIdPleaseHoldYour
+                .tr,
             textAlign: TextAlign.center,
             style: AppTextStyles.body.copyWith(
               color: AppColors.shade2,

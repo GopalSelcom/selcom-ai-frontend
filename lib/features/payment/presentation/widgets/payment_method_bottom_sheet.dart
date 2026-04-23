@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/constants/app_assets.dart';
@@ -41,7 +42,7 @@ class PaymentMethodBottomSheet extends StatelessWidget {
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 24.w),
               child: Text(
-                'Select a payment method',
+                AppStrings.selectAPaymentMethod.tr,
                 style: AppTextStyles.homeTitle.copyWith(
                   fontSize: 20.sp,
                   fontWeight: FontWeight.w600,
@@ -52,7 +53,8 @@ class PaymentMethodBottomSheet extends StatelessWidget {
             SizedBox(height: 16.h),
             Divider(color: const Color(0xFFF1F5F9), thickness: 1.h),
             Obx(() {
-              if (controller.isLoading.value && controller.paymentMethods.isEmpty) {
+              if (controller.isLoading.value &&
+                  controller.paymentMethods.isEmpty) {
                 return const Padding(
                   padding: EdgeInsets.all(40),
                   child: Center(child: CircularProgressIndicator()),
@@ -67,7 +69,8 @@ class PaymentMethodBottomSheet extends StatelessWidget {
                 separatorBuilder: (_, __) => SizedBox(height: 12.h),
                 itemBuilder: (context, index) {
                   final method = controller.paymentMethods[index];
-                  final isSelected = controller.selectedPayment.value?.id == method.id;
+                  final isSelected =
+                      controller.selectedPayment.value?.id == method.id;
                   return _PaymentMethodTile(
                     method: method,
                     isSelected: isSelected,
@@ -75,7 +78,9 @@ class PaymentMethodBottomSheet extends StatelessWidget {
                       controller.selectPaymentMethod(method);
                       Get.back();
                     },
-                    walletBalance: method.type == 'wallet' ? controller.walletBalance.value : null,
+                    walletBalance: method.type == 'wallet'
+                        ? controller.walletBalance.value
+                        : null,
                   );
                 },
               );
@@ -155,11 +160,7 @@ class _PaymentMethodTile extends StatelessWidget {
               ),
             ),
             if (isSelected)
-              Icon(
-                Icons.check_circle,
-                color: AppColors.primary,
-                size: 20.sp,
-              ),
+              Icon(Icons.check_circle, color: AppColors.primary, size: 20.sp),
           ],
         ),
       ),

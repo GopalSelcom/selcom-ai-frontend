@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
 import '../../domain/usecases/profile_usecase.dart';
 import '../../domain/repositories/profile_repository.dart';
@@ -51,13 +52,13 @@ class FavoriteLocationsController extends GetxController {
       (failure) {
         // Rollback
         favorites.value = originalList;
-        AppDialogs.showErrorDialog(message: 'Failed to update favorite status');
+        AppDialogs.showErrorDialog(message: AppStrings.failedToUpdateFavoriteStatus.tr);
       },
       (success) {
         if (!success) {
           // Rollback
           favorites.value = originalList;
-          AppDialogs.showErrorDialog(message: 'Failed to update favorite status');
+          AppDialogs.showErrorDialog(message: AppStrings.failedToUpdateFavoriteStatus.tr);
         } else {
           // Sync with HomeController if it exists
           if (Get.isRegistered<HomeController>()) {
@@ -71,7 +72,7 @@ class FavoriteLocationsController extends GetxController {
   void onLocationSelected(SavedPlace place) {
     if (!Get.isRegistered<HomeController>()) {
       AppDialogs.showErrorDialog(
-        message: 'Unable to initiate booking right now.',
+        message: AppStrings.unableToInitiateBookingRightNow.tr,
       );
       return;
     }
@@ -90,8 +91,8 @@ class FavoriteLocationsController extends GetxController {
 
     if (dLat == null || dLng == null) {
       AppDialogs.showErrorDialog(
-        title: 'Location unavailable',
-        message: 'This saved place is missing coordinates.',
+        title: AppStrings.locationUnavailable.tr,
+        message: AppStrings.thisSavedPlaceIsMissingCoordinates.tr,
       );
       return;
     }
