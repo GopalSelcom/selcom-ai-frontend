@@ -173,11 +173,7 @@ struct MainDashboardView: View {
             VStack(alignment: .leading, spacing: 2) {
                 // 🏷️ Brand Header
                 HStack(spacing: 6) {
-                    Circle()
-                        .fill(selcomRed)
-                        .frame(width: 18, height: 18)
-                        .overlay(Text("S").foregroundColor(.white).font(.system(size: 10, weight: .black)))
-                    Text("selcom.go").font(.system(size: 16, weight: .black)).foregroundColor(.white)
+                    Text("Selcom Go").font(.system(size: 16, weight: .black)).foregroundColor(.white)
                 }
                 .padding(.bottom, 6)
 
@@ -271,8 +267,11 @@ struct RiderTrackingWidgetLiveActivity: Widget {
                 }
             } compactLeading: {
                 HStack(spacing: 4) {
-                    Circle().fill(selcomRed).frame(width: 15, height: 15)
-                    Text("selcom").font(.system(size: 13, weight: .bold)).foregroundColor(.white)
+                    Image("selcom_go_logo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 24, height: 24)
+                        .cornerRadius(4)
                 }
                 .padding(.leading, 4)
             } compactTrailing: {
