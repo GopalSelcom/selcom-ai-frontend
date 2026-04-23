@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -60,7 +61,7 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
                             child: TextButton(
                               onPressed: controller.onSkipTap,
                               child: Text(
-                                'Skip',
+                                AppStrings.skip.tr,
                                 style: AppTextStyles.homeCaption.copyWith(
                                   color: const Color(0xFF364B63),
                                   fontWeight: FontWeight.w600,
@@ -82,25 +83,30 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
                                     CircleAvatar(
                                       radius: 40.r,
                                       backgroundColor: const Color(0xFFFFD2DE),
-                                      backgroundImage: ride.driverImage.trim().isEmpty
+                                      backgroundImage:
+                                          ride.driverImage.trim().isEmpty
                                           ? null
                                           : NetworkImage(ride.driverImage),
                                       child: ride.driverImage.trim().isEmpty
                                           ? Text(
                                               ride.driverName.isEmpty
                                                   ? '?'
-                                                  : ride.driverName.characters.first
+                                                  : ride
+                                                        .driverName
+                                                        .characters
+                                                        .first
                                                         .toUpperCase(),
-                                              style: AppTextStyles.homeTitle.copyWith(
-                                                color: AppColors.shade1,
-                                                fontWeight: FontWeight.w700,
-                                              ),
+                                              style: AppTextStyles.homeTitle
+                                                  .copyWith(
+                                                    color: AppColors.shade1,
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
                                             )
                                           : null,
                                     ),
                                     SizedBox(height: 14.h),
                                     Text(
-                                      'How do you rate the driver?',
+                                      AppStrings.howDoYouRateTheDriver.tr,
                                       style: AppTextStyles.homeTitle.copyWith(
                                         fontSize: 36.sp / 2,
                                         fontWeight: FontWeight.w700,
@@ -109,7 +115,9 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
                                     ),
                                     SizedBox(height: 4.h),
                                     Text(
-                                      'Help Selcom Go do better by rating this trip',
+                                      AppStrings
+                                          .helpSelcomGoDoBetterByRatingThisTrip
+                                          .tr,
                                       style: AppTextStyles.homeCaption.copyWith(
                                         color: const Color(0xFF364B63),
                                         fontSize: 15.sp,
@@ -129,18 +137,24 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
                                             children: [
                                               Text(
                                                 controller.rideTitle,
-                                                style: AppTextStyles.homeTitle.copyWith(
-                                                  fontSize: 20.sp,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: const Color(0xFF132235),
-                                                ),
+                                                style: AppTextStyles.homeTitle
+                                                    .copyWith(
+                                                      fontSize: 20.sp,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      color: const Color(
+                                                        0xFF132235,
+                                                      ),
+                                                    ),
                                               ),
                                               SizedBox(height: 2.h),
                                               Text(
                                                 controller.rideDateLabel,
                                                 style: AppTextStyles.homeCaption
                                                     .copyWith(
-                                                      color: const Color(0xFF364B63),
+                                                      color: const Color(
+                                                        0xFF364B63,
+                                                      ),
                                                       fontSize: 15.sp,
                                                     ),
                                               ),
@@ -158,7 +172,9 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
                                     ),
                                     SizedBox(height: 18.h),
                                     if (ride.pickupAddress.trim().isNotEmpty ||
-                                        ride.destinationAddress.trim().isNotEmpty)
+                                        ride.destinationAddress
+                                            .trim()
+                                            .isNotEmpty)
                                       _routeSummaryCard(),
                                     SizedBox(height: 14.h),
                                   ],
@@ -187,7 +203,6 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
       },
     );
   }
-
 
   Widget _routeSummaryCard() {
     final ride = controller.pendingReviewRide.value;

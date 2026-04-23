@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../../core/constants/app_assets.dart';
 import '../../../../core/routes/app_routes.dart';
 
@@ -7,18 +8,18 @@ class OnboardingController extends GetxController {
 
   final List<OnboardingSlide> slides = [
     OnboardingSlide(
-      title: 'Making your drive best is our responsibility',
-      subtitle: 'Lorem ipsum dolor sit amet, consectetur',
+      title: AppStrings.makingYourDriveBestIsOurResponsibility.tr,
+      subtitle: AppStrings.loremIpsumDolorSitAmetConsectetur.tr,
       image: AppAssets.onboarding1,
     ),
     OnboardingSlide(
-      title: 'This is Second Slide',
-      subtitle: 'Lorem ipsum dolor sit amet, consectetur',
+      title: AppStrings.thisIsSecondSlide.tr,
+      subtitle: AppStrings.loremIpsumDolorSitAmetConsectetur.tr,
       image: AppAssets.onboarding2,
     ),
     OnboardingSlide(
-      title: 'This is third Slide',
-      subtitle: 'Lorem ipsum dolor sit amet, consectetur',
+      title: AppStrings.thisIsThirdSlide.tr,
+      subtitle: AppStrings.loremIpsumDolorSitAmetConsectetur.tr,
       image: AppAssets.onboarding3,
     ),
   ];

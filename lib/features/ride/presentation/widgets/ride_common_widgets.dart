@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+import 'package:get/get.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -294,7 +296,7 @@ class NeedHelpRow extends StatelessWidget {
         GestureDetector(
           onTap: () => Get.toNamed(AppRoutes.contactUs),
           child: Text(
-            'Need Help?',
+            AppStrings.needHelp.tr,
             style: TextStyle(
               fontFamily: AppTextStyles.metropolisFont,
               fontWeight: FontWeight.w600,

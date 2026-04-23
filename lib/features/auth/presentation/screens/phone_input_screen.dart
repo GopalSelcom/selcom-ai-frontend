@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -35,7 +36,7 @@ class PhoneInputScreen extends GetView<AuthController> {
 
                         // Title
                         Text(
-                          'Enter Phone number for verification',
+                          AppStrings.enterPhoneNumberForVerification.tr,
                           style: AppTextStyles.onboardingTitle.copyWith(
                             fontSize: 28.sp,
                           ),
@@ -45,7 +46,7 @@ class PhoneInputScreen extends GetView<AuthController> {
 
                         // Subtitle
                         Text(
-                          'We’ll text a code to verify your phone number',
+                          AppStrings.weLlTextACodeToVerifyYourPhoneNumber.tr,
                           style: AppTextStyles.onboardingSubtitle,
                         ),
 
@@ -78,7 +79,7 @@ class PhoneInputScreen extends GetView<AuthController> {
                                   ),
                                   SizedBox(width: 8.w),
                                   Text(
-                                    '+255',
+                                    AppStrings.value255.tr,
                                     style: AppTextStyles.body.copyWith(
                                       fontFamily: AppTextStyles.metropolisFont,
                                       fontWeight: FontWeight.w600,
@@ -127,7 +128,7 @@ class PhoneInputScreen extends GetView<AuthController> {
                                         .replaceAll(' ', '');
                                   },
                                   decoration: InputDecoration(
-                                    hintText: 'e.g. 7XX XXX XXX',
+                                    hintText: AppStrings.eG7XxXxxXxx.tr,
                                     counterText: "",
                                     hintStyle: AppTextStyles.hint.copyWith(
                                       fontSize: 18.sp,
@@ -177,7 +178,8 @@ class PhoneInputScreen extends GetView<AuthController> {
                                   ),
                                   onChanged: controller.onEmailChanged,
                                   decoration: InputDecoration(
-                                    hintText: 'e.g. name@email.com (optional)',
+                                    hintText:
+                                        AppStrings.eGNameEmailComOptional.tr,
                                     hintStyle: AppTextStyles.hint.copyWith(
                                       fontSize: 16.sp,
                                     ),
@@ -214,7 +216,9 @@ class PhoneInputScreen extends GetView<AuthController> {
                         Padding(
                           padding: EdgeInsets.only(bottom: 24.h),
                           child: Text(
-                            'Note: By proceeding, you consent to get calls, WhatsApp or SMS messages, including by automated means, from GoChauffeur and its affiliates to the number provided.',
+                            AppStrings
+                                .noteByProceedingYouConsentToGetCallsWhatsappOrSmsMessagesIncludingByAu
+                                .tr,
                             style: AppTextStyles.onboardingFooter.copyWith(
                               fontSize: 11.sp,
                               color: AppColors.shade2.withValues(alpha: 0.7),

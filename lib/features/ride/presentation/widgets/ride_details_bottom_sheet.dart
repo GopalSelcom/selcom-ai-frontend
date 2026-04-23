@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_assets.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
@@ -99,7 +100,8 @@ class _RideDetailsBottomSheetState extends State<RideDetailsBottomSheet> {
     super.initState();
     _hasExistingRating = (widget.ride.riderRating ?? 0) > 0;
     _canShowReviewInput =
-        widget.ride.status == RideStatus.rideCompleted && widget.ride.showReviewUi;
+        widget.ride.status == RideStatus.rideCompleted &&
+        widget.ride.showReviewUi;
     _ratingController = _resolveRideRatingController();
     if (!_hasExistingRating && _canShowReviewInput) {
       _ratingController.prepareRatingForRide(_toRatingEntity(widget.ride));
@@ -152,7 +154,7 @@ class _RideDetailsBottomSheetState extends State<RideDetailsBottomSheet> {
           SizedBox(height: 16.h),
 
           Text(
-            'Your Rides',
+            AppStrings.yourRides.tr,
             style: TextStyle(
               fontFamily: AppTextStyles.metropolisFont,
               fontWeight: FontWeight.w700,
@@ -250,7 +252,7 @@ class _RideDetailsBottomSheetState extends State<RideDetailsBottomSheet> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Total Fare',
+                          AppStrings.totalFare.tr,
                           style: TextStyle(
                             fontFamily: AppTextStyles.metropolisFont,
                             fontWeight: FontWeight.w600,
@@ -260,17 +262,17 @@ class _RideDetailsBottomSheetState extends State<RideDetailsBottomSheet> {
                         ),
                         SizedBox(height: 16.h),
                         FareBreakdownRow(
-                          title: 'Ride Charge',
+                          title: AppStrings.rideCharge.tr,
                           amount: 'TZS $rideCharge',
                         ),
                         SizedBox(height: 12.h),
                         FareBreakdownRow(
-                          title: 'Booking Fees & Convenience Charges',
+                          title: AppStrings.bookingFeesAndConvenienceCharges.tr,
                           amount: 'TZS $bookingFee',
                         ),
                         SizedBox(height: 12.h),
                         FareBreakdownRow(
-                          title: 'Total Amount',
+                          title: AppStrings.totalAmount.tr,
                           amount: 'TZS $totalAmount',
                           isTotal: true,
                         ),
@@ -294,7 +296,7 @@ class _RideDetailsBottomSheetState extends State<RideDetailsBottomSheet> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'How was your ride?',
+                                AppStrings.howWasYourRide.tr,
                                 style: TextStyle(
                                   fontFamily: AppTextStyles.metropolisFont,
                                   fontWeight: FontWeight.w600,
@@ -321,7 +323,7 @@ class _RideDetailsBottomSheetState extends State<RideDetailsBottomSheet> {
                           ),
                         )
                       : _canShowReviewInput
-                          ? Column(
+                      ? Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             SizedBox(height: 12.h),
@@ -330,8 +332,8 @@ class _RideDetailsBottomSheetState extends State<RideDetailsBottomSheet> {
                               starSize: 40,
                             ),
                           ],
-                          )
-                          : const SizedBox.shrink(),
+                        )
+                      : const SizedBox.shrink(),
                   SizedBox(height: 24.h),
 
                   // Need Help

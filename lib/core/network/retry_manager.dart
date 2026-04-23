@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+import 'package:get/get.dart';
 import 'package:get/get.dart' hide Response;
 
 import 'api_service.dart';
@@ -90,8 +92,8 @@ class RetryManager {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Connection Error',
+              Text(
+                AppStrings.connectionError.tr,
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
@@ -102,10 +104,7 @@ class RetryManager {
               const SizedBox(height: 12),
               const Text(
                 "We couldn't complete your request. Please try again.",
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Color(0xFF364B63),
-                ),
+                style: TextStyle(fontSize: 15, color: Color(0xFF364B63)),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -125,7 +124,7 @@ class RetryManager {
                     Get.back();
                     retryAll();
                   },
-                  child: const Text('Retry'),
+                  child: Text(AppStrings.retry.tr),
                 ),
               ),
             ],

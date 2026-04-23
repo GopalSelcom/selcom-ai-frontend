@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+import 'package:selcom_rides_frontend/core/localization/localization.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -17,6 +19,27 @@ class ProfileScreen extends StatelessWidget {
   ProfileScreen({super.key});
 
   final ProfileController controller = Get.put(sl<ProfileController>());
+
+  Future<void> _toggleLanguage(BuildContext context) async {
+    final current = Get.locale ?? Get.deviceLocale ?? const Locale('en');
+    final nextCode = current.languageCode == 'sw' ? 'en' : 'sw';
+    await Localization.instance.changeLanguage(context, nextCode);
+    Get.snackbar(
+      AppStrings.language.tr,
+      nextCode == 'sw'
+          ? AppStrings.switchedToSwahili.tr
+          : AppStrings.switchedToEnglish.tr,
+      snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 2),
+    );
+  }
+
+  String _currentLanguageLabel(BuildContext context) {
+    final current = Get.locale ?? Get.deviceLocale ?? const Locale('en');
+    return current.languageCode == 'sw'
+        ? AppStrings.swahili.tr
+        : AppStrings.english.tr;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +79,7 @@ class ProfileScreen extends StatelessWidget {
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.w),
                         child: Text(
-                          'App Settings',
+                          AppStrings.appSettings.tr,
                           style: AppTextStyles.sectionTitle.copyWith(
                             color: AppColors.shade2,
                             fontSize: 15.sp,
@@ -66,7 +89,7 @@ class ProfileScreen extends StatelessWidget {
                       SizedBox(height: 16.h),
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.w),
-                        child: _buildSettingsList(),
+                        child: _buildSettingsList(context),
                       ),
                       SizedBox(height: 24.h),
                       Padding(
@@ -93,7 +116,7 @@ class ProfileScreen extends StatelessWidget {
                                 ),
                                 SizedBox(width: 16.w),
                                 Text(
-                                  'Logout',
+                                  AppStrings.logout.tr,
                                   style: AppTextStyles.body.copyWith(
                                     fontWeight: FontWeight.w600,
                                     color: AppColors.error,
@@ -326,7 +349,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSettingsList() {
+  Widget _buildSettingsList(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
@@ -338,47 +361,53 @@ class ProfileScreen extends StatelessWidget {
           children: [
             MenuItemWidget(
               icon: Iconsax.clock,
-              title: 'My Rides',
+              title: AppStrings.myRides.tr,
               onTap: controller.openMyRides,
             ),
             MenuItemWidget(
               icon: Iconsax.card,
-              title: 'Payment',
+              title: AppStrings.payment.tr,
               onTap: controller.openPaymentMethods,
             ),
             MenuItemWidget(
               icon: Iconsax.gift,
-              title: 'Promotions',
+              title: AppStrings.promotions.tr,
               onTap: controller.openPromotions,
             ),
             MenuItemWidget(
               icon: Iconsax.message_question,
-              title: 'Help',
+              title: AppStrings.help.tr,
               onTap: controller.openContactUs,
             ),
             MenuItemWidget(
               icon: Iconsax.shield_tick,
-              title: 'Safety & Privacy',
+              title: AppStrings.safetyAndPrivacy.tr,
               onTap: controller.openPrivacyPolicy,
             ),
             MenuItemWidget(
               icon: Iconsax.heart,
-              title: 'Favourite Locations',
+              title: AppStrings.favouriteLocations.tr,
               onTap: controller.openFavoriteLocations,
             ),
             MenuItemWidget(
               icon: Iconsax.reserve,
-              title: 'Notification',
+              title: AppStrings.notification.tr,
               onTap: controller.openNotifications,
               showDivider: controller.showSettingsOption.value,
             ),
             if (controller.showSettingsOption.value)
               MenuItemWidget(
                 icon: Iconsax.setting_2,
-                title: 'Settings',
+                title: AppStrings.settings.tr,
                 onTap: controller.openSettings,
-                showDivider: false,
               ),
+            MenuItemWidget(
+              icon: Iconsax.language_square,
+              title:
+                  '${AppStrings.language.tr} (${_currentLanguageLabel(context)})',
+              onTap: () => _toggleLanguage(context),
+              showDivider: false,
+            ),
           ],
         ),
       ),

@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../controllers/payment_method_controller.dart';
 import './payment_method_bottom_sheet.dart';
@@ -50,7 +51,7 @@ class PaymentBar extends StatelessWidget {
                       Row(
                         children: [
                           Text(
-                            'Pay Using',
+                            AppStrings.payUsing.tr,
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.9),
                               fontSize: 15.sp,
@@ -67,7 +68,7 @@ class PaymentBar extends StatelessWidget {
                       ),
                       SizedBox(height: 4.h),
                       Text(
-                        pay?.label ?? 'Select payment',
+                        pay?.label ?? AppStrings.selectPayment.tr,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 18.sp,
@@ -78,7 +79,9 @@ class PaymentBar extends StatelessWidget {
                       ),
                       if (pay?.type == 'card')
                         Text(
-                          'Card ending in XX1234', // Mock descriptive text from Figma
+                          AppStrings
+                              .cardEndingInPlaceholder
+                              .tr, // Mock descriptive text from Figma
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.85),
                             fontSize: 14.sp,

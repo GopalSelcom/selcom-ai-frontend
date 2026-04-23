@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/utils/phone_formatter.dart';
@@ -38,7 +39,7 @@ class SelcomPesaPhoneInputBottomSheet
           SizedBox(height: 24.h),
 
           Text(
-            'Enter your Selcom Pesa Number',
+            AppStrings.enterYourSelcomPesaNumber.tr,
             style: AppTextStyles.sectionTitle.copyWith(
               fontSize: 20.sp,
               fontWeight: FontWeight.w700,
@@ -52,7 +53,7 @@ class SelcomPesaPhoneInputBottomSheet
           Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              'Enter Phone number',
+              AppStrings.enterPhoneNumber.tr,
               style: AppTextStyles.body.copyWith(
                 color: AppColors.shade2,
                 fontWeight: FontWeight.w500,
@@ -78,7 +79,7 @@ class SelcomPesaPhoneInputBottomSheet
               prefixIcon: Container(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
                 child: Text(
-                  '+255',
+                  AppStrings.value255.tr,
                   style: AppTextStyles.body.copyWith(
                     fontWeight: FontWeight.w600,
                     color: AppColors.shade1,

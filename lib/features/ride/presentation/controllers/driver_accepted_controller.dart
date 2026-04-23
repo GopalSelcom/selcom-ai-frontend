@@ -8,6 +8,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/driver_location_socker_response.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
 
 import '../../../../core/constants/app_assets.dart';
@@ -420,8 +421,8 @@ class DriverAcceptedController extends GetxController
         await LiveActivityManager().endActivity(rideId);
         _showCancelDialogThenGoHome(
           normalized == 'no_driver_found'
-              ? 'No driver found for your request. Please try again.'
-              : 'Your ride was cancelled.',
+              ? AppStrings.noDriverFoundForYourRequestPleaseTryAgain.tr
+              : AppStrings.rideCancelled.tr,
         );
       }
     });
@@ -502,7 +503,7 @@ class DriverAcceptedController extends GetxController
         final msg = data['message'] ?? data['text'] ?? 'New message';
 
         NotificationService().showLocalNotification(
-          title: 'New Message',
+          title: AppStrings.newMessage.tr,
           body: msg.toString(),
           payload: jsonEncode(data),
         );
@@ -930,8 +931,8 @@ class DriverAcceptedController extends GetxController
       _navigatedAway = true;
       _showCancelDialogThenGoHome(
         status == 'no_driver_found'
-            ? 'No driver found for your request. Please try again.'
-            : 'Your ride was cancelled.',
+            ? AppStrings.noDriverFoundForYourRequestPleaseTryAgain.tr
+            :AppStrings.rideCancelled.tr,
       );
       return;
     }
@@ -1077,8 +1078,8 @@ class DriverAcceptedController extends GetxController
     final phone = driverPhone.value.trim();
     if (phone.isEmpty) {
       AppDialogs.showErrorDialog(
-        title: 'Call',
-        message: 'Phone number unavailable',
+        title: AppStrings.call.tr,
+        message: AppStrings.phoneNumberUnavailable.tr,
       );
       return;
     }
@@ -1097,8 +1098,8 @@ class DriverAcceptedController extends GetxController
     } catch (e) {
       debugPrint("Error launching dialer: $e");
       AppDialogs.showErrorDialog(
-        title: 'Call',
-        message: 'Error opening phone dialer',
+        title: AppStrings.call.tr,
+        message: AppStrings.errorOpeningPhoneDialer.tr,
       );
     }
   }
@@ -1238,16 +1239,16 @@ class DriverAcceptedController extends GetxController
     // 3. Perform Cancellation
     if (rideId.isEmpty) {
       AppDialogs.showErrorDialog(
-        title: 'Cancel failed',
-        message: 'Ride id is missing.',
+        title: AppStrings.cancelFailed.tr,
+        message:  AppStrings.rideIdIsMissing.tr,
       );
       return;
     }
     final result = await rideRepository.cancelRide(rideId, 'rider_cancelled');
     result.fold(
       (_) => AppDialogs.showErrorDialog(
-        title: 'Cancel failed',
-        message: 'Could not cancel. Try again.',
+        title: AppStrings.cancelFailed.tr,
+        message: AppStrings.couldNotCancelTryAgain.tr,
       ),
       (success) async {
         if (success) {
@@ -1259,8 +1260,8 @@ class DriverAcceptedController extends GetxController
           );
         } else {
           AppDialogs.showErrorDialog(
-            title: 'Cancel failed',
-            message: 'Please try again.',
+            title: AppStrings.cancelFailed.tr,
+            message:AppStrings.pleaseTryAgain.tr,
           );
         }
       },

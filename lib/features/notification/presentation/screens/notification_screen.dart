@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 
 import '../../../../core/data/models/notification_model.dart';
 import '../../../../core/di/injection_container.dart';
@@ -22,7 +23,7 @@ class NotificationScreen extends StatelessWidget {
         children: [
           /// Header + Mark All Read
           AppProfileHeader(
-            title: "Notifications",
+            title: AppStrings.notifications.tr,
             bottomPadding: 20.h,
             child: Padding(
               padding: EdgeInsets.only(top: 12.h, right: 16.w),
@@ -254,12 +255,12 @@ class NotificationScreen extends StatelessWidget {
           ),
           SizedBox(height: 16.h),
           Text(
-            'No notifications yet',
+            AppStrings.noNotificationsYet.tr,
             style: AppTextStyles.homeSubtitle.copyWith(color: AppColors.shade2),
           ),
           SizedBox(height: 8.h),
           Text(
-            'We will notify you when something important happens.',
+            AppStrings.weWillNotifyYouWhenSomethingImportantHappens.tr,
             style: AppTextStyles.homeCaption,
             textAlign: TextAlign.center,
           ),

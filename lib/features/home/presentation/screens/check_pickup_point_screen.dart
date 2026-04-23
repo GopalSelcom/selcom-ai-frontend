@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -117,7 +118,7 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                               ],
                             ),
                             child: Text(
-                              'Pickup point',
+                              AppStrings.pickupPoint.tr,
                               style: AppTextStyles.homeCaption.copyWith(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
@@ -209,7 +210,7 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Check your pickup point',
+                            AppStrings.checkYourPickupPoint.tr,
                             style: AppTextStyles.homeTitle.copyWith(
                               fontSize: 18.sp,
                               fontWeight: FontWeight.bold,
@@ -217,7 +218,7 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                           ),
                           SizedBox(height: 4.h),
                           Text(
-                            'Select a nearby point for easier pickup',
+                            AppStrings.selectANearbyPointForEasierPickup.tr,
                             style: AppTextStyles.homeCaption.copyWith(
                               color: AppColors.shade2,
                               fontSize: 13.sp,
@@ -315,7 +316,7 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Confirm pickup',
+                          AppStrings.confirmPickup.tr,
                           style: AppTextStyles.body.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -507,7 +508,7 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                                   ),
                                 )
                               : Text(
-                                  'Yes',
+                                  AppStrings.yes.tr,
                                   style: AppTextStyles.body.copyWith(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
@@ -532,7 +533,7 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                               ? null
                               : () => Get.back(),
                           child: Text(
-                            'Change Location',
+                            AppStrings.changeLocation.tr,
                             style: AppTextStyles.body.copyWith(
                               color: AppColors.shade2,
                               fontWeight: FontWeight.w500,

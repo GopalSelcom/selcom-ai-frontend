@@ -4,6 +4,7 @@ import 'package:m7_livelyness_detection/index.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:selcom_rides_frontend/core/constants/app_assets.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../domain/entities/payment_card.dart';
@@ -59,8 +60,8 @@ class PaymentMethodsController extends GetxController {
   void resendOtp() {
     _startTimer();
     AppDialogs.showSuccessDialog(
-      title: 'Selcom Pesa',
-      message: 'OTP resent successfully',
+      title: AppStrings.selcomPesa.tr,
+      message: AppStrings.otpResentSuccessfully.tr,
     );
   }
 
@@ -102,8 +103,8 @@ class PaymentMethodsController extends GetxController {
     isSelcomPesaLinked.value = false;
     // Optional: Clear selection or reset other states
     AppDialogs.showSuccessDialog(
-      title: 'Selcom Pesa',
-      message: 'Account unlinked successfully',
+      title: AppStrings.selcomPesa.tr,
+      message: AppStrings.accountUnlinkedSuccessfully.tr,
     );
   }
 
@@ -184,7 +185,7 @@ class PaymentMethodsController extends GetxController {
     final status = await Permission.camera.request();
     if (!status.isGranted) {
       AppDialogs.showPermissionDialog(
-        title: 'Camera Permission',
+        title: AppStrings.cameraPermission.tr,
         message:
             'We need camera access to capture your selfie for identity verification. Please enable it in your device settings.',
         onOpenSettings: () => openAppSettings(),
@@ -216,13 +217,13 @@ class PaymentMethodsController extends GetxController {
           steps: [
             M7LivelynessStepItem(
               step: M7LivelynessStep.smile,
-              title: 'Smile',
+              title: AppStrings.smile.tr,
               isCompleted: false,
               detectionColor: Colors.blue.shade200,
             ),
             M7LivelynessStepItem(
               step: M7LivelynessStep.blink,
-              title: 'Blink Your Eyes',
+              title: AppStrings.blinkYourEyes.tr,
               isCompleted: false,
               detectionColor: Colors.blue.shade200,
             ),
@@ -250,7 +251,7 @@ class PaymentMethodsController extends GetxController {
         });
       }
     } catch (e) {
-      AppDialogs.showErrorDialog(message: 'Selfie capture failed');
+      AppDialogs.showErrorDialog(message: AppStrings.selfieCaptureFailed.tr);
     }
   }
 
@@ -260,7 +261,7 @@ class PaymentMethodsController extends GetxController {
     if (result != null) {
       Get.bottomSheet(
         PaymentCardActionBottomSheet(
-          title: 'Your card has been\nadded successfully.',
+          title: AppStrings.yourCardHasBeenNaddedSuccessfully.tr,
           description:
               'Now ready to use for payments. You can manage or remove this card anytime from your payment settings.',
           cardNumber: result.fullNumber,

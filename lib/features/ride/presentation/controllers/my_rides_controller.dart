@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
@@ -33,15 +34,12 @@ class MyRidesController extends GetxController {
         page: _page.value,
         limit: _limit,
       );
-      result.fold(
-        (failure) => AppDialogs.showErrorDialog(message: failure.message),
-        (rides) {
-          pastRides.assignAll(rides);
-          hasMoreData.value = rides.length >= _limit;
-        },
-      );
+      result.fold((failure) => AppDialogs.showErrorDialog(message: failure.message), (rides) {
+        pastRides.assignAll(rides);
+        hasMoreData.value = rides.length >= _limit;
+      });
     } catch (e) {
-      AppDialogs.showErrorDialog(message: 'An unexpected error occurred');
+      AppDialogs.showErrorDialog(message: AppStrings.anUnexpectedErrorOccurred.tr,);
     } finally {
       isLoading.value = false;
     }
@@ -55,21 +53,20 @@ class MyRidesController extends GetxController {
     isOpeningRide.value = true;
     try {
       final result = await rideUseCase.getRideDetails(ride.id);
-      result.fold(
-        (failure) => AppDialogs.showErrorDialog(message: failure.message),
-        (freshRide) {
-          if (rideStatusIsOngoingActive(freshRide.status)) {
-            navigateToDriverAcceptedForRide(freshRide);
-            return;
-          }
-          Get.bottomSheet(
-            RideDetailsBottomSheet(ride: freshRide),
-            isScrollControlled: true,
-          );
-        },
-      );
+      result.fold((failure) => AppDialogs.showErrorDialog(message: failure.message), (
+        freshRide,
+      ) {
+        if (rideStatusIsOngoingActive(freshRide.status)) {
+          navigateToDriverAcceptedForRide(freshRide);
+          return;
+        }
+        Get.bottomSheet(
+          RideDetailsBottomSheet(ride: freshRide),
+          isScrollControlled: true,
+        );
+      });
     } catch (_) {
-      AppDialogs.showErrorDialog(message: 'An unexpected error occurred');
+      AppDialogs.showErrorDialog(message: AppStrings.anUnexpectedErrorOccurred.tr,);
     } finally {
       isOpeningRide.value = false;
     }
@@ -88,20 +85,17 @@ class MyRidesController extends GetxController {
         limit: _limit,
       );
 
-      result.fold(
-        (failure) => AppDialogs.showErrorDialog(message: failure.message),
-        (rides) {
-          if (rides.isEmpty) {
-            hasMoreData.value = false;
-            return;
-          }
-          pastRides.addAll(rides);
-          _page.value = nextPage;
-          hasMoreData.value = rides.length >= _limit;
-        },
-      );
+      result.fold((failure) => AppDialogs.showErrorDialog(message: failure.message), (rides) {
+        if (rides.isEmpty) {
+          hasMoreData.value = false;
+          return;
+        }
+        pastRides.addAll(rides);
+        _page.value = nextPage;
+        hasMoreData.value = rides.length >= _limit;
+      });
     } catch (e) {
-      AppDialogs.showErrorDialog(message: 'An unexpected error occurred');
+      AppDialogs.showErrorDialog(message: AppStrings.anUnexpectedErrorOccurred.tr,);
     } finally {
       isLoadingMore.value = false;
     }

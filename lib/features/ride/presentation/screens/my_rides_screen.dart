@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -22,7 +23,7 @@ class MyRidesScreen extends StatelessWidget {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const AppProfileHeader(title: 'My Rides'),
+          AppProfileHeader(title: AppStrings.myRides.tr),
 
           Expanded(
             child: Obx(() {
@@ -39,7 +40,7 @@ class MyRidesScreen extends StatelessWidget {
                       height: 400.h,
                       child: Center(
                         child: Text(
-                          'No past rides found',
+                          AppStrings.noPastRidesFound.tr,
                           style: AppTextStyles.body.copyWith(
                             color: AppColors.shade2,
                           ),
@@ -75,7 +76,7 @@ class MyRidesScreen extends StatelessWidget {
                           Padding(
                             padding: EdgeInsets.symmetric(horizontal: 8.w),
                             child: Text(
-                              'Past',
+                              AppStrings.past.tr,
                               style: AppTextStyles.body.copyWith(
                                 color: AppColors.shade2,
                                 fontWeight: FontWeight.w600,

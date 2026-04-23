@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_text_field.dart';
@@ -31,7 +32,7 @@ class RideRatingInputSection extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'How was your ride?',
+              AppStrings.howWasYourRide.tr,
               style: AppTextStyles.homeTitle.copyWith(
                 fontSize: 15.sp,
                 fontWeight: FontWeight.w600,
@@ -58,7 +59,7 @@ class RideRatingInputSection extends StatelessWidget {
             if (controller.hasSelectedRating) ...[
               SizedBox(height: 12.h),
               Text(
-                'What stood out?',
+                AppStrings.whatStoodOut.tr,
                 style: AppTextStyles.homeTitle.copyWith(
                   fontSize: 15.sp,
                   fontWeight: FontWeight.w600,
@@ -67,7 +68,7 @@ class RideRatingInputSection extends StatelessWidget {
               ),
               SizedBox(height: 6.h),
               Text(
-                'Pick any tags that match this trip.',
+                AppStrings.pickAnyTagsThatMatchThisTrip.tr,
                 style: AppTextStyles.homeCaption.copyWith(
                   color: const Color(0xFF364B63),
                   fontSize: 13.sp,
@@ -116,7 +117,7 @@ class RideRatingInputSection extends StatelessWidget {
               if (controller.selectedRating.value <= 2) ...[
                 SizedBox(height: 12.h),
                 Text(
-                  'Please tell us what went wrong or how we can improve.',
+                  AppStrings.pleaseTellUsWhatWentWrongOrHowWeCanImprove.tr,
                   style: AppTextStyles.homeTitle.copyWith(
                     fontSize: 15.sp,
                     fontWeight: FontWeight.w600,
@@ -127,7 +128,7 @@ class RideRatingInputSection extends StatelessWidget {
                 AppTextField(
                   controller: controller.commentController,
                   onChanged: controller.onCommentChanged,
-                  hintText: 'Tell us more about your experience...',
+                  hintText: AppStrings.tellUsMoreAboutYourExperience.tr,
                   maxLines: 2,
                   maxLength: 120,
                   showCounter: true,

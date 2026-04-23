@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 
 class CancelConfirmationDialog extends StatelessWidget {
   const CancelConfirmationDialog({super.key});
@@ -17,7 +18,7 @@ class CancelConfirmationDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Are you sure you want to cancel?',
+              AppStrings.areYouSureYouWantToCancel.tr,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 20.sp,
@@ -28,14 +29,14 @@ class CancelConfirmationDialog extends StatelessWidget {
             ),
             SizedBox(height: 32.h),
             _ActionButton(
-              title: 'YES, CANCEL',
+              title: AppStrings.yesCancel.tr,
               color: const Color(0xFFFF0050),
               textColor: Colors.white,
               onTap: () => Get.back(result: true),
             ),
             SizedBox(height: 12.h),
             _ActionButton(
-              title: 'NO',
+              title: AppStrings.no.tr,
               color: const Color(0xFFF1F5F9),
               textColor: const Color(0xFF64748B),
               onTap: () => Get.back(result: false),
@@ -62,7 +63,7 @@ class CancelAssignmentWarningDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Are you sure you want to cancel?',
+              AppStrings.areYouSureYouWantToCancel.tr,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 20.sp,
@@ -71,7 +72,7 @@ class CancelAssignmentWarningDialog extends StatelessWidget {
               ),
             ),
             Text(
-              'Your driver is already on the way.',
+              AppStrings.yourDriverIsAlreadyOnTheWay.tr,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 20.sp,
@@ -107,14 +108,14 @@ class CancelAssignmentWarningDialog extends StatelessWidget {
             ),
             SizedBox(height: 32.h),
             _ActionButton(
-              title: 'Keep Ride',
+              title: AppStrings.keepRide.tr,
               color: const Color(0xFFFF0050),
               textColor: Colors.white,
               onTap: () => Get.back(result: false),
             ),
             SizedBox(height: 12.h),
             _ActionButton(
-              title: 'Cancel & Pay',
+              title: AppStrings.cancelAndPay.tr,
               color: const Color(0xFFF1F5F9),
               textColor: const Color(0xFF64748B),
               onTap: () => Get.back(result: true),
@@ -172,7 +173,7 @@ class _CancelReasonSelectionDialogState
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Why do you want to cancel?',
+              AppStrings.whyDoYouWantToCancel.tr,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 20.sp,
@@ -245,7 +246,7 @@ class _CancelReasonSelectionDialogState
             ),
             SizedBox(height: 32.h),
             _ActionButton(
-              title: 'Continue',
+              title: AppStrings.continueLabel.tr,
               color: isSelected
                   ? const Color(0xFFFF0050)
                   : const Color(0xFFFF0050).withValues(alpha: 0.5),
@@ -256,7 +257,7 @@ class _CancelReasonSelectionDialogState
             ),
             SizedBox(height: 12.h),
             _ActionButton(
-              title: 'NO',
+              title: AppStrings.no.tr,
               color: const Color(0xFFF1F5F9),
               textColor: const Color(0xFF64748B),
               onTap: () => Get.back(),

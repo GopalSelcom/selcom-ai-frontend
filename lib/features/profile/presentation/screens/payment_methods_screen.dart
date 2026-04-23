@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
@@ -39,7 +40,10 @@ class PaymentMethodsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AppProfileHeader(title: 'Payment', onBack: controller.handleBack),
+            AppProfileHeader(
+              title: AppStrings.payment.tr,
+              onBack: controller.handleBack,
+            ),
             SizedBox(height: 24.h),
 
             // Wallet Card
@@ -109,7 +113,7 @@ class PaymentMethodsScreen extends StatelessWidget {
               Row(
                 children: [
                   Text(
-                    'Selcom Pesa',
+                    AppStrings.selcomPesa.tr,
                     style: AppTextStyles.body.copyWith(
                       fontWeight: FontWeight.w700,
                       color: AppColors.shade1,
@@ -127,7 +131,7 @@ class PaymentMethodsScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(4.r),
                       ),
                       child: Text(
-                        'Default',
+                        AppStrings.defaultLabel.tr,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 10.sp,
@@ -160,7 +164,7 @@ class PaymentMethodsScreen extends StatelessWidget {
               if (!isLinked) ...[
                 SizedBox(height: 12.h),
                 Text(
-                  'Link Account',
+                  AppStrings.linkAccount.tr,
                   style: AppTextStyles.body.copyWith(
                     color: AppColors.primary,
                     fontWeight: FontWeight.w600,
@@ -308,7 +312,7 @@ class PaymentMethodsScreen extends StatelessWidget {
             Icon(Icons.add, color: AppColors.primary, size: 24.w),
             SizedBox(width: 12.w),
             Text(
-              'Add debit/credit card',
+              AppStrings.addDebitCreditCard.tr,
               style: AppTextStyles.body.copyWith(
                 color: AppColors.primary,
                 fontWeight: FontWeight.w600,

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/network/urls.dart';
 import '../../../../core/routes/app_routes.dart';
@@ -127,8 +128,8 @@ class ProfileController extends GetxController {
   Future<void> saveProfile() async {
     if (nameTextController.text.trim().isEmpty) {
       AppDialogs.showErrorDialog(
-        title: 'Validation',
-        message: 'Name cannot be empty',
+        title: AppStrings.validation.tr,
+        message: AppStrings.nameCannotBeEmpty.tr,
       );
       return;
     }
@@ -159,7 +160,7 @@ class ProfileController extends GetxController {
 
         isEditing.value = false;
         AppDialogs.showSuccessDialog(
-          message: 'User profile updated successfully',
+          message: AppStrings.userProfileUpdatedSuccessfully.tr,
         );
       },
     );
@@ -207,7 +208,7 @@ class ProfileController extends GetxController {
   void openPrivacyPolicy() {
     Get.to(
       () => WebViewScreen(
-        title: "Privacy Policy",
+        title: AppStrings.privacyPolicy.tr,
         url: "${AppConfig.baseUrl}/${URLS.common.privacy}",
       ),
     );
@@ -223,7 +224,7 @@ class ProfileController extends GetxController {
 
   void logout() {
     AppDialogs.showConfirmationDialog(
-      title: 'Logout',
+      title: AppStrings.logout.tr,
       message: 'Are you sure you want to logout from the app?',
       confirmText: 'Logout',
       confirmColor: AppColors.error,

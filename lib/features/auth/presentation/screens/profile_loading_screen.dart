@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import 'dart:ui';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_assets.dart';
@@ -51,7 +52,7 @@ class _ProfileLoadingScreenState extends State<ProfileLoadingScreen>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Loading your profile...',
+                  AppStrings.loadingYourProfile.tr,
                   style: AppTextStyles.onboardingTitle.copyWith(
                     fontSize: 28.sp,
                     color: const Color(0xFF132235),
@@ -141,7 +142,7 @@ class _ProfileLoadingScreenState extends State<ProfileLoadingScreen>
 
                           // Text Content
                           Text(
-                            'Verification Successfully',
+                            AppStrings.verificationSuccessfully.tr,
                             style: AppTextStyles.onboardingTitle.copyWith(
                               fontSize: 24.sp,
                               color: const Color(0xFF132235),
@@ -150,7 +151,7 @@ class _ProfileLoadingScreenState extends State<ProfileLoadingScreen>
                           ),
                           SizedBox(height: 8.h),
                           Text(
-                            'Face scan process has been successful',
+                            AppStrings.faceScanProcessHasBeenSuccessful.tr,
                             style: AppTextStyles.onboardingSubtitle.copyWith(
                               fontSize: 15.sp,
                               color: const Color(0xFF364B63),
@@ -180,7 +181,7 @@ class _ProfileLoadingScreenState extends State<ProfileLoadingScreen>
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
-                                    'Done',
+                                    AppStrings.done.tr,
                                     style: AppTextStyles.onboardingButton.copyWith(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16.sp,

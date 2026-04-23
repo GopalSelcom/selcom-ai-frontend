@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../../../../../shared/widgets/app_profile_header.dart';
@@ -17,7 +18,7 @@ class SettingsScreen extends GetView<SettingsController> {
       backgroundColor: AppColors.pageBackground,
       body: Column(
         children: [
-          const AppProfileHeader(title: 'Settings'),
+          AppProfileHeader(title: AppStrings.settings.tr),
           Expanded(
             child: Obx(
               () => controller.isLoading.value
@@ -30,7 +31,7 @@ class SettingsScreen extends GetView<SettingsController> {
                         padding: EdgeInsets.fromLTRB(16.w, 24.h, 16.w, 24.h),
                         children: [
                           Text(
-                            'App Settings',
+                            AppStrings.appSettings.tr,
                             style: AppTextStyles.sectionTitle.copyWith(
                               color: AppColors.shade2,
                               fontSize: 15.sp,
@@ -38,7 +39,9 @@ class SettingsScreen extends GetView<SettingsController> {
                           ),
                           SizedBox(height: 8.h),
                           Text(
-                            'Security and preference controls. More settings will appear here as they are enabled.',
+                            AppStrings
+                                .securityAndPreferenceControlsMoreSettingsWillAppearHereAsTheyAreEnable
+                                .tr,
                             style: AppTextStyles.caption.copyWith(
                               color: AppColors.shade2,
                             ),
@@ -53,7 +56,9 @@ class SettingsScreen extends GetView<SettingsController> {
                                 borderRadius: BorderRadius.circular(16.r),
                               ),
                               child: Text(
-                                'No configurable settings are available right now.',
+                                AppStrings
+                                    .noConfigurableSettingsAreAvailableRightNow
+                                    .tr,
                                 style: AppTextStyles.body.copyWith(
                                   color: AppColors.shade2,
                                 ),
@@ -63,11 +68,12 @@ class SettingsScreen extends GetView<SettingsController> {
                             Obx(
                               () => SettingsToggleTile(
                                 icon: Iconsax.shield_security,
-                                title: 'Ride PIN Protection',
+                                title: AppStrings.ridePinProtection.tr,
                                 subtitle: controller.canToggleRidePin
                                     ? 'Require a verification PIN before starting a ride.'
                                     : 'Ride PIN is required by admin and cannot be turned off.',
-                                statusText: controller.effectiveRequiredRidePin.value
+                                statusText:
+                                    controller.effectiveRequiredRidePin.value
                                     ? 'Current status: required'
                                     : 'Current status: optional',
                                 value: controller.ridePinSwitchValue,

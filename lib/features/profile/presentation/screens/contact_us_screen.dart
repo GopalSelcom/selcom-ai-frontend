@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
@@ -19,7 +20,7 @@ class ContactUsScreen extends GetView<ContactUsController> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const AppProfileHeader(title: 'Contact Us'),
+          AppProfileHeader(title: AppStrings.contactUs.tr),
 
           SizedBox(height: 32.h),
 
@@ -36,18 +37,21 @@ class ContactUsScreen extends GetView<ContactUsController> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Reason to Contact',
+                        AppStrings.reasonToContact.tr,
                         style: AppTextStyles.homeSubtitle,
                       ),
                       SizedBox(height: 8.h),
                       _buildReasonDropdown(context),
 
                       SizedBox(height: 24.h),
-                      Text('Message', style: AppTextStyles.homeSubtitle),
+                      Text(
+                        AppStrings.message.tr,
+                        style: AppTextStyles.homeSubtitle,
+                      ),
                       SizedBox(height: 8.h),
                       AppTextField(
                         controller: controller.messageController,
-                        hintText: 'How can we help you?',
+                        hintText: AppStrings.howCanWeHelpYou.tr,
                         maxLines: 5,
                       ),
                     ],
@@ -115,7 +119,10 @@ class ContactUsScreen extends GetView<ContactUsController> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Select a Reason', style: AppTextStyles.sectionTitle),
+            Text(
+              AppStrings.selectAReason.tr,
+              style: AppTextStyles.sectionTitle,
+            ),
             SizedBox(height: 16.h),
             Flexible(
               child: ListView.builder(

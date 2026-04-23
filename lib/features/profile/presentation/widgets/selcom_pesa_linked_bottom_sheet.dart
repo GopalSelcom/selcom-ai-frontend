@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/constants/app_assets.dart';
@@ -35,7 +36,7 @@ class SelcomPesaLinkedBottomSheet extends GetView<PaymentMethodsController> {
           SizedBox(height: 24.h),
 
           Text(
-            'Your Linked Account',
+            AppStrings.yourLinkedAccount.tr,
             style: AppTextStyles.sectionTitle.copyWith(
               fontSize: 20.sp,
               fontWeight: FontWeight.w700,
@@ -62,7 +63,7 @@ class SelcomPesaLinkedBottomSheet extends GetView<PaymentMethodsController> {
               ),
               SizedBox(width: 12.w),
               Text(
-                'Account Verified',
+                AppStrings.accountVerified.tr,
                 style: AppTextStyles.body.copyWith(
                   color: const Color(0xFF2E7D32),
                   fontWeight: FontWeight.w600,
@@ -87,7 +88,7 @@ class SelcomPesaLinkedBottomSheet extends GetView<PaymentMethodsController> {
                 ),
               ),
               child: Text(
-                'Remove Account',
+                AppStrings.removeAccount.tr,
                 style: AppTextStyles.body.copyWith(
                   color: AppColors.primary,
                   fontWeight: FontWeight.w600,

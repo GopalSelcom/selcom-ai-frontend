@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 
 import '../../../../core/data/models/requests/submit_ride_rating_request.dart';
 import '../../../../core/errors/failures.dart';
@@ -162,30 +163,30 @@ class RideRatingController extends GetxController {
     final ride = pendingReviewRide.value;
     if (ride == null) {
       AppDialogs.showErrorDialog(
-        title: 'Rating',
-        message: 'Ride data is unavailable.',
+        title: AppStrings.rating.tr,
+        message: AppStrings.rideDataIsUnavailable.tr,
       );
       return;
     }
     if (selectedRating.value == 0) {
       AppDialogs.showErrorDialog(
-        title: 'Rating required',
-        message: 'Please rate your ride before submitting.',
+        title:  AppStrings.ratingRequired.tr,
+        message: AppStrings.pleaseRateYourRideBeforeSubmitting.tr,
       );
       return;
     }
     if (selectedTags.isEmpty) {
       AppDialogs.showErrorDialog(
-        title: 'Tag required',
-        message: 'Please select at least one tag before submitting.',
+        title: AppStrings.tagRequired.tr,
+        message: AppStrings.pleaseSelectAtLeastOneTagBeforeSubmitting.tr,
       );
       return;
     }
     final comment = requiresComment ? commentController.text.trim() : '';
     if (requiresComment && comment.isEmpty) {
       AppDialogs.showErrorDialog(
-        title: 'Comment required',
-        message: 'Please enter your comment first.',
+        title: AppStrings.commentRequired.tr,
+        message: AppStrings.pleaseEnterYourCommentFirst.tr,
       );
       return;
     }
@@ -204,8 +205,8 @@ class RideRatingController extends GetxController {
     result.fold((failure) => _handleFailure(failure), (ok) async {
       if (!ok) {
         AppDialogs.showErrorDialog(
-          title: 'Submit failed',
-          message: 'Unable to submit rating now.',
+          title: AppStrings.submitFailed.tr,
+          message:AppStrings.unableToSubmitRatingNow.tr
         );
         return;
       }
@@ -220,8 +221,8 @@ class RideRatingController extends GetxController {
       _resetSheetState(clearPendingRide: true);
       closeBottomSheet();
       AppDialogs.showSuccessDialog(
-        title: 'Thank you',
-        message: 'Your rating has been submitted.',
+        title:    AppStrings.thankYou.tr,
+        message:  AppStrings.yourRatingHasBeenSubmitted.tr,
       );
     });
   }
@@ -240,8 +241,8 @@ class RideRatingController extends GetxController {
     result.fold((failure) => _handleFailure(failure), (ok) async {
       if (!ok) {
         AppDialogs.showErrorDialog(
-          title: 'Skip failed',
-          message: 'Unable to skip rating now.',
+          title:   AppStrings.skipFailed.tr,
+          message:     AppStrings.unableToSkipRatingNow.tr,
         );
         return;
       }
@@ -345,9 +346,7 @@ class RideRatingController extends GetxController {
       return;
     }
 
-    AppDialogs.showErrorDialog(
-      message: message.isEmpty ? 'Something went wrong.' : message,
-    );
+    AppDialogs.showErrorDialog(message: message.isEmpty ? 'Something went wrong.' : message);
   }
 
   @override

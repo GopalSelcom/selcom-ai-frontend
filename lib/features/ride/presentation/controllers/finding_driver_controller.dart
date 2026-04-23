@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/near_by_rider_response.dart';
 import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/driver_location_socker_response.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
@@ -373,14 +374,14 @@ class FindingDriverController extends GetxController {
           currentStatusLabel.value = 'Ride Cancelled';
           currentDescriptionLabel.value = 'The ride has been cancelled.';
           await LiveActivityManager().endActivity(rideId);
-          _showCancelDialogThenGoHome('Your ride was cancelled.');
+          _showCancelDialogThenGoHome(AppStrings.yourRideWasCancelled.tr);
           break;
         case 'no_driver_found':
           currentStatusLabel.value = 'No Driver Found';
           currentDescriptionLabel.value = 'We couldn\'t find a driver nearby.';
           await LiveActivityManager().endActivity(rideId);
           _showCancelDialogThenGoHome(
-            'No drivers nearby. Please try again later.',
+            AppStrings.noDriversNearbyPleaseTryAgainLater.tr,
           );
           break;
       }
@@ -621,8 +622,8 @@ class FindingDriverController extends GetxController {
     // 3. Perform Cancellation
     if (rideId.isEmpty) {
       AppDialogs.showErrorDialog(
-        title: 'Cancel failed',
-        message: 'Ride id is missing.',
+        title: AppStrings.cancelFailed.tr,
+        message: AppStrings.rideIdIsMissing.tr,
       );
       return;
     }
@@ -630,14 +631,14 @@ class FindingDriverController extends GetxController {
     final result = await rideRepository.cancelRide(rideId, reason);
     result.fold(
       (_) => AppDialogs.showErrorDialog(
-        title: 'Cancel failed',
-        message: 'Could not cancel. Try again.',
+        title:AppStrings.cancelFailed.tr,
+        message: AppStrings.couldNotCancelTryAgain.tr,
       ),
       (success) async {
         if (!success) {
           AppDialogs.showErrorDialog(
-            title: 'Cancel failed',
-            message: 'Please try again.',
+            title: AppStrings.cancelFailed.tr,
+            message:   AppStrings.pleaseTryAgain.tr,
           );
         } else {
           await LiveActivityManager().endActivity(rideId);
