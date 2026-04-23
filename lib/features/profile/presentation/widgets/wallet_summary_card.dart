@@ -67,11 +67,6 @@ class WalletSummaryCard extends StatelessWidget {
                       GestureDetector(
                         onTap: () {
                           Clipboard.setData(ClipboardData(text: walletNumber));
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Wallet number copied'),
-                            ),
-                          );
                         },
                         child: Icon(
                           Iconsax.copy,

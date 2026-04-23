@@ -21,6 +21,7 @@ import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../home/domain/repositories/home_repository.dart';
 import '../../../payment/presentation/controllers/payment_method_controller.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../domain/repositories/ride_repository.dart';
 
@@ -474,7 +475,10 @@ class VehicleSelectionController extends GetxController {
     final est = selectedEstimate;
     final pay = paymentMethodController.selectedPayment.value;
     if (est == null || pay == null) {
-      Get.snackbar('Missing info', 'Select a vehicle and payment method.');
+      AppDialogs.showErrorDialog(
+        title: 'Missing info',
+        message: 'Select a vehicle and payment method.',
+      );
       return;
     }
 
@@ -483,9 +487,9 @@ class VehicleSelectionController extends GetxController {
       var resolvedVehicleTypeId = (est.vehicleTypeId ?? '').trim();
       if (resolvedVehicleTypeId.isEmpty ||
           !_looksLikeBackendVehicleTypeId(resolvedVehicleTypeId)) {
-        Get.snackbar(
-          'Vehicle type',
-          'Could not resolve vehicle type id. Please try again.',
+        AppDialogs.showErrorDialog(
+          title: 'Vehicle type',
+          message: 'Could not resolve vehicle type id. Please try again.',
         );
         return;
       }
@@ -508,7 +512,10 @@ class VehicleSelectionController extends GetxController {
       final confirmedLng = (confirmed['pickupLng'] as num?)?.toDouble();
       final confirmedAddress = (confirmed['pickupAddress'] as String?)?.trim();
       if (confirmedLat == null || confirmedLng == null) {
-        Get.snackbar('Pickup', 'Please confirm pickup point to continue.');
+        AppDialogs.showErrorDialog(
+          title: 'Pickup',
+          message: 'Please confirm pickup point to continue.',
+        );
         return;
       }
 
@@ -534,9 +541,9 @@ class VehicleSelectionController extends GetxController {
           if (msg.startsWith('Exception: ')) {
             msg = msg.replaceFirst('Exception: ', '');
           }
-          Get.snackbar(
-            'Estimate failed',
-            msg.isEmpty
+          AppDialogs.showErrorDialog(
+            title: 'Estimate failed',
+            message: msg.isEmpty
                 ? 'Could not refresh fare after pickup confirmation.'
                 : msg,
           );
@@ -544,9 +551,9 @@ class VehicleSelectionController extends GetxController {
         },
         (model) async {
           if (model.estimates.isEmpty) {
-            Get.snackbar(
-              'Estimate failed',
-              'No fare estimate returned for the updated pickup location.',
+            AppDialogs.showErrorDialog(
+              title: 'Estimate failed',
+              message: 'No fare estimate returned for the updated pickup location.',
             );
             return false;
           }
@@ -614,16 +621,16 @@ class VehicleSelectionController extends GetxController {
 
       await validationResult.fold(
         (f) async {
-          Get.snackbar(
-            'Payment validation failed',
-            'Could not validate payment. Please try again.',
+          AppDialogs.showErrorDialog(
+            title: 'Payment validation failed',
+            message: 'Could not validate payment. Please try again.',
           );
         },
         (validationId) async {
           if (validationId.trim().isEmpty) {
-            Get.snackbar(
-              'Payment validation failed',
-              'Validation id missing from server response.',
+            AppDialogs.showErrorDialog(
+              title: 'Payment validation failed',
+              message: 'Validation id missing from server response.',
             );
             return;
           }
@@ -655,9 +662,9 @@ class VehicleSelectionController extends GetxController {
 
           _closePaymentStatusDialogIfOpen();
           if (!blockOk) {
-            Get.snackbar(
-              'Payment not confirmed',
-              'We could not confirm your payment block. Please try again.',
+            AppDialogs.showErrorDialog(
+              title: 'Payment not confirmed',
+              message: 'We could not confirm your payment block. Please try again.',
             );
             return;
           }
@@ -679,22 +686,19 @@ class VehicleSelectionController extends GetxController {
               if (msg.startsWith('Exception: ')) {
                 msg = msg.replaceFirst('Exception: ', '');
               }
-              Get.snackbar(
-                'Booking failed',
-                msg,
-                backgroundColor: Colors.black87,
-                colorText: Colors.white,
+              AppDialogs.showErrorDialog(
+                title: 'Booking failed',
+                message: msg,
               );
             },
             (data) async {
               final rideId = data.data?.ride?.id;
               if (rideId == null || rideId.isEmpty) {
-                Get.snackbar(
-                  'Booking',
-                  data.message ??
+                AppDialogs.showErrorDialog(
+                  title: 'Booking',
+                  message:
+                      data.message ??
                       'Ride was created but ride id is missing from the response.',
-                  backgroundColor: Colors.black87,
-                  colorText: Colors.white,
                 );
                 return;
               }

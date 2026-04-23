@@ -25,115 +25,133 @@ class AppDialogs {
         normalizedMessage.contains('login again') ||
         normalizedMessage.contains('unauthorized');
 
+    var didHandleAction = false;
+    void handleAction({required bool invokeConfirm}) async {
+      if (didHandleAction) return;
+      didHandleAction = true;
+      _isErrorDialogVisible = false;
+      if (invokeConfirm && onConfirm != null) {
+        onConfirm();
+      }
+      if (isSessionExpiredError) {
+        await StorageService().deleteAll();
+        Get.offAllNamed(AppRoutes.phone);
+        return;
+      }
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
+    }
+
     Get.dialog(
-      Dialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24.r),
-        ),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
+      PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24.r),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // App Logo
-              Container(
-                padding: EdgeInsets.all(24.h),
-                decoration: const BoxDecoration(
-                  color: AppColors.textLight,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24.r),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // App Logo
+                Container(
+                  padding: EdgeInsets.all(24.h),
+                  decoration: const BoxDecoration(
+                    color: AppColors.textLight,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SvgPicture.asset(AppAssets.selcomGoLogo, height: 48.h),
+                    ],
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SvgPicture.asset(AppAssets.selcomGoLogo, height: 48.h),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(height: 24.h),
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 24.w,
+                    vertical: 32.h,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(height: 24.h),
 
-                    // Title
-                    Text(
-                      title,
-                      style: AppTextStyles.onboardingTitle.copyWith(
-                        fontSize: 22.sp,
-                        color: AppColors.shade1,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 12.h),
-
-                    // Message
-                    Text(
-                      message,
-                      style: AppTextStyles.onboardingSubtitle.copyWith(
-                        fontSize: 15.sp,
-                        color: AppColors.shade2,
-                        height: 1.5,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 32.h),
-
-                    // OK Button
-                    InkWell(
-                      onTap: () async {
-                        _isErrorDialogVisible = false;
-                        if (onConfirm != null) onConfirm();
-                        if (isSessionExpiredError) {
-                          await StorageService().deleteAll();
-                          Get.offAllNamed(AppRoutes.phone);
-                          return;
-                        }
-                        Get.back(); // Close dialog
-                      },
-                      child: Container(
-                        height: 54.h,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(16.r),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.2),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
+                      // Title
+                      Text(
+                        title,
+                        style: AppTextStyles.onboardingTitle.copyWith(
+                          fontSize: 22.sp,
+                          color: AppColors.shade1,
+                          fontWeight: FontWeight.w700,
                         ),
-                        child: Center(
-                          child: Text(
-                            'OK',
-                            style: AppTextStyles.onboardingButton.copyWith(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w600,
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 12.h),
+
+                      // Message
+                      Text(
+                        message,
+                        style: AppTextStyles.onboardingSubtitle.copyWith(
+                          fontSize: 15.sp,
+                          color: AppColors.shade2,
+                          height: 1.5,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 32.h),
+
+                      // OK Button
+                      InkWell(
+                        onTap: () => handleAction(invokeConfirm: true),
+                        child: Container(
+                          height: 54.h,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(16.r),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primary.withValues(alpha: 0.2),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Text(
+                              'OK',
+                              style: AppTextStyles.onboardingButton.copyWith(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
       barrierDismissible: false,
-    );
+      barrierColor: Colors.black.withValues(alpha: 0.12),
+    ).whenComplete(() {
+      _isErrorDialogVisible = false;
+    });
   }
 
   /// Shows a success dialog
@@ -142,67 +160,87 @@ class AppDialogs {
     required String message,
     VoidCallback? onConfirm,
   }) {
+    var didHandleAction = false;
+    void handleAction() {
+      if (didHandleAction) return;
+      didHandleAction = true;
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
+      if (onConfirm != null) onConfirm();
+    }
+
     Get.dialog(
-      Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20.r),
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(24.w),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: EdgeInsets.all(16.w),
-                decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.check_circle_outline,
-                  color: Colors.green,
-                  size: 32.sp,
-                ),
-              ),
-              SizedBox(height: 20.h),
-              Text(
-                title,
-                style: AppTextStyles.onboardingTitle.copyWith(fontSize: 20.sp),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 12.h),
-              Text(
-                message,
-                style: AppTextStyles.onboardingSubtitle.copyWith(
-                  fontSize: 14.sp,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 32.h),
-              InkWell(
-                onTap: () {
-                  Get.back();
-                  if (onConfirm != null) onConfirm();
-                },
-                child: Container(
-                  height: 50.h,
-                  width: double.infinity,
+      PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24.r),
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24.r),
+            ),
+            padding: EdgeInsets.all(24.w),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: EdgeInsets.all(16.w),
                   decoration: BoxDecoration(
-                    color: Colors.green,
-                    borderRadius: BorderRadius.circular(12.r),
+                    color: Colors.green.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
                   ),
-                  child: Center(
-                    child: Text(
-                      'Continue',
-                      style: AppTextStyles.onboardingButton,
+                  child: Icon(
+                    Icons.check_circle_outline,
+                    color: Colors.green,
+                    size: 32.sp,
+                  ),
+                ),
+                SizedBox(height: 20.h),
+                Text(
+                  title,
+                  style: AppTextStyles.onboardingTitle.copyWith(
+                    fontSize: 20.sp,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 12.h),
+                Text(
+                  message,
+                  style: AppTextStyles.onboardingSubtitle.copyWith(
+                    fontSize: 14.sp,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 32.h),
+                InkWell(
+                  onTap: handleAction,
+                  child: Container(
+                    height: 50.h,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.green,
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'Continue',
+                        style: AppTextStyles.onboardingButton,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
+      barrierDismissible: false,
+      barrierColor: Colors.black.withValues(alpha: 0.12),
     );
   }
 
@@ -216,126 +254,141 @@ class AppDialogs {
     required VoidCallback onConfirm,
     VoidCallback? onCancel,
   }) {
+    var didHandleAction = false;
+    void handleCancel() {
+      if (didHandleAction) return;
+      didHandleAction = true;
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
+      if (onCancel != null) onCancel();
+    }
+
     Get.dialog(
-      Dialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20.r),
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(24.w),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Confirmation Icon
-              Container(
-                padding: EdgeInsets.all(16.w),
-                decoration: BoxDecoration(
-                  color: (confirmColor ?? AppColors.primary).withValues(
-                    alpha: 0.1,
+      PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24.r),
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24.r),
+            ),
+            padding: EdgeInsets.all(24.w),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Confirmation Icon
+                Container(
+                  padding: EdgeInsets.all(16.w),
+                  decoration: BoxDecoration(
+                    color: (confirmColor ?? AppColors.primary).withValues(
+                      alpha: 0.1,
+                    ),
+                    shape: BoxShape.circle,
                   ),
-                  shape: BoxShape.circle,
+                  child: Icon(
+                    Icons.help_outline,
+                    color: confirmColor ?? AppColors.primary,
+                    size: 32.sp,
+                  ),
                 ),
-                child: Icon(
-                  Icons.help_outline,
-                  color: confirmColor ?? AppColors.primary,
-                  size: 32.sp,
-                ),
-              ),
-              SizedBox(height: 20.h),
+                SizedBox(height: 20.h),
 
-              // Title
-              Text(
-                title,
-                style: AppTextStyles.onboardingTitle.copyWith(
-                  fontSize: 20.sp,
-                  color: AppColors.shade1,
+                // Title
+                Text(
+                  title,
+                  style: AppTextStyles.onboardingTitle.copyWith(
+                    fontSize: 20.sp,
+                    color: AppColors.shade1,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 12.h),
+                SizedBox(height: 12.h),
 
-              // Message
-              Text(
-                message,
-                style: AppTextStyles.onboardingSubtitle.copyWith(
-                  fontSize: 14.sp,
-                  color: AppColors.shade2,
+                // Message
+                Text(
+                  message,
+                  style: AppTextStyles.onboardingSubtitle.copyWith(
+                    fontSize: 14.sp,
+                    color: AppColors.shade2,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 32.h),
+                SizedBox(height: 32.h),
 
-              // Buttons
-              Row(
-                children: [
-                  // Cancel Button
-                  Expanded(
-                    child: InkWell(
-                      onTap: () {
-                        Get.back();
-                        if (onCancel != null) onCancel();
-                      },
-                      child: Container(
-                        height: 50.h,
-                        decoration: BoxDecoration(
-                          color: Colors.transparent,
-                          border: Border.all(color: AppColors.divider),
-                          borderRadius: BorderRadius.circular(12.r),
-                        ),
-                        child: Center(
-                          child: Text(
-                            cancelText,
-                            style: AppTextStyles.body.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.shade2,
+                // Buttons
+                Row(
+                  children: [
+                    // Cancel Button
+                    Expanded(
+                      child: InkWell(
+                        onTap: handleCancel,
+                        child: Container(
+                          height: 50.h,
+                          decoration: BoxDecoration(
+                            color: Colors.transparent,
+                            border: Border.all(color: AppColors.divider),
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
+                          child: Center(
+                            child: Text(
+                              cancelText,
+                              style: AppTextStyles.body.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.shade2,
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  SizedBox(width: 12.w),
-                  // Confirm Button
-                  Expanded(
-                    child: InkWell(
-                      onTap: () {
-                        Get.back();
-                        onConfirm();
-                      },
-                      child: Container(
-                        height: 50.h,
-                        decoration: BoxDecoration(
-                          color: confirmColor ?? AppColors.primary,
-                          borderRadius: BorderRadius.circular(12.r),
-                          boxShadow: [
-                            BoxShadow(
-                              color: (confirmColor ?? AppColors.primary)
-                                  .withValues(alpha: 0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Center(
-                          child: Text(
-                            confirmText,
-                            style: AppTextStyles.onboardingButton.copyWith(
-                              fontSize: 16.sp,
+                    SizedBox(width: 12.w),
+                    // Confirm Button
+                    Expanded(
+                      child: InkWell(
+                        onTap: () {
+                          Get.back();
+                          onConfirm();
+                        },
+                        child: Container(
+                          height: 50.h,
+                          decoration: BoxDecoration(
+                            color: confirmColor ?? AppColors.primary,
+                            borderRadius: BorderRadius.circular(12.r),
+                            boxShadow: [
+                              BoxShadow(
+                                color: (confirmColor ?? AppColors.primary)
+                                    .withValues(alpha: 0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Text(
+                              confirmText,
+                              style: AppTextStyles.onboardingButton.copyWith(
+                                fontSize: 16.sp,
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
       barrierDismissible: false,
+      barrierColor: Colors.black.withValues(alpha: 0.12),
     );
   }
 

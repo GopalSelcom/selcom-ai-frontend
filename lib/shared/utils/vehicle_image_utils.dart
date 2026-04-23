@@ -7,7 +7,6 @@ class VehicleImageUtils {
     String? vehicleType, {
     String fallbackAsset = AppAssets.imgCab,
   }) {
-    print("======================= $vehicleType");
     final type = (vehicleType ?? '').toLowerCase().trim();
     if (type.isEmpty) return fallbackAsset;
 

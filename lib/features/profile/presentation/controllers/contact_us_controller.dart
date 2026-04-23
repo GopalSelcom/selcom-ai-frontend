@@ -72,7 +72,7 @@ class ContactUsController extends GetxController {
       (failure) => AppDialogs.showErrorDialog(message: failure.message),
       (success) {
         Get.back();
-        Get.snackbar('Success', success.message);
+        AppDialogs.showSuccessDialog(message: success.message);
       },
     );
   }

@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import '../../../../core/data/models/ride_model.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../domain/usecases/ride_usecase.dart';
 import '../widgets/ride_details_bottom_sheet.dart';
@@ -33,14 +34,14 @@ class MyRidesController extends GetxController {
         limit: _limit,
       );
       result.fold(
-        (failure) => Get.snackbar('Error', failure.message),
+        (failure) => AppDialogs.showErrorDialog(message: failure.message),
         (rides) {
           pastRides.assignAll(rides);
           hasMoreData.value = rides.length >= _limit;
         },
       );
     } catch (e) {
-      Get.snackbar('Error', 'An unexpected error occurred');
+      AppDialogs.showErrorDialog(message: 'An unexpected error occurred');
     } finally {
       isLoading.value = false;
     }
@@ -55,7 +56,7 @@ class MyRidesController extends GetxController {
     try {
       final result = await rideUseCase.getRideDetails(ride.id);
       result.fold(
-        (failure) => Get.snackbar('Error', failure.message),
+        (failure) => AppDialogs.showErrorDialog(message: failure.message),
         (freshRide) {
           if (rideStatusIsOngoingActive(freshRide.status)) {
             navigateToDriverAcceptedForRide(freshRide);
@@ -68,7 +69,7 @@ class MyRidesController extends GetxController {
         },
       );
     } catch (_) {
-      Get.snackbar('Error', 'An unexpected error occurred');
+      AppDialogs.showErrorDialog(message: 'An unexpected error occurred');
     } finally {
       isOpeningRide.value = false;
     }
@@ -88,7 +89,7 @@ class MyRidesController extends GetxController {
       );
 
       result.fold(
-        (failure) => Get.snackbar('Error', failure.message),
+        (failure) => AppDialogs.showErrorDialog(message: failure.message),
         (rides) {
           if (rides.isEmpty) {
             hasMoreData.value = false;
@@ -100,7 +101,7 @@ class MyRidesController extends GetxController {
         },
       );
     } catch (e) {
-      Get.snackbar('Error', 'An unexpected error occurred');
+      AppDialogs.showErrorDialog(message: 'An unexpected error occurred');
     } finally {
       isLoadingMore.value = false;
     }

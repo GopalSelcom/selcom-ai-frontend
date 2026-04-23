@@ -19,6 +19,7 @@ import '../../../../core/services/app_map_service.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/utils/map_marker_utils.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../domain/repositories/ride_repository.dart';
@@ -394,16 +395,11 @@ class DriverAcceptedController extends GetxController
       final normalized = status.toLowerCase();
       if (normalized == 'cancelled' || normalized == 'no_driver_found') {
         _navigatedAway = true;
-        if (normalized == 'no_driver_found') {
-          Get.snackbar(
-            'Ride Cancelled',
-            'No driver found for your request. Please try again.',
-            backgroundColor: Colors.red,
-            colorText: Colors.white,
-            snackPosition: SnackPosition.BOTTOM,
-          );
-        }
-        Get.offAllNamed(AppRoutes.home);
+        _showCancelDialogThenGoHome(
+          normalized == 'no_driver_found'
+              ? 'No driver found for your request. Please try again.'
+              : 'Your ride was cancelled.',
+        );
       }
     });
 
@@ -503,6 +499,14 @@ class DriverAcceptedController extends GetxController
         150,
       );
     }
+  }
+
+  void _showCancelDialogThenGoHome(String message) {
+    AppDialogs.showErrorDialog(
+      title: 'Ride Cancelled',
+      message: message,
+      onConfirm: () => Get.offAllNamed(AppRoutes.home),
+    );
   }
 
   String _resolveVehicleTypeHint({
@@ -886,16 +890,11 @@ class DriverAcceptedController extends GetxController
 
     if (status == 'cancelled' || status == 'no_driver_found') {
       _navigatedAway = true;
-      if (status == 'no_driver_found') {
-        Get.snackbar(
-          'Ride Cancelled',
-          'No driver found for your request. Please try again.',
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM,
-        );
-      }
-      Get.offAllNamed(AppRoutes.home);
+      _showCancelDialogThenGoHome(
+        status == 'no_driver_found'
+            ? 'No driver found for your request. Please try again.'
+            : 'Your ride was cancelled.',
+      );
       return;
     }
 
@@ -1038,7 +1037,10 @@ class DriverAcceptedController extends GetxController
   Future<void> callDriver() async {
     final phone = driverPhone.value.trim();
     if (phone.isEmpty) {
-      Get.snackbar('Call', 'Phone number unavailable');
+      AppDialogs.showErrorDialog(
+        title: 'Call',
+        message: 'Phone number unavailable',
+      );
       return;
     }
 
@@ -1055,7 +1057,10 @@ class DriverAcceptedController extends GetxController
       }
     } catch (e) {
       debugPrint("Error launching dialer: $e");
-      Get.snackbar('Call', 'Error opening phone dialer');
+      AppDialogs.showErrorDialog(
+        title: 'Call',
+        message: 'Error opening phone dialer',
+      );
     }
   }
 
@@ -1168,6 +1173,7 @@ class DriverAcceptedController extends GetxController
     final dynamic confirmResult = await Get.dialog(
       const CancelConfirmationDialog(),
       barrierDismissible: false,
+      barrierColor: Colors.black.withValues(alpha: 0.12),
     );
 
     if (confirmResult != true) return;
@@ -1185,24 +1191,37 @@ class DriverAcceptedController extends GetxController
         ],
       ),
       barrierDismissible: false,
+      barrierColor: Colors.black.withValues(alpha: 0.12),
     );
 
     if (reason == null) return;
 
     // 3. Perform Cancellation
     if (rideId.isEmpty) {
-      Get.snackbar('Cancel failed', 'Ride id is missing.');
+      AppDialogs.showErrorDialog(
+        title: 'Cancel failed',
+        message: 'Ride id is missing.',
+      );
       return;
     }
     final result = await rideRepository.cancelRide(rideId, 'rider_cancelled');
     result.fold(
-      (_) => Get.snackbar('Cancel failed', 'Could not cancel. Try again.'),
+      (_) => AppDialogs.showErrorDialog(
+        title: 'Cancel failed',
+        message: 'Could not cancel. Try again.',
+      ),
       (success) {
         if (success) {
           _navigatedAway = true;
-          Get.offAllNamed(AppRoutes.home);
+          AppDialogs.showSuccessDialog(
+            message: 'Ride cancelled successfully.',
+            onConfirm: () => Get.offAllNamed(AppRoutes.home),
+          );
         } else {
-          Get.snackbar('Cancel failed', 'Please try again.');
+          AppDialogs.showErrorDialog(
+            title: 'Cancel failed',
+            message: 'Please try again.',
+          );
         }
       },
     );

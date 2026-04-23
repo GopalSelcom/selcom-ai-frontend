@@ -4,6 +4,7 @@ import '../../domain/usecases/profile_usecase.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../../../home/presentation/controllers/home_controller.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 
 class FavoriteLocationsController extends GetxController {
   final ProfileUseCase profileUseCase;
@@ -28,7 +29,7 @@ class FavoriteLocationsController extends GetxController {
     final result = await profileUseCase.getFavoritePlaces();
     result.fold(
       (failure) {
-        Get.snackbar('Error', failure.message);
+        AppDialogs.showErrorDialog(message: failure.message);
       },
       (response) {
         if (response != null && response.data != null) {
@@ -50,13 +51,13 @@ class FavoriteLocationsController extends GetxController {
       (failure) {
         // Rollback
         favorites.value = originalList;
-        Get.snackbar('Error', 'Failed to update favorite status');
+        AppDialogs.showErrorDialog(message: 'Failed to update favorite status');
       },
       (success) {
         if (!success) {
           // Rollback
           favorites.value = originalList;
-          Get.snackbar('Error', 'Failed to update favorite status');
+          AppDialogs.showErrorDialog(message: 'Failed to update favorite status');
         } else {
           // Sync with HomeController if it exists
           if (Get.isRegistered<HomeController>()) {
@@ -69,7 +70,9 @@ class FavoriteLocationsController extends GetxController {
 
   void onLocationSelected(SavedPlace place) {
     if (!Get.isRegistered<HomeController>()) {
-      Get.snackbar('Error', 'Unable to initiate booking right now.');
+      AppDialogs.showErrorDialog(
+        message: 'Unable to initiate booking right now.',
+      );
       return;
     }
 
@@ -86,9 +89,9 @@ class FavoriteLocationsController extends GetxController {
     }
 
     if (dLat == null || dLng == null) {
-      Get.snackbar(
-        'Location unavailable',
-        'This saved place is missing coordinates.',
+      AppDialogs.showErrorDialog(
+        title: 'Location unavailable',
+        message: 'This saved place is missing coordinates.',
       );
       return;
     }

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/errors/failures.dart';
 import '../../../../core/services/analytics_service.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../domain/entities/ride_rating_ride_entity.dart';
 import '../../domain/entities/ride_rating_tag_entity.dart';
@@ -159,26 +160,32 @@ class RideRatingController extends GetxController {
   Future<void> onSubmitTap() async {
     final ride = pendingReviewRide.value;
     if (ride == null) {
-      Get.snackbar('Rating', 'Ride data is unavailable.');
+      AppDialogs.showErrorDialog(
+        title: 'Rating',
+        message: 'Ride data is unavailable.',
+      );
       return;
     }
     if (selectedRating.value == 0) {
-      Get.snackbar(
-        'Rating required',
-        'Please rate your ride before submitting.',
+      AppDialogs.showErrorDialog(
+        title: 'Rating required',
+        message: 'Please rate your ride before submitting.',
       );
       return;
     }
     if (selectedTags.isEmpty) {
-      Get.snackbar(
-        'Tag required',
-        'Please select at least one tag before submitting.',
+      AppDialogs.showErrorDialog(
+        title: 'Tag required',
+        message: 'Please select at least one tag before submitting.',
       );
       return;
     }
     final comment = requiresComment ? commentController.text.trim() : '';
     if (requiresComment && comment.isEmpty) {
-      Get.snackbar('Comment required', 'Please enter your comment first.');
+      AppDialogs.showErrorDialog(
+        title: 'Comment required',
+        message: 'Please enter your comment first.',
+      );
       return;
     }
 
@@ -193,7 +200,10 @@ class RideRatingController extends GetxController {
 
     result.fold((failure) => _handleFailure(failure), (ok) async {
       if (!ok) {
-        Get.snackbar('Submit failed', 'Unable to submit rating now.');
+        AppDialogs.showErrorDialog(
+          title: 'Submit failed',
+          message: 'Unable to submit rating now.',
+        );
         return;
       }
       await analyticsService.logEvent(
@@ -206,7 +216,10 @@ class RideRatingController extends GetxController {
       );
       _resetSheetState(clearPendingRide: true);
       closeBottomSheet();
-      Get.snackbar('Thank you', 'Your rating has been submitted.');
+      AppDialogs.showSuccessDialog(
+        title: 'Thank you',
+        message: 'Your rating has been submitted.',
+      );
     });
   }
 
@@ -223,7 +236,10 @@ class RideRatingController extends GetxController {
 
     result.fold((failure) => _handleFailure(failure), (ok) async {
       if (!ok) {
-        Get.snackbar('Skip failed', 'Unable to skip rating now.');
+        AppDialogs.showErrorDialog(
+          title: 'Skip failed',
+          message: 'Unable to skip rating now.',
+        );
         return;
       }
       await analyticsService.logEvent(
@@ -326,9 +342,8 @@ class RideRatingController extends GetxController {
       return;
     }
 
-    Get.snackbar(
-      'Error',
-      message.isEmpty ? 'Something went wrong.' : message,
+    AppDialogs.showErrorDialog(
+      message: message.isEmpty ? 'Something went wrong.' : message,
     );
   }
 

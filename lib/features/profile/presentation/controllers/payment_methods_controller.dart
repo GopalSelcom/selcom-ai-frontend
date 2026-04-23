@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:m7_livelyness_detection/index.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -59,7 +58,10 @@ class PaymentMethodsController extends GetxController {
 
   void resendOtp() {
     _startTimer();
-    Get.snackbar('Selcom Pesa', 'OTP resent successfully');
+    AppDialogs.showSuccessDialog(
+      title: 'Selcom Pesa',
+      message: 'OTP resent successfully',
+    );
   }
 
   void handleBack() {
@@ -99,14 +101,9 @@ class PaymentMethodsController extends GetxController {
     Get.back(); // Close bottom sheet
     isSelcomPesaLinked.value = false;
     // Optional: Clear selection or reset other states
-    Get.snackbar(
-      'Selcom Pesa',
-      'Account unlinked successfully',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: AppColors.shade1,
-      colorText: Colors.white,
-      margin: EdgeInsets.all(16.w),
-      borderRadius: 12.r,
+    AppDialogs.showSuccessDialog(
+      title: 'Selcom Pesa',
+      message: 'Account unlinked successfully',
     );
   }
 
@@ -253,7 +250,7 @@ class PaymentMethodsController extends GetxController {
         });
       }
     } catch (e) {
-      Get.snackbar('Error', 'Selfie capture failed');
+      AppDialogs.showErrorDialog(message: 'Selfie capture failed');
     }
   }
 

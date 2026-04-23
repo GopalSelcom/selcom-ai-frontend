@@ -10,6 +10,7 @@ import 'package:get/get.dart';
 import '../di/injection_container.dart';
 import '../../features/ride/domain/repositories/ride_repository.dart';
 import '../../shared/utils/ride_active_navigation.dart';
+import '../../shared/utils/app_dialogs.dart';
 import '../data/models/notification_model.dart';
 
 class NotificationService {
@@ -241,7 +242,7 @@ class NotificationService {
       result.fold(
         (failure) {
           _logger.e("Error fetching ride details: ${failure.message}");
-          Get.snackbar('Error', 'Unable to open ride details');
+          AppDialogs.showErrorDialog(message: 'Unable to open ride details');
         },
         (ride) {
           navigateToDriverAcceptedForRide(ride);

@@ -317,7 +317,7 @@ class HomeController extends GetxController {
 
     final detailsResult = await rideRepository.getRideDetails(rideId);
     detailsResult.fold(
-      (failure) => Get.snackbar('Error', failure.message),
+      (failure) => AppDialogs.showErrorDialog(message: failure.message),
       (freshRide) => navigateToDriverAcceptedForRide(freshRide),
     );
   }
@@ -572,10 +572,8 @@ class HomeController extends GetxController {
     final result = await homeRepository.estimateFare(req);
     bool canProceed = false;
     result.fold((failure) {
-      Get.snackbar(
-        'Error',
-        _extractEstimateErrorMessage(failure.message),
-        snackPosition: SnackPosition.BOTTOM,
+      AppDialogs.showErrorDialog(
+        message: _extractEstimateErrorMessage(failure.message),
       );
     }, (_) => canProceed = true);
     return canProceed;
@@ -596,10 +594,9 @@ class HomeController extends GetxController {
   Future<void> navigateToVehicleSelectionForSavedLabel(String label) async {
     final place = getSavedPlaceByLabel(label);
     if (place == null) {
-      Get.snackbar(
-        'Add a saved place',
-        'Save this address first, then you can book from here.',
-        snackPosition: SnackPosition.BOTTOM,
+      AppDialogs.showErrorDialog(
+        title: 'Add a saved place',
+        message: 'Save this address first, then you can book from here.',
       );
       return;
     }
@@ -615,20 +612,18 @@ class HomeController extends GetxController {
     }
 
     if (dLat == null || dLng == null) {
-      Get.snackbar(
-        'Location unavailable',
-        'This saved place is missing coordinates. Try saving it again.',
-        snackPosition: SnackPosition.BOTTOM,
+      AppDialogs.showErrorDialog(
+        title: 'Location unavailable',
+        message: 'This saved place is missing coordinates. Try saving it again.',
       );
       return;
     }
 
     final destAddr = (place.address ?? place.name ?? label).trim();
     if (destAddr.isEmpty) {
-      Get.snackbar(
-        'Address missing',
-        'This saved place has no address.',
-        snackPosition: SnackPosition.BOTTOM,
+      AppDialogs.showErrorDialog(
+        title: 'Address missing',
+        message: 'This saved place has no address.',
       );
       return;
     }
@@ -677,20 +672,18 @@ class HomeController extends GetxController {
     }
 
     if (dLat == null || dLng == null) {
-      Get.snackbar(
-        'Location unavailable',
-        'This saved place is missing coordinates.',
-        snackPosition: SnackPosition.BOTTOM,
+      AppDialogs.showErrorDialog(
+        title: 'Location unavailable',
+        message: 'This saved place is missing coordinates.',
       );
       return;
     }
 
     final destAddr = (place.address ?? place.name ?? 'Saved Place').trim();
     if (destAddr.isEmpty) {
-      Get.snackbar(
-        'Address missing',
-        'This saved place has no address.',
-        snackPosition: SnackPosition.BOTTOM,
+      AppDialogs.showErrorDialog(
+        title: 'Address missing',
+        message: 'This saved place has no address.',
       );
       return;
     }
@@ -985,7 +978,9 @@ class HomeController extends GetxController {
         .where((d) => d.isNotEmpty)
         .toList();
     if (items.isEmpty) {
-      Get.snackbar('Error', 'Please enter at least one destination.');
+      AppDialogs.showErrorDialog(
+        message: 'Please enter at least one destination.',
+      );
       return;
     }
 
@@ -1036,7 +1031,9 @@ class HomeController extends GetxController {
       }
 
       if (resolvedDestinations.isEmpty) {
-        Get.snackbar('Error', 'Please select at least one destination.');
+        AppDialogs.showErrorDialog(
+          message: 'Please select at least one destination.',
+        );
         return;
       }
 

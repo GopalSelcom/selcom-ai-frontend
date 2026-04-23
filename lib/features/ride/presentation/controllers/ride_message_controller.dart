@@ -10,6 +10,7 @@ import '../../../../core/data/models/responses/nearbyRiders/response/tracking_up
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 import '../../domain/entities/ride_chat_message.dart';
 import '../../domain/repositories/ride_chat_repository.dart';
 import '../constants/ride_message_static_data.dart';
@@ -63,7 +64,10 @@ class RideMessageController extends GetxController {
     _parseArgs();
     if (rideId.isEmpty && !useStaticChatDataOnly) {
       Future.microtask(() {
-        Get.snackbar('Chat', 'Missing ride information.');
+        AppDialogs.showErrorDialog(
+          title: 'Chat',
+          message: 'Missing ride information.',
+        );
         Get.back();
       });
       return;
@@ -252,7 +256,10 @@ class RideMessageController extends GetxController {
     if (text.isEmpty || rideId.isEmpty) return;
 
     if (!canChat) {
-      Get.snackbar('Chat', 'Chat is only available during an active ride');
+      AppDialogs.showErrorDialog(
+        title: 'Chat',
+        message: 'Chat is only available during an active ride',
+      );
       return;
     }
 
@@ -279,13 +286,19 @@ class RideMessageController extends GetxController {
           text: text,
         );
         if (!success) {
-          Get.snackbar('Chat', 'Failed to send message');
+          AppDialogs.showErrorDialog(
+            title: 'Chat',
+            message: 'Failed to send message',
+          );
           // Optionally remove the local message on failure
           messages.removeWhere((m) => m.id == localId);
         }
       } catch (e) {
         debugPrint("Error sending message: $e");
-        Get.snackbar('Chat', 'Error sending message');
+        AppDialogs.showErrorDialog(
+          title: 'Chat',
+          message: 'Error sending message',
+        );
         messages.removeWhere((m) => m.id == localId);
       } finally {
         isSending.value = false;
@@ -297,26 +310,29 @@ class RideMessageController extends GetxController {
   Future<void> onTapCallDriver() async {
     final phone = driverPhone.trim();
     if (phone.isEmpty) {
-      Get.snackbar('Call', 'Phone number unavailable');
+      AppDialogs.showErrorDialog(
+        title: 'Call',
+        message: 'Phone number unavailable',
+      );
       return;
     }
 
     final uri = Uri.parse('tel:${phone.replaceAll(' ', '')}');
     try {
       if (await canLaunchUrl(uri)) {
-        Get.snackbar(
-          'Calling Driver',
-          'Initiating call to $driverPhone...',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.white.withValues(alpha: 0.9),
-        );
         await launchUrl(uri);
       } else {
-        Get.snackbar('Call', 'Unable to open phone dialer');
+        AppDialogs.showErrorDialog(
+          title: 'Call',
+          message: 'Unable to open phone dialer',
+        );
       }
     } catch (e) {
       debugPrint("Error launching dialer: $e");
-      Get.snackbar('Call', 'Error opening phone dialer');
+      AppDialogs.showErrorDialog(
+        title: 'Call',
+        message: 'Error opening phone dialer',
+      );
     }
   }
 

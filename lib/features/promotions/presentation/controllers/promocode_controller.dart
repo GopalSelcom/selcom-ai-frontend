@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 
 class PromocodeController extends GetxController {
   final RxList<PromocodeModel> promocodes = <PromocodeModel>[].obs;
@@ -35,25 +36,19 @@ class PromocodeController extends GetxController {
   void applyPromoCode() {
     final code = promoCodeTextController.text;
     if (code.isNotEmpty) {
-      Get.snackbar(
-        'Success',
-        'Promo code $code applied!',
-        snackPosition: SnackPosition.BOTTOM,
+      AppDialogs.showSuccessDialog(
+        message: 'Promo code $code applied!',
       );
     } else {
-      Get.snackbar(
-        'Error',
-        'Please enter a promo code',
-        snackPosition: SnackPosition.BOTTOM,
+      AppDialogs.showErrorDialog(
+        message: 'Please enter a promo code',
       );
     }
   }
 
   void applyPromo(PromocodeModel promo) {
-    Get.snackbar(
-      'Success',
-      'Promo "${promo.title}" applied!',
-      snackPosition: SnackPosition.BOTTOM,
+    AppDialogs.showSuccessDialog(
+      message: 'Promo "${promo.title}" applied!',
     );
   }
 }

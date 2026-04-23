@@ -36,9 +36,7 @@ class CancelDialogGalleryScreen extends StatelessWidget {
                 final reason = await Get.dialog<String>(
                   const CancelReasonSelectionDialog(),
                 );
-                if (reason != null) {
-                  Get.snackbar('Selected Reason', reason);
-                }
+                if (reason != null) {}
               },
             ),
             const Spacer(),

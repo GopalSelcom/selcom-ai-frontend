@@ -126,7 +126,10 @@ class ProfileController extends GetxController {
 
   Future<void> saveProfile() async {
     if (nameTextController.text.trim().isEmpty) {
-      Get.snackbar('Validation', 'Name cannot be empty');
+      AppDialogs.showErrorDialog(
+        title: 'Validation',
+        message: 'Name cannot be empty',
+      );
       return;
     }
 
@@ -142,7 +145,7 @@ class ProfileController extends GetxController {
 
     result.fold(
       (failure) {
-        Get.snackbar('Error', failure.message);
+        AppDialogs.showErrorDialog(message: failure.message);
       },
       (updatedUser) async {
         // Save to storage
@@ -155,7 +158,9 @@ class ProfileController extends GetxController {
         _updateLocalUserState(updatedUser);
 
         isEditing.value = false;
-        Get.snackbar('Success', 'User profile updated successfully');
+        AppDialogs.showSuccessDialog(
+          message: 'User profile updated successfully',
+        );
       },
     );
 

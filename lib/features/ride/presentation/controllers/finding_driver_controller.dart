@@ -12,6 +12,7 @@ import '../../../../core/data/models/responses/nearbyRiders/response/rider_statu
 import '../../../../core/data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../../../core/utils/map_marker_utils.dart';
@@ -78,6 +79,14 @@ class FindingDriverController extends GetxController {
   StreamSubscription<String>? _nearbyDriversErrorSub;
 
   bool _didNavigateToAccepted = false;
+
+  void _showCancelDialogThenGoHome(String message) {
+    AppDialogs.showErrorDialog(
+      title: 'Ride Cancelled',
+      message: message,
+      onConfirm: () => Get.offAllNamed(AppRoutes.home),
+    );
+  }
 
   @override
   void onInit() {
@@ -211,26 +220,20 @@ class FindingDriverController extends GetxController {
   Future<void> _autoCancelRide() async {
     if (rideId.isEmpty) return;
 
-    // Show a small loader or snackbar to inform user
-    Get.snackbar(
-      'Search Timeout',
-      'No drivers found within 9 minutes. Cancelling ride...',
-      backgroundColor: Colors.black87,
-      colorText: Colors.white,
-      duration: const Duration(seconds: 3),
-    );
-
     final result = await rideRepository.cancelRide(
       rideId,
       'Search timeout: no driver found',
     );
     result.fold(
       (failure) {
-        // If it fails, we still go home because the search is technically over
-        Get.offAllNamed(AppRoutes.home);
+        _showCancelDialogThenGoHome(
+          'No drivers found within 9 minutes. Please try again.',
+        );
       },
       (success) {
-        Get.offAllNamed(AppRoutes.home);
+        _showCancelDialogThenGoHome(
+          'No drivers found within 9 minutes. Please try again.',
+        );
       },
     );
   }
@@ -320,27 +323,18 @@ class FindingDriverController extends GetxController {
         case 'ride_completed':
           currentStatusLabel.value = 'Ride Completed';
           currentDescriptionLabel.value = 'You have reached your destination.';
-          // Get.snackbar('Success', 'Ride completed successfully!');
-          // Future.delayed(const Duration(seconds: 2), () {
-          //   Get.offAllNamed(AppRoutes.home);
-          // });
           break;
         case 'cancelled':
           currentStatusLabel.value = 'Ride Cancelled';
           currentDescriptionLabel.value = 'The ride has been cancelled.';
-          Get.snackbar('Cancelled', 'Your ride was cancelled.');
-          Get.offAllNamed(AppRoutes.home);
+          _showCancelDialogThenGoHome('Your ride was cancelled.');
           break;
         case 'no_driver_found':
           currentStatusLabel.value = 'No Driver Found';
           currentDescriptionLabel.value = 'We couldn\'t find a driver nearby.';
-          Get.snackbar(
-            'Ride Cancelled',
+          _showCancelDialogThenGoHome(
             'No drivers nearby. Please try again later.',
-            backgroundColor: Colors.black87,
-            colorText: Colors.white,
           );
-          Get.offAllNamed(AppRoutes.home);
           break;
       }
     });
@@ -547,6 +541,7 @@ class FindingDriverController extends GetxController {
           : const */
       const CancelConfirmationDialog(),
       barrierDismissible: false,
+      barrierColor: Colors.black.withValues(alpha: 0.12),
     );
 
     if (confirmResult != true) return;
@@ -565,24 +560,32 @@ class FindingDriverController extends GetxController {
         ],
       ),
       barrierDismissible: false,
+      barrierColor: Colors.black.withValues(alpha: 0.12),
     );
 
     if (reason == null) return;
 
     // 3. Perform Cancellation
     if (rideId.isEmpty) {
-      Get.snackbar('Cancel failed', 'Ride id is missing.');
+      AppDialogs.showErrorDialog(
+        title: 'Cancel failed',
+        message: 'Ride id is missing.',
+      );
       return;
     }
 
     final result = await rideRepository.cancelRide(rideId, reason);
     result.fold(
-      (_) => Get.snackbar('Cancel failed', 'Could not cancel. Try again.'),
+      (_) => AppDialogs.showErrorDialog(
+        title: 'Cancel failed',
+        message: 'Could not cancel. Try again.',
+      ),
       (success) {
-        if (success) {
-          Get.offAllNamed(AppRoutes.home);
-        } else {
-          Get.snackbar('Cancel failed', 'Please try again.');
+        if (!success) {
+          AppDialogs.showErrorDialog(
+            title: 'Cancel failed',
+            message: 'Please try again.',
+          );
         }
       },
     );
