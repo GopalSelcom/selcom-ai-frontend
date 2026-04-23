@@ -37,7 +37,7 @@ class AppMapTopHeader extends StatelessWidget {
       left: left.w,
       right: right.w,
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           addressWidget,
           SizedBox(width: spacing.w),

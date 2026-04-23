@@ -56,10 +56,11 @@ class FindingDriverScreen extends StatelessWidget {
             onProfileTap: c.openProfile,
             addressWidget: Expanded(
               child: AppMapLocationSummaryCard(
-                label: 'Home',
+                label: 'Current location',
                 address: c.pickupAddress.isEmpty
                     ? 'Selected location'
                     : c.pickupAddress,
+                maxAddressLines: 1,
               ),
             ),
           ),

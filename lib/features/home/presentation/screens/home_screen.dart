@@ -95,223 +95,95 @@ class HomeScreen extends GetView<HomeController> {
   Widget _buildModernAddressBox() {
     return Expanded(
       child: Obx(() {
-        if (controller.savedPlaces.isEmpty) {
-          return AnimatedSize(
-            duration: const Duration(milliseconds: 320),
-            curve: Curves.easeInOutCubic,
-            alignment: Alignment.topCenter,
-            clipBehavior: Clip.hardEdge,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 320),
-              curve: Curves.easeInOutCubic,
-              alignment: Alignment.center,
-              padding: EdgeInsets.symmetric(horizontal: 12.w),
-              height: 61.h, // Matched with Figma Frame 207:24539 height
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16.r),
-                border: Border.all(color: AppColors.shade5),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
-                    blurRadius: 2,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: controller.isLoadingHomeData.value
-                    ? Shimmer.fromColors(
-                        baseColor: const Color(0xFFE2E8F0),
-                        highlightColor: const Color(0xFFF8FAFC),
-                        child: Container(
-                          width: 200.w,
-                          height: 16.h,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(4.r),
-                          ),
-                        ),
-                      )
-                    : Text(
-                        controller.currentMapAddress.value,
-                        style: AppTextStyles.homeSubtitle.copyWith(
-                          color: AppColors.shade2,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                      ),
-              ),
-            ),
-          );
-        }
-        final placesToShow = controller.addressHeaderPlacesToShow;
-        final bool isExpanded = controller.isSavedPlacesExpanded.value;
+        final bool isLoading = controller.isLoadingHomeData.value;
+        final String address = controller.currentMapAddress.value;
 
-        return AnimatedSize(
+        return AnimatedContainer(
           duration: const Duration(milliseconds: 320),
           curve: Curves.easeInOutCubic,
-          alignment: Alignment.topCenter,
-          clipBehavior: Clip.hardEdge,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 320),
-            curve: Curves.easeInOutCubic,
-            padding: EdgeInsets.zero,
-            height: isExpanded ? null : 61.h,
-            constraints: BoxConstraints(maxHeight: isExpanded ? 320.h : 61.h),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: AppColors.shade5),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
-                  blurRadius: 2,
-                  offset: const Offset(0, 1),
-                ),
-              ],
-            ),
-            child: Scrollbar(
-              thumbVisibility: true,
-              thickness: 4.w,
-              radius: Radius.circular(10.r),
-              child: ListView.builder(
-                shrinkWrap: true,
-                padding: EdgeInsets.symmetric(
-                  vertical: isExpanded ? 8.h : 7.h,
-                  horizontal: 14.w,
-                ),
-                physics: isExpanded
-                    ? const BouncingScrollPhysics()
-                    : const NeverScrollableScrollPhysics(),
-                itemCount: placesToShow.length,
-                itemBuilder: (context, index) {
-                  final place = placesToShow[index];
-                  final selected = controller.isSavedPlaceSelectedAsPickup(
-                    place.id,
-                  );
-                  return InkWell(
-                    onTap: () {
-                      if (controller.isSavedPlacesExpanded.value) {
-                        controller.selectSavedPlaceAsPickup(place);
-                      } else {
-                        controller.toggleAddressHeaderExpansion();
-                      }
-                    },
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        bottom: index == placesToShow.length - 1
-                            ? 0
-                            : (isExpanded ? 12.h : 0),
-                      ),
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          vertical: 4.h,
-                          horizontal: 4.w,
-                        ),
-                        decoration: BoxDecoration(
-                          color:
-                              selected && controller.isSavedPlacesExpanded.value
-                              ? AppColors.primaryLight.withOpacity(0.35)
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(12.r),
-                          border: Border.all(
-                            color:
-                                selected &&
-                                    controller.isSavedPlacesExpanded.value
-                                ? AppColors.primary
-                                : Colors.transparent,
-                            width:
-                                selected &&
-                                    controller.isSavedPlacesExpanded.value
-                                ? 1
-                                : 0,
-                          ),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            SizedBox(
-                              width: 28.w,
-                              height: 28.w,
-                              child: Icon(
-                                Icons.location_on,
-                                color: AppColors.figmaIconGreen,
-                                size: 28.sp,
-                              ),
-                            ),
-                            SizedBox(width: 4.w),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        place.label ?? 'Place',
-                                        style: AppTextStyles.homeSubtitle
-                                            .copyWith(
-                                              fontWeight: FontWeight.w500,
-                                              color: AppColors.figmaTextPrimary,
-                                              fontSize: 15.sp,
-                                              height: 1.33,
-                                            ),
-                                      ),
-                                      if (index == 0 &&
-                                          controller
-                                              .savedPlaces
-                                              .isNotEmpty) ...[
-                                        SizedBox(width: 4.w),
-                                        AnimatedRotation(
-                                          duration: const Duration(
-                                            milliseconds: 280,
-                                          ),
-                                          curve: Curves.easeInOutCubic,
-                                          turns: controller
-                                              .addressHeaderChevronTurns,
-                                          child: Icon(
-                                            Icons.keyboard_arrow_down,
-                                            size: 15.sp,
-                                            color: AppColors.figmaTextPrimary,
-                                          ),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                  SizedBox(height: 1.h),
-                                  Text(
-                                    place.address ??
-                                        place.name ??
-                                        'No address provided',
-                                    style: AppTextStyles.homeSubtitle.copyWith(
-                                      fontSize: 15.sp,
-                                      fontWeight: FontWeight.w400,
-                                      color: AppColors.figmaTextSecondary,
-                                      height: 1.33,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+          height: 61.h,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: AppColors.shade5),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.06),
+                blurRadius: 2,
+                offset: const Offset(0, 1),
+              ),
+            ],
+          ),
+          child: isLoading
+              ? Shimmer.fromColors(
+                  baseColor: const Color(0xFFE2E8F0),
+                  highlightColor: const Color(0xFFF8FAFC),
+                  child: Center(
+                    child: Container(
+                      width: 200.w,
+                      height: 16.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(4.r),
                       ),
                     ),
-                  );
-                },
-              ),
-            ),
-          ),
+                  ),
+                )
+              : Row(
+                  children: [
+                    Icon(
+                      Icons.location_on,
+                      color: AppColors.figmaIconGreen,
+                      size: 28.sp,
+                    ),
+                    SizedBox(width: 8.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Current location',
+                            style: AppTextStyles.homeSubtitle.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.figmaTextPrimary,
+                              fontSize: 14.sp,
+                              height: 1.2,
+                            ),
+                          ),
+                          Text(
+                            address,
+                            style: AppTextStyles.homeSubtitle.copyWith(
+                              fontSize: 13.sp,
+                              fontWeight: FontWeight.w400,
+                              color: AppColors.figmaTextSecondary,
+                              height: 1.2,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
         );
       }),
     );
   }
+
+  /*
+  // REPLACED BY SIMPLIFIED VERSION PER USER REQUEST
+  Widget _buildModernAddressBox() {
+    return Expanded(
+      child: Obx(() {
+        if (controller.savedPlaces.isEmpty) { ... }
+        ...
+      }),
+    );
+  }
+  */
 
   Widget _buildFigmaDraggableSheet() {
     return DraggableScrollableSheet(
