@@ -603,11 +603,11 @@ class FindingDriverController extends GetxController {
     final String? reason = await Get.dialog<String>(
       const CancelReasonSelectionDialog(
         reasons: [
-          'Taking Too Long To Confirm The Ride',
-          'Wait Time Too Long',
-          'Selected Wrong Pickup Location',
-          'Selected Wrong Drop Location',
-          'Booked By Mistake',
+          'Taking too long to confirm the ride',
+          'Wait time too long',
+          'Selected wrong pickup location',
+          'Selected wrong drop location',
+          'Booked by mistake',
           'Changed my mind',
           'Others',
         ],

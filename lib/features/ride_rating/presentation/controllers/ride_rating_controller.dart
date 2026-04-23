@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/data/models/requests/submit_ride_rating_request.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../shared/utils/app_dialogs.dart';
@@ -29,7 +30,8 @@ class RideRatingController extends GetxController {
   final SkipRideRatingUseCase skipRideRatingUseCase;
   final AnalyticsService analyticsService;
 
-  final Rxn<RideRatingRideEntity> pendingReviewRide = Rxn<RideRatingRideEntity>();
+  final Rxn<RideRatingRideEntity> pendingReviewRide =
+      Rxn<RideRatingRideEntity>();
   final availableTags = <RideRatingTagEntity>[].obs;
   final selectedTags = <String>[].obs;
   final selectedRating = 0.obs;
@@ -43,9 +45,12 @@ class RideRatingController extends GetxController {
   int _latestTagRequestRating = 0;
 
   bool get hasSelectedRating => selectedRating.value > 0;
+
   bool get shouldShowComment => hasSelectedRating;
+
   bool get requiresComment =>
       selectedRating.value > 0 && selectedRating.value <= 2;
+
   bool get canSubmit {
     if (!hasSelectedRating || isSubmitting.value) {
       return false;
@@ -79,8 +84,8 @@ class RideRatingController extends GetxController {
     final initialRating = ride.riderRating;
     selectedRating.value =
         (initialRating != null && initialRating >= 1 && initialRating <= 5)
-            ? initialRating
-            : 0;
+        ? initialRating
+        : 0;
     if (selectedRating.value > 0) {
       await _loadReviewTagsForRating(selectedRating.value);
     }
@@ -93,39 +98,35 @@ class RideRatingController extends GetxController {
     final initialRating = ride.riderRating;
     selectedRating.value =
         (initialRating != null && initialRating >= 1 && initialRating <= 5)
-            ? initialRating
-            : 0;
+        ? initialRating
+        : 0;
     _openRatingBottomSheet();
   }
 
   Future<void> _loadPendingReviewRide() async {
     isLoadingRide.value = true;
     final result = await getLastCompletedRideUseCase();
-    result.fold(
-      (failure) => _handleFailure(failure),
-      (ride) {
-        if (ride == null) {
-          pendingReviewRide.value = null;
-          selectedRating.value = 0;
-          return;
-        }
+    result.fold((failure) => _handleFailure(failure), (ride) {
+      if (ride == null) {
+        pendingReviewRide.value = null;
+        selectedRating.value = 0;
+        return;
+      }
 
-        final isPending = _isWithinPendingReviewWindow(ride);
-        pendingReviewRide.value = isPending ? ride : null;
+      final isPending = _isWithinPendingReviewWindow(ride);
+      pendingReviewRide.value = isPending ? ride : null;
 
-        if (!isPending) {
-          selectedRating.value = 0;
-          return;
-        }
+      if (!isPending) {
+        selectedRating.value = 0;
+        return;
+      }
 
-        final initialRating = ride.riderRating;
-        selectedRating.value = (initialRating != null &&
-                initialRating >= 1 &&
-                initialRating <= 5)
-            ? initialRating
-            : 0;
-      },
-    );
+      final initialRating = ride.riderRating;
+      selectedRating.value =
+          (initialRating != null && initialRating >= 1 && initialRating <= 5)
+          ? initialRating
+          : 0;
+    });
     isLoadingRide.value = false;
   }
 
@@ -191,10 +192,12 @@ class RideRatingController extends GetxController {
 
     isSubmitting.value = true;
     final result = await submitRideRatingUseCase(
-      rideId: ride.rideId,
-      rating: selectedRating.value,
-      tags: selectedTags.toList(),
-      comment: comment,
+      SubmitRideRatingRequest(
+        rideId: ride.rideId,
+        rating: selectedRating.value,
+        tags: selectedTags.toList(),
+        comment: comment,
+      ),
     );
     isSubmitting.value = false;
 

@@ -146,13 +146,13 @@ class _CancelReasonSelectionDialogState
     _reasons =
         widget.reasons ??
         [
-          'Selected Wrong Pickup Location',
-          'Selected Wrong Drop Location',
-          'Booked By Mistake',
-          'Selected Different Service/Vehicle',
-          'Driver Asked To Pay Offline',
-          'Driver Asked To Cancel',
-          'Taking Too Long To Arrive',
+          'Selected wrong pickup location',
+          'Selected wrong drop location',
+          'Booked by mistake',
+          'Selected different service/vehicle',
+          'Driver asked to pay offline',
+          'Driver asked to cancel',
+          'Taking too long to arrive',
           'Others',
         ];
   }
