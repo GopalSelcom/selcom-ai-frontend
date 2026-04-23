@@ -283,6 +283,7 @@ class DriverAcceptedController extends GetxController
       (r) {
         ride.value = r;
         _applyRide(r);
+        _syncLiveActivityFromDetails(r);
         _loadMarkerIcons(); // Refresh icons with new ride context
       },
     );
@@ -1316,6 +1317,36 @@ class DriverAcceptedController extends GetxController
         name: 'ORDER_TRACKING',
       );
       debugPrint('❌ Error syncing Live Activity from tracking payload: $e');
+    }
+  }
+
+  Future<void> _syncLiveActivityFromDetails(RideModel r) async {
+    try {
+      if (rideId.isEmpty) return;
+
+      // Convert enum status (e.g. driverAssigned) to backend-style (e.g. DRIVER_ASSIGNED)
+      final statusStr = r.status.name
+          .replaceAllMapped(
+            RegExp(r'([a-z0-9])([A-Z])'),
+            (m) => '${m.group(1)}_${m.group(2)}',
+          )
+          .toUpperCase();
+
+      await LiveActivityManager().startActivity(
+        orderId: rideId,
+        status: statusStr,
+        driverName: r.driverSnapshot?.name ?? 'Driver Assigned',
+        vehicleName:
+            '${r.vehicleSnapshot?.vehicleType ?? ''} ${r.vehicleSnapshot?.vehicleModel ?? ''}'
+                .trim(),
+        driverAvatarUrl: r.driverSnapshot?.avatarUrl ?? '',
+        plateNumber: r.vehicleSnapshot?.plateNumber ?? '',
+        isCompleted: r.status == RideStatus.rideCompleted,
+        driverLatitude: assignedDriverLocation.value?.latitude,
+        driverLongitude: assignedDriverLocation.value?.longitude,
+      );
+    } catch (e) {
+      debugPrint('❌ Error syncing Live Activity from Details: $e');
     }
   }
 }

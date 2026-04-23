@@ -3,28 +3,17 @@ import WidgetKit
 import SwiftUI
 
 // MARK: - Required by live_activities plugin
-struct LiveActivitiesAppAttributes: ActivityAttributes {
+struct LiveActivitiesAppAttributes: ActivityAttributes, Identifiable {
     public typealias LiveDeliveryData = ContentState
-    public struct ContentState: Codable, Hashable {
-        public var status: String?
-        public var driver_name: String?
-        public var driver_avatar_url: String?
-        public var vehicle_name: String?
-        public var plate_number: String?
-        public var eta_seconds: Double?
-        public var driver_latitude: Double?
-        public var driver_longitude: Double?
-        public var is_completed: Bool?
-    }
+    public struct ContentState: Codable, Hashable { }
 
-    // Static data
-    var order_id: String?
+    // This ID must be present and will be automatically populated by the plugin
+    var id: UUID
 }
 
 extension LiveActivitiesAppAttributes {
     func prefixedKey(_ key: String) -> String { 
-        let id = order_id ?? "default"
-        return "tracking_\(id)_\(key)" 
+        return "\(id)_\(key)" 
     }
 }
 
@@ -38,19 +27,28 @@ struct TrackingViewModel {
     let eta: String
     let progressRatio: Double
     let isRiderDelivering: Bool
+    let debugStatus: String // Helper for diagnosis
     
     init(context: ActivityViewContext<LiveActivitiesAppAttributes>) {
-        let state = context.state
-        let activityId = context.activityID
+        let attrs = context.attributes
         let appGroupId = "group.com.selcom.go"
         let ud = UserDefaults(suiteName: appGroupId)
         
-        func cacheKey(_ key: String) -> String { "tracking_\(activityId)_\(key)" }
+        // Helper to read from prefixed cache
+        func read(_ key: String) -> String? {
+            return ud?.string(forKey: attrs.prefixedKey(key))
+        }
 
-        let rawStatus          = state.status ?? ud?.string(forKey: cacheKey("status")) ?? "finding_driver"
+        let rawStatus          = read("status") ?? "finding_driver"
+        self.debugStatus       = rawStatus
         let normalizedStatus   = rawStatus.lowercased()
-        let etaSeconds         = state.eta_seconds ?? ud?.double(forKey: cacheKey("eta_seconds")) ?? 0
         
+        let etaSecondsStr      = read("eta_seconds") ?? "0"
+        let etaSeconds         = Double(etaSecondsStr) ?? 0
+        
+        let isCompletedStr     = read("is_completed") ?? "false"
+        self.isRiderDelivering = isCompletedStr.lowercased() == "true"
+
         switch normalizedStatus {
             case "ride_completed", "completed":
                 self.status = "You have arrived!"
@@ -72,21 +70,13 @@ struct TrackingViewModel {
                 self.status = rawStatus.replacingOccurrences(of: "_", with: " ").capitalized
         }
         
-        self.driverName        = state.driver_name ?? ud?.string(forKey: cacheKey("driver_name")) ?? ""
-        self.driverAvatarUrl   = state.driver_avatar_url ?? ud?.string(forKey: cacheKey("driver_avatar_url")) ?? ""
-        self.vehicleName       = state.vehicle_name ?? ud?.string(forKey: cacheKey("vehicle_name")) ?? ""
-        self.plateNumber       = state.plate_number ?? ud?.string(forKey: cacheKey("plate_number")) ?? ""
+        self.driverName        = read("driver_name") ?? ""
+        self.driverAvatarUrl   = read("driver_avatar_url") ?? ""
+        self.vehicleName       = read("vehicle_name") ?? ""
+        self.plateNumber       = read("plate_number") ?? ""
         
-        let isCompleted        = state.is_completed ?? ud?.bool(forKey: cacheKey("is_completed")) ?? false
-        
-        // 📏 Inferring state from status
-        self.isRiderDelivering = normalizedStatus.contains("ride_started") || 
-                                normalizedStatus.contains("progress") || 
-                                normalizedStatus.contains("near") || 
-                                normalizedStatus.contains("destination")
-
         // 🕰️ ETA Logic from eta_seconds
-        if isCompleted || normalizedStatus.contains("completed") {
+        if isRiderDelivering || normalizedStatus.contains("completed") {
             self.eta = "Arrived"
             self.progressRatio = 1.0
         } else if etaSeconds > 0 {
@@ -104,17 +94,6 @@ struct TrackingViewModel {
         } else {
             self.eta = "Soon"
             self.progressRatio = isRiderDelivering ? 0.8 : 0.2
-        }
-        
-        // Cache updates
-        if let ud = ud {
-            if let s = state.status { ud.set(s, forKey: cacheKey("status")) }
-            if let dn = state.driver_name { ud.set(dn, forKey: cacheKey("driver_name")) }
-            if let dau = state.driver_avatar_url { ud.set(dau, forKey: cacheKey("driver_avatar_url")) }
-            if let vn = state.vehicle_name { ud.set(vn, forKey: cacheKey("vehicle_name")) }
-            if let pn = state.plate_number { ud.set(pn, forKey: cacheKey("plate_number")) }
-            if let es = state.eta_seconds { ud.set(es, forKey: cacheKey("eta_seconds")) }
-            if let ic = state.is_completed { ud.set(ic, forKey: cacheKey("is_completed")) }
         }
     }
 }
@@ -147,7 +126,10 @@ struct MainDashboardView: View {
                     }
                 } else {
                     VStack(alignment: .leading, spacing: 0) {
-                        Text(vm.status).font(.system(size: 16, weight: .medium)).foregroundColor(.white.opacity(0.8))
+                        HStack(alignment: .center, spacing: 4) {
+                            Text(vm.status).font(.system(size: 16, weight: .medium)).foregroundColor(.white.opacity(0.8))
+                            Text("[\(vm.debugStatus)]").font(.system(size: 8)).foregroundColor(.white.opacity(0.3))
+                        }
                         
                         let isSoon = vm.eta.lowercased().contains("soon") || vm.eta.isEmpty
                         let term = vm.isRiderDelivering ? "Arrival" : "Pickup"
