@@ -288,10 +288,10 @@ class LiveActivityManager {
           'driver_avatar_url': driverAvatarUrl,
           'vehicle_name': vehicleName,
           'plate_number': plateNumber,
-          'eta_seconds': etaSeconds.toString(),
-          'driver_latitude': driverLatitude?.toString(),
-          'driver_longitude': driverLongitude?.toString(),
-          'is_completed': isCompleted.toString(),
+          'eta_seconds': etaSeconds,
+          'driver_latitude': driverLatitude,
+          'driver_longitude': driverLongitude,
+          'is_completed': isCompleted,
         };
 
         activityModel.removeWhere((key, value) => value == null);
@@ -461,12 +461,12 @@ class LiveActivityManager {
         'plate_number': plateNumber.isNotEmpty
             ? plateNumber
             : (_cachePlateNumber[orderId] ?? ''),
-        'eta_seconds':
-            (etaSeconds > 0 ? etaSeconds : (_cacheEtaSeconds[orderId] ?? 0.0))
-                .toString(),
-        'driver_latitude': driverLatitude?.toString(),
-        'driver_longitude': driverLongitude?.toString(),
-        'is_completed': isCompleted.toString(),
+        'eta_seconds': (etaSeconds > 0
+            ? etaSeconds
+            : (_cacheEtaSeconds[orderId] ?? 0.0)),
+        'driver_latitude': driverLatitude,
+        'driver_longitude': driverLongitude,
+        'is_completed': isCompleted,
       };
 
       updateData.removeWhere((key, value) => value == null);

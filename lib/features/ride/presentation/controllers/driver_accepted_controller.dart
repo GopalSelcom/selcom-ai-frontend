@@ -1274,10 +1274,23 @@ class DriverAcceptedController extends GetxController
       if (rideId.isEmpty) return;
       final status = (payload.status ?? '').toString().toUpperCase();
 
-      if (status.contains('COMPLETED') ||
-          status.contains('CANCELLED') ||
-          status.contains('NO_DRIVER_FOUND')) {
+      // Handle termination for cancellation, but keep it alive for COMPLETED
+      if (status.contains('CANCELLED') || status.contains('NO_DRIVER_FOUND')) {
         await LiveActivityManager().endActivity(rideId);
+        return;
+      }
+
+      // If completed, sync one last time as isCompleted: true (handled by the handoff model update logic if needed,
+      // but here we just ensure we don't 'END' it).
+      if (status.contains('COMPLETED')) {
+        // We can call update if we want to ensure the final UI shows,
+        // or just return and let APNs handle the final 'true' state.
+        // To be safe and responsive, we sync the final state.
+        await LiveActivityManager().startActivity(
+          orderId: rideId,
+          status: status,
+          isCompleted: true,
+        );
         return;
       }
 

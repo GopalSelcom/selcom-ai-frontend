@@ -11,20 +11,60 @@ struct LiveActivitiesAppAttributes: ActivityAttributes, Identifiable {
         public var vehicle_name: String?
         public var plate_number: String?
         public var driver_avatar_url: String?
-        public var eta_seconds: String?
-        public var is_completed: String?
-        public var driver_latitude: String?
-        public var driver_longitude: String?
-    }
+        public var eta_seconds: Double?
+        public var is_completed: Bool?
+        public var driver_latitude: Double?
+        public var driver_longitude: Double?
 
+        enum CodingKeys: String, CodingKey {
+            case status, driver_name = "driver_name", vehicle_name = "vehicle_name", plate_number = "plate_number"
+            case driver_avatar_url = "driver_avatar_url", eta_seconds = "eta_seconds"
+            case is_completed = "is_completed", driver_latitude = "driver_latitude", driver_longitude = "driver_longitude"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            
+            func decodeAsString(_ key: CodingKeys) -> String? {
+                if let val = try? container.decode(String.self, forKey: key) { return val }
+                if let val = try? container.decode(Int.self, forKey: key) { return String(val) }
+                if let val = try? container.decode(Double.self, forKey: key) { return String(val) }
+                if let val = try? container.decode(Bool.self, forKey: key) { return String(val) }
+                return nil
+            }
+            func decodeAsDouble(_ key: CodingKeys) -> Double? {
+                if let val = try? container.decode(Double.self, forKey: key) { return val }
+                if let val = try? container.decode(Int.self, forKey: key) { return Double(val) }
+                if let str = try? container.decode(String.self, forKey: key), let val = Double(str) { return val }
+                return nil
+            }
+            func decodeAsBool(_ key: CodingKeys) -> Bool? {
+                if let val = try? container.decode(Bool.self, forKey: key) { return val }
+                if let val = try? container.decode(Int.self, forKey: key) { return val == 1 }
+                if let str = try? container.decode(String.self, forKey: key) {
+                    let s = str.lowercased()
+                    return s == "true" || s == "1" || s == "yes"
+                }
+                return nil
+            }
+
+            status = decodeAsString(.status)
+            driver_name = decodeAsString(.driver_name)
+            vehicle_name = decodeAsString(.vehicle_name)
+            plate_number = decodeAsString(.plate_number)
+            driver_avatar_url = decodeAsString(.driver_avatar_url)
+            eta_seconds = decodeAsDouble(.eta_seconds)
+            is_completed = decodeAsBool(.is_completed)
+            driver_latitude = decodeAsDouble(.driver_latitude)
+            driver_longitude = decodeAsDouble(.driver_longitude)
+        }
+    }
     // This ID must be present and will be automatically populated by the plugin
     var id: UUID
 }
 
 extension LiveActivitiesAppAttributes {
-    func prefixedKey(_ key: String) -> String { 
-        return "\(id)_\(key)" 
-    }
+    func prefixedKey(_ key: String) -> String { "\(id)_\(key)" }
 }
 
 // MARK: - Optimized View Model
@@ -39,33 +79,42 @@ struct TrackingViewModel {
     let isRiderInRide: Bool
     let isArrived: Bool
     let debugStatus: String 
+    let targetDate: Date? 
+    let dataSource: String // DEBUG: "Server" or "Local"
     
     init(context: ActivityViewContext<LiveActivitiesAppAttributes>) {
         let attrs = context.attributes
         let ud = UserDefaults(suiteName: "group.com.selcom.go")
+        var currentDataSource = "Local"
         
-        // 🛠️ Hybrid Reader: UserDefaults (Local Sync) -> ContentState (APNs Sync)
         func read(_ key: String) -> String? {
-            // Priority 1: Check Local Cache (used while app is open)
+            let st = context.state
+            var nativeValue: String? = nil
+            switch key {
+                case "status":            nativeValue = st.status
+                case "driver_name":       nativeValue = st.driver_name
+                case "vehicle_name":      nativeValue = st.vehicle_name
+                case "plate_number":      nativeValue = st.plate_number
+                case "driver_avatar_url": nativeValue = st.driver_avatar_url
+                case "eta_seconds":       nativeValue = st.eta_seconds != nil ? String(st.eta_seconds!) : nil
+                case "is_completed":      nativeValue = st.is_completed != nil ? String(st.is_completed!) : nil
+                default:                  nativeValue = nil
+            }
+
+            if let val = nativeValue, !val.isEmpty {
+                currentDataSource = "Server"
+                return val
+            }
+
             if let cachedValue = ud?.string(forKey: attrs.prefixedKey(key)), !cachedValue.isEmpty {
+                currentDataSource = "Local"
                 return cachedValue
             }
-            
-            // Priority 2: Check Native State (updated by backend APNs via ActivityKit)
-            let st = context.state
-            switch key {
-                case "status":            return st.status
-                case "driver_name":       return st.driver_name
-                case "vehicle_name":      return st.vehicle_name
-                case "plate_number":      return st.plate_number
-                case "driver_avatar_url": return st.driver_avatar_url
-                case "eta_seconds":       return st.eta_seconds
-                case "is_completed":      return st.is_completed
-                default:                  return nil
-            }
+            return nil
         }
 
         let rawStatus          = read("status") ?? "finding_driver"
+        self.dataSource        = currentDataSource
         self.debugStatus       = rawStatus
         let normalizedStatus   = rawStatus.lowercased()
         
@@ -144,10 +193,12 @@ struct TrackingViewModel {
         // 🕰️ ETA & Progress Logic
         if isArrived {
             self.eta = "Arrived"
+            self.targetDate = nil
             self.progressRatio = 1.0
         } else if etaSeconds > 0 {
             let mins = Int(ceil(etaSeconds / 60.0))
             self.eta = mins <= 1 ? "1 min" : "\(mins) mins"
+            self.targetDate = etaSeconds > 0 ? Date().addingTimeInterval(etaSeconds) : nil
             
             if isRiderInRide {
                 // Trip Phase: 50% -> 100%
@@ -158,6 +209,7 @@ struct TrackingViewModel {
             }
         } else {
             self.eta = "Soon"
+            self.targetDate = nil
             self.progressRatio = isArrived ? 1.0 : (isRiderInRide ? 0.75 : 0.25)
         }
     }
@@ -179,9 +231,12 @@ struct MainDashboardView: View {
 
                 if vm.isArrived {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Thank you for your ride!").font(.system(size: 15, weight: .medium)).foregroundColor(.white.opacity(0.8))
+                        HStack(spacing: 4) {
+                            Text("Hope you had a great ride!").font(.system(size: 15, weight: .medium)).foregroundColor(.white.opacity(0.8))
+                            Text(vm.dataSource == "Server" ? "📡" : "💾").font(.system(size: 8)) // Debug sync indicator
+                        }
                         HStack {
-                            Text("Ride arrived").font(.system(size: 26, weight: .bold)).foregroundColor(.white)
+                            Text("Arrived at Destination").font(.system(size: 26, weight: .bold)).foregroundColor(.white)
                             Text("✅").font(.system(size: 24))
                         }
                     }
@@ -198,7 +253,15 @@ struct MainDashboardView: View {
 
                         HStack(alignment: .firstTextBaseline, spacing: 4) {
                             Text(prefix).font(.system(size: 28, weight: .bold)).foregroundColor(.white)
-                            Text(displayEta).font(.system(size: 28, weight: .bold)).foregroundColor(.white)
+                            if let target = vm.targetDate {
+                                Text(target, style: .timer)
+                                    .font(.system(size: 28, weight: .bold))
+                                    .foregroundColor(.white)
+                                    .multilineTextAlignment(.leading)
+                                    .frame(width: 80, alignment: .leading)
+                            } else {
+                                Text(displayEta).font(.system(size: 28, weight: .bold)).foregroundColor(.white)
+                            }
                         }
                         .minimumScaleFactor(0.7)
                         .lineLimit(1)
@@ -280,9 +343,21 @@ struct RiderTrackingWidgetLiveActivity: Widget {
                         .stroke(selcomRed.opacity(0.5), lineWidth: 2)
                         .frame(width: 54, height: 22)
 
-                    Text(vm.isArrived ? "Done" : vm.eta.lowercased())
-                        .font(.system(size: 9.5, weight: .bold))
-                        .foregroundColor(.white)
+                    if vm.isArrived {
+                        Text("Done")
+                            .font(.system(size: 9.5, weight: .bold))
+                            .foregroundColor(.white)
+                    } else if let target = vm.targetDate {
+                        Text(target, style: .timer)
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(.white)
+                            .multilineTextAlignment(.center)
+                            .frame(width: 38)
+                    } else {
+                        Text(vm.eta.lowercased())
+                            .font(.system(size: 9.5, weight: .bold))
+                            .foregroundColor(.white)
+                    }
                 }
                 .padding(.leading, 6)
             } minimal: {
