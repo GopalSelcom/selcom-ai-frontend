@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
+import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_text_styles.dart';
 
 class RideDateFormatter {
@@ -289,13 +291,16 @@ class NeedHelpRow extends StatelessWidget {
       children: [
         Icon(Iconsax.headphone5, color: const Color(0xFF364B63), size: 24.w),
         SizedBox(width: 8.w),
-        Text(
-          'Need Help?',
-          style: TextStyle(
-            fontFamily: AppTextStyles.metropolisFont,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF364B63),
-            fontSize: 15.sp,
+        GestureDetector(
+          onTap: () => Get.toNamed(AppRoutes.contactUs),
+          child: Text(
+            'Need Help?',
+            style: TextStyle(
+              fontFamily: AppTextStyles.metropolisFont,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF364B63),
+              fontSize: 15.sp,
+            ),
           ),
         ),
       ],
