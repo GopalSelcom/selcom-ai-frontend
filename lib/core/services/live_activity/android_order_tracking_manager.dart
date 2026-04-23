@@ -86,26 +86,61 @@ class AndroidOrderTrackingManager {
         }
       }
 
+      final String normalizedStatus = status.toLowerCase();
+      String displayStatus = status;
+
+      // 🏷️ Premium Status Mapping (Replicated from Swift)
+      if (isCompleted || normalizedStatus.contains('completed')) {
+        displayStatus = 'Arrived at Destination';
+      } else if (normalizedStatus.contains('near_destination') ||
+          normalizedStatus.contains('neardestination')) {
+        displayStatus = 'Almost There';
+      } else if (normalizedStatus.contains('ride_in_progress') ||
+          normalizedStatus.contains('rideinprogress')) {
+        displayStatus = 'On Your Way';
+      } else if (normalizedStatus.contains('ride_started') ||
+          normalizedStatus.contains('ridestarted')) {
+        displayStatus = 'Ride Started';
+      } else if (normalizedStatus.contains('driver_arrived') ||
+          normalizedStatus.contains('driverarrived')) {
+        displayStatus = 'Driver Arrived';
+      } else if (normalizedStatus.contains('driver_arriving') ||
+          normalizedStatus.contains('driverarriving')) {
+        displayStatus = 'Driver En Route';
+      } else if (normalizedStatus.contains('searching') ||
+          normalizedStatus.contains('finding')) {
+        displayStatus = 'Finding Driver';
+      } else if (normalizedStatus.contains('assigned')) {
+        displayStatus = 'Driver Assigned';
+      }
+
       final int progress = totalStepsVal > 0
           ? ((stepVal / totalStepsVal) * 100).round()
           : 0;
 
-      final String etaLabel = displayEta == 'Arrived'
-          ? 'Ride arrived'
-          : 'Arriving in $displayEta';
+      String etaLabel = '';
+      String topLabel = '';
+
+      if (isCompleted || normalizedStatus.contains('completed')) {
+        topLabel = 'Arrived';
+        etaLabel = 'Hope you had a great ride!';
+      } else {
+        topLabel = isRiderDelivering ? 'Arrival' : 'Pickup';
+        etaLabel = displayEta.toLowerCase() == 'soon' ? 'Soon' : displayEta;
+      }
 
       final String contentTitle = merchantName.isNotEmpty
           ? merchantName
           : title;
 
       final String bigText = [
-        status,
-        if (etaLabel.isNotEmpty) etaLabel,
+        displayStatus,
+        '$topLabel: $etaLabel',
         if (vehicleDesc.isNotEmpty) vehicleDesc,
         if (plateNumber.isNotEmpty) plateNumber,
       ].join('\n');
 
-      final String contentText = etaLabel.isNotEmpty ? etaLabel : status;
+      final String contentText = '$topLabel: $etaLabel';
 
       final AndroidNotificationDetails androidDetails =
           AndroidNotificationDetails(
