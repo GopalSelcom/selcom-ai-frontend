@@ -19,6 +19,7 @@ import '../../../../core/services/app_map_service.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/utils/map_marker_utils.dart';
+import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../widgets/cancel_ride_dialogs.dart';
@@ -491,15 +492,7 @@ class DriverAcceptedController extends GetxController
 
   Future<void> loadDriverIcon({String? vehicleType}) async {
     try {
-      String asset = AppAssets.imgCab;
-      if (vehicleType != null) {
-        final vt = vehicleType.toLowerCase();
-        if (vt.contains('boda') || vt.contains('bike')) {
-          asset = AppAssets.imgBoda;
-        } else if (vt.contains('bajaj')) {
-          asset = AppAssets.imgBajaji;
-        }
-      }
+      final asset = VehicleImageUtils.imageAssetForVehicleType(vehicleType);
       assignedDriverMarkerIcon.value = await MapMarkerUtils.getResizedMarker(
         asset,
         150,

@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:selcom_rides_frontend/core/constants/app_assets.dart';
 import 'package:selcom_rides_frontend/core/utils/map_marker_utils.dart';
 
 import '../../../../core/data/models/requests/book_ride_request.dart';
@@ -22,6 +21,7 @@ import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../home/domain/repositories/home_repository.dart';
 import '../../../payment/presentation/controllers/payment_method_controller.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
+import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../domain/repositories/ride_repository.dart';
 
 /// SCR-09 — vehicle + fare selection.
@@ -326,12 +326,7 @@ class VehicleSelectionController extends GetxController {
   bool get isMapDataReady => isRouteReady.value && routePoints.length >= 2;
 
   String vehicleImage(FareEstimateItem e) {
-    final n = '${e.vehicleName ?? ''} ${e.displayName ?? ''}'.toLowerCase();
-    if (n.contains('boda') || n.contains('bike') || n.contains('moto')) {
-      return AppAssets.imgBoda;
-    }
-    if (n.contains('bajaj') || n.contains('auto')) return AppAssets.imgBajaji;
-    return AppAssets.imgCab;
+    return VehicleImageUtils.imageAssetForVehicleType(e.vehicleName);
   }
 
   /// Backend expects `vehicle_type_id` as the catalog id (e.g. Mongo `_id`), not a slug like `cab`.
@@ -607,7 +602,9 @@ class VehicleSelectionController extends GetxController {
       final refreshedSelectedEstimate = selectedEstimate;
       final validateRequest = ValidateRidePaymentRequest(
         fareEstimate:
-            refreshedSelectedEstimate?.fareEstimate ?? est.fareEstimate ?? selectedFareAmount,
+            refreshedSelectedEstimate?.fareEstimate ??
+            est.fareEstimate ??
+            selectedFareAmount,
         paymentMethod: pay.type,
         vehicleTypeId: resolvedVehicleTypeId,
       );

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../core/constants/app_assets.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/services/analytics_service.dart';
+import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../domain/entities/ride_rating_ride_entity.dart';
 import '../../domain/entities/ride_rating_tag_entity.dart';
 import '../../domain/usecases/get_review_tags_usecase.dart';
@@ -59,17 +59,7 @@ class RideRatingController extends GetxController {
   }
 
   String vehicleImageAssetForType(String vehicleType) {
-    final type = vehicleType.toLowerCase().trim();
-    if (type.contains('boda') || type.contains('bike')) {
-      return AppAssets.imgBoda;
-    }
-    if (type.contains('bajaj') ||
-        type.contains('auto') ||
-        type.contains('rickshaw') ||
-        type.contains('tuk')) {
-      return AppAssets.imgBajaji;
-    }
-    return AppAssets.imgCab;
+    return VehicleImageUtils.imageAssetForVehicleType(vehicleType);
   }
 
   Future<void> tryOpenRatingSheetAfterHomeLoad() async {

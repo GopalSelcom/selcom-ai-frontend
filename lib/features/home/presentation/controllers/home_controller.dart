@@ -25,9 +25,9 @@ import '../../../ride_rating/presentation/controllers/ride_rating_controller.dar
 import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
-import '../../../../core/constants/app_assets.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
+import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/data/models/responses/rides/active_ride_response.dart';
@@ -1085,16 +1085,7 @@ class HomeController extends GetxController {
   }
 
   String vehicleExploreImageAsset(String vehicleName) {
-    final name = vehicleName.toLowerCase();
-    if (name.contains('bike') || name.contains('boda')) {
-      return AppAssets.imgBoda;
-    }
-    if (name.contains('auto') ||
-        name.contains('wheeler') ||
-        name.contains('bajaj')) {
-      return AppAssets.imgBajaji;
-    }
-    return AppAssets.imgCab;
+    return VehicleImageUtils.imageAssetForVehicleType(vehicleName);
   }
 
   String recentDestinationTitleLine(RecentDestinationModel loc) {

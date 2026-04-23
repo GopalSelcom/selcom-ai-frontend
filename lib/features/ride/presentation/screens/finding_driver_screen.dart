@@ -8,6 +8,7 @@ import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../controllers/finding_driver_controller.dart';
 
@@ -413,9 +414,9 @@ class FindingDriverScreen extends StatelessWidget {
 
   String _getVehicleAsset(String? vehicleType) {
     if (vehicleType == null) return AppAssets.rideFindingLoaderCar;
-    final vt = vehicleType.toLowerCase();
-    if (vt.contains('boda') || vt.contains('bike')) return AppAssets.boda;
-    if (vt.contains('bajaj')) return AppAssets.bajaj;
+    final mapped = VehicleImageUtils.imageAssetForVehicleType(vehicleType);
+    if (mapped == AppAssets.imgBoda) return AppAssets.boda;
+    if (mapped == AppAssets.imgBajaji) return AppAssets.bajaj;
     return AppAssets.imgCab;
   }
 }

@@ -12,6 +12,7 @@ import '../../../../core/data/models/responses/nearbyRiders/response/rider_statu
 import '../../../../core/data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
+import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../domain/repositories/ride_repository.dart';
@@ -103,15 +104,7 @@ class FindingDriverController extends GetxController {
 
   Future<void> _loadDriverMarkerIcon({String? vehicleType}) async {
     try {
-      String asset = AppAssets.imgCab;
-      if (vehicleType != null) {
-        final vt = vehicleType.toLowerCase();
-        if (vt.contains('boda') || vt.contains('bike')) {
-          asset = AppAssets.imgBoda;
-        } else if (vt.contains('bajaj')) {
-          asset = AppAssets.imgBajaji;
-        }
-      }
+      final asset = VehicleImageUtils.imageAssetForVehicleType(vehicleType);
       assignedDriverMarkerIcon.value = await MapMarkerUtils.getResizedMarker(
         asset,
         150,
