@@ -147,7 +147,8 @@ class OtpScreen extends GetView<AuthController> {
                                   ),
                                   SizedBox(height: 8.h),
                                   InkWell(
-                                    onTap: () => controller.resendOtp(),
+                                    onTap: () async =>
+                                        await controller.resendOtp(),
                                     child: Text(
                                       'Resend Code',
                                       style: AppTextStyles.onboardingButton

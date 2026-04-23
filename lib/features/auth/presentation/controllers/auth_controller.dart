@@ -6,15 +6,18 @@ import '../../../../core/data/models/requests/send_otp_request.dart';
 import '../../../../core/data/models/requests/verify_otp_request.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/storage_service.dart';
+import '../../domain/usecases/resend_otp_use_case.dart';
 import '../../domain/usecases/send_otp_use_case.dart';
 import '../../domain/usecases/verify_otp_use_case.dart';
 
 class AuthController extends GetxController {
   final SendOtpUseCase sendOtpUseCase;
+  final ResendOtpUseCase resendOtpUseCase;
   final VerifyOtpUseCase verifyOtpUseCase;
 
   AuthController({
     required this.sendOtpUseCase,
+    required this.resendOtpUseCase,
     required this.verifyOtpUseCase,
   });
 
@@ -135,7 +138,7 @@ class AuthController extends GetxController {
     // Start timer immediately for better user feedback
     startResendTimer();
 
-    final result = await sendOtpUseCase(
+    final result = await resendOtpUseCase(
       SendOtpRequest(
         mobileNumber: mobileNumber.value.replaceAll(' ', ''),
         countryCode: countryCode.value.replaceAll('+', ''),
