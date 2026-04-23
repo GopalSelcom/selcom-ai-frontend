@@ -27,6 +27,7 @@ import 'core/data/models/notification_model.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  debugPrint('📩 Background FCM: ${message.data}');
   debugPrint("Handling a background message: ${message.messageId}");
 
   final data = FCMNotificationData.fromJson(message.data);
@@ -35,21 +36,11 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   if (data.rideId != null && data.status != null) {
     await AndroidOrderTrackingManager().show(
       orderId: data.rideId!,
-      title: data.title ?? 'Trip Tracking',
-      merchantName: data.driverName ?? data.plateNumber ?? 'Trip Tracking',
       status: data.status!,
-      subtitle: data.plateNumber ?? '',
-      step: data.step ?? 2,
-      totalSteps: data.totalSteps ?? 5,
-      isRiderDelivering: data.isRiderDelivering ?? false,
-      isCompleted: data.isCompleted ?? false,
-      vehicleDesc: data.vehicleName ?? '',
+      driverName: data.driverName ?? '',
+      vehicleName: data.vehicleName ?? '',
       plateNumber: data.plateNumber ?? '',
-      eta: '',
       etaSeconds: data.etaSeconds ?? 0,
-      riderPhotoUrl: data.driverAvatarUrl ?? '',
-      pickupDistance: data.pickupDistance ?? '0',
-      deliveryDistance: data.deliveryDistance ?? '0',
     );
   }
 }

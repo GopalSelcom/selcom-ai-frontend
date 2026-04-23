@@ -256,22 +256,14 @@ class LiveActivityManager {
       if (_isAndroid) {
         await AndroidOrderTrackingManager().show(
           orderId: orderId,
-          title: 'Trip Tracking',
-          merchantName: driverName.isNotEmpty
-              ? driverName
-              : (plateNumber.isNotEmpty ? plateNumber : 'Trip Tracking'),
           status: status,
-          subtitle: plateNumber,
-          step: isCompleted ? 5 : 2,
-          totalSteps: 5,
-          isRiderDelivering: false,
-          vehicleDesc: vehicleName,
+          driverName: driverName,
+          vehicleName: vehicleName,
           plateNumber: plateNumber,
-          eta: '',
+          etaSeconds: etaSeconds,
           isCompleted: isCompleted,
-          riderPhotoUrl: driverAvatarUrl,
-          pickupDistance: '0',
-          deliveryDistance: '0',
+          driverLatitude: driverLatitude,
+          driverLongitude: driverLongitude,
         );
         _orderToActivityId[orderId] = 'android';
         await _saveState();

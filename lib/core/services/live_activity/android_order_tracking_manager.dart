@@ -1,9 +1,10 @@
 import 'dart:io';
 import 'dart:ui';
-
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:developer' as developer;
+import '../storage_service.dart';
 
 class AndroidOrderTrackingManager {
   static final AndroidOrderTrackingManager _instance =
@@ -23,6 +24,30 @@ class AndroidOrderTrackingManager {
 
   int _getNotificationId(String orderId) {
     return _baseNotificationId + (orderId.hashCode % 1000).abs();
+  }
+
+  String _getCacheKey(String orderId) => 'ride_telemetry_$orderId';
+
+  Future<Map<String, dynamic>> _getCachedTelemetry(String orderId) async {
+    try {
+      final String? data = await StorageService().read(_getCacheKey(orderId));
+      if (data != null && data.isNotEmpty) {
+        return Map<String, dynamic>.from(jsonDecode(data));
+      }
+    } catch (_) {}
+    return {};
+  }
+
+  Future<void> _saveTelemetry(
+    String orderId,
+    Map<String, dynamic> telemetry,
+  ) async {
+    try {
+      await StorageService().write(
+        _getCacheKey(orderId),
+        jsonEncode(telemetry),
+      );
+    } catch (_) {}
   }
 
   Future<void> ensureInitialized() async {
@@ -53,21 +78,15 @@ class AndroidOrderTrackingManager {
 
   Future<void> show({
     required String orderId,
-    required String title,
-    required String merchantName,
     required String status,
-    required String subtitle,
-    required int step,
-    required int totalSteps,
-    required bool isRiderDelivering,
-    required bool isCompleted,
-    required String vehicleDesc,
-    required String plateNumber,
-    required String eta,
-    required String riderPhotoUrl,
+    String driverName = '',
+    String vehicleName = '',
+    String driverAvatarUrl = '',
+    String plateNumber = '',
     double etaSeconds = 0,
-    String pickupDistance = '0',
-    String deliveryDistance = '0',
+    bool isCompleted = false,
+    double? driverLatitude,
+    double? driverLongitude,
   }) async {
     if (!_isAndroid) return;
     await ensureInitialized();
@@ -75,92 +94,105 @@ class AndroidOrderTrackingManager {
     try {
       final int notificationId = _getNotificationId(orderId);
 
-      final double pickupVal = double.tryParse(pickupDistance) ?? 0.0;
-      final double deliveryVal = double.tryParse(deliveryDistance) ?? 0.0;
-      final double stepVal = step.toDouble();
-      final double totalStepsVal = totalSteps.toDouble().clamp(6.0, 100.0);
+      // 💾 Load and Merge Telemetry Cache
+      final cached = await _getCachedTelemetry(orderId);
 
-      String displayEta = '';
-      if (stepVal >= totalStepsVal || isCompleted) {
-        displayEta = 'Arrived';
-      } else {
-        if (etaSeconds > 0) {
-          displayEta = _formatDuration((etaSeconds / 60.0).ceil());
-        } else {
-          final double totalDist = (stepVal < totalStepsVal - 1)
-              ? (pickupVal + deliveryVal)
-              : deliveryVal;
-          final int calcMin = (totalDist / 35.0 * 60.0).ceil();
+      final String effectiveDriverName = driverName.isNotEmpty
+          ? driverName
+          : (cached['driver_name'] ?? '');
+      final String effectiveVehicleName = vehicleName.isNotEmpty
+          ? vehicleName
+          : (cached['vehicle_name'] ?? '');
+      final String effectivePlateNumber = plateNumber.isNotEmpty
+          ? plateNumber
+          : (cached['plate_number'] ?? '');
+      final double effectiveEtaSeconds = etaSeconds > 0
+          ? etaSeconds
+          : (double.tryParse(cached['eta_seconds']?.toString() ?? '') ?? 0.0);
+      final bool effectiveIsCompleted =
+          isCompleted || (cached['is_completed'] == true);
 
-          if (calcMin > 0) {
-            displayEta = _formatDuration(calcMin);
-          } else {
-            displayEta = eta
-                .toLowerCase()
-                .replaceAll(" min", " mins")
-                .replaceAll(" soon", " soon");
-            if (displayEta.isEmpty || displayEta.toLowerCase().contains("na")) {
-              displayEta = "soon";
-            }
-          }
-        }
-      }
+      // Update Cache
+      await _saveTelemetry(orderId, {
+        'driver_name': effectiveDriverName,
+        'vehicle_name': effectiveVehicleName,
+        'plate_number': effectivePlateNumber,
+        'eta_seconds': effectiveEtaSeconds,
+        'is_completed': effectiveIsCompleted,
+      });
 
       final String normalizedStatus = status.toLowerCase();
       String displayStatus = status;
 
-      // 🏷️ Premium Status Mapping (Replicated from Swift)
-      if (isCompleted || normalizedStatus.contains('completed')) {
+      // 📡 Status-Based Phase/Progress Detection
+      final bool isInRide =
+          normalizedStatus.contains('ride_started') ||
+          normalizedStatus.contains('ride_in_progress') ||
+          normalizedStatus.contains('in_progress') ||
+          normalizedStatus.contains('near_destination') ||
+          normalizedStatus.contains('neardestination');
+
+      int progress = 0;
+
+      // 🏷️ Premium Status Mapping & Progress Logic
+      if (effectiveIsCompleted || normalizedStatus.contains('completed')) {
         displayStatus = 'Arrived at Destination';
+        progress = 100;
       } else if (normalizedStatus.contains('near_destination') ||
           normalizedStatus.contains('neardestination')) {
         displayStatus = 'Almost There';
+        progress = 95;
       } else if (normalizedStatus.contains('ride_in_progress') ||
           normalizedStatus.contains('rideinprogress')) {
         displayStatus = 'On Your Way';
+        progress = 80;
       } else if (normalizedStatus.contains('ride_started') ||
           normalizedStatus.contains('ridestarted')) {
         displayStatus = 'Ride Started';
+        progress = 70;
       } else if (normalizedStatus.contains('driver_arrived') ||
           normalizedStatus.contains('driverarrived')) {
         displayStatus = 'Driver Arrived';
+        progress = 60;
       } else if (normalizedStatus.contains('driver_arriving') ||
           normalizedStatus.contains('driverarriving')) {
         displayStatus = 'Driver En Route';
+        progress = 40;
+      } else if (normalizedStatus.contains('assigned')) {
+        displayStatus = 'Driver Assigned';
+        progress = 30;
       } else if (normalizedStatus.contains('searching') ||
           normalizedStatus.contains('finding')) {
         displayStatus = 'Finding Driver';
-      } else if (normalizedStatus.contains('assigned')) {
-        displayStatus = 'Driver Assigned';
+        progress = 10;
       }
 
-      final int progress =
-          (isCompleted || normalizedStatus.contains('completed'))
-          ? 100
-          : (totalStepsVal > 0 ? ((stepVal / totalStepsVal) * 100).round() : 0);
+      String displayEta = 'Soon';
+      if (effectiveIsCompleted) {
+        displayEta = 'Arrived';
+      } else if (effectiveEtaSeconds > 0) {
+        displayEta = _formatDuration((effectiveEtaSeconds / 60.0).ceil());
+      }
 
       String etaDetail = '';
-      if (isCompleted || normalizedStatus.contains('completed')) {
+      if (effectiveIsCompleted || normalizedStatus.contains('completed')) {
         etaDetail = 'Hope you had a great ride!';
       } else {
-        final String phase = isRiderDelivering
+        final String phase = isInRide
             ? 'Arriving at destination'
             : 'Arriving at pickup';
-        final String time = displayEta.toLowerCase() == 'soon'
-            ? 'Soon'
-            : displayEta;
-        etaDetail = '$phase • $time';
+        etaDetail = '$phase • $displayEta';
       }
 
-      final String contentTitle = merchantName.isNotEmpty
-          ? merchantName
-          : title;
+      final String contentTitle = effectiveDriverName.isNotEmpty
+          ? effectiveDriverName
+          : 'Trip Tracking';
 
       final String bigText = [
         displayStatus,
         etaDetail,
-        if (vehicleDesc.isNotEmpty) vehicleDesc,
-        if (plateNumber.isNotEmpty) plateNumber,
+        if (effectiveVehicleName.isNotEmpty) effectiveVehicleName,
+        if (effectivePlateNumber.isNotEmpty) effectivePlateNumber,
       ].join('\n');
 
       final String contentText = etaDetail;
@@ -179,7 +211,6 @@ class AndroidOrderTrackingManager {
             maxProgress: 100,
             progress: progress,
             indeterminate: false,
-            // Make sure these assets exist or use generic ones
             icon: '@mipmap/ic_launcher',
             styleInformation: BigTextStyleInformation(
               bigText,
@@ -199,7 +230,7 @@ class AndroidOrderTrackingManager {
       );
 
       developer.log(
-        'Android ride tracking notification shown for $orderId: $status (step $step/$totalSteps)',
+        'Android ride tracking notification shown for $orderId: $status',
         name: 'ORDER_TRACKING',
       );
     } catch (e) {

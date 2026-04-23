@@ -205,21 +205,11 @@ class NotificationService {
     if (data.rideId != null && data.status != null) {
       AndroidOrderTrackingManager().show(
         orderId: data.rideId!,
-        title: data.title ?? 'Trip Tracking',
-        merchantName: data.driverName ?? data.plateNumber ?? 'Trip Tracking',
         status: data.status!,
-        subtitle: data.plateNumber ?? '',
-        step: data.step ?? 2,
-        totalSteps: data.totalSteps ?? 5,
-        isRiderDelivering: data.isRiderDelivering ?? false,
-        isCompleted: data.isCompleted ?? false,
-        vehicleDesc: data.vehicleName ?? '',
+        driverName: data.driverName ?? '',
+        vehicleName: data.vehicleName ?? '',
         plateNumber: data.plateNumber ?? '',
-        eta: '',
         etaSeconds: data.etaSeconds ?? 0,
-        riderPhotoUrl: data.driverAvatarUrl ?? '',
-        pickupDistance: data.pickupDistance ?? '0',
-        deliveryDistance: data.deliveryDistance ?? '0',
       );
     }
   }
@@ -266,7 +256,9 @@ class NotificationService {
       result.fold(
         (failure) {
           _logger.e("Error fetching ride details: ${failure.message}");
-          AppDialogs.showErrorDialog(message: AppStrings.unableToOpenRideDetails.tr,);
+          AppDialogs.showErrorDialog(
+            message: AppStrings.unableToOpenRideDetails.tr,
+          );
         },
         (ride) {
           navigateToDriverAcceptedForRide(ride);

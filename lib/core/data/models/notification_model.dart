@@ -230,6 +230,28 @@ class FCMNotificationData {
   });
 
   factory FCMNotificationData.fromJson(Map<String, dynamic> json) {
+    // 📡 Robust ETA Decoding
+    final rawEta = json['eta_seconds'] ?? json['eta'] ?? json['eta_minutes'];
+    double? eta;
+    if (rawEta != null) {
+      eta = double.tryParse(rawEta.toString());
+      // If the key was 'eta_minutes', convert to seconds
+      if (json.containsKey('eta_minutes') && !json.containsKey('eta_seconds')) {
+        eta = (eta ?? 0) * 60;
+      }
+    }
+
+    // 📡 Robust Phase Decoding (Is Rider In Ride?)
+    final rawPhase =
+        json['is_rider_delivering'] ??
+        json['is_rider_in_ride'] ??
+        json['rider_in_ride'];
+    final bool isInRide =
+        rawPhase?.toString() == 'true' ||
+        rawPhase?.toString() == '1' ||
+        rawPhase == true ||
+        rawPhase == 1;
+
     return FCMNotificationData(
       status: json['status']?.toString(),
       rideId: json['ride_id']?.toString() ?? json['order_id']?.toString(),
@@ -241,16 +263,15 @@ class FCMNotificationData {
 
       // Parse Telemetry
       driverName: json['driver_name']?.toString(),
-      vehicleName: json['vehicle_name']?.toString(),
+      vehicleName:
+          json['vehicle_name']?.toString() ?? json['vehicle_desc']?.toString(),
       plateNumber: json['plate_number']?.toString(),
       driverAvatarUrl: json['driver_avatar_url']?.toString(),
-      etaSeconds: double.tryParse(json['eta_seconds']?.toString() ?? ''),
+      etaSeconds: eta,
       isCompleted:
           json['is_completed']?.toString() == 'true' ||
           json['is_completed']?.toString() == '1',
-      isRiderDelivering:
-          json['is_rider_delivering']?.toString() == 'true' ||
-          json['is_rider_delivering']?.toString() == '1',
+      isRiderDelivering: isInRide,
       step: int.tryParse(json['step']?.toString() ?? ''),
       totalSteps: int.tryParse(json['total_steps']?.toString() ?? ''),
       pickupDistance: json['pickup_distance']?.toString(),
