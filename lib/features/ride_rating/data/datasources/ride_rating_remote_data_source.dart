@@ -1,3 +1,4 @@
+import '../../../../core/data/models/requests/submit_ride_rating_request.dart';
 import '../models/ride_rating_ride_model.dart';
 import '../models/ride_rating_tag_model.dart';
 import '../../../../core/network/api_service.dart';
@@ -6,20 +7,11 @@ import '../../../../core/network/urls.dart';
 abstract class RideRatingRemoteDataSource {
   Future<RideRatingRideModel?> getLastCompletedRide();
 
-  Future<List<RideRatingTagModel>> getReviewTags({
-    required int rating,
-  });
+  Future<List<RideRatingTagModel>> getReviewTags({required int rating});
 
-  Future<bool> submitRideRating({
-    required String rideId,
-    required int rating,
-    required List<String> tags,
-    required String comment,
-  });
+  Future<bool> submitRideRating(SubmitRideRatingRequest request);
 
-  Future<bool> skipRideRating({
-    required String rideId,
-  });
+  Future<bool> skipRideRating({required String rideId});
 }
 
 class RideRatingRemoteDataSourceImpl implements RideRatingRemoteDataSource {
@@ -47,13 +39,13 @@ class RideRatingRemoteDataSourceImpl implements RideRatingRemoteDataSource {
       return null;
     }
 
-    throw Exception(_errorMessageFromResponse(response, 'Unable to load ride.'));
+    throw Exception(
+      _errorMessageFromResponse(response, 'Unable to load ride.'),
+    );
   }
 
   @override
-  Future<List<RideRatingTagModel>> getReviewTags({
-    required int rating,
-  }) async {
+  Future<List<RideRatingTagModel>> getReviewTags({required int rating}) async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.ride.reviewTags,
@@ -72,7 +64,10 @@ class RideRatingRemoteDataSourceImpl implements RideRatingRemoteDataSource {
       if (tags is List) {
         final parsed = tags
             .whereType<Map>()
-            .map((item) => RideRatingTagModel.fromJson(item.cast<String, dynamic>()))
+            .map(
+              (item) =>
+                  RideRatingTagModel.fromJson(item.cast<String, dynamic>()),
+            )
             .toList();
         parsed.sort((a, b) => a.order.compareTo(b.order));
         return parsed;
@@ -86,21 +81,12 @@ class RideRatingRemoteDataSourceImpl implements RideRatingRemoteDataSource {
   }
 
   @override
-  Future<bool> submitRideRating({
-    required String rideId,
-    required int rating,
-    required List<String> tags,
-    required String comment,
-  }) async {
+  Future<bool> submitRideRating(SubmitRideRatingRequest request) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: URLS.ride.rateRide(rideId),
+        endpoint: URLS.ride.rateRide(request.rideId),
         method: ApiMethod.post,
-        body: {
-          'rating': rating,
-          'tags': tags,
-          if (comment.isNotEmpty) 'comment': comment,
-        },
+        body: request.toJson(),
         errorPresentationType: ErrorPresentationType.none,
       ),
     );
@@ -121,9 +107,7 @@ class RideRatingRemoteDataSourceImpl implements RideRatingRemoteDataSource {
   }
 
   @override
-  Future<bool> skipRideRating({
-    required String rideId,
-  }) async {
+  Future<bool> skipRideRating({required String rideId}) async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.ride.skipRideRating(rideId),
