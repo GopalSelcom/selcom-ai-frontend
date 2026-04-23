@@ -7,6 +7,8 @@ class RideModel extends RideEntity {
     required super.riderId,
     super.driverId,
     required super.vehicleTypeId,
+    super.vehicleKey,
+    super.vehicleDisplayName,
     required super.status,
     required super.pickup,
     required super.destination,
@@ -63,12 +65,24 @@ class RideModel extends RideEntity {
 
     final stopsJson = json['stops'] as List? ?? [];
     final stops = stopsJson.map((e) => RideStopModel.fromJson(e)).toList();
+    final vehicleTypeIdRaw = json['vehicle_type_id'];
+    final vehicleTypeId = vehicleTypeIdRaw is Map
+        ? (vehicleTypeIdRaw['_id']?.toString() ?? '')
+        : (vehicleTypeIdRaw?.toString() ?? '');
+    final vehicleTypeKey = vehicleTypeIdRaw is Map
+        ? vehicleTypeIdRaw['key']?.toString()
+        : json['vehicle_key']?.toString();
+    final vehicleTypeDisplayName = vehicleTypeIdRaw is Map
+        ? vehicleTypeIdRaw['display_name']?.toString()
+        : json['vehicle_display_name']?.toString();
 
     return RideModel(
       id: json['_id'] ?? '',
       riderId: json['rider_id'] ?? '',
       driverId: json['driver_id'],
-      vehicleTypeId: json['vehicle_type_id'] ?? '',
+      vehicleTypeId: vehicleTypeId,
+      vehicleKey: vehicleTypeKey,
+      vehicleDisplayName: vehicleTypeDisplayName,
       status: RideStatus.values.firstWhere(
         (e) => e.name == _toCamelCase(json['status'] ?? 'searching'),
         orElse: () => RideStatus.searching,
@@ -111,6 +125,8 @@ class RideModel extends RideEntity {
     String? riderId,
     String? driverId,
     String? vehicleTypeId,
+    String? vehicleKey,
+    String? vehicleDisplayName,
     RideStatus? status,
     LocationEntity? pickup,
     LocationEntity? destination,
@@ -122,6 +138,7 @@ class RideModel extends RideEntity {
     double? distanceKm,
     int? durationMinutes,
     String? pinCode,
+    bool? pinRequired,
     PaymentMethod? paymentMethod,
     PaymentStatus? paymentStatus,
     int? cancellationFee,
@@ -137,11 +154,13 @@ class RideModel extends RideEntity {
       riderId: riderId ?? this.riderId,
       driverId: driverId ?? this.driverId,
       vehicleTypeId: vehicleTypeId ?? this.vehicleTypeId,
+      vehicleKey: vehicleKey ?? this.vehicleKey,
+      vehicleDisplayName: vehicleDisplayName ?? this.vehicleDisplayName,
       status: status ?? this.status,
       pickup: pickup ?? this.pickup,
       destination: destination ?? this.destination,
       stops: stops ?? this.stops,
-      pinRequired: pinRequired ?? pinRequired,
+      pinRequired: pinRequired ?? this.pinRequired,
       isMultiStop: isMultiStop ?? this.isMultiStop,
       currentStopIndex: currentStopIndex ?? this.currentStopIndex,
       fareEstimate: fareEstimate ?? this.fareEstimate,

@@ -51,7 +51,10 @@ class RideHistoryCard extends StatelessWidget {
     final formattedDate = DateFormat(
       'yyyy-MM-dd, hh:mm a',
     ).format(ride.createdAt);
-    final vehicleType = ride.vehicleSnapshot?.vehicleType ?? 'Boda';
+    final resolvedVehicleType = (ride.vehicleDisplayName ?? '').trim();
+    final vehicleType = resolvedVehicleType.isNotEmpty
+        ? resolvedVehicleType
+        : 'Ride';
     final effectiveFare = ride.status == RideStatus.cancelled
         ? (ride.cancellationFee ?? 0)
         : (ride.fareBreakdown?.totalAmount ??

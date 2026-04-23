@@ -84,6 +84,8 @@ class RideEntity {
   final String riderId;
   final String? driverId;
   final String vehicleTypeId;
+  final String? vehicleKey;
+  final String? vehicleDisplayName;
   final RideStatus status;
   final LocationEntity pickup;
   final LocationEntity destination;
@@ -111,6 +113,8 @@ class RideEntity {
     required this.riderId,
     this.driverId,
     required this.vehicleTypeId,
+    this.vehicleKey,
+    this.vehicleDisplayName,
     required this.status,
     required this.pickup,
     required this.destination,

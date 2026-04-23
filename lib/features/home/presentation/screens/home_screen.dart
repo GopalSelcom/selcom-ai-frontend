@@ -774,7 +774,9 @@ class HomeScreen extends GetView<HomeController> {
                   ),
                   SizedBox(width: 4.w),
                   Text(
-                    ride.vehicleSnapshot?.vehicleType ?? ride.vehicleTypeId,
+                    (ride.vehicleDisplayName ?? '').trim().isNotEmpty
+                        ? (ride.vehicleDisplayName ?? '').trim()
+                        : 'Ride',
                     style: AppTextStyles.homeCaption.copyWith(
                       color: AppColors.shade1,
                       fontWeight: FontWeight.w600,

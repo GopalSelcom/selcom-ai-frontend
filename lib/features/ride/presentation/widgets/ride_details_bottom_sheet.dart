@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/constants/app_assets.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
@@ -15,6 +16,7 @@ import '../../../../features/ride_rating/domain/usecases/skip_ride_rating_usecas
 import '../../../../features/ride_rating/domain/usecases/submit_ride_rating_usecase.dart';
 import '../../../../features/ride_rating/presentation/controllers/ride_rating_controller.dart';
 import '../../../../features/ride_rating/presentation/widgets/ride_rating_input_section.dart';
+import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import 'ride_common_widgets.dart';
 
@@ -32,9 +34,26 @@ class _RideDetailsBottomSheetState extends State<RideDetailsBottomSheet> {
   late final bool _hasExistingRating;
   late final bool _canShowReviewInput;
 
+  String _resolvedVehicleTypeForImage(RideModel ride) {
+    final value = (ride.vehicleKey ?? '').trim();
+    return value.isNotEmpty ? value : 'Ride';
+  }
+
+  String _resolvedVehicleDisplayName(RideModel ride) {
+    final value = (ride.vehicleDisplayName ?? '').trim();
+    return value.isNotEmpty ? value : 'Ride';
+  }
+
+  String _resolvedVehicleImageAsset(RideModel ride) {
+    return VehicleImageUtils.imageAssetForVehicleType(
+      _resolvedVehicleTypeForImage(ride),
+      fallbackAsset: AppAssets.imgCab,
+    );
+  }
+
   RideRatingRideEntity _toRatingEntity(RideModel source) {
-    final vehicleType = source.vehicleSnapshot?.vehicleType ?? '';
-    final displayName = source.vehicleSnapshot?.vehicleType ?? vehicleType;
+    final vehicleType = _resolvedVehicleTypeForImage(source);
+    final displayName = _resolvedVehicleDisplayName(source);
     final fareValue =
         source.fareBreakdown?.totalAmount ??
         source.finalFare ??
@@ -158,7 +177,7 @@ class _RideDetailsBottomSheetState extends State<RideDetailsBottomSheet> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            widget.ride.vehicleSnapshot?.vehicleType ?? 'Boda',
+                            _resolvedVehicleDisplayName(widget.ride),
                             style: TextStyle(
                               fontFamily: AppTextStyles.metropolisFont,
                               fontWeight: FontWeight.w700,
@@ -179,7 +198,7 @@ class _RideDetailsBottomSheetState extends State<RideDetailsBottomSheet> {
                         ],
                       ),
                       Image.asset(
-                        'assets/images/img_boda.png',
+                        _resolvedVehicleImageAsset(widget.ride),
                         height: 60.h,
                         fit: BoxFit.contain,
                         errorBuilder: (_, __, ___) => Icon(
