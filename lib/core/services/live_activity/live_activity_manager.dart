@@ -256,8 +256,10 @@ class LiveActivityManager {
       if (_isAndroid) {
         await AndroidOrderTrackingManager().show(
           orderId: orderId,
-          title: 'Ride tracked',
-          merchantName: driverName,
+          title: 'Trip Tracking',
+          merchantName: driverName.isNotEmpty
+              ? driverName
+              : (plateNumber.isNotEmpty ? plateNumber : 'Trip Tracking'),
           status: status,
           subtitle: plateNumber,
           step: isCompleted ? 5 : 2,

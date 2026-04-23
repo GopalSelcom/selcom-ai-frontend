@@ -12,6 +12,7 @@ import '../../features/ride/domain/repositories/ride_repository.dart';
 import '../../shared/utils/ride_active_navigation.dart';
 import '../../shared/utils/app_dialogs.dart';
 import '../data/models/notification_model.dart';
+import 'live_activity/android_order_tracking_manager.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -196,6 +197,28 @@ class NotificationService {
         title: title,
         body: body,
         payload: jsonEncode(data.toJson()),
+      );
+    }
+
+    // 🚗 Refresh Sticky Notification if this is a ride update
+    if (data.rideId != null && data.status != null) {
+      AndroidOrderTrackingManager().show(
+        orderId: data.rideId!,
+        title: data.title ?? 'Trip Tracking',
+        merchantName: data.driverName ?? data.plateNumber ?? 'Trip Tracking',
+        status: data.status!,
+        subtitle: data.plateNumber ?? '',
+        step: data.step ?? 2,
+        totalSteps: data.totalSteps ?? 5,
+        isRiderDelivering: data.isRiderDelivering ?? false,
+        isCompleted: data.isCompleted ?? false,
+        vehicleDesc: data.vehicleName ?? '',
+        plateNumber: data.plateNumber ?? '',
+        eta: '',
+        etaSeconds: data.etaSeconds ?? 0,
+        riderPhotoUrl: data.driverAvatarUrl ?? '',
+        pickupDistance: data.pickupDistance ?? '0',
+        deliveryDistance: data.deliveryDistance ?? '0',
       );
     }
   }

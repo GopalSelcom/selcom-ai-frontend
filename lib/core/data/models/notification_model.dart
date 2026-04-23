@@ -195,6 +195,19 @@ class FCMNotificationData {
   final int? type;
   final String? clickAction;
 
+  // 🚗 Ride Tracking Telemetry
+  final String? driverName;
+  final String? vehicleName;
+  final String? plateNumber;
+  final String? driverAvatarUrl;
+  final double? etaSeconds;
+  final bool? isCompleted;
+  final bool? isRiderDelivering;
+  final int? step;
+  final int? totalSteps;
+  final String? pickupDistance;
+  final String? deliveryDistance;
+
   FCMNotificationData({
     this.status,
     this.rideId,
@@ -203,17 +216,45 @@ class FCMNotificationData {
     this.sound,
     this.type,
     this.clickAction,
+    this.driverName,
+    this.vehicleName,
+    this.plateNumber,
+    this.driverAvatarUrl,
+    this.etaSeconds,
+    this.isCompleted,
+    this.isRiderDelivering,
+    this.step,
+    this.totalSteps,
+    this.pickupDistance,
+    this.deliveryDistance,
   });
 
   factory FCMNotificationData.fromJson(Map<String, dynamic> json) {
     return FCMNotificationData(
       status: json['status']?.toString(),
-      rideId: json['ride_id']?.toString(),
+      rideId: json['ride_id']?.toString() ?? json['order_id']?.toString(),
       title: json['title']?.toString(),
       body: json['body']?.toString(),
       sound: json['sound']?.toString() == 'true',
       type: int.tryParse(json['type']?.toString() ?? ''),
       clickAction: json['click_action']?.toString(),
+
+      // Parse Telemetry
+      driverName: json['driver_name']?.toString(),
+      vehicleName: json['vehicle_name']?.toString(),
+      plateNumber: json['plate_number']?.toString(),
+      driverAvatarUrl: json['driver_avatar_url']?.toString(),
+      etaSeconds: double.tryParse(json['eta_seconds']?.toString() ?? ''),
+      isCompleted:
+          json['is_completed']?.toString() == 'true' ||
+          json['is_completed']?.toString() == '1',
+      isRiderDelivering:
+          json['is_rider_delivering']?.toString() == 'true' ||
+          json['is_rider_delivering']?.toString() == '1',
+      step: int.tryParse(json['step']?.toString() ?? ''),
+      totalSteps: int.tryParse(json['total_steps']?.toString() ?? ''),
+      pickupDistance: json['pickup_distance']?.toString(),
+      deliveryDistance: json['delivery_distance']?.toString(),
     );
   }
 
@@ -225,5 +266,16 @@ class FCMNotificationData {
     'sound': sound,
     'type': type,
     'click_action': clickAction,
+    'driver_name': driverName,
+    'vehicle_name': vehicleName,
+    'plate_number': plateNumber,
+    'driver_avatar_url': driverAvatarUrl,
+    'eta_seconds': etaSeconds,
+    'is_completed': isCompleted,
+    'is_rider_delivering': isRiderDelivering,
+    'step': step,
+    'total_steps': totalSteps,
+    'pickup_distance': pickupDistance,
+    'delivery_distance': deliveryDistance,
   };
 }

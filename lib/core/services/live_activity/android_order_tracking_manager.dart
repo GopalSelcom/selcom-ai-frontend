@@ -17,10 +17,29 @@ class AndroidOrderTrackingManager {
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
 
+  bool _isPluginInitialized = false;
+
   bool get _isAndroid => !kIsWeb && Platform.isAndroid;
 
   int _getNotificationId(String orderId) {
     return _baseNotificationId + (orderId.hashCode % 1000).abs();
+  }
+
+  Future<void> ensureInitialized() async {
+    if (_isPluginInitialized) return;
+
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    const InitializationSettings initializationSettings =
+        InitializationSettings(android: initializationSettingsAndroid);
+
+    await _plugin.initialize(initializationSettings);
+    _isPluginInitialized = true;
+    developer.log(
+      'AndroidOrderTrackingManager: Plugin Initialized',
+      name: 'ORDER_TRACKING',
+    );
   }
 
   String _formatDuration(int totalMinutes) {
@@ -51,6 +70,7 @@ class AndroidOrderTrackingManager {
     String deliveryDistance = '0',
   }) async {
     if (!_isAndroid) return;
+    await ensureInitialized();
 
     try {
       final int notificationId = _getNotificationId(orderId);
@@ -114,19 +134,22 @@ class AndroidOrderTrackingManager {
         displayStatus = 'Driver Assigned';
       }
 
-      final int progress = totalStepsVal > 0
-          ? ((stepVal / totalStepsVal) * 100).round()
-          : 0;
+      final int progress =
+          (isCompleted || normalizedStatus.contains('completed'))
+          ? 100
+          : (totalStepsVal > 0 ? ((stepVal / totalStepsVal) * 100).round() : 0);
 
-      String etaLabel = '';
-      String topLabel = '';
-
+      String etaDetail = '';
       if (isCompleted || normalizedStatus.contains('completed')) {
-        topLabel = 'Arrived';
-        etaLabel = 'Hope you had a great ride!';
+        etaDetail = 'Hope you had a great ride!';
       } else {
-        topLabel = isRiderDelivering ? 'Arrival' : 'Pickup';
-        etaLabel = displayEta.toLowerCase() == 'soon' ? 'Soon' : displayEta;
+        final String phase = isRiderDelivering
+            ? 'Arriving at destination'
+            : 'Arriving at pickup';
+        final String time = displayEta.toLowerCase() == 'soon'
+            ? 'Soon'
+            : displayEta;
+        etaDetail = '$phase • $time';
       }
 
       final String contentTitle = merchantName.isNotEmpty
@@ -135,12 +158,12 @@ class AndroidOrderTrackingManager {
 
       final String bigText = [
         displayStatus,
-        '$topLabel: $etaLabel',
+        etaDetail,
         if (vehicleDesc.isNotEmpty) vehicleDesc,
         if (plateNumber.isNotEmpty) plateNumber,
       ].join('\n');
 
-      final String contentText = '$topLabel: $etaLabel';
+      final String contentText = etaDetail;
 
       final AndroidNotificationDetails androidDetails =
           AndroidNotificationDetails(

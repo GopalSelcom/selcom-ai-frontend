@@ -16,15 +16,35 @@ import 'core/bindings/initial_binding.dart';
 import 'core/theme/app_theme.dart';
 import 'core/routes/app_routes.dart';
 import 'core/services/live_activity/live_activity_manager.dart';
+import 'core/services/live_activity/android_order_tracking_manager.dart';
+import 'core/data/models/notification_model.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   debugPrint("Handling a background message: ${message.messageId}");
-  debugPrint("Background Message Data: ${message.data}");
-  if (message.notification != null) {
-    debugPrint(
-      "Background Message Notification: ${message.notification?.title} - ${message.notification?.body}",
+
+  final data = FCMNotificationData.fromJson(message.data);
+
+  // 🚗 Refresh Sticky Notification if this is a ride update
+  if (data.rideId != null && data.status != null) {
+    await AndroidOrderTrackingManager().show(
+      orderId: data.rideId!,
+      title: data.title ?? 'Trip Tracking',
+      merchantName: data.driverName ?? data.plateNumber ?? 'Trip Tracking',
+      status: data.status!,
+      subtitle: data.plateNumber ?? '',
+      step: data.step ?? 2,
+      totalSteps: data.totalSteps ?? 5,
+      isRiderDelivering: data.isRiderDelivering ?? false,
+      isCompleted: data.isCompleted ?? false,
+      vehicleDesc: data.vehicleName ?? '',
+      plateNumber: data.plateNumber ?? '',
+      eta: '',
+      etaSeconds: data.etaSeconds ?? 0,
+      riderPhotoUrl: data.driverAvatarUrl ?? '',
+      pickupDistance: data.pickupDistance ?? '0',
+      deliveryDistance: data.deliveryDistance ?? '0',
     );
   }
 }
