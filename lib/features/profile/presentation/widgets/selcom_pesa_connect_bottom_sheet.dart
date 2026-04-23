@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
@@ -34,7 +35,7 @@ class SelcomPesaConnectBottomSheet extends GetView<PaymentMethodsController> {
           SizedBox(height: 24.h),
 
           Text(
-            'Steps to Connect Selcom Pesa',
+            AppStrings.stepsToConnectSelcomPesa.tr,
             style: AppTextStyles.sectionTitle.copyWith(
               fontSize: 20.sp,
               fontWeight: FontWeight.w700,
@@ -57,7 +58,9 @@ class SelcomPesaConnectBottomSheet extends GetView<PaymentMethodsController> {
               borderRadius: BorderRadius.circular(12.r),
             ),
             child: Text(
-              'You can still able to request money on Selcom Pesa using another number.',
+              AppStrings
+                  .youCanStillAbleToRequestMoneyOnSelcomPesaUsingAnotherNumber
+                  .tr,
               style: AppTextStyles.caption.copyWith(
                 color: const Color(0xFF1D9E75), // Success green
                 fontWeight: FontWeight.w500,

@@ -14,6 +14,7 @@ import '../../../../core/services/notification_service.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:selcom_rides_frontend/features/home/data/models/places_models.dart';
 import 'package:selcom_rides_frontend/core/data/models/ride_model.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/data/models/requests/create_saved_place_request.dart';
 import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
@@ -132,7 +133,7 @@ class HomeController extends GetxController {
     // If explicitly denied, show the custom settings popup
     if (status.authorizationStatus == AuthorizationStatus.denied) {
       AppDialogs.showPermissionDialog(
-        title: 'Stay Notified!',
+        title: AppStrings.stayNotified.tr,
         message:
             'Enable notifications to get real-time updates on your ride arrival and driver status.',
         onOpenSettings: () {
@@ -663,8 +664,8 @@ class HomeController extends GetxController {
     final place = getSavedPlaceByLabel(label);
     if (place == null) {
       AppDialogs.showErrorDialog(
-        title: 'Add a saved place',
-        message: 'Save this address first, then you can book from here.',
+        title: AppStrings.addASavedPlace.tr,
+        message: AppStrings.saveThisAddressFirstThenYouCanBookFromHere.tr,
       );
       return;
     }
@@ -681,9 +682,9 @@ class HomeController extends GetxController {
 
     if (dLat == null || dLng == null) {
       AppDialogs.showErrorDialog(
-        title: 'Location unavailable',
+        title: AppStrings.locationUnavailable.tr,
         message:
-            'This saved place is missing coordinates. Try saving it again.',
+        AppStrings.thisSavedPlaceIsMissingCoordinatesTrySavingItAgain.tr,
       );
       return;
     }
@@ -691,8 +692,8 @@ class HomeController extends GetxController {
     final destAddr = (place.address ?? place.name ?? label).trim();
     if (destAddr.isEmpty) {
       AppDialogs.showErrorDialog(
-        title: 'Address missing',
-        message: 'This saved place has no address.',
+        title: AppStrings.addressMissing.tr,
+        message:  AppStrings.thisSavedPlaceHasNoAddress.tr,
       );
       return;
     }
@@ -742,8 +743,8 @@ class HomeController extends GetxController {
 
     if (dLat == null || dLng == null) {
       AppDialogs.showErrorDialog(
-        title: 'Location unavailable',
-        message: 'This saved place is missing coordinates.',
+        title: AppStrings.locationUnavailable.tr,
+        message:  AppStrings.thisSavedPlaceIsMissingCoordinates.tr,
       );
       return;
     }
@@ -751,8 +752,8 @@ class HomeController extends GetxController {
     final destAddr = (place.address ?? place.name ?? 'Saved Place').trim();
     if (destAddr.isEmpty) {
       AppDialogs.showErrorDialog(
-        title: 'Address missing',
-        message: 'This saved place has no address.',
+        title:AppStrings.addressMissing.tr,
+        message:  AppStrings.thisSavedPlaceHasNoAddress.tr,
       );
       return;
     }
@@ -1050,7 +1051,7 @@ class HomeController extends GetxController {
         .toList();
     if (items.isEmpty) {
       AppDialogs.showErrorDialog(
-        message: 'Please enter at least one destination.',
+        message:  AppStrings.pleaseEnterAtLeastOneDestination.tr,
       );
       return;
     }
@@ -1103,7 +1104,7 @@ class HomeController extends GetxController {
 
       if (resolvedDestinations.isEmpty) {
         AppDialogs.showErrorDialog(
-          message: 'Please select at least one destination.',
+          message: AppStrings.pleaseSelectAtLeastOneDestination.tr,
         );
         return;
       }

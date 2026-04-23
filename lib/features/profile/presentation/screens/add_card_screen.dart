@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../controllers/add_card_controller.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
@@ -31,7 +32,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
       backgroundColor: AppColors.pageBackground,
       body: Column(
         children: [
-          AppProfileHeader(title: 'Add New Card', onBack: Get.back),
+          AppProfileHeader(title: AppStrings.addNewCard.tr, onBack: Get.back),
           Expanded(
             child: Padding(
               padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 24.h),
@@ -45,7 +46,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                           Obx(
                             () => AppTextField(
                               label: 'Full Name',
-                              hintText: 'e.g. John Doe',
+                              hintText: AppStrings.eGJohnDoe.tr,
                               controller: controller.cardHolderController,
                               focusNode: controller.fullNameFocus,
                               textInputAction: TextInputAction.next,
@@ -58,7 +59,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                           Obx(
                             () => AppTextField(
                               label: 'Card Number',
-                              hintText: '0000 0000 0000 0000',
+                              hintText: AppStrings.value0000000000000000.tr,
                               controller: controller.cardNumberController,
                               focusNode: controller.cardNumberFocus,
                               keyboardType: TextInputType.number,
@@ -80,7 +81,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                                 child: Obx(
                                   () => AppTextField(
                                     label: 'Expiry',
-                                    hintText: 'MM/YY',
+                                    hintText: AppStrings.mmYy.tr,
                                     controller: controller.expiryController,
                                     focusNode: controller.expiryFocus,
                                     keyboardType: TextInputType.number,
@@ -102,7 +103,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                                 child: Obx(
                                   () => AppTextField(
                                     label: 'CVV',
-                                    hintText: 'e.g. 123',
+                                    hintText: AppStrings.eG123.tr,
                                     controller: controller.cvvController,
                                     focusNode: controller.cvvFocus,
                                     keyboardType: TextInputType.number,

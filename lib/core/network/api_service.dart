@@ -11,6 +11,7 @@ import 'package:http_parser/http_parser.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 
 import '../constants/app_assets.dart';
 import '../routes/app_routes.dart';
@@ -532,7 +533,7 @@ class ApiService {
 
       if (request.errorPresentationType == ErrorPresentationType.dialog) {
         AppDialogs.showErrorDialog(
-          title: 'Timeout',
+          title: AppStrings.timeout.tr,
           message: 'Server is taking too long to respond. Please try again.',
         );
       }
@@ -651,7 +652,7 @@ class ApiService {
 
               // Title
               Text(
-                'Session Expired',
+                AppStrings.sessionExpired.tr,
                 style: AppTextStyles.onboardingTitle.copyWith(
                   fontSize: 22.sp,
                   color: AppColors.shade1,
@@ -663,7 +664,7 @@ class ApiService {
 
               // Message
               Text(
-                'Your session has expired. Please login again to continue.',
+                AppStrings.yourSessionHasExpiredPleaseLoginAgainToContinue.tr,
                 style: AppTextStyles.onboardingSubtitle.copyWith(
                   fontSize: 15.sp,
                   color: AppColors.shade2,
@@ -699,7 +700,7 @@ class ApiService {
                   ),
                   child: Center(
                     child: Text(
-                      'Login',
+                      AppStrings.login.tr,
                       style: AppTextStyles.onboardingButton.copyWith(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w600,

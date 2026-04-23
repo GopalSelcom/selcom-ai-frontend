@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 
 import '../../../../core/data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
@@ -65,8 +66,8 @@ class RideMessageController extends GetxController {
     if (rideId.isEmpty && !useStaticChatDataOnly) {
       Future.microtask(() {
         AppDialogs.showErrorDialog(
-          title: 'Chat',
-          message: 'Missing ride information.',
+          title: AppStrings.chat.tr,
+          message: AppStrings.missingRideInformation.tr,
         );
         Get.back();
       });
@@ -257,8 +258,8 @@ class RideMessageController extends GetxController {
 
     if (!canChat) {
       AppDialogs.showErrorDialog(
-        title: 'Chat',
-        message: 'Chat is only available during an active ride',
+        title: AppStrings.chat.tr,
+        message: AppStrings.chatIsOnlyAvailableDuringAnActiveRide.tr,
       );
       return;
     }
@@ -287,8 +288,8 @@ class RideMessageController extends GetxController {
         );
         if (!success) {
           AppDialogs.showErrorDialog(
-            title: 'Chat',
-            message: 'Failed to send message',
+            title: AppStrings.chat.tr,
+            message:AppStrings.failedToSendMessage.tr,
           );
           // Optionally remove the local message on failure
           messages.removeWhere((m) => m.id == localId);
@@ -296,8 +297,8 @@ class RideMessageController extends GetxController {
       } catch (e) {
         debugPrint("Error sending message: $e");
         AppDialogs.showErrorDialog(
-          title: 'Chat',
-          message: 'Error sending message',
+          title:AppStrings.chat.tr,
+          message: AppStrings.errorSendingMessage.tr,
         );
         messages.removeWhere((m) => m.id == localId);
       } finally {
@@ -311,8 +312,8 @@ class RideMessageController extends GetxController {
     final phone = driverPhone.trim();
     if (phone.isEmpty) {
       AppDialogs.showErrorDialog(
-        title: 'Call',
-        message: 'Phone number unavailable',
+        title: AppStrings.call.tr,
+        message: AppStrings.phoneNumberUnavailable.tr,
       );
       return;
     }
@@ -323,15 +324,15 @@ class RideMessageController extends GetxController {
         await launchUrl(uri);
       } else {
         AppDialogs.showErrorDialog(
-          title: 'Call',
-          message: 'Unable to open phone dialer',
+          title: AppStrings.call.tr,
+          message: AppStrings.unableToOpenPhoneDialer.tr,
         );
       }
     } catch (e) {
       debugPrint("Error launching dialer: $e");
       AppDialogs.showErrorDialog(
-        title: 'Call',
-        message: 'Error opening phone dialer',
+        title: AppStrings.call.tr,
+        message: AppStrings.errorOpeningPhoneDialer.tr,
       );
     }
   }

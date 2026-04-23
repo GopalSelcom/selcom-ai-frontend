@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:selcom_rides_frontend/core/utils/map_marker_utils.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 
 import '../../../../core/data/models/requests/book_ride_request.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
@@ -476,8 +477,8 @@ class VehicleSelectionController extends GetxController {
     final pay = paymentMethodController.selectedPayment.value;
     if (est == null || pay == null) {
       AppDialogs.showErrorDialog(
-        title: 'Missing info',
-        message: 'Select a vehicle and payment method.',
+        title: AppStrings.missingInfo.tr,
+        message: AppStrings.selectAVehicleAndPaymentMethod.tr,
       );
       return;
     }
@@ -488,8 +489,8 @@ class VehicleSelectionController extends GetxController {
       if (resolvedVehicleTypeId.isEmpty ||
           !_looksLikeBackendVehicleTypeId(resolvedVehicleTypeId)) {
         AppDialogs.showErrorDialog(
-          title: 'Vehicle type',
-          message: 'Could not resolve vehicle type id. Please try again.',
+          title:  AppStrings.vehicleType.tr,
+          message: AppStrings.couldNotResolveVehicleTypeIdPleaseTryAgain.tr,
         );
         return;
       }
@@ -513,8 +514,8 @@ class VehicleSelectionController extends GetxController {
       final confirmedAddress = (confirmed['pickupAddress'] as String?)?.trim();
       if (confirmedLat == null || confirmedLng == null) {
         AppDialogs.showErrorDialog(
-          title: 'Pickup',
-          message: 'Please confirm pickup point to continue.',
+          title:  AppStrings.pickup.tr,
+          message:AppStrings.pleaseConfirmPickupPointToContinue.tr,
         );
         return;
       }
@@ -552,8 +553,8 @@ class VehicleSelectionController extends GetxController {
         (model) async {
           if (model.estimates.isEmpty) {
             AppDialogs.showErrorDialog(
-              title: 'Estimate failed',
-              message: 'No fare estimate returned for the updated pickup location.',
+              title:    AppStrings.estimateFailed.tr,
+              message: AppStrings.noFareEstimateReturnedForTheUpdatedPickupLocation.tr,
             );
             return false;
           }
@@ -622,15 +623,15 @@ class VehicleSelectionController extends GetxController {
       await validationResult.fold(
         (f) async {
           AppDialogs.showErrorDialog(
-            title: 'Payment validation failed',
-            message: 'Could not validate payment. Please try again.',
+            title:  AppStrings.paymentValidationFailed.tr,
+            message: AppStrings.couldNotValidatePaymentPleaseTryAgain.tr,
           );
         },
         (validationId) async {
           if (validationId.trim().isEmpty) {
             AppDialogs.showErrorDialog(
-              title: 'Payment validation failed',
-              message: 'Validation id missing from server response.',
+              title:    AppStrings.paymentValidationFailed.tr,
+              message: AppStrings.validationIdMissingFromServerResponse.tr,
             );
             return;
           }
@@ -663,8 +664,8 @@ class VehicleSelectionController extends GetxController {
           _closePaymentStatusDialogIfOpen();
           if (!blockOk) {
             AppDialogs.showErrorDialog(
-              title: 'Payment not confirmed',
-              message: 'We could not confirm your payment block. Please try again.',
+              title: AppStrings.paymentNotConfirmed.tr,
+              message: AppStrings.weCouldNotConfirmYourPaymentBlockPleaseTryAgain.tr,
             );
             return;
           }

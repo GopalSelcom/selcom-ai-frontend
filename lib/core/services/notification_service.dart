@@ -7,6 +7,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../services/storage_service.dart';
 import 'package:logger/logger.dart';
 import 'package:get/get.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../di/injection_container.dart';
 import '../../features/ride/domain/repositories/ride_repository.dart';
 import '../../shared/utils/ride_active_navigation.dart';
@@ -242,7 +243,7 @@ class NotificationService {
       result.fold(
         (failure) {
           _logger.e("Error fetching ride details: ${failure.message}");
-          AppDialogs.showErrorDialog(message: 'Unable to open ride details');
+          AppDialogs.showErrorDialog(message: AppStrings.unableToOpenRideDetails.tr,);
         },
         (ride) {
           navigateToDriverAcceptedForRide(ride);

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 
 class PromocodeController extends GetxController {
   final RxList<PromocodeModel> promocodes = <PromocodeModel>[].obs;
@@ -21,13 +22,13 @@ class PromocodeController extends GetxController {
   void _loadStaticPromocodes() {
     promocodes.assignAll([
       PromocodeModel(
-        title: '20% Off on your first ride Booking',
-        subtitle: 'Maximum Promo TZS 1500',
+        title: AppStrings.value20PercentOffOnYourFirstRideBooking.tr,
+        subtitle: AppStrings.maximumPromoTzs1500.tr,
         footer: '21 days left',
       ),
       PromocodeModel(
-        title: '20% Off on your first ride Booking',
-        subtitle: 'Maximum Promo TZS 1500',
+        title: AppStrings.value20PercentOffOnYourFirstRideBooking.tr,
+        subtitle: AppStrings.maximumPromoTzs1500.tr,
         footer: '21 days left',
       ),
     ]);
@@ -41,7 +42,7 @@ class PromocodeController extends GetxController {
       );
     } else {
       AppDialogs.showErrorDialog(
-        message: 'Please enter a promo code',
+        message: AppStrings.pleaseEnterAPromoCode.tr,
       );
     }
   }

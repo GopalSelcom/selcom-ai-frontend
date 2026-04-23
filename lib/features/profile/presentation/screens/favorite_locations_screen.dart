@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
@@ -16,7 +17,7 @@ class FavoriteLocationsScreen extends GetView<FavoriteLocationsController> {
       backgroundColor: AppColors.pageBackground,
       body: Column(
         children: [
-          const AppProfileHeader(title: 'Favourite Locations'),
+          AppProfileHeader(title: AppStrings.favouriteLocations.tr),
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value) {
@@ -35,7 +36,7 @@ class FavoriteLocationsScreen extends GetView<FavoriteLocationsController> {
                       ),
                       SizedBox(height: 16.h),
                       Text(
-                        'No favorite locations yet',
+                        AppStrings.noFavoriteLocationsYet.tr,
                         style: AppTextStyles.homeSubtitle.copyWith(
                           color: AppColors.shade2,
                         ),

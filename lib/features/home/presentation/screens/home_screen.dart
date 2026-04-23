@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:selcom_rides_frontend/shared/widgets/map_widgets.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
@@ -352,6 +353,11 @@ class HomeScreen extends GetView<HomeController> {
                 ),
               ),
               SizedBox(height: 24.h),
+              Text(
+                AppStrings.whereTo.tr,
+                style: AppTextStyles.homeTitle.copyWith(fontSize: 20.sp),
+              ),
+              SizedBox(height: 16.h),
               GestureDetector(
                 onTap: () => controller.openLocationSelection(),
                 child: Container(
@@ -376,7 +382,7 @@ class HomeScreen extends GetView<HomeController> {
                       ),
                       SizedBox(width: 12.w),
                       Text(
-                        'Where are you going?',
+                        AppStrings.whereAreYouGoing.tr,
                         style: AppTextStyles.homeSubtitle,
                       ),
                     ],
@@ -402,7 +408,7 @@ class HomeScreen extends GetView<HomeController> {
                     if (controller.shouldShowRecentSection) ...[
                       SizedBox(height: 28.h),
                       Text(
-                        'Recent Location',
+                        AppStrings.recentLocation.tr,
                         style: AppTextStyles.homeSubtitle.copyWith(
                           fontSize: 15.sp,
                           fontWeight: FontWeight.bold,
@@ -425,7 +431,7 @@ class HomeScreen extends GetView<HomeController> {
                       if (!controller.shouldShowRecentSection)
                         SizedBox(height: 28.h),
                       Text(
-                        'Explore Vehicle',
+                        AppStrings.exploreVehicle.tr,
                         style: AppTextStyles.homeSubtitle.copyWith(
                           fontSize: 15.sp,
                           fontWeight: FontWeight.bold,
@@ -809,7 +815,7 @@ class HomeScreen extends GetView<HomeController> {
                   ),
                   const Spacer(),
                   Text(
-                    'View trip',
+                    AppStrings.viewTrip.tr,
                     style: AppTextStyles.homeCaption.copyWith(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w700,

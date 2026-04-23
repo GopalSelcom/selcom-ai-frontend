@@ -5,6 +5,8 @@ import 'package:iconsax/iconsax.dart';
 import 'package:selcom_rides_frontend/core/constants/app_assets.dart';
 import 'package:selcom_rides_frontend/core/theme/app_colors.dart';
 import 'package:selcom_rides_frontend/core/theme/app_text_styles.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+import 'package:get/get.dart';
 
 class WalletSummaryCard extends StatelessWidget {
   final String balance;
@@ -23,7 +25,10 @@ class WalletSummaryCard extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       decoration: BoxDecoration(
         color: const Color(0xFFF8F9FD), // fill_PYRYYM
-        border: Border.all(color: const Color(0xFFE6E9EE), width: 0.8), // Divider/Primary
+        border: Border.all(
+          color: const Color(0xFFE6E9EE),
+          width: 0.8,
+        ), // Divider/Primary
         borderRadius: BorderRadius.circular(27.r),
       ),
       child: Row(
@@ -46,7 +51,7 @@ class WalletSummaryCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Wallet',
+                    AppStrings.wallet.tr,
                     style: AppTextStyles.body.copyWith(
                       color: AppColors.textDark, // fill_IETHWP
                       fontSize: 15.sp,

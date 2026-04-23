@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:selcom_rides_frontend/shared/widgets/map_widgets.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/routes/app_routes.dart';
@@ -383,7 +384,7 @@ class DriverAcceptedScreen extends StatelessWidget {
         ),
         SizedBox(height: 2.h),
         Text(
-          'Driver is heading to your location',
+          AppStrings.driverIsHeadingToYourLocation.tr,
           textAlign: TextAlign.center,
           style: AppTextStyles.homeTitle.copyWith(
             fontSize: 20.sp,
@@ -399,7 +400,7 @@ class DriverAcceptedScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'PIN',
+                AppStrings.pin.tr,
                 style: AppTextStyles.homeCaption.copyWith(
                   fontWeight: FontWeight.w700,
                   fontSize: 15.sp,
@@ -598,7 +599,7 @@ class DriverAcceptedScreen extends StatelessWidget {
             ),
             onPressed: c.confirmCancelRide,
             child: Text(
-              'Cancel Ride',
+              AppStrings.cancelRide.tr,
               style: TextStyle(fontSize: 17.sp, fontWeight: FontWeight.w600),
             ),
           ),
@@ -688,7 +689,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'Change Drop Location',
+                    AppStrings.changeDropLocation.tr,
                     style: AppTextStyles.homeCaption.copyWith(
                       color: AppColors.primary,
                       fontSize: 14.sp,
@@ -714,7 +715,7 @@ class DriverAcceptedScreen extends StatelessWidget {
               Row(
                 children: [
                   Text(
-                    'Total Fare',
+                    AppStrings.totalFare.tr,
                     style: AppTextStyles.homeTitle.copyWith(
                       fontSize: 15.sp,
                       fontWeight: FontWeight.w600,
@@ -734,22 +735,25 @@ class DriverAcceptedScreen extends StatelessWidget {
                 ],
               ),
               SizedBox(height: 10.h),
-              FareBreakdownRow(title: 'Ride Charge', amount: c.rideChargeLabel),
+              FareBreakdownRow(
+                title: AppStrings.rideCharge.tr,
+                amount: c.rideChargeLabel,
+              ),
               SizedBox(height: 8.h),
               FareBreakdownRow(
-                title: 'Booking Fees & Convenience Charges',
+                title: AppStrings.bookingFeesAndConvenienceCharges.tr,
                 amount: c.bookingFeeLabel,
               ),
               if (!isCompleted) ...[
                 SizedBox(height: 8.h),
                 FareBreakdownRow(
-                  title: 'Payment mode',
+                  title: AppStrings.paymentMode.tr,
                   amount: c.paymentModeLabel,
                 ),
               ],
               SizedBox(height: 8.h),
               FareBreakdownRow(
-                title: 'Total Amount',
+                title: AppStrings.totalAmount.tr,
                 amount: c.totalAmountLabel,
                 isTotal: true,
               ),
@@ -770,7 +774,7 @@ class DriverAcceptedScreen extends StatelessWidget {
               GestureDetector(
                 onTap: () => Get.toNamed(AppRoutes.contactUs),
                 child: Text(
-                  'Need Help?',
+                  AppStrings.needHelp.tr,
                   style: AppTextStyles.homeCaption.copyWith(
                     color: const Color(0xFF364B63),
                     fontSize: 16.sp,
@@ -786,7 +790,7 @@ class DriverAcceptedScreen extends StatelessWidget {
               ),
               SizedBox(width: 6.w),
               Text(
-                'Download Slip',
+                AppStrings.downloadSlip.tr,
                 style: AppTextStyles.homeCaption.copyWith(
                   color: const Color(0xFF364B63),
                   fontSize: 16.sp,
