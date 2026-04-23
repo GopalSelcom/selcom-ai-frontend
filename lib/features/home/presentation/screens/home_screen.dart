@@ -352,11 +352,6 @@ class HomeScreen extends GetView<HomeController> {
                 ),
               ),
               SizedBox(height: 24.h),
-              Text(
-                'Where to?',
-                style: AppTextStyles.homeTitle.copyWith(fontSize: 20.sp),
-              ),
-              SizedBox(height: 16.h),
               GestureDetector(
                 onTap: () => controller.openLocationSelection(),
                 child: Container(
