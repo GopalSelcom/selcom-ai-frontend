@@ -1221,11 +1221,11 @@ class DriverAcceptedController extends GetxController
     final String? reason = await Get.dialog<String>(
       const CancelReasonSelectionDialog(
         reasons: [
-          'Driver Asked To Cancel',
-          'Driver Asked To Pay Offline',
-          'Taking Too Long To Arrive',
-          'Selected Wrong Pickup Location',
-          'Booked By Mistake',
+          'Driver asked to cancel',
+          'Driver asked to pay offline',
+          'Taking too long to arrive',
+          'Selected wrong pickup location',
+          'Booked by mistake',
           'Others',
         ],
       ),
