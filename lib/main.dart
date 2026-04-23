@@ -108,7 +108,7 @@ class MyApp extends StatelessWidget {
       builder: (context, child) {
         return GetMaterialApp(
           debugShowCheckedModeBanner: false,
-          title: 'Selcom Rides',
+          title: 'Selcom Go',
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: ThemeMode.system,
