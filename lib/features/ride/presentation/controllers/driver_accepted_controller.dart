@@ -473,7 +473,6 @@ class DriverAcceptedController extends GetxController
           error: jsonEncode(payload.toJson()),
         );
         _applyTrackingPayload(payload);
-        await _syncLiveActivityFromTrackingPayload(payload);
       }
     });
 
@@ -1270,58 +1269,16 @@ class DriverAcceptedController extends GetxController
         return;
       }
 
-      // Sync Live Activity
-
-      await LiveActivityManager().startActivity(
-        orderId: rideId,
-        status: status,
-        driverName: payload.driverSnapshot?.name ?? 'Driver Assigned',
-        vehicleName:
-            '${payload.driverSnapshot?.vehicleType ?? ''} ${payload.driverSnapshot?.vehicleModel ?? ''}'
-                .trim(),
-        driverAvatarUrl: payload.driverSnapshot?.avatarUrl ?? '',
-        plateNumber: payload.driverSnapshot?.vehicleRegistrationNumber ?? '',
-        isCompleted: false,
-        etaSeconds: currentEtaSeconds.value,
-        driverLatitude: payload.driverSnapshot?.lat,
-        driverLongitude: payload.driverSnapshot?.lng,
-      );
+      // startActivity call removed to respect 'APNs-only' update model
     } catch (e) {
       developer.log(
         "❌ Error in DriverAcceptedController._syncLiveActivityFromStatusPayload: $e",
         name: 'ORDER_TRACKING',
       );
-      debugPrint('❌ Error syncing Live Activity from status payload: $e');
     }
   }
 
-  Future<void> _syncLiveActivityFromTrackingPayload(
-    TrackingUpdateSocketResponse payload,
-  ) async {
-    try {
-      if (rideId.isEmpty) return;
-      // Sync Live Activity
-
-      // If we have tracking, it means it's either en route to pickup or en route to destination
-      // Sync Live Activity
-
-      await LiveActivityManager().startActivity(
-        orderId: rideId,
-        status: currentRideStatus.value.toUpperCase(),
-        driverName: driverName.value,
-        vehicleName: driverVehicleLine.value,
-        plateNumber: plateLinePrimary.value + plateLineSecondary.value,
-        isCompleted: false,
-        etaSeconds: currentEtaSeconds.value,
-      );
-    } catch (e) {
-      developer.log(
-        "❌ Error in DriverAcceptedController._syncLiveActivityFromTrackingPayload: $e",
-        name: 'ORDER_TRACKING',
-      );
-      debugPrint('❌ Error syncing Live Activity from tracking payload: $e');
-    }
-  }
+  // _syncLiveActivityFromTrackingPayload removed to respect 'APNs-only' update model
 
   Future<void> _syncLiveActivityFromDetails(RideModel r) async {
     try {

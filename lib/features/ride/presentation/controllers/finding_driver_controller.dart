@@ -339,7 +339,7 @@ class FindingDriverController extends GetxController {
       latestRideStatusPayload.value = payload;
       final status = (payload.status ?? '').toString().toLowerCase();
       _applyStatusPayload(payload);
-      await _syncLiveActivityFromPayload(payload);
+      // Removed _syncLiveActivityFromPayload(payload) to respect 'APNs-only' update model
       if (status.isEmpty) return;
 
       switch (status) {
@@ -418,35 +418,11 @@ class FindingDriverController extends GetxController {
 
     if (_socketService.isConnected) {
       _socketService.joinRideRoom(rideId: rideId);
-      _syncLiveActivity();
+      // Removed redundant _syncLiveActivity() call to respect 'APNs-only' update model
     }
   }
 
-  Future<void> _syncLiveActivityFromPayload(
-    EventRiderStatusUpdateResponse payload,
-  ) async {
-    try {
-      if (rideId.isEmpty) return;
-      final status = (payload.status ?? '').toString().toUpperCase();
-
-      // Sync Live Activity
-
-      await LiveActivityManager().startActivity(
-        orderId: rideId,
-        status: status.toUpperCase(),
-        driverName: payload.driverSnapshot?.name ?? 'Driver Assigned',
-        vehicleName:
-            '${payload.driverSnapshot?.vehicleType ?? ''} ${payload.driverSnapshot?.vehicleModel ?? ''}'
-                .trim(),
-        plateNumber: payload.driverSnapshot?.vehicleRegistrationNumber ?? '',
-        driverAvatarUrl: payload.driverSnapshot?.avatarUrl ?? '',
-        isCompleted: status.contains('COMPLETED'),
-        etaSeconds: currentEtaSeconds.value,
-      );
-    } catch (e) {
-      debugPrint('❌ Error syncing Live Activity from payload: $e');
-    }
-  }
+  // Removed _syncLiveActivityFromPayload to respect 'APNs-only' update model
 
   Future<void> _initNearbyDriversSocket() async {
     _nearbyDriversSub?.cancel();
@@ -597,7 +573,7 @@ class FindingDriverController extends GetxController {
     }
     if ((payload.eta ?? 0) > 0) {
       currentEtaSeconds.value = (payload.eta ?? 0).toDouble();
-      _syncLiveActivity();
+      // Removed redundant _syncLiveActivity() call to respect 'APNs-only' update model
     }
     _fitRouteBounds();
   }
