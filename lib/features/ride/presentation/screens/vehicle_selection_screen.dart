@@ -11,6 +11,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_back_button.dart';
+import '../../../../shared/utils/currency_formatter.dart';
 import '../../../payment/presentation/widgets/payment_bar.dart';
 import '../controllers/vehicle_selection_controller.dart';
 
@@ -276,10 +277,8 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
             ),
             Obx(() {
               return PaymentBar(
-                buttonLabel: AppStrings.bookRideWithFare.trParams({
-                  'currency': controller.currency,
-                  'amount': '${controller.selectedFareAmount}',
-                }),
+                buttonLabel:
+                    '${AppStrings.bookRide.tr} ${CurrencyFormatter.format(controller.selectedFareAmount)}',
                 isLoading: controller.isBooking,
                 onActionButtonPressed: controller.bookRide,
               );
@@ -391,7 +390,7 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
                 ),
               ),
               Text(
-                '${item.currency ?? AppStrings.defaultCurrencyTzs.tr} ${item.fareEstimate ?? 0}',
+                CurrencyFormatter.format(item.fareEstimate ?? 0),
                 style: TextStyle(
                   fontFamily: 'Metropolis',
                   fontSize: 16.sp,

@@ -23,6 +23,7 @@ import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../domain/repositories/ride_repository.dart';
@@ -1188,13 +1189,13 @@ class DriverAcceptedController extends GetxController
         _seedRideCharge ??
         ride.value?.fareEstimate ??
         100;
-    return 'TZS $amount.00';
+    return CurrencyFormatter.format(amount);
   }
 
   String get bookingFeeLabel {
     final amount =
         ride.value?.fareBreakdown?.bookingFee ?? _seedBookingFee ?? 0;
-    return 'TZS $amount.00';
+    return CurrencyFormatter.format(amount);
   }
 
   String get totalAmountLabel {
@@ -1204,7 +1205,7 @@ class DriverAcceptedController extends GetxController
         ride.value?.finalFare ??
         ride.value?.fareEstimate ??
         100;
-    return 'TZS $amount.00';
+    return CurrencyFormatter.format(amount);
   }
 
   String get paymentModeLabel {

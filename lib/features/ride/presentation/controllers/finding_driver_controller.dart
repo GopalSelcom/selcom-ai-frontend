@@ -16,6 +16,7 @@ import '../../../../core/data/models/responses/nearbyRiders/response/tracking_up
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../../../core/utils/map_marker_utils.dart';
@@ -653,7 +654,7 @@ class FindingDriverController extends GetxController {
       capacity: '4',
       eta: '10 min away',
       dropAt: 'Drop 1:11 pm',
-      fare: 'TZS 500',
+      fareAmount: 500,
       assetPath: AppAssets.gari,
       nearFast: true,
     ),
@@ -662,7 +663,7 @@ class FindingDriverController extends GetxController {
       capacity: '3',
       eta: '5 min away',
       dropAt: 'Drop 1:09 pm',
-      fare: 'TZS 100',
+      fareAmount: 100,
       assetPath: AppAssets.bajaj,
     ),
     MockRideOption(
@@ -670,12 +671,13 @@ class FindingDriverController extends GetxController {
       capacity: '1',
       eta: '1 min away',
       dropAt: 'Drop 1:00 pm',
-      fare: 'TZS 100',
+      fareAmount: 100,
       assetPath: AppAssets.boda,
     ),
   ];
 
-  String get selectedFare => rideOptions[selectedRideIndex.value].fare;
+  String get selectedFare =>
+      CurrencyFormatter.format(rideOptions[selectedRideIndex.value].fareAmount);
 
   void selectRideOption(int index) {
     if (index < 0 || index >= rideOptions.length) return;
@@ -700,7 +702,7 @@ class MockRideOption {
   final String capacity;
   final String eta;
   final String dropAt;
-  final String fare;
+  final num fareAmount;
   final String assetPath;
   final bool nearFast;
 
@@ -709,7 +711,7 @@ class MockRideOption {
     required this.capacity,
     required this.eta,
     required this.dropAt,
-    required this.fare,
+    required this.fareAmount,
     required this.assetPath,
     this.nearFast = false,
   });

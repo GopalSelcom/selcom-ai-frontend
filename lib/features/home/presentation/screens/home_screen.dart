@@ -15,6 +15,7 @@ import '../../../../core/routes/app_routes.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/utils/currency_formatter.dart';
 
 class HomeScreen extends GetView<HomeController> {
   const HomeScreen({super.key});
@@ -679,7 +680,7 @@ class HomeScreen extends GetView<HomeController> {
               Row(
                 children: [
                   Text(
-                    'TZS ${ride.fareEstimate}',
+                    CurrencyFormatter.format(ride.fareEstimate),
                     style: AppTextStyles.homeSubtitle.copyWith(
                       fontWeight: FontWeight.w700,
                       color: AppColors.shade1,

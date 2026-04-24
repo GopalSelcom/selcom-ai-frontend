@@ -17,6 +17,7 @@ import '../../../../features/ride_rating/domain/usecases/skip_ride_rating_usecas
 import '../../../../features/ride_rating/domain/usecases/submit_ride_rating_usecase.dart';
 import '../../../../features/ride_rating/presentation/controllers/ride_rating_controller.dart';
 import '../../../../features/ride_rating/presentation/widgets/ride_rating_input_section.dart';
+import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import 'ride_common_widgets.dart';
@@ -263,17 +264,17 @@ class _RideDetailsBottomSheetState extends State<RideDetailsBottomSheet> {
                         SizedBox(height: 16.h),
                         FareBreakdownRow(
                           title: AppStrings.rideCharge.tr,
-                          amount: 'TZS $rideCharge',
+                          amount: CurrencyFormatter.format(rideCharge),
                         ),
                         SizedBox(height: 12.h),
                         FareBreakdownRow(
                           title: AppStrings.bookingFeesAndConvenienceCharges.tr,
-                          amount: 'TZS $bookingFee',
+                          amount: CurrencyFormatter.format(bookingFee),
                         ),
                         SizedBox(height: 12.h),
                         FareBreakdownRow(
                           title: AppStrings.totalAmount.tr,
-                          amount: 'TZS $totalAmount',
+                          amount: CurrencyFormatter.format(totalAmount),
                           isTotal: true,
                         ),
                       ],

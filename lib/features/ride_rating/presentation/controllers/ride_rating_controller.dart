@@ -7,6 +7,7 @@ import '../../../../core/data/models/requests/submit_ride_rating_request.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../domain/entities/ride_rating_ride_entity.dart';
 import '../../domain/entities/ride_rating_tag_entity.dart';
@@ -306,7 +307,7 @@ class RideRatingController extends GetxController {
   String get rideFareLabel {
     final fare = pendingReviewRide.value?.finalFare;
     if (fare == null) return '';
-    return 'TZS ${fare.toString()}';
+    return CurrencyFormatter.format(fare);
   }
 
   bool _isWithinPendingReviewWindow(RideRatingRideEntity? ride) {

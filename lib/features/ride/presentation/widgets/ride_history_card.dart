@@ -5,6 +5,7 @@ import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
 import 'ride_common_widgets.dart';
 
@@ -165,7 +166,7 @@ class RideHistoryCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'TZS $effectiveFare',
+                    CurrencyFormatter.format(effectiveFare),
                     style: TextStyle(
                       fontFamily: AppTextStyles.metropolisFont,
                       fontWeight: FontWeight.w500,
