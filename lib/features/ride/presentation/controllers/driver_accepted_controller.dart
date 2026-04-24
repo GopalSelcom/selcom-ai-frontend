@@ -64,6 +64,7 @@ class DriverAcceptedController extends GetxController
   final driverAvatarUrl = ''.obs;
   final driverRating = ''.obs;
   final driverVehicleLine = ''.obs;
+  final bottomSheetVehicleImageAsset = AppAssets.imgCab.obs;
   final plateLinePrimary = ''.obs;
   final plateLineSecondary = ''.obs;
   final vehicleSubtitle = ''.obs;
@@ -299,6 +300,7 @@ class DriverAcceptedController extends GetxController
     driverName.value = 'John Doe';
     driverPhone.value = '';
     driverAvatarUrl.value = '';
+    bottomSheetVehicleImageAsset.value = AppAssets.imgBoda;
     driverRating.value = '4';
     driverVehicleLine.value = 'Volkswagen';
     plateLinePrimary.value = 'T 772';
@@ -320,6 +322,7 @@ class DriverAcceptedController extends GetxController
       vehicleName: v?.vehicleModel,
       vehicleType: v?.vehicleType,
     );
+    _syncBottomSheetVehicleImage(vehicleTypeHint);
     if (vehicleTypeHint.isNotEmpty) {
       loadDriverIcon(vehicleType: vehicleTypeHint);
     }
@@ -566,6 +569,13 @@ class DriverAcceptedController extends GetxController
         .toLowerCase();
   }
 
+  void _syncBottomSheetVehicleImage(String? vehicleTypeHint) {
+    bottomSheetVehicleImageAsset.value = VehicleImageUtils.imageAssetForVehicleType(
+      vehicleTypeHint,
+      fallbackAsset: AppAssets.imgCab,
+    );
+  }
+
   void onMapCreated(GoogleMapController c) {
     mapController = c;
     _fitRouteBounds();
@@ -683,6 +693,7 @@ class DriverAcceptedController extends GetxController
       vehicleName: v?.vehicleName,
       vehicleType: v?.vehicleType,
     );
+    _syncBottomSheetVehicleImage(vehicleTypeHint);
     if (vehicleTypeHint.isNotEmpty) {
       loadDriverIcon(vehicleType: vehicleTypeHint);
     }

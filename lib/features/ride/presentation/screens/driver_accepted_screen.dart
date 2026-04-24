@@ -665,14 +665,16 @@ class DriverAcceptedScreen extends StatelessWidget {
                 ],
               ),
             ),
-            Image.asset(
-              AppAssets.imgBoda,
-              height: 52.h,
-              fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => Icon(
-                Icons.two_wheeler,
-                size: 40.w,
-                color: const Color(0xFF364B63),
+            Obx(
+              () => Image.asset(
+                c.bottomSheetVehicleImageAsset.value,
+                height: 52.h,
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => Icon(
+                  Icons.two_wheeler,
+                  size: 40.w,
+                  color: const Color(0xFF364B63),
+                ),
               ),
             ),
           ],
