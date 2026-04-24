@@ -33,7 +33,7 @@ class DriverAcceptedScreen extends StatelessWidget {
     });
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.pageBackground,
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -49,9 +49,9 @@ class DriverAcceptedScreen extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.white,
-                    Colors.white.withValues(alpha: 0.92),
-                    Colors.white.withValues(alpha: 0),
+                    AppColors.white,
+                    AppColors.white.withValues(alpha: 0.92),
+                    AppColors.white.withValues(alpha: 0),
                   ],
                 ),
               ),
@@ -85,11 +85,11 @@ class DriverAcceptedScreen extends StatelessWidget {
                     vertical: 6.h,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE31E24), // Red as seen in screenshot
+                    color: AppColors.dangerDeep,
                     borderRadius: BorderRadius.circular(12.r),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.15),
+                        color: AppColors.black.withValues(alpha: 0.15),
                         blurRadius: 8,
                         offset: const Offset(0, 3),
                       ),
@@ -98,7 +98,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                   child: Text(
                     c.etaLabel.value,
                     style: TextStyle(
-                      color: Colors.white,
+                      color: AppColors.white,
                       fontSize: 12.sp,
                       fontWeight: FontWeight.w700,
                     ),
@@ -216,7 +216,7 @@ class DriverAcceptedScreen extends StatelessWidget {
           Polyline(
             polylineId: const PolylineId('active_route'),
             points: route,
-            color: const Color(0xFF3073E8),
+            color: AppColors.routeBlue,
             width: 5,
           ),
         );
@@ -284,11 +284,11 @@ class DriverAcceptedScreen extends StatelessWidget {
                     vertical: 8.h,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.92),
+                    color: AppColors.white.withValues(alpha: 0.92),
                     borderRadius: BorderRadius.circular(24.r),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
+                        color: AppColors.black.withValues(alpha: 0.08),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -302,7 +302,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                         height: 14.w,
                         child: const CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Color(0xFF3073E8),
+                          color: AppColors.routeBlue,
                         ),
                       ),
                       SizedBox(width: 10.w),
@@ -311,7 +311,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 13.sp,
                           fontWeight: FontWeight.w500,
-                          color: const Color(0xFF364B63),
+                          color: AppColors.textBody,
                         ),
                       ),
                     ],
@@ -337,7 +337,7 @@ class DriverAcceptedScreen extends StatelessWidget {
             width: 64.w,
             height: 5.h,
             decoration: BoxDecoration(
-              color: const Color(0xFFE2E8F0),
+              color: AppColors.skeletonBase,
               borderRadius: BorderRadius.circular(37.r),
             ),
           ),
@@ -369,14 +369,14 @@ class DriverAcceptedScreen extends StatelessWidget {
             Icon(
               Icons.watch_later_outlined,
               size: 20.sp,
-              color: const Color(0xFF364B63),
+              color: AppColors.textBody,
             ),
             SizedBox(width: 2.w), // 2px gap from Figma
             Text(
               c.arrivalLabel.value,
               style: AppTextStyles.homeCaption.copyWith(
                 fontSize: 15.sp,
-                color: const Color(0xFF364B63),
+                color: AppColors.textBody,
                 fontWeight: FontWeight.w500,
                 height: 1.33,
               ),
@@ -389,7 +389,7 @@ class DriverAcceptedScreen extends StatelessWidget {
           textAlign: TextAlign.center,
           style: AppTextStyles.homeTitle.copyWith(
             fontSize: 20.sp,
-            color: const Color(0xFF132235),
+            color: AppColors.textHeading,
             fontWeight: FontWeight.w600,
             height: 1.7,
             letterSpacing: -0.4,
@@ -405,7 +405,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                 style: AppTextStyles.homeCaption.copyWith(
                   fontWeight: FontWeight.w700,
                   fontSize: 15.sp,
-                  color: const Color(0xFF364B63),
+                  color: AppColors.textBody,
                   height: 1.33,
                 ),
               ),
@@ -417,17 +417,17 @@ class DriverAcceptedScreen extends StatelessWidget {
                   height: 28.w,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF8F9FD),
+                    color: AppColors.surfaceSubtle,
                     borderRadius: BorderRadius.circular(16.r),
                     border: Border.all(
-                      color: const Color(0xFFE6E9EE),
+                      color: AppColors.borderWalletCard,
                       width: 0.787,
                     ),
                   ),
                   child: Text(
                     d,
                     style: AppTextStyles.homeCaption.copyWith(
-                      color: const Color(0xFF000000),
+                      color: AppColors.black,
                       fontSize: 12.6.sp,
                       fontWeight: FontWeight.w600,
                       height: 1.28,
@@ -443,9 +443,9 @@ class DriverAcceptedScreen extends StatelessWidget {
           width: 221.w,
           padding: EdgeInsets.symmetric(vertical: 8.h),
           decoration: BoxDecoration(
-            color: const Color(0xFFD9A800),
+            color: AppColors.ratingGoldDark,
             borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: const Color(0xFFE6E9EE), width: 0.787),
+            border: Border.all(color: AppColors.borderWalletCard, width: 0.787),
           ),
           child: Obx(
             () => Column(
@@ -471,7 +471,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                     height: 1,
                     letterSpacing: 9.6, // 20% of 48
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF131D0B),
+                    color: AppColors.textDarkOlive,
                   ),
                 ),
                 if (c.plateLineSecondary.value.isNotEmpty)
@@ -482,7 +482,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                       height: 1,
                       letterSpacing: 9.6,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF131D0B),
+                      color: AppColors.textDarkOlive,
                     ),
                   ),
                 SizedBox(height: 4.h),
@@ -491,7 +491,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                   style: AppTextStyles.homeCaption.copyWith(
                     fontSize: 15.sp,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF000000),
+                    color: AppColors.black,
                     height: 1.33,
                   ),
                 ),
@@ -500,7 +500,7 @@ class DriverAcceptedScreen extends StatelessWidget {
           ),
         ),
         SizedBox(height: 17.h),
-        const Divider(color: Color(0xFFE6E9EE), height: 1),
+        const Divider(color: AppColors.borderWalletCard, height: 1),
         SizedBox(height: 17.h),
         Row(
           children: [
@@ -510,7 +510,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                 width: 51.66.w,
                 height: 51.66.w,
                 decoration: const BoxDecoration(
-                  color: Color(0xFFD9D9D9),
+                  color: AppColors.borderGray,
                   shape: BoxShape.circle,
                 ),
                 child: ClipOval(
@@ -539,7 +539,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                           child: Text(
                             c.driverName.value,
                             style: AppTextStyles.homeTitle.copyWith(
-                              color: const Color(0xFF132235),
+                              color: AppColors.textHeading,
                               fontSize: 20.sp,
                               fontWeight: FontWeight.w600,
                               height: 1.7,
@@ -549,14 +549,14 @@ class DriverAcceptedScreen extends StatelessWidget {
                         SizedBox(width: 9.w),
                         Icon(
                           Icons.star,
-                          color: const Color(0xFFFFD600),
+                          color: AppColors.ratingGold,
                           size: 11.sp,
                         ),
                         SizedBox(width: 3.w),
                         Text(
                           c.driverRating.value,
                           style: AppTextStyles.homeCaption.copyWith(
-                            color: const Color(0xFF585858),
+                            color: AppColors.textDim,
                             fontSize: 15.sp,
                             fontWeight: FontWeight.w500,
                             height: 1.33,
@@ -567,7 +567,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                     Text(
                       c.driverVehicleLine.value,
                       style: AppTextStyles.homeCaption.copyWith(
-                        color: const Color(0xFF585858),
+                        color: AppColors.textDim,
                         fontSize: 15.sp,
                         fontWeight: FontWeight.w500,
                         height: 1.33,
@@ -631,12 +631,12 @@ class DriverAcceptedScreen extends StatelessWidget {
           textAlign: TextAlign.center,
           style: AppTextStyles.homeTitle.copyWith(
             fontSize: 38.sp / 2,
-            color: const Color(0xFF132235),
+            color: AppColors.textHeading,
             fontWeight: FontWeight.w700,
           ),
         ),
         SizedBox(height: 14.h),
-        const Divider(color: Color(0xFFE6E9EE), height: 1),
+        const Divider(color: AppColors.borderWalletCard, height: 1),
         SizedBox(height: 16.h),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -649,7 +649,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                     c.rideVehicleLabel,
                     style: AppTextStyles.homeTitle.copyWith(
                       fontSize: 36.sp / 2,
-                      color: const Color(0xFF132235),
+                      color: AppColors.textHeading,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -658,7 +658,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                     c.rideProgressSubtitle,
                     style: AppTextStyles.homeCaption.copyWith(
                       fontSize: 15.sp,
-                      color: const Color(0xFF364B63),
+                      color: AppColors.textBody,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -673,7 +673,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                 errorBuilder: (_, __, ___) => Icon(
                   Icons.two_wheeler,
                   size: 40.w,
-                  color: const Color(0xFF364B63),
+                  color: AppColors.textBody,
                 ),
               ),
             ),
@@ -683,8 +683,8 @@ class DriverAcceptedScreen extends StatelessWidget {
         Container(
           padding: EdgeInsets.all(14.w),
           decoration: BoxDecoration(
-            color: const Color(0xFFF8F9FD),
-            border: Border.all(color: const Color(0xFFE6E9EE), width: 0.8),
+            color: AppColors.surfaceSubtle,
+            border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
             borderRadius: BorderRadius.circular(16.r),
           ),
           child: Column(
@@ -725,8 +725,8 @@ class DriverAcceptedScreen extends StatelessWidget {
           () => Container(
             padding: EdgeInsets.all(14.w),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8F9FD),
-              border: Border.all(color: const Color(0xFFE6E9EE), width: 0.8),
+              color: AppColors.surfaceSubtle,
+              border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
               borderRadius: BorderRadius.circular(16.r),
             ),
             child: Column(
@@ -739,7 +739,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                       style: AppTextStyles.homeTitle.copyWith(
                         fontSize: 15.sp,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF132235),
+                        color: AppColors.textHeading,
                       ),
                     ),
                     const Spacer(),
@@ -749,7 +749,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                         style: AppTextStyles.homeTitle.copyWith(
                           fontSize: 16.sp,
                           fontWeight: FontWeight.w700,
-                          color: const Color(0xFF132235),
+                          color: AppColors.textHeading,
                         ),
                       ),
                   ],
@@ -788,7 +788,7 @@ class DriverAcceptedScreen extends StatelessWidget {
             children: [
               Icon(
                 Icons.headset_mic_outlined,
-                color: const Color(0xFF364B63),
+                color: AppColors.textBody,
                 size: 18.sp,
               ),
               SizedBox(width: 6.w),
@@ -797,7 +797,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                 child: Text(
                   AppStrings.needHelp.tr,
                   style: AppTextStyles.homeCaption.copyWith(
-                    color: const Color(0xFF364B63),
+                    color: AppColors.textBody,
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w600,
                   ),
@@ -806,14 +806,14 @@ class DriverAcceptedScreen extends StatelessWidget {
               SizedBox(width: 20.w),
               Icon(
                 Icons.download_rounded,
-                color: const Color(0xFF364B63),
+                color: AppColors.textBody,
                 size: 18.sp,
               ),
               SizedBox(width: 6.w),
               Text(
                 AppStrings.downloadSlip.tr,
                 style: AppTextStyles.homeCaption.copyWith(
-                  color: const Color(0xFF364B63),
+                  color: AppColors.textBody,
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
                 ),
@@ -845,7 +845,7 @@ class DriverAcceptedScreen extends StatelessWidget {
             child: SizedBox(
               width: 33.81.w,
               height: 33.81.w,
-              child: Icon(icon, size: 14.sp, color: Colors.white),
+              child: Icon(icon, size: 14.sp, color: AppColors.white),
             ),
           ),
         ),
@@ -858,16 +858,16 @@ class DriverAcceptedScreen extends StatelessWidget {
               height: 15.w,
               decoration: BoxDecoration(
                 color: (color == AppColors.primary)
-                    ? const Color(0xFF269441)
+                    ? AppColors.figmaIconGreen
                     : AppColors.error,
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 1.5),
+                border: Border.all(color: AppColors.white, width: 1.5),
               ),
               alignment: Alignment.center,
               child: Text(
                 badge,
                 style: TextStyle(
-                  color: Colors.white,
+                  color: AppColors.white,
                   fontSize: 10.sp,
                   fontWeight: FontWeight.w600,
                   height: 1,

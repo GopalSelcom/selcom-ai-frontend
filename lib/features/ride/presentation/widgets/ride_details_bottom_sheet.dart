@@ -133,7 +133,7 @@ class _RideDetailsBottomSheetState extends State<RideDetailsBottomSheet> {
         bottom: MediaQuery.of(context).padding.bottom + 24.h,
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(37.r),
           topRight: Radius.circular(37.r),
@@ -148,7 +148,7 @@ class _RideDetailsBottomSheetState extends State<RideDetailsBottomSheet> {
             width: 48.w,
             height: 5.h,
             decoration: BoxDecoration(
-              color: const Color(0xFFE6E9EE),
+            color: AppColors.borderWalletCard,
               borderRadius: BorderRadius.circular(4.r),
             ),
           ),
@@ -159,7 +159,7 @@ class _RideDetailsBottomSheetState extends State<RideDetailsBottomSheet> {
             style: TextStyle(
               fontFamily: AppTextStyles.metropolisFont,
               fontWeight: FontWeight.w700,
-              color: AppColors.textDark,
+              color: AppColors.textHeading,
               fontSize: 20.sp,
             ),
             textAlign: TextAlign.center,
@@ -184,7 +184,7 @@ class _RideDetailsBottomSheetState extends State<RideDetailsBottomSheet> {
                             style: TextStyle(
                               fontFamily: AppTextStyles.metropolisFont,
                               fontWeight: FontWeight.w700,
-                              color: AppColors.textDark,
+                              color: AppColors.textHeading,
                               fontSize: 20.sp,
                             ),
                           ),
@@ -194,7 +194,7 @@ class _RideDetailsBottomSheetState extends State<RideDetailsBottomSheet> {
                             style: TextStyle(
                               fontFamily: AppTextStyles.metropolisFont,
                               fontWeight: FontWeight.w500,
-                              color: const Color(0xFF364B63),
+                              color: AppColors.textBody,
                               fontSize: 15.sp,
                             ),
                           ),
@@ -207,7 +207,7 @@ class _RideDetailsBottomSheetState extends State<RideDetailsBottomSheet> {
                         errorBuilder: (_, __, ___) => Icon(
                           Icons.two_wheeler,
                           size: 50.w,
-                          color: AppColors.textGrey,
+                          color: AppColors.textBody,
                         ),
                       ),
                     ],
@@ -218,9 +218,9 @@ class _RideDetailsBottomSheetState extends State<RideDetailsBottomSheet> {
                   Container(
                     padding: EdgeInsets.all(16.w),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF8F9FD),
+                      color: AppColors.surfaceSubtle,
                       border: Border.all(
-                        color: const Color(0xFFE6E9EE),
+                        color: AppColors.borderWalletCard,
                         width: 0.78,
                       ),
                       borderRadius: BorderRadius.circular(16.r),
@@ -242,9 +242,9 @@ class _RideDetailsBottomSheetState extends State<RideDetailsBottomSheet> {
                   Container(
                     padding: EdgeInsets.all(16.w),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF8F9FD),
+                      color: AppColors.surfaceSubtle,
                       border: Border.all(
-                        color: const Color(0xFFE6E9EE),
+                        color: AppColors.borderWalletCard,
                         width: 0.78,
                       ),
                       borderRadius: BorderRadius.circular(16.r),
@@ -257,7 +257,7 @@ class _RideDetailsBottomSheetState extends State<RideDetailsBottomSheet> {
                           style: TextStyle(
                             fontFamily: AppTextStyles.metropolisFont,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textDark,
+                            color: AppColors.textHeading,
                             fontSize: 15.sp,
                           ),
                         ),
@@ -286,9 +286,9 @@ class _RideDetailsBottomSheetState extends State<RideDetailsBottomSheet> {
                       ? Container(
                           padding: EdgeInsets.all(16.w),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF8F9FD),
+                            color: AppColors.surfaceSubtle,
                             border: Border.all(
-                              color: const Color(0xFFE6E9EE),
+                              color: AppColors.borderWalletCard,
                               width: 0.78,
                             ),
                             borderRadius: BorderRadius.circular(16.r),
@@ -301,7 +301,7 @@ class _RideDetailsBottomSheetState extends State<RideDetailsBottomSheet> {
                                 style: TextStyle(
                                   fontFamily: AppTextStyles.metropolisFont,
                                   fontWeight: FontWeight.w600,
-                                  color: AppColors.textDark,
+                                  color: AppColors.textHeading,
                                   fontSize: 15.sp,
                                 ),
                               ),
@@ -316,7 +316,7 @@ class _RideDetailsBottomSheetState extends State<RideDetailsBottomSheet> {
                                 style: TextStyle(
                                   fontFamily: AppTextStyles.metropolisFont,
                                   fontWeight: FontWeight.w600,
-                                  color: AppColors.textGrey,
+                                  color: AppColors.textBody,
                                   fontSize: 13.sp,
                                 ),
                               ),

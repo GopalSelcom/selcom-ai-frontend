@@ -26,6 +26,7 @@ import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/app_map_service.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/currency_formatter.dart';
@@ -225,18 +226,18 @@ class DriverAcceptedController extends GetxController
       // Single Stop: P (Blue) and D (Green)
       pickupIcon.value = await MapMarkerUtils.createTextMarker(
         text: 'P',
-        color: const Color(0xFF4FA3FF),
+        color: AppColors.mapPickupMarkerBlue,
       );
       dropIcon.value = await MapMarkerUtils.createTextMarker(
         text: 'D',
-        color: const Color(0xFF34C759), // Green
+        color: AppColors.mapDropMarkerGreen,
       );
       stopIcons.clear();
     } else {
       // Multi Stop: A (Blue), B, C... (Red), Last (Green)
       pickupIcon.value = await MapMarkerUtils.createTextMarker(
         text: 'A',
-        color: const Color(0xFF4FA3FF),
+        color: AppColors.mapPickupMarkerBlue,
       );
 
       stopIcons.clear();
@@ -244,7 +245,7 @@ class DriverAcceptedController extends GetxController
       for (int i = 1; i < letters.length; i++) {
         final icon = await MapMarkerUtils.createTextMarker(
           text: letters[i],
-          color: const Color(0xFFE11D48),
+          color: AppColors.mapStopMarkerRed,
         );
         stopIcons.add(icon);
       }
@@ -258,7 +259,7 @@ class DriverAcceptedController extends GetxController
 
       dropIcon.value = await MapMarkerUtils.createTextMarker(
         text: label,
-        color: const Color(0xFF34C759), // Green
+        color: AppColors.mapDropMarkerGreen,
       );
     }
   }
@@ -1373,7 +1374,7 @@ class DriverAcceptedController extends GetxController
     final dynamic confirmResult = await Get.dialog(
       const CancelConfirmationDialog(),
       barrierDismissible: false,
-      barrierColor: Colors.black.withValues(alpha: 0.12),
+      barrierColor: AppColors.overlayBlack12,
     );
 
     if (confirmResult != true) return;
@@ -1391,7 +1392,7 @@ class DriverAcceptedController extends GetxController
         ],
       ),
       barrierDismissible: false,
-      barrierColor: Colors.black.withValues(alpha: 0.12),
+      barrierColor: AppColors.overlayBlack12,
     );
 
     if (reason == null) return;
@@ -1675,7 +1676,7 @@ class DriverAcceptedController extends GetxController
         const StopUpdateProgressModal(),
         isDismissible: false,
         enableDrag: false,
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.transparent,
       );
     } else {
       if (Get.isBottomSheetOpen ?? false) {

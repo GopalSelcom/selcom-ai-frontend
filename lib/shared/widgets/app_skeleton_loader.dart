@@ -23,7 +23,7 @@ class AppSkeletonLoader extends StatelessWidget {
         width: width ?? double.infinity,
         height: height ?? 20,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.white,
           borderRadius: BorderRadius.circular(borderRadius ?? 8),
         ),
       ),

@@ -43,7 +43,7 @@ class AppProfileHeader extends StatelessWidget {
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.w),
               child: AppBackButton(
-                color: Colors.white,
+                color: AppColors.white,
                 size: 28.w,
                 onPressed: onBack,
               ),
@@ -56,7 +56,7 @@ class AppProfileHeader extends StatelessWidget {
               child: Text(
                 title!,
                 style: AppTextStyles.screenTitle.copyWith(
-                  color: Colors.white,
+                  color: AppColors.white,
                   fontWeight: FontWeight.w800,
                 ),
               ),

@@ -33,7 +33,7 @@ class SettingsScreen extends GetView<SettingsController> {
                           Text(
                             AppStrings.appSettings.tr,
                             style: AppTextStyles.sectionTitle.copyWith(
-                              color: AppColors.shade2,
+                              color: AppColors.textBody,
                               fontSize: 15.sp,
                             ),
                           ),
@@ -43,7 +43,7 @@ class SettingsScreen extends GetView<SettingsController> {
                                 .securityAndPreferenceControlsMoreSettingsWillAppearHereAsTheyAreEnable
                                 .tr,
                             style: AppTextStyles.caption.copyWith(
-                              color: AppColors.shade2,
+                              color: AppColors.textBody,
                             ),
                           ),
                           SizedBox(height: 14.h),
@@ -60,7 +60,7 @@ class SettingsScreen extends GetView<SettingsController> {
                                     .noConfigurableSettingsAreAvailableRightNow
                                     .tr,
                                 style: AppTextStyles.body.copyWith(
-                                  color: AppColors.shade2,
+                                  color: AppColors.textBody,
                                 ),
                               ),
                             )

@@ -150,7 +150,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                 left: 16.w,
                 child: Navigator.of(context).canPop()
                     ? AppBackButton(
-                        color: AppColors.shade1,
+                        color: AppColors.textHeading,
                         onPressed: controller.closeLocationSelection,
                       )
                     : const SizedBox.shrink(),
@@ -194,7 +194,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             child: SvgPictureAsset(
               AppAssets.locationCardBackground,
               fit: BoxFit.fill,
-              placeholderBuilder: (_) => Container(color: Colors.white),
+              placeholderBuilder: (_) => Container(color: AppColors.white),
             ),
           ),
           Padding(
@@ -205,7 +205,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                 Expanded(child: _integratedLocationFields()),
                 SizedBox(width: 6.w),
                 Material(
-                  color: Colors.transparent,
+                  color: AppColors.transparent,
                   child: Opacity(
                     opacity:
                         _extraDestinationControllers.length >= _maxExtraStops
@@ -228,10 +228,10 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                               fit: BoxFit.fill,
                               placeholderBuilder: (_) => Container(
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFFAFAFA),
+                                  color: AppColors.bgNeutralSoft,
                                   borderRadius: BorderRadius.circular(20.r),
                                   border: Border.all(
-                                    color: const Color(0xFFEDEDED),
+                                    color: AppColors.borderNeutral,
                                   ),
                                 ),
                               ),
@@ -247,14 +247,14 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                                   placeholderBuilder: (_) => const Icon(
                                     Icons.add_circle_outline,
                                     size: 16,
-                                    color: Color(0xFF656565),
+                                    color: AppColors.textMutedStrong,
                                   ),
                                 ),
                                 SizedBox(width: 4.72.w),
                                 Text(
                                   AppStrings.add.tr,
                                   style: AppTextStyles.homeCaption.copyWith(
-                                    color: const Color(0xFF656565),
+                                    color: AppColors.textMutedStrong,
                                     fontSize: 14.34.sp,
                                     fontWeight: FontWeight.w400,
                                   ),
@@ -304,7 +304,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                   child: Container(
                     width: 1.w,
                     height: 17.h,
-                    color: const Color(0xFFEDEDED),
+                    color: AppColors.borderNeutral,
                   ),
                 ),
               ),
@@ -318,7 +318,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                     width: double.infinity,
                     height: 1.h,
                     placeholderBuilder: (_) =>
-                        Container(height: 1.h, color: const Color(0xFFEDEDED)),
+                        Container(height: 1.h, color: AppColors.borderNeutral),
                   ),
                 ),
               ),
@@ -330,7 +330,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
 
   Widget _integratedLocationFields() {
     final fieldStyle = AppTextStyles.homeSubtitle.copyWith(
-      color: AppColors.shade1,
+      color: AppColors.textHeading,
       fontSize: 15.sp,
       fontWeight: FontWeight.w500,
       height: 20 / 15,
@@ -347,7 +347,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           width: 12.6.w,
           height: 16.4.h,
           placeholderBuilder: (_) =>
-              const Icon(Icons.location_on, color: Color(0xFFF52D56), size: 14),
+              const Icon(Icons.location_on, color: AppColors.pinRed, size: 14),
         ),
         field: TextField(
           controller: pickupController,
@@ -380,7 +380,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     // 2. Destination
     rows.add(
       _pinFieldRow(
-        icon: const Icon(Icons.push_pin, color: Color(0xFF34C759), size: 14),
+        icon: const Icon(Icons.push_pin, color: AppColors.mapDropMarkerGreen, size: 14),
         field: TextField(
           controller: destinationController,
           focusNode: destinationFocusNode,
@@ -412,12 +412,12 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       final segment = 2 + i;
       rows.add(
         _pinFieldRow(
-          icon: const Icon(Icons.push_pin, color: Color(0xFF34C759), size: 14),
+          icon: const Icon(Icons.push_pin, color: AppColors.mapDropMarkerGreen, size: 14),
           trailing: InkWell(
             onTap: () => _onRemoveDestinationStop(i),
             child: Icon(
               Icons.close,
-              color: const Color(0xFF94A3B8),
+              color: AppColors.textHint,
               size: 16.sp,
             ),
           ),
@@ -520,9 +520,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.white,
             borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: const Color(0xFFE2E8F0), width: 0.8),
+            border: Border.all(color: AppColors.skeletonBase, width: 0.8),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -530,7 +530,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
               Container(
                 padding: EdgeInsets.all(4.w),
                 decoration: BoxDecoration(
-                  color: isSaved ? const Color(0xFFFEF3C7) : AppColors.primary,
+                  color: isSaved ? AppColors.bgWarningLight : AppColors.primary,
                   shape: BoxShape.circle,
                 ),
                 child: isSaved
@@ -543,14 +543,14 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                         width: 16.w,
                         height: 16.w,
                       )
-                    : Icon(Icons.add, color: Colors.white, size: 14.sp),
+                    : Icon(Icons.add, color: AppColors.white, size: 14.sp),
               ),
               SizedBox(width: 8.w),
               Text(
                 label,
                 style: AppTextStyles.homeChip.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: AppColors.shade1,
+                  color: AppColors.textHeading,
                 ),
               ),
             ],
@@ -565,7 +565,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       return Center(
         child: Text(
           AppStrings.noLocationsFound.tr,
-          style: AppTextStyles.homeCaption.copyWith(color: AppColors.shade2),
+          style: AppTextStyles.homeCaption.copyWith(color: AppColors.textBody),
         ),
       );
     }
@@ -609,7 +609,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         return Center(
           child: Text(
             AppStrings.startTypingDestination.tr,
-            style: AppTextStyles.homeCaption.copyWith(color: AppColors.shade2),
+            style: AppTextStyles.homeCaption.copyWith(color: AppColors.textBody),
           ),
         );
       }
@@ -809,7 +809,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       title,
       style: AppTextStyles.homeTitle.copyWith(
         fontSize: 16.sp,
-        color: AppColors.shade1,
+        color: AppColors.textHeading,
       ),
     );
   }
@@ -824,7 +824,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     required VoidCallback onFavoriteTap,
   }) {
     return Material(
-      color: Colors.white,
+      color: AppColors.white,
       borderRadius: BorderRadius.circular(20.r),
       child: InkWell(
         borderRadius: BorderRadius.circular(20.r),
@@ -842,7 +842,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                     children: [
                       Icon(
                         Icons.access_time_outlined,
-                        color: const Color(0xFF94A3B8),
+                        color: AppColors.textHint,
                         size: 20.sp,
                       ),
                       SizedBox(height: 4.h),
@@ -852,7 +852,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTextStyles.homeCaption.copyWith(
-                          color: const Color(0xFF64748B),
+                          color: AppColors.textSlateSoft,
                           fontWeight: FontWeight.w500,
                           fontSize: 12.sp,
                           height: 1.0,
@@ -872,7 +872,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTextStyles.homeSubtitle.copyWith(
-                          color: AppColors.shade1,
+                          color: AppColors.textHeading,
                           fontSize: 16.sp,
                           fontWeight: FontWeight.w500,
                           letterSpacing: -0.4,
@@ -885,7 +885,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTextStyles.homeCaption.copyWith(
-                          color: AppColors.shade2,
+                          color: AppColors.textBody,
                           fontWeight: FontWeight.w400,
                           height: 20 / 12,
                         ),
@@ -920,9 +920,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                               height: 24.w,
                               placeholderBuilder: (_) => Icon(
                                 Icons.favorite_border,
-                                color: const Color(
-                                  0xFF292D32,
-                                ).withValues(alpha: 0.5),
+                                color: AppColors.textHeading.withValues(alpha: 0.5),
                                 size: 20,
                               ),
                             ),
@@ -942,7 +940,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           controller.isPickupSelected.value &&
           controller.isDestinationSelected.value;
       return Material(
-        color: isReady ? AppColors.primary : const Color(0xFFCBD5E1),
+        color: isReady ? AppColors.primary : AppColors.borderNeutralStrong,
         borderRadius: BorderRadius.circular(16.r),
         child: InkWell(
           onTap: (isReady && !controller.isProceedingToBooking.value)
@@ -977,7 +975,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                     width: 24.w,
                     height: 24.w,
                     child: const CircularProgressIndicator(
-                      color: Colors.white,
+                      color: AppColors.white,
                       strokeWidth: 2,
                     ),
                   )
@@ -985,7 +983,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                   Text(
                     AppStrings.bookRide.tr,
                     style: AppTextStyles.homeTitle.copyWith(
-                      color: isReady ? Colors.white : const Color(0xFF94A3B8),
+                      color: isReady ? AppColors.white : AppColors.textHint,
                       fontSize: 18.sp,
                       fontWeight: FontWeight.w600,
                     ),
@@ -995,7 +993,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                     right: 20.w,
                     child: Icon(
                       Icons.arrow_forward,
-                      color: isReady ? Colors.white : const Color(0xFF94A3B8),
+                      color: isReady ? AppColors.white : AppColors.textHint,
                       size: 20.sp,
                     ),
                   ),

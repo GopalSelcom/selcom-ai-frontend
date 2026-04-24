@@ -35,7 +35,7 @@ class PhoneInputScreen extends GetView<AuthController> {
                       children: [
                         if (Navigator.of(context).canPop()) ...[
                           SizedBox(height: 16.h),
-                          AppBackButton(color: AppColors.shade1, size: 28.w),
+                          AppBackButton(color: AppColors.textHeading, size: 28.w),
                         ],
                         SizedBox(height: 30.h),
 
@@ -65,9 +65,9 @@ class PhoneInputScreen extends GetView<AuthController> {
                               height: 54.h,
                               padding: EdgeInsets.symmetric(horizontal: 12.w),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: AppColors.white,
                                 border: Border.all(
-                                  color: const Color(0xFFE5E7EB),
+                                  color: AppColors.borderLight,
                                 ),
                                 borderRadius: BorderRadius.circular(16.r),
                               ),
@@ -88,14 +88,14 @@ class PhoneInputScreen extends GetView<AuthController> {
                                     style: AppTextStyles.body.copyWith(
                                       fontFamily: AppTextStyles.metropolisFont,
                                       fontWeight: FontWeight.w600,
-                                      color: AppColors.shade1,
+                                      color: AppColors.textHeading,
                                       fontSize: 16.sp,
                                     ),
                                   ),
                                   Icon(
                                     Icons.keyboard_arrow_down,
                                     size: 20.sp,
-                                    color: AppColors.shade2,
+                                    color: AppColors.textBody,
                                   ),
                                 ],
                               ),
@@ -108,9 +108,9 @@ class PhoneInputScreen extends GetView<AuthController> {
                               child: Container(
                                 height: 54.h,
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
+                                  color: AppColors.white,
                                   border: Border.all(
-                                    color: const Color(0xFFE5E7EB),
+                                    color: AppColors.borderLight,
                                   ),
                                   borderRadius: BorderRadius.circular(16.r),
                                 ),
@@ -124,7 +124,7 @@ class PhoneInputScreen extends GetView<AuthController> {
                                     fontFamily: AppTextStyles.metropolisFont,
                                     fontWeight: FontWeight.w600,
                                     fontSize: 18.sp,
-                                    color: AppColors.shade1,
+                                    color: AppColors.textHeading,
                                     letterSpacing: 1.2,
                                   ),
                                   maxLength: 11,
@@ -156,8 +156,8 @@ class PhoneInputScreen extends GetView<AuthController> {
                         Container(
                           height: 56.h,
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            border: Border.all(color: const Color(0xFFE5E7EB)),
+                            color: AppColors.white,
+                            border: Border.all(color: AppColors.borderLight),
                             borderRadius: BorderRadius.circular(16.r),
                           ),
                           child: Row(
@@ -168,7 +168,7 @@ class PhoneInputScreen extends GetView<AuthController> {
                                 height: 20.h,
                                 width: 20.w,
                                 colorFilter: const ColorFilter.mode(
-                                  AppColors.shade2,
+                                  AppColors.textBody,
                                   BlendMode.srcIn,
                                 ),
                               ),
@@ -179,7 +179,7 @@ class PhoneInputScreen extends GetView<AuthController> {
                                     fontFamily: AppTextStyles.metropolisFont,
                                     fontWeight: FontWeight.w500,
                                     fontSize: 16.sp,
-                                    color: AppColors.shade1,
+                                    color: AppColors.textHeading,
                                   ),
                                   onChanged: controller.onEmailChanged,
                                   decoration: InputDecoration(
@@ -226,7 +226,7 @@ class PhoneInputScreen extends GetView<AuthController> {
                                 .tr,
                             style: AppTextStyles.onboardingFooter.copyWith(
                               fontSize: 11.sp,
-                              color: AppColors.shade2.withValues(alpha: 0.7),
+                              color: AppColors.textBody.withValues(alpha: 0.7),
                             ),
                           ),
                         ),

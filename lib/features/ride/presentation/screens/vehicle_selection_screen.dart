@@ -36,11 +36,11 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
               top: MediaQuery.paddingOf(context).top + 8.h,
               left: 16.w,
               child: Material(
-                color: Colors.white,
+                color: AppColors.white,
                 shape: const CircleBorder(),
                 elevation: 2,
                 child: AppBackButton(
-                  color: AppColors.shade1,
+                  color: AppColors.textHeading,
                   alignment: Alignment.center,
                   size: 24.w,
                   hitSize: 40.w,
@@ -54,9 +54,9 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
               () => Container(
                 padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.94),
+                  color: AppColors.white.withValues(alpha: 0.94),
                   borderRadius: BorderRadius.circular(12.r),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: AppColors.skeletonBase),
                 ),
                 child: Text(
                   controller.isSocketConnected.value
@@ -179,7 +179,7 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
               Polyline(
                 polylineId: const PolylineId('route'),
                 points: points,
-                color: const Color(0xFF2668D2),
+                color: AppColors.inputBorderActive,
                 width: 5,
               ),
             },
@@ -205,11 +205,11 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
   Widget _bottomSheet(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: AppColors.black.withValues(alpha: 0.08),
             blurRadius: 16,
             offset: const Offset(0, -4),
           ),
@@ -225,7 +225,7 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
               width: 48.w,
               height: 4.h,
               decoration: BoxDecoration(
-                color: const Color(0xFFE2E8F0),
+              color: AppColors.skeletonBase,
                 borderRadius: BorderRadius.circular(2.r),
               ),
             ),
@@ -239,7 +239,7 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
                   style: AppTextStyles.homeTitle.copyWith(
                     fontSize: 20.sp,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black,
+                    color: AppColors.black,
                     letterSpacing: -0.4,
                   ),
                 ),
@@ -303,7 +303,7 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
         '${drop.hour.toString().padLeft(2, '0')}:${drop.minute.toString().padLeft(2, '0')}';
 
     return Material(
-      color: selected ? const Color(0xFFFBF0F4) : const Color(0xFFF8F9FD),
+      color: selected ? AppColors.primaryLight : AppColors.surfaceSubtle,
       borderRadius: BorderRadius.circular(16.r),
       child: InkWell(
         borderRadius: BorderRadius.circular(16.r),
@@ -313,7 +313,7 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16.r),
             border: Border.all(
-              color: selected ? AppColors.primary : const Color(0xFFE6E9EE),
+              color: selected ? AppColors.primary : AppColors.borderWalletCard,
               width: selected ? 1.2 : 0.787,
             ),
           ),
@@ -335,7 +335,7 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
                             style: AppTextStyles.homeSubtitle.copyWith(
                               fontSize: 16.sp,
                               fontWeight: FontWeight.w500,
-                              color: AppColors.shade1,
+                              color: AppColors.textHeading,
                               letterSpacing: -0.4,
                             ),
                           ),
@@ -345,7 +345,7 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
                           width: 3,
                           height: 3,
                           decoration: const BoxDecoration(
-                            color: Color(0xFF364B63),
+                            color: AppColors.textBody,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -354,13 +354,13 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
                           AppAssets.icPaymentPerson,
                           width: 14.w,
                           height: 14.w,
-                          color: AppColors.shade2,
+                          color: AppColors.textBody,
                         ),
                         SizedBox(width: 4.w),
                         Text(
                           '${item.maxPassengers ?? 1}',
                           style: AppTextStyles.homeCaption.copyWith(
-                            color: AppColors.shade2,
+                            color: AppColors.textBody,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -372,7 +372,7 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
                         'time': dropLabel,
                       }),
                       style: AppTextStyles.homeCaption.copyWith(
-                        color: AppColors.shade2,
+                        color: AppColors.textBody,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -398,7 +398,7 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
                   fontStyle: FontStyle.italic,
-                  color: AppColors.shade1,
+                  color: AppColors.textHeading,
                   letterSpacing: -0.4,
                 ),
               ),
@@ -420,8 +420,8 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
         errorBuilder: (_, __, ___) => Container(
           width: 72.w,
           height: 52.h,
-          color: const Color(0xFFF1F5F9),
-          child: const Icon(Icons.directions_car, color: AppColors.shade2),
+          color: AppColors.bgSoftCircle,
+          child: const Icon(Icons.directions_car, color: AppColors.textBody),
         ),
       ),
     );

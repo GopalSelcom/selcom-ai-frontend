@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../theme/app_colors.dart';
 
 class MapMarkerUtils {
   /// Resizes an image asset to be used as a Google Maps marker.
@@ -39,7 +40,7 @@ class MapMarkerUtils {
 
     // Inner circle (White)
     final innerPaint = Paint()
-      ..color = Colors.white
+      ..color = AppColors.white
       ..style = PaintingStyle.fill;
     canvas.drawCircle(center, size * 0.2, innerPaint);
 
@@ -61,7 +62,7 @@ class MapMarkerUtils {
 
     // Outer circle with subtle "shadow" (Darker version of color)
     final shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.1)
+      ..color = AppColors.black.withOpacity(0.1)
       ..style = PaintingStyle.fill
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
     canvas.drawCircle(center + const Offset(1, 1), size * 0.45, shadowPaint);
@@ -74,7 +75,7 @@ class MapMarkerUtils {
 
     // White Border
     final borderPaint = Paint()
-      ..color = Colors.white
+      ..color = AppColors.white
       ..style = PaintingStyle.stroke
       ..strokeWidth = size * 0.05;
     canvas.drawCircle(center, size * 0.42, borderPaint);
@@ -84,7 +85,7 @@ class MapMarkerUtils {
       text: TextSpan(
         text: text,
         style: TextStyle(
-          color: Colors.white,
+          color: AppColors.white,
           fontSize: size * 0.45,
           fontWeight: FontWeight.w800, // Extra bold
           height: 1.0,

@@ -24,9 +24,9 @@ class WalletSummaryCard extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8F9FD), // fill_PYRYYM
+        color: AppColors.surfaceSubtle,
         border: Border.all(
-          color: const Color(0xFFE6E9EE),
+          color: AppColors.borderWalletCard,
           width: 0.8,
         ), // Divider/Primary
         borderRadius: BorderRadius.circular(27.r),
@@ -53,7 +53,7 @@ class WalletSummaryCard extends StatelessWidget {
                   Text(
                     AppStrings.wallet.tr,
                     style: AppTextStyles.body.copyWith(
-                      color: AppColors.textDark, // fill_IETHWP
+                      color: AppColors.textHeading, // fill_IETHWP
                       fontSize: 15.sp,
                       fontWeight: FontWeight.w500,
                     ),
@@ -64,7 +64,7 @@ class WalletSummaryCard extends StatelessWidget {
                       Text(
                         walletNumber,
                         style: AppTextStyles.caption.copyWith(
-                          color: const Color(0xFF364B63), // fill_RYTD4O
+                          color: AppColors.textBody,
                           fontSize: 12.sp,
                         ),
                       ),
@@ -76,7 +76,7 @@ class WalletSummaryCard extends StatelessWidget {
                         child: Icon(
                           Iconsax.copy,
                           size: 14.w,
-                          color: AppColors.textDark.withValues(alpha: 0.5),
+                          color: AppColors.textHeading.withValues(alpha: 0.5),
                         ),
                       ),
                     ],
@@ -101,7 +101,7 @@ class WalletSummaryCard extends StatelessWidget {
               Icon(
                 Iconsax.arrow_right_3,
                 size: 24.w,
-                color: AppColors.textDark.withValues(alpha: 0.5),
+                color: AppColors.textHeading.withValues(alpha: 0.5),
               ),
             ],
           ),

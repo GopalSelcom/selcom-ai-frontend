@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../core/services/app_map_service.dart';
+import '../../core/theme/app_colors.dart';
 
 /// **Canonical embedded map for the app** (`lib/shared/widgets/`).
 ///
@@ -241,7 +242,7 @@ class _AppGoogleMapState extends State<AppGoogleMap> {
                 _IconActionButton(
                   icon: Icons.gps_fixed,
                   onPressed: widget.onGpsPressed,
-                  color: Colors.black54,
+                  color: AppColors.textMapHint,
                 ),
             ],
           ),
@@ -265,19 +266,19 @@ class _IconActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
+      decoration: const BoxDecoration(
+        color: AppColors.white,
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: AppColors.shadow,
             blurRadius: 8,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),
       child: Material(
-        color: Colors.transparent,
+        color: AppColors.transparent,
         child: InkWell(
           onTap: onPressed,
           borderRadius: BorderRadius.circular(32),

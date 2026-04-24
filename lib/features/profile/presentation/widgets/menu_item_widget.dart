@@ -32,7 +32,7 @@ class MenuItemWidget extends StatelessWidget {
                 Icon(
                   icon,
                   size: 24.w,
-                  color: AppColors.shade1,
+                  color: AppColors.textHeading,
                 ),
                 SizedBox(width: 16.w),
                 Expanded(
@@ -40,14 +40,14 @@ class MenuItemWidget extends StatelessWidget {
                     title,
                     style: AppTextStyles.body.copyWith(
                       fontWeight: FontWeight.w500,
-                      color: AppColors.shade1,
+                      color: AppColors.textHeading,
                     ),
                   ),
                 ),
                 Icon(
                   Iconsax.arrow_right_3,
                   size: 18.w,
-                  color: AppColors.textDark.withValues(alpha: 0.5),
+                  color: AppColors.textHeading.withValues(alpha: 0.5),
                 ),
               ],
             ),

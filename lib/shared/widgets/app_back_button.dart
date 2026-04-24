@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
+import '../../core/theme/app_colors.dart';
 
 class AppBackButton extends StatelessWidget {
   const AppBackButton({
     super.key,
-    this.color = Colors.white,
+    this.color = AppColors.white,
     this.size = 28,
     this.onPressed,
     this.alignment = Alignment.centerLeft,

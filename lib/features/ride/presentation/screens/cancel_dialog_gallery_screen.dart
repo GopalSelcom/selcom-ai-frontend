@@ -17,10 +17,10 @@ class CancelDialogGalleryScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        leading: canGoBack ? const AppBackButton(color: AppColors.shade1) : null,
+        leading: canGoBack ? const AppBackButton(color: AppColors.textHeading) : null,
         title: Text(AppStrings.cancelDialogsGallery.tr),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: AppColors.cardBackground,
+        foregroundColor: AppColors.black,
         elevation: 0.5,
       ),
       body: Padding(
@@ -49,7 +49,7 @@ class CancelDialogGalleryScreen extends StatelessWidget {
             const Spacer(),
             Text(
               AppStrings.tapEachButtonToPreviewThePopupUi.tr,
-              style: TextStyle(color: Colors.grey, fontSize: 13.sp),
+              style: TextStyle(color: AppColors.textMuted, fontSize: 13.sp),
             ),
           ],
         ),
@@ -66,8 +66,8 @@ class CancelDialogGalleryScreen extends StatelessWidget {
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           padding: EdgeInsets.symmetric(vertical: 16.h),
-          backgroundColor: const Color(0xFFF1F5F9),
-          foregroundColor: Colors.black,
+          backgroundColor: AppColors.bgSoftCircle,
+          foregroundColor: AppColors.black,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.r),

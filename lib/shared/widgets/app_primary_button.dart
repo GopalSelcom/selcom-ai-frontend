@@ -34,7 +34,7 @@ class AppPrimaryButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.5),
-          foregroundColor: Colors.white,
+          foregroundColor: AppColors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.button),
           ),
@@ -46,7 +46,7 @@ class AppPrimaryButton extends StatelessWidget {
                 width: 24.w,
                 height: 24.w,
                 child: const CircularProgressIndicator(
-                  color: Colors.white,
+                  color: AppColors.white,
                   strokeWidth: 2,
                 ),
               )

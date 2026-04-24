@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../core/theme/app_colors.dart';
 
 /// Reusable draggable bottom sheet shell for map-style screens.
 class AppDraggableBottomSheet extends StatelessWidget {
@@ -35,11 +36,11 @@ class AppDraggableBottomSheet extends StatelessWidget {
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(40.r)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
+                color: AppColors.black.withValues(alpha: 0.08),
                 blurRadius: 20,
                 offset: const Offset(0, -4),
               ),

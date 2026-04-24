@@ -24,9 +24,9 @@ class RideRatingInputSection extends StatelessWidget {
         width: double.infinity,
         padding: EdgeInsets.all(14.w),
         decoration: BoxDecoration(
-          color: const Color(0xFFF8F9FD),
+          color: AppColors.surfaceSubtle,
           borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: const Color(0xFFE6E9EE), width: 0.8),
+          border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -36,7 +36,7 @@ class RideRatingInputSection extends StatelessWidget {
               style: AppTextStyles.homeTitle.copyWith(
                 fontSize: 15.sp,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF132235),
+                color: AppColors.textHeading,
               ),
             ),
             SizedBox(height: 10.h),
@@ -50,8 +50,8 @@ class RideRatingInputSection extends StatelessWidget {
                     Icons.star,
                     size: starSize.w,
                     color: star <= controller.selectedRating.value
-                        ? const Color(0xFFFFCC00)
-                        : const Color(0xFFD9DDE3),
+                        ? AppColors.ratingStarFilled
+                        : AppColors.borderDefault,
                   ),
                 );
               }),
@@ -63,14 +63,14 @@ class RideRatingInputSection extends StatelessWidget {
                 style: AppTextStyles.homeTitle.copyWith(
                   fontSize: 15.sp,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF132235),
+                  color: AppColors.textHeading,
                 ),
               ),
               SizedBox(height: 6.h),
               Text(
                 AppStrings.pickAnyTagsThatMatchThisTrip.tr,
                 style: AppTextStyles.homeCaption.copyWith(
-                  color: const Color(0xFF364B63),
+                  color: AppColors.textBody,
                   fontSize: 13.sp,
                 ),
               ),
@@ -93,12 +93,12 @@ class RideRatingInputSection extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: isSelected
                               ? AppColors.primaryLight
-                              : Colors.white,
+                              : AppColors.white,
                           borderRadius: BorderRadius.circular(999.r),
                           border: Border.all(
                             color: isSelected
                                 ? AppColors.primary
-                                : const Color(0xFFD9DDE3),
+                                : AppColors.borderDefault,
                           ),
                         ),
                         child: Text(
@@ -106,7 +106,7 @@ class RideRatingInputSection extends StatelessWidget {
                           style: AppTextStyles.homeCaption.copyWith(
                             color: isSelected
                                 ? AppColors.primary
-                                : const Color(0xFF364B63),
+                                : AppColors.textBody,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -121,7 +121,7 @@ class RideRatingInputSection extends StatelessWidget {
                   style: AppTextStyles.homeTitle.copyWith(
                     fontSize: 15.sp,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF132235),
+                    color: AppColors.textHeading,
                   ),
                 ),
                 SizedBox(height: 10.h),

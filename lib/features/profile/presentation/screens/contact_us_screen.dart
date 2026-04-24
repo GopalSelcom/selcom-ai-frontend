@@ -83,7 +83,7 @@ class ContactUsScreen extends GetView<ContactUsController> {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.white,
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(color: AppColors.divider),
         ),
@@ -95,13 +95,13 @@ class ContactUsScreen extends GetView<ContactUsController> {
                   controller.selectedReason.value,
                   style: AppTextStyles.body.copyWith(
                     color: controller.selectedReason.value == 'Select a Reason'
-                        ? AppColors.textGrey
-                        : AppColors.textDark,
+                        ? AppColors.textBody
+                        : AppColors.textHeading,
                   ),
                 ),
               ),
             ),
-            const Icon(Iconsax.arrow_down_1, color: AppColors.shade2, size: 20),
+            const Icon(Iconsax.arrow_down_1, color: AppColors.textBody, size: 20),
           ],
         ),
       ),
@@ -113,7 +113,7 @@ class ContactUsScreen extends GetView<ContactUsController> {
       Container(
         padding: EdgeInsets.symmetric(vertical: 20.h),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
         ),
         child: Column(

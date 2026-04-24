@@ -18,7 +18,7 @@ class PaymentMethodBottomSheet extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(40.r)),
       ),
       child: SafeArea(
@@ -33,7 +33,7 @@ class PaymentMethodBottomSheet extends StatelessWidget {
                 width: 48.w,
                 height: 4.h,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0),
+                  color: AppColors.skeletonBase,
                   borderRadius: BorderRadius.circular(2.r),
                 ),
               ),
@@ -46,12 +46,12 @@ class PaymentMethodBottomSheet extends StatelessWidget {
                 style: AppTextStyles.homeTitle.copyWith(
                   fontSize: 20.sp,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF132235),
+                  color: AppColors.textHeading,
                 ),
               ),
             ),
             SizedBox(height: 16.h),
-            Divider(color: const Color(0xFFF1F5F9), thickness: 1.h),
+            Divider(color: AppColors.bgSoftCircle, thickness: 1.h),
             Obx(() {
               if (controller.isLoading.value &&
                   controller.paymentMethods.isEmpty) {
@@ -118,10 +118,10 @@ class _PaymentMethodTile extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
         decoration: BoxDecoration(
-          color: const Color(0xFFF8F9FD),
+          color: AppColors.surfaceSubtle,
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(
-            color: isSelected ? AppColors.primary : Colors.transparent,
+            color: isSelected ? AppColors.primary : AppColors.transparent,
             width: 1.5.w,
           ),
         ),
@@ -131,7 +131,7 @@ class _PaymentMethodTile extends StatelessWidget {
               asset,
               width: 24.w,
               height: 24.w,
-              color: const Color(0xFF132235),
+              color: AppColors.textHeading,
             ),
             SizedBox(width: 16.w),
             Expanded(
@@ -143,7 +143,7 @@ class _PaymentMethodTile extends StatelessWidget {
                     style: AppTextStyles.homeSubtitle.copyWith(
                       fontSize: 16.sp,
                       fontWeight: FontWeight.w500,
-                      color: const Color(0xFF132235),
+                      color: AppColors.textHeading,
                     ),
                   ),
                   if (walletBalance != null) ...[

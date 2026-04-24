@@ -647,7 +647,7 @@ class ApiService {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24.r),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.cardBackground,
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
           child: Column(
@@ -662,7 +662,7 @@ class ApiService {
                 AppStrings.sessionExpired.tr,
                 style: AppTextStyles.onboardingTitle.copyWith(
                   fontSize: 22.sp,
-                  color: AppColors.shade1,
+                  color: AppColors.textHeading,
                   fontWeight: FontWeight.w700,
                 ),
                 textAlign: TextAlign.center,
@@ -674,7 +674,7 @@ class ApiService {
                 AppStrings.yourSessionHasExpiredPleaseLoginAgainToContinue.tr,
                 style: AppTextStyles.onboardingSubtitle.copyWith(
                   fontSize: 15.sp,
-                  color: AppColors.shade2,
+                  color: AppColors.textBody,
                   height: 1.5,
                 ),
                 textAlign: TextAlign.center,

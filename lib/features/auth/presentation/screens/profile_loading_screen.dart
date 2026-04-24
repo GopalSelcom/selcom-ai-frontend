@@ -55,7 +55,7 @@ class _ProfileLoadingScreenState extends State<ProfileLoadingScreen>
                   AppStrings.loadingYourProfile.tr,
                   style: AppTextStyles.onboardingTitle.copyWith(
                     fontSize: 28.sp,
-                    color: const Color(0xFF132235),
+                    color: AppColors.textHeading,
                   ),
                 ),
                 SizedBox(height: 24.h),
@@ -64,7 +64,7 @@ class _ProfileLoadingScreenState extends State<ProfileLoadingScreen>
                   width: 311.w,
                   height: 10.h,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFDCE1E8),
+                    color: AppColors.progressTrack,
                     borderRadius: BorderRadius.circular(5.r),
                   ),
                   child: AnimatedBuilder(
@@ -103,22 +103,20 @@ class _ProfileLoadingScreenState extends State<ProfileLoadingScreen>
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 7, sigmaY: 7),
                 child: Container(
-                  color: Colors.black.withValues(alpha: 0.1),
+                  color: AppColors.black.withValues(alpha: 0.1),
                   child: Center(
                     child: Container(
                       width: 327.w,
                       margin: EdgeInsets.symmetric(horizontal: 24.w),
                       padding: EdgeInsets.all(16.w),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.white,
                         borderRadius: BorderRadius.circular(24.r),
-                        boxShadow: [
+                        boxShadow: const [
                           BoxShadow(
-                            color: const Color(
-                              0xFF242E49,
-                            ).withValues(alpha: 0.05),
+                            color: AppColors.shadowProfileModal,
                             blurRadius: 21,
-                            offset: const Offset(0, 9),
+                            offset: Offset(0, 9),
                           ),
                         ],
                       ),
@@ -130,7 +128,7 @@ class _ProfileLoadingScreenState extends State<ProfileLoadingScreen>
                             height: 200.h,
                             width: double.infinity,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF2F5F9),
+                              color: AppColors.bgVerificationSurface,
                               borderRadius: BorderRadius.circular(16.r),
                             ),
                             child: SvgPicture.asset(
@@ -145,7 +143,7 @@ class _ProfileLoadingScreenState extends State<ProfileLoadingScreen>
                             AppStrings.verificationSuccessfully.tr,
                             style: AppTextStyles.onboardingTitle.copyWith(
                               fontSize: 24.sp,
-                              color: const Color(0xFF132235),
+                              color: AppColors.textHeading,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -154,7 +152,7 @@ class _ProfileLoadingScreenState extends State<ProfileLoadingScreen>
                             AppStrings.faceScanProcessHasBeenSuccessful.tr,
                             style: AppTextStyles.onboardingSubtitle.copyWith(
                               fontSize: 15.sp,
-                              color: const Color(0xFF364B63),
+                              color: AppColors.textBody,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -195,7 +193,7 @@ class _ProfileLoadingScreenState extends State<ProfileLoadingScreen>
                                     height: 24.h,
                                     width: 24.w,
                                     colorFilter: const ColorFilter.mode(
-                                      Colors.white,
+                                      AppColors.white,
                                       BlendMode.srcIn,
                                     ),
                                   ),

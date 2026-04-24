@@ -38,7 +38,7 @@ class OtpScreen extends GetView<AuthController> {
                       children: [
                         SizedBox(height: 16.h),
                         // Back Button
-                        AppBackButton(color: AppColors.shade1, size: 28.w),
+                        AppBackButton(color: AppColors.textHeading, size: 28.w),
                         SizedBox(height: 32.h),
 
                         // Title
@@ -116,7 +116,7 @@ class OtpScreen extends GetView<AuthController> {
                                   Text(
                                     "Haven't got the confirmation code yet? ",
                                     style: AppTextStyles.body.copyWith(
-                                      color: AppColors.textGrey,
+                                      color: AppColors.textBody,
                                       fontSize: 13.sp,
                                     ),
                                   ),

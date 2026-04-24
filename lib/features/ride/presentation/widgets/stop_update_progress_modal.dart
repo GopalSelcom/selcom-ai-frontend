@@ -13,7 +13,7 @@ class StopUpdateProgressModal extends GetView<DriverAcceptedController> {
     return Container(
       padding: EdgeInsets.all(24.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardBackground,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
       ),
       child: Obx(() {
@@ -26,7 +26,7 @@ class StopUpdateProgressModal extends GetView<DriverAcceptedController> {
               const CircularProgressIndicator(color: AppColors.primary),
               SizedBox(height: 24.h),
             ] else ...[
-              const Icon(Icons.check_circle, color: Colors.green, size: 64),
+              const Icon(Icons.check_circle, color: AppColors.success, size: 64),
               SizedBox(height: 16.h),
             ],
             Text(

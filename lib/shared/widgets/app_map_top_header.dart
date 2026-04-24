@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../core/theme/app_colors.dart';
 
 import 'app_map_profile_chip.dart';
 
@@ -14,7 +15,7 @@ class AppMapTopHeader extends StatelessWidget {
     this.spacing = 12,
     this.onProfileTap,
     this.profileIcon = Icons.person,
-    this.profileIconColor = Colors.black,
+    this.profileIconColor = AppColors.black,
     this.isLoading = false,
     this.isExpanded = false,
   });

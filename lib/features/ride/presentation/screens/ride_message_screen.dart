@@ -16,7 +16,7 @@ class RideMessageScreen extends GetView<RideMessageController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.cardBackground,
       body: SafeArea(
         child: Column(
           children: [
@@ -37,13 +37,13 @@ class RideMessageScreen extends GetView<RideMessageController> {
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.white,
                   borderRadius: BorderRadius.vertical(
                     top: Radius.circular(40.r),
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
+                      color: AppColors.black.withValues(alpha: 0.08),
                       blurRadius: 20,
                       offset: const Offset(0, -4),
                     ),
@@ -72,7 +72,7 @@ class RideMessageScreen extends GetView<RideMessageController> {
       height: 4.h,
       margin: EdgeInsets.only(top: 12.h, bottom: 8.h),
       decoration: BoxDecoration(
-        color: const Color(0xFFE2E8F0),
+        color: AppColors.skeletonBase,
         borderRadius: BorderRadius.circular(40.r),
       ),
     );
@@ -83,7 +83,7 @@ class RideMessageScreen extends GetView<RideMessageController> {
       padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
       child: Row(
         children: [
-          AppBackButton(color: AppColors.shade1, onPressed: controller.goBack),
+          AppBackButton(color: AppColors.textHeading, onPressed: controller.goBack),
           Expanded(
             child: Column(
               children: [
@@ -94,7 +94,7 @@ class RideMessageScreen extends GetView<RideMessageController> {
                 Text(
                   controller.driverSubtitle,
                   style: AppTextStyles.homeCaption.copyWith(
-                    color: const Color(0xFF586377),
+                    color: AppColors.figmaTextSecondary,
                   ),
                 ),
               ],
@@ -109,7 +109,7 @@ class RideMessageScreen extends GetView<RideMessageController> {
             ),
             child: IconButton(
               onPressed: controller.onTapCallDriver,
-              icon: const Icon(Icons.call, color: Colors.white, size: 20),
+              icon: const Icon(Icons.call, color: AppColors.white, size: 20),
             ),
           ),
         ],
@@ -135,7 +135,7 @@ class RideMessageScreen extends GetView<RideMessageController> {
             ),
             child: const Icon(
               Icons.info_outline,
-              color: Colors.white,
+              color: AppColors.white,
               size: 14,
             ),
           ),
@@ -146,7 +146,7 @@ class RideMessageScreen extends GetView<RideMessageController> {
                   .doNotShareYourPersonalDetailsWithRiderBeSafeAndAlwaysCheckYourLuggage
                   .tr,
               style: AppTextStyles.body.copyWith(
-                color: AppColors.shade1,
+                color: AppColors.textHeading,
                 fontSize: 12.sp,
                 fontWeight: FontWeight.w500,
               ),
@@ -183,7 +183,7 @@ class RideMessageScreen extends GetView<RideMessageController> {
             decoration: BoxDecoration(
               color: AppColors.driverBubbleBg,
               borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
+              border: Border.all(color: AppColors.borderLight),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -206,7 +206,7 @@ class RideMessageScreen extends GetView<RideMessageController> {
                 Text(
                   m.text,
                   style: AppTextStyles.body.copyWith(
-                    color: AppColors.shade1,
+                    color: AppColors.textHeading,
                     height: 1.4,
                   ),
                 ),
@@ -216,7 +216,7 @@ class RideMessageScreen extends GetView<RideMessageController> {
                   child: Text(
                     _formatTime(m.sentAt),
                     style: AppTextStyles.homeCaption.copyWith(
-                      color: const Color(0xFF8B9AAC),
+                      color: AppColors.borderInputMuted,
                       fontSize: 10.sp,
                     ),
                   ),
@@ -251,7 +251,7 @@ class RideMessageScreen extends GetView<RideMessageController> {
                   Text(
                     m.displayName!,
                     style: AppTextStyles.homeCaption.copyWith(
-                      color: Colors.white,
+                      color: AppColors.white,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -259,7 +259,7 @@ class RideMessageScreen extends GetView<RideMessageController> {
                 Text(
                   m.text,
                   style: AppTextStyles.body.copyWith(
-                    color: Colors.white,
+                    color: AppColors.white,
                     height: 1.4,
                   ),
                   textAlign: TextAlign.right,
@@ -270,7 +270,7 @@ class RideMessageScreen extends GetView<RideMessageController> {
                   child: Text(
                     _formatTime(m.sentAt),
                     style: AppTextStyles.homeCaption.copyWith(
-                      color: Colors.white.withValues(alpha: 0.8),
+                      color: AppColors.white.withValues(alpha: 0.8),
                       fontSize: 10.sp,
                     ),
                   ),
@@ -290,8 +290,8 @@ class RideMessageScreen extends GetView<RideMessageController> {
         CircleAvatar(
           radius: 18.r,
           backgroundColor: isRider
-              ? Colors.white.withValues(alpha: 0.2)
-              : const Color(0xFFF3F4F6),
+              ? AppColors.white.withValues(alpha: 0.2)
+              : AppColors.bgSoftCircle,
           child: ClipOval(
             child: imageUrl.isNotEmpty
                 ? Image.network(
@@ -302,13 +302,13 @@ class RideMessageScreen extends GetView<RideMessageController> {
                     errorBuilder: (_, __, ___) => Icon(
                       Icons.person,
                       size: 20.sp,
-                      color: isRider ? Colors.white : const Color(0xFF9CA3AF),
+                      color: isRider ? AppColors.white : AppColors.borderInputMuted,
                     ),
                   )
                 : Icon(
                     Icons.person,
                     size: 20.sp,
-                    color: isRider ? Colors.white : const Color(0xFF9CA3AF),
+                    color: isRider ? AppColors.white : AppColors.borderInputMuted,
                   ),
           ),
         ),
@@ -321,7 +321,7 @@ class RideMessageScreen extends GetView<RideMessageController> {
             decoration: BoxDecoration(
               color: AppColors.onlineGreen,
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
+              border: Border.all(color: AppColors.white, width: 2),
             ),
           ),
         ),
@@ -339,9 +339,9 @@ class RideMessageScreen extends GetView<RideMessageController> {
       return Container(
         padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 16.h),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.white,
           border: Border(
-            top: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
+            top: BorderSide(color: AppColors.black.withValues(alpha: 0.06)),
           ),
         ),
         child: Opacity(
@@ -354,9 +354,9 @@ class RideMessageScreen extends GetView<RideMessageController> {
                   child: Container(
                     padding: EdgeInsets.symmetric(horizontal: 16.w),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF9FAFB),
+                      color: AppColors.pageBackground,
                       borderRadius: BorderRadius.circular(32.r),
-                      border: Border.all(color: const Color(0xFFE5E7EB)),
+                      border: Border.all(color: AppColors.borderLight),
                     ),
                     child: Row(
                       children: [
@@ -365,7 +365,7 @@ class RideMessageScreen extends GetView<RideMessageController> {
                             controller: controller.messageController,
                             enabled: allowed,
                             style: AppTextStyles.body.copyWith(
-                              color: AppColors.shade1,
+                              color: AppColors.textHeading,
                             ),
                             decoration: InputDecoration(
                               hintText: allowed
@@ -385,14 +385,14 @@ class RideMessageScreen extends GetView<RideMessageController> {
                   width: 48.w,
                   height: 48.w,
                   decoration: BoxDecoration(
-                    color: allowed ? AppColors.primary : Colors.grey[300],
+                    color: allowed ? AppColors.primary : AppColors.skeletonBase,
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(
                     onPressed: controller.sendCurrentMessage,
                     icon: const Icon(
                       Icons.send_rounded,
-                      color: Colors.white,
+                      color: AppColors.white,
                       size: 24,
                     ),
                   ),

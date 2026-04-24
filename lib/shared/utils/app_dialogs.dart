@@ -48,14 +48,14 @@ class AppDialogs {
       PopScope(
         canPop: false,
         child: Dialog(
-          backgroundColor: Colors.white,
-          surfaceTintColor: Colors.transparent,
+          backgroundColor: AppColors.cardBackground,
+          surfaceTintColor: AppColors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24.r),
           ),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.white,
               borderRadius: BorderRadius.circular(24.r),
             ),
             child: Column(
@@ -93,7 +93,7 @@ class AppDialogs {
                         title,
                         style: AppTextStyles.onboardingTitle.copyWith(
                           fontSize: 22.sp,
-                          color: AppColors.shade1,
+                          color: AppColors.textHeading,
                           fontWeight: FontWeight.w700,
                         ),
                         textAlign: TextAlign.center,
@@ -105,7 +105,7 @@ class AppDialogs {
                         message,
                         style: AppTextStyles.onboardingSubtitle.copyWith(
                           fontSize: 15.sp,
-                          color: AppColors.shade2,
+                          color: AppColors.textBody,
                           height: 1.5,
                         ),
                         textAlign: TextAlign.center,
@@ -149,7 +149,7 @@ class AppDialogs {
         ),
       ),
       barrierDismissible: false,
-      barrierColor: Colors.black.withValues(alpha: 0.12),
+      barrierColor: AppColors.overlayBlack12,
     ).whenComplete(() {
       _isErrorDialogVisible = false;
     });
@@ -163,8 +163,8 @@ class AppDialogs {
   }) {
     Get.dialog(
       Dialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
+        backgroundColor: AppColors.cardBackground,
+        surfaceTintColor: AppColors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24.r),
         ),
@@ -236,14 +236,14 @@ class AppDialogs {
       PopScope(
         canPop: false,
         child: Dialog(
-          backgroundColor: Colors.white,
-          surfaceTintColor: Colors.transparent,
+          backgroundColor: AppColors.cardBackground,
+          surfaceTintColor: AppColors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24.r),
           ),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.white,
               borderRadius: BorderRadius.circular(24.r),
             ),
             padding: EdgeInsets.all(24.w),
@@ -253,12 +253,12 @@ class AppDialogs {
                 Container(
                   padding: EdgeInsets.all(16.w),
                   decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.1),
+                    color: AppColors.successBadge.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.check_circle_outline,
-                    color: Colors.green,
+                    color: AppColors.successBadge,
                     size: 32.sp,
                   ),
                 ),
@@ -285,7 +285,7 @@ class AppDialogs {
                     height: 50.h,
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: Colors.green,
+                      color: AppColors.successBadge,
                       borderRadius: BorderRadius.circular(12.r),
                     ),
                     child: Center(
@@ -302,7 +302,7 @@ class AppDialogs {
         ),
       ),
       barrierDismissible: false,
-      barrierColor: Colors.black.withValues(alpha: 0.12),
+      barrierColor: AppColors.overlayBlack12,
     );
   }
 
@@ -330,14 +330,14 @@ class AppDialogs {
       PopScope(
         canPop: false,
         child: Dialog(
-          backgroundColor: Colors.white,
-          surfaceTintColor: Colors.transparent,
+          backgroundColor: AppColors.cardBackground,
+          surfaceTintColor: AppColors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24.r),
           ),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.white,
               borderRadius: BorderRadius.circular(24.r),
             ),
             padding: EdgeInsets.all(24.w),
@@ -366,7 +366,7 @@ class AppDialogs {
                   title,
                   style: AppTextStyles.onboardingTitle.copyWith(
                     fontSize: 20.sp,
-                    color: AppColors.shade1,
+                    color: AppColors.textHeading,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -377,7 +377,7 @@ class AppDialogs {
                   message,
                   style: AppTextStyles.onboardingSubtitle.copyWith(
                     fontSize: 14.sp,
-                    color: AppColors.shade2,
+                    color: AppColors.textBody,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -393,7 +393,7 @@ class AppDialogs {
                         child: Container(
                           height: 50.h,
                           decoration: BoxDecoration(
-                            color: Colors.transparent,
+                            color: AppColors.transparent,
                             border: Border.all(color: AppColors.divider),
                             borderRadius: BorderRadius.circular(12.r),
                           ),
@@ -402,7 +402,7 @@ class AppDialogs {
                               cancelText,
                               style: AppTextStyles.body.copyWith(
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.shade2,
+                                color: AppColors.textBody,
                               ),
                             ),
                           ),
@@ -450,7 +450,7 @@ class AppDialogs {
         ),
       ),
       barrierDismissible: false,
-      barrierColor: Colors.black.withValues(alpha: 0.12),
+      barrierColor: AppColors.overlayBlack12,
     );
   }
 
@@ -465,8 +465,8 @@ class AppDialogs {
   }) {
     Get.dialog(
       Dialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
+        backgroundColor: AppColors.cardBackground,
+        surfaceTintColor: AppColors.transparent,
         insetPadding: const EdgeInsets.all(13.0),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(28.r),
@@ -481,20 +481,20 @@ class AppDialogs {
                 height: 140.h,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF5F5F5),
+                  color: AppColors.bgMuted,
                   borderRadius: BorderRadius.circular(20.r),
                 ),
                 child: Center(
                   child: Container(
                     padding: EdgeInsets.all(20.w),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.white,
                       borderRadius: BorderRadius.circular(16.r),
-                      boxShadow: [
+                      boxShadow: const [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
+                          color: AppColors.shadowSoft,
                           blurRadius: 10,
-                          offset: const Offset(0, 4),
+                          offset: Offset(0, 4),
                         ),
                       ],
                     ),
@@ -520,7 +520,7 @@ class AppDialogs {
                 title,
                 style: AppTextStyles.onboardingTitle.copyWith(
                   fontSize: 24.sp,
-                  color: const Color(0xFF222222),
+                  color: AppColors.textPrimary,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.5,
                 ),
@@ -533,7 +533,7 @@ class AppDialogs {
                 message,
                 style: AppTextStyles.onboardingSubtitle.copyWith(
                   fontSize: 15.sp,
-                  color: const Color(0xFF666666),
+                  color: AppColors.textSecondary,
                   height: 1.5,
                 ),
                 textAlign: TextAlign.center,
@@ -548,7 +548,7 @@ class AppDialogs {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.white,
                   minimumSize: Size(double.infinity, 56.h),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30.r),
@@ -572,7 +572,7 @@ class AppDialogs {
                   if (onCancel != null) onCancel();
                 },
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Color(0xFFE0E0E0), width: 1.2),
+                  side: const BorderSide(color: AppColors.borderSubtle, width: 1.2),
                   minimumSize: Size(double.infinity, 56.h),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30.r),
@@ -582,7 +582,7 @@ class AppDialogs {
                   AppStrings.maybeLater.tr,
                   style: TextStyle(
                     fontSize: 16.sp,
-                    color: const Color(0xFF9E9E9E),
+                    color: AppColors.textMuted,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -599,10 +599,10 @@ class AppDialogs {
   static void showVerificationSuccessDialog({VoidCallback? onConfirm}) {
     Get.dialog(
       Dialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
+        backgroundColor: AppColors.cardBackground,
+        surfaceTintColor: AppColors.transparent,
         elevation: 20,
-        shadowColor: Colors.black.withValues(alpha: 0.4),
+        shadowColor: AppColors.shadowStrong,
         insetPadding: EdgeInsets.symmetric(horizontal: 24.w),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(32.r),
@@ -618,7 +618,7 @@ class AppDialogs {
                     height: 140.h,
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE8F5E9),
+                      color: AppColors.bgSuccessLight,
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(32.r),
                         topRight: Radius.circular(32.r),
@@ -634,11 +634,11 @@ class AppDialogs {
                     child: Container(
                       padding: EdgeInsets.all(16.w),
                       decoration: BoxDecoration(
-                        color: Colors.green,
+                        color: AppColors.successBadge,
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.green.withValues(alpha: 0.2),
+                            color: AppColors.successBadge.withValues(alpha: 0.2),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -647,7 +647,7 @@ class AppDialogs {
                       child: Icon(
                         Icons.check_circle_rounded,
                         size: 32.w,
-                        color: Colors.white,
+                        color: AppColors.white,
                       ),
                     ),
                   ),
@@ -663,7 +663,7 @@ class AppDialogs {
                     style: AppTextStyles.sectionTitle.copyWith(
                       fontSize: 22.sp,
                       fontWeight: FontWeight.w800,
-                      color: Colors.black,
+                      color: AppColors.black,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -674,7 +674,7 @@ class AppDialogs {
                         .tr,
                     style: AppTextStyles.body.copyWith(
                       fontSize: 16.sp,
-                      color: AppColors.shade2,
+                      color: AppColors.textBody,
                       height: 1.5,
                     ),
                     textAlign: TextAlign.center,
@@ -696,7 +696,7 @@ class AppDialogs {
                         child: Text(
                           AppStrings.gotIt.tr,
                           style: AppTextStyles.body.copyWith(
-                            color: Colors.white,
+                            color: AppColors.white,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -724,10 +724,10 @@ class AppDialogs {
 
     Get.dialog(
       Dialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
+        backgroundColor: AppColors.cardBackground,
+        surfaceTintColor: AppColors.transparent,
         elevation: 20,
-        shadowColor: Colors.black.withValues(alpha: 0.4),
+        shadowColor: AppColors.shadowStrong,
         insetPadding: EdgeInsets.symmetric(horizontal: 24.w),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(32.r),
@@ -743,7 +743,7 @@ class AppDialogs {
                     height: 140.h,
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFDECEA),
+                      color: AppColors.errorBackground,
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(32.r),
                         topRight: Radius.circular(32.r),
@@ -772,7 +772,7 @@ class AppDialogs {
                       child: Icon(
                         Icons.lock_rounded,
                         size: 32.w,
-                        color: Colors.white,
+                        color: AppColors.white,
                       ),
                     ),
                   ),
@@ -788,7 +788,7 @@ class AppDialogs {
                     style: AppTextStyles.sectionTitle.copyWith(
                       fontSize: 22.sp,
                       fontWeight: FontWeight.w800,
-                      color: Colors.black,
+                      color: AppColors.black,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -797,7 +797,7 @@ class AppDialogs {
                     "$message. Please try again in $timeText.",
                     style: AppTextStyles.body.copyWith(
                       fontSize: 16.sp,
-                      color: AppColors.shade2,
+                      color: AppColors.textBody,
                       height: 1.5,
                     ),
                     textAlign: TextAlign.center,
@@ -819,7 +819,7 @@ class AppDialogs {
                         child: Text(
                           AppStrings.gotIt.tr,
                           style: AppTextStyles.body.copyWith(
-                            color: Colors.white,
+                            color: AppColors.white,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -845,7 +845,7 @@ class AppDialogs {
           child: Container(
             padding: EdgeInsets.all(24.w),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.cardBackground,
               borderRadius: BorderRadius.circular(16.r),
             ),
             child: Column(
@@ -857,7 +857,7 @@ class AppDialogs {
                   Text(
                     message,
                     style: AppTextStyles.body.copyWith(
-                      color: AppColors.shade1,
+                      color: AppColors.textHeading,
                       fontSize: 14.sp,
                       decoration: TextDecoration.none,
                     ),

@@ -42,7 +42,7 @@ class MyRidesScreen extends StatelessWidget {
                         child: Text(
                           AppStrings.noPastRidesFound.tr,
                           style: AppTextStyles.body.copyWith(
-                            color: AppColors.shade2,
+                            color: AppColors.textBody,
                           ),
                         ),
                       ),
@@ -78,7 +78,7 @@ class MyRidesScreen extends StatelessWidget {
                             child: Text(
                               AppStrings.past.tr,
                               style: AppTextStyles.body.copyWith(
-                                color: AppColors.shade2,
+                                color: AppColors.textBody,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 15.sp,
                               ),

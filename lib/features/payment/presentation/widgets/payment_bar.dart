@@ -53,7 +53,7 @@ class PaymentBar extends StatelessWidget {
                           Text(
                             AppStrings.payUsing.tr,
                             style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.9),
+                              color: AppColors.white.withValues(alpha: 0.9),
                               fontSize: 15.sp,
                               fontWeight: FontWeight.w500,
                             ),
@@ -61,7 +61,7 @@ class PaymentBar extends StatelessWidget {
                           SizedBox(width: 6.w),
                           SvgPictureAsset(
                             AppAssets.icPaymentArrowUp,
-                            color: Colors.white,
+                            color: AppColors.white,
                             width: 12.w,
                           ),
                         ],
@@ -70,7 +70,7 @@ class PaymentBar extends StatelessWidget {
                       Text(
                         pay?.label ?? AppStrings.selectPayment.tr,
                         style: TextStyle(
-                          color: Colors.white,
+                          color: AppColors.white,
                           fontSize: 18.sp,
                           fontWeight: FontWeight.w600,
                         ),
@@ -83,7 +83,7 @@ class PaymentBar extends StatelessWidget {
                               .cardEndingInPlaceholder
                               .tr, // Mock descriptive text from Figma
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.85),
+                            color: AppColors.white.withValues(alpha: 0.85),
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w400,
                           ),
@@ -95,7 +95,7 @@ class PaymentBar extends StatelessWidget {
             ),
             SizedBox(width: 12.w),
             Material(
-              color: Colors.white,
+              color: AppColors.white,
               borderRadius: BorderRadius.circular(25.r),
               child: InkWell(
                 borderRadius: BorderRadius.circular(25.r),
@@ -135,7 +135,7 @@ class PaymentBar extends StatelessWidget {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (ctx) => const PaymentMethodBottomSheet(),
     );
   }

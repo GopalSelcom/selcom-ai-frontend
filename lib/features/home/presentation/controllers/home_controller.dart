@@ -145,7 +145,7 @@ class HomeController extends GetxController {
 
   Future<void> _loadMapIcons() async {
     pickupMarkerIcon.value = await MapMarkerUtils.createCustomCircleMarker(
-      color: const Color(0xFF4FA3FF),
+      color: AppColors.mapPickupMarkerBlue,
       // Match the blue used in vehicle selection
       size: 60,
     );

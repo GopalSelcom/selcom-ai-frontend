@@ -6,6 +6,7 @@ import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import 'package:get/get.dart';
 import 'package:get/get.dart' hide Response;
 
+import '../theme/app_colors.dart';
 import 'api_service.dart';
 import 'failed_request_queue.dart';
 import 'network_connectivity_service.dart';
@@ -71,8 +72,8 @@ class RetryManager {
 
     await Get.dialog(
       Dialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
+        backgroundColor: AppColors.cardBackground,
+        surfaceTintColor: AppColors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -82,29 +83,29 @@ class RetryManager {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: const BoxDecoration(
-                  color: Color(0xFFFDECEA),
+                  color: AppColors.errorBackground,
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.wifi_off_rounded,
-                  color: Color(0xFFE24B4A),
+                  color: AppColors.error,
                   size: 28,
                 ),
               ),
               const SizedBox(height: 16),
               Text(
                 AppStrings.connectionError.tr,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF132235),
+                  color: AppColors.textHeading,
                 ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
               const Text(
                 "We couldn't complete your request. Please try again.",
-                style: TextStyle(fontSize: 15, color: Color(0xFF364B63)),
+                style: TextStyle(fontSize: 15, color: AppColors.textBody),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -112,8 +113,8 @@ class RetryManager {
                 width: double.infinity,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFF3004C),
-                    foregroundColor: Colors.white,
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.white,
                     minimumSize: const Size(double.infinity, 52),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),

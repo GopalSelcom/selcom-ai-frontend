@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -19,6 +18,7 @@ import '../../../payment/presentation/widgets/payment_status_dialog.dart';
 import '../../../../core/domain/entities/location_entity.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../home/domain/repositories/home_repository.dart';
 import '../../../payment/presentation/controllers/payment_method_controller.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
@@ -281,11 +281,11 @@ class VehicleSelectionController extends GetxController {
         // Single Stop: P (Blue) and D (Green)
         pickupIcon = await MapMarkerUtils.createTextMarker(
           text: 'P',
-          color: const Color(0xFF4FA3FF),
+          color: AppColors.mapPickupMarkerBlue,
         );
         dropIcon = await MapMarkerUtils.createTextMarker(
           text: 'D',
-          color: const Color(0xFF34C759), // Green for Destination
+          color: AppColors.mapDropMarkerGreen,
         );
         stopIcons.clear();
       } else {
@@ -293,7 +293,7 @@ class VehicleSelectionController extends GetxController {
         const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
         pickupIcon = await MapMarkerUtils.createTextMarker(
           text: 'A',
-          color: const Color(0xFF4FA3FF),
+          color: AppColors.mapPickupMarkerBlue,
         );
 
         stopIcons.clear();
@@ -301,7 +301,7 @@ class VehicleSelectionController extends GetxController {
         for (int i = 1; i < letters.length; i++) {
           final icon = await MapMarkerUtils.createTextMarker(
             text: letters[i],
-            color: const Color(0xFFE11D48), // Red for Intermediate Stops
+            color: AppColors.mapStopMarkerRed,
           );
           stopIcons.add(icon);
         }
@@ -313,7 +313,7 @@ class VehicleSelectionController extends GetxController {
             : letters.last;
         dropIcon = await MapMarkerUtils.createTextMarker(
           text: label,
-          color: const Color(0xFF34C759), // Green for Destination
+          color: AppColors.mapDropMarkerGreen,
         );
       }
     } catch (e) {

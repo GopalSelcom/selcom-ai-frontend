@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+import 'package:selcom_rides_frontend/core/theme/app_colors.dart';
 
 import '../../../../core/data/models/requests/submit_ride_rating_request.dart';
 import '../../../../core/errors/failures.dart';
@@ -269,7 +270,7 @@ class RideRatingController extends GetxController {
       isDismissible: true,
       enableDrag: true,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
     );
   }
 

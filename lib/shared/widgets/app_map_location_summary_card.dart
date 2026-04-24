@@ -23,22 +23,20 @@ class AppMapLocationSummaryCard extends StatelessWidget {
   final TextStyle? addressStyle;
   final int maxAddressLines;
 
-  static const Color _borderColor = Color(0xFFD3DDE7);
-
   @override
   Widget build(BuildContext context) {
     return Container(
       height: 61.h,
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: _borderColor),
-        boxShadow: [
+        border: Border.all(color: AppColors.borderMedium),
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: AppColors.shadowMapCard,
             blurRadius: 2,
-            offset: const Offset(0, 1),
+            offset: Offset(0, 1),
           ),
         ],
       ),
@@ -57,7 +55,7 @@ class AppMapLocationSummaryCard extends StatelessWidget {
                   style:
                       labelStyle ??
                       AppTextStyles.homeSubtitle.copyWith(
-                        color: const Color(0xFF2A3143),
+                        color: AppColors.figmaTextPrimary,
                         fontWeight: FontWeight.w600,
                       ),
                 ),
@@ -66,7 +64,7 @@ class AppMapLocationSummaryCard extends StatelessWidget {
                   style:
                       addressStyle ??
                       AppTextStyles.homeCaption.copyWith(
-                        color: const Color(0xFF586377),
+                        color: AppColors.figmaTextSecondary,
                         fontSize: 13.sp,
                       ),
                   maxLines: maxAddressLines,

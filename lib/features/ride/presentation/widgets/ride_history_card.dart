@@ -37,13 +37,13 @@ class RideHistoryCard extends StatelessWidget {
     }
     switch (status) {
       case RideStatus.rideCompleted:
-        return const Color(0xFF0EAD36); // Green
+        return AppColors.iconSuccess;
       case RideStatus.cancelled:
-        return const Color(0xFFE53935); // Red
+        return AppColors.error;
       case RideStatus.noDriverFound:
-        return const Color(0xFF9CA3AF); // Grey
+        return AppColors.borderInputMuted;
       default:
-        return const Color(0xFF0EAD36);
+        return AppColors.iconSuccess;
     }
   }
 
@@ -67,8 +67,8 @@ class RideHistoryCard extends StatelessWidget {
       child: Container(
         margin: EdgeInsets.only(bottom: 16.h),
         decoration: BoxDecoration(
-          color: const Color(0xFFF8F9FD),
-          border: Border.all(color: const Color(0xFFE6E9EE), width: 0.78),
+          color: AppColors.surfaceSubtle,
+          border: Border.all(color: AppColors.borderWalletCard, width: 0.78),
           borderRadius: BorderRadius.circular(16.r),
         ),
         child: Column(
@@ -92,7 +92,7 @@ class RideHistoryCard extends StatelessWidget {
                       style: TextStyle(
                         fontFamily: AppTextStyles.metropolisFont,
                         fontWeight: FontWeight.w500,
-                        color: Colors.black,
+                        color: AppColors.black,
                         fontSize: 15.sp,
                       ),
                     ),
@@ -127,7 +127,7 @@ class RideHistoryCard extends StatelessWidget {
 
             // Top Divider
             Divider(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: AppColors.black.withValues(alpha: 0.1),
               height: 1,
               thickness: 0.5,
             ),
@@ -145,7 +145,7 @@ class RideHistoryCard extends StatelessWidget {
 
             // Bottom Divider
             Divider(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: AppColors.black.withValues(alpha: 0.1),
               height: 1,
               thickness: 0.5,
             ),
@@ -161,7 +161,7 @@ class RideHistoryCard extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: AppTextStyles.metropolisFont,
                       fontWeight: FontWeight.w500,
-                      color: Colors.black,
+                      color: AppColors.black,
                       fontSize: 15.sp,
                     ),
                   ),
@@ -170,7 +170,7 @@ class RideHistoryCard extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: AppTextStyles.metropolisFont,
                       fontWeight: FontWeight.w500,
-                      color: const Color(0xFF0EAD36),
+                      color: AppColors.iconSuccess,
                       fontSize: 15.sp,
                     ),
                   ),

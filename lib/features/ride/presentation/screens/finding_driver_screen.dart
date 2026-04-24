@@ -26,7 +26,7 @@ class FindingDriverScreen extends StatelessWidget {
     final sheetController = DraggableScrollableController();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.pageBackground,
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -42,9 +42,9 @@ class FindingDriverScreen extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.white,
-                    Colors.white.withValues(alpha: 0.92),
-                    Colors.white.withValues(alpha: 0),
+                    AppColors.white,
+                    AppColors.white.withValues(alpha: 0.92),
+                    AppColors.white.withValues(alpha: 0),
                   ],
                 ),
               ),
@@ -171,14 +171,14 @@ class FindingDriverScreen extends StatelessWidget {
             Polyline(
               polylineId: const PolylineId('active_route'),
               points: routePoints,
-              color: const Color(0xFF3073E8),
+              color: AppColors.inputBorderActive,
               width: 5,
             ),
           if (routePoints.isEmpty && isPickupRoute && driver != null)
             Polyline(
               polylineId: const PolylineId('fallback_pickup_route'),
               points: [driver, pickup],
-              color: const Color(0xFF3073E8).withValues(alpha: 0.5),
+              color: AppColors.inputBorderActive.withValues(alpha: 0.5),
               width: 3,
             ),
         },
@@ -188,8 +188,8 @@ class FindingDriverScreen extends StatelessWidget {
                   circleId: const CircleId('search_pulse'),
                   center: pickup,
                   radius: _searchCircleRadiusM,
-                  fillColor: const Color(0xFF2668D2).withValues(alpha: 0.12),
-                  strokeColor: const Color(0xFF2668D2).withValues(alpha: 0.35),
+                  fillColor: AppColors.inputBorderActive.withValues(alpha: 0.12),
+                  strokeColor: AppColors.inputBorderActive.withValues(alpha: 0.35),
                   strokeWidth: 2,
                 ),
               }
@@ -211,7 +211,7 @@ class FindingDriverScreen extends StatelessWidget {
             width: 64.w,
             height: 5.h,
             decoration: BoxDecoration(
-              color: const Color(0xFFE2E8F0),
+              color: AppColors.skeletonBase,
               borderRadius: BorderRadius.circular(37.r),
             ),
           ),
@@ -224,7 +224,7 @@ class FindingDriverScreen extends StatelessWidget {
             style: AppTextStyles.homeTitle.copyWith(
               fontSize: 20.sp,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF132235),
+              color: AppColors.textHeading,
               letterSpacing: -0.4,
             ),
           ),
@@ -236,7 +236,7 @@ class FindingDriverScreen extends StatelessWidget {
             textAlign: TextAlign.center,
             style: AppTextStyles.homeCaption.copyWith(
               fontSize: 15.sp,
-              color: const Color(0xFF364B63),
+              color: AppColors.textBody,
               height: 1.33,
             ),
           ),
@@ -254,13 +254,13 @@ class FindingDriverScreen extends StatelessWidget {
           return Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.access_time, size: 22.sp, color: Colors.black87),
+              Icon(Icons.access_time, size: 22.sp, color: AppColors.textMapIcon),
               SizedBox(width: 6.w),
               Text(
                 '$mins minutes remain',
                 style: AppTextStyles.homeCaption.copyWith(
                   fontSize: 15.sp,
-                  color: const Color(0xFF364B63),
+                  color: AppColors.textBody,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -316,9 +316,9 @@ class FindingDriverScreen extends StatelessWidget {
           return Container(
             height: 52.h,
             decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
+              color: AppColors.bgSoftCircle,
               borderRadius: BorderRadius.circular(26.r),
-              border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+              border: Border.all(color: AppColors.skeletonBase, width: 1),
             ),
             child: Stack(
               clipBehavior: Clip.none,
@@ -331,12 +331,12 @@ class FindingDriverScreen extends StatelessWidget {
                     child: Container(
                       width: fillW,
                       height: double.infinity,
-                      decoration: const BoxDecoration(color: Color(0xFFE11D48)),
+                      decoration: const BoxDecoration(color: AppColors.mapStopMarkerRed),
                       alignment: Alignment.center,
                       child: ShaderMask(
                         shaderCallback: (bounds) {
                           return const LinearGradient(
-                            colors: [Colors.transparent, Colors.white],
+                            colors: [AppColors.transparent, AppColors.white],
                             stops: [0.0, 0.4],
                           ).createShader(bounds);
                         },
@@ -350,22 +350,22 @@ class FindingDriverScreen extends StatelessWidget {
                             children: [
                               Icon(
                                 Icons.chevron_right,
-                                color: Colors.white,
+                                color: AppColors.white,
                                 size: 24,
                               ),
                               Icon(
                                 Icons.chevron_right,
-                                color: Colors.white,
+                                color: AppColors.white,
                                 size: 24,
                               ),
                               Icon(
                                 Icons.chevron_right,
-                                color: Colors.white,
+                                color: AppColors.white,
                                 size: 24,
                               ),
                               Icon(
                                 Icons.chevron_right,
-                                color: Colors.white,
+                                color: AppColors.white,
                                 size: 24,
                               ),
                             ],
@@ -383,11 +383,11 @@ class FindingDriverScreen extends StatelessWidget {
                     width: carSize,
                     height: carSize,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE11D48),
+                      color: AppColors.mapStopMarkerRed,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
+                          color: AppColors.black.withValues(alpha: 0.1),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -400,7 +400,7 @@ class FindingDriverScreen extends StatelessWidget {
                       height: 32.w,
                       placeholderBuilder: (_) => Icon(
                         Icons.directions_car,
-                        color: Colors.white,
+                        color: AppColors.white,
                         size: 32.sp,
                       ),
                     ),

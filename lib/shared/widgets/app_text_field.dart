@@ -80,7 +80,7 @@ class AppTextField extends StatelessWidget {
             prefixIcon: prefixIcon,
             suffixIcon: suffixIcon,
             filled: true,
-            fillColor: Colors.white,
+            fillColor: AppColors.white,
             contentPadding: EdgeInsets.symmetric(
               horizontal: 16.w,
               vertical: 18.h,
@@ -121,8 +121,8 @@ class AppTextField extends StatelessWidget {
                   style: AppTextStyles.bodySecondary.copyWith(
                     fontSize: 12.sp,
                     color: length >= maxLength!
-                        ? Colors.red
-                        : const Color(0xFF9CA3AF),
+                        ? AppColors.textError
+                        : AppColors.borderInputMuted,
                   ),
                 );
               },

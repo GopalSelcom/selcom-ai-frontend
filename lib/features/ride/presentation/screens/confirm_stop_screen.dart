@@ -106,7 +106,7 @@ class _ConfirmStopScreenState extends State<ConfirmStopScreen> {
                             child: Text(
                               AppStrings.stopLocation.tr,
                               style: AppTextStyles.caption.copyWith(
-                                color: Colors.white,
+                                color: AppColors.white,
                                 fontSize: 14.sp,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -128,10 +128,10 @@ class _ConfirmStopScreenState extends State<ConfirmStopScreen> {
                       decoration: BoxDecoration(
                         color: AppColors.primary,
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
+                        border: Border.all(color: AppColors.white, width: 2),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
+                            color: AppColors.black.withOpacity(0.2),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -149,9 +149,9 @@ class _ConfirmStopScreenState extends State<ConfirmStopScreen> {
             top: MediaQuery.of(context).padding.top + 10.h,
             left: 16.w,
             child: CircleAvatar(
-              backgroundColor: Colors.white,
+              backgroundColor: AppColors.cardBackground,
               child: IconButton(
-                icon: const Icon(Icons.arrow_back, color: AppColors.shade1),
+                icon: const Icon(Icons.arrow_back, color: AppColors.textHeading),
                 onPressed: () => Get.back(),
               ),
             ),
@@ -163,11 +163,11 @@ class _ConfirmStopScreenState extends State<ConfirmStopScreen> {
             child: Container(
               padding: EdgeInsets.all(24.w),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.cardBackground,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: AppColors.black.withOpacity(0.1),
                     blurRadius: 20,
                     offset: const Offset(0, -5),
                   ),
@@ -217,7 +217,7 @@ class _ConfirmStopScreenState extends State<ConfirmStopScreen> {
                       child: Text(
                         'Confirm Stop',
                         style: AppTextStyles.button.copyWith(
-                          color: Colors.white,
+                          color: AppColors.white,
                         ),
                       ),
                     ),

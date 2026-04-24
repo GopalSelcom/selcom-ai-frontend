@@ -32,13 +32,13 @@ class FavoriteLocationsScreen extends GetView<FavoriteLocationsController> {
                       Icon(
                         Icons.favorite_border,
                         size: 64.sp,
-                        color: AppColors.shade2.withValues(alpha: 0.5),
+                        color: AppColors.textBody.withValues(alpha: 0.5),
                       ),
                       SizedBox(height: 16.h),
                       Text(
                         AppStrings.noFavoriteLocationsYet.tr,
                         style: AppTextStyles.homeSubtitle.copyWith(
-                          color: AppColors.shade2,
+                          color: AppColors.textBody,
                         ),
                       ),
                     ],
@@ -72,7 +72,7 @@ class FavoriteLocationsScreen extends GetView<FavoriteLocationsController> {
       child: Container(
         padding: EdgeInsets.all(12.w),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.white,
           borderRadius: BorderRadius.circular(16.r),
           border: Border.all(color: AppColors.divider),
         ),
@@ -81,7 +81,7 @@ class FavoriteLocationsScreen extends GetView<FavoriteLocationsController> {
             Container(
               padding: EdgeInsets.all(10.w),
               decoration: const BoxDecoration(
-                color: Color(0xFFF1F5F9),
+                color: AppColors.bgSoftCircle,
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -99,14 +99,14 @@ class FavoriteLocationsScreen extends GetView<FavoriteLocationsController> {
                     (place.label ?? 'Location').capitalizeFirst ?? 'Location',
                     style: AppTextStyles.body.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: AppColors.shade1,
+                      color: AppColors.textHeading,
                     ),
                   ),
                   SizedBox(height: 4.h),
                   Text(
                     place.address ?? '',
                     style: AppTextStyles.caption.copyWith(
-                      color: AppColors.shade2,
+                      color: AppColors.textBody,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

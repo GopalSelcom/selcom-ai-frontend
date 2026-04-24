@@ -85,10 +85,10 @@ class OnboardingScreen extends GetView<OnboardingController> {
                             decoration: BoxDecoration(
                               color: controller.currentIndex.value == index
                                   ? AppColors.primary
-                                  : Colors.transparent,
+                                  : AppColors.transparent,
                               border: Border.all(
                                 color: controller.currentIndex.value != index
-                                    ? AppColors.textGrey
+                                    ? AppColors.textBody
                                     : AppColors.primary,
                                 width: 1.5,
                               ),
@@ -130,7 +130,7 @@ class OnboardingScreen extends GetView<OnboardingController> {
                               SvgPicture.asset(
                                 AppAssets.icArrowRight,
                                 colorFilter: const ColorFilter.mode(
-                                  Colors.white,
+                                  AppColors.white,
                                   BlendMode.srcIn,
                                 ),
                                 height: 24.h,

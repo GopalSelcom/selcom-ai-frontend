@@ -81,7 +81,7 @@ class ProfileScreen extends StatelessWidget {
                         child: Text(
                           AppStrings.appSettings.tr,
                           style: AppTextStyles.sectionTitle.copyWith(
-                            color: AppColors.shade2,
+                            color: AppColors.textBody,
                             fontSize: 15.sp,
                           ),
                         ),
@@ -103,7 +103,7 @@ class ProfileScreen extends StatelessWidget {
                               horizontal: 16.w,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: AppColors.white,
                               border: Border.all(color: AppColors.divider),
                               borderRadius: BorderRadius.circular(16.r),
                             ),
@@ -147,7 +147,7 @@ class ProfileScreen extends StatelessWidget {
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 4.0, sigmaY: 4.0),
                     child: Container(
-                      color: const Color(0x6D808080), // Dim color
+                      color: AppColors.overlayGray43,
                     ),
                   ),
                 ),
@@ -194,7 +194,7 @@ class ProfileScreen extends StatelessWidget {
           Obx(
             () => controller.isLoading.value
                 ? Container(
-                    color: Colors.black26,
+                    color: AppColors.black.withValues(alpha: 0.26),
                     child: const Center(child: CircularProgressIndicator()),
                   )
                 : const SizedBox.shrink(),
@@ -230,7 +230,7 @@ class ProfileScreen extends StatelessWidget {
                   Text(
                     name,
                     style: AppTextStyles.screenTitle.copyWith(
-                      color: Colors.white,
+                      color: AppColors.white,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -239,7 +239,7 @@ class ProfileScreen extends StatelessWidget {
                     onTap: controller.toggleEditMode,
                     child: Icon(
                       Iconsax.user_edit,
-                      color: Colors.white,
+                      color: AppColors.white,
                       size: 24.w,
                     ),
                   ),
@@ -249,7 +249,7 @@ class ProfileScreen extends StatelessWidget {
               Text(
                 mobile,
                 style: AppTextStyles.body.copyWith(
-                  color: Colors.white.withValues(alpha: 0.8),
+                  color: AppColors.white.withValues(alpha: 0.8),
                 ),
               ),
             ],
@@ -313,7 +313,7 @@ class ProfileScreen extends StatelessWidget {
         Text(
           label,
           style: AppTextStyles.caption.copyWith(
-            color: Colors.white,
+            color: AppColors.white,
             fontSize: 12.sp,
           ),
         ),
@@ -325,7 +325,7 @@ class ProfileScreen extends StatelessWidget {
           textInputAction: textInputAction,
           onSubmitted: onSubmitted,
           style: AppTextStyles.screenTitle.copyWith(
-            color: Colors.white,
+            color: AppColors.white,
             fontSize: 30.sp,
             fontWeight: FontWeight.w800,
             letterSpacing: -1.0,
@@ -336,12 +336,12 @@ class ProfileScreen extends StatelessWidget {
             contentPadding: EdgeInsets.only(bottom: 8.h),
             enabledBorder: UnderlineInputBorder(
               borderSide: BorderSide(
-                color: Colors.white.withValues(alpha: 0.3),
+                color: AppColors.white.withValues(alpha: 0.3),
                 width: 1.0,
               ),
             ),
             focusedBorder: const UnderlineInputBorder(
-              borderSide: BorderSide(color: Colors.white, width: 2.0),
+              borderSide: BorderSide(color: AppColors.white, width: 2.0),
             ),
           ),
         ),

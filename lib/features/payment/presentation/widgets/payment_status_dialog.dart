@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 
 enum PaymentStatus { pending, success }
@@ -19,8 +20,8 @@ class PaymentStatusDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isPending = status == PaymentStatus.pending;
 
-    final Color bgColor = isPending ? const Color(0xFFE6DCCD) : const Color(0xFFD6EADC);
-    final Color circleColor = isPending ? const Color(0xFFF59E0B) : const Color(0xFF22C55E);
+    final Color bgColor = isPending ? AppColors.bgPaymentPending : AppColors.bgPaymentSuccess;
+    final Color circleColor = isPending ? AppColors.warningStrong : AppColors.onlineGreen;
     final String asset = isPending ? AppAssets.icPaymentPending : AppAssets.icPaymentSuccess;
     final String title = isPending
         ? 'Request sent. Payment will be deducted automatically from your wallet to book your ride.'
@@ -31,7 +32,7 @@ class PaymentStatusDialog extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.white,
           borderRadius: BorderRadius.circular(28.r),
         ),
         child: Column(
@@ -57,7 +58,7 @@ class PaymentStatusDialog extends StatelessWidget {
                       asset,
                       width: 44.w,
                       height: 44.w,
-                      color: Colors.white,
+                      color: AppColors.white,
                     ),
                   ),
                 ),
@@ -72,7 +73,7 @@ class PaymentStatusDialog extends StatelessWidget {
                   fontFamily: 'Metropolis',
                   fontSize: 20.sp,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF132235),
+                  color: AppColors.textHeading,
                   height: 1.3,
                   letterSpacing: -0.4,
                 ),
@@ -88,7 +89,7 @@ class PaymentStatusDialog extends StatelessWidget {
                     fontFamily: 'Metropolis',
                     fontSize: 15.sp,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF364B63),
+                    color: AppColors.textBody,
                     height: 1.33,
                   ),
                 ),

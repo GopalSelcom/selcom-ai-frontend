@@ -24,7 +24,7 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
           child: Container(
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.white,
               borderRadius: BorderRadius.vertical(top: Radius.circular(36.r)),
             ),
             child: Obx(() {
@@ -50,7 +50,7 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
                               width: 64.w,
                               height: 5.h,
                               decoration: BoxDecoration(
-                                color: const Color(0xFFD1D5DB),
+                                color: AppColors.dividerHandle,
                                 borderRadius: BorderRadius.circular(20.r),
                               ),
                             ),
@@ -63,7 +63,7 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
                               child: Text(
                                 AppStrings.skip.tr,
                                 style: AppTextStyles.homeCaption.copyWith(
-                                  color: const Color(0xFF364B63),
+                                  color: AppColors.textBody,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -82,7 +82,7 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
                                   children: [
                                     CircleAvatar(
                                       radius: 40.r,
-                                      backgroundColor: const Color(0xFFFFD2DE),
+                                      backgroundColor: AppColors.bgAvatarLightPink,
                                       backgroundImage:
                                           ride.driverImage.trim().isEmpty
                                           ? null
@@ -98,7 +98,7 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
                                                         .toUpperCase(),
                                               style: AppTextStyles.homeTitle
                                                   .copyWith(
-                                                    color: AppColors.shade1,
+                                                    color: AppColors.textHeading,
                                                     fontWeight: FontWeight.w700,
                                                   ),
                                             )
@@ -110,7 +110,7 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
                                       style: AppTextStyles.homeTitle.copyWith(
                                         fontSize: 36.sp / 2,
                                         fontWeight: FontWeight.w700,
-                                        color: const Color(0xFF132235),
+                                        color: AppColors.textHeading,
                                       ),
                                     ),
                                     SizedBox(height: 4.h),
@@ -119,7 +119,7 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
                                           .helpSelcomGoDoBetterByRatingThisTrip
                                           .tr,
                                       style: AppTextStyles.homeCaption.copyWith(
-                                        color: const Color(0xFF364B63),
+                                        color: AppColors.textBody,
                                         fontSize: 15.sp,
                                       ),
                                     ),
@@ -142,9 +142,7 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
                                                       fontSize: 20.sp,
                                                       fontWeight:
                                                           FontWeight.w700,
-                                                      color: const Color(
-                                                        0xFF132235,
-                                                      ),
+                                                      color: AppColors.textHeading,
                                                     ),
                                               ),
                                               SizedBox(height: 2.h),
@@ -152,9 +150,7 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
                                                 controller.rideDateLabel,
                                                 style: AppTextStyles.homeCaption
                                                     .copyWith(
-                                                      color: const Color(
-                                                        0xFF364B63,
-                                                      ),
+                                                      color: AppColors.textBody,
                                                       fontSize: 15.sp,
                                                     ),
                                               ),
@@ -211,9 +207,9 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
       width: double.infinity,
       padding: EdgeInsets.all(14.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8F9FD),
+        color: AppColors.surfaceSubtle,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFFE6E9EE), width: 0.8),
+        border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -241,7 +237,7 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
         Text(
           label,
           style: AppTextStyles.homeCaption.copyWith(
-            color: const Color(0xFF6B7280),
+            color: AppColors.textTertiary,
             fontSize: 12.sp,
           ),
         ),
@@ -249,7 +245,7 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
         Text(
           value,
           style: AppTextStyles.homeCaption.copyWith(
-            color: const Color(0xFF132235),
+            color: AppColors.textHeading,
             fontSize: 14.sp,
             fontWeight: FontWeight.w600,
           ),

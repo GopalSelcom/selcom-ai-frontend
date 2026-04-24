@@ -16,7 +16,7 @@ class SelcomPesaSelfieBottomSheet extends GetView<PaymentMethodsController> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(36.r)),
       ),
       padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
@@ -29,7 +29,7 @@ class SelcomPesaSelfieBottomSheet extends GetView<PaymentMethodsController> {
               width: 64.w,
               height: 5.h,
               decoration: BoxDecoration(
-                color: const Color(0xFFD1D5DB),
+                color: AppColors.dividerHandle,
                 borderRadius: BorderRadius.circular(20.r),
               ),
             ),
@@ -41,7 +41,7 @@ class SelcomPesaSelfieBottomSheet extends GetView<PaymentMethodsController> {
             style: AppTextStyles.sectionTitle.copyWith(
               fontSize: 20.sp,
               fontWeight: FontWeight.w700,
-              color: AppColors.shade1,
+              color: AppColors.textHeading,
             ),
           ),
           SizedBox(height: 12.h),
@@ -65,7 +65,7 @@ class SelcomPesaSelfieBottomSheet extends GetView<PaymentMethodsController> {
                 .tr,
             textAlign: TextAlign.center,
             style: AppTextStyles.body.copyWith(
-              color: AppColors.shade2,
+              color: AppColors.textBody,
               fontSize: 14.sp,
               height: 1.5,
             ),

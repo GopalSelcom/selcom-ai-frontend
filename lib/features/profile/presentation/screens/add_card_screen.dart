@@ -119,7 +119,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                                         controller.isCvvHidden.value
                                             ? Icons.visibility_off_outlined
                                             : Icons.visibility_outlined,
-                                        color: AppColors.shade2.withValues(
+                                        color: AppColors.textBody.withValues(
                                           alpha: 0.7,
                                         ),
                                         size: 20.w,

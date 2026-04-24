@@ -61,10 +61,10 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
     return Scaffold(
       backgroundColor: AppColors.pageBackground,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.transparent,
         elevation: 0,
         automaticallyImplyLeading: false,
-        leading: canGoBack ? const AppBackButton(color: AppColors.shade1) : null,
+        leading: canGoBack ? const AppBackButton(color: AppColors.textHeading) : null,
         title: Text(
           label,
           style: AppTextStyles.homeTitle.copyWith(
@@ -98,7 +98,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
                   }),
                   if (_isGeocoding)
                     Container(
-                      color: Colors.white.withOpacity(0.5),
+                      color: AppColors.white.withOpacity(0.5),
                       child: const Center(child: CircularProgressIndicator()),
                     ),
                 ],
@@ -115,9 +115,9 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
       padding: EdgeInsets.symmetric(horizontal: 16.w),
       height: 54.h,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 0.8),
+        border: Border.all(color: AppColors.skeletonBase, width: 0.8),
       ),
       child: Center(
         child: TextField(
@@ -126,7 +126,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
           textAlignVertical: TextAlignVertical.center,
           onChanged: (value) => controller.searchQuery.value = value,
           style: AppTextStyles.homeSubtitle.copyWith(
-            color: AppColors.shade1,
+            color: AppColors.textHeading,
             fontWeight: FontWeight.w500,
           ),
           decoration: InputDecoration(
@@ -138,7 +138,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
                 () => controller.searchQuery.value.isEmpty
                     ? Icon(
                         Icons.search,
-                        color: const Color(0xFF94A3B8),
+                        color: AppColors.textHint,
                         size: 22.sp,
                       )
                     : SvgPicture.asset(
@@ -161,7 +161,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
                       padding: EdgeInsets.zero,
                       icon: Icon(
                         Icons.cancel,
-                        color: const Color(0xFF94A3B8),
+                        color: AppColors.textHint,
                         size: 20.sp,
                       ),
                       onPressed: () {
@@ -183,7 +183,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
       return Center(
         child: Text(
           AppStrings.noLocationsFound.tr,
-          style: AppTextStyles.homeCaption.copyWith(color: AppColors.shade2),
+          style: AppTextStyles.homeCaption.copyWith(color: AppColors.textBody),
         ),
       );
     }
@@ -211,7 +211,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
       return Center(
         child: Text(
           AppStrings.noRecentLocations.tr,
-          style: AppTextStyles.homeCaption.copyWith(color: AppColors.shade2),
+          style: AppTextStyles.homeCaption.copyWith(color: AppColors.textBody),
         ),
       );
     }
@@ -245,13 +245,13 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.white,
           borderRadius: BorderRadius.circular(16.r),
           // Subtle border/shadow as per image
-          border: Border.all(color: const Color(0xFFF1F5F9), width: 0.5),
+          border: Border.all(color: AppColors.bgSoftCircle, width: 0.5),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.01),
+              color: AppColors.black.withValues(alpha: 0.01),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -262,12 +262,12 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
             Container(
               padding: EdgeInsets.all(8.w),
               decoration: const BoxDecoration(
-                color: Color(0xFFF1F5F9),
+                color: AppColors.bgSoftCircle,
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.access_time_outlined,
-                color: const Color(0xFF94A3B8),
+                color: AppColors.textHint,
                 size: 20.sp,
               ),
             ),
@@ -280,7 +280,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
                     title,
                     style: AppTextStyles.homeSubtitle.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: AppColors.shade1,
+                      color: AppColors.textHeading,
                       fontSize: 15.sp,
                     ),
                     maxLines: 1,
@@ -290,7 +290,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
                   Text(
                     subtitle,
                     style: AppTextStyles.homeCaption.copyWith(
-                      color: AppColors.shade2,
+                      color: AppColors.textBody,
                       fontSize: 13.sp,
                       fontWeight: FontWeight.w400,
                     ),

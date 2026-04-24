@@ -3,9 +3,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
-import 'package:get/get.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 
 class RideDateFormatter {
@@ -100,7 +100,7 @@ class RideLocationsTimeline extends StatelessWidget {
           address: startAddress,
           icon: _buildLetterIcon(
             isMulti ? 'A' : 'P',
-            color: const Color(0xFF4FA3FF),
+            color: AppColors.mapPickupMarkerBlue,
           ),
           showBottomLine: true,
         ),
@@ -112,7 +112,7 @@ class RideLocationsTimeline extends StatelessWidget {
             address: filteredStops[i].address,
             icon: _buildLetterIcon(
               letters[i + 1],
-              color: const Color(0xFFE11D48),
+              color: AppColors.mapStopMarkerRed,
             ),
             showBottomLine: true,
           ),
@@ -123,7 +123,7 @@ class RideLocationsTimeline extends StatelessWidget {
           address: endAddress,
           icon: _buildLetterIcon(
             isMulti ? letters[filteredStops.length + 1] : 'D',
-            color: const Color(0xFF34C759), // Green
+            color: AppColors.mapDropMarkerGreen,
           ),
           showBottomLine: false,
         ),
@@ -140,7 +140,7 @@ class RideLocationsTimeline extends StatelessWidget {
       child: Text(
         label,
         style: TextStyle(
-          color: Colors.white,
+          color: AppColors.white,
           fontSize: 12.sp,
           fontWeight: FontWeight.w800,
         ),
@@ -168,7 +168,7 @@ class RideLocationsTimeline extends StatelessWidget {
                     margin: EdgeInsets.symmetric(vertical: 2.h),
                     child: CustomPaint(
                       painter: DashedLinePainter(
-                        color: Colors.black.withOpacity(0.5),
+                        color: AppColors.black.withOpacity(0.5),
                       ),
                     ),
                   ),
@@ -187,7 +187,7 @@ class RideLocationsTimeline extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: AppTextStyles.metropolisFont,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black,
+                      color: AppColors.black,
                       fontSize: 16.sp,
                     ),
                   ),
@@ -196,7 +196,7 @@ class RideLocationsTimeline extends StatelessWidget {
                     address,
                     style: TextStyle(
                       fontFamily: AppTextStyles.metropolisFont,
-                      color: const Color(0xFF364B63),
+                      color: AppColors.textBody,
                       fontSize: 13.sp,
                     ),
                   ),
@@ -264,7 +264,7 @@ class FareBreakdownRow extends StatelessWidget {
             style: TextStyle(
               fontFamily: AppTextStyles.metropolisFont,
               fontWeight: isTotal ? FontWeight.w500 : FontWeight.w400,
-              color: const Color(0xFF364B63),
+              color: AppColors.textBody,
               fontSize: 14.sp,
             ),
           ),
@@ -274,7 +274,7 @@ class FareBreakdownRow extends StatelessWidget {
           style: TextStyle(
             fontFamily: AppTextStyles.metropolisFont,
             fontWeight: isTotal ? FontWeight.w500 : FontWeight.w500,
-            color: const Color(0xFF364B63),
+            color: AppColors.textBody,
             fontSize: 14.sp,
           ),
         ),
@@ -291,7 +291,7 @@ class NeedHelpRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Iconsax.headphone5, color: const Color(0xFF364B63), size: 24.w),
+        Icon(Iconsax.headphone5, color: AppColors.textBody, size: 24.w),
         SizedBox(width: 8.w),
         GestureDetector(
           onTap: () => Get.toNamed(AppRoutes.contactUs),
@@ -300,7 +300,7 @@ class NeedHelpRow extends StatelessWidget {
             style: TextStyle(
               fontFamily: AppTextStyles.metropolisFont,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF364B63),
+              color: AppColors.textBody,
               fontSize: 15.sp,
             ),
           ),
@@ -324,7 +324,7 @@ class RideRatingStars extends StatelessWidget {
         final isFilled = rating != null && index < rating!.floor();
         return Icon(
           Icons.star,
-          color: isFilled ? const Color(0xFFFFCC00) : const Color(0xFFE6E9EE),
+          color: isFilled ? AppColors.ratingStarFilled : AppColors.ratingStarEmpty,
           size: starSize.w,
         );
       }),

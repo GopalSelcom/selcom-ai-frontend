@@ -74,7 +74,7 @@ class PaymentMethodsController extends GetxController {
     Get.bottomSheet(
       const SelcomPesaConnectBottomSheet(),
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
     );
   }
 
@@ -86,7 +86,7 @@ class PaymentMethodsController extends GetxController {
     Get.bottomSheet(
       const SelcomPesaPhoneInputBottomSheet(),
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
     );
   }
 
@@ -134,7 +134,7 @@ class PaymentMethodsController extends GetxController {
     Get.bottomSheet(
       const SelcomPesaOtpBottomSheet(),
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
     );
   }
 
@@ -154,7 +154,7 @@ class PaymentMethodsController extends GetxController {
     Get.bottomSheet(
       const SelcomPesaSelfieBottomSheet(),
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
     );
   }
 
@@ -202,8 +202,8 @@ class PaymentMethodsController extends GetxController {
           rightEyeProbability: 0.5,
         ),
       ],
-      lineColor: Colors.blue.shade200,
-      dotColor: Colors.blue.shade200,
+      lineColor: AppColors.inputBorderActive.withValues(alpha: 0.35),
+      dotColor: AppColors.inputBorderActive.withValues(alpha: 0.35),
       displayDots: true,
       displayLines: true,
     );
@@ -219,13 +219,13 @@ class PaymentMethodsController extends GetxController {
               step: M7LivelynessStep.smile,
               title: AppStrings.smile.tr,
               isCompleted: false,
-              detectionColor: Colors.blue.shade200,
+              detectionColor: AppColors.inputBorderActive.withValues(alpha: 0.35),
             ),
             M7LivelynessStepItem(
               step: M7LivelynessStep.blink,
               title: AppStrings.blinkYourEyes.tr,
               isCompleted: false,
-              detectionColor: Colors.blue.shade200,
+              detectionColor: AppColors.inputBorderActive.withValues(alpha: 0.35),
             ),
           ],
           captureButtonColor: AppColors.primary,
@@ -270,7 +270,7 @@ class PaymentMethodsController extends GetxController {
           onPrimaryPressed: Get.back,
         ),
         isScrollControlled: true,
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.transparent,
       );
     }
   }

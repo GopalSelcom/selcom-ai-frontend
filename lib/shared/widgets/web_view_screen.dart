@@ -35,7 +35,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
     /// 🔥 Initialize controller synchronously (IMPORTANT)
     webController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(const Color(0x00000000))
+      ..setBackgroundColor(AppColors.transparent)
       ..setNavigationDelegate(
         NavigationDelegate(
           onNavigationRequest: (request) {

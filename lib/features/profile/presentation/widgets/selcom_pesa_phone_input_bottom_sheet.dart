@@ -18,7 +18,7 @@ class SelcomPesaPhoneInputBottomSheet
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(36.r)),
       ),
       padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
@@ -31,7 +31,7 @@ class SelcomPesaPhoneInputBottomSheet
               width: 64.w,
               height: 5.h,
               decoration: BoxDecoration(
-                color: const Color(0xFFD1D5DB),
+                color: AppColors.dividerHandle,
                 borderRadius: BorderRadius.circular(20.r),
               ),
             ),
@@ -43,7 +43,7 @@ class SelcomPesaPhoneInputBottomSheet
             style: AppTextStyles.sectionTitle.copyWith(
               fontSize: 20.sp,
               fontWeight: FontWeight.w700,
-              color: AppColors.shade1,
+              color: AppColors.textHeading,
             ),
           ),
           SizedBox(height: 12.h),
@@ -55,7 +55,7 @@ class SelcomPesaPhoneInputBottomSheet
             child: Text(
               AppStrings.enterPhoneNumber.tr,
               style: AppTextStyles.body.copyWith(
-                color: AppColors.shade2,
+                color: AppColors.textBody,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -82,7 +82,7 @@ class SelcomPesaPhoneInputBottomSheet
                   AppStrings.value255.tr,
                   style: AppTextStyles.body.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: AppColors.shade1,
+                    color: AppColors.textHeading,
                   ),
                 ),
               ),

@@ -57,7 +57,7 @@ class SettingsToggleTile extends StatelessWidget {
                   child: Text(
                     title,
                     style: AppTextStyles.cardTitle.copyWith(
-                      color: AppColors.shade1,
+                      color: AppColors.textHeading,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -74,9 +74,9 @@ class SettingsToggleTile extends StatelessWidget {
                     }
                     if (selected) return AppColors.primary;
                     if (disabled) {
-                      return AppColors.shade2.withValues(alpha: 0.6);
+                      return AppColors.textBody.withValues(alpha: 0.6);
                     }
-                    return AppColors.shade2;
+                    return AppColors.textBody;
                   }),
                   trackColor: WidgetStateProperty.resolveWith((states) {
                     final selected = states.contains(WidgetState.selected);
@@ -99,7 +99,7 @@ class SettingsToggleTile extends StatelessWidget {
             SizedBox(height: 8.h),
             Text(
               subtitle,
-              style: AppTextStyles.body.copyWith(color: AppColors.shade2),
+              style: AppTextStyles.body.copyWith(color: AppColors.textBody),
             ),
             SizedBox(height: 12.h),
             Container(
@@ -114,14 +114,14 @@ class SettingsToggleTile extends StatelessWidget {
                   Icon(
                     Iconsax.info_circle,
                     size: 14.w,
-                    color: AppColors.shade2,
+                    color: AppColors.textBody,
                   ),
                   SizedBox(width: 8.w),
                   Expanded(
                     child: Text(
                       statusText,
                       style: AppTextStyles.caption.copyWith(
-                        color: AppColors.shade2,
+                        color: AppColors.textBody,
                       ),
                     ),
                   ),
@@ -141,7 +141,7 @@ class SettingsToggleTile extends StatelessWidget {
                   Text(
                     AppStrings.savingChanges.tr,
                     style: AppTextStyles.caption.copyWith(
-                      color: AppColors.shade2,
+                      color: AppColors.textBody,
                     ),
                   ),
                 ],

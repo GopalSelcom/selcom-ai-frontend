@@ -14,7 +14,6 @@ import 'core/di/injection_container.dart' as di;
 import 'core/localization/delegate.dart';
 import 'core/localization/getx_languages_translations.dart';
 import 'core/localization/localization.dart';
-import 'core/localization/app_strings.dart';
 import 'core/services/analytics_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/bindings/initial_binding.dart';

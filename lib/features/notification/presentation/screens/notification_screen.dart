@@ -40,7 +40,7 @@ class NotificationScreen extends StatelessWidget {
                         vertical: 6.h,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: AppColors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20.r),
                       ),
                       child: controller.isMarkAllLoading.value
@@ -48,14 +48,14 @@ class NotificationScreen extends StatelessWidget {
                               width: 14.w,
                               height: 14.w,
                               child: const CircularProgressIndicator(
-                                color: Colors.white,
+                                color: AppColors.white,
                                 strokeWidth: 2,
                               ),
                             )
                           : Text(
                               "Mark all read (${controller.unreadCount.value})",
                               style: AppTextStyles.homeCaption.copyWith(
-                                color: Colors.white,
+                                color: AppColors.white,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -137,15 +137,15 @@ class NotificationScreen extends StatelessWidget {
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
           color: notification.isRead
-              ? Colors.white
-              : const Color(0xFFF0F9FF), // Unread bg
+              ? AppColors.white
+              : AppColors.bgUnreadNotification,
           borderRadius: BorderRadius.circular(16.r),
           border: notification.isRead
               ? null
               : Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
+              color: AppColors.black.withValues(alpha: 0.03),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -161,7 +161,7 @@ class NotificationScreen extends StatelessWidget {
                 height: 8.w,
                 margin: EdgeInsets.only(right: 8.w, top: 6.h),
                 decoration: const BoxDecoration(
-                  color: Colors.red,
+                  color: AppColors.danger,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -198,7 +198,7 @@ class NotificationScreen extends StatelessWidget {
                             fontWeight: notification.isRead
                                 ? FontWeight.w500
                                 : FontWeight.bold,
-                            color: AppColors.shade1,
+                            color: AppColors.textHeading,
                           ),
                         ),
                       ),
@@ -222,7 +222,7 @@ class NotificationScreen extends StatelessWidget {
                         vertical: 4.h,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF1F5F9),
+                        color: AppColors.bgSoftCircle,
                         borderRadius: BorderRadius.circular(4.r),
                       ),
                       child: Text(
@@ -230,7 +230,7 @@ class NotificationScreen extends StatelessWidget {
                         style: AppTextStyles.homeCaption.copyWith(
                           fontSize: 10.sp,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.shade1,
+                          color: AppColors.textHeading,
                         ),
                       ),
                     ),
@@ -251,12 +251,12 @@ class NotificationScreen extends StatelessWidget {
           Icon(
             Icons.notifications_none_outlined,
             size: 80.sp,
-            color: AppColors.shade2.withValues(alpha: 0.2),
+            color: AppColors.textBody.withValues(alpha: 0.2),
           ),
           SizedBox(height: 16.h),
           Text(
             AppStrings.noNotificationsYet.tr,
-            style: AppTextStyles.homeSubtitle.copyWith(color: AppColors.shade2),
+            style: AppTextStyles.homeSubtitle.copyWith(color: AppColors.textBody),
           ),
           SizedBox(height: 8.h),
           Text(
@@ -272,34 +272,34 @@ class NotificationScreen extends StatelessWidget {
   Color _getIconBackgroundColor(int? type) {
     switch (type) {
       case 500:
-        return const Color(0xFFE0F2FE);
+        return AppColors.bgInfoLight;
       case 501:
-        return const Color(0xFFEDE9FE);
+        return AppColors.bgPurpleLight;
       case 502:
-        return const Color(0xFFFEF3C7);
+        return AppColors.bgWarningLight;
       case 503:
-        return const Color(0xFFDCFCE7);
+        return AppColors.bgGreenLight;
       case 504:
-        return const Color(0xFFFFEDD5);
+        return AppColors.bgOrangeLight;
       default:
-        return const Color(0xFFF1F5F9);
+        return AppColors.bgSoftCircle;
     }
   }
 
   Color _getIconColor(int? type) {
     switch (type) {
       case 500:
-        return const Color(0xFF0284C7);
+        return AppColors.iconInfo;
       case 501:
-        return const Color(0xFF6D28D9);
+        return AppColors.iconPurple;
       case 502:
-        return const Color(0xFFD97706);
+        return AppColors.iconWarning;
       case 503:
-        return const Color(0xFF16A34A);
+        return AppColors.iconSuccess;
       case 504:
-        return const Color(0xFFEA580C);
+        return AppColors.iconOrange;
       default:
-        return AppColors.shade2;
+        return AppColors.textBody;
     }
   }
 

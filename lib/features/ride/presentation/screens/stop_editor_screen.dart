@@ -124,7 +124,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
     return Scaffold(
       backgroundColor: AppColors.pageBackground,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.cardBackground,
         elevation: 0,
         centerTitle: true,
         title: Text(
@@ -157,7 +157,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: _stops.length,
                   proxyDecorator: (widget, index, animation) {
-                    return Material(color: Colors.transparent, child: widget);
+                    return Material(color: AppColors.transparent, child: widget);
                   },
                   itemBuilder: (context, index) {
                     final stop = _stops[index];
@@ -167,11 +167,11 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                       child: Container(
                         padding: EdgeInsets.all(12.w),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.cardBackground,
                           borderRadius: BorderRadius.circular(12.r),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.04),
+                              color: AppColors.black.withOpacity(0.04),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -304,17 +304,17 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
       final isDecrease = preview.direction == 'down';
       final color = isIncrease
           ? AppColors.error
-          : (isDecrease ? Colors.green : AppColors.shade2);
+          : (isDecrease ? AppColors.success : AppColors.textBody);
       final sign = isIncrease ? '+' : (isDecrease ? '-' : '');
 
       return Container(
         padding: EdgeInsets.all(20.w),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.cardBackground,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: AppColors.black.withOpacity(0.08),
               blurRadius: 15,
               offset: const Offset(0, -5),
             ),

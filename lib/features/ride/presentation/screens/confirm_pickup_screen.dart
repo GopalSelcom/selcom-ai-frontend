@@ -69,7 +69,7 @@ class ConfirmPickupScreen extends StatelessWidget {
                             child: Text(
                               AppStrings.pickupPoint.tr,
                               style: AppTextStyles.homeCaption.copyWith(
-                                color: Colors.white,
+                                color: AppColors.white,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -92,9 +92,9 @@ class ConfirmPickupScreen extends StatelessWidget {
               top: MediaQuery.paddingOf(context).top + 10.h,
               left: 16.w,
               child: CircleAvatar(
-                backgroundColor: Colors.white,
+                backgroundColor: AppColors.cardBackground,
                 child: AppBackButton(
-                  color: AppColors.shade1,
+                  color: AppColors.textHeading,
                   alignment: Alignment.center,
                   size: 22.w,
                   hitSize: 40.w,
@@ -106,11 +106,11 @@ class ConfirmPickupScreen extends StatelessWidget {
             child: Container(
               width: double.infinity,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
+                    color: AppColors.black.withValues(alpha: 0.08),
                     blurRadius: 16,
                     offset: const Offset(0, -4),
                   ),
@@ -129,7 +129,7 @@ class ConfirmPickupScreen extends StatelessWidget {
                           width: 48.w,
                           height: 4.h,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFE2E8F0),
+                            color: AppColors.skeletonBase,
                             borderRadius: BorderRadius.circular(2.r),
                           ),
                         ),
@@ -140,14 +140,14 @@ class ConfirmPickupScreen extends StatelessWidget {
                         style: AppTextStyles.homeTitle.copyWith(
                           fontSize: 28.sp / 2,
                           fontWeight: FontWeight.w700,
-                          color: Colors.black,
+                          color: AppColors.black,
                         ),
                       ),
                       SizedBox(height: 4.h),
                       Text(
                         AppStrings.selectANearbyPointForEasierPickup.tr,
                         style: AppTextStyles.homeCaption.copyWith(
-                          color: AppColors.shade2,
+                          color: AppColors.textBody,
                         ),
                       ),
                       SizedBox(height: 14.h),
@@ -160,9 +160,9 @@ class ConfirmPickupScreen extends StatelessWidget {
                           width: double.infinity,
                           padding: EdgeInsets.all(14.w),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF8F9FD),
+                            color: AppColors.surfaceSubtle,
                             borderRadius: BorderRadius.circular(14.r),
-                            border: Border.all(color: const Color(0xFFE6E9EE)),
+                            border: Border.all(color: AppColors.borderWalletCard),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -170,7 +170,7 @@ class ConfirmPickupScreen extends StatelessWidget {
                               Text(
                                 title.isEmpty ? 'Pickup point' : title,
                                 style: AppTextStyles.homeSubtitle.copyWith(
-                                  color: AppColors.shade1,
+                                  color: AppColors.textHeading,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
@@ -178,7 +178,7 @@ class ConfirmPickupScreen extends StatelessWidget {
                               Text(
                                 fullAddress,
                                 style: AppTextStyles.homeCaption.copyWith(
-                                  color: AppColors.shade2,
+                                  color: AppColors.textBody,
                                 ),
                               ),
                               if (c.isResolvingAddress.value) ...[
@@ -196,7 +196,7 @@ class ConfirmPickupScreen extends StatelessWidget {
                                     Text(
                                       AppStrings.updatingAddress.tr,
                                       style: AppTextStyles.homeCaption.copyWith(
-                                        color: AppColors.shade2,
+                                        color: AppColors.textBody,
                                       ),
                                     ),
                                   ],
@@ -227,14 +227,14 @@ class ConfirmPickupScreen extends StatelessWidget {
                                     width: 20.w,
                                     height: 20.w,
                                     child: const CircularProgressIndicator(
-                                      color: Colors.white,
+                                      color: AppColors.white,
                                       strokeWidth: 2,
                                     ),
                                   )
                                 : Text(
                                     AppStrings.confirmPickup.tr,
                                     style: AppTextStyles.button.copyWith(
-                                      color: Colors.white,
+                                      color: AppColors.white,
                                     ),
                                   ),
                           ),

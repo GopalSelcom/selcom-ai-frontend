@@ -15,6 +15,7 @@ import '../../../../core/data/models/responses/nearbyRiders/response/rider_statu
 import '../../../../core/data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
@@ -105,11 +106,11 @@ class FindingDriverController extends GetxController {
   Future<void> _loadMarkerIcons() async {
     pickupIcon.value = await MapMarkerUtils.createTextMarker(
       text: 'P',
-      color: const Color(0xFF4FA3FF), // Blue for Pickup
+      color: AppColors.mapPickupMarkerBlue,
     );
     dropIcon.value = await MapMarkerUtils.createTextMarker(
       text: 'D',
-      color: const Color(0xFF34C759), // Green for Destination
+      color: AppColors.mapDropMarkerGreen,
     );
     // Initial attempt to load the icon for the requested vehicle type
     await _loadDriverMarkerIcon(vehicleType: requestedVehicleType);
@@ -594,7 +595,7 @@ class FindingDriverController extends GetxController {
           : const */
       const CancelConfirmationDialog(),
       barrierDismissible: false,
-      barrierColor: Colors.black.withValues(alpha: 0.12),
+      barrierColor: AppColors.overlayBlack12,
     );
 
     if (confirmResult != true) return;
@@ -613,7 +614,7 @@ class FindingDriverController extends GetxController {
         ],
       ),
       barrierDismissible: false,
-      barrierColor: Colors.black.withValues(alpha: 0.12),
+      barrierColor: AppColors.overlayBlack12,
     );
 
     if (reason == null) return;

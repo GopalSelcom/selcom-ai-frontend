@@ -9,7 +9,7 @@ class AppMapProfileChip extends StatelessWidget {
     super.key,
     this.onTap,
     this.icon = Icons.person_outline,
-    this.iconColor = Colors.black87,
+    this.iconColor = AppColors.textMapIcon,
     this.isLoading = false,
   });
 
@@ -18,19 +18,17 @@ class AppMapProfileChip extends StatelessWidget {
   final Color iconColor;
   final bool isLoading;
 
-  static const Color _borderColor = Color(0xFFD3DDE7);
-
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
       return Shimmer.fromColors(
-        baseColor: const Color(0xFFE2E8F0),
-        highlightColor: const Color(0xFFF8FAFC),
+        baseColor: AppColors.skeletonBase,
+        highlightColor: AppColors.skeletonHighlight,
         child: Container(
           width: 64.w,
           constraints: BoxConstraints(minHeight: 61.h),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.white,
             borderRadius: BorderRadius.circular(16.r),
           ),
         ),
@@ -41,12 +39,12 @@ class AppMapProfileChip extends StatelessWidget {
       width: 64.w,
       height: 61.h,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: AppColors.shade5),
+        border: Border.all(color: AppColors.borderDefault),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: AppColors.shadowMapCard,
             blurRadius: 2,
             offset: const Offset(0, 1),
           ),
@@ -62,7 +60,7 @@ class AppMapProfileChip extends StatelessWidget {
     }
 
     return Material(
-      color: Colors.transparent,
+      color: AppColors.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16.r),

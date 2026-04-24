@@ -1,9 +1,9 @@
 import 'dart:io';
-import 'dart:ui';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:developer' as developer;
+import '../../theme/app_colors.dart';
 import '../storage_service.dart';
 
 class AndroidOrderTrackingManager {
@@ -217,7 +217,7 @@ class AndroidOrderTrackingManager {
               contentTitle: contentTitle,
               summaryText: null,
             ),
-            color: const Color(0xFFF3004C),
+            color: AppColors.primary,
             colorized: true,
             ticker: status,
           );

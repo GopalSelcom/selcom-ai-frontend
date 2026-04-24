@@ -30,7 +30,7 @@ class PromocodeScreen extends StatelessWidget {
                     AppStrings.enterPromocode.tr,
                     style: AppTextStyles.bodySecondary.copyWith(
                       fontSize: 15.sp,
-                      color: AppColors.shade2,
+                      color: AppColors.textBody,
                     ),
                   ),
                   SizedBox(height: 12.h),
@@ -40,7 +40,7 @@ class PromocodeScreen extends StatelessWidget {
                     AppStrings.promocodeList.tr,
                     style: AppTextStyles.bodySecondary.copyWith(
                       fontSize: 15.sp,
-                      color: AppColors.shade2,
+                      color: AppColors.textBody,
                     ),
                   ),
                   SizedBox(height: 12.h),
@@ -70,7 +70,7 @@ class PromocodeScreen extends StatelessWidget {
   Widget _buildPromoInputField(PromocodeController controller) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
           color: AppColors.inputBorderDefault.withValues(alpha: 0.5),
@@ -125,7 +125,7 @@ class PromocodeScreen extends StatelessWidget {
   Widget _buildPromoCard(PromocodeModel promo, PromocodeController controller) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
           color: AppColors.inputBorderDefault.withValues(alpha: 0.5),
@@ -147,14 +147,14 @@ class PromocodeScreen extends StatelessWidget {
                         style: AppTextStyles.body.copyWith(
                           fontWeight: FontWeight.w700,
                           fontSize: 14.sp,
-                          color: AppColors.shade1,
+                          color: AppColors.textHeading,
                         ),
                       ),
                       SizedBox(height: 4.h),
                       Text(
                         promo.subtitle,
                         style: AppTextStyles.caption.copyWith(
-                          color: AppColors.shade2,
+                          color: AppColors.textBody,
                           fontSize: 13.sp,
                         ),
                       ),
@@ -179,7 +179,7 @@ class PromocodeScreen extends StatelessWidget {
                 Text(
                   promo.footer,
                   style: AppTextStyles.caption.copyWith(
-                    color: AppColors.shade2,
+                    color: AppColors.textBody,
                     fontSize: 13.sp,
                   ),
                 ),

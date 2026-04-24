@@ -69,7 +69,7 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
         ),
       ),
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
     );
   }
 
@@ -93,16 +93,16 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                       vertical: 18.h,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF1F3F7),
+                      color: AppColors.bgCardDetailsSurface,
                       borderRadius: BorderRadius.circular(16.r),
-                      border: Border.all(color: const Color(0xFFE6E9EE)),
+                      border: Border.all(color: AppColors.borderWalletCard),
                     ),
                     child: Row(
                       children: [
                         Text(
                           AppStrings.visa.tr,
                           style: AppTextStyles.sectionTitle.copyWith(
-                            color: const Color(0xFF0057A0),
+                            color: AppColors.textBrandVisaPrimary,
                             fontWeight: FontWeight.w900,
                             fontStyle: FontStyle.italic,
                             fontSize: 34.sp * 0.55,
@@ -112,7 +112,7 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                         Text(
                           widget.card.fullNumber,
                           style: AppTextStyles.body.copyWith(
-                            color: AppColors.shade1,
+                            color: AppColors.textHeading,
                             fontSize: 17.sp,
                             fontWeight: FontWeight.w700,
                           ),

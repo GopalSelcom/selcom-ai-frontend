@@ -14,7 +14,7 @@ class SelcomPesaConnectBottomSheet extends GetView<PaymentMethodsController> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(36.r)),
       ),
       padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
@@ -27,7 +27,7 @@ class SelcomPesaConnectBottomSheet extends GetView<PaymentMethodsController> {
               width: 64.w,
               height: 5.h,
               decoration: BoxDecoration(
-                color: const Color(0xFFD1D5DB),
+                color: AppColors.dividerHandle,
                 borderRadius: BorderRadius.circular(20.r),
               ),
             ),
@@ -39,7 +39,7 @@ class SelcomPesaConnectBottomSheet extends GetView<PaymentMethodsController> {
             style: AppTextStyles.sectionTitle.copyWith(
               fontSize: 20.sp,
               fontWeight: FontWeight.w700,
-              color: AppColors.shade1,
+              color: AppColors.textHeading,
             ),
           ),
           SizedBox(height: 32.h),
@@ -54,7 +54,7 @@ class SelcomPesaConnectBottomSheet extends GetView<PaymentMethodsController> {
             width: double.infinity,
             padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
-              color: const Color(0xFFEAF9F1), // Light green
+              color: AppColors.bgSuccessBanner,
               borderRadius: BorderRadius.circular(12.r),
             ),
             child: Text(
@@ -62,7 +62,7 @@ class SelcomPesaConnectBottomSheet extends GetView<PaymentMethodsController> {
                   .youCanStillAbleToRequestMoneyOnSelcomPesaUsingAnotherNumber
                   .tr,
               style: AppTextStyles.caption.copyWith(
-                color: const Color(0xFF1D9E75), // Success green
+                color: AppColors.success,
                 fontWeight: FontWeight.w500,
                 fontSize: 14.sp,
               ),
@@ -134,23 +134,23 @@ class _StepperItem extends StatelessWidget {
                 width: 48.w,
                 height: 48.h,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8F9FD),
+                  color: AppColors.surfaceSubtle,
                   shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFFE6E9EE), width: 1),
+                  border: Border.all(color: AppColors.borderWalletCard, width: 1),
                 ),
                 child: Center(
                   child: Text(
                     step,
                     style: AppTextStyles.body.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: AppColors.shade1,
+                      color: AppColors.textHeading,
                     ),
                   ),
                 ),
               ),
               if (!isLast)
                 Expanded(
-                  child: Container(width: 2.w, color: const Color(0xFFE6E9EE)),
+                  child: Container(width: 2.w, color: AppColors.borderWalletCard),
                 ),
             ],
           ),
@@ -163,7 +163,7 @@ class _StepperItem extends StatelessWidget {
                 Text(
                   description,
                   style: AppTextStyles.body.copyWith(
-                    color: AppColors.shade2,
+                    color: AppColors.textBody,
                     fontSize: 15.sp,
                     height: 1.4,
                   ),

@@ -8,7 +8,7 @@ class AppTheme {
         seedColor: AppColors.primary,
         primary: AppColors.primary,
         surface: AppColors.pageBackground,
-        onSurface: AppColors.textDark,
+        onSurface: AppColors.textHeading,
         error: AppColors.error,
         secondary: AppColors.info,
       ),
@@ -18,11 +18,11 @@ class AppTheme {
         elevation: 0,
         centerTitle: true,
         titleTextStyle: TextStyle(
-          color: AppColors.textDark,
+          color: AppColors.textHeading,
           fontSize: 18,
           fontWeight: FontWeight.w600,
         ),
-        iconTheme: IconThemeData(color: AppColors.textDark),
+        iconTheme: IconThemeData(color: AppColors.textHeading),
       ),
       useMaterial3: true,
       cardTheme: CardThemeData(
@@ -41,8 +41,8 @@ class AppTheme {
         seedColor: AppColors.primary,
         primary: AppColors.primary,
         brightness: Brightness.dark,
-        surface: const Color(0xFF121212),
-        onSurface: Colors.white,
+        surface: AppColors.bgDarkSurface,
+        onSurface: AppColors.white,
       ),
       useMaterial3: true,
     );

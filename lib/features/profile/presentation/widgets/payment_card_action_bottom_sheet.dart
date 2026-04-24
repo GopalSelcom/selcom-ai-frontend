@@ -35,7 +35,7 @@ class PaymentCardActionBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(36.r)),
       ),
       padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 28.h),
@@ -48,7 +48,7 @@ class PaymentCardActionBottomSheet extends StatelessWidget {
               width: 64.w,
               height: 5.h,
               decoration: BoxDecoration(
-                color: const Color(0xFFD1D5DB),
+                color: AppColors.dividerHandle,
                 borderRadius: BorderRadius.circular(12.r),
               ),
             ),
@@ -61,7 +61,7 @@ class PaymentCardActionBottomSheet extends StatelessWidget {
                 child: Text(
                   title,
                   style: AppTextStyles.sectionTitle.copyWith(
-                    color: AppColors.shade1,
+                    color: AppColors.textHeading,
                     fontSize: 32.sp * 0.6,
                     fontWeight: FontWeight.w700,
                     height: 1.25,
@@ -83,7 +83,7 @@ class PaymentCardActionBottomSheet extends StatelessWidget {
                 TextSpan(
                   text: 'VISA',
                   style: AppTextStyles.sectionTitle.copyWith(
-                    color: const Color(0xFF0057A0),
+                    color: AppColors.textBrandVisaPrimary,
                     fontWeight: FontWeight.w900,
                     fontStyle: FontStyle.italic,
                     fontSize: 16.sp,
@@ -92,7 +92,7 @@ class PaymentCardActionBottomSheet extends StatelessWidget {
                 TextSpan(
                   text: ' $cardNumber',
                   style: AppTextStyles.body.copyWith(
-                    color: AppColors.shade1,
+                    color: AppColors.textHeading,
                     fontSize: 15.sp,
                     fontWeight: FontWeight.w500,
                   ),
@@ -104,7 +104,7 @@ class PaymentCardActionBottomSheet extends StatelessWidget {
           Text(
             description,
             style: AppTextStyles.body.copyWith(
-              color: AppColors.shade2,
+              color: AppColors.textBody,
               fontSize: 14.sp,
               height: 1.5,
             ),

@@ -114,7 +114,7 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                               borderRadius: BorderRadius.circular(20.r),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
+                                  color: AppColors.black.withValues(alpha: 0.1),
                                   blurRadius: 8,
                                   offset: const Offset(0, 4),
                                 ),
@@ -123,7 +123,7 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                             child: Text(
                               AppStrings.pickupPoint.tr,
                               style: AppTextStyles.homeCaption.copyWith(
-                                color: Colors.white,
+                                color: AppColors.white,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -148,9 +148,9 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
               top: MediaQuery.of(context).padding.top + 10.h,
               left: 16.w,
               child: CircleAvatar(
-                backgroundColor: Colors.white,
+                backgroundColor: AppColors.cardBackground,
                 child: AppBackButton(
-                  color: AppColors.shade1,
+                  color: AppColors.textHeading,
                   alignment: Alignment.center,
                   size: 22.w,
                   hitSize: 40.w,
@@ -169,11 +169,11 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: AppColors.black.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),
@@ -187,7 +187,7 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
             width: 50.w,
             height: 4.h,
             decoration: BoxDecoration(
-              color: const Color(0xFFE2E8F0),
+              color: AppColors.skeletonBase,
               borderRadius: BorderRadius.circular(2.r),
             ),
           ),
@@ -201,12 +201,12 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                     Container(
                       padding: EdgeInsets.all(8.w),
                       decoration: const BoxDecoration(
-                        color: Color(0xFFECFDF5),
+                        color: AppColors.bgMintLight,
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         Icons.place,
-                        color: const Color(0xFF10B981),
+                        color: AppColors.successMint,
                         size: 24.sp,
                       ),
                     ),
@@ -226,7 +226,7 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                           Text(
                             AppStrings.selectANearbyPointForEasierPickup.tr,
                             style: AppTextStyles.homeCaption.copyWith(
-                              color: AppColors.shade2,
+                              color: AppColors.textBody,
                               fontSize: 13.sp,
                             ),
                           ),
@@ -240,9 +240,9 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                 Container(
                   padding: EdgeInsets.all(16.w),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
+                    color: AppColors.pageBackground,
                     borderRadius: BorderRadius.circular(16.r),
-                    border: Border.all(color: const Color(0xFFF1F5F9)),
+                    border: Border.all(color: AppColors.bgSoftCircle),
                   ),
                   child: Row(
                     children: [
@@ -261,7 +261,7 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                                 _title.value,
                                 style: AppTextStyles.homeSubtitle.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: AppColors.shade1,
+                                  color: AppColors.textHeading,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -270,7 +270,7 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                               Text(
                                 _subtitle.value,
                                 style: AppTextStyles.homeCaption.copyWith(
-                                  color: AppColors.shade2,
+                                  color: AppColors.textBody,
                                   fontSize: 13.sp,
                                 ),
                                 maxLines: 2,
@@ -324,12 +324,12 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                         Text(
                           AppStrings.confirmPickup.tr,
                           style: AppTextStyles.body.copyWith(
-                            color: Colors.white,
+                            color: AppColors.white,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         SizedBox(width: 8.w),
-                        const Icon(Icons.arrow_forward, color: Colors.white),
+                        const Icon(Icons.arrow_forward, color: AppColors.white),
                       ],
                     ),
                   ),
@@ -355,7 +355,7 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
         insetPadding: EdgeInsets.symmetric(horizontal: 24.w),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.white,
             borderRadius: BorderRadius.circular(24.r),
           ),
           child: Column(
@@ -370,7 +370,7 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                     height: 120.h,
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFECFDF5),
+                      color: AppColors.bgMintLight,
                       borderRadius: BorderRadius.vertical(
                         top: Radius.circular(24.r),
                       ),
@@ -382,12 +382,12 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                       Container(
                         padding: EdgeInsets.all(12.w),
                         decoration: const BoxDecoration(
-                          color: Color(0xFF10B981),
+                          color: AppColors.successMint,
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
                           Icons.check,
-                          color: Colors.white,
+                          color: AppColors.white,
                           size: 40.sp,
                         ),
                       ),
@@ -398,11 +398,11 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                           vertical: 6.h,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.white,
                           borderRadius: BorderRadius.circular(20.r),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
+                              color: AppColors.black.withValues(alpha: 0.05),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -417,7 +417,7 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                               label,
                               style: AppTextStyles.homeSubtitle.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.shade1,
+                                color: AppColors.textHeading,
                               ),
                             ),
                           ],
@@ -444,9 +444,9 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                     Container(
                       padding: EdgeInsets.all(16.w),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.white,
                         borderRadius: BorderRadius.circular(16.r),
-                        border: Border.all(color: const Color(0xFFF1F5F9)),
+                        border: Border.all(color: AppColors.bgSoftCircle),
                       ),
                       child: Row(
                         children: [
@@ -467,7 +467,7 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                                   title,
                                   style: AppTextStyles.homeSubtitle.copyWith(
                                     fontWeight: FontWeight.bold,
-                                    color: AppColors.shade1,
+                                    color: AppColors.textHeading,
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -476,7 +476,7 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                                 Text(
                                   subtitle,
                                   style: AppTextStyles.homeCaption.copyWith(
-                                    color: AppColors.shade2,
+                                    color: AppColors.textBody,
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -509,14 +509,14 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                                   width: 20.w,
                                   height: 20.h,
                                   child: const CircularProgressIndicator(
-                                    color: Colors.white,
+                                    color: AppColors.white,
                                     strokeWidth: 2,
                                   ),
                                 )
                               : Text(
                                   AppStrings.yes.tr,
                                   style: AppTextStyles.body.copyWith(
-                                    color: Colors.white,
+                                    color: AppColors.white,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -530,7 +530,7 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                       child: Obx(
                         () => OutlinedButton(
                           style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Color(0xFFE2E8F0)),
+                            side: const BorderSide(color: AppColors.skeletonBase),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(25.r),
                             ),
@@ -541,7 +541,7 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                           child: Text(
                             AppStrings.changeLocation.tr,
                             style: AppTextStyles.body.copyWith(
-                              color: AppColors.shade2,
+                              color: AppColors.textBody,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -569,7 +569,7 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
       asset,
       width: 16.w,
       colorFilter: const ColorFilter.mode(
-        Color(0xFFB45309), // Amber-ish color for icons in the image
+        AppColors.iconAmber,
         BlendMode.srcIn,
       ),
     );

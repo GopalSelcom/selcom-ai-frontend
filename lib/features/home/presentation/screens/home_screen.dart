@@ -61,7 +61,7 @@ class HomeScreen extends GetView<HomeController> {
               addressWidget: _buildModernAddressBox(),
               onProfileTap: controller.openProfile,
               profileIcon: Icons.person,
-              profileIconColor: Colors.black,
+              profileIconColor: AppColors.black,
               isLoading: controller.isLoadingHomeData.value,
               isExpanded: controller.isSavedPlacesExpanded.value,
             ),
@@ -107,12 +107,12 @@ class HomeScreen extends GetView<HomeController> {
           padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
           height: 61.h,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.white,
             borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: AppColors.shade5),
+            border: Border.all(color: AppColors.borderDefault),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.06),
+                color: AppColors.black.withOpacity(0.06),
                 blurRadius: 2,
                 offset: const Offset(0, 1),
               ),
@@ -120,14 +120,14 @@ class HomeScreen extends GetView<HomeController> {
           ),
           child: isLoading
               ? Shimmer.fromColors(
-                  baseColor: const Color(0xFFE2E8F0),
-                  highlightColor: const Color(0xFFF8FAFC),
+                  baseColor: AppColors.skeletonBase,
+                  highlightColor: AppColors.skeletonHighlight,
                   child: Center(
                     child: Container(
                       width: 200.w,
                       height: 16.h,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.white,
                         borderRadius: BorderRadius.circular(4.r),
                       ),
                     ),
@@ -209,7 +209,7 @@ class HomeScreen extends GetView<HomeController> {
                 width: 48.w,
                 height: 5.h,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0),
+                  color: AppColors.skeletonBase,
                   borderRadius: BorderRadius.circular(37.r),
                 ),
               ),
@@ -220,10 +220,10 @@ class HomeScreen extends GetView<HomeController> {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
+                  color: AppColors.pageBackground,
                   borderRadius: BorderRadius.circular(16.r),
                   border: Border.all(
-                    color: const Color(0xFFE2E8F0),
+                    color: AppColors.skeletonBase,
                     width: 0.8,
                   ),
                 ),
@@ -325,9 +325,9 @@ class HomeScreen extends GetView<HomeController> {
           margin: EdgeInsets.only(right: 12.w),
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.white,
             borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: const Color(0xFFE2E8F0), width: 0.8),
+            border: Border.all(color: AppColors.skeletonBase, width: 0.8),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -335,7 +335,7 @@ class HomeScreen extends GetView<HomeController> {
               Container(
                 padding: EdgeInsets.all(4.w),
                 decoration: BoxDecoration(
-                  color: isSaved ? const Color(0xFFFEF3C7) : AppColors.primary,
+                  color: isSaved ? AppColors.bgWarningLight : AppColors.primary,
                   shape: BoxShape.circle,
                 ),
                 child: isSaved
@@ -348,14 +348,14 @@ class HomeScreen extends GetView<HomeController> {
                         width: 16.w,
                         height: 16.w,
                       )
-                    : Icon(Icons.add, color: Colors.white, size: 14.sp),
+                    : Icon(Icons.add, color: AppColors.white, size: 14.sp),
               ),
               SizedBox(width: 8.w),
               Text(
                 label,
                 style: AppTextStyles.homeChip.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: AppColors.shade1,
+                  color: AppColors.textHeading,
                 ),
               ),
             ],
@@ -381,7 +381,7 @@ class HomeScreen extends GetView<HomeController> {
                 constraints: BoxConstraints(minWidth: 52.w),
                 padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 8.h),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
+                  color: AppColors.bgSoftCircle,
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Column(
@@ -390,7 +390,7 @@ class HomeScreen extends GetView<HomeController> {
                     Icon(
                       Icons.directions_car_outlined,
                       size: 20.sp,
-                      color: AppColors.shade2,
+                      color: AppColors.textBody,
                     ),
                     SizedBox(height: 4.h),
                     FittedBox(
@@ -416,7 +416,7 @@ class HomeScreen extends GetView<HomeController> {
                     controller.recentDestinationTitleLine(loc),
                     style: AppTextStyles.homeSubtitle.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: AppColors.shade1,
+                      color: AppColors.textHeading,
                       fontSize: 15.sp,
                     ),
                   ),
@@ -424,7 +424,7 @@ class HomeScreen extends GetView<HomeController> {
                   Text(
                     loc.address,
                     style: AppTextStyles.homeCaption.copyWith(
-                      color: AppColors.shade2,
+                      color: AppColors.textBody,
                       fontSize: 13.sp,
                     ),
                     maxLines: 1,
@@ -442,7 +442,7 @@ class HomeScreen extends GetView<HomeController> {
                   isFavorite ? Icons.favorite : Icons.favorite_border,
                   color: isFavorite
                       ? AppColors.primary
-                      : const Color(0xFFE2E8F0),
+                      : AppColors.skeletonBase,
                   size: 24.sp,
                 ),
               );
@@ -462,7 +462,7 @@ class HomeScreen extends GetView<HomeController> {
             width: 52.w,
             height: 52.w,
             decoration: BoxDecoration(
-              color: const Color(0xFFE2E8F0),
+              color: AppColors.skeletonBase,
               borderRadius: BorderRadius.circular(12.r),
             ),
           ),
@@ -475,7 +475,7 @@ class HomeScreen extends GetView<HomeController> {
                   height: 14.h,
                   width: 130.w,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE2E8F0),
+                    color: AppColors.skeletonBase,
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                 ),
@@ -484,7 +484,7 @@ class HomeScreen extends GetView<HomeController> {
                   height: 12.h,
                   width: 200.w,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE2E8F0),
+                    color: AppColors.skeletonBase,
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                 ),
@@ -526,7 +526,7 @@ class HomeScreen extends GetView<HomeController> {
               height: 72.h,
               padding: EdgeInsets.all(8.w),
               decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
+                color: AppColors.pageBackground,
                 borderRadius: BorderRadius.circular(16.r),
               ),
               child: Image.asset(
@@ -534,7 +534,7 @@ class HomeScreen extends GetView<HomeController> {
                 fit: BoxFit.contain,
                 errorBuilder: (_, __, ___) => Icon(
                   Icons.directions_car,
-                  color: AppColors.shade2,
+                  color: AppColors.textBody,
                   size: 28.sp,
                 ),
               ),
@@ -543,7 +543,7 @@ class HomeScreen extends GetView<HomeController> {
             Text(
               vehicle.displayName,
               style: AppTextStyles.homeCaption.copyWith(
-                color: AppColors.shade1,
+                color: AppColors.textHeading,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -562,7 +562,7 @@ class HomeScreen extends GetView<HomeController> {
             width: 86.w,
             height: 72.h,
             decoration: BoxDecoration(
-              color: const Color(0xFFE2E8F0),
+              color: AppColors.skeletonBase,
               borderRadius: BorderRadius.circular(16.r),
             ),
           ),
@@ -571,7 +571,7 @@ class HomeScreen extends GetView<HomeController> {
             width: 56.w,
             height: 10.h,
             decoration: BoxDecoration(
-              color: const Color(0xFFE2E8F0),
+              color: AppColors.skeletonBase,
               borderRadius: BorderRadius.circular(8.r),
             ),
           ),
@@ -582,7 +582,7 @@ class HomeScreen extends GetView<HomeController> {
 
   Widget _activeRideCard(RideModel ride) {
     return Material(
-      color: Colors.white,
+      color: AppColors.white,
       borderRadius: BorderRadius.circular(16.r),
       elevation: 4,
       child: InkWell(
@@ -592,7 +592,7 @@ class HomeScreen extends GetView<HomeController> {
           padding: EdgeInsets.all(12.w),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: AppColors.skeletonBase),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -605,7 +605,7 @@ class HomeScreen extends GetView<HomeController> {
                       vertical: 4.h,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFCE7F3),
+                      color: AppColors.primaryLight,
                       borderRadius: BorderRadius.circular(10.r),
                     ),
                     child: Text(
@@ -628,7 +628,7 @@ class HomeScreen extends GetView<HomeController> {
                         ? (ride.vehicleDisplayName ?? '').trim()
                         : 'Ride',
                     style: AppTextStyles.homeCaption.copyWith(
-                      color: AppColors.shade1,
+                      color: AppColors.textHeading,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -641,7 +641,7 @@ class HomeScreen extends GetView<HomeController> {
                 overflow: TextOverflow.ellipsis,
                 style: AppTextStyles.homeSubtitle.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: AppColors.shade1,
+                  color: AppColors.textHeading,
                 ),
               ),
               SizedBox(height: 2.h),
@@ -650,7 +650,7 @@ class HomeScreen extends GetView<HomeController> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTextStyles.homeCaption.copyWith(
-                  color: AppColors.shade2,
+                  color: AppColors.textBody,
                 ),
               ),
               SizedBox(height: 10.h),
@@ -660,7 +660,7 @@ class HomeScreen extends GetView<HomeController> {
                     CurrencyFormatter.format(ride.fareEstimate),
                     style: AppTextStyles.homeSubtitle.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: AppColors.shade1,
+                      color: AppColors.textHeading,
                     ),
                   ),
                   const Spacer(),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+import 'package:selcom_rides_frontend/core/theme/app_colors.dart';
 
 class CancelConfirmationDialog extends StatelessWidget {
   const CancelConfirmationDialog({super.key});
@@ -10,7 +11,7 @@ class CancelConfirmationDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.cardBackground,
       insetPadding: EdgeInsets.symmetric(horizontal: 13.w),
       child: Padding(
         padding: EdgeInsets.symmetric(vertical: 32.h, horizontal: 24.w),
@@ -23,22 +24,22 @@ class CancelConfirmationDialog extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20.sp,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF0F172A),
+                color: AppColors.textSlateStrong,
                 height: 1.2,
               ),
             ),
             SizedBox(height: 32.h),
             _ActionButton(
               title: AppStrings.yesCancel.tr,
-              color: const Color(0xFFFF0050),
-              textColor: Colors.white,
+              color: AppColors.primary,
+              textColor: AppColors.white,
               onTap: () => Get.back(result: true),
             ),
             SizedBox(height: 12.h),
             _ActionButton(
               title: AppStrings.no.tr,
-              color: const Color(0xFFF1F5F9),
-              textColor: const Color(0xFF64748B),
+              color: AppColors.bgSoftCircle,
+              textColor: AppColors.textSlateSoft,
               onTap: () => Get.back(result: false),
             ),
           ],
@@ -55,7 +56,7 @@ class CancelAssignmentWarningDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.cardBackground,
       insetPadding: EdgeInsets.symmetric(horizontal: 13.w),
       child: Padding(
         padding: EdgeInsets.symmetric(vertical: 32.h, horizontal: 24.w),
@@ -68,7 +69,7 @@ class CancelAssignmentWarningDialog extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20.sp,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF0F172A),
+                color: AppColors.textSlateStrong,
               ),
             ),
             Text(
@@ -77,7 +78,7 @@ class CancelAssignmentWarningDialog extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20.sp,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF0F172A),
+                color: AppColors.textSlateStrong,
                 height: 1.2,
               ),
             ),
@@ -87,7 +88,7 @@ class CancelAssignmentWarningDialog extends StatelessWidget {
               text: TextSpan(
                 style: TextStyle(
                   fontSize: 15.sp,
-                  color: const Color(0xFF475569),
+                  color: AppColors.textSlate,
                   height: 1.5,
                   fontWeight: FontWeight.w400,
                 ),
@@ -96,7 +97,7 @@ class CancelAssignmentWarningDialog extends StatelessWidget {
                   TextSpan(
                     text: 'TZS 150',
                     style: TextStyle(
-                      color: Color(0xFFFF0050),
+                      color: AppColors.primary,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -109,15 +110,15 @@ class CancelAssignmentWarningDialog extends StatelessWidget {
             SizedBox(height: 32.h),
             _ActionButton(
               title: AppStrings.keepRide.tr,
-              color: const Color(0xFFFF0050),
-              textColor: Colors.white,
+              color: AppColors.primary,
+              textColor: AppColors.white,
               onTap: () => Get.back(result: false),
             ),
             SizedBox(height: 12.h),
             _ActionButton(
               title: AppStrings.cancelAndPay.tr,
-              color: const Color(0xFFF1F5F9),
-              textColor: const Color(0xFF64748B),
+              color: AppColors.bgSoftCircle,
+              textColor: AppColors.textSlateSoft,
               onTap: () => Get.back(result: true),
             ),
           ],
@@ -164,7 +165,7 @@ class _CancelReasonSelectionDialogState
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.cardBackground,
       insetPadding: EdgeInsets.symmetric(horizontal: 13.w),
       child: Padding(
         padding: EdgeInsets.symmetric(vertical: 32.h, horizontal: 24.w),
@@ -178,7 +179,7 @@ class _CancelReasonSelectionDialogState
               style: TextStyle(
                 fontSize: 20.sp,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF0F172A),
+                color: AppColors.textSlateStrong,
               ),
             ),
             SizedBox(height: 24.h),
@@ -188,7 +189,7 @@ class _CancelReasonSelectionDialogState
                 padding: EdgeInsets.zero,
                 itemCount: _reasons.length,
                 separatorBuilder: (_, __) =>
-                    Divider(height: 1.h, color: const Color(0xFFF1F5F9)),
+                    Divider(height: 1.h, color: AppColors.bgSoftCircle),
                 itemBuilder: (context, index) {
                   final reason = _reasons[index];
                   final isSelected = _selectedReason == reason;
@@ -210,7 +211,7 @@ class _CancelReasonSelectionDialogState
                                 fontWeight: isSelected
                                     ? FontWeight.w600
                                     : FontWeight.w400,
-                                color: const Color(0xFF475569),
+                                color: AppColors.textSlate,
                               ),
                             ),
                           ),
@@ -221,19 +222,19 @@ class _CancelReasonSelectionDialogState
                               borderRadius: BorderRadius.circular(6.r),
                               border: Border.all(
                                 color: isSelected
-                                    ? const Color(0xFFFF0050)
-                                    : const Color(0xFFCBD5E1),
+                                    ? AppColors.primary
+                                    : AppColors.skeletonBase,
                                 width: 1.2,
                               ),
                               color: isSelected
-                                  ? const Color(0xFFFF0050)
-                                  : Colors.transparent,
+                                  ? AppColors.primary
+                                  : AppColors.transparent,
                             ),
                             child: isSelected
                                 ? Icon(
                                     Icons.check,
                                     size: 14.sp,
-                                    color: Colors.white,
+                                    color: AppColors.white,
                                   )
                                 : null,
                           ),
@@ -248,9 +249,9 @@ class _CancelReasonSelectionDialogState
             _ActionButton(
               title: AppStrings.continueLabel.tr,
               color: isSelected
-                  ? const Color(0xFFFF0050)
-                  : const Color(0xFFFF0050).withValues(alpha: 0.5),
-              textColor: Colors.white,
+                  ? AppColors.primary
+                  : AppColors.primary.withValues(alpha: 0.5),
+              textColor: AppColors.white,
               onTap: _selectedReason == null
                   ? null
                   : () => Get.back(result: _selectedReason),
@@ -258,8 +259,8 @@ class _CancelReasonSelectionDialogState
             SizedBox(height: 12.h),
             _ActionButton(
               title: AppStrings.no.tr,
-              color: const Color(0xFFF1F5F9),
-              textColor: const Color(0xFF64748B),
+              color: AppColors.bgSoftCircle,
+              textColor: AppColors.textSlateSoft,
               onTap: () => Get.back(),
             ),
           ],

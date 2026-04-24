@@ -84,7 +84,7 @@ class PaymentMethodsScreen extends StatelessWidget {
       child: Text(
         title,
         style: AppTextStyles.sectionTitle.copyWith(
-          color: AppColors.shade2,
+          color: AppColors.textBody,
           fontSize: 15.sp,
         ),
       ),
@@ -99,8 +99,8 @@ class PaymentMethodsScreen extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.all(20.w),
         decoration: BoxDecoration(
-          color: const Color(0xFFF8F9FD),
-          border: Border.all(color: const Color(0xFFE6E9EE), width: 0.8),
+          color: AppColors.surfaceSubtle,
+          border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
           borderRadius: BorderRadius.circular(20.r),
         ),
         child: InkWell(
@@ -116,7 +116,7 @@ class PaymentMethodsScreen extends StatelessWidget {
                     AppStrings.selcomPesa.tr,
                     style: AppTextStyles.body.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: AppColors.shade1,
+                      color: AppColors.textHeading,
                     ),
                   ),
                   if (isLinked) ...[
@@ -127,13 +127,13 @@ class PaymentMethodsScreen extends StatelessWidget {
                         vertical: 2.h,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF2E7D32),
+                        color: AppColors.textVerified,
                         borderRadius: BorderRadius.circular(4.r),
                       ),
                       child: Text(
                         AppStrings.defaultLabel.tr,
                         style: TextStyle(
-                          color: Colors.white,
+                          color: AppColors.white,
                           fontSize: 10.sp,
                           fontWeight: FontWeight.w700,
                         ),
@@ -145,7 +145,7 @@ class PaymentMethodsScreen extends StatelessWidget {
                     Icon(
                       Iconsax.arrow_right_3,
                       size: 20.w,
-                      color: AppColors.shade2.withValues(alpha: 0.5),
+                      color: AppColors.textBody.withValues(alpha: 0.5),
                     ),
                   ],
                 ],
@@ -156,7 +156,7 @@ class PaymentMethodsScreen extends StatelessWidget {
                     ? 'Linked number +255 711 410 410'
                     : 'Connect your Selcom Pesa account to enable automatic, seamless ride charge deductions.',
                 style: AppTextStyles.caption.copyWith(
-                  color: AppColors.shade2,
+                  color: AppColors.textBody,
                   fontSize: 13.sp,
                   height: 1.5,
                 ),
@@ -183,8 +183,8 @@ class PaymentMethodsScreen extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 16.w),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFFF8F9FD),
-          border: Border.all(color: const Color(0xFFE6E9EE), width: 0.8),
+          color: AppColors.surfaceSubtle,
+          border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
           borderRadius: BorderRadius.circular(20.r),
         ),
         child: Column(
@@ -210,7 +210,7 @@ class PaymentMethodsScreen extends StatelessWidget {
               onTap: () => controller.openCardDetails(_expiredCard),
               showDivider: false,
             ),
-            const Divider(color: Color(0xFFE6E9EE), height: 1),
+            const Divider(color: AppColors.borderWalletCard, height: 1),
             _buildAddCardTile(controller),
           ],
         ),
@@ -241,7 +241,7 @@ class PaymentMethodsScreen extends StatelessWidget {
                     Text(
                       brand,
                       style: TextStyle(
-                        color: const Color(0xFF00579F),
+                        color: AppColors.textBrandVisaSecondary,
                         fontWeight: FontWeight.w900,
                         fontStyle: FontStyle.italic,
                         fontSize: 16.sp,
@@ -256,8 +256,8 @@ class PaymentMethodsScreen extends StatelessWidget {
                     style: AppTextStyles.body.copyWith(
                       fontWeight: FontWeight.w500,
                       color: status == 'Expired'
-                          ? AppColors.shade2
-                          : AppColors.shade1,
+                          ? AppColors.textBody
+                          : AppColors.textHeading,
                     ),
                   ),
                   SizedBox(width: 8.w),
@@ -267,8 +267,8 @@ class PaymentMethodsScreen extends StatelessWidget {
                   style: AppTextStyles.body.copyWith(
                     fontWeight: FontWeight.w500,
                     color: status == 'Expired'
-                        ? AppColors.shade2
-                        : AppColors.shade1,
+                        ? AppColors.textBody
+                        : AppColors.textHeading,
                   ),
                 ),
                 if (status != null) ...[
@@ -278,8 +278,8 @@ class PaymentMethodsScreen extends StatelessWidget {
                     style: AppTextStyles.body.copyWith(
                       fontWeight: FontWeight.w500,
                       color: status == 'Expired'
-                          ? AppColors.shade2
-                          : AppColors.shade1,
+                          ? AppColors.textBody
+                          : AppColors.textHeading,
                     ),
                   ),
                 ],
@@ -287,7 +287,7 @@ class PaymentMethodsScreen extends StatelessWidget {
                 Icon(
                   Iconsax.arrow_right_3,
                   size: 20.w,
-                  color: AppColors.shade2.withValues(alpha: 0.5),
+                  color: AppColors.textBody.withValues(alpha: 0.5),
                 ),
               ],
             ),
@@ -295,7 +295,7 @@ class PaymentMethodsScreen extends StatelessWidget {
           if (showDivider)
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: const Divider(color: Color(0xFFE6E9EE), height: 1),
+              child: const Divider(color: AppColors.borderWalletCard, height: 1),
             ),
         ],
       ),
