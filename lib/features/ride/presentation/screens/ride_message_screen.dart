@@ -188,7 +188,11 @@ class RideMessageScreen extends GetView<RideMessageController> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _avatarWithDot(m.avatarUrl),
+                _avatarWithDot(
+                  (m.avatarUrl ?? '').trim().isNotEmpty
+                      ? m.avatarUrl
+                      : controller.driverAvatarUrl,
+                ),
                 SizedBox(height: 8.h),
                 if (m.displayName != null)
                   Text(
@@ -241,7 +245,7 @@ class RideMessageScreen extends GetView<RideMessageController> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                _avatarWithDot(m.avatarUrl, isRider: true),
+                _avatarWithDot(null, isRider: true),
                 SizedBox(height: 8.h),
                 if (m.displayName != null)
                   Text(
@@ -280,21 +284,33 @@ class RideMessageScreen extends GetView<RideMessageController> {
   }
 
   Widget _avatarWithDot(String? url, {bool isRider = false}) {
+    final imageUrl = (url ?? '').trim();
     return Stack(
       children: [
         CircleAvatar(
           radius: 18.r,
-          backgroundImage: url != null ? NetworkImage(url) : null,
           backgroundColor: isRider
               ? Colors.white.withValues(alpha: 0.2)
               : const Color(0xFFF3F4F6),
-          child: url == null
-              ? Icon(
-                  Icons.person,
-                  size: 20.sp,
-                  color: isRider ? Colors.white : const Color(0xFF9CA3AF),
-                )
-              : null,
+          child: ClipOval(
+            child: imageUrl.isNotEmpty
+                ? Image.network(
+                    imageUrl,
+                    width: 36.r,
+                    height: 36.r,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Icon(
+                      Icons.person,
+                      size: 20.sp,
+                      color: isRider ? Colors.white : const Color(0xFF9CA3AF),
+                    ),
+                  )
+                : Icon(
+                    Icons.person,
+                    size: 20.sp,
+                    color: isRider ? Colors.white : const Color(0xFF9CA3AF),
+                  ),
+          ),
         ),
         Positioned(
           right: 0,

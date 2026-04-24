@@ -504,20 +504,29 @@ class DriverAcceptedScreen extends StatelessWidget {
         SizedBox(height: 17.h),
         Row(
           children: [
-            Container(
-              width: 51.66.w,
-              height: 51.66.w,
-              decoration: const BoxDecoration(
-                color: Color(0xFFD9D9D9),
-                shape: BoxShape.circle,
-              ),
-              child: ClipOval(
-                child: Image.asset(
-                  AppAssets.imgBoda, // Placeholder for driver image
-                  fit: BoxFit.cover,
+            Obx(() {
+              final avatarUrl = c.driverAvatarUrl.value.trim();
+              return Container(
+                width: 51.66.w,
+                height: 51.66.w,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFD9D9D9),
+                  shape: BoxShape.circle,
                 ),
-              ),
-            ),
+                child: ClipOval(
+                  child: avatarUrl.isNotEmpty
+                      ? Image.network(
+                          avatarUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Image.asset(
+                            AppAssets.imgBoda,
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      : Image.asset(AppAssets.imgBoda, fit: BoxFit.cover),
+                ),
+              );
+            }),
             SizedBox(width: 12.w),
             Expanded(
               child: Obx(

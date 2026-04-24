@@ -12,7 +12,6 @@ import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
 
 import '../../../../core/constants/app_assets.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
 import '../../../../core/data/models/ride_model.dart';
@@ -62,6 +61,7 @@ class DriverAcceptedController extends GetxController
 
   final driverName = ''.obs;
   final driverPhone = ''.obs;
+  final driverAvatarUrl = ''.obs;
   final driverRating = ''.obs;
   final driverVehicleLine = ''.obs;
   final plateLinePrimary = ''.obs;
@@ -298,6 +298,7 @@ class DriverAcceptedController extends GetxController
   void _applyMockContent() {
     driverName.value = 'John Doe';
     driverPhone.value = '';
+    driverAvatarUrl.value = '';
     driverRating.value = '4';
     driverVehicleLine.value = 'Volkswagen';
     plateLinePrimary.value = 'T 772';
@@ -326,6 +327,7 @@ class DriverAcceptedController extends GetxController
     if (d != null) {
       driverName.value = d.name;
       driverPhone.value = d.phone;
+      driverAvatarUrl.value = (d.avatarUrl ?? '').trim();
       driverRating.value = d.rating > 0 ? d.rating.toStringAsFixed(1) : '—';
 
       // If vehicle snapshot is missing or generic, use fields from driver snapshot
@@ -372,6 +374,7 @@ class DriverAcceptedController extends GetxController
     } else {
       driverName.value = 'Driver';
       driverPhone.value = '';
+      driverAvatarUrl.value = '';
       driverRating.value = '—';
       if (isPinRequired.value) {
         otpDigits.assignAll(['—', '—', '—', '—']);
@@ -692,6 +695,10 @@ class DriverAcceptedController extends GetxController
       if ((d.name ?? '').trim().isNotEmpty) driverName.value = d.name!.trim();
       if ((d.phone ?? '').trim().isNotEmpty) {
         driverPhone.value = d.phone!.trim();
+      }
+      final avatar = (d.avatarUrl ?? '').trim();
+      if (avatar.isNotEmpty) {
+        driverAvatarUrl.value = avatar;
       }
       if ((d.lat) != null && (d.lng) != null) {
         assignedDriverLocation.value = LatLng(d.lat!, d.lng!);
@@ -1112,6 +1119,7 @@ class DriverAcceptedController extends GetxController
         'rideId': rideId,
         'driverName': driverName.value,
         'driverPhone': driverPhone.value,
+        'driverAvatarUrl': driverAvatarUrl.value,
         'driverSubtitle': plateLinePrimary.value + plateLineSecondary.value,
         'riderName': 'Rider', // Default placeholder
         'initialStatus': _mapBottomSheetToRideStatus(
