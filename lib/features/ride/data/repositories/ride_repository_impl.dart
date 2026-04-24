@@ -191,4 +191,34 @@ class RideRepositoryImpl implements RideRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, dynamic>> updateStops(
+    String rideId, {
+    required List<Map<String, dynamic>> stops,
+    bool confirm = false,
+    required String idempotencyKey,
+  }) async {
+    try {
+      final result = await remoteDataSource.updateStops(
+        rideId,
+        stops: stops,
+        confirm: confirm,
+        idempotencyKey: idempotencyKey,
+      );
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> cancelPendingStops(String rideId) async {
+    try {
+      await remoteDataSource.cancelPendingStops(rideId);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

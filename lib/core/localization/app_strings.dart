@@ -38,6 +38,7 @@ class AppStrings {
   static const String cardDetail = 'card_detail';
   static const String cardEndingInPlaceholder = 'card_ending_in_placeholder';
   static const String changeDropLocation = 'change_drop_location';
+  static const String editStops = 'edit_stops';
   static const String changeLocation = 'change_location';
   static const String changePhoneNumber = 'change_phone_number';
   static const String chat = 'chat';
@@ -200,6 +201,7 @@ class AppStrings {
   static const String searchDestination = 'search_destination';
   static const String searchLocation = 'search_location';
   static const String searchPickupLocation = 'search_pickup_location';
+  static const String searchStop = 'search_stop';
   static const String searchStopLocation = 'search_stop_location';
   static const String searchTimeout = 'search_timeout';
   static const String
@@ -250,6 +252,7 @@ class AppStrings {
   static const String unableToOpenRideDetails = 'unable_to_open_ride_details';
   static const String unableToSkipRatingNow = 'unable_to_skip_rating_now';
   static const String unableToSubmitRatingNow = 'unable_to_submit_rating_now';
+  static const String stopLocation = 'stop_location';
   static const String updatingAddress = 'updating_address';
   static const String userProfileUpdatedSuccessfully =
       'user_profile_updated_successfully';

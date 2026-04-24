@@ -1,4 +1,6 @@
 import 'package:get/get.dart';
+import 'package:selcom_rides_frontend/features/ride/presentation/screens/stop_editor_screen.dart';
+import 'package:selcom_rides_frontend/features/ride/presentation/screens/confirm_stop_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/onboarding_screen.dart';
 import '../../features/auth/presentation/screens/phone_input_screen.dart';
@@ -58,6 +60,8 @@ class AppRoutes {
   static const String settings = '/settings';
   static const String selectSavedLocation = '/select-saved-location';
   static const String checkPickupPoint = '/check-pickup-point';
+  static const String stopEditor = '/stop-editor';
+  static const String confirmStop = '/confirm-stop';
 
   static List<GetPage> get pages => [
     GetPage(name: splash, page: () => const SplashScreen()),
@@ -134,6 +138,12 @@ class AppRoutes {
     GetPage(
       name: checkPickupPoint,
       page: () => const CheckPickupPointScreen(),
+      binding: HomeBinding(),
+    ),
+    GetPage(name: stopEditor, page: () => const StopEditorScreen()),
+    GetPage(
+      name: confirmStop,
+      page: () => const ConfirmStopScreen(),
       binding: HomeBinding(),
     ),
   ];

@@ -79,6 +79,28 @@ class RideStopEntity {
   });
 }
 
+class PendingStopsUpdateEntity {
+  final List<RideStopEntity> stops;
+  final String status;
+  final int deltaAmount;
+  final String direction;
+  final int? newFare;
+  final String? validationId;
+  final DateTime? expiresAt;
+  final String? idempotencyKey;
+
+  const PendingStopsUpdateEntity({
+    required this.stops,
+    required this.status,
+    required this.deltaAmount,
+    required this.direction,
+    this.newFare,
+    this.validationId,
+    this.expiresAt,
+    this.idempotencyKey,
+  });
+}
+
 class RideEntity {
   final String id;
   final String riderId;
@@ -107,6 +129,7 @@ class RideEntity {
   final DriverSnapshotEntity? driverSnapshot;
   final VehicleSnapshotEntity? vehicleSnapshot;
   final DateTime createdAt;
+  final PendingStopsUpdateEntity? pendingStopsUpdate;
 
   const RideEntity({
     required this.id,
@@ -136,5 +159,6 @@ class RideEntity {
     this.driverSnapshot,
     this.vehicleSnapshot,
     required this.createdAt,
+    this.pendingStopsUpdate,
   });
 }

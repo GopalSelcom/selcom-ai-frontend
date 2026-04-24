@@ -8,6 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../controllers/home_controller.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 import '../../data/models/places_models.dart';
 import '../../../ride/data/models/ride_management_models.dart';
 
@@ -23,12 +24,19 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
   late final HomeController controller;
   late final TextEditingController searchController;
   late final String label;
+  bool _isGeocoding = false;
 
   @override
   void initState() {
     super.initState();
     controller = Get.find<HomeController>();
-    label = Get.arguments as String? ?? 'Home';
+    final args = Get.arguments;
+    if (args is Map) {
+      final Map<String, dynamic> data = Map<String, dynamic>.from(args);
+      label = data['label'] ?? AppStrings.searchLocation.tr;
+    } else {
+      label = args as String? ?? 'Home';
+    }
     searchController = TextEditingController();
 
     // Clear previous suggestions and search query
@@ -74,17 +82,26 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
             _buildSearchBar(),
             SizedBox(height: 16.h),
             Expanded(
-              child: Obx(() {
-                if (controller.isSearching.value) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+              child: Stack(
+                children: [
+                  Obx(() {
+                    if (controller.isSearching.value) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
 
-                if (controller.searchQuery.value.trim().isNotEmpty) {
-                  return _buildSuggestionsList();
-                }
+                    if (controller.searchQuery.value.trim().isNotEmpty) {
+                      return _buildSuggestionsList();
+                    }
 
-                return _buildRecentList();
-              }),
+                    return _buildRecentList();
+                  }),
+                  if (_isGeocoding)
+                    Container(
+                      color: Colors.white.withOpacity(0.5),
+                      child: const Center(child: CircularProgressIndicator()),
+                    ),
+                ],
+              ),
             ),
           ],
         ),
@@ -301,6 +318,38 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
     final title = item.description?.split(',').first ?? label;
     final subtitle = item.description ?? '';
 
+    final args = Get.arguments;
+    if (args is Map && args['isSelectingStop'] == true) {
+      if (_isGeocoding) return;
+      setState(() => _isGeocoding = true);
+      try {
+        final latLng = await controller.getLatLngFromAddress(subtitle);
+        setState(() => _isGeocoding = false);
+
+        if (latLng != null) {
+          final result = await Get.toNamed(
+            AppRoutes.confirmStop,
+            arguments: {
+              'address': subtitle,
+              'lat': latLng.latitude,
+              'lng': latLng.longitude,
+            },
+          );
+          if (result != null) {
+            Get.back(result: result);
+          }
+        } else {
+          AppDialogs.showErrorDialog(
+            message: 'Unable to get location coordinates',
+          );
+        }
+      } catch (e) {
+        setState(() => _isGeocoding = false);
+        AppDialogs.showErrorDialog(message: 'Something went wrong: $e');
+      }
+      return;
+    }
+
     // Show loading? Maybe, but geocoding is usually fast.
     final latLng = await controller.getLatLngFromAddress(subtitle);
 
@@ -320,6 +369,18 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
   Future<void> _handleRecentSelection(RecentDestinationModel loc) async {
     final title = loc.address.split(',').first;
     final subtitle = loc.address;
+
+    final args = Get.arguments;
+    if (args is Map && args['isSelectingStop'] == true) {
+      final result = await Get.toNamed(
+        AppRoutes.confirmStop,
+        arguments: {'address': subtitle, 'lat': loc.lat, 'lng': loc.lng},
+      );
+      if (result != null) {
+        Get.back(result: result);
+      }
+      return;
+    }
 
     Get.toNamed(
       AppRoutes.checkPickupPoint,

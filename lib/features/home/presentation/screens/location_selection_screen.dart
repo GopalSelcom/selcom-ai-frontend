@@ -7,6 +7,7 @@ import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 import '../controllers/home_controller.dart';
 import '../../data/models/places_models.dart';
 import '../../../../core/routes/app_routes.dart';
@@ -660,6 +661,15 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                   isFavorite: isFavorite,
                   showFavorite: showFavorite,
                   onTap: () {
+                    if (Get.arguments is Map &&
+                        Get.arguments['isSelectingStop'] == true) {
+                      _handleStopSelection(
+                        address: destination.address,
+                        lat: destination.lat,
+                        lng: destination.lng,
+                      );
+                      return;
+                    }
                     controller.applyRecentDestinationToLocationSelection(
                       destination: destination,
                       activeSegmentIndex: _activeSegmentIndex.value,
@@ -705,7 +715,35 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           subtitle: recentText,
           isFavorite: isFavorite,
           showFavorite: showFavorite,
-          onTap: () {
+          onTap: () async {
+            if (Get.arguments is Map &&
+                Get.arguments['isSelectingStop'] == true) {
+              AppDialogs.showLoadingDialog();
+              final result = await controller.homeRepository.getGeocode(
+                address: recentText,
+              );
+              Get.back(); // close loading
+
+              result.fold(
+                (failure) =>
+                    AppDialogs.showErrorDialog(message: failure.message),
+                (data) {
+                  final loc = data.results?.firstOrNull?.geometry?.location;
+                  if (loc != null && loc.lat != null && loc.lng != null) {
+                    _handleStopSelection(
+                      address: recentText,
+                      lat: loc.lat!,
+                      lng: loc.lng!,
+                    );
+                  } else {
+                    AppDialogs.showErrorDialog(
+                      message: 'Unable to get location coordinates',
+                    );
+                  }
+                },
+              );
+              return;
+            }
             controller.applyRecentSearchToLocationSelection(
               recentText: recentText,
               activeSegmentIndex: _activeSegmentIndex.value,
@@ -744,6 +782,15 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           isFavorite: place.isFavourite ?? false,
           showFavorite: true,
           onTap: () {
+            if (Get.arguments is Map &&
+                Get.arguments['isSelectingStop'] == true) {
+              _handleStopSelection(
+                address: place.address ?? '',
+                lat: place.lat ?? 0.0,
+                lng: place.lng ?? 0.0,
+              );
+              return;
+            }
             controller.applySavedLabelToLocationSelection(
               label: label,
               activeSegmentIndex: _activeSegmentIndex.value,
@@ -969,7 +1016,48 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     });
   }
 
-  void _onSuggestionSelected(Prediction prediction) {
+  Future<void> _handleStopSelection({
+    required String address,
+    required double lat,
+    required double lng,
+  }) async {
+    final result = await Get.toNamed(
+      AppRoutes.confirmStop,
+      arguments: {'address': address, 'lat': lat, 'lng': lng},
+    );
+    if (result != null) {
+      Get.back(result: result);
+    }
+  }
+
+  void _onSuggestionSelected(Prediction prediction) async {
+    if (Get.arguments is Map && Get.arguments['isSelectingStop'] == true) {
+      final description = prediction.description ?? '';
+      AppDialogs.showLoadingDialog();
+      final result = await controller.homeRepository.getGeocode(
+        address: description,
+      );
+      Get.back(); // close loading
+
+      result.fold(
+        (failure) => AppDialogs.showErrorDialog(message: failure.message),
+        (data) {
+          final loc = data.results?.firstOrNull?.geometry?.location;
+          if (loc != null && loc.lat != null && loc.lng != null) {
+            _handleStopSelection(
+              address: description,
+              lat: loc.lat!,
+              lng: loc.lng!,
+            );
+          } else {
+            AppDialogs.showErrorDialog(
+              message: 'Unable to get location coordinates',
+            );
+          }
+        },
+      );
+      return;
+    }
     controller.applySuggestionToLocationSelection(
       prediction: prediction,
       activeSegmentIndex: _activeSegmentIndex.value,

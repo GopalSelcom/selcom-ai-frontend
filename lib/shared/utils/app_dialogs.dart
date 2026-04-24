@@ -17,8 +17,7 @@ class AppDialogs {
     String title = 'Error',
     required String message,
     VoidCallback? onConfirm,
-  })
-  {
+  }) {
     if (_isErrorDialogVisible) return;
     _isErrorDialogVisible = true;
     final normalizedMessage = message.toLowerCase();
@@ -156,13 +155,73 @@ class AppDialogs {
     });
   }
 
+  /// Shows an info dialog.
+  static void showInfoDialog({
+    String title = 'Info',
+    required String message,
+    VoidCallback? onConfirm,
+  }) {
+    Get.dialog(
+      Dialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24.r),
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(24.w),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.info_outline, color: AppColors.primary, size: 48.sp),
+              SizedBox(height: 20.h),
+              Text(
+                title,
+                style: AppTextStyles.onboardingTitle.copyWith(fontSize: 20.sp),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 12.h),
+              Text(
+                message,
+                style: AppTextStyles.onboardingSubtitle.copyWith(
+                  fontSize: 14.sp,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 32.h),
+              InkWell(
+                onTap: () {
+                  Get.back();
+                  if (onConfirm != null) onConfirm();
+                },
+                child: Container(
+                  height: 50.h,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Center(
+                    child: Text(
+                      AppStrings.gotIt.tr,
+                      style: AppTextStyles.onboardingButton,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   /// Shows a success dialog
   static void showSuccessDialog({
     String title = 'Success',
     required String message,
     VoidCallback? onConfirm,
-  })
-  {
+  }) {
     var didHandleAction = false;
     void handleAction() {
       if (didHandleAction) return;
@@ -172,6 +231,7 @@ class AppDialogs {
       }
       if (onConfirm != null) onConfirm();
     }
+
     Get.dialog(
       PopScope(
         canPop: false,
@@ -255,8 +315,7 @@ class AppDialogs {
     Color? confirmColor,
     required VoidCallback onConfirm,
     VoidCallback? onCancel,
-  })
-  {
+  }) {
     var didHandleAction = false;
     void handleCancel() {
       if (didHandleAction) return;
@@ -266,6 +325,7 @@ class AppDialogs {
       }
       if (onCancel != null) onCancel();
     }
+
     Get.dialog(
       PopScope(
         canPop: false,
@@ -402,8 +462,7 @@ class AppDialogs {
     VoidCallback? onCancel,
     IconData icon = Icons.notifications_off,
     IconData? secondaryIcon,
-  })
-  {
+  }) {
     Get.dialog(
       Dialog(
         backgroundColor: Colors.white,
@@ -774,6 +833,42 @@ class AppDialogs {
         ),
       ),
       barrierDismissible: true,
+    );
+  }
+
+  /// Shows a simple loading dialog.
+  static void showLoadingDialog({String message = 'Loading...'}) {
+    Get.dialog(
+      PopScope(
+        canPop: false,
+        child: Center(
+          child: Container(
+            padding: EdgeInsets.all(24.w),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(color: AppColors.primary),
+                if (message.isNotEmpty) ...[
+                  SizedBox(height: 16.h),
+                  Text(
+                    message,
+                    style: AppTextStyles.body.copyWith(
+                      color: AppColors.shade1,
+                      fontSize: 14.sp,
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
     );
   }
 }

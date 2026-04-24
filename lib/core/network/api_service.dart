@@ -232,7 +232,9 @@ class ApiService {
     };
 
     // ── Merge Headers ──
-    final Map<String, dynamic> finalHeaders = await _commonHeadersBuilder();
+    final Map<String, dynamic> finalHeaders = Map<String, dynamic>.from(
+      await _commonHeadersBuilder(),
+    );
     if (request.headers != null) finalHeaders.addAll(request.headers!);
 
     if (request.method == ApiMethod.multipart) {
@@ -507,7 +509,12 @@ class ApiService {
         break;
       case DioExceptionType.badResponse:
         try {
-          message = e.response?.data['message'] ?? 'Bad response from server';
+          final data = e.response?.data;
+          if (data is Map) {
+            message = data['message'] ?? 'Bad response from server';
+          } else {
+            message = 'Server Error (${statusCode})';
+          }
         } catch (_) {
           message = 'Bad response from server';
         }

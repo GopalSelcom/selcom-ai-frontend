@@ -5,6 +5,7 @@ import 'dart:developer';
 import 'package:flutter/foundation.dart';
 import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/driver_location_socker_response.dart';
 import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
+import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/ride_stops_update_response.dart';
 import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
 import 'package:selcom_rides_frontend/core/data/models/responses/payment_status_response/payment_status_response.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
@@ -54,6 +55,8 @@ class AppSocketService {
   static const String evtJoinRideRoom = 'join_ride_room';
   static const String evtRideStatusUpdate = 'ride:status_update';
   static const String evtRideStopUpdate = 'ride:stop_update';
+  static const String evtRideStopsUpdated = 'ride:stops_updated';
+  static const String evtRideStopsUpdateFailed = 'ride:stops_update_failed';
   static const String evtRideDriverLocation = 'ride:driver_location';
   static const String trackingDriverLocation = 'ride:tracking_update';
 
@@ -76,6 +79,10 @@ class AppSocketService {
       StreamController<DriverLocationSocketResponse>.broadcast();
   final _rideStopUpdateController =
       StreamController<EventRiderStatusUpdateResponse>.broadcast();
+  final _rideStopsUpdatedController =
+      StreamController<RideStopsUpdatedResponse>.broadcast();
+  final _rideStopsUpdateFailedController =
+      StreamController<RideStopsUpdateFailedResponse>.broadcast();
   final _paymentStatusController =
       StreamController<PaymentStatusUpdateResponse>.broadcast();
   final _trackingUpdateStatusController =
@@ -101,6 +108,10 @@ class AppSocketService {
       _rideDriverLocationController.stream;
   Stream<EventRiderStatusUpdateResponse> get rideStopUpdateStream =>
       _rideStopUpdateController.stream;
+  Stream<RideStopsUpdatedResponse> get rideStopsUpdatedStream =>
+      _rideStopsUpdatedController.stream;
+  Stream<RideStopsUpdateFailedResponse> get rideStopsUpdateFailedStream =>
+      _rideStopsUpdateFailedController.stream;
   Stream<PaymentStatusUpdateResponse> get paymentStatusStream =>
       _paymentStatusController.stream;
 
@@ -180,6 +191,20 @@ class AppSocketService {
       print("this is the evtRideStopUpdate----->$payload");
       final data = eventRiderStatusUpdateResponseFromJson(jsonEncode(payload));
       if (data != null) _rideStopUpdateController.add(data);
+    });
+    _socket!.on(evtRideStopsUpdated, (payload) {
+      print("this is the evtRideStopsUpdated----->$payload");
+      final data = RideStopsUpdatedResponse.fromJson(
+        payload as Map<String, dynamic>,
+      );
+      _rideStopsUpdatedController.add(data);
+    });
+    _socket!.on(evtRideStopsUpdateFailed, (payload) {
+      print("this is the evtRideStopsUpdateFailed----->$payload");
+      final data = RideStopsUpdateFailedResponse.fromJson(
+        payload as Map<String, dynamic>,
+      );
+      _rideStopsUpdateFailedController.add(data);
     });
     _socket!.on(trackingDriverLocation, (payload) {
       log("this is the call back ---driver_location:->${jsonEncode(payload)}");

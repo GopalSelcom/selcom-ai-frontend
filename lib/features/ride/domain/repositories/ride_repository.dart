@@ -44,4 +44,12 @@ abstract class RideRepository {
     String rideId,
     String token,
   );
+  Future<Either<Failure, dynamic>> updateStops(
+    String rideId, {
+    required List<Map<String, dynamic>> stops,
+    bool confirm = false,
+    required String idempotencyKey,
+  });
+
+  Future<Either<Failure, void>> cancelPendingStops(String rideId);
 }

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:uuid/uuid.dart';
 
 import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
@@ -7,7 +8,11 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/driver_location_socker_response.dart';
+import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/ride_stops_update_response.dart';
+import 'package:selcom_rides_frontend/core/data/models/responses/payment_status_response/payment_status_response.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:selcom_rides_frontend/features/ride/data/models/stop_update_models.dart';
+import 'package:selcom_rides_frontend/core/data/models/requests/validate_ride_payment_request.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
 
@@ -28,6 +33,8 @@ import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../widgets/cancel_ride_dialogs.dart';
+import '../widgets/stop_update_progress_modal.dart';
+import '../../../../core/services/storage_service.dart';
 
 /// SCR-11 — Driver accepted: live map, driver details, OTP.
 enum RideBottomSheetState { driverAssigned, rideStarted, rideCompleted }
@@ -98,9 +105,23 @@ class DriverAcceptedController extends GetxController
   StreamSubscription<DriverLocationSocketResponse>? _driverLocSub;
   StreamSubscription<TrackingUpdateSocketResponse?>? _trackingSub;
   StreamSubscription<Map<String, dynamic>>? _chatSub;
+  StreamSubscription<RideStopsUpdatedResponse>? _rideStopsUpdatedSub;
+  StreamSubscription<RideStopsUpdateFailedResponse>? _rideStopsUpdateFailedSub;
+  StreamSubscription<PaymentStatusUpdateResponse>? _paymentStatusSub;
   bool _didJoinRideRoom = false;
 
   final RxDouble sheetSize = 0.3.obs;
+
+  // Mid-Ride Stops State
+  final isUpdatingStops = false.obs;
+  final stopUpdateIdempotencyKey = ''.obs;
+  final Rxn<StopUpdatePreviewModel> stopUpdatePreview =
+      Rxn<StopUpdatePreviewModel>();
+  final Rxn<StopUpdateAppliedModel> stopUpdateApplied =
+      Rxn<StopUpdateAppliedModel>();
+  final stopUpdateProgressStep =
+      0.obs; // 0: Idle, 1: Payment, 2: Route, 3: Success
+  final stopUpdateWorkingStops = <RideStopEntity>[].obs;
 
   void updateSheetSize(double size) {
     sheetSize.value = size;
@@ -121,13 +142,77 @@ class DriverAcceptedController extends GetxController
         recenterMap();
       }
     });
+    ever(
+      isUpdatingStops,
+      (bool updating) => _handleStopUpdateProgress(updating),
+    );
+    _loadPersistedIdempotencyKey();
     analyticsService.logEvent('driver_assigned_screen_viewed');
+  }
+
+  Future<void> _loadPersistedIdempotencyKey() async {
+    final key = await StorageService().read(
+      '${StorageKeys.stopsIdempotencyPrefix}$rideId',
+    );
+    if (key != null) {
+      stopUpdateIdempotencyKey.value = key;
+    }
+  }
+
+  Future<void> _saveIdempotencyKey(String key) async {
+    await StorageService().write(
+      '${StorageKeys.stopsIdempotencyPrefix}$rideId',
+      key,
+    );
+  }
+
+  Future<void> _clearIdempotencyKey() async {
+    await StorageService().delete(
+      '${StorageKeys.stopsIdempotencyPrefix}$rideId',
+    );
+    stopUpdateWorkingStops.clear();
+    stopUpdatePreview.value = null;
   }
 
   Future<void> _bootstrap() async {
     await _loadMarkerIcons();
     await _fetchRideDetails();
+    _handleStopUpdateRecovery();
     await _initRideRoomSocket();
+  }
+
+  void _handleStopUpdateRecovery() {
+    final pending = ride.value?.pendingStopsUpdate;
+    if (pending == null) return;
+
+    if (pending.status == 'pending_payment') {
+      // Trust the backend: if it's in the response, it's not expired yet
+      stopUpdatePreview.value = StopUpdatePreviewModel(
+        fareChanged: true,
+        oldFareEstimate: ride.value?.fareEstimate ?? 0,
+        newFareEstimate: pending.newFare ?? 0,
+        deltaAmount: pending.deltaAmount,
+        direction: pending.direction,
+        newDistanceKm: 0,
+        newDurationMin: 0,
+        waypointCharge: 0,
+        legs: [],
+        stopsDiff: StopUpdateDiffModel(
+          added: [],
+          removed: [],
+          reordered: false,
+        ),
+      );
+      stopUpdateWorkingStops.assignAll(pending.stops);
+      if (pending.idempotencyKey != null) {
+        stopUpdateIdempotencyKey.value = pending.idempotencyKey!;
+        _saveIdempotencyKey(pending.idempotencyKey!);
+      }
+    } else if (pending.status == 'pending_da') {
+      isUpdatingStops.value = true;
+      stopUpdateProgressStep.value = 2; // Route update phase
+      _startStopUpdateTimeout();
+    }
   }
 
   Future<void> _loadMarkerIcons() async {
@@ -289,6 +374,31 @@ class DriverAcceptedController extends GetxController
         _applyRide(r);
         _syncLiveActivityFromDetails(r);
         _loadMarkerIcons(); // Refresh icons with new ride context
+
+        // Debug logging for the "Stuck" state issues
+        if (isUpdatingStops.value) {
+          debugPrint(
+            "STOPS_UPDATE_POLL: step=${stopUpdateProgressStep.value}, "
+            "pendingStatus=${r.pendingStopsUpdate?.status}, "
+            "rideStopsCount=${r.stops.length}, "
+            "workingStopsCount=${stopUpdateWorkingStops.length}",
+          );
+        }
+
+        // Hardening: If we are stuck in recalculating step and pending update is gone, it succeeded!
+        if (isUpdatingStops.value && stopUpdateProgressStep.value == 2) {
+          if (r.pendingStopsUpdate == null) {
+            _clearIdempotencyKey();
+            stopUpdateProgressStep.value = 3; // Success!
+            isUpdatingStops.value = false;
+          } else if (stopUpdateWorkingStops.isNotEmpty &&
+              r.stops.length == stopUpdateWorkingStops.length) {
+            // Also succeed if the confirmed stops list now matches our target list count
+            _clearIdempotencyKey();
+            stopUpdateProgressStep.value = 3; // Success!
+            isUpdatingStops.value = false;
+          }
+        }
       },
     );
     isLoadingRide.value = false;
@@ -397,6 +507,9 @@ class DriverAcceptedController extends GetxController
     _driverLocSub?.cancel();
     _trackingSub?.cancel();
     _chatSub?.cancel();
+    _rideStopsUpdatedSub?.cancel();
+    _rideStopsUpdateFailedSub?.cancel();
+    _paymentStatusSub?.cancel();
     _didJoinRideRoom = false;
 
     _connectionSub = _socketService.connectionStream.listen((connected) {
@@ -508,6 +621,33 @@ class DriverAcceptedController extends GetxController
           payload: jsonEncode(data),
         );
       }
+    });
+
+    _rideStopsUpdatedSub = _socketService.rideStopsUpdatedStream.listen((res) {
+      if (res.rideId != rideId) return;
+      _clearIdempotencyKey();
+      isUpdatingStops.value = false;
+      stopUpdateProgressStep.value = 3; // Success
+      _fetchRideDetails();
+    });
+
+    _rideStopsUpdateFailedSub = _socketService.rideStopsUpdateFailedStream.listen((
+      res,
+    ) {
+      if (res.rideId != rideId) return;
+      _clearIdempotencyKey();
+      isUpdatingStops.value = false;
+      stopUpdateProgressStep.value = 0;
+
+      String userMessage = res.reason;
+      if (res.reason == 'da_patch_rejected') {
+        userMessage =
+            "Driver's app couldn't be updated. Your billing has been adjusted back.";
+      } else if (res.reason == 'payment_failed') {
+        userMessage = "Payment hold update failed. No charges applied.";
+      }
+
+      AppDialogs.showErrorDialog(title: 'Update Failed', message: userMessage);
     });
   }
 
@@ -932,7 +1072,7 @@ class DriverAcceptedController extends GetxController
       _showCancelDialogThenGoHome(
         status == 'no_driver_found'
             ? AppStrings.noDriverFoundForYourRequestPleaseTryAgain.tr
-            :AppStrings.rideCancelled.tr,
+            : AppStrings.rideCancelled.tr,
       );
       return;
     }
@@ -1240,7 +1380,7 @@ class DriverAcceptedController extends GetxController
     if (rideId.isEmpty) {
       AppDialogs.showErrorDialog(
         title: AppStrings.cancelFailed.tr,
-        message:  AppStrings.rideIdIsMissing.tr,
+        message: AppStrings.rideIdIsMissing.tr,
       );
       return;
     }
@@ -1261,7 +1401,7 @@ class DriverAcceptedController extends GetxController
         } else {
           AppDialogs.showErrorDialog(
             title: AppStrings.cancelFailed.tr,
-            message:AppStrings.pleaseTryAgain.tr,
+            message: AppStrings.pleaseTryAgain.tr,
           );
         }
       },
@@ -1335,5 +1475,205 @@ class DriverAcceptedController extends GetxController
     } catch (e) {
       debugPrint('❌ Error syncing Live Activity from Details: $e');
     }
+  }
+
+  bool isNearDestination() {
+    return currentRideStatus.value.toLowerCase() == 'near_destination';
+  }
+
+  void onEditStops() {
+    if (isUpdatingStops.value) {
+      AppDialogs.showInfoDialog(
+        title: 'Update in progress',
+        message: 'A previous update is still being processed.',
+      );
+      return;
+    }
+    stopUpdateIdempotencyKey.value = Uuid().v4();
+    Get.toNamed(AppRoutes.stopEditor, arguments: {'ride': ride.value});
+  }
+
+  Future<void> previewStopsUpdate(List<RideStopEntity> stops) async {
+    isUpdatingStops.value = true;
+    final stopsJson = stops
+        .map(
+          (s) => {
+            'lat': s.lat,
+            'lng': s.lng,
+            'address': s.address,
+            'status': s.status,
+          },
+        )
+        .toList();
+
+    final result = await rideRepository.updateStops(
+      rideId,
+      stops: stopsJson,
+      confirm: false,
+      idempotencyKey: stopUpdateIdempotencyKey.value,
+    );
+
+    result.fold(
+      (f) {
+        isUpdatingStops.value = false;
+        AppDialogs.showErrorDialog(title: 'Error', message: f.message);
+      },
+      (res) {
+        if (res is StopUpdatePreviewModel) {
+          stopUpdatePreview.value = res;
+          // Generate key if not present and save it
+          if (stopUpdateIdempotencyKey.value.isEmpty) {
+            stopUpdateIdempotencyKey.value = const Uuid().v4();
+          }
+          _saveIdempotencyKey(stopUpdateIdempotencyKey.value);
+        }
+        isUpdatingStops.value = false;
+      },
+    );
+  }
+
+  Future<void> applyStopsUpdate(List<RideStopEntity> stops) async {
+    final pending = ride.value?.pendingStopsUpdate;
+    if (pending != null &&
+        pending.status == 'pending_payment' &&
+        pending.validationId != null) {
+      // RESUME FLOW: Skip PUT /stops and go straight to payment dummy
+      isUpdatingStops.value = true;
+      await _processPaymentHold(pending.validationId!, pending.direction);
+      return;
+    }
+
+    isUpdatingStops.value = true;
+    stopUpdateProgressStep.value = 1; // Updating payment/Starting
+    final stopsJson = stops
+        .map(
+          (s) => {
+            'lat': s.lat,
+            'lng': s.lng,
+            'address': s.address,
+            'status': s.status,
+          },
+        )
+        .toList();
+
+    final result = await rideRepository.updateStops(
+      rideId,
+      stops: stopsJson,
+      confirm: true,
+      idempotencyKey: stopUpdateIdempotencyKey.value,
+    );
+
+    result.fold(
+      (f) {
+        _clearIdempotencyKey(); // Clear on failure
+        isUpdatingStops.value = false;
+        stopUpdateProgressStep.value = 0;
+        AppDialogs.showErrorDialog(title: 'Error', message: f.message);
+      },
+      (res) async {
+        if (res is StopUpdateAppliedModel) {
+          stopUpdateApplied.value = res;
+          await _processPaymentHold(
+            res.blockUpdateValidationId ?? '',
+            res.direction,
+          );
+        }
+      },
+    );
+  }
+
+  Future<void> _processPaymentHold(
+    String validationId,
+    String direction,
+  ) async {
+    if (direction == 'up') {
+      stopUpdateProgressStep.value = 1; // Show payment step
+      // For development, we use dummy payment as per guide
+      await rideRepository.walletDummyPaymentRequest(
+        DummyPaymentRequest(
+          result: "SUCCESS",
+          transId: 'TXN-${const Uuid().v4()}',
+          validationId: validationId,
+        ),
+      );
+    } else if (direction == 'down') {
+      stopUpdateProgressStep.value = 2; // Jump to route update (silent payment)
+    } else {
+      stopUpdateProgressStep.value = 2; // Jump to route update (no payment)
+    }
+
+    // The socket listeners will handle the rest of the flow
+    _startStopUpdateTimeout();
+  }
+
+  void _startStopUpdateTimeout() {
+    Future.delayed(const Duration(seconds: 90), () {
+      if (isUpdatingStops.value) {
+        isUpdatingStops.value = false;
+        stopUpdateProgressStep.value = 0;
+        AppDialogs.showInfoDialog(
+          title: 'Taking longer than expected',
+          message: 'The update is taking some time. Please check back shortly.',
+        );
+        _fetchRideDetails();
+      }
+    });
+
+    // Periodic poll fallback for socket events
+    _pollForStopUpdateResult();
+  }
+
+  void _pollForStopUpdateResult() {
+    Future.delayed(const Duration(seconds: 8), () {
+      if (isUpdatingStops.value && stopUpdateProgressStep.value == 2) {
+        _fetchRideDetails();
+        _pollForStopUpdateResult();
+      }
+    });
+  }
+
+  Future<void> cancelStopUpdate() async {
+    if (ride.value == null) return;
+
+    // Optimistic UI close
+    isUpdatingStops.value = false;
+    stopUpdateProgressStep.value = 0;
+
+    final result = await rideRepository.cancelPendingStops(rideId);
+    result.fold(
+      (f) => debugPrint("Failed to cancel stop update: ${f.message}"),
+      (_) {
+        _clearIdempotencyKey();
+        _fetchRideDetails();
+      },
+    );
+  }
+
+  void _handleStopUpdateProgress(bool updating) {
+    if (updating) {
+      Get.bottomSheet(
+        const StopUpdateProgressModal(),
+        isDismissible: false,
+        enableDrag: false,
+        backgroundColor: Colors.transparent,
+      );
+    } else {
+      if (Get.isBottomSheetOpen ?? false) {
+        if (stopUpdateProgressStep.value == 3) {
+          Future.delayed(const Duration(seconds: 3), () {
+            if (Get.isBottomSheetOpen ?? false) Get.back();
+            stopUpdateProgressStep.value = 0;
+          });
+        } else {
+          Get.back();
+          stopUpdateProgressStep.value = 0;
+        }
+      }
+    }
+  }
+
+  String priceFormatter(int? amount) {
+    if (amount == null) return '0';
+    return NumberFormat('#,###').format(amount);
   }
 }

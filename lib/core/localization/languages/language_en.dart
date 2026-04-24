@@ -37,6 +37,7 @@ class LanguageEn extends Languages {
     'card_detail': 'Card Detail',
     'card_ending_in_placeholder': 'Card ending in XX1234',
     'change_drop_location': 'Change Drop Location',
+    'edit_stops': 'Edit Stops',
     'change_location': 'Change Location',
     'change_phone_number': 'Change phone number',
     'chat': 'Chat',
@@ -191,6 +192,7 @@ class LanguageEn extends Languages {
     'search_destination': 'Search destination',
     'search_location': 'Search location...',
     'search_pickup_location': 'Search pickup location',
+    'search_stop': 'Search stop location',
     'search_stop_location': 'Search stop location',
     'search_timeout': 'Search Timeout',
     'security_and_preference_controls_more_settings_will_appear_here_as_they_are_enable':
@@ -239,6 +241,7 @@ class LanguageEn extends Languages {
     'unable_to_open_ride_details': 'Unable to open ride details',
     'unable_to_skip_rating_now': 'Unable to skip rating now.',
     'unable_to_submit_rating_now': 'Unable to submit rating now.',
+    'stop_location': 'Stop Location',
     'updating_address': 'Updating address...',
     'user_profile_updated_successfully': 'User profile updated successfully',
     'validation': 'Validation',
@@ -395,6 +398,9 @@ class LanguageEn extends Languages {
 
   @override
   String get changeDropLocation => values['change_drop_location'] ?? '';
+
+  @override
+  String get editStops => values['edit_stops'] ?? '';
 
   @override
   String get changeLocation => values['change_location'] ?? '';

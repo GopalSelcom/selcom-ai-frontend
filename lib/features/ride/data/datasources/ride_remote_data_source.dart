@@ -2,6 +2,7 @@ import '../../../../core/data/models/responses/rides/active_ride_response.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../models/ride_management_models.dart';
+import '../models/stop_update_models.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/urls.dart';
 import 'dart:developer' as developer;
@@ -31,9 +32,18 @@ abstract class RideRemoteDataSource {
   });
   Future<bool> sendChatMessage(String rideId, String message);
   Future<bool> updateActivityToken(String rideId, String token);
+  Future<dynamic> updateStops(
+    String rideId, {
+    required List<Map<String, dynamic>> stops,
+    bool confirm = false,
+    required String idempotencyKey,
+  });
+  Future<void> cancelPendingStops(String rideId);
 }
 
 class RideRemoteDataSourceImpl implements RideRemoteDataSource {
+  final ApiService apiService = ApiService();
+
   RideRemoteDataSourceImpl();
 
   @override
@@ -292,6 +302,48 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
         );
       }
       return false;
+    }
+  }
+
+  @override
+  Future<dynamic> updateStops(
+    String rideId, {
+    required List<Map<String, dynamic>> stops,
+    bool confirm = false,
+    required String idempotencyKey,
+  }) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.ride.updateStops(rideId),
+        method: ApiMethod.put,
+        headers: {'Idempotency-Key': idempotencyKey},
+        body: {'stops': stops, 'confirm': confirm},
+        errorPresentationType: ErrorPresentationType.none,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      final data = response.data['data'] ?? {};
+      if (confirm) {
+        return StopUpdateAppliedModel.fromJson(data);
+      } else {
+        return StopUpdatePreviewModel.fromJson(data);
+      }
+    }
+    throw Exception(response.data?['message'] ?? 'Failed to update stops');
+  }
+
+  @override
+  Future<void> cancelPendingStops(String rideId) async {
+    try {
+      await apiService.call(
+        request: ApiRequest(
+          endpoint: URLS.ride.cancelPendingStops(rideId),
+          method: ApiMethod.delete,
+        ),
+      );
+    } catch (e) {
+      developer.log("Error cancelling pending stops: $e");
     }
   }
 }

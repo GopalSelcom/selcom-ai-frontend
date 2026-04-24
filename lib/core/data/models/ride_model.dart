@@ -30,6 +30,7 @@ class RideModel extends RideEntity {
     super.driverSnapshot,
     super.vehicleSnapshot,
     required super.createdAt,
+    super.pendingStopsUpdate,
   });
 
   factory RideModel.fromJson(Map<String, dynamic> json) {
@@ -76,6 +77,11 @@ class RideModel extends RideEntity {
         ? vehicleTypeIdRaw['display_name']?.toString()
         : json['vehicle_display_name']?.toString();
 
+    final pendingUpdateJson = json['pending_stops_update'];
+    final pendingStopsUpdate = pendingUpdateJson != null
+        ? PendingStopsUpdateModel.fromJson(pendingUpdateJson)
+        : null;
+
     return RideModel(
       id: json['_id'] ?? '',
       riderId: json['rider_id'] ?? '',
@@ -119,6 +125,7 @@ class RideModel extends RideEntity {
           ? VehicleSnapshotModel.fromJson(json['vehicle_snapshot'])
           : null,
       createdAt: DateTime.parse(createdAtStr),
+      pendingStopsUpdate: pendingStopsUpdate,
     );
   }
 
@@ -150,6 +157,7 @@ class RideModel extends RideEntity {
     DriverSnapshotEntity? driverSnapshot,
     VehicleSnapshotEntity? vehicleSnapshot,
     DateTime? createdAt,
+    PendingStopsUpdateEntity? pendingStopsUpdate,
   }) {
     return RideModel(
       id: id ?? this.id,
@@ -179,6 +187,7 @@ class RideModel extends RideEntity {
       driverSnapshot: driverSnapshot ?? this.driverSnapshot,
       vehicleSnapshot: vehicleSnapshot ?? this.vehicleSnapshot,
       createdAt: createdAt ?? this.createdAt,
+      pendingStopsUpdate: pendingStopsUpdate ?? this.pendingStopsUpdate,
     );
   }
 
@@ -305,6 +314,37 @@ class FareBreakdownModel extends FareBreakdownEntity {
       rideCharge: ((json['ride_charge'] ?? 0) as num).toInt(),
       bookingFee: ((json['booking_fee'] ?? 0) as num).toInt(),
       totalAmount: ((json['total_amount'] ?? 0) as num).toInt(),
+    );
+  }
+}
+
+class PendingStopsUpdateModel extends PendingStopsUpdateEntity {
+  const PendingStopsUpdateModel({
+    required super.stops,
+    required super.status,
+    required super.deltaAmount,
+    required super.direction,
+    super.newFare,
+    super.validationId,
+    super.expiresAt,
+    super.idempotencyKey,
+  });
+
+  factory PendingStopsUpdateModel.fromJson(Map<String, dynamic> json) {
+    final stopsJson = json['stops'] as List? ?? [];
+    final stops = stopsJson.map((e) => RideStopModel.fromJson(e)).toList();
+
+    return PendingStopsUpdateModel(
+      stops: stops,
+      status: json['status'] ?? '',
+      deltaAmount: json['delta_amount'] ?? 0,
+      direction: json['direction'] ?? '',
+      newFare: json['new_fare'] ?? json['new_fare_estimate'],
+      validationId: json['block_update_validation_id'],
+      expiresAt: json['expires_at'] != null
+          ? DateTime.parse(json['expires_at'])
+          : null,
+      idempotencyKey: json['idempotency_key'],
     );
   }
 }

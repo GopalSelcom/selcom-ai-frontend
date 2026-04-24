@@ -685,16 +685,23 @@ class DriverAcceptedScreen extends StatelessWidget {
                 endAddress: c.destinationAddress,
                 stops: c.ride.value?.stops,
               ),
-              if (!isCompleted) ...[
-                SizedBox(height: 6.h),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    AppStrings.changeDropLocation.tr,
-                    style: AppTextStyles.homeCaption.copyWith(
-                      color: AppColors.primary,
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
+              if (!isCompleted &&
+                  !c.isNearDestination() &&
+                  c.ride.value?.pendingStopsUpdate == null) ...[
+                GestureDetector(
+                  onTap: c.onEditStops,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding: EdgeInsets.only(top: 8.h),
+                      child: Text(
+                        AppStrings.editStops.tr,
+                        style: AppTextStyles.homeCaption.copyWith(
+                          color: AppColors.primary,
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -703,62 +710,64 @@ class DriverAcceptedScreen extends StatelessWidget {
           ),
         ),
         SizedBox(height: 12.h),
-        Container(
-          padding: EdgeInsets.all(14.w),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF8F9FD),
-            border: Border.all(color: const Color(0xFFE6E9EE), width: 0.8),
-            borderRadius: BorderRadius.circular(16.r),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    AppStrings.totalFare.tr,
-                    style: AppTextStyles.homeTitle.copyWith(
-                      fontSize: 15.sp,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF132235),
-                    ),
-                  ),
-                  const Spacer(),
-                  if (isCompleted)
+        Obx(
+          () => Container(
+            padding: EdgeInsets.all(14.w),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8F9FD),
+              border: Border.all(color: const Color(0xFFE6E9EE), width: 0.8),
+              borderRadius: BorderRadius.circular(16.r),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
                     Text(
-                      c.totalAmountLabel,
+                      AppStrings.totalFare.tr,
                       style: AppTextStyles.homeTitle.copyWith(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w600,
                         color: const Color(0xFF132235),
                       ),
                     ),
-                ],
-              ),
-              SizedBox(height: 10.h),
-              FareBreakdownRow(
-                title: AppStrings.rideCharge.tr,
-                amount: c.rideChargeLabel,
-              ),
-              SizedBox(height: 8.h),
-              FareBreakdownRow(
-                title: AppStrings.bookingFeesAndConvenienceCharges.tr,
-                amount: c.bookingFeeLabel,
-              ),
-              if (!isCompleted) ...[
+                    const Spacer(),
+                    if (isCompleted)
+                      Text(
+                        c.totalAmountLabel,
+                        style: AppTextStyles.homeTitle.copyWith(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF132235),
+                        ),
+                      ),
+                  ],
+                ),
+                SizedBox(height: 10.h),
+                FareBreakdownRow(
+                  title: AppStrings.rideCharge.tr,
+                  amount: c.rideChargeLabel,
+                ),
                 SizedBox(height: 8.h),
                 FareBreakdownRow(
-                  title: AppStrings.paymentMode.tr,
-                  amount: c.paymentModeLabel,
+                  title: AppStrings.bookingFeesAndConvenienceCharges.tr,
+                  amount: c.bookingFeeLabel,
+                ),
+                if (!isCompleted) ...[
+                  SizedBox(height: 8.h),
+                  FareBreakdownRow(
+                    title: AppStrings.paymentMode.tr,
+                    amount: c.paymentModeLabel,
+                  ),
+                ],
+                SizedBox(height: 8.h),
+                FareBreakdownRow(
+                  title: AppStrings.totalAmount.tr,
+                  amount: c.totalAmountLabel,
+                  isTotal: true,
                 ),
               ],
-              SizedBox(height: 8.h),
-              FareBreakdownRow(
-                title: AppStrings.totalAmount.tr,
-                amount: c.totalAmountLabel,
-                isTotal: true,
-              ),
-            ],
+            ),
           ),
         ),
         if (isCompleted) ...[
