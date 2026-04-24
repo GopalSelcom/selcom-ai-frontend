@@ -16,7 +16,6 @@ import '../../../../core/data/models/responses/nearbyRiders/response/tracking_up
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../shared/utils/app_dialogs.dart';
-import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../../../core/utils/map_marker_utils.dart';
@@ -71,7 +70,6 @@ class FindingDriverController extends GetxController {
       Rxn<TrackingUpdateSocketResponse>();
   final driverName = ''.obs;
   final driverPhone = ''.obs;
-  final selectedRideIndex = 0.obs;
 
   GoogleMapController? mapController;
 
@@ -632,56 +630,20 @@ class FindingDriverController extends GetxController {
     final result = await rideRepository.cancelRide(rideId, reason);
     result.fold(
       (_) => AppDialogs.showErrorDialog(
-        title:AppStrings.cancelFailed.tr,
+        title: AppStrings.cancelFailed.tr,
         message: AppStrings.couldNotCancelTryAgain.tr,
       ),
       (success) async {
         if (!success) {
           AppDialogs.showErrorDialog(
             title: AppStrings.cancelFailed.tr,
-            message:   AppStrings.pleaseTryAgain.tr,
+            message: AppStrings.pleaseTryAgain.tr,
           );
         } else {
           await LiveActivityManager().endActivity(rideId);
         }
       },
     );
-  }
-
-  final rideOptions = const <MockRideOption>[
-    MockRideOption(
-      name: 'GoRide Card',
-      capacity: '4',
-      eta: '10 min away',
-      dropAt: 'Drop 1:11 pm',
-      fareAmount: 500,
-      assetPath: AppAssets.gari,
-      nearFast: true,
-    ),
-    MockRideOption(
-      name: 'Bajaji',
-      capacity: '3',
-      eta: '5 min away',
-      dropAt: 'Drop 1:09 pm',
-      fareAmount: 100,
-      assetPath: AppAssets.bajaj,
-    ),
-    MockRideOption(
-      name: 'Boda',
-      capacity: '1',
-      eta: '1 min away',
-      dropAt: 'Drop 1:00 pm',
-      fareAmount: 100,
-      assetPath: AppAssets.boda,
-    ),
-  ];
-
-  String get selectedFare =>
-      CurrencyFormatter.format(rideOptions[selectedRideIndex.value].fareAmount);
-
-  void selectRideOption(int index) {
-    if (index < 0 || index >= rideOptions.length) return;
-    selectedRideIndex.value = index;
   }
 
   void openRideMessage() {
@@ -695,24 +657,4 @@ class FindingDriverController extends GetxController {
       },
     );
   }
-}
-
-class MockRideOption {
-  final String name;
-  final String capacity;
-  final String eta;
-  final String dropAt;
-  final num fareAmount;
-  final String assetPath;
-  final bool nearFast;
-
-  const MockRideOption({
-    required this.name,
-    required this.capacity,
-    required this.eta,
-    required this.dropAt,
-    required this.fareAmount,
-    required this.assetPath,
-    this.nearFast = false,
-  });
 }
