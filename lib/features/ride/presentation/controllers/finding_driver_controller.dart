@@ -70,7 +70,6 @@ class FindingDriverController extends GetxController {
       Rxn<TrackingUpdateSocketResponse>();
   final driverName = ''.obs;
   final driverPhone = ''.obs;
-  final selectedRideIndex = 0.obs;
 
   GoogleMapController? mapController;
 
@@ -631,55 +630,20 @@ class FindingDriverController extends GetxController {
     final result = await rideRepository.cancelRide(rideId, reason);
     result.fold(
       (_) => AppDialogs.showErrorDialog(
-        title:AppStrings.cancelFailed.tr,
+        title: AppStrings.cancelFailed.tr,
         message: AppStrings.couldNotCancelTryAgain.tr,
       ),
       (success) async {
         if (!success) {
           AppDialogs.showErrorDialog(
             title: AppStrings.cancelFailed.tr,
-            message:   AppStrings.pleaseTryAgain.tr,
+            message: AppStrings.pleaseTryAgain.tr,
           );
         } else {
           await LiveActivityManager().endActivity(rideId);
         }
       },
     );
-  }
-
-  final rideOptions = const <MockRideOption>[
-    MockRideOption(
-      name: 'GoRide Card',
-      capacity: '4',
-      eta: '10 min away',
-      dropAt: 'Drop 1:11 pm',
-      fare: 'TZS 500',
-      assetPath: AppAssets.gari,
-      nearFast: true,
-    ),
-    MockRideOption(
-      name: 'Bajaji',
-      capacity: '3',
-      eta: '5 min away',
-      dropAt: 'Drop 1:09 pm',
-      fare: 'TZS 100',
-      assetPath: AppAssets.bajaj,
-    ),
-    MockRideOption(
-      name: 'Boda',
-      capacity: '1',
-      eta: '1 min away',
-      dropAt: 'Drop 1:00 pm',
-      fare: 'TZS 100',
-      assetPath: AppAssets.boda,
-    ),
-  ];
-
-  String get selectedFare => rideOptions[selectedRideIndex.value].fare;
-
-  void selectRideOption(int index) {
-    if (index < 0 || index >= rideOptions.length) return;
-    selectedRideIndex.value = index;
   }
 
   void openRideMessage() {
@@ -693,24 +657,4 @@ class FindingDriverController extends GetxController {
       },
     );
   }
-}
-
-class MockRideOption {
-  final String name;
-  final String capacity;
-  final String eta;
-  final String dropAt;
-  final String fare;
-  final String assetPath;
-  final bool nearFast;
-
-  const MockRideOption({
-    required this.name,
-    required this.capacity,
-    required this.eta,
-    required this.dropAt,
-    required this.fare,
-    required this.assetPath,
-    this.nearFast = false,
-  });
 }

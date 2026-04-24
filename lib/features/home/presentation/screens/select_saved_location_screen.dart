@@ -6,6 +6,7 @@ import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_back_button.dart';
 import '../controllers/home_controller.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../shared/utils/app_dialogs.dart';
@@ -55,15 +56,15 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final canGoBack = Navigator.of(context).canPop();
+
     return Scaffold(
       backgroundColor: AppColors.pageBackground,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.shade1),
-          onPressed: () => Get.back(),
-        ),
+        automaticallyImplyLeading: false,
+        leading: canGoBack ? const AppBackButton(color: AppColors.shade1) : null,
         title: Text(
           label,
           style: AppTextStyles.homeTitle.copyWith(

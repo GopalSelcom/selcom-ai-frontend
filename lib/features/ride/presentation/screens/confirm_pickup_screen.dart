@@ -6,6 +6,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart' hide Marker;
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../shared/widgets/map_widgets.dart';
 import '../controllers/confirm_pickup_controller.dart';
 
@@ -15,6 +16,7 @@ class ConfirmPickupScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = Get.find<ConfirmPickupController>();
+    final canGoBack = Navigator.of(context).canPop();
 
     return Scaffold(
       body: Stack(
@@ -85,17 +87,20 @@ class ConfirmPickupScreen extends StatelessWidget {
               ),
             ),
           ),
-          Positioned(
-            top: MediaQuery.paddingOf(context).top + 10.h,
-            left: 16.w,
-            child: CircleAvatar(
-              backgroundColor: Colors.white,
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back, color: AppColors.shade1),
-                onPressed: Get.back,
+          if (canGoBack)
+            Positioned(
+              top: MediaQuery.paddingOf(context).top + 10.h,
+              left: 16.w,
+              child: CircleAvatar(
+                backgroundColor: Colors.white,
+                child: AppBackButton(
+                  color: AppColors.shade1,
+                  alignment: Alignment.center,
+                  size: 22.w,
+                  hitSize: 40.w,
+                ),
               ),
             ),
-          ),
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(

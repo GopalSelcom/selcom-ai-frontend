@@ -10,6 +10,9 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/widgets/app_back_button.dart';
+import '../../../../shared/utils/currency_formatter.dart';
+import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../payment/presentation/widgets/payment_bar.dart';
 import '../controllers/vehicle_selection_controller.dart';
 
@@ -17,34 +20,33 @@ import '../controllers/vehicle_selection_controller.dart';
 class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
   const VehicleSelectionScreen({super.key});
 
-  static const double _sheetHeightFactor = 0.58;
+  static const double _sheetHeightFactor = 0.50;
 
   @override
   Widget build(BuildContext context) {
+    final canGoBack = Navigator.of(context).canPop();
+
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
         children: [
           _buildMap(context),
-          Positioned(
-            top: MediaQuery.paddingOf(context).top + 8.h,
-            left: 16.w,
-            child: Material(
-              color: Colors.white,
-              shape: const CircleBorder(),
-              elevation: 2,
-              child: IconButton(
-                icon: SvgPictureAsset(
-                  AppAssets.locationIcArrowLeft,
-                  width: 22.w,
-                  height: 20.h,
-                  placeholderBuilder: (_) =>
-                      const Icon(Icons.arrow_back_ios_new, size: 18),
+          if (canGoBack)
+            Positioned(
+              top: MediaQuery.paddingOf(context).top + 8.h,
+              left: 16.w,
+              child: Material(
+                color: Colors.white,
+                shape: const CircleBorder(),
+                elevation: 2,
+                child: AppBackButton(
+                  color: AppColors.shade1,
+                  alignment: Alignment.center,
+                  size: 24.w,
+                  hitSize: 40.w,
                 ),
-                onPressed: Get.back,
               ),
             ),
-          ),
           Positioned(
             top: MediaQuery.paddingOf(context).top + 14.h,
             right: 16.w,
@@ -76,12 +78,13 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
               ),
             ),
           ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: _sheetHeightFactor.sh,
-            child: _bottomSheet(context),
+          AppDraggableBottomSheet(
+            initialChildSize: _sheetHeightFactor,
+            minChildSize: _sheetHeightFactor,
+            maxChildSize: 0.9,
+            snap: true,
+            snapSizes: const [_sheetHeightFactor, 0.9],
+            childBuilder: (_) => _bottomSheet(context),
           ),
         ],
       ),
@@ -276,10 +279,8 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
             ),
             Obx(() {
               return PaymentBar(
-                buttonLabel: AppStrings.bookRideWithFare.trParams({
-                  'currency': controller.currency,
-                  'amount': '${controller.selectedFareAmount}',
-                }),
+                buttonLabel:
+                    '${AppStrings.bookRide.tr} ${CurrencyFormatter.format(controller.selectedFareAmount)}',
                 isLoading: controller.isBooking,
                 onActionButtonPressed: controller.bookRide,
               );
@@ -391,7 +392,7 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
                 ),
               ),
               Text(
-                '${item.currency ?? AppStrings.defaultCurrencyTzs.tr} ${item.fareEstimate ?? 0}',
+                CurrencyFormatter.format(item.fareEstimate ?? 0),
                 style: TextStyle(
                   fontFamily: 'Metropolis',
                   fontSize: 16.sp,

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:get/get.dart';
-import 'package:iconsax/iconsax.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import 'app_back_button.dart';
 
 class AppProfileHeader extends StatelessWidget {
   final String? title;
@@ -21,6 +20,8 @@ class AppProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final canGoBack = Navigator.of(context).canPop();
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.only(
@@ -38,17 +39,16 @@ class AppProfileHeader extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Back Arrow
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
-            child: IconButton(
-              icon: Icon(Iconsax.arrow_left, color: Colors.white, size: 28.w),
-              padding: EdgeInsets.zero,
-              alignment: Alignment.centerLeft,
-              onPressed: onBack ?? () => Get.back(),
+          if (canGoBack)
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              child: AppBackButton(
+                color: Colors.white,
+                size: 28.w,
+                onPressed: onBack,
+              ),
             ),
-          ),
-          
+
           if (title != null) ...[
             SizedBox(height: 12.h),
             Padding(

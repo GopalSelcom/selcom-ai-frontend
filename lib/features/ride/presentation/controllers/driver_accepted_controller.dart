@@ -17,7 +17,6 @@ import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
 
 import '../../../../core/constants/app_assets.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
 import '../../../../core/data/models/ride_model.dart';
@@ -29,6 +28,7 @@ import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../domain/repositories/ride_repository.dart';
@@ -69,8 +69,10 @@ class DriverAcceptedController extends GetxController
 
   final driverName = ''.obs;
   final driverPhone = ''.obs;
+  final driverAvatarUrl = ''.obs;
   final driverRating = ''.obs;
   final driverVehicleLine = ''.obs;
+  final bottomSheetVehicleImageAsset = AppAssets.imgCab.obs;
   final plateLinePrimary = ''.obs;
   final plateLineSecondary = ''.obs;
   final vehicleSubtitle = ''.obs;
@@ -408,6 +410,8 @@ class DriverAcceptedController extends GetxController
   void _applyMockContent() {
     driverName.value = 'John Doe';
     driverPhone.value = '';
+    driverAvatarUrl.value = '';
+    bottomSheetVehicleImageAsset.value = AppAssets.imgBoda;
     driverRating.value = '4';
     driverVehicleLine.value = 'Volkswagen';
     plateLinePrimary.value = 'T 772';
@@ -429,6 +433,7 @@ class DriverAcceptedController extends GetxController
       vehicleName: v?.vehicleModel,
       vehicleType: v?.vehicleType,
     );
+    _syncBottomSheetVehicleImage(vehicleTypeHint);
     if (vehicleTypeHint.isNotEmpty) {
       loadDriverIcon(vehicleType: vehicleTypeHint);
     }
@@ -436,6 +441,7 @@ class DriverAcceptedController extends GetxController
     if (d != null) {
       driverName.value = d.name;
       driverPhone.value = d.phone;
+      driverAvatarUrl.value = (d.avatarUrl ?? '').trim();
       driverRating.value = d.rating > 0 ? d.rating.toStringAsFixed(1) : '—';
 
       // If vehicle snapshot is missing or generic, use fields from driver snapshot
@@ -482,6 +488,7 @@ class DriverAcceptedController extends GetxController
     } else {
       driverName.value = 'Driver';
       driverPhone.value = '';
+      driverAvatarUrl.value = '';
       driverRating.value = '—';
       if (isPinRequired.value) {
         otpDigits.assignAll(['—', '—', '—', '—']);
@@ -703,6 +710,13 @@ class DriverAcceptedController extends GetxController
         .toLowerCase();
   }
 
+  void _syncBottomSheetVehicleImage(String? vehicleTypeHint) {
+    bottomSheetVehicleImageAsset.value = VehicleImageUtils.imageAssetForVehicleType(
+      vehicleTypeHint,
+      fallbackAsset: AppAssets.imgCab,
+    );
+  }
+
   void onMapCreated(GoogleMapController c) {
     mapController = c;
     _fitRouteBounds();
@@ -820,6 +834,7 @@ class DriverAcceptedController extends GetxController
       vehicleName: v?.vehicleName,
       vehicleType: v?.vehicleType,
     );
+    _syncBottomSheetVehicleImage(vehicleTypeHint);
     if (vehicleTypeHint.isNotEmpty) {
       loadDriverIcon(vehicleType: vehicleTypeHint);
     }
@@ -832,6 +847,10 @@ class DriverAcceptedController extends GetxController
       if ((d.name ?? '').trim().isNotEmpty) driverName.value = d.name!.trim();
       if ((d.phone ?? '').trim().isNotEmpty) {
         driverPhone.value = d.phone!.trim();
+      }
+      final avatar = (d.avatarUrl ?? '').trim();
+      if (avatar.isNotEmpty) {
+        driverAvatarUrl.value = avatar;
       }
       if ((d.lat) != null && (d.lng) != null) {
         assignedDriverLocation.value = LatLng(d.lat!, d.lng!);
@@ -1252,6 +1271,7 @@ class DriverAcceptedController extends GetxController
         'rideId': rideId,
         'driverName': driverName.value,
         'driverPhone': driverPhone.value,
+        'driverAvatarUrl': driverAvatarUrl.value,
         'driverSubtitle': plateLinePrimary.value + plateLineSecondary.value,
         'riderName': 'Rider', // Default placeholder
         'initialStatus': _mapBottomSheetToRideStatus(
@@ -1309,13 +1329,13 @@ class DriverAcceptedController extends GetxController
         _seedRideCharge ??
         ride.value?.fareEstimate ??
         100;
-    return 'TZS $amount.00';
+    return CurrencyFormatter.format(amount);
   }
 
   String get bookingFeeLabel {
     final amount =
         ride.value?.fareBreakdown?.bookingFee ?? _seedBookingFee ?? 0;
-    return 'TZS $amount.00';
+    return CurrencyFormatter.format(amount);
   }
 
   String get totalAmountLabel {
@@ -1325,7 +1345,7 @@ class DriverAcceptedController extends GetxController
         ride.value?.finalFare ??
         ride.value?.fareEstimate ??
         100;
-    return 'TZS $amount.00';
+    return CurrencyFormatter.format(amount);
   }
 
   String get paymentModeLabel {

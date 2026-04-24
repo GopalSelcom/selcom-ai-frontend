@@ -34,6 +34,7 @@ class RideMessageController extends GetxController {
   String driverName = 'John Anthany deo';
   String driverSubtitle = kRideChatStaticDriverPlate;
   String driverPhone = '';
+  String driverAvatarUrl = '';
 
   final rideStatus = RideStatus.searching.obs;
 
@@ -139,6 +140,11 @@ class RideMessageController extends GetxController {
     final phone = (args['driverPhone'] as String?)?.trim();
     if (phone != null && phone.isNotEmpty) {
       driverPhone = phone;
+    }
+
+    final avatar = (args['driverAvatarUrl'] as String?)?.trim();
+    if (avatar != null && avatar.isNotEmpty) {
+      driverAvatarUrl = avatar;
     }
 
     final initialStatus = args['initialStatus'];
