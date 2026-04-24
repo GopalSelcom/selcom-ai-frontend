@@ -7,6 +7,7 @@ import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/widgets/app_back_button.dart';
 import '../controllers/home_controller.dart';
 import '../../data/models/places_models.dart';
 import '../../../../core/routes/app_routes.dart';
@@ -146,22 +147,12 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
               Positioned(
                 top: 12.h,
                 left: 16.w,
-                child: InkWell(
-                  onTap: controller.closeLocationSelection,
-                  child: SizedBox(
-                    width: 28.w,
-                    height: 28.w,
-                    child: Center(
-                      child: SvgPictureAsset(
-                        AppAssets.locationIcArrowLeft,
-                        width: 22.w,
-                        height: 20.h,
-                        placeholderBuilder: (_) =>
-                            const Icon(Icons.arrow_back_ios_new, size: 18),
-                      ),
-                    ),
-                  ),
-                ),
+                child: Navigator.of(context).canPop()
+                    ? AppBackButton(
+                        color: AppColors.shade1,
+                        onPressed: controller.closeLocationSelection,
+                      )
+                    : const SizedBox.shrink(),
               ),
               Positioned(
                 top: 12.h,

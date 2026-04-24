@@ -7,6 +7,7 @@ import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../shared/utils/phone_formatter.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../controllers/auth_controller.dart';
@@ -32,6 +33,10 @@ class PhoneInputScreen extends GetView<AuthController> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        if (Navigator.of(context).canPop()) ...[
+                          SizedBox(height: 16.h),
+                          AppBackButton(color: AppColors.shade1, size: 28.w),
+                        ],
                         SizedBox(height: 30.h),
 
                         // Title

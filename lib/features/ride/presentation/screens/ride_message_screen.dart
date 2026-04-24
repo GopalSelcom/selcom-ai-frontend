@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_back_button.dart';
 import '../../domain/entities/ride_chat_message.dart';
 import '../controllers/ride_message_controller.dart';
 
@@ -83,10 +83,7 @@ class RideMessageScreen extends GetView<RideMessageController> {
       padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
       child: Row(
         children: [
-          IconButton(
-            onPressed: controller.goBack,
-            icon: const Icon(Iconsax.arrow_left, color: AppColors.shade1),
-          ),
+          AppBackButton(color: AppColors.shade1, onPressed: controller.goBack),
           Expanded(
             child: Column(
               children: [

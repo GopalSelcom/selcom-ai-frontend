@@ -3,6 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 
+import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/widgets/app_back_button.dart';
 import '../widgets/cancel_ride_dialogs.dart';
 
 class CancelDialogGalleryScreen extends StatelessWidget {
@@ -10,8 +12,12 @@ class CancelDialogGalleryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final canGoBack = Navigator.of(context).canPop();
+
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
+        leading: canGoBack ? const AppBackButton(color: AppColors.shade1) : null,
         title: Text(AppStrings.cancelDialogsGallery.tr),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,

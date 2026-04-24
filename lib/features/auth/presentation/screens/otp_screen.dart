@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../shared/widgets/app_otp_field.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/utils/phone_formatter.dart';
@@ -39,14 +38,7 @@ class OtpScreen extends GetView<AuthController> {
                       children: [
                         SizedBox(height: 16.h),
                         // Back Button
-                        InkWell(
-                          onTap: () => Get.back(),
-                          child: SvgPicture.asset(
-                            AppAssets.icArrowLeft,
-                            height: 28.h,
-                            width: 28.w,
-                          ),
-                        ),
+                        AppBackButton(color: AppColors.shade1, size: 28.w),
                         SizedBox(height: 32.h),
 
                         // Title

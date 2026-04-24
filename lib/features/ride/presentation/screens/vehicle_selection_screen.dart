@@ -10,6 +10,7 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/widgets/app_back_button.dart';
 import '../../../payment/presentation/widgets/payment_bar.dart';
 import '../controllers/vehicle_selection_controller.dart';
 
@@ -21,30 +22,29 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
 
   @override
   Widget build(BuildContext context) {
+    final canGoBack = Navigator.of(context).canPop();
+
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
         children: [
           _buildMap(context),
-          Positioned(
-            top: MediaQuery.paddingOf(context).top + 8.h,
-            left: 16.w,
-            child: Material(
-              color: Colors.white,
-              shape: const CircleBorder(),
-              elevation: 2,
-              child: IconButton(
-                icon: SvgPictureAsset(
-                  AppAssets.locationIcArrowLeft,
-                  width: 22.w,
-                  height: 20.h,
-                  placeholderBuilder: (_) =>
-                      const Icon(Icons.arrow_back_ios_new, size: 18),
+          if (canGoBack)
+            Positioned(
+              top: MediaQuery.paddingOf(context).top + 8.h,
+              left: 16.w,
+              child: Material(
+                color: Colors.white,
+                shape: const CircleBorder(),
+                elevation: 2,
+                child: AppBackButton(
+                  color: AppColors.shade1,
+                  alignment: Alignment.center,
+                  size: 24.w,
+                  hitSize: 40.w,
                 ),
-                onPressed: Get.back,
               ),
             ),
-          ),
           Positioned(
             top: MediaQuery.paddingOf(context).top + 14.h,
             right: 16.w,

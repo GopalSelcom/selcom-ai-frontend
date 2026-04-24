@@ -7,6 +7,7 @@ import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../shared/widgets/map_widgets.dart';
 import '../controllers/home_controller.dart';
 import '../../../../core/routes/app_routes.dart';
@@ -51,6 +52,8 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final canGoBack = Navigator.of(context).canPop();
+
     return Scaffold(
       body: Stack(
         children: [
@@ -140,17 +143,20 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
           ),
 
           // Back Button
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 10.h,
-            left: 16.w,
-            child: CircleAvatar(
-              backgroundColor: Colors.white,
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back, color: AppColors.shade1),
-                onPressed: () => Get.back(),
+          if (canGoBack)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 10.h,
+              left: 16.w,
+              child: CircleAvatar(
+                backgroundColor: Colors.white,
+                child: AppBackButton(
+                  color: AppColors.shade1,
+                  alignment: Alignment.center,
+                  size: 22.w,
+                  hitSize: 40.w,
+                ),
               ),
             ),
-          ),
 
           // Bottom Sheet
           Align(alignment: Alignment.bottomCenter, child: _buildBottomSheet()),
