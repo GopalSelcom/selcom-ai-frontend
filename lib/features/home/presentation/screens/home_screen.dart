@@ -197,117 +197,106 @@ class HomeScreen extends GetView<HomeController> {
       snapSizes: const [_homeSheetInitialSize, 0.9],
       childBuilder: (scrollController) {
         return ListView(
-            controller: scrollController,
-            physics: const BouncingScrollPhysics(
-              parent: AlwaysScrollableScrollPhysics(),
+          controller: scrollController,
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
+          padding: EdgeInsets.symmetric(horizontal: 24.w),
+          children: [
+            SizedBox(height: 12.h),
+            Center(
+              child: Container(
+                width: 48.w,
+                height: 5.h,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE2E8F0),
+                  borderRadius: BorderRadius.circular(37.r),
+                ),
+              ),
             ),
-            padding: EdgeInsets.symmetric(horizontal: 24.w),
-            children: [
-              SizedBox(height: 12.h),
-              Center(
-                child: Container(
-                  width: 48.w,
-                  height: 5.h,
-                  decoration: BoxDecoration(
+            SizedBox(height: 24.h),
+            GestureDetector(
+              onTap: () => controller.openLocationSelection(),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(16.r),
+                  border: Border.all(
                     color: const Color(0xFFE2E8F0),
-                    borderRadius: BorderRadius.circular(37.r),
+                    width: 0.8,
                   ),
                 ),
-              ),
-              SizedBox(height: 24.h),
-              Text(
-                AppStrings.whereTo.tr,
-                style: AppTextStyles.homeTitle.copyWith(fontSize: 20.sp),
-              ),
-              SizedBox(height: 16.h),
-              GestureDetector(
-                onTap: () => controller.openLocationSelection(),
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 16.w,
-                    vertical: 14.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(16.r),
-                    border: Border.all(
-                      color: const Color(0xFFE2E8F0),
-                      width: 0.8,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.location_on,
-                        color: AppColors.primary,
-                        size: 24.sp,
-                      ),
-                      SizedBox(width: 12.w),
-                      Text(
-                        AppStrings.whereAreYouGoing.tr,
-                        style: AppTextStyles.homeSubtitle,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(height: 20.h),
-              // Quick Chips
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    _buildFigmaChip('Home', AppAssets.icHomeChip),
-                    _buildFigmaChip('Work', AppAssets.icWorkChip),
-                    _buildFigmaChip('Other', AppAssets.icOtherChip),
+                    Icon(
+                      Icons.location_on,
+                      color: AppColors.primary,
+                      size: 24.sp,
+                    ),
+                    SizedBox(width: 12.w),
+                    Text(
+                      AppStrings.whereAreYouGoing.tr,
+                      style: AppTextStyles.homeSubtitle,
+                    ),
                   ],
                 ),
               ),
-              Obx(
-                () => Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (controller.shouldShowRecentSection) ...[
+            ),
+            SizedBox(height: 20.h),
+            // Quick Chips
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildFigmaChip('Home', AppAssets.icHomeChip),
+                  _buildFigmaChip('Work', AppAssets.icWorkChip),
+                  _buildFigmaChip('Other', AppAssets.icOtherChip),
+                ],
+              ),
+            ),
+            Obx(
+              () => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (controller.shouldShowRecentSection) ...[
+                    SizedBox(height: 28.h),
+                    Text(
+                      AppStrings.recentLocation.tr,
+                      style: AppTextStyles.homeSubtitle.copyWith(
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+                    if (controller.isLoadingHomeData.value)
+                      ...List.generate(3, (_) => _buildRecentLocationSkeleton())
+                    else
+                      ...controller.recentDestinations.map(
+                        (loc) => _buildRecentLocationItem(loc),
+                      ),
+                  ],
+                  if (controller.shouldShowVehicleSection) ...[
+                    if (controller.shouldShowRecentSection)
+                      SizedBox(height: 24.h),
+                    if (!controller.shouldShowRecentSection)
                       SizedBox(height: 28.h),
-                      Text(
-                        AppStrings.recentLocation.tr,
-                        style: AppTextStyles.homeSubtitle.copyWith(
-                          fontSize: 15.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    Text(
+                      AppStrings.exploreVehicle.tr,
+                      style: AppTextStyles.homeSubtitle.copyWith(
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.bold,
                       ),
-                      SizedBox(height: 16.h),
-                      if (controller.isLoadingHomeData.value)
-                        ...List.generate(
-                          3,
-                          (_) => _buildRecentLocationSkeleton(),
-                        )
-                      else
-                        ...controller.recentDestinations.map(
-                          (loc) => _buildRecentLocationItem(loc),
-                        ),
-                    ],
-                    if (controller.shouldShowVehicleSection) ...[
-                      if (controller.shouldShowRecentSection)
-                        SizedBox(height: 24.h),
-                      if (!controller.shouldShowRecentSection)
-                        SizedBox(height: 28.h),
-                      Text(
-                        AppStrings.exploreVehicle.tr,
-                        style: AppTextStyles.homeSubtitle.copyWith(
-                          fontSize: 15.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 16.h),
-                      _buildVehicleHorizontalList(),
-                    ],
+                    ),
+                    SizedBox(height: 16.h),
+                    _buildVehicleHorizontalList(),
                   ],
-                ),
+                ],
               ),
-              SizedBox(height: 40.h),
-            ],
-          );
+            ),
+            SizedBox(height: 40.h),
+          ],
+        );
       },
     );
   }

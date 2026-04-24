@@ -271,7 +271,6 @@ class LanguageEn extends Languages {
         'We will notify you when something important happens.',
     'what_stood_out': 'What stood out?',
     'where_are_you_going': 'Where are you going?',
-    'where_to': 'Where to?',
     'why_do_you_want_to_cancel': 'Why do you want to cancel?',
     'yes': 'Yes',
     'yes_cancel': 'YES, CANCEL',
@@ -1053,9 +1052,6 @@ class LanguageEn extends Languages {
 
   @override
   String get whereAreYouGoing => values['where_are_you_going'] ?? '';
-
-  @override
-  String get whereTo => values['where_to'] ?? '';
 
   @override
   String get whyDoYouWantToCancel => values['why_do_you_want_to_cancel'] ?? '';

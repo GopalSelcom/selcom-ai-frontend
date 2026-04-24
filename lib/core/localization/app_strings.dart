@@ -285,7 +285,6 @@ class AppStrings {
       'we_will_notify_you_when_something_important_happens';
   static const String whatStoodOut = 'what_stood_out';
   static const String whereAreYouGoing = 'where_are_you_going';
-  static const String whereTo = 'where_to';
   static const String whyDoYouWantToCancel = 'why_do_you_want_to_cancel';
   static const String yes = 'yes';
   static const String yesCancel = 'yes_cancel';

@@ -245,7 +245,6 @@ abstract class Languages {
   String get weWillNotifyYouWhenSomethingImportantHappens;
   String get whatStoodOut;
   String get whereAreYouGoing;
-  String get whereTo;
   String get whyDoYouWantToCancel;
   String get yes;
   String get yesCancel;
