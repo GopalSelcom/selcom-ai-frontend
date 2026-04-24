@@ -7,6 +7,7 @@ import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
+import '../../../../core/data/models/responses/get_saved_places_response.dart';
 import '../../../ride/data/models/ride_management_models.dart';
 import '../controllers/home_controller.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -244,15 +245,16 @@ class HomeScreen extends GetView<HomeController> {
               ),
             ),
             SizedBox(height: 20.h),
-            // Quick Chips
-            SingleChildScrollView(
+            Obx(
+                () => controller.savedPlaces.isEmpty
+                    ? const SizedBox.shrink()
+            :SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                children: [
-                  _buildFigmaChip('Home', AppAssets.icHomeChip),
-                  _buildFigmaChip('Work', AppAssets.icWorkChip),
-                  _buildFigmaChip('Other', AppAssets.icOtherChip),
-                ],
+                children: _sortedSavedPlaces(controller.savedPlaces)
+                  .map((place) => _buildSavedPlaceChip(place))
+                  .toList(),
+                ),
               ),
             ),
             Obx(
@@ -301,68 +303,91 @@ class HomeScreen extends GetView<HomeController> {
     );
   }
 
-  Widget _buildFigmaChip(String label, String iconPath) {
-    return Obx(() {
-      final savedPlace = controller.savedPlaces.firstWhereOrNull(
-        (p) => p.label?.toLowerCase() == label.toLowerCase(),
-      );
-      final isSaved = savedPlace != null;
-
-      return GestureDetector(
-        onTap: () {
-          if (isSaved) {
-            // For now, if saved, navigate to the selection flow or handle as per ride logic
-            // The original logic was: controller.navigateToVehicleSelectionForSavedLabel(label)
-            controller.navigateToVehicleSelectionForSavedLabel(label);
-          } else {
-            Get.toNamed(AppRoutes.selectSavedLocation, arguments: label);
-          }
-        },
-        onLongPress: isSaved
-            ? () => Get.toNamed(AppRoutes.selectSavedLocation, arguments: label)
-            : null,
-        child: Container(
-          margin: EdgeInsets.only(right: 12.w),
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: AppColors.skeletonBase, width: 0.8),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: EdgeInsets.all(4.w),
-                decoration: BoxDecoration(
-                  color: isSaved ? AppColors.bgWarningLight : AppColors.primary,
-                  shape: BoxShape.circle,
-                ),
-                child: isSaved
-                    ? SvgPictureAsset(
-                        label.toLowerCase() == 'home'
-                            ? AppAssets.icHomeChip
-                            : label.toLowerCase() == 'work'
-                            ? AppAssets.icWorkChip
-                            : AppAssets.icOtherChip,
-                        width: 16.w,
-                        height: 16.w,
-                      )
-                    : Icon(Icons.add, color: AppColors.white, size: 14.sp),
-              ),
-              SizedBox(width: 8.w),
-              Text(
-                label,
-                style: AppTextStyles.homeChip.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textHeading,
-                ),
-              ),
-            ],
-          ),
+  Widget _buildSavedPlaceChip(SavedPlace place) {
+    final label = _savedPlaceLabel(place);
+    return GestureDetector(
+      onTap: () => controller.navigateToVehicleSelectionForSavedLabel(label),
+      onLongPress: () => Get.toNamed(AppRoutes.selectSavedLocation, arguments: label),
+      child: Container(
+        margin: EdgeInsets.only(right: 12.w),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: const Color(0xFFE2E8F0), width: 0.8),
         ),
-      );
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: EdgeInsets.all(4.w),
+              decoration: const BoxDecoration(
+                color: Color(0xFFFEF3C7),
+                shape: BoxShape.circle,
+              ),
+              child: SvgPictureAsset(
+                _chipIconForLabel(label),
+                width: 16.w,
+                height: 16.w,
+              ),
+            ),
+            SizedBox(width: 8.w),
+            Text(
+              label,
+              style: AppTextStyles.homeChip.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppColors.textHeading,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _savedPlaceLabel(SavedPlace place) {
+    final raw = (place.label ?? place.name ?? '').trim();
+    if (raw.isNotEmpty) return raw.capitalizeFirst ?? raw;
+    return 'Saved';
+  }
+
+  String _chipIconForLabel(String label) {
+    switch (label.toLowerCase()) {
+      case 'home':
+        return AppAssets.icHomeChip;
+      case 'work':
+        return AppAssets.icWorkChip;
+      case 'office':
+        return AppAssets.icOfficeChip;
+      default:
+        return AppAssets.icOtherChip;
+    }
+  }
+
+  List<SavedPlace> _sortedSavedPlaces(List<SavedPlace> places) {
+    int priority(String label) {
+      switch (label.toLowerCase()) {
+        case 'home':
+          return 0;
+        case 'work':
+          return 1;
+        case 'office':
+          return 2;
+        default:
+          return 3;
+      }
+    }
+
+    final sorted = List<SavedPlace>.from(places);
+    sorted.sort((a, b) {
+      final la = _savedPlaceLabel(a);
+      final lb = _savedPlaceLabel(b);
+      final pa = priority(la);
+      final pb = priority(lb);
+      if (pa != pb) return pa.compareTo(pb);
+      return la.toLowerCase().compareTo(lb.toLowerCase());
     });
+    return sorted;
   }
 
   Widget _buildRecentLocationItem(RecentDestinationModel loc) {

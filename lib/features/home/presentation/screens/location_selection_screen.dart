@@ -7,6 +7,7 @@ import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../core/data/models/responses/get_saved_places_response.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_back_button.dart';
 import '../controllers/home_controller.dart';
@@ -472,50 +473,44 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
   }
 
   Widget _chipsRow() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          _chip('Home', AppAssets.icHomeChip),
-          _chip('Work', AppAssets.icWorkChip),
-          _chip('Other', AppAssets.icOtherChip),
-        ],
-      ),
+    return Obx(
+      () => controller.savedPlaces.isEmpty
+          ? const SizedBox.shrink()
+          : SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: _sortedSavedPlaces(controller.savedPlaces)
+                    .map((place) => _chip(place))
+                    .toList(),
+              ),
+            ),
     );
   }
 
-  Widget _chip(String label, String iconPath) {
-    final savedPlace = controller.savedPlaces.firstWhereOrNull(
-      (p) => p.label?.toLowerCase() == label.toLowerCase(),
-    );
-    final isSaved = savedPlace != null;
+  Widget _chip(SavedPlace savedPlace) {
+    final label = _savedPlaceLabel(savedPlace);
 
     return Padding(
       padding: EdgeInsets.only(right: 8.w),
       child: InkWell(
         onTap: () {
-          if (isSaved) {
-            controller.applySavedLabelToLocationSelection(
-              label: label,
-              activeSegmentIndex: _activeSegmentIndex.value,
-              pickupController: pickupController,
-              destinationController: destinationController,
-              extraDestinationControllers: _extraDestinationControllers,
-              pickupEditedByUser: pickupEditedByUser,
-              routePickupLat: _routePickupLat,
-              routePickupLng: _routePickupLng,
-              routeDestinationLat: _routeDestinationLat,
-              routeDestinationLng: _routeDestinationLng,
-              destinationPlaceId: _destinationPlaceId,
-            );
-            controller.isDestinationSelected.value = true;
-          } else {
-            Get.toNamed(AppRoutes.selectSavedLocation, arguments: label);
-          }
+          controller.applySavedLabelToLocationSelection(
+            label: label,
+            activeSegmentIndex: _activeSegmentIndex.value,
+            pickupController: pickupController,
+            destinationController: destinationController,
+            extraDestinationControllers: _extraDestinationControllers,
+            pickupEditedByUser: pickupEditedByUser,
+            routePickupLat: _routePickupLat,
+            routePickupLng: _routePickupLng,
+            routeDestinationLat: _routeDestinationLat,
+            routeDestinationLng: _routeDestinationLng,
+            destinationPlaceId: _destinationPlaceId,
+          );
+          controller.isDestinationSelected.value = true;
         },
-        onLongPress: isSaved
-            ? () => Get.toNamed(AppRoutes.selectSavedLocation, arguments: label)
-            : null,
+        onLongPress: () =>
+            Get.toNamed(AppRoutes.selectSavedLocation, arguments: label),
         borderRadius: BorderRadius.circular(12.r),
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
@@ -529,21 +524,15 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             children: [
               Container(
                 padding: EdgeInsets.all(4.w),
-                decoration: BoxDecoration(
-                  color: isSaved ? AppColors.bgWarningLight : AppColors.primary,
+                decoration: const BoxDecoration(
+                  color:  AppColors.bgWarningLight,
                   shape: BoxShape.circle,
                 ),
-                child: isSaved
-                    ? SvgPictureAsset(
-                        label.toLowerCase() == 'home'
-                            ? AppAssets.icHomeChip
-                            : label.toLowerCase() == 'work'
-                            ? AppAssets.icWorkChip
-                            : AppAssets.icOtherChip,
-                        width: 16.w,
-                        height: 16.w,
-                      )
-                    : Icon(Icons.add, color: AppColors.white, size: 14.sp),
+                child: SvgPictureAsset(
+                  _chipIconForLabel(label),
+                  width: 16.w,
+                  height: 16.w,
+                ),
               ),
               SizedBox(width: 8.w),
               Text(
@@ -558,6 +547,51 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         ),
       ),
     );
+  }
+
+  String _savedPlaceLabel(SavedPlace place) {
+    final raw = (place.label ?? place.name ?? '').trim();
+    if (raw.isNotEmpty) return raw.capitalizeFirst ?? raw;
+    return 'Saved';
+  }
+
+  String _chipIconForLabel(String label) {
+    switch (label.toLowerCase()) {
+      case 'home':
+        return AppAssets.icHomeChip;
+      case 'work':
+        return AppAssets.icWorkChip;
+      case 'office':
+        return AppAssets.icOfficeChip;
+      default:
+        return AppAssets.icOtherChip;
+    }
+  }
+
+  List<SavedPlace> _sortedSavedPlaces(List<SavedPlace> places) {
+    int priority(String label) {
+      switch (label.toLowerCase()) {
+        case 'home':
+          return 0;
+        case 'work':
+          return 1;
+        case 'office':
+          return 2;
+        default:
+          return 3;
+      }
+    }
+
+    final sorted = List<SavedPlace>.from(places);
+    sorted.sort((a, b) {
+      final la = _savedPlaceLabel(a);
+      final lb = _savedPlaceLabel(b);
+      final pa = priority(la);
+      final pb = priority(lb);
+      if (pa != pb) return pa.compareTo(pb);
+      return la.toLowerCase().compareTo(lb.toLowerCase());
+    });
+    return sorted;
   }
 
   Widget _suggestionsList(HomeController controller) {
@@ -596,7 +630,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           showFavorite: showFavorite,
           onTap: () => _onSuggestionSelected(item),
           onFavoriteTap: () =>
-              controller.toggleFavorite(description, item.placeId),
+              controller.toggleAddAddressBottomSheet(item),
         );
       },
     );
@@ -677,7 +711,11 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                     controller.isDestinationSelected.value = true;
                   },
                   onFavoriteTap: () =>
-                      controller.toggleFavorite(destination.address, null),
+                      controller.toggleAddAddressBottomSheetForAddress(
+                        address: destination.address,
+                        lat: destination.lat,
+                        lng: destination.lng,
+                      ),
                 );
               },
             ),
@@ -750,7 +788,10 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             );
             controller.isDestinationSelected.value = true;
           },
-          onFavoriteTap: () => controller.toggleFavorite(recentText, null),
+          onFavoriteTap: () =>
+              controller.toggleAddAddressBottomSheetForAddress(
+                address: recentText,
+              ),
         );
       },
     );
@@ -798,7 +839,11 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             controller.isDestinationSelected.value = true;
           },
           onFavoriteTap: () =>
-              controller.toggleFavorite(place.address ?? '', null),
+              controller.toggleAddAddressBottomSheetForAddress(
+                address: place.address ?? '',
+                lat: place.lat,
+                lng: place.lng,
+              ),
         );
       },
     );

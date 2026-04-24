@@ -1,6 +1,6 @@
 // This is a generated file; do not edit or check into version control.
-FLUTTER_ROOT=/Users/parthdarji/Developer/sdk/flutter
-FLUTTER_APPLICATION_PATH=/Users/parthdarji/Developer/projects/professional/selcom/selcom_go/selcom_go_app
+FLUTTER_ROOT=/Users/gopal/fvm/versions/3.41.6
+FLUTTER_APPLICATION_PATH=/Users/gopal/StudioProjects/selcom_rides_frontend
 COCOAPODS_PARALLEL_CODE_SIGN=true
 FLUTTER_BUILD_DIR=build
 FLUTTER_BUILD_NAME=1.0.0

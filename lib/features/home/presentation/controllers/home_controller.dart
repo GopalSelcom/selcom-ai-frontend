@@ -30,6 +30,7 @@ import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
+import '../../../../shared/widgets/add_favorite_location_sheet.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/data/models/responses/rides/active_ride_response.dart';
@@ -477,11 +478,11 @@ class HomeController extends GetxController {
 
   Future<void> toggleFavoriteForRecent(RecentDestinationModel loc) async {
     final saved = getSavedPlaceFor(loc.address, null);
-    if (saved != null && saved.id != null) {
-      await toggleFavorite(loc.address, null);
-    } else {
-      await saveRecentAsFavorite(loc: loc, label: 'other');
+    if (saved?.id != null) {
+      await _confirmAndDeleteSavedPlace(saved!);
+      return;
     }
+    await toggleAddAddressBottomSheetForRecent(loc);
   }
 
   Future<void> refreshCurrentLocationAddress() async {
@@ -835,6 +836,14 @@ class HomeController extends GetxController {
         _syncSelectedPickupAfterSavedPlacesLoad();
       }
     });
+  }
+
+  /// After a save/delete mutation, fetch latest saved places from server.
+  /// Some backends are eventually consistent, so we retry once shortly.
+  Future<void> refreshSavedPlacesAfterMutation() async {
+    await loadSavedPlaces();
+    await Future<void>.delayed(const Duration(milliseconds: 250));
+    await loadSavedPlaces();
   }
 
   void _syncSelectedPickupAfterSavedPlacesLoad() {
@@ -1413,44 +1422,246 @@ class HomeController extends GetxController {
     return saved?.isFavourite ?? false;
   }
 
-  Future<void> toggleFavorite(String address, String? placeId) async {
-    final saved = getSavedPlaceFor(address, placeId);
-    if (saved == null || saved.id == null) {
+  Future<void> toggleAddAddressBottomSheet(Prediction item) async {
+    final detailedAddress = (item.description ?? '').trim();
+    if (detailedAddress.isEmpty) {
+      AppDialogs.showErrorDialog(message: AppStrings.noLocationsFound.tr);
       return;
     }
-
-    final newStatus = !(saved.isFavourite ?? false);
-
-    // Optimistic UI update
-    final index = savedPlaces.indexWhere((p) => p.id == saved.id);
-    if (index != -1) {
-      savedPlaces[index] = savedPlaces[index].copyWith(isFavourite: newStatus);
-      savedPlaces.refresh();
+    final saved = getSavedPlaceFor(detailedAddress, item.placeId);
+    if (saved?.id != null) {
+      await _confirmAndDeleteSavedPlace(saved!);
+      return;
     }
+    await _openAddFavoriteBottomSheet(
+      address: detailedAddress,
+      onSave: (label) => saveAddressFromPrediction(item: item, label: label),
+    );
+  }
 
-    final result = await profileRepository.toggleFavorite(saved.id!, newStatus);
+  Future<void> toggleAddAddressBottomSheetForRecent(
+    RecentDestinationModel loc,
+  ) async {
+    final saved = getSavedPlaceFor(loc.address, null);
+    if (saved?.id != null) {
+      await _confirmAndDeleteSavedPlace(saved!);
+      return;
+    }
+    await _openAddFavoriteBottomSheet(
+      address: loc.address.trim(),
+      onSave: (label) => saveAddressFromRecentLocation(loc: loc, label: label),
+    );
+  }
 
-    result.fold(
-      (failure) {
-        // Rollback
-        if (index != -1) {
-          savedPlaces[index] = savedPlaces[index].copyWith(
-            isFavourite: !newStatus,
-          );
-          savedPlaces.refresh();
-        }
-      },
-      (success) {
-        if (!success) {
-          // Rollback
-          if (index != -1) {
-            savedPlaces[index] = savedPlaces[index].copyWith(
-              isFavourite: !newStatus,
-            );
-            savedPlaces.refresh();
-          }
-        }
+  Future<void> toggleAddAddressBottomSheetForAddress({
+    required String address,
+    double? lat,
+    double? lng,
+  }) async {
+    final saved = getSavedPlaceFor(address, null);
+    if (saved?.id != null) {
+      await _confirmAndDeleteSavedPlace(saved!);
+      return;
+    }
+    await _openAddFavoriteBottomSheet(
+      address: address.trim(),
+      onSave: (label) => saveAddressFromAddress(
+        address: address,
+        label: label,
+        lat: lat,
+        lng: lng,
+      ),
+    );
+  }
+
+  Future<void> _openAddFavoriteBottomSheet({
+    required String address,
+    required Future<void> Function(String label) onSave,
+  }) async {
+    final detailedAddress = address.trim();
+    if (detailedAddress.isEmpty) {
+      AppDialogs.showErrorDialog(message: AppStrings.noLocationsFound.tr);
+      return;
+    }
+    if (Get.isBottomSheetOpen ?? false) return;
+
+    await Get.bottomSheet<void>(
+      Obx(
+        () => AddFavoriteLocationSheet(
+          address: detailedAddress,
+          isSaving: isSavingPlace.value,
+          onSave: (label) async {
+            await onSave(label);
+            if ((Get.isBottomSheetOpen ?? false) && !isSavingPlace.value) {
+              Get.back<void>();
+            }
+          },
+        ),
+      ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+    );
+  }
+
+  Future<void> _confirmAndDeleteSavedPlace(SavedPlace place) async {
+    final savedPlaceId = place.id?.trim();
+    if (savedPlaceId == null || savedPlaceId.isEmpty) return;
+
+    AppDialogs.showConfirmationDialog(
+      title: 'Remove saved address',
+      message: 'Are you sure you want to remove this saved address?',
+      confirmText: 'Remove',
+      cancelText: 'Cancel',
+      confirmColor: AppColors.error,
+      onConfirm: () async {
+        final result = await profileRepository.deleteSavedPlace(savedPlaceId);
+        result.fold(
+          (failure) => AppDialogs.showErrorDialog(message: failure.message),
+          (success) async {
+            if (success) {
+              await refreshSavedPlacesAfterMutation();
+            } else {
+              AppDialogs.showErrorDialog(message: 'Could not remove address');
+            }
+          },
+        );
       },
     );
+  }
+
+  Future<void> saveAddressFromPrediction({
+    required Prediction item,
+    required String label,
+  }) async {
+    final normalizedLabel = label.trim();
+    final address = (item.description ?? '').trim();
+    if (normalizedLabel.isEmpty) {
+      AppDialogs.showErrorDialog(message: 'Please enter label');
+      return;
+    }
+    if (address.isEmpty) {
+      AppDialogs.showErrorDialog(message: AppStrings.noLocationsFound.tr);
+      return;
+    }
+    if (isSavingPlace.value) return;
+
+    isSavingPlace.value = true;
+    try {
+      final latLng = await getLatLngFromAddress(address);
+      final lat = latLng?.latitude ?? mapCenter.value.latitude;
+      final lng = latLng?.longitude ?? mapCenter.value.longitude;
+      final name = address.split(',').first.trim().isEmpty
+          ? address
+          : address.split(',').first.trim();
+
+      final request = SaveRecentAsFavoriteRequest(
+        label: normalizedLabel.toLowerCase(),
+        name: name,
+        address: address,
+        lat: lat,
+        lng: lng,
+      );
+
+      final result = await profileRepository.saveRecentAsFavorite(request);
+      result.fold(
+        (failure) => AppDialogs.showErrorDialog(message: failure.message),
+        (success) async {
+          if (success) {
+            await refreshSavedPlacesAfterMutation();
+          }
+        },
+      );
+    } finally {
+      isSavingPlace.value = false;
+    }
+  }
+
+  Future<void> saveAddressFromRecentLocation({
+    required RecentDestinationModel loc,
+    required String label,
+  }) async {
+    final normalizedLabel = label.trim();
+    final address = loc.address.trim();
+    if (normalizedLabel.isEmpty) {
+      AppDialogs.showErrorDialog(message: 'Please enter label');
+      return;
+    }
+    if (address.isEmpty) {
+      AppDialogs.showErrorDialog(message: AppStrings.noLocationsFound.tr);
+      return;
+    }
+    if (isSavingPlace.value) return;
+
+    isSavingPlace.value = true;
+    try {
+      final request = SaveRecentAsFavoriteRequest(
+        label: normalizedLabel.toLowerCase(),
+        name: address.split(',').first.trim().isEmpty
+            ? address
+            : address.split(',').first.trim(),
+        address: address,
+        lat: loc.lat,
+        lng: loc.lng,
+      );
+
+      final result = await profileRepository.saveRecentAsFavorite(request);
+      result.fold(
+        (failure) => AppDialogs.showErrorDialog(message: failure.message),
+        (success) async {
+          if (success) {
+            await refreshSavedPlacesAfterMutation();
+          }
+        },
+      );
+    } finally {
+      isSavingPlace.value = false;
+    }
+  }
+
+  Future<void> saveAddressFromAddress({
+    required String address,
+    required String label,
+    double? lat,
+    double? lng,
+  }) async {
+    final normalizedLabel = label.trim();
+    final detailedAddress = address.trim();
+    if (normalizedLabel.isEmpty) {
+      AppDialogs.showErrorDialog(message: 'Please enter label');
+      return;
+    }
+    if (detailedAddress.isEmpty) {
+      AppDialogs.showErrorDialog(message: AppStrings.noLocationsFound.tr);
+      return;
+    }
+    if (isSavingPlace.value) return;
+
+    isSavingPlace.value = true;
+    try {
+      final latLng = (lat != null && lng != null)
+          ? LatLng(lat, lng)
+          : await getLatLngFromAddress(detailedAddress);
+      final request = SaveRecentAsFavoriteRequest(
+        label: normalizedLabel.toLowerCase(),
+        name: detailedAddress.split(',').first.trim().isEmpty
+            ? detailedAddress
+            : detailedAddress.split(',').first.trim(),
+        address: detailedAddress,
+        lat: latLng?.latitude ?? mapCenter.value.latitude,
+        lng: latLng?.longitude ?? mapCenter.value.longitude,
+      );
+
+      final result = await profileRepository.saveRecentAsFavorite(request);
+      result.fold(
+        (failure) => AppDialogs.showErrorDialog(message: failure.message),
+        (success) async {
+          if (success) {
+            await refreshSavedPlacesAfterMutation();
+          }
+        },
+      );
+    } finally {
+      isSavingPlace.value = false;
+    }
   }
 }
