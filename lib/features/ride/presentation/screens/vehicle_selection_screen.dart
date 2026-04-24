@@ -12,6 +12,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../shared/utils/currency_formatter.dart';
+import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../payment/presentation/widgets/payment_bar.dart';
 import '../controllers/vehicle_selection_controller.dart';
 
@@ -19,7 +20,7 @@ import '../controllers/vehicle_selection_controller.dart';
 class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
   const VehicleSelectionScreen({super.key});
 
-  static const double _sheetHeightFactor = 0.58;
+  static const double _sheetHeightFactor = 0.50;
 
   @override
   Widget build(BuildContext context) {
@@ -77,12 +78,13 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
               ),
             ),
           ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: _sheetHeightFactor.sh,
-            child: _bottomSheet(context),
+          AppDraggableBottomSheet(
+            initialChildSize: _sheetHeightFactor,
+            minChildSize: _sheetHeightFactor,
+            maxChildSize: 0.9,
+            snap: true,
+            snapSizes: const [_sheetHeightFactor, 0.9],
+            childBuilder: (_) => _bottomSheet(context),
           ),
         ],
       ),

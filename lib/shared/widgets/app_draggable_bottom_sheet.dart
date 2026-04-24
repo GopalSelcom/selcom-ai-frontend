@@ -8,6 +8,8 @@ class AppDraggableBottomSheet extends StatelessWidget {
     required this.initialChildSize,
     required this.minChildSize,
     this.maxChildSize = 0.9,
+    this.snap = false,
+    this.snapSizes,
     this.controller,
     required this.childBuilder,
   });
@@ -17,6 +19,8 @@ class AppDraggableBottomSheet extends StatelessWidget {
   final double initialChildSize;
   final double minChildSize;
   final double maxChildSize;
+  final bool snap;
+  final List<double>? snapSizes;
   final Widget Function(ScrollController scrollController) childBuilder;
 
   @override
@@ -26,6 +30,8 @@ class AppDraggableBottomSheet extends StatelessWidget {
       initialChildSize: initialChildSize,
       minChildSize: minChildSize,
       maxChildSize: maxChildSize,
+      snap: snap,
+      snapSizes: snapSizes,
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(

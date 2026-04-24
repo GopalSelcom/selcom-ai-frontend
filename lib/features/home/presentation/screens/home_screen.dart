@@ -16,6 +16,7 @@ import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/currency_formatter.dart';
+import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 
 class HomeScreen extends GetView<HomeController> {
   const HomeScreen({super.key});
@@ -188,26 +189,14 @@ class HomeScreen extends GetView<HomeController> {
   */
 
   Widget _buildFigmaDraggableSheet() {
-    return DraggableScrollableSheet(
+    return AppDraggableBottomSheet(
       initialChildSize: _homeSheetInitialSize,
       minChildSize: _homeSheetInitialSize,
       maxChildSize: 0.9,
       snap: true,
       snapSizes: const [_homeSheetInitialSize, 0.9],
-      builder: (context, scrollController) {
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(40.r)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.08),
-                blurRadius: 20,
-                offset: const Offset(0, -4),
-              ),
-            ],
-          ),
-          child: ListView(
+      childBuilder: (scrollController) {
+        return ListView(
             controller: scrollController,
             physics: const BouncingScrollPhysics(
               parent: AlwaysScrollableScrollPhysics(),
@@ -318,8 +307,7 @@ class HomeScreen extends GetView<HomeController> {
               ),
               SizedBox(height: 40.h),
             ],
-          ),
-        );
+          );
       },
     );
   }
