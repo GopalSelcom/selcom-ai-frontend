@@ -4,7 +4,8 @@ import '../../../../core/data/models/ride_model.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../domain/usecases/ride_usecase.dart';
-import '../widgets/ride_details_bottom_sheet.dart';
+import '../screens/ride_details_screen.dart';
+import 'ride_details_controller.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 
 class MyRidesController extends GetxController {
@@ -54,7 +55,7 @@ class MyRidesController extends GetxController {
 
   /// Always fetch latest ride details first, then route the tap behavior.
   /// - Ongoing (active) ride statuses -> navigate like Home active ride
-  /// - Terminal statuses -> open details bottom sheet
+  /// - Terminal statuses -> open details screen
   Future<void> onRideTap(RideModel ride) async {
     if (isOpeningRide.value) return;
     isOpeningRide.value = true;
@@ -67,10 +68,11 @@ class MyRidesController extends GetxController {
             navigateToDriverAcceptedForRide(freshRide);
             return;
           }
-          Get.bottomSheet(
-            RideDetailsBottomSheet(ride: freshRide),
-            isScrollControlled: true,
-          );
+          if (Get.isRegistered<RideDetailsController>()) {
+            Get.delete<RideDetailsController>();
+          }
+          Get.put(RideDetailsController(ride: freshRide));
+          Get.to(() => RideDetailsScreen(ride: freshRide));
         },
       );
     } catch (e, stackTrace) {

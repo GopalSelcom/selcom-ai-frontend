@@ -152,6 +152,7 @@ class LanguageSw extends Languages {
     'promocode_list': '',
     'promotions': '',
     'rating': '',
+    'rating_given': '',
     'rating_required': '',
     'reason_to_contact': '',
     'recent_location': '',
@@ -744,6 +745,9 @@ class LanguageSw extends Languages {
 
   @override
   String get rating => values['rating'] ?? '';
+
+  @override
+  String get ratingGiven => values['rating_given'] ?? '';
 
   @override
   String get ratingRequired => values['rating_required'] ?? '';

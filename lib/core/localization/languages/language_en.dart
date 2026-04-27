@@ -173,6 +173,7 @@ class LanguageEn extends Languages {
     'promocode_list': 'Promocode list',
     'promotions': 'Promotions',
     'rating': 'Rating',
+    'rating_given': 'rating given',
     'rating_required': 'Rating required',
     'reason_to_contact': 'Reason to Contact',
     'recent_location': 'Recent Location',
@@ -780,6 +781,9 @@ class LanguageEn extends Languages {
 
   @override
   String get rating => values['rating'] ?? '';
+
+  @override
+  String get ratingGiven => values['rating_given'] ?? '';
 
   @override
   String get ratingRequired => values['rating_required'] ?? '';
