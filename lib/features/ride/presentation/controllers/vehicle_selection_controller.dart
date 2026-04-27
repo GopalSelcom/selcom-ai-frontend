@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
@@ -17,6 +18,7 @@ import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../payment/presentation/widgets/payment_status_dialog.dart';
 import '../../../../core/domain/entities/location_entity.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/services/app_map_service.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../home/domain/repositories/home_repository.dart';
@@ -54,6 +56,8 @@ class VehicleSelectionController extends GetxController {
   final isRouteReady = false.obs;
   final isLocationIconsReady = false.obs;
   final isMapVisualReady = false.obs;
+  final pickupOverlayOffset = Rxn<Offset>();
+  final dropOverlayOffset = Rxn<Offset>();
 
   /// Full route for polyline (API).
   final routePoints = <LatLng>[].obs;
@@ -75,6 +79,9 @@ class VehicleSelectionController extends GetxController {
   StreamSubscription<bool>? _nearbyDriversConnectionSub;
 
   GoogleMapController? mapController;
+  LatLng? _lastProjectedPickup;
+  LatLng? _lastProjectedDrop;
+  int _overlayProjectionSeq = 0;
 
   BitmapDescriptor? driverIcon;
   BitmapDescriptor? pickupIcon;
@@ -905,6 +912,119 @@ class VehicleSelectionController extends GetxController {
     }
   }
 
+  void scheduleOverlayProjection({
+    required LatLng pickup,
+    required LatLng drop,
+    required double devicePixelRatio,
+  }) {
+    final pickupChanged = _lastProjectedPickup != pickup;
+    final dropChanged = _lastProjectedDrop != drop;
+    if (!pickupChanged && !dropChanged) return;
+    _lastProjectedPickup = pickup;
+    _lastProjectedDrop = drop;
+    Future.microtask(
+      () => projectOverlayOffsets(
+        pickup: pickup,
+        drop: drop,
+        devicePixelRatio: devicePixelRatio,
+      ),
+    );
+  }
+
+  Future<void> projectOverlayOffsets({
+    required LatLng pickup,
+    required LatLng drop,
+    required double devicePixelRatio,
+  }) async {
+    if (mapController == null) return;
+    final seq = ++_overlayProjectionSeq;
+    final pickupRaw = await AppMapService.screenOffsetFor(mapController!, pickup);
+    final dropRaw = await AppMapService.screenOffsetFor(mapController!, drop);
+    if (seq != _overlayProjectionSeq) return;
+
+    Offset? toLogical(Offset? raw) {
+      if (raw == null) return null;
+      return Offset(raw.dx / devicePixelRatio, raw.dy / devicePixelRatio);
+    }
+
+    pickupOverlayOffset.value = toLogical(pickupRaw);
+    dropOverlayOffset.value = toLogical(dropRaw);
+  }
+
+  String compactAddress(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return 'Selected location';
+    final first = trimmed.split(',').first.trim();
+    return first.isEmpty ? trimmed : first;
+  }
+
+  Future<void> editPickupFromMap() async {
+    await _openLocationEdit(isEditingPickup: true);
+  }
+
+  Future<void> editDropFromMap() async {
+    await _openLocationEdit(isEditingPickup: false);
+  }
+
+  Future<void> _openLocationEdit({required bool isEditingPickup}) async {
+    final result = await Get.toNamed(
+      AppRoutes.locationSelection,
+      arguments: {
+        'fromVehicleSelectionEdit': true,
+        'editTarget': isEditingPickup ? 'pickup' : 'drop',
+        'activeSegmentIndex': isEditingPickup ? 0 : 1,
+        'clearPickupOnOpen': isEditingPickup,
+        'clearDestinationOnOpen': !isEditingPickup,
+        'pickup': pickupEntity.address,
+        'pickupLat': pickupEntity.lat,
+        'pickupLng': pickupEntity.lng,
+        'destination': destinationEntity.address,
+        'destinationLat': destinationEntity.lat,
+        'destinationLng': destinationEntity.lng,
+      },
+    );
+    if (result is! Map) return;
+
+    final edited = Map<String, dynamic>.from(result);
+    final nextPickupAddress = (edited['pickup'] as String?)?.trim();
+    final nextPickupLat = (edited['pickupLat'] as num?)?.toDouble();
+    final nextPickupLng = (edited['pickupLng'] as num?)?.toDouble();
+    final nextDestinationsRaw = edited['destinations'];
+
+    if (nextPickupAddress == null ||
+        nextPickupAddress.isEmpty ||
+        nextPickupLat == null ||
+        nextPickupLng == null ||
+        nextDestinationsRaw is! List ||
+        nextDestinationsRaw.isEmpty) {
+      return;
+    }
+
+    final nextDestinations = <LocationEntity>[];
+    for (final item in nextDestinationsRaw) {
+      if (item is! Map) continue;
+      final m = Map<String, dynamic>.from(item);
+      final lat = (m['lat'] as num?)?.toDouble();
+      final lng = (m['lng'] as num?)?.toDouble();
+      final address = (m['address'] as String?)?.trim() ?? '';
+      if (lat == null || lng == null || address.isEmpty) continue;
+      nextDestinations.add(LocationEntity(lat: lat, lng: lng, address: address));
+    }
+    if (nextDestinations.isEmpty) return;
+
+    pickupEntity = LocationEntity(
+      lat: nextPickupLat,
+      lng: nextPickupLng,
+      address: nextPickupAddress,
+    );
+    destinations.assignAll(nextDestinations);
+    destinationEntity = nextDestinations.last;
+
+    isMapVisualReady.value = false;
+    await loadLocationIcons();
+    await _loadEstimates();
+  }
+
   Future<void> _fitBounds() async {
     if (mapController == null || routePoints.length < 2) return;
     final pts = routePoints.toList();
@@ -918,13 +1038,24 @@ class VehicleSelectionController extends GetxController {
       minLng = minLng < p.longitude ? minLng : p.longitude;
       maxLng = maxLng > p.longitude ? maxLng : p.longitude;
     }
+    // Auto-fit zoom controls:
+    // - 0.20 factor: lower => tighter zoom in, higher => more zoom out.
+    // - clamp min/max: reduce max for tighter fit on long routes, increase for more margin.
+    final latSpan = (maxLat - minLat).abs();
+    final lngSpan = (maxLng - minLng).abs();
+    final latPad = (latSpan * 0.20).clamp(0.0005, 0.01);
+    final lngPad = (lngSpan * 0.20).clamp(0.0005, 0.01);
+
+    // Bounds padding (screen pixels):
+    // - lower => more zoom in
+    // - higher => more zoom out
     await mapController!.animateCamera(
       CameraUpdate.newLatLngBounds(
         LatLngBounds(
-          southwest: LatLng(minLat - 0.01, minLng - 0.01),
-          northeast: LatLng(maxLat + 0.01, maxLng + 0.01),
+          southwest: LatLng(minLat - latPad, minLng - lngPad),
+          northeast: LatLng(maxLat + latPad, maxLng + lngPad),
         ),
-        48,
+        42,
       ),
     );
   }

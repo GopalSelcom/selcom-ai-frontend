@@ -256,6 +256,7 @@ abstract class Languages {
   String get yourLinkedAccount;
   String get yourRatingHasBeenSubmitted;
   String get yourRideWasCancelled;
+  String get yourRideIsCompleted;
   String get yourRides;
   String
   get yourSelfieWillBeCapturedToHelpUsValidateYouAgainstYourIdPleaseHoldYour;

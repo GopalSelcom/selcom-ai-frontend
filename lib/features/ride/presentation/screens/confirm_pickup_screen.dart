@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' hide Marker;
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -28,6 +28,10 @@ class ConfirmPickupScreen extends StatelessWidget {
                 initialCameraPosition: CameraPosition(
                   target: c.selectedLatLng.value,
                   zoom: 16,
+                ),
+                circles: _buildRouteCircles(
+                  from: c.initialLatLng,
+                  to: c.selectedLatLng.value,
                 ),
                 onMapCreated: c.onMapCreated,
                 onCameraMove: c.onCameraMove,
@@ -249,5 +253,43 @@ class ConfirmPickupScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Set<Circle> _buildRouteCircles({required LatLng from, required LatLng to}) {
+    final circles = <Circle>{
+      Circle(
+        circleId: const CircleId('initial_pickup_point'),
+        center: from,
+        radius: 7,
+        fillColor: AppColors.primary.withValues(alpha: 0.22),
+        strokeColor: AppColors.primary,
+        strokeWidth: 2,
+      ),
+    };
+
+    final latDiff = (to.latitude - from.latitude).abs();
+    final lngDiff = (to.longitude - from.longitude).abs();
+    final hasMoved = latDiff > 0.000001 || lngDiff > 0.000001;
+    if (!hasMoved) return circles;
+
+    final approxDistanceMeters = (latDiff + lngDiff) * 111000;
+    final dotCount = (approxDistanceMeters / 16).clamp(10, 60).round();
+    for (var i = 1; i < dotCount; i++) {
+      final t = i / dotCount;
+      circles.add(
+        Circle(
+          circleId: CircleId('pickup_route_dot_$i'),
+          center: LatLng(
+            from.latitude + (to.latitude - from.latitude) * t,
+            from.longitude + (to.longitude - from.longitude) * t,
+          ),
+          radius: 3.2,
+          fillColor: AppColors.primary.withValues(alpha: 0.65),
+          strokeColor: AppColors.primary.withValues(alpha: 0.65),
+          strokeWidth: 1,
+        ),
+      );
+    }
+    return circles;
   }
 }

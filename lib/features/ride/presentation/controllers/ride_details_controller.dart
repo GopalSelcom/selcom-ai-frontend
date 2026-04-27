@@ -15,9 +15,13 @@ import '../../../ride_rating/domain/usecases/submit_ride_rating_usecase.dart';
 import '../../../ride_rating/presentation/controllers/ride_rating_controller.dart';
 
 class RideDetailsController extends GetxController {
-  RideDetailsController({required this.ride});
+  RideDetailsController({
+    required this.ride,
+    this.openedFromCompletionFlow = false,
+  });
 
   final RideEntity ride;
+  final bool openedFromCompletionFlow;
 
   late final RideRatingController ratingController;
   late final bool hasExistingRating;
@@ -27,9 +31,13 @@ class RideDetailsController extends GetxController {
   void onInit() {
     super.onInit();
     hasExistingRating = (ride.riderRating ?? 0) > 0;
-    canShowReviewInput =
-        ride.status == RideStatus.rideCompleted && ride.showReviewUi;
+    // Completion-entry should prioritize collecting feedback immediately.
+    // My Rides keeps backend-driven visibility via showReviewUi.
+    canShowReviewInput = openedFromCompletionFlow
+        ? !hasExistingRating
+        : (ride.status == RideStatus.rideCompleted && ride.showReviewUi);
     ratingController = _resolveRideRatingController();
+    // Prime rating state so the screen can render review inputs immediately.
     if (!hasExistingRating && canShowReviewInput) {
       ratingController.prepareRatingForRide(_toRatingEntity(ride));
     }
@@ -85,6 +93,10 @@ class RideDetailsController extends GetxController {
 
   String get destinationTitle => ride.destination.address.split(',').first;
 
+  bool get shouldPrioritizeReviewSection =>
+      openedFromCompletionFlow && canShowReviewInput && !hasExistingRating;
+
+  // Map ride details into the rating module contract.
   RideRatingRideEntity _toRatingEntity(RideEntity source) {
     final fareValue =
         source.fareBreakdown?.totalAmount ??
@@ -113,6 +125,7 @@ class RideDetailsController extends GetxController {
     if (Get.isRegistered<RideRatingController>()) {
       return Get.find<RideRatingController>();
     }
+    // Keep one shared rating controller instance across flows/screens.
     return Get.put<RideRatingController>(
       RideRatingController(
         getLastCompletedRideUseCase: di.sl<GetLastCompletedRideUseCase>(),

@@ -303,6 +303,7 @@ class AppStrings {
   static const String yourRatingHasBeenSubmitted =
       'your_rating_has_been_submitted';
   static const String yourRideWasCancelled = 'your_ride_was_cancelled';
+  static const String yourRideIsCompleted = 'your_ride_is_completed';
   static const String yourRides = 'your_rides';
   static const String
   yourSelfieWillBeCapturedToHelpUsValidateYouAgainstYourIdPleaseHoldYour =

@@ -250,6 +250,7 @@ class LanguageSw extends Languages {
     'your_linked_account': '',
     'your_rating_has_been_submitted': '',
     'your_ride_was_cancelled': '',
+    'your_ride_is_completed': '',
     'your_rides': '',
     'your_selfie_will_be_captured_to_help_us_validate_you_against_your_id_please_hold_your':
         '',
@@ -1057,6 +1058,9 @@ class LanguageSw extends Languages {
 
   @override
   String get yourRideWasCancelled => values['your_ride_was_cancelled'] ?? '';
+
+  @override
+  String get yourRideIsCompleted => values['your_ride_is_completed'] ?? '';
 
   @override
   String get yourRides => values['your_rides'] ?? '';

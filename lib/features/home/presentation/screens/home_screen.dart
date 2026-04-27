@@ -18,6 +18,7 @@ import 'package:shimmer/shimmer.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
+import '../widgets/recent_location_tile.dart';
 
 class HomeScreen extends GetView<HomeController> {
   const HomeScreen({super.key});
@@ -47,10 +48,10 @@ class HomeScreen extends GetView<HomeController> {
                 ),
                 myLocationEnabled: controller.hasLocationPermission.value,
                 circles: controller.nearbyPickupRadiusCircles,
-                markers: controller.selectedPickupMarkers,
+                // markers: controller.selectedPickupMarkers,
                 onMapCreated: controller.onMapCreated,
-                onCameraMove: controller.onCameraMove,
-                onCameraIdle: controller.onCameraIdle,
+                // onCameraMove: controller.onCameraMove,
+                // onCameraIdle: controller.onCameraIdle,
               ),
             ),
           ),
@@ -204,99 +205,127 @@ class HomeScreen extends GetView<HomeController> {
           ),
           padding: EdgeInsets.symmetric(horizontal: 24.w),
           children: [
-            SizedBox(height: 12.h),
-            Center(
-              child: Container(
-                width: 48.w,
-                height: 5.h,
-                decoration: BoxDecoration(
-                  color: AppColors.skeletonBase,
-                  borderRadius: BorderRadius.circular(37.r),
-                ),
-              ),
-            ),
-            SizedBox(height: 24.h),
-            GestureDetector(
-              onTap: () => controller.openLocationSelection(),
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-                decoration: BoxDecoration(
-                  color: AppColors.pageBackground,
-                  borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(
+              SizedBox(height: 12.h),
+              Center(
+                child: Container(
+                  width: 48.w,
+                  height: 5.h,
+                  decoration: BoxDecoration(
                     color: AppColors.skeletonBase,
-                    width: 0.8,
+                    borderRadius: BorderRadius.circular(37.r),
                   ),
                 ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.location_on,
-                      color: AppColors.primary,
-                      size: 24.sp,
+              ),
+              SizedBox(height: 24.h),
+              GestureDetector(
+                onTap: () => controller.openLocationSelection(),
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 14.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.pageBackground,
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(
+                      color: AppColors.skeletonBase,
+                      width: 0.8,
                     ),
-                    SizedBox(width: 12.w),
-                    Text(
-                      AppStrings.whereAreYouGoing.tr,
-                      style: AppTextStyles.homeSubtitle,
-                    ),
-                  ],
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.location_on,
+                        color: AppColors.primary,
+                        size: 24.sp,
+                      ),
+                      SizedBox(width: 12.w),
+                      Text(
+                        AppStrings.whereAreYouGoing.tr,
+                        style: AppTextStyles.homeSubtitle,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            SizedBox(height: 20.h),
-            Obx(
+              SizedBox(height: 20.h),
+              Obx(
                 () => controller.savedPlaces.isEmpty
                     ? const SizedBox.shrink()
-            :SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: _sortedSavedPlaces(controller.savedPlaces)
-                  .map((place) => _buildSavedPlaceChip(place))
-                  .toList(),
+                    : SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: _sortedSavedPlaces(controller.savedPlaces)
+                              .map((place) => _buildSavedPlaceChip(place))
+                              .toList(),
+                        ),
+                      ),
+              ),
+              Obx(
+                () => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (controller.shouldShowRecentSection) ...[
+                      SizedBox(height: 28.h),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              AppStrings.recentLocation.tr,
+                              style: AppTextStyles.homeSubtitle.copyWith(
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          if (controller.canViewMoreRecentLocations)
+                            TextButton(
+                              onPressed: controller.openRecentLocationsScreen,
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 8.w,
+                                  vertical: 4.h,
+                                ),
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: Text(
+                                'View more',
+                                style: AppTextStyles.homeCaption.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      SizedBox(height: 16.h),
+                      if (controller.isLoadingHomeData.value)
+                        ...List.generate(3, (_) => _buildRecentLocationSkeleton())
+                      else
+                        ...controller.recentDestinationsPreview.map(
+                          (loc) => _buildRecentLocationItem(loc),
+                        ),
+                    ],
+                    if (controller.shouldShowVehicleSection) ...[
+                      if (controller.shouldShowRecentSection)
+                        SizedBox(height: 12.h),
+                      if (!controller.shouldShowRecentSection)
+                        SizedBox(height: 28.h),
+                      Text(
+                        AppStrings.exploreVehicle.tr,
+                        style: AppTextStyles.homeSubtitle.copyWith(
+                          fontSize: 15.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
+                      _buildVehicleHorizontalList(),
+                    ],
+                  ],
                 ),
               ),
-            ),
-            Obx(
-              () => Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (controller.shouldShowRecentSection) ...[
-                    SizedBox(height: 28.h),
-                    Text(
-                      AppStrings.recentLocation.tr,
-                      style: AppTextStyles.homeSubtitle.copyWith(
-                        fontSize: 15.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 16.h),
-                    if (controller.isLoadingHomeData.value)
-                      ...List.generate(3, (_) => _buildRecentLocationSkeleton())
-                    else
-                      ...controller.recentDestinations.map(
-                        (loc) => _buildRecentLocationItem(loc),
-                      ),
-                  ],
-                  if (controller.shouldShowVehicleSection) ...[
-                    if (controller.shouldShowRecentSection)
-                      SizedBox(height: 24.h),
-                    if (!controller.shouldShowRecentSection)
-                      SizedBox(height: 28.h),
-                    Text(
-                      AppStrings.exploreVehicle.tr,
-                      style: AppTextStyles.homeSubtitle.copyWith(
-                        fontSize: 15.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 16.h),
-                    _buildVehicleHorizontalList(),
-                  ],
-                ],
-              ),
-            ),
-            SizedBox(height: 40.h),
+              SizedBox(height: 40.h),
           ],
         );
       },
@@ -391,91 +420,19 @@ class HomeScreen extends GetView<HomeController> {
   }
 
   Widget _buildRecentLocationItem(RecentDestinationModel loc) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 24.h),
-      child: InkWell(
-        onTap: () =>
-            controller.navigateToVehicleSelectionForRecentDestination(loc),
-        borderRadius: BorderRadius.circular(12.r),
-        child: Row(
-          children: [
-            // Distance Badge
-            Obx(() {
-              final distance = controller.calculateDistanceKm(loc.lat, loc.lng);
-              return Container(
-                constraints: BoxConstraints(minWidth: 52.w),
-                padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 8.h),
-                decoration: BoxDecoration(
-                  color: AppColors.bgSoftCircle,
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.directions_car_outlined,
-                      size: 20.sp,
-                      color: AppColors.textBody,
-                    ),
-                    SizedBox(height: 4.h),
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        distance.isEmpty ? 'SAVED' : distance,
-                        style: AppTextStyles.homeCaption.copyWith(
-                          fontSize: 10.sp,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-            SizedBox(width: 16.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    controller.recentDestinationTitleLine(loc),
-                    style: AppTextStyles.homeSubtitle.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textHeading,
-                      fontSize: 15.sp,
-                    ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    loc.address,
-                    style: AppTextStyles.homeCaption.copyWith(
-                      color: AppColors.textBody,
-                      fontSize: 13.sp,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            Obx(() {
-              final savedPlace = controller.getSavedPlaceFor(loc.address, null);
-              final isFavorite = savedPlace?.isFavourite ?? false;
-              return IconButton(
-                onPressed: () => controller.toggleFavoriteForRecent(loc),
-                icon: Icon(
-                  isFavorite ? Icons.favorite : Icons.favorite_border,
-                  color: isFavorite
-                      ? AppColors.primary
-                      : AppColors.skeletonBase,
-                  size: 24.sp,
-                ),
-              );
-            }),
-          ],
-        ),
-      ),
-    );
+    return Obx(() {
+      final distance = controller.calculateDistanceKm(loc.lat, loc.lng);
+      final savedPlace = controller.getSavedPlaceFor(loc.address, null);
+      final isFavorite = savedPlace?.isFavourite ?? false;
+      return RecentLocationTile(
+        title: controller.recentDestinationTitleLine(loc),
+        address: loc.address,
+        distance: distance,
+        isFavorite: isFavorite,
+        onTap: () => controller.navigateToVehicleSelectionForRecentDestination(loc),
+        onFavoriteTap: () => controller.toggleFavoriteForRecent(loc),
+      );
+    });
   }
 
   Widget _buildRecentLocationSkeleton() {
