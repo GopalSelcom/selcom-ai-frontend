@@ -162,6 +162,7 @@ abstract class Languages {
   String get promocodeList;
   String get promotions;
   String get rating;
+  String get ratingGiven;
   String get ratingRequired;
   String get reasonToContact;
   String get recentLocation;

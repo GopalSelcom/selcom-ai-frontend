@@ -182,6 +182,7 @@ class AppStrings {
   static const String promocodeList = 'promocode_list';
   static const String promotions = 'promotions';
   static const String rating = 'rating';
+  static const String ratingGiven = 'rating_given';
   static const String ratingRequired = 'rating_required';
   static const String reasonToContact = 'reason_to_contact';
   static const String recentLocation = 'recent_location';
