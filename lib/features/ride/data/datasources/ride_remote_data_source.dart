@@ -14,6 +14,7 @@ abstract class RideRemoteDataSource {
   Future<List<RecentDestinationModel>> getRecentDestinations();
   Future<List<RideModel>> getRideHistory({int page = 1, int limit = 10});
   Future<RideModel> getRideDetails(String rideId);
+  Future<RideCancellationChargesModel> getCancellationCharges(String rideId);
   Future<bool> cancelRide(String rideId, String reason);
   Future<bool> updateDestination(
     String rideId,
@@ -112,6 +113,24 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       return RideModel.fromJson(rideData);
     }
     throw Exception('Failed to get ride details');
+  }
+
+  @override
+  Future<RideCancellationChargesModel> getCancellationCharges(
+    String rideId,
+  ) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.ride.cancellationCharges(rideId),
+        method: ApiMethod.get,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      final data = Map<String, dynamic>.from(response.data['data'] ?? {});
+      return RideCancellationChargesModel.fromJson(data);
+    }
+    throw Exception('Failed to fetch cancellation charges');
   }
 
   @override

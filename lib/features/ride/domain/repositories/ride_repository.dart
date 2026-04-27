@@ -13,6 +13,9 @@ abstract class RideRepository {
     int limit = 10,
   });
   Future<Either<Failure, RideModel>> getRideDetails(String rideId);
+  Future<Either<Failure, RideCancellationChargesModel>> getCancellationCharges(
+    String rideId,
+  );
   Future<Either<Failure, bool>> cancelRide(String rideId, String reason);
   Future<Either<Failure, bool>> updateDestination(
     String rideId,

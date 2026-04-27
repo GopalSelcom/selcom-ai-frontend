@@ -84,3 +84,61 @@ class ReceiptModel {
     );
   }
 }
+
+class RideCancellationPolicyItem {
+  final String status;
+  final bool canCancel;
+  final int fee;
+  final String label;
+
+  RideCancellationPolicyItem({
+    required this.status,
+    required this.canCancel,
+    required this.fee,
+    required this.label,
+  });
+
+  factory RideCancellationPolicyItem.fromJson(Map<String, dynamic> json) {
+    return RideCancellationPolicyItem(
+      status: (json['status'] ?? '').toString(),
+      canCancel: json['can_cancel'] == true,
+      fee: (json['fee'] as num?)?.toInt() ?? 0,
+      label: (json['label'] ?? '').toString(),
+    );
+  }
+}
+
+class RideCancellationChargesModel {
+  final String rideId;
+  final String currentStatus;
+  final bool canCancel;
+  final int cancellationFee;
+  final int netRefund;
+  final List<RideCancellationPolicyItem> policy;
+
+  RideCancellationChargesModel({
+    required this.rideId,
+    required this.currentStatus,
+    required this.canCancel,
+    required this.cancellationFee,
+    required this.netRefund,
+    required this.policy,
+  });
+
+  factory RideCancellationChargesModel.fromJson(Map<String, dynamic> json) {
+    final policyRaw = (json['policy'] as List?) ?? const [];
+    return RideCancellationChargesModel(
+      rideId: (json['ride_id'] ?? '').toString(),
+      currentStatus: (json['current_status'] ?? '').toString(),
+      canCancel: json['can_cancel'] == true,
+      cancellationFee: (json['cancellation_fee'] as num?)?.toInt() ?? 0,
+      netRefund: (json['net_refund'] as num?)?.toInt() ?? 0,
+      policy: policyRaw
+          .whereType<Map>()
+          .map((e) => RideCancellationPolicyItem.fromJson(
+                Map<String, dynamic>.from(e),
+              ))
+          .toList(),
+    );
+  }
+}

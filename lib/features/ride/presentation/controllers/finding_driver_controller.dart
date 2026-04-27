@@ -621,8 +621,6 @@ class FindingDriverController extends GetxController {
     );
 
     if (reason == null) return;
-
-    // 3. Perform Cancellation
     if (rideId.isEmpty) {
       AppDialogs.showErrorDialog(
         title: AppStrings.cancelFailed.tr,
@@ -631,6 +629,35 @@ class FindingDriverController extends GetxController {
       return;
     }
 
+    final charges = await rideRepository.getCancellationCharges(rideId);
+    bool canProceed = false;
+    await charges.fold(
+      (_) async {
+        AppDialogs.showErrorDialog(
+          title: AppStrings.cancelFailed.tr,
+          message: AppStrings.couldNotCancelTryAgain.tr,
+        );
+      },
+      (data) async {
+        final selectedPolicy = data.policy.firstWhereOrNull(
+          (p) => p.status.toLowerCase() == data.currentStatus.toLowerCase(),
+        );
+        final proceed = await Get.dialog<bool>(
+          CancellationChargesDialog(
+            canCancel: data.canCancel,
+            cancellationFee: data.cancellationFee,
+            netRefund: data.netRefund,
+            policyLabel: selectedPolicy?.label ?? '',
+          ),
+          barrierDismissible: false,
+          barrierColor: AppColors.overlayBlack12,
+        );
+        canProceed = proceed == true;
+      },
+    );
+    if (!canProceed) return;
+
+    // 3. Perform Cancellation
     final result = await rideRepository.cancelRide(rideId, reason);
     result.fold(
       (_) => AppDialogs.showErrorDialog(

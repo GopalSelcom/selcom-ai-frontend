@@ -70,6 +70,11 @@ class AppSocketService {
   static const String evtReceiveMessage = 'ride:new_message';
 
   io.Socket? _socket;
+  Timer? _reconnectTimer;
+  bool _manualDisconnect = false;
+  bool _isConnecting = false;
+  int _reconnectAttempt = 0;
+  static const int _maxReconnectAttempts = 12;
   final _driversController = StreamController<List<Driver>>.broadcast();
   final _errorController = StreamController<String>.broadcast();
   final _connectionController = StreamController<bool>.broadcast();
@@ -124,7 +129,9 @@ class AppSocketService {
   // ---------------- CONNECT ----------------
 
   Future<void> connect() async {
-    if (_socket?.connected == true) return;
+    if (_socket?.connected == true || _isConnecting) return;
+    _manualDisconnect = false;
+    _isConnecting = true;
 
     final storage = StorageService();
     final token =
@@ -139,8 +146,8 @@ class AppSocketService {
       io.OptionBuilder()
           .setTransports(['websocket'])
           .enableReconnection()
-          .setReconnectionAttempts(10)
-          .setReconnectionDelay(800)
+          .setReconnectionAttempts(_maxReconnectAttempts)
+          .setReconnectionDelay(1000)
           .setTimeout(12000)
           .setQuery({'token': token})
           .setExtraHeaders({'Authorization': 'Bearer $token'})
@@ -157,20 +164,28 @@ class AppSocketService {
     _socket!.onConnect((data) {
       debugPrint("Socket connected");
       debugPrint("Connected socketId: ${_socket?.id}");
+      _isConnecting = false;
+      _reconnectAttempt = 0;
+      _cancelReconnectTimer();
 
       _connectionController.add(true);
     });
     _socket!.onDisconnect((data) {
       debugPrint("Socket disconnected: $data");
+      _isConnecting = false;
       _connectionController.add(false);
+      _scheduleReconnect(reason: 'disconnect:$data');
     });
     _socket!.onConnectError((err) {
       debugPrint("onConnectError init function: $err");
+      _isConnecting = false;
       _connectionController.add(false);
       _errorController.add(err?.toString() ?? 'Socket connection error');
+      _scheduleReconnect(reason: 'connect_error:$err');
     });
     _socket!.onError((err) {
       _errorController.add(err?.toString() ?? 'Socket error');
+      _scheduleReconnect(reason: 'socket_error:$err');
     });
 
     // ---------------- LISTENERS ----------------
@@ -308,12 +323,18 @@ class AppSocketService {
   // ---------------- DISCONNECT ----------------
 
   void disconnect() {
+    _manualDisconnect = true;
+    _isConnecting = false;
+    _cancelReconnectTimer();
     _socket?.disconnect();
   }
 
   void dispose() {
     // For a singleton, we might not want to close streams until the app dies,
     // but we can provide a method to clear things if needed.
+    _manualDisconnect = true;
+    _isConnecting = false;
+    _cancelReconnectTimer();
     // _socket?.dispose();
   }
 
@@ -333,5 +354,32 @@ class AppSocketService {
     if (payload is Map<String, dynamic>) return payload;
     if (payload is Map) return Map<String, dynamic>.from(payload);
     return null;
+  }
+
+  void _scheduleReconnect({required String reason}) {
+    if (_manualDisconnect || _socket?.connected == true) return;
+    if (_reconnectAttempt >= _maxReconnectAttempts) {
+      _errorController.add(
+        'Socket reconnect failed after $_maxReconnectAttempts attempts.',
+      );
+      return;
+    }
+    if (_reconnectTimer?.isActive == true) return;
+
+    final delaySeconds = (1 << _reconnectAttempt).clamp(1, 20);
+    _reconnectAttempt += 1;
+    debugPrint(
+      'Socket reconnect scheduled in ${delaySeconds}s '
+      '(attempt $_reconnectAttempt/$_maxReconnectAttempts, reason=$reason)',
+    );
+    _reconnectTimer = Timer(Duration(seconds: delaySeconds), () async {
+      if (_manualDisconnect || _socket?.connected == true) return;
+      await connect();
+    });
+  }
+
+  void _cancelReconnectTimer() {
+    _reconnectTimer?.cancel();
+    _reconnectTimer = null;
   }
 }

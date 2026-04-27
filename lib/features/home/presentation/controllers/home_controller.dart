@@ -40,7 +40,7 @@ import '../screens/recent_locations_screen.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 
-class HomeController extends GetxController {
+class HomeController extends GetxController with WidgetsBindingObserver {
   static const String _currentLocationPlaceId = '__current_location__';
   static bool _didCheckPendingReviewOnHomeLaunch = false;
 
@@ -108,6 +108,7 @@ class HomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    WidgetsBinding.instance.addObserver(this);
     analyticsService.logEvent('home_screen_viewed');
     _loadMapIcons();
     _getCurrentLocation();
@@ -404,6 +405,14 @@ class HomeController extends GetxController {
 
   Future<void> _connectAndJoinActiveRideRoom(RideModel ride) async {
     if (_didHandleActiveRideFlow) return;
+    await _connectAndJoinActiveRideRoomInternal(ride, force: false);
+  }
+
+  Future<void> _connectAndJoinActiveRideRoomInternal(
+    RideModel ride, {
+    required bool force,
+  }) async {
+    if (_didHandleActiveRideFlow && !force) return;
     _didHandleActiveRideFlow = true;
 
     final riderId = ride.id.trim();
@@ -418,16 +427,29 @@ class HomeController extends GetxController {
       _homeSocketConnectionSub?.cancel();
       _homeSocketConnectionSub = null;
     });
-    // await _socketService.connect();
-    // if (_socketService.isConnected) {
-    //   _socketService.joinRideRoom(rideId: riderId);
-    //   _homeSocketConnectionSub?.cancel();
-    //   _homeSocketConnectionSub = null;
-    // }
+    await _socketService.connect();
+    if (_socketService.isConnected) {
+      _socketService.joinRideRoom(rideId: riderId);
+      _homeSocketConnectionSub?.cancel();
+      _homeSocketConnectionSub = null;
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    Future.microtask(() async {
+      await refreshActiveRide(force: true);
+      final active = activeRide.value;
+      if (active != null) {
+        await _connectAndJoinActiveRideRoomInternal(active, force: true);
+      }
+    });
   }
 
   @override
   void onClose() {
+    WidgetsBinding.instance.removeObserver(this);
     _activeRidePollingTimer?.cancel();
     _homeSocketConnectionSub?.cancel();
     _socketService.dispose();

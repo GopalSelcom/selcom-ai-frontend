@@ -66,6 +66,19 @@ class RideRepositoryImpl implements RideRepository {
   }
 
   @override
+  Future<Either<Failure, RideCancellationChargesModel>> getCancellationCharges(
+    String rideId,
+  ) async {
+    try {
+      final result = await remoteDataSource.getCancellationCharges(rideId);
+      return Right(result);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, bool>> cancelRide(String rideId, String reason) async {
     try {
       final result = await remoteDataSource.cancelRide(rideId, reason);

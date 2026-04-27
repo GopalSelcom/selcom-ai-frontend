@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 
 import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
@@ -28,6 +29,7 @@ import '../../../../core/services/app_map_service.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/currency_formatter.dart';
@@ -44,7 +46,7 @@ import 'ride_details_controller.dart';
 enum RideBottomSheetState { driverAssigned, rideStarted, rideCompleted }
 
 class DriverAcceptedController extends GetxController
-    with GetSingleTickerProviderStateMixin {
+    with GetSingleTickerProviderStateMixin, WidgetsBindingObserver {
   DriverAcceptedController({
     required this.rideRepository,
     required this.analyticsService,
@@ -116,6 +118,7 @@ class DriverAcceptedController extends GetxController
   StreamSubscription<RideStopsUpdateFailedResponse>? _rideStopsUpdateFailedSub;
   StreamSubscription<PaymentStatusUpdateResponse>? _paymentStatusSub;
   bool _didJoinRideRoom = false;
+  bool _isHandlingAppResume = false;
 
   final RxDouble sheetSize = 0.3.obs;
 
@@ -137,6 +140,7 @@ class DriverAcceptedController extends GetxController
   @override
   void onInit() {
     super.onInit();
+    WidgetsBinding.instance.addObserver(this);
     _moveAnimController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 1),
@@ -270,6 +274,7 @@ class DriverAcceptedController extends GetxController
 
   @override
   void onClose() {
+    WidgetsBinding.instance.removeObserver(this);
     _connectionSub?.cancel();
     _rideStatusSub?.cancel();
     _rideStopSub?.cancel();
@@ -277,6 +282,27 @@ class DriverAcceptedController extends GetxController
     _trackingSub?.cancel();
     _chatSub?.cancel();
     super.onClose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    _recoverRealtimeStateOnResume();
+  }
+
+  void _recoverRealtimeStateOnResume() {
+    if (_isHandlingAppResume || rideId.isEmpty) return;
+    _isHandlingAppResume = true;
+    Future.microtask(() async {
+      try {
+        await _fetchRideDetails();
+        await _socketService.connect();
+        _didJoinRideRoom = false;
+        _joinRideRoomIfNeeded();
+      } finally {
+        _isHandlingAppResume = false;
+      }
+    });
   }
 
   void _parseArgs() {
@@ -456,7 +482,7 @@ class DriverAcceptedController extends GetxController
       final type = (d.vehicleType ?? '').trim();
 
       if (plate.isNotEmpty) {
-        driverVehicleLine.value = type.isNotEmpty ? '$type - $plate' : plate;
+        driverVehicleLine.value = "$model - $type";
         final compact = plate.replaceAll(' ', '');
         if (compact.length > 3) {
           final mid = compact.length ~/ 2;
@@ -506,7 +532,7 @@ class DriverAcceptedController extends GetxController
       vehicleSubtitle.value =
           '${v.vehicleMake} ${v.vehicleModel}, ${v.vehicleColor}'.trim();
       if (driverVehicleLine.value.isEmpty) {
-        driverVehicleLine.value = '${v.vehicleType} - ${v.plateNumber}';
+        driverVehicleLine.value = v.vehicleType;
       }
     }
   }
@@ -1283,7 +1309,118 @@ class DriverAcceptedController extends GetxController
       );
       return;
     }
+    _showCallOptionsBottomSheet(phone);
+  }
 
+  void _showCallOptionsBottomSheet(String phone) {
+    Get.bottomSheet(
+      SafeArea(
+        top: false,
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+          ),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 20.h),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 48.w,
+                  height: 4.h,
+                  decoration: BoxDecoration(
+                    color: AppColors.skeletonBase,
+                    borderRadius: BorderRadius.circular(2.r),
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    AppStrings.call.tr,
+                    style: AppTextStyles.homeTitle.copyWith(
+                      fontSize: 18.sp,
+                      color: AppColors.textHeading,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                _callOptionTile(
+                  title: 'In app calling',
+                  icon: Icons.phone_in_talk_outlined,
+                  onTap: () {
+                    if (Get.isBottomSheetOpen ?? false) {
+                      Get.back();
+                    }
+                    AppDialogs.showInfoDialog(
+                      title: 'Coming soon',
+                      message: 'In app calling will available soon',
+                    );
+                  },
+                ),
+                SizedBox(height: 10.h),
+                _callOptionTile(
+                  title: 'Normal call',
+                  icon: Icons.call_outlined,
+                  onTap: () {
+                    if (Get.isBottomSheetOpen ?? false) {
+                      Get.back();
+                    }
+                    _callDriverViaPhoneDialer(phone);
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      isScrollControlled: true,
+      backgroundColor: AppColors.transparent,
+    );
+  }
+
+  Widget _callOptionTile({
+    required String title,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: AppColors.surfaceSubtle,
+      borderRadius: BorderRadius.circular(14.r),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14.r),
+        onTap: onTap,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
+          child: Row(
+            children: [
+              Icon(icon, color: AppColors.textHeading, size: 20.sp),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Text(
+                  title,
+                  style: AppTextStyles.homeSubtitle.copyWith(
+                    color: AppColors.textHeading,
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 14.sp,
+                color: AppColors.textMapHint,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _callDriverViaPhoneDialer(String phone) async {
     // Clean string for tel: link
     final cleanPhone = phone.replaceAll(RegExp(r'[^0-9+]'), '');
     final uri = Uri(scheme: 'tel', path: cleanPhone);
@@ -1430,8 +1567,6 @@ class DriverAcceptedController extends GetxController
     );
 
     if (reason == null) return;
-
-    // 3. Perform Cancellation
     if (rideId.isEmpty) {
       AppDialogs.showErrorDialog(
         title: AppStrings.cancelFailed.tr,
@@ -1439,6 +1574,36 @@ class DriverAcceptedController extends GetxController
       );
       return;
     }
+
+    final charges = await rideRepository.getCancellationCharges(rideId);
+    bool canProceed = false;
+    await charges.fold(
+      (_) async {
+        AppDialogs.showErrorDialog(
+          title: AppStrings.cancelFailed.tr,
+          message: AppStrings.couldNotCancelTryAgain.tr,
+        );
+      },
+      (data) async {
+        final selectedPolicy = data.policy.firstWhereOrNull(
+          (p) => p.status.toLowerCase() == data.currentStatus.toLowerCase(),
+        );
+        final proceed = await Get.dialog<bool>(
+          CancellationChargesDialog(
+            canCancel: data.canCancel,
+            cancellationFee: data.cancellationFee,
+            netRefund: data.netRefund,
+            policyLabel: selectedPolicy?.label ?? '',
+          ),
+          barrierDismissible: false,
+          barrierColor: AppColors.overlayBlack12,
+        );
+        canProceed = proceed == true;
+      },
+    );
+    if (!canProceed) return;
+
+    // 3. Perform Cancellation
     final result = await rideRepository.cancelRide(rideId, 'rider_cancelled');
     result.fold(
       (_) => AppDialogs.showErrorDialog(
@@ -1449,10 +1614,7 @@ class DriverAcceptedController extends GetxController
         if (success) {
           _navigatedAway = true;
           await LiveActivityManager().endActivity(rideId);
-          AppDialogs.showSuccessDialog(
-            message: 'Ride cancelled successfully.',
-            onConfirm: () => Get.offAllNamed(AppRoutes.home),
-          );
+          Get.offAllNamed(AppRoutes.home);
         } else {
           AppDialogs.showErrorDialog(
             title: AppStrings.cancelFailed.tr,

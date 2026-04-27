@@ -272,6 +272,120 @@ class _CancelReasonSelectionDialogState
   bool get isSelected => _selectedReason != null;
 }
 
+class CancellationChargesDialog extends StatelessWidget {
+  const CancellationChargesDialog({
+    super.key,
+    required this.canCancel,
+    required this.cancellationFee,
+    required this.netRefund,
+    required this.policyLabel,
+  });
+
+  final bool canCancel;
+  final int cancellationFee;
+  final int netRefund;
+  final String policyLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final feeLabel = 'TZS $cancellationFee';
+    final refundLabel = 'TZS $netRefund';
+
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
+      backgroundColor: AppColors.cardBackground,
+      insetPadding: EdgeInsets.symmetric(horizontal: 13.w),
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 28.h, horizontal: 24.w),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Cancellation charges',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 20.sp,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textSlateStrong,
+              ),
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              policyLabel.trim().isEmpty
+                  ? (canCancel
+                      ? 'A cancellation fee may apply for this ride status.'
+                      : 'This ride cannot be cancelled at the current status.')
+                  : policyLabel,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: AppColors.textSlate,
+                height: 1.4,
+              ),
+            ),
+            SizedBox(height: 18.h),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+              decoration: BoxDecoration(
+                color: AppColors.white,
+                borderRadius: BorderRadius.circular(14.r),
+                border: Border.all(color: AppColors.bgSoftCircle),
+              ),
+              child: Column(
+                children: [
+                  _chargesRow('Cancellation fee', feeLabel),
+                  SizedBox(height: 8.h),
+                  _chargesRow('Net refund', refundLabel),
+                ],
+              ),
+            ),
+            SizedBox(height: 24.h),
+            _ActionButton(
+              title: canCancel ? 'Continue' : AppStrings.keepRide.tr,
+              color: AppColors.primary,
+              textColor: AppColors.white,
+              onTap: () => Get.back(result: canCancel),
+            ),
+            SizedBox(height: 10.h),
+            _ActionButton(
+              title: AppStrings.no.tr,
+              color: AppColors.bgSoftCircle,
+              textColor: AppColors.textSlateSoft,
+              onTap: () => Get.back(result: false),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _chargesRow(String title, String value) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: 13.sp,
+              color: AppColors.textSlate,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 13.sp,
+            color: AppColors.textSlateStrong,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _ActionButton extends StatelessWidget {
   const _ActionButton({
     required this.title,
