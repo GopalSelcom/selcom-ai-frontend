@@ -20,6 +20,7 @@ class VehicleImageUtils {
       'rickshaw',
       'tuk',
       'wheeler',
+      'bajaji',
     ])) {
       return AppAssets.imgBajaji;
     }
