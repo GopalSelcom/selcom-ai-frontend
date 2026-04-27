@@ -285,6 +285,7 @@ class LanguageEn extends Languages {
     'your_linked_account': 'Your Linked Account',
     'your_rating_has_been_submitted': 'Your rating has been submitted.',
     'your_ride_was_cancelled': 'Your ride was cancelled.',
+    'your_ride_is_completed': 'Your Ride is Completed',
     'your_rides': 'Your Rides',
     'your_selfie_will_be_captured_to_help_us_validate_you_against_your_id_please_hold_your':
         'Your selfie will be captured to help us validate you against your ID. Please hold your phone steady, ensure your face is within the circular frame, and follow the prompts.',
@@ -1093,6 +1094,9 @@ class LanguageEn extends Languages {
 
   @override
   String get yourRideWasCancelled => values['your_ride_was_cancelled'] ?? '';
+
+  @override
+  String get yourRideIsCompleted => values['your_ride_is_completed'] ?? '';
 
   @override
   String get yourRides => values['your_rides'] ?? '';

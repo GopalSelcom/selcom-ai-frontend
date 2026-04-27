@@ -161,7 +161,9 @@ class RideRatingController extends GetxController {
     }
   }
 
-  Future<void> onSubmitTap() async {
+  // onSuccessConfirmed lets callers decide where "Continue" should navigate
+  // after success dialog (e.g., Home for completion flow, pop for My Rides).
+  Future<void> onSubmitTap({VoidCallback? onSuccessConfirmed}) async {
     final ride = pendingReviewRide.value;
     if (ride == null) {
       AppDialogs.showErrorDialog(
@@ -225,6 +227,7 @@ class RideRatingController extends GetxController {
       AppDialogs.showSuccessDialog(
         title:    AppStrings.thankYou.tr,
         message:  AppStrings.yourRatingHasBeenSubmitted.tr,
+        onConfirm: onSuccessConfirmed,
       );
     });
   }

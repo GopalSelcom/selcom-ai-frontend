@@ -37,6 +37,8 @@ import '../../domain/repositories/ride_repository.dart';
 import '../widgets/cancel_ride_dialogs.dart';
 import '../widgets/stop_update_progress_modal.dart';
 import '../../../../core/services/storage_service.dart';
+import '../screens/ride_details_screen.dart';
+import 'ride_details_controller.dart';
 
 /// SCR-11 — Driver accepted: live map, driver details, OTP.
 enum RideBottomSheetState { driverAssigned, rideStarted, rideCompleted }
@@ -102,6 +104,7 @@ class DriverAcceptedController extends GetxController
   GoogleMapController? mapController;
   bool _navigatedAway = false;
   DateTime? _lastCameraUpdate;
+  bool _openedCompletedRideDetails = false;
 
   StreamSubscription<bool>? _connectionSub;
   StreamSubscription<EventRiderStatusUpdateResponse>? _rideStatusSub;
@@ -996,6 +999,40 @@ class DriverAcceptedController extends GetxController
     }
 
     rideBottomSheetState.value = nextState;
+    if (nextState == RideBottomSheetState.rideCompleted &&
+        currentState != RideBottomSheetState.rideCompleted) {
+      _openCompletedRideDetailsScreen();
+    }
+  }
+
+  void _openCompletedRideDetailsScreen() {
+    if (_openedCompletedRideDetails) return;
+    final currentRide = ride.value;
+    if (currentRide == null) return;
+    // Normalize payload for details screen: force completed status and review UI.
+    // Socket/status payloads can be slightly delayed, so we make this explicit.
+    final completedRide = currentRide.copyWith(
+      status: RideStatus.rideCompleted,
+      showReviewUi: true,
+    );
+    _openedCompletedRideDetails = true;
+    if (Get.isRegistered<RideDetailsController>()) {
+      Get.delete<RideDetailsController>();
+    }
+    Get.off(
+      () => RideDetailsScreen(
+        ride: completedRide,
+        openedFromCompletionFlow: true,
+      ),
+      binding: BindingsBuilder(
+        () => Get.put(
+          RideDetailsController(
+            ride: completedRide,
+            openedFromCompletionFlow: true,
+          ),
+        ),
+      ),
+    );
   }
 
   void _applyRouteFallbackForStatus(String rawStatus) {
@@ -1303,13 +1340,7 @@ class DriverAcceptedController extends GetxController
   }
 
   void finishCompletedRide() {
-    if (Get.isBottomSheetOpen ?? false) {
-      Get.back();
-    }
-    if (Get.isDialogOpen ?? false) {
-      Get.back();
-    }
-    Get.offAllNamed(AppRoutes.home);
+    _openCompletedRideDetailsScreen();
   }
 
   String get pickupTitle => _firstAddressLine(pickupAddress);

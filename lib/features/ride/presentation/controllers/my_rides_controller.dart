@@ -68,11 +68,23 @@ class MyRidesController extends GetxController {
             navigateToDriverAcceptedForRide(freshRide);
             return;
           }
+          // My Rides entry must always use non-completion mode.
+          // This keeps screen title/layout/back behavior unchanged here.
           if (Get.isRegistered<RideDetailsController>()) {
             Get.delete<RideDetailsController>();
           }
-          Get.put(RideDetailsController(ride: freshRide));
-          Get.to(() => RideDetailsScreen(ride: freshRide));
+          Get.put(
+            RideDetailsController(
+              ride: freshRide,
+              openedFromCompletionFlow: false,
+            ),
+          );
+          Get.to(
+            () => RideDetailsScreen(
+              ride: freshRide,
+              openedFromCompletionFlow: false,
+            ),
+          );
         },
       );
     } catch (e, stackTrace) {
