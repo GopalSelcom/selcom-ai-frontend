@@ -225,7 +225,7 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
               width: 48.w,
               height: 4.h,
               decoration: BoxDecoration(
-              color: AppColors.skeletonBase,
+                color: AppColors.skeletonBase,
                 borderRadius: BorderRadius.circular(2.r),
               ),
             ),
@@ -394,10 +394,9 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
               Text(
                 CurrencyFormatter.format(item.fareEstimate ?? 0),
                 style: TextStyle(
-                  fontFamily: 'Metropolis',
+                  fontFamily: AppTextStyles.metropolisFont,
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
-                  fontStyle: FontStyle.italic,
                   color: AppColors.textHeading,
                   letterSpacing: -0.4,
                 ),

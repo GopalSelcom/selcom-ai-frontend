@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 
 enum PaymentStatus { pending, success }
@@ -70,7 +71,7 @@ class PaymentStatusDialog extends StatelessWidget {
                 title,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontFamily: 'Metropolis',
+                  fontFamily: AppTextStyles.metropolisFont,
                   fontSize: 20.sp,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textHeading,
@@ -86,7 +87,7 @@ class PaymentStatusDialog extends StatelessWidget {
                   'Expire in ${_formatTimer(secondsRemaining!)}',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontFamily: 'Metropolis',
+                    fontFamily: AppTextStyles.metropolisFont,
                     fontSize: 15.sp,
                     fontWeight: FontWeight.w500,
                     color: AppColors.textBody,
