@@ -7,6 +7,7 @@ import 'package:selcom_rides_frontend/core/constants/app_assets.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../domain/entities/payment_card.dart';
 import '../screens/add_card_screen.dart';
 import '../screens/card_details_screen.dart';
@@ -219,13 +220,17 @@ class PaymentMethodsController extends GetxController {
               step: M7LivelynessStep.smile,
               title: AppStrings.smile.tr,
               isCompleted: false,
-              detectionColor: AppColors.inputBorderActive.withValues(alpha: 0.35),
+              detectionColor: AppColors.inputBorderActive.withValues(
+                alpha: 0.35,
+              ),
             ),
             M7LivelynessStepItem(
               step: M7LivelynessStep.blink,
               title: AppStrings.blinkYourEyes.tr,
               isCompleted: false,
-              detectionColor: AppColors.inputBorderActive.withValues(alpha: 0.35),
+              detectionColor: AppColors.inputBorderActive.withValues(
+                alpha: 0.35,
+              ),
             ),
           ],
           captureButtonColor: AppColors.primary,
@@ -250,7 +255,8 @@ class PaymentMethodsController extends GetxController {
           // Refresh or navigate if needed, but since it's reactive, the UI will update
         });
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       AppDialogs.showErrorDialog(message: AppStrings.selfieCaptureFailed.tr);
     }
   }

@@ -6,6 +6,7 @@ import '../../../../core/data/models/requests/verify_otp_request.dart';
 import '../../../../core/data/models/responses/verify_otp_response.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_data_source.dart';
+import '../../../../core/services/error_reporting/error_reporter.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
@@ -19,7 +20,8 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final result = await remoteDataSource.sendOtp(request: request);
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -31,7 +33,8 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final result = await remoteDataSource.resendOtp(request: request);
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -43,7 +46,8 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final result = await remoteDataSource.verifyOtp(request: request);
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -53,7 +57,8 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final token = await remoteDataSource.refreshToken();
       return Right(token);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(AuthFailure(e.toString()));
     }
   }
@@ -63,7 +68,8 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final result = await remoteDataSource.logout();
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }

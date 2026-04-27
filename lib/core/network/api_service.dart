@@ -21,6 +21,8 @@ import '../services/storage_service.dart';
 import 'failed_request_queue.dart';
 import 'retry_manager.dart';
 import '../../shared/utils/app_dialogs.dart';
+import '../services/error_reporting/error_reporter.dart';
+import '../services/error_reporting/models/error_constants.dart';
 
 // ─────────────────────────────────────────────────────────
 // Enums
@@ -433,6 +435,11 @@ class ApiService {
       "$fullUrl [Body] ${_safeJsonEncode(safeBody)}",
       name: 'ApiService',
     );
+
+    ErrorReporter.instance.addLog(
+      "🚀 API REQUEST: ${request.method.name.toUpperCase()} $fullUrl | Query: ${jsonEncode(safeQuery)} | Body: ${jsonEncode(safeBody)}",
+      tag: 'API',
+    );
   }
 
   void _logResponse({
@@ -454,6 +461,11 @@ class ApiService {
     developer.log(
       "$fullUrl [Response] ${_safeJsonEncode(_redactSensitiveData(data))}",
       name: 'ApiService',
+    );
+
+    ErrorReporter.instance.addLog(
+      "✅ API RESPONSE: $fullUrl | Status: ${statusCode ?? 'N/A'} | Error: $isError | Message: ${errorMessage ?? 'None'}",
+      tag: 'API',
     );
   }
 
@@ -578,6 +590,15 @@ class ApiService {
 
     if (request.errorPresentationType == ErrorPresentationType.dialog) {
       AppDialogs.showErrorDialog(message: message);
+    }
+
+    // Automatically report significant errors (Server errors, timeouts, etc.)
+    if (statusCode >= 500 || statusCode == 408 || isNetworkError) {
+      ErrorReporter.instance.report(
+        error: e,
+        customMessage: "API Error at ${request.endpoint} | Status: $statusCode",
+        errorKey: isNetworkError ? ErrorKeys.apiTimeout : ErrorKeys.logicError,
+      );
     }
 
     return Response(

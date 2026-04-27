@@ -7,6 +7,7 @@ import '../datasources/ride_remote_data_source.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../models/ride_management_models.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
+import '../../../../core/services/error_reporting/error_reporter.dart';
 
 class RideRepositoryImpl implements RideRepository {
   final RideRemoteDataSource remoteDataSource;
@@ -18,7 +19,8 @@ class RideRepositoryImpl implements RideRepository {
     try {
       final result = await remoteDataSource.getActiveRide();
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -29,7 +31,8 @@ class RideRepositoryImpl implements RideRepository {
     try {
       final result = await remoteDataSource.getRecentDestinations();
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -45,7 +48,8 @@ class RideRepositoryImpl implements RideRepository {
         limit: limit,
       );
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -55,7 +59,8 @@ class RideRepositoryImpl implements RideRepository {
     try {
       final result = await remoteDataSource.getRideDetails(rideId);
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -65,7 +70,8 @@ class RideRepositoryImpl implements RideRepository {
     try {
       final result = await remoteDataSource.cancelRide(rideId, reason);
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -81,7 +87,8 @@ class RideRepositoryImpl implements RideRepository {
         destination,
       );
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -94,7 +101,8 @@ class RideRepositoryImpl implements RideRepository {
     try {
       final result = await remoteDataSource.updatePickup(rideId, pickup);
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -104,7 +112,8 @@ class RideRepositoryImpl implements RideRepository {
     try {
       final result = await remoteDataSource.increaseFare(rideId, newFare);
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -114,7 +123,8 @@ class RideRepositoryImpl implements RideRepository {
     try {
       final result = await remoteDataSource.getReceipt(rideId);
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -128,7 +138,8 @@ class RideRepositoryImpl implements RideRepository {
     try {
       final result = await remoteDataSource.rateDriver(rideId, rating, comment);
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -146,7 +157,8 @@ class RideRepositoryImpl implements RideRepository {
         message,
       );
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -158,7 +170,8 @@ class RideRepositoryImpl implements RideRepository {
     try {
       final result = await remoteDataSource.validateRidePayment(request);
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -170,7 +183,8 @@ class RideRepositoryImpl implements RideRepository {
     try {
       final result = await remoteDataSource.walletDummyPaymentRequest(request);
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -183,7 +197,8 @@ class RideRepositoryImpl implements RideRepository {
     try {
       final result = await remoteDataSource.updateActivityToken(rideId, token);
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       developer.log(
         "❌ Repository Error during updateActivityToken: $e",
         name: 'ORDER_TRACKING',
@@ -207,7 +222,8 @@ class RideRepositoryImpl implements RideRepository {
         idempotencyKey: idempotencyKey,
       );
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -217,7 +233,8 @@ class RideRepositoryImpl implements RideRepository {
     try {
       await remoteDataSource.cancelPendingStops(rideId);
       return const Right(null);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }

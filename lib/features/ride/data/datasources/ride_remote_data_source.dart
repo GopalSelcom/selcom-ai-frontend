@@ -7,6 +7,7 @@ import '../../../../core/network/api_service.dart';
 import '../../../../core/network/urls.dart';
 import 'dart:developer' as developer;
 import 'package:dio/dio.dart';
+import '../../../../core/services/error_reporting/error_reporter.dart';
 
 abstract class RideRemoteDataSource {
   Future<ActiveRideResponseModel?> getActiveRide();
@@ -289,7 +290,8 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
         name: 'ORDER_TRACKING',
       );
       return response.statusCode == 200 || response.statusCode == 201;
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       if (e is DioException) {
         developer.log(
           "❌ API Error: ${e.response?.statusCode} - ${e.response?.data} while updating token for ride $rideId",
@@ -342,7 +344,8 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
           method: ApiMethod.delete,
         ),
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       developer.log("Error cancelling pending stops: $e");
     }
   }

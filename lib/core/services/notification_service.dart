@@ -14,6 +14,7 @@ import '../../shared/utils/ride_active_navigation.dart';
 import '../../shared/utils/app_dialogs.dart';
 import '../data/models/notification_model.dart';
 import 'live_activity/android_order_tracking_manager.dart';
+import '../services/error_reporting/error_reporter.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -152,7 +153,8 @@ class NotificationService {
       }
 
       return token;
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       // On iOS, sometimes the APNS token isn't ready immediately.
       if (Platform.isIOS &&
           e.toString().contains('apns-token-not-set') &&
@@ -227,7 +229,8 @@ class NotificationService {
         final Map<String, dynamic> rawData = jsonDecode(response.payload!);
         final data = FCMNotificationData.fromJson(rawData);
         _handleNotificationNavigation(data);
-      } catch (e) {
+      } catch (e, stackTrace) {
+        ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
         _logger.e("Error decoding notification payload: $e");
       }
     }
@@ -264,7 +267,8 @@ class NotificationService {
           navigateToDriverAcceptedForRide(ride);
         },
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       if (Get.isDialogOpen ?? false) Get.back();
       _logger.e("Exception in _handleNotificationNavigation: $e");
     }
@@ -306,7 +310,8 @@ class NotificationService {
         ),
         payload: payload,
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       debugPrint("Error in _localNotifications.show: $e");
     }
   }

@@ -25,6 +25,7 @@ import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../domain/repositories/ride_repository.dart';
+import '../../../../core/services/error_reporting/error_reporter.dart';
 
 /// SCR-09 — vehicle + fare selection.
 class VehicleSelectionController extends GetxController {
@@ -316,7 +317,8 @@ class VehicleSelectionController extends GetxController {
           color: AppColors.mapDropMarkerGreen,
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       if (kDebugMode) {
         debugPrint('[VehicleSelection] Error loading markers: $e');
       }
@@ -489,7 +491,7 @@ class VehicleSelectionController extends GetxController {
       if (resolvedVehicleTypeId.isEmpty ||
           !_looksLikeBackendVehicleTypeId(resolvedVehicleTypeId)) {
         AppDialogs.showErrorDialog(
-          title:  AppStrings.vehicleType.tr,
+          title: AppStrings.vehicleType.tr,
           message: AppStrings.couldNotResolveVehicleTypeIdPleaseTryAgain.tr,
         );
         return;
@@ -514,8 +516,8 @@ class VehicleSelectionController extends GetxController {
       final confirmedAddress = (confirmed['pickupAddress'] as String?)?.trim();
       if (confirmedLat == null || confirmedLng == null) {
         AppDialogs.showErrorDialog(
-          title:  AppStrings.pickup.tr,
-          message:AppStrings.pleaseConfirmPickupPointToContinue.tr,
+          title: AppStrings.pickup.tr,
+          message: AppStrings.pleaseConfirmPickupPointToContinue.tr,
         );
         return;
       }
@@ -553,8 +555,10 @@ class VehicleSelectionController extends GetxController {
         (model) async {
           if (model.estimates.isEmpty) {
             AppDialogs.showErrorDialog(
-              title:    AppStrings.estimateFailed.tr,
-              message: AppStrings.noFareEstimateReturnedForTheUpdatedPickupLocation.tr,
+              title: AppStrings.estimateFailed.tr,
+              message: AppStrings
+                  .noFareEstimateReturnedForTheUpdatedPickupLocation
+                  .tr,
             );
             return false;
           }
@@ -623,14 +627,14 @@ class VehicleSelectionController extends GetxController {
       await validationResult.fold(
         (f) async {
           AppDialogs.showErrorDialog(
-            title:  AppStrings.paymentValidationFailed.tr,
+            title: AppStrings.paymentValidationFailed.tr,
             message: AppStrings.couldNotValidatePaymentPleaseTryAgain.tr,
           );
         },
         (validationId) async {
           if (validationId.trim().isEmpty) {
             AppDialogs.showErrorDialog(
-              title:    AppStrings.paymentValidationFailed.tr,
+              title: AppStrings.paymentValidationFailed.tr,
               message: AppStrings.validationIdMissingFromServerResponse.tr,
             );
             return;
@@ -665,7 +669,8 @@ class VehicleSelectionController extends GetxController {
           if (!blockOk) {
             AppDialogs.showErrorDialog(
               title: AppStrings.paymentNotConfirmed.tr,
-              message: AppStrings.weCouldNotConfirmYourPaymentBlockPleaseTryAgain.tr,
+              message:
+                  AppStrings.weCouldNotConfirmYourPaymentBlockPleaseTryAgain.tr,
             );
             return;
           }
@@ -687,10 +692,7 @@ class VehicleSelectionController extends GetxController {
               if (msg.startsWith('Exception: ')) {
                 msg = msg.replaceFirst('Exception: ', '');
               }
-              AppDialogs.showErrorDialog(
-                title: 'Booking failed',
-                message: msg,
-              );
+              AppDialogs.showErrorDialog(title: 'Booking failed', message: msg);
             },
             (data) async {
               final rideId = data.data?.ride?.id;

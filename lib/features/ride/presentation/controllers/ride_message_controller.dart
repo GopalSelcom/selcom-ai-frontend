@@ -12,6 +12,7 @@ import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../domain/entities/ride_chat_message.dart';
 import '../../domain/repositories/ride_chat_repository.dart';
 import '../constants/ride_message_static_data.dart';
@@ -93,7 +94,8 @@ class RideMessageController extends GetxController {
           riderBubbleDisplayName = name;
         }
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       debugPrint("Error loading rider profile: $e");
     }
   }
@@ -217,7 +219,8 @@ class RideMessageController extends GetxController {
       if (history.isNotEmpty) {
         messages.assignAll(history);
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       debugPrint("Error fetching chat history: $e");
     }
 
@@ -295,15 +298,16 @@ class RideMessageController extends GetxController {
         if (!success) {
           AppDialogs.showErrorDialog(
             title: AppStrings.chat.tr,
-            message:AppStrings.failedToSendMessage.tr,
+            message: AppStrings.failedToSendMessage.tr,
           );
           // Optionally remove the local message on failure
           messages.removeWhere((m) => m.id == localId);
         }
-      } catch (e) {
+      } catch (e, stackTrace) {
+        ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
         debugPrint("Error sending message: $e");
         AppDialogs.showErrorDialog(
-          title:AppStrings.chat.tr,
+          title: AppStrings.chat.tr,
           message: AppStrings.errorSendingMessage.tr,
         );
         messages.removeWhere((m) => m.id == localId);
@@ -334,7 +338,8 @@ class RideMessageController extends GetxController {
           message: AppStrings.unableToOpenPhoneDialer.tr,
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       debugPrint("Error launching dialer: $e");
       AppDialogs.showErrorDialog(
         title: AppStrings.call.tr,

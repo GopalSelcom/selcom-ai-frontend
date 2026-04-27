@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -22,6 +21,8 @@ import 'core/routes/app_routes.dart';
 import 'core/services/live_activity/live_activity_manager.dart';
 import 'core/services/live_activity/android_order_tracking_manager.dart';
 import 'core/data/models/notification_model.dart';
+import 'core/services/error_reporting/error_reporter.dart';
+import 'package:screenshot/screenshot.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -61,6 +62,9 @@ void main() async {
         options: DefaultFirebaseOptions.currentPlatform,
       );
 
+      // Initialize Error Reporter
+      await ErrorReporter.instance.init();
+
       // Set background handler
       FirebaseMessaging.onBackgroundMessage(
         _firebaseMessagingBackgroundHandler,
@@ -72,12 +76,20 @@ void main() async {
           FlutterError.presentError(details);
           return;
         }
-        FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+        ErrorReporter.instance.report(
+          error: details.exception,
+          stackTrace: details.stack,
+          customMessage: details.context?.toString(),
+        );
       };
 
       PlatformDispatcher.instance.onError = (error, stack) {
         if (!kDebugMode) {
-          FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+          ErrorReporter.instance.report(
+            error: error,
+            stackTrace: stack,
+            fatal: true,
+          );
         }
         return true;
       };
@@ -104,7 +116,11 @@ void main() async {
     },
     (error, stack) {
       if (!kDebugMode) {
-        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+        ErrorReporter.instance.report(
+          error: error,
+          stackTrace: stack,
+          fatal: true,
+        );
       }
     },
   );
@@ -152,25 +168,28 @@ class _MyAppState extends State<MyApp> {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
-        return GetMaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'Selcom Go',
-          theme: AppTheme.lightTheme,
-          darkTheme: AppTheme.darkTheme,
-          themeMode: ThemeMode.system,
-          locale: _locale,
-          fallbackLocale: const Locale('en'),
-          supportedLocales: const [Locale('en'), Locale('sw')],
-          localizationsDelegates: const [
-            AppLocalizationsDelegate(),
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          translations: GetxLanguagesTranslations(),
-          initialBinding: InitialBinding(),
-          initialRoute: AppRoutes.splash,
-          getPages: AppRoutes.pages,
+        return Screenshot(
+          controller: ErrorReporter.instance.screenshotController,
+          child: GetMaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'Selcom Go',
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: ThemeMode.system,
+            locale: _locale,
+            fallbackLocale: const Locale('en'),
+            supportedLocales: const [Locale('en'), Locale('sw')],
+            localizationsDelegates: const [
+              AppLocalizationsDelegate(),
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            translations: GetxLanguagesTranslations(),
+            initialBinding: InitialBinding(),
+            initialRoute: AppRoutes.splash,
+            getPages: AppRoutes.pages,
+          ),
         );
       },
     );

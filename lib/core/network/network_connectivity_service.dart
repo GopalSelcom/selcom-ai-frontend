@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
+import '../services/error_reporting/error_reporter.dart';
+
 /// Monitors internet connectivity and notifies listeners when connection is restored
 class NetworkConnectivityService {
   static final NetworkConnectivityService instance =
@@ -67,7 +69,8 @@ class NetworkConnectivityService {
     try {
       final result = await InternetAddress.lookup('google.com');
       return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return false;
     }
   }

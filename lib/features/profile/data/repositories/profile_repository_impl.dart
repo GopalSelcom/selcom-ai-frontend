@@ -8,6 +8,7 @@ import '../../../../core/data/models/user_model.dart';
 import '../../../../core/data/models/requests/create_saved_place_request.dart';
 import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
 import '../models/contact_us_models.dart';
+import '../../../../core/services/error_reporting/error_reporter.dart';
 
 class ProfileRepositoryImpl implements ProfileRepository {
   final ProfileRemoteDataSource remoteDataSource;
@@ -19,7 +20,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       final result = await remoteDataSource.getProfile();
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -29,7 +31,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       final result = await remoteDataSource.updateProfile(data);
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -45,7 +48,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
         emailId: emailId,
       );
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -55,7 +59,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       final result = await remoteDataSource.getSavedPlaces();
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -67,7 +72,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       final result = await remoteDataSource.addSavedPlace(request);
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -79,7 +85,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       final result = await remoteDataSource.saveRecentAsFavorite(request);
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -89,7 +96,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       final result = await remoteDataSource.deleteSavedPlace(id);
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -99,7 +107,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       final result = await remoteDataSource.getWalletBalance();
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -109,7 +118,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       final result = await remoteDataSource.getPaymentMethods();
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -119,7 +129,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       final result = await remoteDataSource.getEmailSubjects();
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -131,7 +142,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       final result = await remoteDataSource.sendEmail(request);
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -142,7 +154,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       final res = await remoteDataSource.getFavoritePlaces();
       return Right(res);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -155,7 +168,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       final result = await remoteDataSource.toggleFavorite(id, isFavorite);
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }

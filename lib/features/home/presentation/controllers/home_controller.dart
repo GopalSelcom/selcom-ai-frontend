@@ -37,6 +37,7 @@ import '../../../../core/data/models/responses/rides/active_ride_response.dart';
 import '../../../../core/domain/entities/location_entity.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
+import '../../../../core/services/error_reporting/error_reporter.dart';
 
 class HomeController extends GetxController {
   static const String _currentLocationPlaceId = '__current_location__';
@@ -340,7 +341,8 @@ class HomeController extends GetxController {
         plateNumber: ride.vehicleSnapshot?.plateNumber ?? '',
         isCompleted: isCompleted,
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       developer.log(
         '❌ Error syncing Live Activity: $e',
         name: 'HOME_CONTROLLER',
@@ -549,7 +551,8 @@ class HomeController extends GetxController {
 
       // Final attempt to geocode the fresh position.
       await _reverseGeocodeAtCenter();
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       developer.log("📍 Location Fetch Error: $e", name: 'HomeController');
       // Even if GPS fails, try geocoding the current map center (which might be the default Dar Lat/Lng)
       await _reverseGeocodeAtCenter();
@@ -685,7 +688,7 @@ class HomeController extends GetxController {
       AppDialogs.showErrorDialog(
         title: AppStrings.locationUnavailable.tr,
         message:
-        AppStrings.thisSavedPlaceIsMissingCoordinatesTrySavingItAgain.tr,
+            AppStrings.thisSavedPlaceIsMissingCoordinatesTrySavingItAgain.tr,
       );
       return;
     }
@@ -694,7 +697,7 @@ class HomeController extends GetxController {
     if (destAddr.isEmpty) {
       AppDialogs.showErrorDialog(
         title: AppStrings.addressMissing.tr,
-        message:  AppStrings.thisSavedPlaceHasNoAddress.tr,
+        message: AppStrings.thisSavedPlaceHasNoAddress.tr,
       );
       return;
     }
@@ -745,7 +748,7 @@ class HomeController extends GetxController {
     if (dLat == null || dLng == null) {
       AppDialogs.showErrorDialog(
         title: AppStrings.locationUnavailable.tr,
-        message:  AppStrings.thisSavedPlaceIsMissingCoordinates.tr,
+        message: AppStrings.thisSavedPlaceIsMissingCoordinates.tr,
       );
       return;
     }
@@ -753,8 +756,8 @@ class HomeController extends GetxController {
     final destAddr = (place.address ?? place.name ?? 'Saved Place').trim();
     if (destAddr.isEmpty) {
       AppDialogs.showErrorDialog(
-        title:AppStrings.addressMissing.tr,
-        message:  AppStrings.thisSavedPlaceHasNoAddress.tr,
+        title: AppStrings.addressMissing.tr,
+        message: AppStrings.thisSavedPlaceHasNoAddress.tr,
       );
       return;
     }
@@ -1060,7 +1063,7 @@ class HomeController extends GetxController {
         .toList();
     if (items.isEmpty) {
       AppDialogs.showErrorDialog(
-        message:  AppStrings.pleaseEnterAtLeastOneDestination.tr,
+        message: AppStrings.pleaseEnterAtLeastOneDestination.tr,
       );
       return;
     }

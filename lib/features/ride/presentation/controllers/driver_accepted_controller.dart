@@ -15,6 +15,7 @@ import 'package:selcom_rides_frontend/features/ride/data/models/stop_update_mode
 import 'package:selcom_rides_frontend/core/data/models/requests/validate_ride_payment_request.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
+import '../../../../core/services/error_reporting/error_reporter.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
@@ -674,7 +675,8 @@ class DriverAcceptedController extends GetxController
         asset,
         150,
       );
-    } catch (_) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       assignedDriverMarkerIcon.value = await MapMarkerUtils.getResizedMarker(
         AppAssets.imgBoda,
         150,
@@ -712,10 +714,11 @@ class DriverAcceptedController extends GetxController
   }
 
   void _syncBottomSheetVehicleImage(String? vehicleTypeHint) {
-    bottomSheetVehicleImageAsset.value = VehicleImageUtils.imageAssetForVehicleType(
-      vehicleTypeHint,
-      fallbackAsset: AppAssets.imgCab,
-    );
+    bottomSheetVehicleImageAsset.value =
+        VehicleImageUtils.imageAssetForVehicleType(
+          vehicleTypeHint,
+          fallbackAsset: AppAssets.imgCab,
+        );
   }
 
   void onMapCreated(GoogleMapController c) {
@@ -1255,7 +1258,8 @@ class DriverAcceptedController extends GetxController
         // Fallback: try launch regardless if canLaunch fails on some systems
         await launchUrl(uri);
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       debugPrint("Error launching dialer: $e");
       AppDialogs.showErrorDialog(
         title: AppStrings.call.tr,
@@ -1457,7 +1461,8 @@ class DriverAcceptedController extends GetxController
       }
 
       // startActivity call removed to respect 'APNs-only' update model
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       developer.log(
         "❌ Error in DriverAcceptedController._syncLiveActivityFromStatusPayload: $e",
         name: 'ORDER_TRACKING',
@@ -1493,7 +1498,8 @@ class DriverAcceptedController extends GetxController
         driverLatitude: assignedDriverLocation.value?.latitude,
         driverLongitude: assignedDriverLocation.value?.longitude,
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       debugPrint('❌ Error syncing Live Activity from Details: $e');
     }
   }

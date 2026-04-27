@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/repositories/notification_repository.dart';
 import '../datasources/notification_remote_data_source.dart';
+import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/data/models/notification_model.dart';
 
 class NotificationRepositoryImpl implements NotificationRepository {
@@ -20,7 +21,8 @@ class NotificationRepositoryImpl implements NotificationRepository {
         limit: limit,
       );
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -30,7 +32,8 @@ class NotificationRepositoryImpl implements NotificationRepository {
     try {
       final result = await remoteDataSource.markAsRead(notificationId);
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -40,7 +43,8 @@ class NotificationRepositoryImpl implements NotificationRepository {
     try {
       final result = await remoteDataSource.markAllAsRead();
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }

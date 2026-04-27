@@ -7,6 +7,7 @@ import '../../../../core/data/models/requests/save_recent_as_favorite_request.da
 import '../../../../core/data/models/responses/create_saved_place_response.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/urls.dart';
+import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../models/contact_us_models.dart';
 
 abstract class ProfileRemoteDataSource {
@@ -108,7 +109,8 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         return savedResponse;
       }
       return null;
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       debugPrint("Error fetching saved places: $e");
       return null;
     }
@@ -170,7 +172,8 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       if (response.statusCode == 200 && response.data != null) {
         return WalletBalanceModel.fromJson(response.data['data'] ?? {});
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       debugPrint("getWalletBalance error (suppressed): $e");
     }
     return WalletBalanceModel(balance: 0.0, currency: 'TZS');

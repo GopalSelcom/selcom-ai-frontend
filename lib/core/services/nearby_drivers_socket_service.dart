@@ -12,6 +12,7 @@ import 'package:socket_io_client/socket_io_client.dart' as io;
 
 import '../data/models/responses/nearbyRiders/response/near_by_rider_response.dart';
 import 'storage_service.dart';
+import 'error_reporting/error_reporter.dart';
 
 class NearbyDriverPoint {
   final String fleetId;
@@ -278,7 +279,8 @@ class AppSocketService {
     }
     try {
       _socket!.emit(evtJoinPaymentRoom, {'validation_id': validationId});
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       if (kDebugMode) {
         debugPrint('joinPaymentRoom failed');
       }

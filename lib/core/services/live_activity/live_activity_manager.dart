@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:live_activities/live_activities.dart';
 import 'package:live_activities/models/activity_update.dart';
 import 'dart:developer' as developer;
+import '../error_reporting/error_reporter.dart';
 
 import '../storage_service.dart';
 import 'android_order_tracking_manager.dart';
@@ -59,7 +60,8 @@ class LiveActivityManager {
         final Map<String, dynamic> decoded = jsonDecode(merchantsData);
         _orderToMerchantName = decoded.map((k, v) => MapEntry(k, v.toString()));
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       developer.log(
         "❌ Error loading persisted state: $e",
         name: 'LIVE_ACTIVITY',
@@ -102,7 +104,8 @@ class LiveActivityManager {
           const Duration(minutes: 5),
           (_) => _syncAllActiveTokens(),
         );
-      } catch (e) {
+      } catch (e, stackTrace) {
+        ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
         developer.log(
           "❌ Error initializing ActivityKit: $e",
           name: 'LIVE_ACTIVITY',
@@ -121,7 +124,8 @@ class LiveActivityManager {
         _merchantNameKey,
         jsonEncode(_orderToMerchantName),
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       developer.log("❌ Error saving state: $e", name: 'LIVE_ACTIVITY');
     }
   }
@@ -154,7 +158,9 @@ class LiveActivityManager {
         token = await _liveActivitiesPlugin
             .getPushToken(activityId)
             .timeout(const Duration(seconds: 3));
-      } catch (e) {}
+      } catch (e, stackTrace) {
+        ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      }
       if (token != null && token.isNotEmpty) tokens[orderId] = token;
     }
     return tokens;
@@ -309,7 +315,8 @@ class LiveActivityManager {
           return activityId;
         }
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       developer.log("❌ Error starting tracking: $e", name: 'LIVE_ACTIVITY');
     }
     return null;
@@ -476,7 +483,8 @@ class LiveActivityManager {
         "📡 Activity updated! Status: $status",
         name: 'LIVE_ACTIVITY',
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       developer.log("❌ Error in updateActivity: $e", name: 'LIVE_ACTIVITY');
     }
   }
@@ -493,7 +501,8 @@ class LiveActivityManager {
             .timeout(const Duration(seconds: 4), onTimeout: () {});
       }
       await _clearState(orderId);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       await _clearState(orderId);
     }
   }

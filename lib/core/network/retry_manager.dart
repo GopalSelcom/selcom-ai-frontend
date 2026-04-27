@@ -10,6 +10,7 @@ import '../theme/app_colors.dart';
 import 'api_service.dart';
 import 'failed_request_queue.dart';
 import 'network_connectivity_service.dart';
+import '../services/error_reporting/error_reporter.dart';
 
 /// Orchestrates API retry operations and manages popup state
 class RetryManager {
@@ -266,7 +267,8 @@ class RetryManager {
               name: 'RetryManager',
             );
           }
-        } catch (e) {
+        } catch (e, stackTrace) {
+          ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
           // Error during retry - keep in queue
           failureCount++;
           developer.log(

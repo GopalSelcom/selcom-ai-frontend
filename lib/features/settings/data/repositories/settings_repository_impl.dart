@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/repositories/settings_repository.dart';
 import '../datasources/settings_remote_data_source.dart';
+import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../models/settings_models.dart';
 
 class SettingsRepositoryImpl implements SettingsRepository {
@@ -14,7 +15,8 @@ class SettingsRepositoryImpl implements SettingsRepository {
     try {
       final result = await remoteDataSource.getAppSettings();
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -24,7 +26,8 @@ class SettingsRepositoryImpl implements SettingsRepository {
     try {
       final result = await remoteDataSource.getRidePinPreference();
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -38,7 +41,8 @@ class SettingsRepositoryImpl implements SettingsRepository {
         enabled: enabled,
       );
       return Right(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }

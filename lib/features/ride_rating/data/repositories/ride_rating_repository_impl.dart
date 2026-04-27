@@ -6,6 +6,7 @@ import '../../domain/entities/ride_rating_ride_entity.dart';
 import '../../domain/entities/ride_rating_tag_entity.dart';
 import '../../domain/repositories/ride_rating_repository.dart';
 import '../datasources/ride_rating_remote_data_source.dart';
+import '../../../../core/services/error_reporting/error_reporter.dart';
 
 class RideRatingRepositoryImpl implements RideRatingRepository {
   final RideRatingRemoteDataSource remoteDataSource;
@@ -17,7 +18,8 @@ class RideRatingRepositoryImpl implements RideRatingRepository {
     try {
       final ride = await remoteDataSource.getLastCompletedRide();
       return Right(ride);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -29,7 +31,8 @@ class RideRatingRepositoryImpl implements RideRatingRepository {
     try {
       final tags = await remoteDataSource.getReviewTags(rating: rating);
       return Right(tags);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -41,7 +44,8 @@ class RideRatingRepositoryImpl implements RideRatingRepository {
     try {
       final ok = await remoteDataSource.submitRideRating(request);
       return Right(ok);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -51,7 +55,8 @@ class RideRatingRepositoryImpl implements RideRatingRepository {
     try {
       final ok = await remoteDataSource.skipRideRating(rideId: rideId);
       return Right(ok);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
     }
   }

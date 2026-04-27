@@ -23,6 +23,7 @@ import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../widgets/cancel_ride_dialogs.dart';
+import '../../../../core/services/error_reporting/error_reporter.dart';
 
 /// SCR-10 — finding driver: search UI only; on assignment navigates to [AppRoutes.driverAccepted].
 class FindingDriverController extends GetxController {
@@ -123,7 +124,8 @@ class FindingDriverController extends GetxController {
         asset,
         150,
       );
-    } catch (_) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       // Fallback
       assignedDriverMarkerIcon.value = await BitmapDescriptor.asset(
         const ImageConfiguration(size: Size(36, 36)),
@@ -240,7 +242,8 @@ class FindingDriverController extends GetxController {
         isCompleted: false,
         etaSeconds: currentEtaSeconds.value,
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       developer.log(
         "❌ Error in FindingDriverController._syncLiveActivity: $e",
         name: 'ORDER_TRACKING',
