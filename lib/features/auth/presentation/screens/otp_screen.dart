@@ -38,7 +38,7 @@ class OtpScreen extends GetView<AuthController> {
                       children: [
                         SizedBox(height: 16.h),
                         // Back Button
-                        AppBackButton(color: AppColors.textHeading, size: 28.w),
+                        const AppBackButton(color: AppColors.textHeading),
                         SizedBox(height: 32.h),
 
                         // Title

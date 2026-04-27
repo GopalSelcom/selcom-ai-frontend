@@ -5,6 +5,7 @@ import '../../../../core/routes/app_routes.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
+import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../controllers/driver_accepted_controller.dart';
 import '../../../../core/localization/app_strings.dart';
@@ -67,10 +68,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
     // Navigate to location selection and get result
     final result = await Get.toNamed(
       AppRoutes.selectSavedLocation,
-      arguments: {
-        'isSelectingStop': true,
-        'label': AppStrings.addStops.tr,
-      },
+      arguments: {'isSelectingStop': true, 'label': AppStrings.addStops.tr},
     );
     if (result != null && result is Map<String, dynamic>) {
       setState(() {
@@ -131,13 +129,9 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
           AppStrings.addStops.tr,
           style: AppTextStyles.homeTitle.copyWith(fontSize: 18.sp),
         ),
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new,
-            color: AppColors.shade1,
-            size: 20,
-          ),
-          onPressed: () => Get.back(),
+        leading: const AppBackButton(
+          color: AppColors.textHeading,
+          alignment: Alignment.center,
         ),
       ),
       body: Column(
@@ -157,7 +151,10 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: _stops.length,
                   proxyDecorator: (widget, index, animation) {
-                    return Material(color: AppColors.transparent, child: widget);
+                    return Material(
+                      color: AppColors.transparent,
+                      child: widget,
+                    );
                   },
                   itemBuilder: (context, index) {
                     final stop = _stops[index];

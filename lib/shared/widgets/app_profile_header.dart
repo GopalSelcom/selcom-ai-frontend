@@ -42,11 +42,7 @@ class AppProfileHeader extends StatelessWidget {
           if (canGoBack)
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: AppBackButton(
-                color: AppColors.white,
-                size: 28.w,
-                onPressed: onBack,
-              ),
+              child: AppBackButton(onPressed: onBack),
             ),
 
           if (title != null) ...[

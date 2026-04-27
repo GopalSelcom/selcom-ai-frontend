@@ -48,15 +48,13 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
             Positioned(
               top: MediaQuery.paddingOf(context).top + 8.h,
               left: 16.w,
-              child: Material(
+              child: const Material(
                 color: AppColors.white,
-                shape: const CircleBorder(),
+                shape: CircleBorder(),
                 elevation: 2,
                 child: AppBackButton(
                   color: AppColors.textHeading,
                   alignment: Alignment.center,
-                  size: 24.w,
-                  hitSize: 40.w,
                 ),
               ),
             ),

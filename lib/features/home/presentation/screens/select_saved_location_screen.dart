@@ -64,7 +64,12 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
         backgroundColor: AppColors.transparent,
         elevation: 0,
         automaticallyImplyLeading: false,
-        leading: canGoBack ? const AppBackButton(color: AppColors.textHeading) : null,
+        leading: canGoBack
+            ? const AppBackButton(
+                color: AppColors.textHeading,
+                alignment: Alignment.center,
+              )
+            : null,
         title: Text(
           label,
           style: AppTextStyles.homeTitle.copyWith(
@@ -136,11 +141,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
               padding: EdgeInsets.only(right: 8.w),
               child: Obx(
                 () => controller.searchQuery.value.isEmpty
-                    ? Icon(
-                        Icons.search,
-                        color: AppColors.textHint,
-                        size: 22.sp,
-                      )
+                    ? Icon(Icons.search, color: AppColors.textHint, size: 22.sp)
                     : SvgPicture.asset(
                         AppAssets.locationIcPin,
                         width: 14.w,

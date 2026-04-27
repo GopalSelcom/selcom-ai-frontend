@@ -35,7 +35,7 @@ class PhoneInputScreen extends GetView<AuthController> {
                       children: [
                         if (Navigator.of(context).canPop()) ...[
                           SizedBox(height: 16.h),
-                          AppBackButton(color: AppColors.textHeading, size: 28.w),
+                          const AppBackButton(color: AppColors.textHeading),
                         ],
                         SizedBox(height: 30.h),
 
