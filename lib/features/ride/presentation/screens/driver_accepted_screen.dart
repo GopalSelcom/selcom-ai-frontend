@@ -439,66 +439,69 @@ class DriverAcceptedScreen extends StatelessWidget {
           ),
           SizedBox(height: 17.h),
         ],
-        Container(
-          width: 221.w,
-          padding: EdgeInsets.symmetric(vertical: 8.h),
-          decoration: BoxDecoration(
-            color: AppColors.ratingGoldDark,
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: AppColors.borderWalletCard, width: 0.787),
-          ),
-          child: Obx(
-            () => Column(
-              children: [
-                SizedBox(
-                  width: 221.w,
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Padding(
-                      padding: EdgeInsets.only(left: 12.w, top: 4.h),
-                      child: SvgPictureAsset(
-                        AppAssets.icTanzaniaFlag,
-                        width: 26.w,
-                        height: 17.h,
+        Obx(() {
+          final plateText =
+              '${c.plateLinePrimary.value}${c.plateLineSecondary.value.isNotEmpty ? ' ${c.plateLineSecondary.value}' : ''}'
+                  .trim();
+
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IntrinsicWidth(
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    vertical: 8.h,
+                    horizontal: 12.w,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.ratingGoldDark,
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(
+                      color: AppColors.borderWalletCard,
+                      width: 0.787,
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Padding(
+                          padding: EdgeInsets.only(top: 4.h),
+                          child: SvgPictureAsset(
+                            AppAssets.icTanzaniaFlag,
+                            width: 26.w,
+                            height: 17.h,
+                          ),
+                        ),
                       ),
-                    ),
+                      Text(
+                        plateText,
+                        maxLines: 1,
+                        style: AppTextStyles.homeTitle.copyWith(
+                          fontSize: 48.sp,
+                          height: 1,
+                          letterSpacing: 7.2,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textDarkOlive,
+                        ),
+                      ),
+                      Text(
+                        c.vehicleSubtitle.value,
+                        style: AppTextStyles.homeCaption.copyWith(
+                          fontSize: 15.sp,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.black,
+                          height: 1.33,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                Text(
-                  c.plateLinePrimary.value,
-                  style: AppTextStyles.homeTitle.copyWith(
-                    fontSize: 48.sp,
-                    height: 1,
-                    letterSpacing: 9.6, // 20% of 48
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textDarkOlive,
-                  ),
-                ),
-                if (c.plateLineSecondary.value.isNotEmpty)
-                  Text(
-                    c.plateLineSecondary.value,
-                    style: AppTextStyles.homeTitle.copyWith(
-                      fontSize: 48.sp,
-                      height: 1,
-                      letterSpacing: 9.6,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textDarkOlive,
-                    ),
-                  ),
-                SizedBox(height: 4.h),
-                Text(
-                  c.vehicleSubtitle.value,
-                  style: AppTextStyles.homeCaption.copyWith(
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.black,
-                    height: 1.33,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+              ),
+            ],
+          );
+        }),
         SizedBox(height: 17.h),
         const Divider(color: AppColors.borderWalletCard, height: 1),
         SizedBox(height: 17.h),
@@ -518,10 +521,8 @@ class DriverAcceptedScreen extends StatelessWidget {
                       ? Image.network(
                           avatarUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Image.asset(
-                            AppAssets.imgBoda,
-                            fit: BoxFit.cover,
-                          ),
+                          errorBuilder: (_, __, ___) =>
+                              Image.asset(AppAssets.imgBoda, fit: BoxFit.cover),
                         )
                       : Image.asset(AppAssets.imgBoda, fit: BoxFit.cover),
                 ),
