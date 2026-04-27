@@ -212,9 +212,14 @@ class ErrorReporter {
 
   Future<bool> _uploadReport(ErrorReport report) async {
     try {
+      final String errorBaseUrl = AppConfig.environment == Environment.prod
+          ? 'https://app2.duka.direct'
+          : 'https://dukastaging.selcom.dev:7443';
+
       final request = ApiRequest(
         endpoint: "report-error",
         method: ApiMethod.multipart,
+        customBaseUrl: errorBaseUrl,
         skipAuthInterceptor: true,
         body: {
           "error_key": report.errorKey,
