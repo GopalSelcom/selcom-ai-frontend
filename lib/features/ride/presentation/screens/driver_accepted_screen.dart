@@ -707,7 +707,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                     child: Padding(
                       padding: EdgeInsets.only(top: 8.h),
                       child: Text(
-                        AppStrings.editStops.tr,
+                        AppStrings.addStops.tr,
                         style: AppTextStyles.homeCaption.copyWith(
                           color: AppColors.primary,
                           fontSize: 14.sp,

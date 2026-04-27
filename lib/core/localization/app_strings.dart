@@ -5,6 +5,7 @@ class AppStrings {
       'account_unlinked_successfully';
   static const String accountVerified = 'account_verified';
   static const String add = 'add';
+  static const String addStops = 'add_stops';
   static const String addASavedPlace = 'add_asaved_place';
   static const String addDebitCreditCard = 'add_debit_credit_card';
   static const String addNewCard = 'add_new_card';
@@ -38,7 +39,6 @@ class AppStrings {
   static const String cardDetail = 'card_detail';
   static const String cardEndingInPlaceholder = 'card_ending_in_placeholder';
   static const String changeDropLocation = 'change_drop_location';
-  static const String editStops = 'edit_stops';
   static const String changeLocation = 'change_location';
   static const String changePhoneNumber = 'change_phone_number';
   static const String chat = 'chat';

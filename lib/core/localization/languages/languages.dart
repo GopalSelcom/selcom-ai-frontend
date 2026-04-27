@@ -72,7 +72,7 @@ abstract class Languages {
   String get eGJohnDoe;
   String get eGNameEmailComOptional;
   String get editYourPhoneNumber;
-  String get editStops;
+  String get addStops;
   String get enterOtp;
   String get enterPhoneNumber;
   String get enterPhoneNumberForVerification;

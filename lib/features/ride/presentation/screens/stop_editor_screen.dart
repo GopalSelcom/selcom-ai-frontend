@@ -69,7 +69,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
       AppRoutes.selectSavedLocation,
       arguments: {
         'isSelectingStop': true,
-        'label': AppStrings.editStops.tr, // Or a more specific label
+        'label': AppStrings.addStops.tr,
       },
     );
     if (result != null && result is Map<String, dynamic>) {
@@ -128,7 +128,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          'Edit Stops',
+          AppStrings.addStops.tr,
           style: AppTextStyles.homeTitle.copyWith(fontSize: 18.sp),
         ),
         leading: IconButton(

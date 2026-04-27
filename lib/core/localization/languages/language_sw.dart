@@ -35,7 +35,7 @@ class LanguageSw extends Languages {
     'card_detail': '',
     'card_ending_in_placeholder': '',
     'change_drop_location': 'Badilisha eneo la kushukia',
-    'edit_stops': 'Hariri vituo',
+    'add_stops': 'Ongeza vituo',
     'change_location': '',
     'change_phone_number': '',
     'chat': '',
@@ -363,7 +363,7 @@ class LanguageSw extends Languages {
   String get changeDropLocation => values['change_drop_location'] ?? '';
 
   @override
-  String get editStops => values['edit_stops'] ?? '';
+  String get addStops => values['add_stops'] ?? '';
 
   @override
   String get changeLocation => values['change_location'] ?? '';

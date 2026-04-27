@@ -37,7 +37,7 @@ class LanguageEn extends Languages {
     'card_detail': 'Card Detail',
     'card_ending_in_placeholder': 'Card ending in XX1234',
     'change_drop_location': 'Change Drop Location',
-    'edit_stops': 'Edit Stops',
+    'add_stops': 'Add Stops',
     'change_location': 'Change Location',
     'change_phone_number': 'Change phone number',
     'chat': 'Chat',
@@ -399,7 +399,7 @@ class LanguageEn extends Languages {
   String get changeDropLocation => values['change_drop_location'] ?? '';
 
   @override
-  String get editStops => values['edit_stops'] ?? '';
+  String get addStops => values['add_stops'] ?? '';
 
   @override
   String get changeLocation => values['change_location'] ?? '';
