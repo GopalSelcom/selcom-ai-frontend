@@ -17,10 +17,23 @@ import '../../../payment/presentation/widgets/payment_bar.dart';
 import '../controllers/vehicle_selection_controller.dart';
 
 /// SCR-09 — vehicle selection, fare, payment + Book Ride.
-class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
+class VehicleSelectionScreen extends StatefulWidget {
   const VehicleSelectionScreen({super.key});
 
+  @override
+  State<VehicleSelectionScreen> createState() => _VehicleSelectionScreenState();
+}
+
+class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
+  late final VehicleSelectionController controller;
+
   static const double _sheetHeightFactor = 0.50;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = Get.find<VehicleSelectionController>();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -119,8 +132,14 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
         (pickup.latitude + drop.latitude) / 2,
         (pickup.longitude + drop.longitude) / 2,
       );
+      final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
       final drivers = controller.driverMarkerPoints.toList();
       final markers = <Marker>{};
+      controller.scheduleOverlayProjection(
+        pickup: pickup,
+        drop: drop,
+        devicePixelRatio: devicePixelRatio,
+      );
       for (var i = 0; i < drivers.length; i++) {
         final jitter = drivers[i];
         markers.add(
@@ -138,6 +157,8 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
           markerId: const MarkerId('pickup'),
           position: pickup,
           icon: controller.pickupIcon ?? BitmapDescriptor.defaultMarker,
+          consumeTapEvents: true,
+          onTap: controller.editPickupFromMap,
         ),
       );
 
@@ -160,6 +181,8 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
             markerId: MarkerId('drop_$i'),
             position: LatLng(d.lat, d.lng),
             icon: icon,
+            consumeTapEvents: isLast,
+            onTap: isLast ? controller.editDropFromMap : null,
           ),
         );
       }
@@ -169,12 +192,36 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
         children: [
           AppGoogleMap(
             mapWidgetKey: const ValueKey('vehicle_selection_map'),
-            initialCameraPosition: CameraPosition(target: mid, zoom: 13.5),
+            // Manual initial zoom level:
+            // - Increase value => more zoom in
+            // - Decrease value => more zoom out
+            initialCameraPosition: CameraPosition(target: mid, zoom: 14.8),
             padding: EdgeInsets.only(
               bottom: MediaQuery.of(context).size.height * _sheetHeightFactor,
             ),
-            onMapCreated: controller.onMapCreated,
-            onCameraIdle: controller.onCameraIdle,
+            onMapCreated: (c) async {
+              controller.onMapCreated(c);
+              await controller.projectOverlayOffsets(
+                pickup: pickup,
+                drop: drop,
+                devicePixelRatio: devicePixelRatio,
+              );
+            },
+            onCameraMove: (_) {
+              controller.projectOverlayOffsets(
+                pickup: pickup,
+                drop: drop,
+                devicePixelRatio: devicePixelRatio,
+              );
+            },
+            onCameraIdle: () async {
+              controller.onCameraIdle();
+              await controller.projectOverlayOffsets(
+                pickup: pickup,
+                drop: drop,
+                devicePixelRatio: devicePixelRatio,
+              );
+            },
             polylines: {
               Polyline(
                 polylineId: const PolylineId('route'),
@@ -197,9 +244,99 @@ class VehicleSelectionScreen extends GetView<VehicleSelectionController> {
               ),
             ),
           ),
+          Obx(() {
+            final offset = controller.pickupOverlayOffset.value;
+            if (offset == null) return const SizedBox.shrink();
+            return Positioned(
+              left: offset.dx - 40.w,
+              top: offset.dy - 70.h,
+              child: _locationEditBubble(
+                label: controller.compactAddress(controller.pickupEntity.address),
+                onEditTap: controller.editPickupFromMap,
+              ),
+            );
+          }),
+          Obx(() {
+            final offset = controller.dropOverlayOffset.value;
+            if (offset == null) return const SizedBox.shrink();
+            return Positioned(
+              left: offset.dx - 40.w,
+              top: offset.dy - 70.h,
+              child: _locationEditBubble(
+                label: controller.compactAddress(
+                  controller.destinationEntity.address,
+                ),
+                onEditTap: controller.editDropFromMap,
+              ),
+            );
+          }),
         ],
       );
     });
+  }
+
+  Widget _locationEditBubble({
+    required String label,
+    required VoidCallback onEditTap,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 80.w,
+          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(14.r),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.black.withValues(alpha: 0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.homeSubtitle.copyWith(
+                    color: AppColors.textHeading,
+                    fontSize: 9.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Material(
+                color: AppColors.bgSoftCircle,
+                shape: const CircleBorder(),
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: onEditTap,
+                  child: Padding(
+                    padding: EdgeInsets.all(1.w),
+                    child: Icon(
+                      Icons.edit,
+                      color: AppColors.textMapHint,
+                      size: 12.sp,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          width: 2.w,
+          height: 12.h,
+          color: AppColors.black.withValues(alpha: 0.8),
+        ),
+      ],
+    );
   }
 
   Widget _bottomSheet(BuildContext context) {

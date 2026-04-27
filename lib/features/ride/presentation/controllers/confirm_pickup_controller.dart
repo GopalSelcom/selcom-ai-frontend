@@ -12,8 +12,16 @@ class ConfirmPickupController extends GetxController {
   final isResolvingAddress = false.obs;
   final isSubmitting = false.obs;
   late LatLng _initialLatLng;
+  late String initialAddress;
 
   GoogleMapController? mapController;
+  LatLng get initialLatLng => _initialLatLng;
+
+  bool get hasMovedFromInitial =>
+      (selectedLatLng.value.latitude - _initialLatLng.latitude).abs() >
+          0.000001 ||
+      (selectedLatLng.value.longitude - _initialLatLng.longitude).abs() >
+          0.000001;
 
   @override
   void onInit() {
@@ -27,8 +35,9 @@ class ConfirmPickupController extends GetxController {
     final lng = (args['pickupLng'] as num?)?.toDouble() ?? 39.2083;
     selectedLatLng.value = LatLng(lat, lng);
     _initialLatLng = LatLng(lat, lng);
-    address.value =
+    initialAddress =
         (args['pickupAddress'] as String?)?.trim() ?? 'Selected pickup point';
+    address.value = initialAddress;
   }
 
   Future<void> onMapCreated(GoogleMapController controller) async {
@@ -44,12 +53,7 @@ class ConfirmPickupController extends GetxController {
 
   Future<void> onCameraIdle() async {
     // Keep the initially selected pickup address on first paint.
-    final movedFromInitial =
-        (selectedLatLng.value.latitude - _initialLatLng.latitude).abs() >
-            0.000001 ||
-        (selectedLatLng.value.longitude - _initialLatLng.longitude).abs() >
-            0.000001;
-    if (!movedFromInitial) return;
+    if (!hasMovedFromInitial) return;
 
     final lat = selectedLatLng.value.latitude;
     final lng = selectedLatLng.value.longitude;

@@ -36,6 +36,7 @@ import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/data/models/responses/rides/active_ride_response.dart';
 import '../../../../core/domain/entities/location_entity.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
+import '../screens/recent_locations_screen.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 
@@ -263,6 +264,25 @@ class HomeController extends GetxController {
     } finally {
       isLoadingHomeData.value = false;
     }
+  }
+
+  List<RecentDestinationModel> get recentDestinationsPreview {
+    if (recentDestinations.length <= 3) return recentDestinations;
+    return recentDestinations.take(3).toList(growable: false);
+  }
+
+  bool get canViewMoreRecentLocations =>
+      recentDestinations.length > 3;
+
+  Future<void> openRecentLocationsScreen() async {
+    await Get.to<void>(() => const RecentLocationsScreen());
+  }
+
+  Future<void> refreshRecentDestinations() async {
+    final result = await rideRepository.getRecentDestinations();
+    result.fold((_) => null, (destinations) {
+      recentDestinations.assignAll(destinations);
+    });
   }
 
   void onHomeVisible() {

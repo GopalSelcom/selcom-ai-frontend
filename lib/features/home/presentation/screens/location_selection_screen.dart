@@ -50,6 +50,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
   /// Forwarded to vehicle selection as default vehicle.
   final RxnString _preferredVehicleTypeId = RxnString();
   final RxnString _preferredVehicleName = RxnString();
+  late bool _isVehicleSelectionEditMode;
 
   @override
   void initState() {
@@ -57,12 +58,23 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     controller = Get.find<HomeController>();
     final raw = Get.arguments;
     String initialPickup = controller.currentMapAddress.value;
+    String initialDestination = '';
+    int initialActiveSegment = 1;
+    bool clearPickupOnOpen = false;
+    bool clearDestinationOnOpen = false;
+    _isVehicleSelectionEditMode = false;
     if (raw is Map) {
       final m = Map<String, dynamic>.from(raw);
+      _isVehicleSelectionEditMode =
+          (m['fromVehicleSelectionEdit'] as bool?) ?? false;
       final p = (m['pickup'] as String?)?.trim();
       if (p != null && p.isNotEmpty) {
         initialPickup = p;
         pickupEditedByUser.value = true;
+      }
+      final d = (m['destination'] as String?)?.trim();
+      if (d != null && d.isNotEmpty) {
+        initialDestination = d;
       }
       final plat = (m['pickupLat'] as num?)?.toDouble();
       final plng = (m['pickupLng'] as num?)?.toDouble();
@@ -70,20 +82,57 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         _routePickupLat.value = plat;
         _routePickupLng.value = plng;
       }
+      final dlat = (m['destinationLat'] as num?)?.toDouble();
+      final dlng = (m['destinationLng'] as num?)?.toDouble();
+      if (dlat != null && dlng != null) {
+        _routeDestinationLat.value = dlat;
+        _routeDestinationLng.value = dlng;
+      }
+      final active = (m['activeSegmentIndex'] as num?)?.toInt();
+      if (active != null && active >= 0) {
+        initialActiveSegment = active;
+      }
+      clearPickupOnOpen = (m['clearPickupOnOpen'] as bool?) ?? false;
+      clearDestinationOnOpen = (m['clearDestinationOnOpen'] as bool?) ?? false;
       _preferredVehicleTypeId.value = (m['preferredVehicleTypeId'] as String?)
           ?.trim();
       _preferredVehicleName.value = (m['preferredVehicleName'] as String?)
           ?.trim();
     }
+    if (clearPickupOnOpen) {
+      initialPickup = '';
+      _routePickupLat.value = null;
+      _routePickupLng.value = null;
+      pickupEditedByUser.value = true;
+    }
+    if (clearDestinationOnOpen) {
+      initialDestination = '';
+      _routeDestinationLat.value = null;
+      _routeDestinationLng.value = null;
+      _destinationPlaceId.value = null;
+    }
     pickupController = TextEditingController(text: initialPickup);
-    destinationController = TextEditingController();
+    destinationController = TextEditingController(text: initialDestination);
     pickupFocusNode = FocusNode();
     destinationFocusNode = FocusNode();
-    if (_routePickupLat.value != null) {
+    _activeSegmentIndex.value = initialActiveSegment;
+    if (_routePickupLat.value != null && initialPickup.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         controller.isPickupSelected.value = true;
       });
     }
+    if (_routeDestinationLat.value != null && initialDestination.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        controller.isDestinationSelected.value = true;
+      });
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_activeSegmentIndex.value == 0) {
+        pickupFocusNode.requestFocus();
+      } else {
+        destinationFocusNode.requestFocus();
+      }
+    });
   }
 
   @override
@@ -989,12 +1038,26 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         borderRadius: BorderRadius.circular(16.r),
         child: InkWell(
           onTap: (isReady && !controller.isProceedingToBooking.value)
-              ? () {
+              ? () async {
                   final destinations = <String>[];
                   destinations.add(destinationController.text.trim());
                   for (final c in _extraDestinationControllers) {
                     final t = c.text.trim();
                     if (t.isNotEmpty) destinations.add(t);
+                  }
+                  if (_isVehicleSelectionEditMode) {
+                    final payload = await _buildVehicleSelectionEditResult(
+                      pickupText: pickupController.text.trim(),
+                      destinationTexts: destinations,
+                    );
+                    if (payload == null) {
+                      AppDialogs.showErrorDialog(
+                        message: 'Please select valid pickup and destination locations.',
+                      );
+                      return;
+                    }
+                    Get.back(result: payload);
+                    return;
                   }
                   controller.proceedToBookingFromLocationSelection(
                     pickup: pickupController.text.trim(),
@@ -1048,6 +1111,50 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         ),
       );
     });
+  }
+
+  Future<Map<String, dynamic>?> _buildVehicleSelectionEditResult({
+    required String pickupText,
+    required List<String> destinationTexts,
+  }) async {
+    final cleanedDestinations = destinationTexts
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+    if (pickupText.isEmpty || cleanedDestinations.isEmpty) return null;
+
+    final pickupLatLng =
+        (_routePickupLat.value != null && _routePickupLng.value != null)
+        ? null
+        : await controller.getLatLngFromAddress(pickupText);
+    final pickupLat = _routePickupLat.value ?? pickupLatLng?.latitude;
+    final pickupLng = _routePickupLng.value ?? pickupLatLng?.longitude;
+    if (pickupLat == null || pickupLng == null) return null;
+
+    final resultDestinations = <Map<String, dynamic>>[];
+    for (var i = 0; i < cleanedDestinations.length; i++) {
+      final text = cleanedDestinations[i];
+      double? lat;
+      double? lng;
+      if (i == 0) {
+        lat = _routeDestinationLat.value;
+        lng = _routeDestinationLng.value;
+      }
+      if (lat == null || lng == null) {
+        final resolved = await controller.getLatLngFromAddress(text);
+        lat = resolved?.latitude;
+        lng = resolved?.longitude;
+      }
+      if (lat == null || lng == null) return null;
+      resultDestinations.add({'address': text, 'lat': lat, 'lng': lng});
+    }
+
+    return {
+      'pickup': pickupText,
+      'pickupLat': pickupLat,
+      'pickupLng': pickupLng,
+      'destinations': resultDestinations,
+    };
   }
 
   Future<void> _handleStopSelection({
