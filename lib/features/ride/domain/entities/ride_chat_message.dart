@@ -6,8 +6,7 @@ class RideChatMessage {
     required this.text,
     required this.isFromRider,
     required this.sentAt,
-    this.displayName,
-    this.avatarUrl,
+
   });
 
   final String id;
@@ -15,10 +14,4 @@ class RideChatMessage {
   final String text;
   final bool isFromRider;
   final DateTime sentAt;
-
-  /// Name on the bubble (driver: pink, left; rider: white on pink bubble).
-  final String? displayName;
-
-  /// Avatar image URL for the sender.
-  final String? avatarUrl;
 }

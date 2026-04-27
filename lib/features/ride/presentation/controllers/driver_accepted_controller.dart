@@ -1313,7 +1313,6 @@ class DriverAcceptedController extends GetxController
         'rideId': rideId,
         'driverName': driverName.value,
         'driverPhone': driverPhone.value,
-        'driverAvatarUrl': driverAvatarUrl.value,
         'driverSubtitle': plateLinePrimary.value + plateLineSecondary.value,
         'riderName': 'Rider', // Default placeholder
         'initialStatus': _mapBottomSheetToRideStatus(

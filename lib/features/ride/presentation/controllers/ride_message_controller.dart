@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -9,13 +8,11 @@ import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
-import '../../../../core/services/storage_service.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../domain/entities/ride_chat_message.dart';
 import '../../domain/repositories/ride_chat_repository.dart';
-import '../constants/ride_message_static_data.dart';
 
 /// Ride-scoped chat (Figma `207:26441`). Uses [RideChatRepository] → socket `chat:*` when live.
 class RideMessageController extends GetxController {
@@ -33,9 +30,8 @@ class RideMessageController extends GetxController {
 
   late final String rideId;
   String driverName = 'John Anthany deo';
-  String driverSubtitle = kRideChatStaticDriverPlate;
+  String driverSubtitle = '';
   String driverPhone = '';
-  String driverAvatarUrl = '';
 
   final rideStatus = RideStatus.searching.obs;
 
@@ -48,24 +44,16 @@ class RideMessageController extends GetxController {
     RideStatus.nearDestination,
   ].contains(rideStatus.value);
 
-  /// Shown on outgoing bubbles until profile API provides the rider name.
-  String riderBubbleDisplayName = 'Mike';
-
   StreamSubscription<RideChatMessage>? _chatSub;
   StreamSubscription<bool>? _connectionSub;
   StreamSubscription<EventRiderStatusUpdateResponse>? _rideStatusSub;
   StreamSubscription<TrackingUpdateSocketResponse?>? _trackingStatusSub;
 
-  /// **TODO(static → API):** Set to `false` when chat history + send are fully driven by API/socket.
-  /// While `true`, seeded [staticSeedMessages] are shown and socket send is skipped (UI-only).
-  /// **Spec 1.0:** Set to `false` as backend is now ready.
-  static const bool useStaticChatDataOnly = false;
-
   @override
   void onInit() {
     super.onInit();
     _parseArgs();
-    if (rideId.isEmpty && !useStaticChatDataOnly) {
+    if (rideId.isEmpty) {
       Future.microtask(() {
         AppDialogs.showErrorDialog(
           title: AppStrings.chat.tr,
@@ -75,29 +63,7 @@ class RideMessageController extends GetxController {
       });
       return;
     }
-    if (useStaticChatDataOnly) {
-      _applyStaticSeed();
-      return;
-    }
-    _loadRiderProfile();
     _bootstrap();
-  }
-
-  Future<void> _loadRiderProfile() async {
-    try {
-      final storage = StorageService();
-      final data = await storage.read(StorageKeys.user);
-      if (data != null) {
-        final json = jsonDecode(data);
-        final name = (json['name'] ?? '').toString().trim();
-        if (name.isNotEmpty) {
-          riderBubbleDisplayName = name;
-        }
-      }
-    } catch (e, stackTrace) {
-      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      debugPrint("Error loading rider profile: $e");
-    }
   }
 
   @override
@@ -106,9 +72,7 @@ class RideMessageController extends GetxController {
     _connectionSub?.cancel();
     _rideStatusSub?.cancel();
     _trackingStatusSub?.cancel();
-    if (!useStaticChatDataOnly) {
-      _repository.stopListening();
-    }
+    _repository.stopListening();
     messageController.dispose();
     scrollController.dispose();
     super.onClose();
@@ -119,34 +83,21 @@ class RideMessageController extends GetxController {
     final args = raw is Map
         ? Map<String, dynamic>.from(raw)
         : <String, dynamic>{};
-    var id = (args['rideId'] as String?)?.trim() ?? '';
-    if (id.isEmpty && useStaticChatDataOnly) {
-      id = kRideChatStaticPreviewRideId;
-    }
-    rideId = id;
+    rideId = (args['rideId'] as String?)?.trim() ?? '';
 
     final name = (args['driverName'] as String?)?.trim();
     if (name != null && name.isNotEmpty) {
       driverName = name;
-    } else if (useStaticChatDataOnly) {
-      driverName = 'John Anthany deo';
     }
 
     final sub = (args['driverSubtitle'] as String?)?.trim();
     if (sub != null && sub.isNotEmpty) {
       driverSubtitle = sub;
-    } else if (useStaticChatDataOnly) {
-      driverSubtitle = kRideChatStaticDriverPlate;
     }
 
     final phone = (args['driverPhone'] as String?)?.trim();
     if (phone != null && phone.isNotEmpty) {
       driverPhone = phone;
-    }
-
-    final avatar = (args['driverAvatarUrl'] as String?)?.trim();
-    if (avatar != null && avatar.isNotEmpty) {
-      driverAvatarUrl = avatar;
     }
 
     final initialStatus = args['initialStatus'];
@@ -167,12 +118,6 @@ class RideMessageController extends GetxController {
         }
       }
     }
-  }
-
-  void _applyStaticSeed() {
-    messages.assignAll(staticSeedMessages(rideId));
-    isSocketConnected.value = false;
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
   Future<void> _bootstrap() async {
@@ -281,39 +226,33 @@ class RideMessageController extends GetxController {
       text: text,
       isFromRider: true,
       sentAt: now,
-      displayName: riderBubbleDisplayName,
     );
 
     messages.add(tempMsg);
     messageController.clear();
     _scrollToBottom();
 
-    if (!useStaticChatDataOnly) {
-      isSending.value = true;
-      try {
-        final success = await _repository.sendMessage(
-          rideId: rideId,
-          text: text,
-        );
-        if (!success) {
-          AppDialogs.showErrorDialog(
-            title: AppStrings.chat.tr,
-            message: AppStrings.failedToSendMessage.tr,
-          );
-          // Optionally remove the local message on failure
-          messages.removeWhere((m) => m.id == localId);
-        }
-      } catch (e, stackTrace) {
-        ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-        debugPrint("Error sending message: $e");
+    isSending.value = true;
+    try {
+      final success = await _repository.sendMessage(rideId: rideId, text: text);
+      if (!success) {
         AppDialogs.showErrorDialog(
           title: AppStrings.chat.tr,
-          message: AppStrings.errorSendingMessage.tr,
+          message: AppStrings.failedToSendMessage.tr,
         );
+        // Optionally remove the local message on failure
         messages.removeWhere((m) => m.id == localId);
-      } finally {
-        isSending.value = false;
       }
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      debugPrint("Error sending message: $e");
+      AppDialogs.showErrorDialog(
+        title: AppStrings.chat.tr,
+        message: AppStrings.errorSendingMessage.tr,
+      );
+      messages.removeWhere((m) => m.id == localId);
+    } finally {
+      isSending.value = false;
     }
   }
 

@@ -94,15 +94,8 @@ class RideChatSocketDataSource {
                 '${rideId}_${sentAt.millisecondsSinceEpoch}_$text')
             .toString();
 
-    final driverName = payload['driver_name'] ?? payload['sender_name'];
-    final riderName = payload['rider_name'] ?? payload['user_name'];
-    final String? displayName = isFromRider
-        ? (riderName is String && riderName.trim().isNotEmpty
-              ? riderName.trim()
-              : null)
-        : (driverName is String && driverName.trim().isNotEmpty
-              ? driverName.trim()
-              : null);
+    // final driverName = payload['driver_name'] ?? payload['sender_name'];
+    // final riderName = payload['rider_name'] ?? payload['user_name'];
 
     return RideChatMessage(
       id: id,
@@ -110,7 +103,6 @@ class RideChatSocketDataSource {
       text: text,
       isFromRider: isFromRider,
       sentAt: sentAt,
-      displayName: displayName,
     );
   }
 }

@@ -83,7 +83,10 @@ class RideMessageScreen extends GetView<RideMessageController> {
       padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
       child: Row(
         children: [
-          AppBackButton(color: AppColors.textHeading, onPressed: controller.goBack),
+          AppBackButton(
+            color: AppColors.textHeading,
+            onPressed: controller.goBack,
+          ),
           Expanded(
             child: Column(
               children: [
@@ -173,55 +176,53 @@ class RideMessageScreen extends GetView<RideMessageController> {
 
   Widget _driverRow(RideChatMessage m) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 16.h),
+      padding: EdgeInsets.only(bottom: 10.h),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            constraints: BoxConstraints(maxWidth: 0.75.sw),
-            padding: EdgeInsets.all(12.w),
-            decoration: BoxDecoration(
-              color: AppColors.driverBubbleBg,
-              borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: AppColors.borderLight),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _avatarWithDot(
-                  (m.avatarUrl ?? '').trim().isNotEmpty
-                      ? m.avatarUrl
-                      : controller.driverAvatarUrl,
+          IntrinsicWidth(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: 0.72.sw),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                decoration: BoxDecoration(
+                  color: AppColors.driverBubbleBg,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(4.r),
+                    topRight: Radius.circular(14.r),
+                    bottomLeft: Radius.circular(14.r),
+                    bottomRight: Radius.circular(14.r),
+                  ),
+                  border: Border.all(color: AppColors.borderLight),
                 ),
-                SizedBox(height: 8.h),
-                if (m.displayName != null)
-                  Text(
-                    m.displayName!,
-                    style: AppTextStyles.homeCaption.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      m.text,
+                      style: AppTextStyles.body.copyWith(
+                        color: AppColors.textHeading,
+                        height: 1.35,
+                      ),
+                      textAlign: TextAlign.left,
                     ),
-                  ),
-                SizedBox(height: 4.h),
-                Text(
-                  m.text,
-                  style: AppTextStyles.body.copyWith(
-                    color: AppColors.textHeading,
-                    height: 1.4,
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                Align(
-                  alignment: Alignment.bottomRight,
-                  child: Text(
-                    _formatTime(m.sentAt),
-                    style: AppTextStyles.homeCaption.copyWith(
-                      color: AppColors.borderInputMuted,
-                      fontSize: 10.sp,
+                    Padding(
+                      padding: EdgeInsets.only(top: 2.h),
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          _formatTime(m.sentAt),
+                          style: AppTextStyles.homeCaption.copyWith(
+                            color: AppColors.borderInputMuted,
+                            fontSize: 10.sp,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ],
@@ -231,101 +232,63 @@ class RideMessageScreen extends GetView<RideMessageController> {
 
   Widget _riderRow(RideChatMessage m) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 16.h),
+      padding: EdgeInsets.only(bottom: 10.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          Container(
-            constraints: BoxConstraints(maxWidth: 0.75.sw),
-            padding: EdgeInsets.all(12.w),
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.circular(16.r),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                _avatarWithDot(null, isRider: true),
-                SizedBox(height: 8.h),
-                if (m.displayName != null)
-                  Text(
-                    m.displayName!,
-                    style: AppTextStyles.homeCaption.copyWith(
-                      color: AppColors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                SizedBox(height: 4.h),
-                Text(
-                  m.text,
-                  style: AppTextStyles.body.copyWith(
-                    color: AppColors.white,
-                    height: 1.4,
-                  ),
-                  textAlign: TextAlign.right,
-                ),
-                SizedBox(height: 4.h),
-                Align(
-                  alignment: Alignment.bottomLeft,
-                  child: Text(
-                    _formatTime(m.sentAt),
-                    style: AppTextStyles.homeCaption.copyWith(
-                      color: AppColors.white.withValues(alpha: 0.8),
-                      fontSize: 10.sp,
-                    ),
+          IntrinsicWidth(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: 0.72.sw),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(14.r),
+                    topRight: Radius.circular(4.r),
+                    bottomLeft: Radius.circular(14.r),
+                    bottomRight: Radius.circular(14.r),
                   ),
                 ),
-              ],
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      m.text,
+                      style: AppTextStyles.body.copyWith(
+                        color: AppColors.white,
+                        height: 1.35,
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(top: 2.h),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _formatTime(m.sentAt),
+                            style: AppTextStyles.homeCaption.copyWith(
+                              color: AppColors.white.withValues(alpha: 0.8),
+                              fontSize: 10.sp,
+                            ),
+                          ),
+                          SizedBox(width: 3.w),
+                          Icon(
+                            Icons.done_all_rounded,
+                            size: 14.sp,
+                            color: AppColors.white.withValues(alpha: 0.9),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _avatarWithDot(String? url, {bool isRider = false}) {
-    final imageUrl = (url ?? '').trim();
-    return Stack(
-      children: [
-        CircleAvatar(
-          radius: 18.r,
-          backgroundColor: isRider
-              ? AppColors.white.withValues(alpha: 0.2)
-              : AppColors.bgSoftCircle,
-          child: ClipOval(
-            child: imageUrl.isNotEmpty
-                ? Image.network(
-                    imageUrl,
-                    width: 36.r,
-                    height: 36.r,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Icon(
-                      Icons.person,
-                      size: 20.sp,
-                      color: isRider ? AppColors.white : AppColors.borderInputMuted,
-                    ),
-                  )
-                : Icon(
-                    Icons.person,
-                    size: 20.sp,
-                    color: isRider ? AppColors.white : AppColors.borderInputMuted,
-                  ),
-          ),
-        ),
-        Positioned(
-          right: 0,
-          bottom: 0,
-          child: Container(
-            width: 10.w,
-            height: 10.w,
-            decoration: BoxDecoration(
-              color: AppColors.onlineGreen,
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.white, width: 2),
-            ),
-          ),
-        ),
-      ],
     );
   }
 
@@ -349,6 +312,7 @@ class RideMessageScreen extends GetView<RideMessageController> {
           child: AbsorbPointer(
             absorbing: !allowed,
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Expanded(
                   child: Container(
@@ -364,6 +328,10 @@ class RideMessageScreen extends GetView<RideMessageController> {
                           child: TextField(
                             controller: controller.messageController,
                             enabled: allowed,
+                            keyboardType: TextInputType.multiline,
+                            textInputAction: TextInputAction.newline,
+                            minLines: 1,
+                            maxLines: 5,
                             style: AppTextStyles.body.copyWith(
                               color: AppColors.textHeading,
                             ),
