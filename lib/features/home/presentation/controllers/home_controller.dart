@@ -42,6 +42,7 @@ import '../../../../core/services/error_reporting/error_reporter.dart';
 
 class HomeController extends GetxController {
   static const String _currentLocationPlaceId = '__current_location__';
+  static bool _didCheckPendingReviewOnHomeLaunch = false;
 
   final HomeRepository homeRepository;
   final RideRepository rideRepository;
@@ -112,9 +113,15 @@ class HomeController extends GetxController {
     _getCurrentLocation();
     _addMockDrivers();
     _startActiveRidePolling();
-    _loadHomeData().whenComplete(
-      rideRatingController.tryOpenRatingSheetAfterHomeLoad,
-    );
+    _loadHomeData().whenComplete(() async {
+      // Product rule: call pending-review API only once when app session
+      // first opens Home, not on subsequent returns to Home.
+      if (_didCheckPendingReviewOnHomeLaunch) {
+        return;
+      }
+      _didCheckPendingReviewOnHomeLaunch = true;
+      await rideRatingController.tryOpenRatingSheetAfterHomeLoad();
+    });
 
     // Request Notification Permission (Best practice: delayed until Home Screen)
     _checkNotificationPermission();
