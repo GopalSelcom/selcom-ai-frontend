@@ -194,7 +194,9 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      return ReceiptModel.fromJson(response.data['data'] ?? {});
+      final receiptJson =
+          (response.data['data'] as Map?)?['receipt'] as Map<String, dynamic>?;
+      return ReceiptModel.fromJson(receiptJson ?? {});
     }
     throw Exception('Failed to get receipt');
   }

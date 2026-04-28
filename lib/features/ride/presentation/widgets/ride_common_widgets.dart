@@ -347,22 +347,27 @@ class NeedHelpRow extends StatelessWidget {
         ),
         if (showDownloadSlip) ...[
           SizedBox(width: 20.w),
-          Icon(
-            Iconsax.document_download5,
-            color: AppColors.textBody,
-            size: 20.w,
-          ),
-          SizedBox(width: 6.w),
           GestureDetector(
             onTap: onDownloadTap,
-            child: Text(
-              AppStrings.downloadSlip.tr,
-              style: TextStyle(
-                fontFamily: AppTextStyles.metropolisFont,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textBody,
-                fontSize: 15.sp,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Iconsax.document_download5,
+                  color: AppColors.textBody,
+                  size: 20.w,
+                ),
+                SizedBox(width: 6.w),
+                Text(
+                  AppStrings.downloadSlip.tr,
+                  style: TextStyle(
+                    fontFamily: AppTextStyles.metropolisFont,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textBody,
+                    fontSize: 15.sp,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

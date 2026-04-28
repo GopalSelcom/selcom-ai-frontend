@@ -922,18 +922,26 @@ class DriverAcceptedScreen extends StatelessWidget {
                 ),
               ),
               SizedBox(width: 20.w),
-              Icon(
-                Icons.download_rounded,
-                color: AppColors.textBody,
-                size: 18.sp,
-              ),
-              SizedBox(width: 6.w),
-              Text(
-                AppStrings.downloadSlip.tr,
-                style: AppTextStyles.homeCaption.copyWith(
-                  color: AppColors.textBody,
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
+              GestureDetector(
+                onTap: c.downloadSlip,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.download_rounded,
+                      color: AppColors.textBody,
+                      size: 18.sp,
+                    ),
+                    SizedBox(width: 6.w),
+                    Text(
+                      AppStrings.downloadSlip.tr,
+                      style: AppTextStyles.homeCaption.copyWith(
+                        color: AppColors.textBody,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
