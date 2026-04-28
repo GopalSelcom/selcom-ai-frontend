@@ -206,7 +206,7 @@ struct TrackingViewModel {
         } else if etaSeconds > 0 {
             let mins = Int(ceil(etaSeconds / 60.0))
             self.eta = mins <= 1 ? "1 min" : "\(mins) mins"
-            self.targetDate = etaSeconds > 0 ? Date().addingTimeInterval(etaSeconds) : nil
+            self.targetDate = Date().addingTimeInterval(etaSeconds)
             
             if isRiderInRide {
                 // Trip Phase: 50% -> 100%
@@ -215,8 +215,17 @@ struct TrackingViewModel {
                 // Pickup Phase: 0% -> 50%
                 self.progressRatio = 0.1 + (0.4 * (1.0 - min(etaSeconds / 1200.0, 1.0)))
             }
+        } else if etaSeconds < 0 {
+            let lateMins = Int(abs(floor(etaSeconds / 60.0)))
+            self.eta = lateMins <= 1 ? "1 min delayed" : "\(lateMins) mins delayed"
+            self.targetDate = nil
+            self.progressRatio = 1.0
         } else {
-            self.eta = "Soon"
+            if normalizedStatus == "searching" || normalizedStatus == "finding_driver" || normalizedStatus == "finding driver" {
+                self.eta = "Soon"
+            } else {
+                self.eta = self.isArrived ? "Done" : "Delayed"
+            }
             self.targetDate = nil
             self.progressRatio = isArrived ? 1.0 : (isRiderInRide ? 0.75 : 0.25)
         }
