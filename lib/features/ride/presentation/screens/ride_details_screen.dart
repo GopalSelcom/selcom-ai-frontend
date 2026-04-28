@@ -32,7 +32,8 @@ class RideDetailsScreen extends StatelessWidget {
     if (hasRegisteredController) {
       final existingController = Get.find<RideDetailsController>();
       final hasDifferentFlowMode =
-          existingController.openedFromCompletionFlow != openedFromCompletionFlow;
+          existingController.openedFromCompletionFlow !=
+          openedFromCompletionFlow;
       final hasDifferentRide = existingController.ride.id != ride.id;
       if (hasDifferentFlowMode || hasDifferentRide) {
         Get.delete<RideDetailsController>();
@@ -128,12 +129,14 @@ class RideDetailsScreen extends StatelessWidget {
               onBack: controller.openedFromCompletionFlow
                   ? handleCompletionExit
                   : null,
-              bottomPadding: controller.openedFromCompletionFlow &&
+              bottomPadding:
+                  controller.openedFromCompletionFlow &&
                       controller.canShowReviewInput &&
                       !controller.hasExistingRating
                   ? 10.h
                   : null,
-              child: controller.openedFromCompletionFlow &&
+              child:
+                  controller.openedFromCompletionFlow &&
                       controller.canShowReviewInput &&
                       !controller.hasExistingRating
                   ? Align(
@@ -287,31 +290,32 @@ class RideDetailsScreen extends StatelessWidget {
               top: false,
               child: Padding(
                 padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
-                child: Obx(
-                  () => (controller.hasExistingRating ||
-                          !controller.canShowReviewInput)
-                      ? AppPrimaryButton(
-                          label: AppStrings.done.tr,
-                          onPressed: controller.openedFromCompletionFlow
-                              ? handleCompletionExit
-                              : () => Navigator.pop(context),
-                        )
-                      : AppPrimaryButton(
+                child:
+                    (controller.hasExistingRating ||
+                        !controller.canShowReviewInput)
+                    ? AppPrimaryButton(
+                        label: AppStrings.done.tr,
+                        onPressed: controller.openedFromCompletionFlow
+                            ? handleCompletionExit
+                            : () => Navigator.pop(context),
+                      )
+                    : Obx(
+                        () => AppPrimaryButton(
                           label: AppStrings.done.tr,
                           isLoading:
                               controller.ratingController.isSubmitting.value,
                           onPressed: controller.ratingController.canSubmit
                               ? () => controller.ratingController.onSubmitTap(
-                                    // Route success-dialog "Continue" by source:
-                                    // completion flow -> Home, My Rides -> pop.
-                                    onSuccessConfirmed:
-                                        controller.openedFromCompletionFlow
-                                        ? handleCompletionExit
-                                        : () => Navigator.pop(context),
-                                  )
+                                  // Route success-dialog "Continue" by source:
+                                  // completion flow -> Home, My Rides -> pop.
+                                  onSuccessConfirmed:
+                                      controller.openedFromCompletionFlow
+                                      ? handleCompletionExit
+                                      : () => Navigator.pop(context),
+                                )
                               : null,
                         ),
-                ),
+                      ),
               ),
             ),
           ],
