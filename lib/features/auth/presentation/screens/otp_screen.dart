@@ -6,7 +6,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../shared/widgets/app_otp_field.dart';
-import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/utils/phone_formatter.dart';
 import '../controllers/auth_controller.dart';
 
@@ -32,52 +31,78 @@ class OtpScreen extends GetView<AuthController> {
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: IntrinsicHeight(
                   child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24.w),
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(height: 16.h),
-                        // Back Button
-                        const AppBackButton(color: AppColors.textHeading),
-                        SizedBox(height: 32.h),
+                        SizedBox(height: 10.h),
+                        AppBackButton(
+                          color: AppColors.textHeading,
+                          showOnlyWhenCanPop: false,
+                          onPressed: () {
+                            if (Navigator.of(context).canPop()) {
+                              Get.back();
+                            }
+                          },
+                        ),
+                        SizedBox(height: 17.h),
 
                         // Title
                         Text(
                           AppStrings.verifyPhoneNumber.tr,
                           style: AppTextStyles.onboardingTitle.copyWith(
-                            fontSize: 24.sp,
+                            fontSize: 28.sp,
+                            height: 34 / 28,
+                            letterSpacing: -0.4,
                           ),
                         ),
-                        SizedBox(height: 12.h),
+                        SizedBox(height: 8.h),
 
                         // Subtitle
                         Text(
                           'Please enter the 4-digit code sent to \n${controller.countryCode} ${TanzaniaPhoneFormatter.formatString(controller.mobileNumber.value)} through SMS',
-                          style: AppTextStyles.onboardingSubtitle,
+                          style: AppTextStyles.homeSubtitle.copyWith(
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textBody,
+                            height: 20 / 15,
+                          ),
                         ),
-                        SizedBox(height: 16.h),
+                        SizedBox(height: 18.h),
 
                         // Edit Phone Number
                         InkWell(
                           onTap: () => Get.back(),
                           child: Text(
-                            AppStrings.editYourPhoneNumber.tr,
-                            style: AppTextStyles.body.copyWith(
-                              color: AppColors.info,
-                              // Blue color as per generic design commonalities
+                            '${AppStrings.editYourPhoneNumber.tr}?',
+                            style: AppTextStyles.homeSubtitle.copyWith(
+                              fontSize: 17.sp,
+                              color: AppColors.figmaInputBlue,
                               decoration: TextDecoration.underline,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w500,
+                              height: 22 / 17,
                             ),
                           ),
                         ),
-                        SizedBox(height: 48.h),
+                        SizedBox(height: 42.h),
 
                         // OTP Input Field
                         Center(
                           child: Obx(
                             () => AppOtpField(
                               length: 4,
+                              fieldHeight: 70.h,
+                              fieldWidth: 64.w,
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               hasError: controller.errorMessage.isNotEmpty,
+                              textStyle: AppTextStyles.body.copyWith(
+                                fontFamily: AppTextStyles.metropolisFont,
+                                fontSize: 34.sp,
+                                fontWeight: FontWeight.w400,
+                                color: AppColors.figmaInputBlue,
+                                height: 41 / 34,
+                                letterSpacing: -0.4,
+                              ),
                               onChanged: (v) => controller.otp.value = v,
                               onCompleted: (v) async {
                                 controller.otp.value = v;
@@ -104,7 +129,7 @@ class OtpScreen extends GetView<AuthController> {
                                 )
                               : const SizedBox.shrink(),
                         ),
-                        SizedBox(height: 32.h),
+                        SizedBox(height: 56.h),
 
                         // Resend Option
                         Center(
@@ -117,15 +142,18 @@ class OtpScreen extends GetView<AuthController> {
                                     "Haven't got the confirmation code yet? ",
                                     style: AppTextStyles.body.copyWith(
                                       color: AppColors.textBody,
-                                      fontSize: 13.sp,
+                                      fontSize: 30.sp / 2,
+                                      fontWeight: FontWeight.w500,
+                                      height: 20 / 15,
                                     ),
                                   ),
                                   Text(
                                     "00:${controller.resendTimer.value.toString().padLeft(2, '0')}",
-                                    style: AppTextStyles.body.copyWith(
+                                    style: AppTextStyles.onboardingFooter.copyWith(
                                       color: AppColors.primary,
-                                      fontWeight: FontWeight.bold,
+                                      fontWeight: FontWeight.w700,
                                       fontSize: 13.sp,
+                                      height: 18 / 13,
                                     ),
                                   ),
                                 ],
@@ -157,66 +185,26 @@ class OtpScreen extends GetView<AuthController> {
                           }),
                         ),
 
-                        const Spacer(),
-
                         // Error Message
                         Obx(
                           () => controller.errorMessage.isNotEmpty
                               ? Padding(
-                                  padding: EdgeInsets.only(bottom: 16.h),
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 16.w,
-                                      vertical: 12.h,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.error.withValues(
-                                        alpha: 0.1,
+                                  padding: EdgeInsets.only(top: 12.h),
+                                  child: Center(
+                                    child: Text(
+                                      controller.errorMessage.value,
+                                      textAlign: TextAlign.center,
+                                      style: AppTextStyles.body.copyWith(
+                                        color: AppColors.error,
+                                        fontSize: 13.sp,
                                       ),
-                                      borderRadius: BorderRadius.circular(8.r),
-                                      border: Border.all(
-                                        color: AppColors.error.withValues(
-                                          alpha: 0.5,
-                                        ),
-                                      ),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          Icons.info_outline,
-                                          color: AppColors.error,
-                                          size: 20.sp,
-                                        ),
-                                        SizedBox(width: 8.w),
-                                        Expanded(
-                                          child: Text(
-                                            controller.errorMessage.value,
-                                            style: AppTextStyles.body.copyWith(
-                                              color: AppColors.error,
-                                              fontSize: 14.sp,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
                                     ),
                                   ),
                                 )
                               : const SizedBox.shrink(),
                         ),
 
-                        // Verify Button
-                        Obx(
-                          () => AppPrimaryButton(
-                            label: 'Verify',
-                            isLoading: controller.isLoading.value,
-                            onPressed: controller.otp.value.length == 4
-                                ? () async {
-                                    await controller.verifyOtp();
-                                  }
-                                : null,
-                          ),
-                        ),
-                        SizedBox(height: 16.h),
+                        const Spacer(),
                       ],
                     ),
                   ),

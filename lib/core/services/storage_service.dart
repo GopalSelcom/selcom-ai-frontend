@@ -9,6 +9,7 @@ class StorageKeys {
   static const String isFirstTime = 'is_first_time';
   static const String fcmToken = 'fcm_token';
   static const String preferredLanguage = 'preferred_language';
+  static const String signupCompleted = 'signup_completed';
   static const String stopsIdempotencyPrefix = 'stops_idem_';
 }
 

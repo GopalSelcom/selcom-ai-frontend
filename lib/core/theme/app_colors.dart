@@ -121,6 +121,7 @@ class AppColors {
   static const Color iconAmber = Color(0xFFB45309);
   static const Color routeBlue = Color(0xFF3073E8);
   static const Color pinRed = Color(0xFFF52D56);
+  static const Color figmaInputBlue = Color(0xFF2F6FED);
   static const Color dangerDeep = Color(0xFFE31E24);
   static const Color successMint = Color(0xFF10B981);
   static const Color ratingGoldDark = Color(0xFFD9A800);

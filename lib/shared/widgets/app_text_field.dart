@@ -5,7 +5,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
 
-class AppTextField extends StatelessWidget {
+class AppTextField extends StatefulWidget {
   final String? label;
   final String? hintText;
   final TextEditingController? controller;
@@ -50,77 +50,153 @@ class AppTextField extends StatelessWidget {
   });
 
   @override
+  State<AppTextField> createState() => _AppTextFieldState();
+}
+
+class _AppTextFieldState extends State<AppTextField> {
+  FocusNode? _ownedFocusNode;
+  late FocusNode _focusNode;
+  final ValueNotifier<bool> _isFocused = ValueNotifier<bool>(false);
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.focusNode != null) {
+      _focusNode = widget.focusNode!;
+    } else {
+      _ownedFocusNode = FocusNode();
+      _focusNode = _ownedFocusNode!;
+    }
+    _focusNode.addListener(_handleFocusChange);
+  }
+
+  @override
+  void didUpdateWidget(covariant AppTextField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.focusNode != widget.focusNode) {
+      _focusNode.removeListener(_handleFocusChange);
+      if (_ownedFocusNode != null && oldWidget.focusNode == null) {
+        _ownedFocusNode!.dispose();
+      }
+      _ownedFocusNode = null;
+      if (widget.focusNode != null) {
+        _focusNode = widget.focusNode!;
+      } else {
+        _ownedFocusNode = FocusNode();
+        _focusNode = _ownedFocusNode!;
+      }
+      _focusNode.addListener(_handleFocusChange);
+      _isFocused.value = _focusNode.hasFocus;
+    }
+  }
+
+  void _handleFocusChange() {
+    _isFocused.value = _focusNode.hasFocus;
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_handleFocusChange);
+    _ownedFocusNode?.dispose();
+    _isFocused.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final hasError = (widget.errorText ?? '').trim().isNotEmpty;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (label != null) ...[
-          Text(label!, style: AppTextStyles.cardTitle),
+        if (widget.label != null) ...[
+          Text(widget.label!, style: AppTextStyles.cardTitle),
           SizedBox(height: 8.h),
         ],
-        TextField(
-          controller: controller,
-          focusNode: focusNode,
-          keyboardType: keyboardType,
-          textInputAction: textInputAction,
-          obscureText: isPassword,
-          onChanged: onChanged,
-          onSubmitted: onSubmitted,
-          readOnly: readOnly,
-          enabled: enabled,
-          maxLines: maxLines,
-          maxLength: maxLength,
-          autofocus: autofocus,
-          inputFormatters: inputFormatters,
-          style: AppTextStyles.body,
-          decoration: InputDecoration(
-            hintText: hintText,
-            hintStyle: AppTextStyles.hint,
-            errorText: errorText,
-            prefixIcon: prefixIcon,
-            suffixIcon: suffixIcon,
-            filled: true,
-            fillColor: AppColors.white,
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: 16.w,
-              vertical: 18.h,
-            ),
-            counterText: "",
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppRadius.input),
-              borderSide: const BorderSide(color: AppColors.inputBorderDefault),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppRadius.input),
-              borderSide: const BorderSide(color: AppColors.inputBorderDefault),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppRadius.input),
-              borderSide: const BorderSide(color: AppColors.inputBorderActive),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppRadius.input),
-              borderSide: const BorderSide(color: AppColors.inputBorderError),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppRadius.input),
-              borderSide: const BorderSide(color: AppColors.inputBorderError),
-            ),
-          ),
+        ValueListenableBuilder<bool>(
+          valueListenable: _isFocused,
+          builder: (_, focused, __) {
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppRadius.input),
+                boxShadow: focused && !hasError
+                    ? const [
+                        BoxShadow(
+                          color: Color(0x400F67FE),
+                          blurRadius: 0,
+                          spreadRadius: 4,
+                        ),
+                      ]
+                    : const [],
+              ),
+              child: TextField(
+                controller: widget.controller,
+                focusNode: _focusNode,
+                keyboardType: widget.keyboardType,
+                textInputAction: widget.textInputAction,
+                obscureText: widget.isPassword,
+                onChanged: widget.onChanged,
+                onSubmitted: widget.onSubmitted,
+                readOnly: widget.readOnly,
+                enabled: widget.enabled,
+                maxLines: widget.maxLines,
+                maxLength: widget.maxLength,
+                autofocus: widget.autofocus,
+                inputFormatters: widget.inputFormatters,
+                style: AppTextStyles.body,
+                decoration: InputDecoration(
+                  hintText: widget.hintText,
+                  hintStyle: AppTextStyles.hint,
+                  errorText: widget.errorText,
+                  prefixIcon: widget.prefixIcon,
+                  suffixIcon: widget.suffixIcon,
+                  filled: true,
+                  fillColor: AppColors.white,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 18.h,
+                  ),
+                  counterText: "",
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.input),
+                    borderSide: const BorderSide(color: AppColors.inputBorderDefault),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.input),
+                    borderSide: const BorderSide(color: AppColors.inputBorderDefault),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.input),
+                    borderSide: const BorderSide(color: AppColors.inputBorderActive),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.input),
+                    borderSide: const BorderSide(color: AppColors.inputBorderError),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.input),
+                    borderSide: const BorderSide(color: AppColors.inputBorderError),
+                  ),
+                ),
+              ),
+            );
+          },
         ),
-        if (showCounter && maxLength != null && controller != null) ...[
+        if (widget.showCounter &&
+            widget.maxLength != null &&
+            widget.controller != null) ...[
           SizedBox(height: 6.h),
           Align(
             alignment: Alignment.centerRight,
             child: ValueListenableBuilder(
-              valueListenable: controller!,
+              valueListenable: widget.controller!,
               builder: (context, TextEditingValue value, _) {
                 final length = value.text.length;
                 return Text(
-                  '$length/$maxLength',
+                  '$length/${widget.maxLength}',
                   style: AppTextStyles.bodySecondary.copyWith(
                     fontSize: 12.sp,
-                    color: length >= maxLength!
+                    color: length >= widget.maxLength!
                         ? AppColors.textError
                         : AppColors.borderInputMuted,
                   ),

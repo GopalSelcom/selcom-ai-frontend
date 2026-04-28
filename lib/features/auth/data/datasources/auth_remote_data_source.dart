@@ -1,9 +1,11 @@
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/urls.dart';
 import '../../../../core/data/models/requests/send_otp_request.dart';
+import '../../../../core/data/models/requests/save_user_additional_details_request.dart';
 import '../../../../core/data/models/responses/send_otp_response.dart';
 import '../../../../core/data/models/requests/verify_otp_request.dart';
 import '../../../../core/data/models/responses/verify_otp_response.dart';
+import '../../../../core/data/models/user_model.dart';
 
 abstract class AuthRemoteDataSource {
   Future<SendOtpResponseModel?> sendOtp({required SendOtpRequest request});
@@ -12,6 +14,10 @@ abstract class AuthRemoteDataSource {
 
   Future<VerifyOtpResponseModel?> verifyOtp({
     required VerifyOtpRequest request,
+  });
+
+  Future<UserModel> saveUserAdditionalDetails({
+    required SaveUserAdditionalDetailsRequest request,
   });
 
   Future<String> refreshToken();
@@ -86,6 +92,26 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       // Intentionally avoid logging request payload details.
     }
     return null;
+  }
+
+  @override
+  Future<UserModel> saveUserAdditionalDetails({
+    required SaveUserAdditionalDetailsRequest request,
+  }) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.auth.saveUserDetails,
+        method: ApiMethod.post,
+        body: request.toJson(),
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      return UserModel.fromJson(response.data['response'] ?? {});
+    }
+    throw Exception(
+      response.data?['message'] ?? 'Failed to save additional details',
+    );
   }
 
   @override

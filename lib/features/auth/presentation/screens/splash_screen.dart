@@ -30,9 +30,17 @@ class _SplashScreenState extends State<SplashScreen> {
 
     // Check for existing valid session token
     final token = await StorageService().read(StorageKeys.authorizationToken);
+    final signupCompleted =
+        await StorageService().read(StorageKeys.signupCompleted);
 
     if (token != null && token.isNotEmpty) {
-      Get.offAllNamed(AppRoutes.home);
+      if (signupCompleted == 'false') {
+        Get.offAllNamed(AppRoutes.phone);
+      } else {
+        // For existing logged-in users where this flag may be absent,
+        // default to home to preserve prior behavior.
+        Get.offAllNamed(AppRoutes.home);
+      }
     } else {
       Get.offAllNamed(AppRoutes.onboarding);
     }

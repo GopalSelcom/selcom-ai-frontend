@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_back_button.dart';
+import '../../../../shared/widgets/app_focus_input_field.dart';
 import '../../../../shared/utils/phone_formatter.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../controllers/auth_controller.dart';
@@ -29,21 +30,29 @@ class PhoneInputScreen extends GetView<AuthController> {
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: IntrinsicHeight(
                   child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24.w),
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (Navigator.of(context).canPop()) ...[
-                          SizedBox(height: 16.h),
-                          const AppBackButton(color: AppColors.textHeading),
-                        ],
-                        SizedBox(height: 30.h),
+                        SizedBox(height: 10.h),
+                        AppBackButton(
+                          color: AppColors.textHeading,
+                          showOnlyWhenCanPop: false,
+                          onPressed: () {
+                            if (Navigator.of(context).canPop()) {
+                              Get.back();
+                            }
+                          },
+                        ),
+                        SizedBox(height: 17.h),
 
                         // Title
                         Text(
                           AppStrings.enterPhoneNumberForVerification.tr,
                           style: AppTextStyles.onboardingTitle.copyWith(
                             fontSize: 28.sp,
+                            height: 34 / 28,
+                            letterSpacing: -0.4,
                           ),
                         ),
 
@@ -52,10 +61,15 @@ class PhoneInputScreen extends GetView<AuthController> {
                         // Subtitle
                         Text(
                           AppStrings.weLlTextACodeToVerifyYourPhoneNumber.tr,
-                          style: AppTextStyles.onboardingSubtitle,
+                          style: AppTextStyles.homeSubtitle.copyWith(
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textBody,
+                            height: 20 / 15,
+                          ),
                         ),
 
-                        SizedBox(height: 24.h),
+                        SizedBox(height: 22.h),
 
                         // Phone Input Field
                         Row(
@@ -67,15 +81,22 @@ class PhoneInputScreen extends GetView<AuthController> {
                               decoration: BoxDecoration(
                                 color: AppColors.white,
                                 border: Border.all(
-                                  color: AppColors.borderLight,
+                                  color: AppColors.borderDefault,
                                 ),
                                 borderRadius: BorderRadius.circular(16.r),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: AppColors.shadowSoft,
+                                    blurRadius: 2,
+                                    offset: Offset(0, 1),
+                                  ),
+                                ],
                               ),
                               child: Row(
                                 children: [
                                   ClipRRect(
                                     borderRadius: BorderRadius.circular(3.r),
-                                    child: SvgPicture.asset(
+                                    child: SvgPictureAsset(
                                       AppAssets.icTanzaniaFlag,
                                       height: 15.h,
                                       width: 23.w,
@@ -87,9 +108,9 @@ class PhoneInputScreen extends GetView<AuthController> {
                                     AppStrings.value255.tr,
                                     style: AppTextStyles.body.copyWith(
                                       fontFamily: AppTextStyles.metropolisFont,
-                                      fontWeight: FontWeight.w600,
+                                      fontWeight: FontWeight.w400,
                                       color: AppColors.textHeading,
-                                      fontSize: 16.sp,
+                                      fontSize: 17.sp,
                                     ),
                                   ),
                                   Icon(
@@ -105,98 +126,118 @@ class PhoneInputScreen extends GetView<AuthController> {
 
                             // Number Input
                             Expanded(
-                              child: Container(
+                              child: AppFocusInputField(
                                 height: 54.h,
-                                decoration: BoxDecoration(
-                                  color: AppColors.white,
-                                  border: Border.all(
-                                    color: AppColors.borderLight,
-                                  ),
-                                  borderRadius: BorderRadius.circular(16.r),
+                                keyboardType: TextInputType.number,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                  TanzaniaPhoneFormatter(),
+                                ],
+                                style: AppTextStyles.body.copyWith(
+                                  fontFamily: 'Plus Jakarta Sans',
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16.sp,
+                                  color: AppColors.figmaInputBlue,
+                                  letterSpacing: -0.16,
                                 ),
-                                child: TextField(
-                                  keyboardType: TextInputType.number,
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.digitsOnly,
-                                    TanzaniaPhoneFormatter(),
-                                  ],
-                                  style: AppTextStyles.body.copyWith(
-                                    fontFamily: AppTextStyles.metropolisFont,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 18.sp,
-                                    color: AppColors.textHeading,
-                                    letterSpacing: 1.2,
-                                  ),
-                                  maxLength: 11,
-                                  onChanged: (v) {
-                                    controller.mobileNumber.value = v
-                                        .replaceAll(' ', '');
-                                  },
-                                  decoration: InputDecoration(
-                                    hintText: AppStrings.eG7XxXxxXxx.tr,
-                                    counterText: "",
-                                    hintStyle: AppTextStyles.hint.copyWith(
-                                      fontSize: 18.sp,
-                                    ),
-                                    border: InputBorder.none,
-                                    contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 16.w,
-                                      vertical: 14.h,
-                                    ),
-                                  ),
+                                maxLength: 11,
+                                onChanged: (v) {
+                                  controller.mobileNumber.value = v.replaceAll(' ', '');
+                                },
+                                hintText: AppStrings.eG7XxXxxXxx.tr,
+                                hintStyle: AppTextStyles.hint.copyWith(
+                                  fontFamily: 'Plus Jakarta Sans',
+                                  fontSize: 16.sp,
+                                  color: AppColors.figmaInputBlue,
+                                  letterSpacing: -0.16,
+                                ),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 16.w,
+                                  vertical: 16.h,
                                 ),
                               ),
                             ),
                           ],
                         ),
 
-                        SizedBox(height: 16.h),
+                        SizedBox(height: 12.h),
 
                         // Email Input Field
-                        Container(
-                          height: 56.h,
-                          decoration: BoxDecoration(
-                            color: AppColors.white,
-                            border: Border.all(color: AppColors.borderLight),
-                            borderRadius: BorderRadius.circular(16.r),
-                          ),
-                          child: Row(
-                            children: [
-                              SizedBox(width: 16.w),
-                              SvgPicture.asset(
-                                AppAssets.icSms,
-                                height: 20.h,
-                                width: 20.w,
-                                colorFilter: const ColorFilter.mode(
-                                  AppColors.textBody,
-                                  BlendMode.srcIn,
-                                ),
+                        Row(
+                          children: [
+                            Container(
+                              height: 56.h,
+                              width: 115.w,
+                              padding: EdgeInsets.symmetric(horizontal: 12.w),
+                              decoration: BoxDecoration(
+                                color: AppColors.white,
+                                border: Border.all(color: AppColors.borderDefault),
+                                borderRadius: BorderRadius.circular(16.r),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: AppColors.shadowSoft,
+                                    blurRadius: 2,
+                                    offset: Offset(0, 1),
+                                  ),
+                                ],
                               ),
-                              Expanded(
-                                child: TextField(
-                                  keyboardType: TextInputType.emailAddress,
-                                  style: AppTextStyles.body.copyWith(
-                                    fontFamily: AppTextStyles.metropolisFont,
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 16.sp,
+                              child: Row(
+                                children: [
+                                  SvgPictureAsset(
+                                    AppAssets.icSms,
+                                    height: 24.h,
+                                    width: 24.w,
                                     color: AppColors.textHeading,
                                   ),
-                                  onChanged: controller.onEmailChanged,
-                                  decoration: InputDecoration(
-                                    hintText:
-                                        AppStrings.eGNameEmailComOptional.tr,
-                                    hintStyle: AppTextStyles.hint.copyWith(
-                                      fontSize: 16.sp,
-                                    ),
-                                    border: InputBorder.none,
-                                    contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 16.w,
+                                  SizedBox(width: 8.w),
+                                  Text(
+                                    'Email',
+                                    style: AppTextStyles.body.copyWith(
+                                      fontFamily: AppTextStyles.metropolisFont,
+                                      fontWeight: FontWeight.w400,
+                                      fontSize: 17.sp,
+                                      color: AppColors.textHeading,
                                     ),
                                   ),
+                                  const Spacer(),
+                                  Transform.rotate(
+                                    angle: -1.5708,
+                                    child: Icon(
+                                      Icons.keyboard_arrow_down,
+                                      size: 12.sp,
+                                      color: AppColors.textBody,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(width: 8.w),
+                            Expanded(
+                              child: AppFocusInputField(
+                                height: 56.h,
+                                keyboardType: TextInputType.emailAddress,
+                                style: AppTextStyles.body.copyWith(
+                                  fontFamily: 'Plus Jakarta Sans',
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16.sp,
+                                  color: AppColors.figmaInputBlue,
+                                  letterSpacing: -0.16,
+                                ),
+                                onChanged: controller.onEmailChanged,
+                                hintText: AppStrings.eGNameEmailComOptional.tr,
+                                hintStyle: AppTextStyles.hint.copyWith(
+                                  fontFamily: 'Plus Jakarta Sans',
+                                  fontSize: 16.sp,
+                                  color: AppColors.figmaInputBlue,
+                                  letterSpacing: -0.16,
+                                ),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12.w,
+                                  vertical: 16.h,
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
 
                         // Error Message
@@ -219,14 +260,16 @@ class PhoneInputScreen extends GetView<AuthController> {
 
                         // Legal Note
                         Padding(
-                          padding: EdgeInsets.only(bottom: 24.h),
+                          padding: EdgeInsets.only(bottom: 14.h),
                           child: Text(
                             AppStrings
                                 .noteByProceedingYouConsentToGetCallsWhatsappOrSmsMessagesIncludingByAu
                                 .tr,
-                            style: AppTextStyles.onboardingFooter.copyWith(
-                              fontSize: 11.sp,
-                              color: AppColors.textBody.withValues(alpha: 0.7),
+                            style: AppTextStyles.homeCaption.copyWith(
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w400,
+                              color: AppColors.textBody,
+                              height: 20 / 12,
                             ),
                           ),
                         ),
@@ -242,7 +285,7 @@ class PhoneInputScreen extends GetView<AuthController> {
                           ),
                         ),
 
-                        SizedBox(height: 16.h),
+                        SizedBox(height: 12.h),
                       ],
                     ),
                   ),

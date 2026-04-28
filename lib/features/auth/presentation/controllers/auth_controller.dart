@@ -215,8 +215,20 @@ class AuthController extends GetxController {
             jsonEncode(verifyData.user!.toJson()),
           );
 
-          // Navigate to Profile Loading to sync data
-          Get.offAllNamed(AppRoutes.profileLoading);
+          final isUserAlreadyRegistered =
+              verifyData.isUserAlreadyRegistered == true;
+          await StorageService().write(
+            StorageKeys.signupCompleted,
+            isUserAlreadyRegistered ? 'true' : 'false',
+          );
+
+          if (isUserAlreadyRegistered) {
+            // Existing flow for already-registered users.
+            Get.offAllNamed(AppRoutes.profileLoading);
+          } else {
+            // New users continue to signup details screen.
+            Get.offNamed(AppRoutes.signUp);
+          }
           return true;
         } else {
           errorMessage.value = response?.message ?? 'OTP verification failed';

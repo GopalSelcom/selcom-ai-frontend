@@ -1,9 +1,11 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/data/models/requests/send_otp_request.dart';
+import '../../../../core/data/models/requests/save_user_additional_details_request.dart';
 import '../../../../core/data/models/responses/send_otp_response.dart';
 import '../../../../core/data/models/requests/verify_otp_request.dart';
 import '../../../../core/data/models/responses/verify_otp_response.dart';
+import '../../../../core/data/models/user_model.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_data_source.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
@@ -45,6 +47,21 @@ class AuthRepositoryImpl implements AuthRepository {
   }) async {
     try {
       final result = await remoteDataSource.verifyOtp(request: request);
+      return Right(result);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, UserModel>> saveUserAdditionalDetails({
+    required SaveUserAdditionalDetailsRequest request,
+  }) async {
+    try {
+      final result = await remoteDataSource.saveUserAdditionalDetails(
+        request: request,
+      );
       return Right(result);
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);

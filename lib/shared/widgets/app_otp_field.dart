@@ -10,6 +10,10 @@ class AppOtpField extends StatelessWidget {
   final Function(String)? onChanged;
   final TextEditingController? controller;
   final bool hasError;
+  final double? fieldHeight;
+  final double? fieldWidth;
+  final TextStyle? textStyle;
+  final MainAxisAlignment mainAxisAlignment;
 
   const AppOtpField({
     super.key,
@@ -18,6 +22,10 @@ class AppOtpField extends StatelessWidget {
     this.onChanged,
     this.controller,
     this.hasError = false,
+    this.fieldHeight,
+    this.fieldWidth,
+    this.textStyle,
+    this.mainAxisAlignment = MainAxisAlignment.spaceBetween,
   });
 
   @override
@@ -30,11 +38,12 @@ class AppOtpField extends StatelessWidget {
       onCompleted: onCompleted,
       keyboardType: TextInputType.number,
       animationType: AnimationType.fade,
+      mainAxisAlignment: mainAxisAlignment,
       pinTheme: PinTheme(
         shape: PinCodeFieldShape.box,
         borderRadius: BorderRadius.circular(16.r),
-        fieldHeight: 64.h,
-        fieldWidth: 64.w,
+        fieldHeight: fieldHeight ?? 64.h,
+        fieldWidth: fieldWidth ?? 64.w,
         activeFillColor: AppColors.white,
         selectedFillColor: AppColors.white,
         inactiveFillColor: AppColors.white,
@@ -43,10 +52,10 @@ class AppOtpField extends StatelessWidget {
         inactiveColor: hasError ? AppColors.error : AppColors.inputBorderDefault,
         borderWidth: 1.w,
       ),
-      cursorColor: AppColors.primary,
+      cursorColor: AppColors.inputBorderActive,
       animationDuration: const Duration(milliseconds: 300),
       enableActiveFill: true,
-      textStyle: AppTextStyles.screenTitle,
+      textStyle: textStyle ?? AppTextStyles.screenTitle,
       beforeTextPaste: (text) => true,
     );
   }

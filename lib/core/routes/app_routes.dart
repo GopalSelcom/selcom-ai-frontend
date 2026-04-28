@@ -6,6 +6,7 @@ import '../../features/auth/presentation/screens/onboarding_screen.dart';
 import '../../features/auth/presentation/screens/phone_input_screen.dart';
 import '../../features/auth/presentation/screens/otp_screen.dart';
 import '../../features/auth/presentation/screens/profile_loading_screen.dart';
+import '../../features/auth/presentation/screens/sign_up.dart';
 import '../../features/auth/presentation/bindings/auth_binding.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/home/presentation/bindings/home_binding.dart';
@@ -39,6 +40,7 @@ class AppRoutes {
   static const String phone = '/auth/phone';
   static const String otp = '/auth/otp';
   static const String profileLoading = '/auth/profile-loading';
+  static const String signUp = '/auth/sign-up';
   static const String home = '/home';
   static const String locationSelection = '/location-selection';
   static const String search = '/search';
@@ -77,6 +79,7 @@ class AppRoutes {
     ),
     GetPage(name: otp, page: () => const OtpScreen(), binding: AuthBinding()),
     GetPage(name: profileLoading, page: () => const ProfileLoadingScreen()),
+    GetPage(name: signUp, page: () => const SignUpScreen(), binding: AuthBinding()),
     GetPage(name: home, page: () => const HomeScreen(), binding: HomeBinding()),
     GetPage(
       name: locationSelection,
