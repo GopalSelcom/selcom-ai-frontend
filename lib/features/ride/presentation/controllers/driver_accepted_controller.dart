@@ -457,6 +457,7 @@ class DriverAcceptedController extends GetxController
     isPinRequired.value = r.pinRequired;
     final d = r.driverSnapshot as DriverSnapshotModel?;
     final v = r.vehicleSnapshot;
+    String plateForVehicleLine = '';
     final vehicleTypeHint = _resolveVehicleTypeHint(
       driverVehicleType: d?.vehicleType,
       driverVehicleModel: d?.vehicleModel,
@@ -479,10 +480,9 @@ class DriverAcceptedController extends GetxController
       final plate = (d.vehicleRegistrationNumber ?? '').trim();
       final model = (d.vehicleModel ?? '').trim();
       final color = (d.vehicleColor ?? '').trim();
-      final type = (d.vehicleType ?? '').trim();
+      plateForVehicleLine = plate;
 
       if (plate.isNotEmpty) {
-        driverVehicleLine.value = "$model - $type";
         final compact = plate.replaceAll(' ', '');
         if (compact.length > 3) {
           final mid = compact.length ~/ 2;
@@ -531,10 +531,13 @@ class DriverAcceptedController extends GetxController
     if (v != null && vehicleSubtitle.value.isEmpty) {
       vehicleSubtitle.value =
           '${v.vehicleMake} ${v.vehicleModel}, ${v.vehicleColor}'.trim();
-      if (driverVehicleLine.value.isEmpty) {
-        driverVehicleLine.value = v.vehicleType;
-      }
     }
+
+    _applyUnifiedDriverVehicleLine(
+      modelName: (d?.vehicleModel ?? '').trim(),
+      plate: plateForVehicleLine,
+      fallbackModel: (v?.vehicleModel ?? '').trim(),
+    );
   }
 
   Future<void> _initRideRoomSocket() async {
@@ -860,6 +863,7 @@ class DriverAcceptedController extends GetxController
 
     final d = payload.driverSnapshot;
     final v = payload.vehicleSnapshot;
+    String plateForVehicleLine = '';
     final vehicleTypeHint = _resolveVehicleTypeHint(
       driverVehicleType: d?.vehicleType,
       driverVehicleModel: d?.vehicleModel,
@@ -907,19 +911,13 @@ class DriverAcceptedController extends GetxController
       final vehicleModel = (d.vehicleModel ?? '').trim();
       final vehicleColor = (d.vehicleColor ?? '').trim();
       final plate = (d.vehicleRegistrationNumber ?? '').trim();
-      final vehicleType = (d.vehicleType ?? '').trim();
+      plateForVehicleLine = plate;
 
       if (vehicleModel.isNotEmpty || vehicleColor.isNotEmpty) {
         final subtitle = '$vehicleModel, $vehicleColor'
             .replaceAll(RegExp(r'(^,\s*|\s*,\s*$)'), '')
             .trim();
         if (subtitle.isNotEmpty) vehicleSubtitle.value = subtitle;
-      }
-      if (vehicleType.isNotEmpty || plate.isNotEmpty) {
-        driverVehicleLine.value = [
-          vehicleType,
-          plate,
-        ].where((e) => e.isNotEmpty).join(' - ');
       }
       if (plate.isNotEmpty) {
         final compact = plate.replaceAll(' ', '');
@@ -934,14 +932,11 @@ class DriverAcceptedController extends GetxController
       }
     }
 
-    if (v != null) {
-      final type = (v.displayName ?? v.vehicleName ?? v.vehicleType ?? '')
-          .trim();
-      if (type.isNotEmpty) {
-        final suffix = plateLinePrimary.value + plateLineSecondary.value;
-        driverVehicleLine.value = suffix.isNotEmpty ? '$type - $suffix' : type;
-      }
-    }
+    _applyUnifiedDriverVehicleLine(
+      modelName: (d?.vehicleModel ?? '').trim(),
+      plate: plateForVehicleLine,
+      fallbackModel: (v?.vehicleName ?? '').trim(),
+    );
 
     if (!isPinRequired.value) {
       otpDigits.clear();
@@ -982,6 +977,21 @@ class DriverAcceptedController extends GetxController
     if (currentRideStatus.value != oldStatus ||
         routeTarget.value != oldTarget) {
       _fitRouteBounds();
+    }
+  }
+
+  void _applyUnifiedDriverVehicleLine({
+    required String modelName,
+    required String plate,
+    String fallbackModel = '',
+  }) {
+    final model = modelName.trim().isNotEmpty
+        ? modelName.trim()
+        : fallbackModel.trim();
+    final registration = plate.trim();
+    final line = [model, registration].where((e) => e.isNotEmpty).join(' - ');
+    if (line.isNotEmpty) {
+      driverVehicleLine.value = line;
     }
   }
 
