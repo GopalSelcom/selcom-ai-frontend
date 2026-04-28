@@ -100,6 +100,7 @@ class AppStrings {
   static const String howCanWeHelpYou = 'how_can_we_help_you';
   static const String howDoYouRateTheDriver = 'how_do_you_rate_the_driver';
   static const String howWasYourRide = 'how_was_your_ride';
+  static const String includesStops = 'includes_stops';
   static const String includesStopFee = 'includes_stop_fee';
   static const String initiatingCallToDriverphone =
       'initiating_call_to_driverphone';
@@ -222,6 +223,7 @@ class AppStrings {
   static const String skip = 'skip';
   static const String skipFailed = 'skip_failed';
   static const String smile = 'smile';
+  static const String stop = 'stop';
   static const String socketOff = 'socket_off';
   static const String socketOffError = 'socket_off_error';
   static const String socketOnDrivers = 'socket_on_drivers';

@@ -140,6 +140,8 @@ class RideHistoryCard extends StatelessWidget {
                 startAddress: ride.pickup.address,
                 endLocation: ride.destination.address.split(',').first,
                 endAddress: ride.destination.address,
+                stops: ride.stops,
+                showStopsAsSummary: true,
               ),
             ),
 

@@ -87,6 +87,7 @@ class LanguageSw extends Languages {
     'how_can_we_help_you': '',
     'how_do_you_rate_the_driver': '',
     'how_was_your_ride': '',
+    'includes_stops': 'Ina vituo',
     'includes_stop_fee': '',
     'initiating_call_to_driverphone': '',
     'keep_ride': '',
@@ -188,6 +189,7 @@ class LanguageSw extends Languages {
     'skip': '',
     'skip_failed': '',
     'smile': '',
+    'stop': 'Kituo',
     'socket_off': '',
     'socket_off_error': '',
     'socket_on_drivers': '',
@@ -535,6 +537,9 @@ class LanguageSw extends Languages {
   String get howWasYourRide => values['how_was_your_ride'] ?? '';
 
   @override
+  String get includesStops => values['includes_stops'] ?? '';
+
+  @override
   String get includesStopFee => values['includes_stop_fee'] ?? '';
 
   @override
@@ -854,6 +859,9 @@ class LanguageSw extends Languages {
 
   @override
   String get smile => values['smile'] ?? '';
+
+  @override
+  String get stop => values['stop'] ?? '';
 
   @override
   String get socketOff => values['socket_off'] ?? '';

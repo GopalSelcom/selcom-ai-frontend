@@ -97,6 +97,7 @@ abstract class Languages {
   String get howCanWeHelpYou;
   String get howDoYouRateTheDriver;
   String get howWasYourRide;
+  String get includesStops;
   String get includesStopFee;
   String get initiatingCallToDriverphone;
   String get keepRide;
@@ -197,6 +198,7 @@ abstract class Languages {
   String get skip;
   String get skipFailed;
   String get smile;
+  String get stop;
   String get socketOff;
   String get socketOffError;
   String get socketOnDrivers;

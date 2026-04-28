@@ -231,6 +231,7 @@ class RideDetailsScreen extends StatelessWidget {
                         startAddress: ride.pickup.address,
                         endLocation: controller.destinationTitle,
                         endAddress: ride.destination.address,
+                        stops: ride.stops,
                       ),
                     ),
                     SizedBox(height: 16.h),

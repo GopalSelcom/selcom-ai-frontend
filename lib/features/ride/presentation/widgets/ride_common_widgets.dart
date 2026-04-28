@@ -70,6 +70,7 @@ class RideLocationsTimeline extends StatelessWidget {
   final String endLocation;
   final String endAddress;
   final List<RideStopEntity>? stops;
+  final bool showStopsAsSummary;
 
   const RideLocationsTimeline({
     super.key,
@@ -78,6 +79,7 @@ class RideLocationsTimeline extends StatelessWidget {
     required this.endLocation,
     required this.endAddress,
     this.stops,
+    this.showStopsAsSummary = false,
   });
 
   @override
@@ -105,17 +107,26 @@ class RideLocationsTimeline extends StatelessWidget {
           showBottomLine: true,
         ),
 
-        // Intermediate Stops
-        for (int i = 0; i < filteredStops.length; i++)
+        // Intermediate Stops (full rows) or compact summary marker
+        if (showStopsAsSummary && filteredStops.isNotEmpty)
           _buildLocationRow(
-            title: filteredStops[i].address.split(',').first,
-            address: filteredStops[i].address,
-            icon: _buildLetterIcon(
-              letters[i + 1],
-              color: AppColors.mapStopMarkerRed,
-            ),
+            title:
+                '${filteredStops.length} ${AppStrings.stop.tr}${filteredStops.length > 1 ? 's' : ''}',
+            address: null,
+            icon: _buildStopCountIcon(filteredStops.length),
             showBottomLine: true,
-          ),
+          )
+        else
+          for (int i = 0; i < filteredStops.length; i++)
+            _buildLocationRow(
+              title: filteredStops[i].address.split(',').first,
+              address: filteredStops[i].address,
+              icon: _buildLetterIcon(
+                letters[i + 1],
+                color: AppColors.mapStopMarkerRed,
+              ),
+              showBottomLine: true,
+            ),
 
         // End Location Row
         _buildLocationRow(
@@ -148,9 +159,29 @@ class RideLocationsTimeline extends StatelessWidget {
     );
   }
 
+  Widget _buildStopCountIcon(int count) {
+    return Container(
+      width: 22.w,
+      height: 22.w,
+      decoration: const BoxDecoration(
+        color: AppColors.mapStopMarkerRed,
+        shape: BoxShape.circle,
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        '$count',
+        style: TextStyle(
+          color: AppColors.white,
+          fontSize: 11.sp,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+
   Widget _buildLocationRow({
     required String title,
-    required String address,
+    String? address,
     required Widget icon,
     required bool showBottomLine,
   }) {
@@ -191,15 +222,17 @@ class RideLocationsTimeline extends StatelessWidget {
                       fontSize: 16.sp,
                     ),
                   ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    address,
-                    style: TextStyle(
-                      fontFamily: AppTextStyles.metropolisFont,
-                      color: AppColors.textBody,
-                      fontSize: 13.sp,
+                  if (address != null && address.trim().isNotEmpty) ...[
+                    SizedBox(height: 4.h),
+                    Text(
+                      address,
+                      style: TextStyle(
+                        fontFamily: AppTextStyles.metropolisFont,
+                        color: AppColors.textBody,
+                        fontSize: 13.sp,
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),

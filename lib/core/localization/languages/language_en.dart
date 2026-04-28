@@ -95,6 +95,7 @@ class LanguageEn extends Languages {
     'how_can_we_help_you': 'How can we help you?',
     'how_do_you_rate_the_driver': 'How do you rate the driver?',
     'how_was_your_ride': 'How was your ride?',
+    'includes_stops': 'Includes stops',
     'includes_stop_fee': 'Includes Stop fee',
     'initiating_call_to_driverphone': 'Initiating call to \$driverPhone...',
     'keep_ride': 'Keep Ride',
@@ -212,6 +213,7 @@ class LanguageEn extends Languages {
     'skip': 'Skip',
     'skip_failed': 'Skip failed',
     'smile': 'Smile',
+    'stop': 'Stop',
     'socket_off': 'Socket OFF',
     'socket_off_error': 'Socket OFF • @error',
     'socket_on_drivers': 'Socket ON • @count drivers',
@@ -571,6 +573,9 @@ class LanguageEn extends Languages {
   String get howWasYourRide => values['how_was_your_ride'] ?? '';
 
   @override
+  String get includesStops => values['includes_stops'] ?? '';
+
+  @override
   String get includesStopFee => values['includes_stop_fee'] ?? '';
 
   @override
@@ -890,6 +895,9 @@ class LanguageEn extends Languages {
 
   @override
   String get smile => values['smile'] ?? '';
+
+  @override
+  String get stop => values['stop'] ?? '';
 
   @override
   String get socketOff => values['socket_off'] ?? '';
