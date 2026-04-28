@@ -3,21 +3,38 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:selcom_rides_frontend/shared/widgets/map_widgets.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
-
-import '../../../../core/constants/app_assets.dart';
+import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/widgets/svg_picture_asset.dart';
-import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../controllers/finding_driver_controller.dart';
 
-class FindingDriverScreen extends StatelessWidget {
+class FindingDriverScreen extends StatefulWidget {
   const FindingDriverScreen({super.key});
 
-  static const double _searchCircleRadiusM = 220;
+  @override
+  State<FindingDriverScreen> createState() => _FindingDriverScreenState();
+}
+
+class _FindingDriverScreenState extends State<FindingDriverScreen>
+    with SingleTickerProviderStateMixin {
   static const double _sheetInitial = 0.52;
+  late AnimationController _pulseController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2200),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +47,12 @@ class FindingDriverScreen extends StatelessWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          _buildMap(context, c, sheetController),
+          AnimatedBuilder(
+            animation: _pulseController,
+            builder: (context, child) {
+              return _buildMap(context, c, sheetController);
+            },
+          ),
           Positioned(
             top: 0,
             left: 0,
@@ -68,9 +90,9 @@ class FindingDriverScreen extends StatelessWidget {
           AppDraggableBottomSheet(
             controller: sheetController,
             initialChildSize: _sheetInitial,
-            minChildSize: 0.3,
+            minChildSize: 0.35, // Adjust minChildSize
             childBuilder: (scrollController) =>
-                _bottomSheet(c, scrollController),
+                _bottomSheet(c, scrollController, sheetController),
           ),
         ],
       ),
@@ -90,6 +112,40 @@ class FindingDriverScreen extends StatelessWidget {
       final routePoints = c.activeRoutePoints.toList();
       final isPickupRoute = c.routeTarget.value == 'pick_up';
       final markers = <Marker>{};
+      final circles = <Circle>{};
+
+      // 1. Generate Animated Pulse Circles (Map Waves)
+      if (!c.isRideCancelled.value) {
+        final pulseVal = _pulseController.value;
+        const int circleCount = 3;
+        for (int i = 0; i < circleCount; i++) {
+          final rippleProgress = (pulseVal + (i / circleCount)) % 1.0;
+
+          // Use an exponential-like curve for radius expansion
+          final easedProgress = Curves.easeOutCirc.transform(rippleProgress);
+          final radius = 500 * easedProgress; // Max radius 500m
+
+          final opacityBase = (1.0 - easedProgress).clamp(0.0, 1.0);
+
+          // Much darker alpha for better visibility
+          final alphaFactor = i == 0 ? 0.85 : (i == 1 ? 0.60 : 0.35);
+
+          circles.add(
+            Circle(
+              circleId: CircleId('pulse_wave_$i'),
+              center: pickup,
+              radius: radius,
+              fillColor: AppColors.routeBlue.withValues(
+                alpha: opacityBase * alphaFactor,
+              ),
+              strokeColor: AppColors.routeBlue.withValues(
+                alpha: opacityBase * alphaFactor * 1.5,
+              ),
+              strokeWidth: 2, // Thicker stroke for visibility
+            ),
+          );
+        }
+      }
 
       // Pickup Marker
       if (c.pickupIcon.value != null) {
@@ -182,18 +238,7 @@ class FindingDriverScreen extends StatelessWidget {
               width: 3,
             ),
         },
-        circles: isPickupRoute
-            ? {
-                Circle(
-                  circleId: const CircleId('search_pulse'),
-                  center: pickup,
-                  radius: _searchCircleRadiusM,
-                  fillColor: AppColors.inputBorderActive.withValues(alpha: 0.12),
-                  strokeColor: AppColors.inputBorderActive.withValues(alpha: 0.35),
-                  strokeWidth: 2,
-                ),
-              }
-            : <Circle>{},
+        circles: circles,
       );
     });
   }
@@ -201,224 +246,184 @@ class FindingDriverScreen extends StatelessWidget {
   Widget _bottomSheet(
     FindingDriverController c,
     ScrollController scrollController,
+    DraggableScrollableController sheetController,
   ) {
     return ListView(
       controller: scrollController,
-      padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 12.h),
+      padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 24.h),
       children: [
         Center(
           child: Container(
-            width: 64.w,
+            width: 48.w,
             height: 5.h,
             decoration: BoxDecoration(
               color: AppColors.skeletonBase,
-              borderRadius: BorderRadius.circular(37.r),
+              borderRadius: BorderRadius.circular(10.r),
             ),
           ),
         ),
-        SizedBox(height: 20.h),
+        SizedBox(height: 24.h),
+
+        // 1. Title & Subtitle (Centered)
         Obx(
-          () => Text(
-            c.currentStatusLabel.value,
-            textAlign: TextAlign.center,
-            style: AppTextStyles.homeTitle.copyWith(
-              fontSize: 20.sp,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textHeading,
-              letterSpacing: -0.4,
-            ),
-          ),
-        ),
-        SizedBox(height: 8.h),
-        Obx(
-          () => Text(
-            c.currentDescriptionLabel.value,
-            textAlign: TextAlign.center,
-            style: AppTextStyles.homeCaption.copyWith(
-              fontSize: 15.sp,
-              color: AppColors.textBody,
-              height: 1.33,
-            ),
-          ),
-        ),
-        SizedBox(height: 20.h),
-        Obx(() {
-          if (c.currentStatusLabel.value == 'Finding Your Driver') {
-            return _searchingSlider(c);
-          }
-          return const SizedBox.shrink();
-        }),
-        SizedBox(height: 16.h),
-        Obx(() {
-          final mins = c.remainingWholeMinutes;
-          return Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          () => Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.access_time, size: 22.sp, color: AppColors.textMapIcon),
-              SizedBox(width: 6.w),
               Text(
-                '$mins minutes remain',
-                style: AppTextStyles.homeCaption.copyWith(
-                  fontSize: 15.sp,
-                  color: AppColors.textBody,
-                  fontWeight: FontWeight.w500,
+                c.currentStatusLabel.value,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.homeTitle.copyWith(
+                  fontSize: 20.sp,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textHeading,
                 ),
               ),
-            ],
-          );
-        }),
-        SizedBox(height: 12.h),
-        // SizedBox(
-        //   width: double.infinity,
-        //   child: TextButton(
-        //     onPressed: c.debugSkipToDriverAccepted,
-        //     child: const Text('Temporary: Open SCR-11'),
-        //   ),
-        // ),
-        SizedBox(height: 16.h),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton(
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.primary,
-              side: const BorderSide(color: AppColors.primary, width: 1.2),
-              padding: EdgeInsets.symmetric(vertical: 16.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16.r),
+              SizedBox(height: 12.h),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20.w),
+                child: Text(
+                  c.currentDescriptionLabel.value,
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.homeCaption.copyWith(
+                    fontSize: 14.sp,
+                    color: AppColors.figmaTextSecondary,
+                    height: 1.4,
+                  ),
+                ),
               ),
-            ),
-            onPressed: c.confirmCancelRide,
-            child: Text(
-              AppStrings.cancelRide.tr,
-              style: TextStyle(fontSize: 17.sp, fontWeight: FontWeight.w600),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 
-  Widget _searchingSlider(FindingDriverController c) {
-    return Obx(() {
-      const total = FindingDriverController.searchTimeoutSeconds;
-      final rem = c.remainingSeconds.value.clamp(0, total);
-      final elapsed = total - rem;
-      final t = total > 0 ? (elapsed / total).clamp(0.0, 1.0) : 1.0;
+              if (!c.isRideCancelled.value) ...[
+                SizedBox(height: 48.h),
 
-      return LayoutBuilder(
-        builder: (context, constraints) {
-          final trackW = constraints.maxWidth;
-          final carSize = 64.w;
-          final maxTravel = (trackW - carSize).clamp(0.0, double.infinity);
-          final carLeft = t * maxTravel;
-          final fillW = (carLeft + carSize / 2).clamp(0.0, trackW);
-
-          return Container(
-            height: 52.h,
-            decoration: BoxDecoration(
-              color: AppColors.bgSoftCircle,
-              borderRadius: BorderRadius.circular(26.r),
-              border: Border.all(color: AppColors.skeletonBase, width: 1),
-            ),
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                // 1. Pink Fill
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(26.r),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Container(
-                      width: fillW,
-                      height: double.infinity,
-                      decoration: const BoxDecoration(color: AppColors.mapStopMarkerRed),
-                      alignment: Alignment.center,
-                      child: ShaderMask(
-                        shaderCallback: (bounds) {
-                          return const LinearGradient(
-                            colors: [AppColors.transparent, AppColors.white],
-                            stops: [0.0, 0.4],
-                          ).createShader(bounds);
-                        },
-                        blendMode: BlendMode.dstIn,
-                        child: const SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          physics: NeverScrollableScrollPhysics(),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.chevron_right,
-                                color: AppColors.white,
-                                size: 24,
-                              ),
-                              Icon(
-                                Icons.chevron_right,
-                                color: AppColors.white,
-                                size: 24,
-                              ),
-                              Icon(
-                                Icons.chevron_right,
-                                color: AppColors.white,
-                                size: 24,
-                              ),
-                              Icon(
-                                Icons.chevron_right,
-                                color: AppColors.white,
-                                size: 24,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                // 2. Bolt-like Linear Progress Bar
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20.w),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(4.r),
+                    child: LinearProgressIndicator(
+                      minHeight: 6.h,
+                      backgroundColor: AppColors.primary.withValues(alpha: 0.15),
+                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
                     ),
                   ),
                 ),
-                // 2. Car Thumb
-                Positioned(
-                  left: carLeft,
-                  top: -6.h,
-                  child: Container(
-                    width: carSize,
-                    height: carSize,
-                    decoration: BoxDecoration(
-                      color: AppColors.mapStopMarkerRed,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.black.withValues(alpha: 0.1),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+
+                SizedBox(height: 32.h),
+
+                // 3. Timer (Icon + Text)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.access_time_rounded,
+                      color: AppColors.textHeading,
+                      size: 20.sp,
                     ),
-                    padding: EdgeInsets.all(12.w),
-                    child: SvgPictureAsset(
-                      _getVehicleAsset(c.requestedVehicleType),
-                      width: 32.w,
-                      height: 32.w,
-                      placeholderBuilder: (_) => Icon(
-                        Icons.directions_car,
-                        color: AppColors.white,
-                        size: 32.sp,
+                    SizedBox(width: 8.w),
+                    Text(
+                      '${c.remainingSeconds.value ~/ 60} minutes remain',
+                      style: AppTextStyles.homeCaption.copyWith(
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textHeading,
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ],
+            ],
+          ),
+        ),
+
+        SizedBox(height: 40.h),
+
+        // 4. Action Buttons (Search Again & Back to Home OR Cancel)
+        Obx(() {
+          if (c.isRideCancelled.value) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (sheetController.isAttached && sheetController.size > 0.35) {
+                sheetController.animateTo(
+                  0.35,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                );
+              }
+            });
+            return Padding(
+              padding: EdgeInsets.symmetric(horizontal: 10.w),
+              child: Column(
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: c.searchAgain,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        padding: EdgeInsets.symmetric(vertical: 18.h),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16.r),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        'Search Again',
+                        style: AppTextStyles.button.copyWith(
+                          color: Colors.white,
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () => Get.offAllNamed(AppRoutes.home),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.borderNeutralStrong, width: 1.5),
+                        padding: EdgeInsets.symmetric(vertical: 18.h),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16.r),
+                        ),
+                      ),
+                      child: Text(
+                        'Back to Home',
+                        style: AppTextStyles.button.copyWith(
+                          color: AppColors.textHeading,
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+          return Padding(
+            padding: EdgeInsets.symmetric(horizontal: 10.w),
+            child: OutlinedButton(
+              onPressed: c.confirmCancelRide,
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: AppColors.primary, width: 1.5),
+                padding: EdgeInsets.symmetric(vertical: 18.h),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16.r),
+                ),
+              ),
+              child: Text(
+                'Cancel Ride',
+                style: AppTextStyles.button.copyWith(
+                  color: AppColors.primary,
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
           );
-        },
-      );
-    });
-  }
-
-  String _getVehicleAsset(String? vehicleType) {
-    if (vehicleType == null) return AppAssets.rideFindingLoaderCar;
-    final mapped = VehicleImageUtils.imageAssetForVehicleType(vehicleType);
-    if (mapped == AppAssets.imgBoda) return AppAssets.boda;
-    if (mapped == AppAssets.imgBajaji) return AppAssets.bajaj;
-    return AppAssets.imgCab;
+        }),
+      ],
+    );
   }
 }
