@@ -17,6 +17,8 @@ import 'package:selcom_rides_frontend/core/data/models/requests/validate_ride_pa
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
+import '../../domain/utils/receipt_pdf_generator.dart';
+import 'package:open_filex/open_filex.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
@@ -1487,6 +1489,46 @@ class DriverAcceptedController extends GetxController
 
   void finishCompletedRide() {
     _openCompletedRideDetailsScreen();
+  }
+
+  Future<void> downloadSlip() async {
+    if (rideId.isEmpty) return;
+    try {
+      AppDialogs.showLoadingDialog();
+      final response = await rideRepository.getReceipt(rideId);
+      final receiptModel = response.fold((l) => null, (r) => r);
+
+      if (receiptModel == null) {
+        if (Get.isDialogOpen ?? false) Get.back();
+        AppDialogs.showErrorDialog(message: 'Could not fetch receipt details.');
+        return;
+      }
+
+      final rideData = ride.value;
+      if (rideData == null) {
+        if (Get.isDialogOpen ?? false) Get.back();
+        AppDialogs.showErrorDialog(message: 'Ride details are missing.');
+        return;
+      }
+
+      final file = await ReceiptPdfGenerator.generateReceiptPdf(
+        receipt: receiptModel,
+      );
+
+      if (Get.isDialogOpen ?? false) Get.back();
+      final result = await OpenFilex.open(file.path);
+      if (result.type != ResultType.done) {
+        AppDialogs.showErrorDialog(
+          message: 'Could not open PDF: ${result.message}',
+        );
+      }
+    } catch (e, stackTrace) {
+      if (Get.isDialogOpen ?? false) Get.back();
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      AppDialogs.showErrorDialog(
+        message: 'Could not download slip. Please try again later.',
+      );
+    }
   }
 
   String get pickupTitle => _firstAddressLine(pickupAddress);
