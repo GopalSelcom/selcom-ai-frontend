@@ -6,12 +6,10 @@ import 'package:selcom_rides_frontend/shared/widgets/map_widgets.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 
 import '../../../../core/constants/app_assets.dart';
-import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
-import '../../../../shared/widgets/app_primary_button.dart';
 import '../controllers/driver_accepted_controller.dart';
 import '../widgets/ride_common_widgets.dart';
 
@@ -23,7 +21,6 @@ class DriverAcceptedScreen extends StatelessWidget {
   static const double _sheetMin = 0.3;
   static const double _sheetMaxDriverAssigned = 0.54;
   static const double _sheetMaxRideStarted = 0.68;
-  static const double _sheetMaxRideCompleted = 0.8;
 
   @override
   Widget build(BuildContext context) {
@@ -120,9 +117,6 @@ class DriverAcceptedScreen extends StatelessWidget {
                 break;
               case RideBottomSheetState.rideStarted:
                 maxSheetSize = _sheetMaxRideStarted;
-                break;
-              case RideBottomSheetState.rideCompleted:
-                maxSheetSize = _sheetMaxRideCompleted;
                 break;
             }
             return AppDraggableBottomSheet(
@@ -457,7 +451,7 @@ class DriverAcceptedScreen extends StatelessWidget {
             child: ListView(
               controller: scrollController,
               padding: EdgeInsets.zero,
-              children: [_rideProgressBody(c, isCompleted: false)],
+              children: [_rideProgressBody(c)],
             ),
           ),
         ],
@@ -725,10 +719,6 @@ class DriverAcceptedScreen extends StatelessWidget {
   }
 
   Widget _rideProgressSheet(DriverAcceptedController c) {
-    final isCompleted =
-        c.rideBottomSheetState.value == RideBottomSheetState.rideCompleted &&
-        (c.currentRideStatus.value == 'completed' ||
-            c.currentRideStatus.value == 'ride_completed');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -744,15 +734,12 @@ class DriverAcceptedScreen extends StatelessWidget {
         SizedBox(height: 14.h),
         const Divider(color: AppColors.borderWalletCard, height: 1),
         SizedBox(height: 16.h),
-        _rideProgressBody(c, isCompleted: isCompleted),
+        _rideProgressBody(c),
       ],
     );
   }
 
-  Widget _rideProgressBody(
-    DriverAcceptedController c, {
-    required bool isCompleted,
-  }) {
+  Widget _rideProgressBody(DriverAcceptedController c) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -814,8 +801,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                 endAddress: c.destinationAddress,
                 stops: c.ride.value?.stops,
               ),
-              if (!isCompleted &&
-                  !c.isNearDestination() &&
+              if (!c.isNearDestination() &&
                   c.ride.value?.pendingStopsUpdate == null) ...[
                 GestureDetector(
                   onTap: c.onEditStops,
@@ -861,15 +847,6 @@ class DriverAcceptedScreen extends StatelessWidget {
                       ),
                     ),
                     const Spacer(),
-                    if (isCompleted)
-                      Text(
-                        c.totalAmountLabel,
-                        style: AppTextStyles.homeTitle.copyWith(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textHeading,
-                        ),
-                      ),
                   ],
                 ),
                 SizedBox(height: 10.h),
@@ -882,13 +859,11 @@ class DriverAcceptedScreen extends StatelessWidget {
                   title: AppStrings.bookingFeesAndConvenienceCharges.tr,
                   amount: c.bookingFeeLabel,
                 ),
-                if (!isCompleted) ...[
-                  SizedBox(height: 8.h),
-                  FareBreakdownRow(
-                    title: AppStrings.paymentMode.tr,
-                    amount: c.paymentModeLabel,
-                  ),
-                ],
+                SizedBox(height: 8.h),
+                FareBreakdownRow(
+                  title: AppStrings.paymentMode.tr,
+                  amount: c.paymentModeLabel,
+                ),
                 SizedBox(height: 8.h),
                 FareBreakdownRow(
                   title: AppStrings.totalAmount.tr,
@@ -899,48 +874,6 @@ class DriverAcceptedScreen extends StatelessWidget {
             ),
           ),
         ),
-        if (isCompleted) ...[
-          SizedBox(height: 12.h),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.headset_mic_outlined,
-                color: AppColors.textBody,
-                size: 18.sp,
-              ),
-              SizedBox(width: 6.w),
-              GestureDetector(
-                onTap: () => Get.toNamed(AppRoutes.contactUs),
-                child: Text(
-                  AppStrings.needHelp.tr,
-                  style: AppTextStyles.homeCaption.copyWith(
-                    color: AppColors.textBody,
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              SizedBox(width: 20.w),
-              Icon(
-                Icons.download_rounded,
-                color: AppColors.textBody,
-                size: 18.sp,
-              ),
-              SizedBox(width: 6.w),
-              Text(
-                AppStrings.downloadSlip.tr,
-                style: AppTextStyles.homeCaption.copyWith(
-                  color: AppColors.textBody,
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 16.h),
-          AppPrimaryButton(label: 'Finish', onPressed: c.finishCompletedRide),
-        ],
       ],
     );
   }

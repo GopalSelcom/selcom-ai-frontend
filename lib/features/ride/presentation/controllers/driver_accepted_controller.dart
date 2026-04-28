@@ -43,7 +43,7 @@ import '../screens/ride_details_screen.dart';
 import 'ride_details_controller.dart';
 
 /// SCR-11 — Driver accepted: live map, driver details, OTP.
-enum RideBottomSheetState { driverAssigned, rideStarted, rideCompleted }
+enum RideBottomSheetState { driverAssigned, rideStarted }
 
 class DriverAcceptedController extends GetxController
     with GetSingleTickerProviderStateMixin, WidgetsBindingObserver {
@@ -1016,12 +1016,11 @@ class DriverAcceptedController extends GetxController
     }
 
     RideBottomSheetState nextState = RideBottomSheetState.driverAssigned;
-    if (normalizedStatus == 'completed' ||
-        normalizedStatus == 'ride_completed') {
-      nextState = RideBottomSheetState.rideCompleted;
-    } else if (normalizedStatus == 'ride_started' ||
+    if (normalizedStatus == 'ride_started' ||
         normalizedStatus == 'ride_in_progress' ||
-        normalizedStatus == 'near_destination') {
+        normalizedStatus == 'near_destination' ||
+        normalizedStatus == 'completed' ||
+        normalizedStatus == 'ride_completed') {
       nextState = RideBottomSheetState.rideStarted;
     }
 
@@ -1035,16 +1034,50 @@ class DriverAcceptedController extends GetxController
     }
 
     rideBottomSheetState.value = nextState;
-    if (nextState == RideBottomSheetState.rideCompleted &&
-        currentState != RideBottomSheetState.rideCompleted) {
+    final isCompletedStatus =
+        normalizedStatus == 'completed' || normalizedStatus == 'ride_completed';
+    if (isCompletedStatus) {
       _openCompletedRideDetailsScreen();
     }
   }
 
   void _openCompletedRideDetailsScreen() {
     if (_openedCompletedRideDetails) return;
-    final currentRide = ride.value;
-    if (currentRide == null) return;
+    final normalizedCurrentStatus = currentRideStatus.value.trim().toLowerCase();
+    if (normalizedCurrentStatus != 'completed' &&
+        normalizedCurrentStatus != 'ride_completed') {
+      return;
+    }
+    RideModel? currentRide = ride.value;
+    if (currentRide == null) {
+      _fetchRideDetails().whenComplete(_openCompletedRideDetailsScreen);
+      return;
+    }
+    final normalizedRideModelStatus = currentRide.status.name
+        .replaceAllMapped(
+          RegExp(r'([a-z0-9])([A-Z])'),
+          (m) => '${m.group(1)}_${m.group(2)}',
+        )
+        .toLowerCase();
+    final isRideModelCompleted =
+        normalizedRideModelStatus == 'completed' ||
+        normalizedRideModelStatus == 'ride_completed';
+    if (!isRideModelCompleted) {
+      _fetchRideDetails().whenComplete(() {
+        final refreshedRide = ride.value;
+        if (refreshedRide == null) return;
+        final refreshedStatus = refreshedRide.status.name
+            .replaceAllMapped(
+              RegExp(r'([a-z0-9])([A-Z])'),
+              (m) => '${m.group(1)}_${m.group(2)}',
+            )
+            .toLowerCase();
+        if (refreshedStatus == 'completed' || refreshedStatus == 'ride_completed') {
+          _openCompletedRideDetailsScreen();
+        }
+      });
+      return;
+    }
     // Normalize payload for details screen: force completed status and review UI.
     // Socket/status payloads can be slightly delayed, so we make this explicit.
     final completedRide = currentRide.copyWith(
@@ -1475,18 +1508,12 @@ class DriverAcceptedController extends GetxController
         return RideStatus.driverAssigned;
       case RideBottomSheetState.rideStarted:
         return RideStatus.rideStarted;
-      case RideBottomSheetState.rideCompleted:
-        return RideStatus.rideCompleted;
     }
   }
 
   void setRideRating(int rating) {
     if (rating < 1 || rating > 5) return;
     selectedRideRating.value = rating;
-  }
-
-  void finishCompletedRide() {
-    _openCompletedRideDetailsScreen();
   }
 
   String get pickupTitle => _firstAddressLine(pickupAddress);
@@ -1724,16 +1751,7 @@ class DriverAcceptedController extends GetxController
 
   Future<void> previewStopsUpdate(List<RideStopEntity> stops) async {
     isUpdatingStops.value = true;
-    final stopsJson = stops
-        .map(
-          (s) => {
-            'lat': s.lat,
-            'lng': s.lng,
-            'address': s.address,
-            'status': s.status,
-          },
-        )
-        .toList();
+    final stopsJson = _buildStopsPayloadForUpdate(stops);
 
     final result = await rideRepository.updateStops(
       rideId,
@@ -1774,16 +1792,7 @@ class DriverAcceptedController extends GetxController
 
     isUpdatingStops.value = true;
     stopUpdateProgressStep.value = 1; // Updating payment/Starting
-    final stopsJson = stops
-        .map(
-          (s) => {
-            'lat': s.lat,
-            'lng': s.lng,
-            'address': s.address,
-            'status': s.status,
-          },
-        )
-        .toList();
+    final stopsJson = _buildStopsPayloadForUpdate(stops);
 
     final result = await rideRepository.updateStops(
       rideId,
@@ -1809,6 +1818,38 @@ class DriverAcceptedController extends GetxController
         }
       },
     );
+  }
+
+  List<Map<String, dynamic>> _buildStopsPayloadForUpdate(
+    List<RideStopEntity> stops,
+  ) {
+    final destination = ride.value?.destination;
+    final destinationLat = destination?.lat ?? destinationLatLng.latitude;
+    final destinationLng = destination?.lng ?? destinationLatLng.longitude;
+    final destinationAddr = (destination?.address ?? destinationAddress).trim();
+
+    final payload = <Map<String, dynamic>>[
+      {
+        'lat': destinationLat,
+        'lng': destinationLng,
+        'address': destinationAddr,
+      },
+    ];
+
+    for (final stop in stops) {
+      final sameAsDestinationByCoord =
+          (stop.lat - destinationLat).abs() < 0.000001 &&
+          (stop.lng - destinationLng).abs() < 0.000001;
+      final sameAsDestinationByAddress =
+          stop.address.trim().toLowerCase() ==
+          destinationAddr.toLowerCase();
+      if (sameAsDestinationByCoord || sameAsDestinationByAddress) {
+        continue;
+      }
+      payload.add({'lat': stop.lat, 'lng': stop.lng, 'address': stop.address});
+    }
+
+    return payload;
   }
 
   Future<void> _processPaymentHold(
