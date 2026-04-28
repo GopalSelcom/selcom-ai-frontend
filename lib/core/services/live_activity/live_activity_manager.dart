@@ -448,6 +448,14 @@ class LiveActivityManager {
       final String? activityId = _orderToActivityId[orderId];
       if (activityId == null || activityId == 'android') return;
 
+      if (_isIOS) {
+        developer.log(
+          "⏳ updateActivity ignored for iOS (Live Activity is updated via APNs)",
+          name: 'LIVE_ACTIVITY',
+        );
+        return;
+      }
+
       final updateData = <String, dynamic>{
         'status': status,
         'driver_name': driverName.isNotEmpty

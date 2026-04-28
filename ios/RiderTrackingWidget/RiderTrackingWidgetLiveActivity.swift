@@ -119,10 +119,18 @@ struct TrackingViewModel {
         let normalizedStatus   = rawStatus.lowercased()
         
         let etaSecondsStr      = read("eta_seconds") ?? "0"
-        let etaSeconds         = Double(etaSecondsStr) ?? 0
+        var etaSeconds         = Double(etaSecondsStr) ?? 0
         
         let isCompletedStr     = read("is_completed") ?? "false"
         self.isArrived         = isCompletedStr.lowercased() == "true" || normalizedStatus.contains("completed")
+
+        // 📝 Ignored 0 ETA as requested: "if the backend sent 0 eta without completed the task then don't accept that in the timer"
+        if etaSeconds == 0 && !self.isArrived {
+            if let cachedEtaStr = ud?.string(forKey: attrs.prefixedKey("eta_seconds")),
+               let cachedEta = Double(cachedEtaStr), cachedEta > 0 {
+                etaSeconds = cachedEta
+            }
+        }
 
         // Phase Detection
         let tripPhaseStatus = ["ride_started", "ridestarted", "ride_in_progress", "rideinprogress", "near_destination", "neardestination"]
