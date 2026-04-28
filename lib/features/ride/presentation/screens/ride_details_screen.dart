@@ -282,7 +282,8 @@ class RideDetailsScreen extends StatelessWidget {
                       reviewSection,
                     SizedBox(height: 24.h),
                     NeedHelpRow(
-                      showDownloadSlip: controller.openedFromCompletionFlow,
+                      showDownloadSlip: controller.isCompleted,
+                      onDownloadTap: controller.downloadSlip,
                     ),
                     SizedBox(height: 24.h),
                   ],

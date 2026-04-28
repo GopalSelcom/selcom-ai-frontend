@@ -46,6 +46,8 @@
 		<string>Selcom Go needs access to your microphone to allow voice communication with drivers and support.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>Selcom Go needs access to your photo library to allow you to upload a profile picture.</string>
+		<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>Selcom Go needs access to your photo library to save your ride receipt.</string>
 		<key>UIApplicationSupportsIndirectInputEvents</key>
 		<true/>
 		<key>NSSupportsLiveActivities</key>

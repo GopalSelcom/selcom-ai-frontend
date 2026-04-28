@@ -178,8 +178,10 @@ class ErrorReporter {
 
       // 5. Trigger Sync
       sync();
-    } catch (e) {
-      debugPrint("🚨 ErrorReporter critical failure: $e");
+    } catch (e, st) {
+      debugPrint("🚨 ErrorReporter critical failure: $e\n$st");
+      // Fallback print for the original error
+      debugPrint("🚨 Original error that failed to report: $error");
     }
   }
 
@@ -263,7 +265,7 @@ class ErrorReporter {
   Future<void> _saveReportLocally(ErrorReport report) async {
     final box = Hive.box(_boxName);
     final List<dynamic> rawReports = box.get(_reportsKey, defaultValue: []);
-    final reports = List<Map<String, dynamic>>.from(rawReports);
+    final reports = rawReports.map((e) => Map<String, dynamic>.from(e)).toList();
 
     reports.add(report.toMap());
     await box.put(_reportsKey, reports);
@@ -281,7 +283,7 @@ class ErrorReporter {
   Future<void> _deleteReportLocally(ErrorReport report) async {
     final box = Hive.box(_boxName);
     final List<dynamic> rawReports = box.get(_reportsKey, defaultValue: []);
-    final reports = List<Map<String, dynamic>>.from(rawReports);
+    final reports = rawReports.map((e) => Map<String, dynamic>.from(e)).toList();
 
     reports.removeWhere((e) => e['id'] == report.id);
     await box.put(_reportsKey, reports);

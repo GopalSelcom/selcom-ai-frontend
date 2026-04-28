@@ -13,6 +13,11 @@ import '../../../ride_rating/domain/usecases/get_review_tags_usecase.dart';
 import '../../../ride_rating/domain/usecases/skip_ride_rating_usecase.dart';
 import '../../../ride_rating/domain/usecases/submit_ride_rating_usecase.dart';
 import '../../../ride_rating/presentation/controllers/ride_rating_controller.dart';
+import '../../domain/repositories/ride_repository.dart';
+import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../core/services/error_reporting/error_reporter.dart';
+import '../../domain/utils/receipt_image_generator.dart';
+import 'package:gal/gal.dart';
 
 class RideDetailsController extends GetxController {
   RideDetailsController({
@@ -66,6 +71,8 @@ class RideDetailsController extends GetxController {
 
   bool get isCancelled => ride.status.name == 'cancelled';
 
+  bool get isCompleted => ride.status == RideStatus.rideCompleted;
+
   int get rideCharge {
     if (isCancelled) return ride.cancellationFee ?? 0;
     return ride.fareBreakdown?.rideCharge ?? ride.fareEstimate;
@@ -95,6 +102,41 @@ class RideDetailsController extends GetxController {
 
   bool get shouldPrioritizeReviewSection =>
       openedFromCompletionFlow && canShowReviewInput && !hasExistingRating;
+
+  Future<void> downloadSlip() async {
+    try {
+      AppDialogs.showLoadingDialog();
+      final rideRepository = di.sl<RideRepository>();
+      final response = await rideRepository.getReceipt(ride.id);
+      final receiptModel = response.fold((l) => null, (r) => r);
+
+      if (receiptModel == null) {
+        if (Get.isDialogOpen ?? false) Get.back();
+        AppDialogs.showErrorDialog(message: 'Could not fetch receipt details.');
+        return;
+      }
+
+      final file = await ReceiptImageGenerator.generateReceiptImage(
+        receipt: receiptModel,
+      );
+
+      if (Get.isDialogOpen ?? false) Get.back();
+
+      final hasAccess = await Gal.hasAccess(toAlbum: true);
+      if (!hasAccess) {
+        await Gal.requestAccess(toAlbum: true);
+      }
+
+      await Gal.putImage(file.path);
+      AppDialogs.showSuccessDialog(message: 'Receipt saved to your photos gallery.');
+    } catch (e, stackTrace) {
+      if (Get.isDialogOpen ?? false) Get.back();
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      AppDialogs.showErrorDialog(
+        message: 'Could not download slip. Please try again later.',
+      );
+    }
+  }
 
   // Map ride details into the rating module contract.
   RideRatingRideEntity _toRatingEntity(RideEntity source) {
