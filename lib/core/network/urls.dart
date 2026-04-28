@@ -49,6 +49,7 @@ class _RideEndpoints {
   String skipRideRating(String rideId) => "$base/$rideId/skip-review";
   String activityToken(String rideId) => "$base/$rideId/activity-token";
   String cancellationCharges(String rideId) => "$base/$rideId/cancellation-charges";
+  String shareRide(String rideId) => "$base/$rideId/share";
   String updateStops(String rideId) => "$base/$rideId/stops";
   String cancelPendingStops(String rideId) => "$base/$rideId/stops/pending";
   final base = "go/rides";

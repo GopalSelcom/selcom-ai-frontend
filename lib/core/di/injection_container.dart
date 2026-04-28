@@ -23,8 +23,13 @@ import '../../features/settings/domain/usecases/settings_usecase.dart';
 import '../services/nearby_drivers_socket_service.dart';
 import '../services/live_activity/live_activity_manager.dart';
 import '../../features/ride/data/datasources/ride_remote_data_source.dart';
+import '../../features/ride/data/datasources/ride_share_remote_datasource.dart';
 import '../../features/ride/data/repositories/ride_repository_impl.dart';
+import '../../features/ride/data/repositories/ride_share_repository_impl.dart';
 import '../../features/ride/domain/repositories/ride_repository.dart';
+import '../../features/ride/domain/repositories/ride_share_repository.dart';
+import '../../features/ride/domain/usecases/generate_share_link_use_case.dart';
+import '../../features/ride/domain/usecases/revoke_share_link_use_case.dart';
 import '../../features/ride/domain/usecases/ride_usecase.dart';
 import '../../features/ride/presentation/controllers/my_rides_controller.dart';
 import '../../features/auth/data/datasources/auth_remote_data_source.dart';
@@ -82,6 +87,14 @@ Future<void> init() async {
   sl.registerLazySingleton<RideRepository>(
     () => RideRepositoryImpl(remoteDataSource: sl()),
   );
+  sl.registerLazySingleton<RideShareRemoteDataSource>(
+    () => RideShareRemoteDataSourceImpl(),
+  );
+  sl.registerLazySingleton<RideShareRepository>(
+    () => RideShareRepositoryImpl(remoteDataSource: sl()),
+  );
+  sl.registerLazySingleton(() => GenerateShareLinkUseCase(sl()));
+  sl.registerLazySingleton(() => RevokeShareLinkUseCase(sl()));
 
   // ── Profile Feature ──
   sl.registerLazySingleton<ProfileRemoteDataSource>(

@@ -11,6 +11,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../controllers/driver_accepted_controller.dart';
+import '../controllers/ride_share_controller.dart';
 import '../widgets/ride_common_widgets.dart';
 
 /// SCR-11 — Driver accepted (heading to pickup). See `.agent/context/frontend/SCREENS.md`.
@@ -25,6 +26,7 @@ class DriverAcceptedScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = Get.find<DriverAcceptedController>();
+    final shareController = Get.find<RideShareController>();
     final topPad = MediaQuery.of(context).padding.top;
     final sheetController = DraggableScrollableController();
 
@@ -109,6 +111,16 @@ class DriverAcceptedScreen extends StatelessWidget {
             );
           }),
           Obx(() {
+            final screenHeight = MediaQuery.sizeOf(context).height;
+            final sheetTopOffset = screenHeight * c.sheetSize.value;
+            return Positioned(
+              left: 16.w,
+              right: 16.w,
+              bottom: sheetTopOffset + 12.h,
+              child: _rideActionRow(c, shareController),
+            );
+          }),
+          Obx(() {
             final state = c.rideBottomSheetState.value;
             final double maxSheetSize;
             switch (state) {
@@ -129,6 +141,201 @@ class DriverAcceptedScreen extends StatelessWidget {
             );
           }),
         ],
+      ),
+    );
+  }
+
+  Widget _rideActionRow(
+    DriverAcceptedController c,
+    RideShareController shareController,
+  ) {
+    return Row(
+      children: [
+        const Spacer(),
+        Obx(() {
+          final isSharing = shareController.isSharing.value;
+          final canRevoke =
+              shareController.enableRevokeLink &&
+              shareController.shareUrl.value != null;
+
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _iconActionChip(
+                icon: isSharing ? Icons.hourglass_top : Icons.share_outlined,
+                onTap: isSharing ? () {} : () => shareController.shareRide(c.rideId),
+                color: AppColors.textVerified,
+              ),
+              if (canRevoke) ...[
+                SizedBox(width: 8.w),
+                _iconActionChip(
+                  icon: shareController.isRevoking.value
+                      ? Icons.hourglass_top
+                      : Icons.link_off_outlined,
+                  onTap: () => shareController.revokeShareLink(c.rideId),
+                  color: AppColors.primary,
+                ),
+              ],
+            ],
+          );
+        }),
+        SizedBox(width: 10.w),
+        _iconActionChip(
+          icon: Icons.shield_outlined,
+          onTap: () => _showSafetyBottomSheet(c, shareController),
+          color: AppColors.textHeading,
+        ),
+      ],
+    );
+  }
+
+  Widget _iconActionChip({
+    required IconData icon,
+    required VoidCallback onTap,
+    required Color color,
+  }) {
+    return Material(
+      color: AppColors.white,
+      borderRadius: BorderRadius.circular(14.r),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14.r),
+        child: Container(
+          width: 44.w,
+          height: 44.h,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14.r),
+            border: Border.all(color: AppColors.borderWalletCard),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.black.withValues(alpha: 0.08),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Icon(icon, color: color, size: 20.sp),
+        ),
+      ),
+    );
+  }
+
+  void _showSafetyBottomSheet(
+    DriverAcceptedController c,
+    RideShareController shareController,
+  ) {
+    Get.bottomSheet(
+      SafeArea(
+        top: false,
+        bottom: false,
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+          ),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 22.h),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 48.w,
+                  height: 4.h,
+                  decoration: BoxDecoration(
+                    color: AppColors.skeletonBase,
+                    borderRadius: BorderRadius.circular(2.r),
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    AppStrings.safetyOptions.tr,
+                    style: AppTextStyles.homeTitle.copyWith(
+                      fontSize: 18.sp,
+                      color: AppColors.textHeading,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                _safetyOptionTile(
+                  title: AppStrings.shareLiveLocation.tr,
+                  icon: Icons.share_location_outlined,
+                  onTap: () {
+                    if (Get.isBottomSheetOpen ?? false) Get.back();
+                    shareController.shareRide(c.rideId);
+                  },
+                ),
+                SizedBox(height: 10.h),
+                _safetyOptionTile(
+                  title: AppStrings.selcomGoSosHelpline.tr,
+                  icon: Icons.support_agent_outlined,
+                  onTap: () {
+                    if (Get.isBottomSheetOpen ?? false) Get.back();
+                    Get.snackbar(
+                      AppStrings.safety.tr,
+                      AppStrings.shareFeatureComingSoon.tr,
+                    );
+                  },
+                ),
+                SizedBox(height: 10.h),
+                _safetyOptionTile(
+                  title: AppStrings.callPolice.tr,
+                  icon: Icons.local_police_outlined,
+                  onTap: () {
+                    if (Get.isBottomSheetOpen ?? false) Get.back();
+                    Get.snackbar(
+                      AppStrings.safety.tr,
+                      AppStrings.shareFeatureComingSoon.tr,
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      isScrollControlled: true,
+      backgroundColor: AppColors.transparent,
+    );
+  }
+
+  Widget _safetyOptionTile({
+    required String title,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: AppColors.surfaceSubtle,
+      borderRadius: BorderRadius.circular(14.r),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14.r),
+        onTap: onTap,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
+          child: Row(
+            children: [
+              Icon(icon, color: AppColors.textHeading, size: 20.sp),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Text(
+                  title,
+                  style: AppTextStyles.homeSubtitle.copyWith(
+                    color: AppColors.textHeading,
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 14.sp,
+                color: AppColors.textMapHint,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

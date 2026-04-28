@@ -271,6 +271,18 @@ class AppStrings {
   static const String value2AssignmentWarningFee =
       'value2_assignment_warning_fee';
   static const String value3ReasonSelection = 'value3_reason_selection';
+  static const String share = 'share';
+  static const String safety = 'safety';
+  static const String safetyOptions = 'safety_options';
+  static const String shareLiveLocation = 'share_live_location';
+  static const String selcomGoSosHelpline = 'selcom_go_sos_helpline';
+  static const String callPolice = 'call_police';
+  static const String shareRideStatus = 'share_ride_status';
+  static const String chooseAppToShare = 'choose_app_to_share';
+  static const String whatsapp = 'whatsapp';
+  static const String textMessage = 'text_message';
+  static const String copyLink = 'copy_link';
+  static const String shareFeatureComingSoon = 'share_feature_coming_soon';
   static const String vehicleType = 'vehicle_type';
   static const String verificationSuccessful = 'verification_successful';
   static const String verificationSuccessfully = 'verification_successfully';
