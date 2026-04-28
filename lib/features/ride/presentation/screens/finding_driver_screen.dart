@@ -280,7 +280,7 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
               ),
               SizedBox(height: 12.h),
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
+                padding: EdgeInsets.symmetric(horizontal: 13.w),
                 child: Text(
                   c.currentDescriptionLabel.value,
                   textAlign: TextAlign.center,
@@ -302,8 +302,12 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
                     borderRadius: BorderRadius.circular(4.r),
                     child: LinearProgressIndicator(
                       minHeight: 6.h,
-                      backgroundColor: AppColors.primary.withValues(alpha: 0.15),
-                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                      backgroundColor: AppColors.primary.withValues(
+                        alpha: 0.15,
+                      ),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        AppColors.primary,
+                      ),
                     ),
                   ),
                 ),
@@ -381,7 +385,10 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
                     child: OutlinedButton(
                       onPressed: () => Get.offAllNamed(AppRoutes.home),
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: AppColors.borderNeutralStrong, width: 1.5),
+                        side: const BorderSide(
+                          color: AppColors.borderNeutralStrong,
+                          width: 1.5,
+                        ),
                         padding: EdgeInsets.symmetric(vertical: 18.h),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16.r),
