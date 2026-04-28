@@ -65,6 +65,7 @@ class FindingDriverController extends GetxController {
   final isRideCancelled = false.obs;
 
   final currentEtaSeconds = 0.0.obs;
+  final sheetSize = 0.42.obs;
   final Rxn<EventRiderStatusUpdateResponse> latestRideStatusPayload =
       Rxn<EventRiderStatusUpdateResponse>();
   final Rxn<DriverLocationSocketResponse> latestDriverLocationPayload =
@@ -86,6 +87,10 @@ class FindingDriverController extends GetxController {
   StreamSubscription<String>? _nearbyDriversErrorSub;
 
   bool _didNavigateToAccepted = false;
+
+  void updateSheetSize(double size) {
+    sheetSize.value = size;
+  }
 
   void _showCancelDialogThenGoHome(String message) {
     Future.delayed(Duration.zero, () {

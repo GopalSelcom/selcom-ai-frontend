@@ -18,8 +18,12 @@ class FindingDriverScreen extends StatefulWidget {
 
 class _FindingDriverScreenState extends State<FindingDriverScreen>
     with SingleTickerProviderStateMixin {
-  static const double _sheetInitial = 0.52;
   late AnimationController _pulseController;
+
+  static const double _sheetInitial = 0.38;
+  static const double _sheetMin = 0.28;
+  static const double _sheetMaxCompact = 0.44;
+  static const double _sheetMaxSearching = 0.38;
 
   @override
   void initState() {
@@ -41,6 +45,9 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
     final c = Get.find<FindingDriverController>();
     final topPad = MediaQuery.paddingOf(context).top;
     final sheetController = DraggableScrollableController();
+    sheetController.addListener(() {
+      c.updateSheetSize(sheetController.size);
+    });
 
     return Scaffold(
       backgroundColor: AppColors.pageBackground,
@@ -87,13 +94,17 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
               ),
             ),
           ),
-          AppDraggableBottomSheet(
-            controller: sheetController,
-            initialChildSize: _sheetInitial,
-            minChildSize: 0.35, // Adjust minChildSize
-            childBuilder: (scrollController) =>
-                _bottomSheet(c, scrollController, sheetController),
-          ),
+          Obx(() {
+            final isSearching = c.assignedDriverLocation.value == null;
+            return AppDraggableBottomSheet(
+              controller: sheetController,
+              initialChildSize: _sheetInitial,
+              minChildSize: _sheetMin,
+              maxChildSize: isSearching ? _sheetMaxSearching : _sheetMaxCompact,
+              childBuilder: (scrollController) =>
+                  _bottomSheet(c, scrollController, sheetController),
+            );
+          }),
         ],
       ),
     );
@@ -111,6 +122,7 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
       final driver = c.assignedDriverLocation.value;
       final routePoints = c.activeRoutePoints.toList();
       final isPickupRoute = c.routeTarget.value == 'pick_up';
+      final sheetSize = c.sheetSize.value;
       final markers = <Marker>{};
       final circles = <Circle>{};
 
@@ -206,7 +218,7 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
         initialCameraPosition: CameraPosition(target: pickup, zoom: 15),
         padding: EdgeInsets.only(
           top: topPad + 80.h,
-          bottom: MediaQuery.of(context).size.height * _sheetInitial,
+          bottom: MediaQuery.of(context).size.height * sheetSize,
         ),
         onMapCreated: c.onMapCreated,
         markers: markers,
@@ -214,9 +226,9 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
         onGpsPressed: c.recenterMap,
         trackRider: true,
         onUserInteraction: () {
-          if (sheetController.isAttached && sheetController.size > 0.3) {
+          if (sheetController.isAttached && sheetController.size > _sheetMin) {
             sheetController.animateTo(
-              0.3,
+              _sheetInitial,
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeOut,
             );
@@ -278,7 +290,7 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
                   color: AppColors.textHeading,
                 ),
               ),
-              SizedBox(height: 12.h),
+              SizedBox(height: 8.h),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 13.w),
                 child: Text(
@@ -293,7 +305,7 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
               ),
 
               if (!c.isRideCancelled.value) ...[
-                SizedBox(height: 48.h),
+                SizedBox(height: 42.h),
 
                 // 2. Bolt-like Linear Progress Bar
                 Padding(
@@ -312,7 +324,7 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
                   ),
                 ),
 
-                SizedBox(height: 32.h),
+                SizedBox(height: 20.h),
 
                 // 3. Timer (Icon + Text)
                 Row(
@@ -339,7 +351,7 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
           ),
         ),
 
-        SizedBox(height: 40.h),
+        SizedBox(height: 28.h),
 
         // 4. Action Buttons (Search Again & Back to Home OR Cancel)
         Obx(() {
