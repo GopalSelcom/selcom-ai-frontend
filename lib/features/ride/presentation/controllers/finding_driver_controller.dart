@@ -62,6 +62,7 @@ class FindingDriverController extends GetxController {
   final currentDescriptionLabel =
       'The driver will pick you up as soon as possible\nafter they confirm your order'
           .obs;
+  final isRideCancelled = false.obs;
 
   final currentEtaSeconds = 0.0.obs;
   final Rxn<EventRiderStatusUpdateResponse> latestRideStatusPayload =
@@ -87,11 +88,13 @@ class FindingDriverController extends GetxController {
   bool _didNavigateToAccepted = false;
 
   void _showCancelDialogThenGoHome(String message) {
-    AppDialogs.showErrorDialog(
-      title: 'Ride Cancelled',
-      message: message,
-      onConfirm: () => Get.offAllNamed(AppRoutes.home),
-    );
+    Future.delayed(Duration.zero, () {
+      AppDialogs.showErrorDialog(
+        title: 'Search Ended',
+        message: message,
+        onConfirm: () => Get.offAllNamed(AppRoutes.home),
+      );
+    });
   }
 
   @override
@@ -338,7 +341,7 @@ class FindingDriverController extends GetxController {
         error: jsonEncode(payload.toJson()),
       );
       latestRideStatusPayload.value = payload;
-      final status = (payload.status ?? '').toString().toLowerCase();
+      final status = (payload.status ?? '').toString().trim().toLowerCase();
       _applyStatusPayload(payload);
       // Removed _syncLiveActivityFromPayload(payload) to respect 'APNs-only' update model
       if (status.isEmpty) return;
@@ -374,17 +377,26 @@ class FindingDriverController extends GetxController {
           currentDescriptionLabel.value = 'You have reached your destination.';
           break;
         case 'cancelled':
+          isRideCancelled.value = true;
           currentStatusLabel.value = 'Ride Cancelled';
           currentDescriptionLabel.value = 'The ride has been cancelled.';
-          await LiveActivityManager().endActivity(rideId);
+          LiveActivityManager().endActivity(rideId);
           _showCancelDialogThenGoHome(AppStrings.yourRideWasCancelled.tr);
           break;
         case 'no_driver_found':
+        case 'no_drivers_found':
+          isRideCancelled.value = true;
           currentStatusLabel.value = 'No Driver Found';
           currentDescriptionLabel.value = 'We couldn\'t find a driver nearby.';
-          await LiveActivityManager().endActivity(rideId);
+          LiveActivityManager().endActivity(rideId);
           _showCancelDialogThenGoHome(
             AppStrings.noDriversNearbyPleaseTryAgainLater.tr,
+          );
+          break;
+        default:
+          developer.log(
+            "⚠️ Unhandled Socket Status: $status",
+            name: 'ORDER_TRACKING',
           );
           break;
       }
@@ -646,6 +658,20 @@ class FindingDriverController extends GetxController {
         } else {
           await LiveActivityManager().endActivity(rideId);
         }
+      },
+    );
+  }
+
+  void searchAgain() {
+    Get.offNamed(
+      AppRoutes.booking,
+      arguments: {
+        'pickup': pickupAddress,
+        'pickupLat': pickupLatLng.latitude,
+        'pickupLng': pickupLatLng.longitude,
+        'destination': destinationAddress,
+        'destinationLat': destinationLatLng.latitude,
+        'destinationLng': destinationLatLng.longitude,
       },
     );
   }
