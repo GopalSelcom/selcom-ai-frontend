@@ -280,7 +280,9 @@ class RideDetailsScreen extends StatelessWidget {
                     if (!controller.shouldPrioritizeReviewSection)
                       reviewSection,
                     SizedBox(height: 24.h),
-                    const NeedHelpRow(),
+                    NeedHelpRow(
+                      showDownloadSlip: controller.openedFromCompletionFlow,
+                    ),
                     SizedBox(height: 24.h),
                   ],
                 ),

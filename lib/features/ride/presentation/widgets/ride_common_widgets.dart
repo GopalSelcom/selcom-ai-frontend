@@ -284,7 +284,14 @@ class FareBreakdownRow extends StatelessWidget {
 }
 
 class NeedHelpRow extends StatelessWidget {
-  const NeedHelpRow({super.key});
+  const NeedHelpRow({
+    super.key,
+    this.showDownloadSlip = false,
+    this.onDownloadTap,
+  });
+
+  final bool showDownloadSlip;
+  final VoidCallback? onDownloadTap;
 
   @override
   Widget build(BuildContext context) {
@@ -305,6 +312,27 @@ class NeedHelpRow extends StatelessWidget {
             ),
           ),
         ),
+        if (showDownloadSlip) ...[
+          SizedBox(width: 20.w),
+          Icon(
+            Iconsax.document_download5,
+            color: AppColors.textBody,
+            size: 20.w,
+          ),
+          SizedBox(width: 6.w),
+          GestureDetector(
+            onTap: onDownloadTap,
+            child: Text(
+              AppStrings.downloadSlip.tr,
+              style: TextStyle(
+                fontFamily: AppTextStyles.metropolisFont,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textBody,
+                fontSize: 15.sp,
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -324,7 +352,9 @@ class RideRatingStars extends StatelessWidget {
         final isFilled = rating != null && index < rating!.floor();
         return Icon(
           Icons.star,
-          color: isFilled ? AppColors.ratingStarFilled : AppColors.ratingStarEmpty,
+          color: isFilled
+              ? AppColors.ratingStarFilled
+              : AppColors.ratingStarEmpty,
           size: starSize.w,
         );
       }),
