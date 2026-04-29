@@ -11,6 +11,7 @@ import '../../../../core/data/models/responses/get_saved_places_response.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_back_button.dart';
 import '../controllers/home_controller.dart';
+import '../controllers/location_selection_controller.dart';
 import '../../data/models/places_models.dart';
 import '../../../../core/routes/app_routes.dart';
 
@@ -23,161 +24,44 @@ class LocationSelectionScreen extends StatefulWidget {
 }
 
 class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
-  late final HomeController controller;
-  late final TextEditingController pickupController;
-  late final TextEditingController destinationController;
-  late final FocusNode pickupFocusNode;
-  late final FocusNode destinationFocusNode;
+  HomeController get controller => Get.find<HomeController>();
+  LocationSelectionController get locationController =>
+      Get.find<LocationSelectionController>();
+  TextEditingController get pickupController =>
+      locationController.pickupController;
+  TextEditingController get destinationController =>
+      locationController.destinationController;
+  FocusNode get pickupFocusNode => locationController.pickupFocusNode;
+  FocusNode get destinationFocusNode => locationController.destinationFocusNode;
+  RxInt get _activeSegmentIndex => locationController.activeSegmentIndex;
+  RxList<TextEditingController> get _extraDestinationControllers =>
+      locationController.extraDestinationControllers;
+  RxList<FocusNode> get _extraDestinationFocusNodes =>
+      locationController.extraDestinationFocusNodes;
+  RxBool get pickupEditedByUser => locationController.pickupEditedByUser;
+  RxnString get _destinationPlaceId => locationController.destinationPlaceId;
+  RxnDouble get _routePickupLat => locationController.routePickupLat;
+  RxnDouble get _routePickupLng => locationController.routePickupLng;
+  RxnDouble get _routeDestinationLat => locationController.routeDestinationLat;
+  RxnDouble get _routeDestinationLng => locationController.routeDestinationLng;
+  RxnString get _preferredVehicleTypeId =>
+      locationController.preferredVehicleTypeId;
+  RxnString get _preferredVehicleName => locationController.preferredVehicleName;
+  bool get _isVehicleSelectionEditMode =>
+      locationController.isVehicleSelectionEditMode.value;
+  int get _maxExtraStops => LocationSelectionController.maxExtraStops;
 
-  /// 0 = pickup, 1 = first destination, 2+ = extra stop at index `segment - 2`.
-  final RxInt _activeSegmentIndex = 1.obs;
-  final _extraDestinationControllers = <TextEditingController>[].obs;
-  final _extraDestinationFocusNodes = <FocusNode>[].obs;
-  final RxBool pickupEditedByUser = false.obs;
+  void _onAddDestinationStop() => locationController.onAddDestinationStop();
 
-  /// Set when the first destination is chosen from autocomplete (required for `saved-places` on Book Ride).
-  final RxnString _destinationPlaceId = RxnString();
-  static const int _maxExtraStops = 2;
-
-  /// From route args (home / explore vehicle); used for Book Ride pickup coords.
-  final RxnDouble _routePickupLat = RxnDouble();
-  final RxnDouble _routePickupLng = RxnDouble();
-
-  /// Destination coordinates for first drop, when user picked a source that includes coords.
-  final RxnDouble _routeDestinationLat = RxnDouble();
-  final RxnDouble _routeDestinationLng = RxnDouble();
-
-  /// Forwarded to vehicle selection as default vehicle.
-  final RxnString _preferredVehicleTypeId = RxnString();
-  final RxnString _preferredVehicleName = RxnString();
-  late bool _isVehicleSelectionEditMode;
-
-  @override
-  void initState() {
-    super.initState();
-    controller = Get.find<HomeController>();
-    final raw = Get.arguments;
-    String initialPickup = controller.currentMapAddress.value;
-    String initialDestination = '';
-    int initialActiveSegment = 1;
-    bool clearPickupOnOpen = false;
-    bool clearDestinationOnOpen = false;
-    _isVehicleSelectionEditMode = false;
-    if (raw is Map) {
-      final m = Map<String, dynamic>.from(raw);
-      _isVehicleSelectionEditMode =
-          (m['fromVehicleSelectionEdit'] as bool?) ?? false;
-      final p = (m['pickup'] as String?)?.trim();
-      if (p != null && p.isNotEmpty) {
-        initialPickup = p;
-        pickupEditedByUser.value = true;
-      }
-      final d = (m['destination'] as String?)?.trim();
-      if (d != null && d.isNotEmpty) {
-        initialDestination = d;
-      }
-      final plat = (m['pickupLat'] as num?)?.toDouble();
-      final plng = (m['pickupLng'] as num?)?.toDouble();
-      if (plat != null && plng != null) {
-        _routePickupLat.value = plat;
-        _routePickupLng.value = plng;
-      }
-      final dlat = (m['destinationLat'] as num?)?.toDouble();
-      final dlng = (m['destinationLng'] as num?)?.toDouble();
-      if (dlat != null && dlng != null) {
-        _routeDestinationLat.value = dlat;
-        _routeDestinationLng.value = dlng;
-      }
-      final active = (m['activeSegmentIndex'] as num?)?.toInt();
-      if (active != null && active >= 0) {
-        initialActiveSegment = active;
-      }
-      clearPickupOnOpen = (m['clearPickupOnOpen'] as bool?) ?? false;
-      clearDestinationOnOpen = (m['clearDestinationOnOpen'] as bool?) ?? false;
-      _preferredVehicleTypeId.value = (m['preferredVehicleTypeId'] as String?)
-          ?.trim();
-      _preferredVehicleName.value = (m['preferredVehicleName'] as String?)
-          ?.trim();
-    }
-    if (clearPickupOnOpen) {
-      initialPickup = '';
-      _routePickupLat.value = null;
-      _routePickupLng.value = null;
-      pickupEditedByUser.value = true;
-    }
-    if (clearDestinationOnOpen) {
-      initialDestination = '';
-      _routeDestinationLat.value = null;
-      _routeDestinationLng.value = null;
-      _destinationPlaceId.value = null;
-    }
-    pickupController = TextEditingController(text: initialPickup);
-    destinationController = TextEditingController(text: initialDestination);
-    pickupFocusNode = FocusNode();
-    destinationFocusNode = FocusNode();
-    _activeSegmentIndex.value = initialActiveSegment;
-    if (_routePickupLat.value != null && initialPickup.isNotEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        controller.isPickupSelected.value = true;
-      });
-    }
-    if (_routeDestinationLat.value != null && initialDestination.isNotEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        controller.isDestinationSelected.value = true;
-      });
-    }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_activeSegmentIndex.value == 0) {
-        pickupFocusNode.requestFocus();
-      } else {
-        destinationFocusNode.requestFocus();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    pickupController.dispose();
-    destinationController.dispose();
-    for (final c in _extraDestinationControllers) {
-      c.dispose();
-    }
-    for (final f in _extraDestinationFocusNodes) {
-      f.dispose();
-    }
-    pickupFocusNode.dispose();
-    destinationFocusNode.dispose();
-    super.dispose();
-  }
-
-  void _onAddDestinationStop() {
-    if (_extraDestinationControllers.length >= _maxExtraStops) return;
-    _extraDestinationControllers.add(TextEditingController());
-    _extraDestinationFocusNodes.add(FocusNode());
-    _activeSegmentIndex.value = 2 + _extraDestinationControllers.length - 1;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_extraDestinationFocusNodes.isEmpty) return;
-      final node = _extraDestinationFocusNodes.last;
-      node.requestFocus();
-      controller.searchQuery.value = _extraDestinationControllers.last.text
-          .trim();
-    });
-  }
-
-  void _setActiveSegment(int index) {
-    if (_activeSegmentIndex.value == index) return;
-    _activeSegmentIndex.value = index;
-  }
+  void _setActiveSegment(int index) =>
+      locationController.setActiveSegment(index);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.pageBackground,
       body: Obx(() {
-        final liveAddress = controller.currentMapAddress.value.trim();
-        if (!pickupEditedByUser.value && liveAddress.isNotEmpty) {
-          pickupController.text = liveAddress;
-        }
+        locationController.syncPickupFromLiveAddress();
 
         return SafeArea(
           child: Stack(
@@ -404,7 +288,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           focusNode: pickupFocusNode,
           onTap: () {
             _setActiveSegment(0);
-            controller.searchQuery.value = pickupController.text.trim();
+            locationController.onPickupFieldTapped();
           },
           onChanged: (value) {
             pickupEditedByUser.value = true;

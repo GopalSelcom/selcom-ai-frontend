@@ -11,6 +11,7 @@ import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../ride_rating/presentation/bindings/ride_rating_binding.dart';
 import '../../../ride_rating/presentation/controllers/ride_rating_controller.dart';
 import '../controllers/home_controller.dart';
+import '../controllers/location_selection_controller.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/notification_service.dart';
@@ -57,6 +58,11 @@ class HomeBinding extends Bindings {
         rideRatingController: Get.find<RideRatingController>(),
       ),
       fenix: true
+    );
+
+    Get.lazyPut<LocationSelectionController>(
+      () => LocationSelectionController(),
+      fenix: true,
     );
 
   }
