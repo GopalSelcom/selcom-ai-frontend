@@ -83,15 +83,26 @@ mixin MapRiderTrackingMixin on State<AppGoogleMap>, TickerProviderStateMixin<App
     }
     _lastUpdateAt = now;
 
-    // Only update if position actually changed
+    // Only update if position actually changed significantly
     if (newPosition != _targetPosition) {
       // Jitter filter: ignore tiny movements (~2m) to prevent drifting while stationary
       final dist = MapMathUtils.calculateSimpleDist(newPosition, _targetPosition!);
       if (dist < 0.00002) return;
 
-      // Prepare position animation
       _previousPosition = _currentAnimatedPosition ?? _targetPosition;
       _targetPosition = newPosition;
+
+      // Calculate duration based on 1km/hr speed (~0.27 m/s)
+      // 1km/hr = 0.0000025 degrees per second (approx)
+      const double speedDegreesPerSecond = 0.0000025;
+      final double travelDist = MapMathUtils.calculateSimpleDist(_previousPosition!, _targetPosition!);
+      
+      int durationMs = (travelDist / speedDegreesPerSecond * 1000).toInt();
+      
+      // Clamp duration between 1s and 10s to keep it responsive but smooth
+      _positionController.duration = Duration(
+        milliseconds: durationMs.clamp(1000, 10000),
+      );
 
       // Start position animation
       _positionController.forward(from: 0.0);

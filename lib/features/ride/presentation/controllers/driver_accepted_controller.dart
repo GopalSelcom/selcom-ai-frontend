@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:selcom_rides_frontend/shared/widgets/app_google_map.dart';
 import 'package:uuid/uuid.dart';
 
 import 'dart:developer' as developer;
@@ -140,9 +141,16 @@ class DriverAcceptedController extends GetxController
     sheetSize.value = size;
   }
 
+  final DraggableScrollableController sheetController = DraggableScrollableController();
+  final RxBool isTrackingRider = false.obs;
+  final GlobalKey<AppGoogleMapState> mapWidgetKey = GlobalKey<AppGoogleMapState>();
+
   @override
   void onInit() {
     super.onInit();
+    sheetController.addListener(() {
+      updateSheetSize(sheetController.size);
+    });
     WidgetsBinding.instance.addObserver(this);
     _parseArgs();
     _bootstrap();
@@ -436,7 +444,7 @@ class DriverAcceptedController extends GetxController
       },
     );
     isLoadingRide.value = false;
-    _fitRouteBounds(force: true);
+    // Removed automatic _fitRouteBounds here to prevent unwanted zoom-out during navigation.
   }
 
   void _applyMockContent() {
@@ -782,6 +790,21 @@ class DriverAcceptedController extends GetxController
       onRecenterPressed!();
     } else {
       _fitRouteBounds(force: true);
+    }
+  }
+
+  Future<void> focusOnUserLocation() async {
+    final ctrl = mapController;
+    if (ctrl == null) return;
+    
+    try {
+      // We rely on the Google Map internal "my location" feature to animate
+      // but we can also manually trigger it if we have the coordinates.
+      // For now, we'll trigger a fitBounds on the whole route as a fallback
+      // but the UI button is now decoupled from Rider Tracking.
+      _fitRouteBounds(force: true);
+    } catch (e) {
+      developer.log("Error focusing on user location: $e");
     }
   }
 
@@ -1278,28 +1301,32 @@ class DriverAcceptedController extends GetxController
 
 
   void trimRoutePoints(LatLng currentPos) {
-    if (routePoints.length < 3) return;
-
-    int closestIndex = -1;
-    // 0.0001 threshold for trimming (~10m)
-    const double trimThreshold = 0.0001;
-
-    // Check upcoming segments for progress
-    int checkCount = routePoints.length > 8 ? 8 : routePoints.length;
-    for (int i = 0; i < checkCount; i++) {
-      final dist = _calculateSimpleDist(currentPos, routePoints[i]);
-      if (dist < trimThreshold) {
+    if (routePoints.isEmpty) return;
+    
+    // Stability fix: Only search within the first 15 points to avoid skipping 
+    // ahead to unrelated route segments in case of GPS jumps or complex intersections.
+    final int searchRange = routePoints.length > 15 ? 15 : routePoints.length;
+    
+    int closestIndex = 0;
+    double minDistance = double.maxFinite;
+    
+    for (int i = 0; i < searchRange; i++) {
+      final distance = _calculateSimpleDist(currentPos, routePoints[i]);
+      if (distance < minDistance) {
+        minDistance = distance;
         closestIndex = i;
-        break;
       }
     }
-
+    
+    // Only trim if we found a reasonably close point (to avoid jagged lines on far GPS jumps)
+    // 0.0005 is approx 50 meters
+    if (closestIndex > 0 && minDistance < 0.0005) {
+      routePoints.removeRange(0, closestIndex);
+    }
+    
+    // Always update the first point to the animated position
+    // so the blue line starts exactly at the bike icon.
     if (routePoints.isNotEmpty) {
-      if (closestIndex > 0) {
-        routePoints.removeRange(0, closestIndex);
-      }
-      // Always update the first point to the animated position
-      // so the blue line starts exactly at the bike icon.
       routePoints[0] = currentPos;
     }
   }

@@ -214,7 +214,7 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
         }
       }
       return AppGoogleMap(
-        mapWidgetKey: const ValueKey('finding_driver_map'),
+        key: const ValueKey('finding_driver_map'),
         initialCameraPosition: CameraPosition(target: pickup, zoom: 15),
         padding: EdgeInsets.only(
           top: topPad + 80.h,

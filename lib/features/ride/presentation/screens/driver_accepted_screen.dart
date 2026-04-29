@@ -16,26 +16,33 @@ import '../widgets/ride_common_widgets.dart';
 
 /// SCR-11 — Driver accepted (heading to pickup). See `.agent/context/frontend/SCREENS.md`.
 class DriverAcceptedScreen extends StatelessWidget {
-  DriverAcceptedScreen({super.key});
+  const DriverAcceptedScreen({super.key});
 
   static const double _sheetInitial = 0.3;
   static const double _sheetMin = 0.3;
   static const double _sheetMaxDriverAssigned = 0.54;
   static const double _sheetMaxRideStarted = 0.68;
 
-  final GlobalKey<AppGoogleMapState> mapWidgetKey = GlobalKey<AppGoogleMapState>();
+
+  void _minimizeSheet(DriverAcceptedController c) {
+    if (c.sheetController.isAttached) {
+      Future.microtask(() {
+        c.sheetController.animateTo(
+          _sheetMin,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final c = Get.find<DriverAcceptedController>();
     final shareController = Get.find<RideShareController>();
     final topPad = MediaQuery.of(context).padding.top;
-    final sheetController = DraggableScrollableController();
-
-    // Listen to sheet size changes and update controller
-    sheetController.addListener(() {
-      c.updateSheetSize(sheetController.size);
-    });
+    // Use the controller's persistent sheet controller
+    final sheetController = c.sheetController;
 
     return Scaffold(
       backgroundColor: AppColors.pageBackground,
@@ -163,6 +170,39 @@ class DriverAcceptedScreen extends StatelessWidget {
           return Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Navigation / Track Rider Chip
+              // Navigation / Track Rider Chip
+              Obx(() {
+                final isTracking = c.assignedDriverLocation.value != null;
+                // Use the controller's state instead of the map's key state
+                final isCurrentlyTracking = c.isTrackingRider.value;
+                
+                if (!isCurrentlyTracking && isTracking) {
+                  return Padding(
+                    padding: EdgeInsets.only(right: 8.w),
+                    child: _iconActionChip(
+                      icon: Icons.navigation,
+                      onTap: () {
+                        c.mapWidgetKey.currentState?.retrack();
+                        _minimizeSheet(c);
+                      },
+                      color: AppColors.primary,
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              }),
+              // Current Location GPS Chip
+              _iconActionChip(
+                icon: Icons.gps_fixed,
+                onTap: () {
+                  c.mapWidgetKey.currentState?.stopTracking();
+                  c.focusOnUserLocation();
+                  _minimizeSheet(c);
+                },
+                color: AppColors.textMapHint,
+              ),
+              SizedBox(width: 8.w),
               _iconActionChip(
                 icon: isSharing ? Icons.hourglass_top : Icons.share_outlined,
                 onTap: isSharing ? () {} : () => shareController.shareRide(c.rideId),
@@ -350,8 +390,9 @@ class DriverAcceptedScreen extends StatelessWidget {
     final screenHeight = MediaQuery.sizeOf(context).height;
 
     return Obx(() {
-      final currentSheetSize = c.sheetSize.value;
-      final dynamicBottomPad = screenHeight * currentSheetSize;
+      // Use a stable padding instead of tracking the sheet's pixel-by-pixel size.
+      // This prevents the "!_dirty" assertion error and keeps the map stable.
+      final stableBottomPad = screenHeight * _sheetMin;
 
       final pickup = c.pickupLatLng;
       final destination = c.destinationLatLng;
@@ -453,37 +494,31 @@ class DriverAcceptedScreen extends StatelessWidget {
       return Stack(
         children: [
           AppGoogleMap(
-            mapWidgetKey: mapWidgetKey,
+            key: c.mapWidgetKey,
             initialCameraPosition: CameraPosition(target: mid, zoom: 15.5),
             padding: EdgeInsets.only(
-              top: dynamicBottomPad - 40.h, // Balanced with current sheet size
-              bottom: dynamicBottomPad,
+              top: 100.h, 
+              bottom: stableBottomPad,
             ),
             onMapCreated: (ctrl) {
               c.onMapCreated(ctrl);
-              c.onRecenterPressed = () => mapWidgetKey.currentState?.retrack();
+              c.onRecenterPressed = () => c.mapWidgetKey.currentState?.retrack();
             },
             onCameraMove: (_) => c.scheduleAssignedEtaOverlayRefresh(),
             onCameraIdle: c.scheduleAssignedEtaOverlayRefresh,
             showGpsButton: true,
-            onGpsPressed: c.recenterMap,
-            onUserInteraction: () {
-              if (sheetController.isAttached &&
-                  sheetController.size > _sheetInitial) {
-                sheetController.animateTo(
-                  _sheetInitial,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOut,
-                );
-              }
-            },
+            onGpsPressed: c.focusOnUserLocation,
+            onUserInteraction: () => _minimizeSheet(c),
+            trackRider: c.isTrackingRider.value,
+            onTrackingChanged: (tracking) => c.isTrackingRider.value = tracking,
             markers: markers,
             polylines: polylines,
             minMaxZoomPreference: const MinMaxZoomPreference(12, 19),
-            trackRider: false,
             onRiderPositionUpdate: (pos) {
-              c.animatedRiderLocation.value = pos;
-              c.trimRoutePoints(pos);
+              Future.microtask(() {
+                c.animatedRiderLocation.value = pos;
+                c.trimRoutePoints(pos);
+              });
             },
           ),
           if (showRouteLoading)
