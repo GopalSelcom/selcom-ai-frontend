@@ -4,8 +4,6 @@ import 'package:get/get.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/constants/app_assets.dart';
-import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../core/data/models/user_profile_models.dart';
 import '../controllers/payment_method_controller.dart';
 
@@ -19,7 +17,7 @@ class PaymentMethodBottomSheet extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(40.r)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
       ),
       child: SafeArea(
         top: false,
@@ -27,18 +25,18 @@ class PaymentMethodBottomSheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SizedBox(height: 12.h),
+            SizedBox(height: 10.h),
             Center(
               child: Container(
-                width: 48.w,
-                height: 4.h,
+                width: 56.w,
+                height: 5.h,
                 decoration: BoxDecoration(
-                  color: AppColors.skeletonBase,
-                  borderRadius: BorderRadius.circular(2.r),
+                  color: AppColors.borderNeutralStrong.withValues(alpha: 0.75),
+                  borderRadius: BorderRadius.circular(999.r),
                 ),
               ),
             ),
-            SizedBox(height: 24.h),
+            SizedBox(height: 18.h),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 24.w),
               child: Text(
@@ -47,11 +45,20 @@ class PaymentMethodBottomSheet extends StatelessWidget {
                   fontSize: 20.sp,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textHeading,
+                  height: 34 / 20,
                 ),
+                textAlign: TextAlign.center,
               ),
             ),
-            SizedBox(height: 16.h),
-            Divider(color: AppColors.bgSoftCircle, thickness: 1.h),
+            SizedBox(height: 14.h),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              child: Divider(
+                color: AppColors.bgSoftCircle,
+                thickness: 1.h,
+                height: 1.h,
+              ),
+            ),
             Obx(() {
               if (controller.isLoading.value &&
                   controller.paymentMethods.isEmpty) {
@@ -63,7 +70,7 @@ class PaymentMethodBottomSheet extends StatelessWidget {
 
               return ListView.separated(
                 shrinkWrap: true,
-                padding: EdgeInsets.all(24.w),
+                padding: EdgeInsets.fromLTRB(20.w, 18.h, 20.w, 6.h),
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: controller.paymentMethods.length,
                 separatorBuilder: (_, __) => SizedBox(height: 12.h),
@@ -85,7 +92,7 @@ class PaymentMethodBottomSheet extends StatelessWidget {
                 },
               );
             }),
-            SizedBox(height: 16.h),
+            SizedBox(height: 18.h),
           ],
         ),
       ),
@@ -108,59 +115,52 @@ class _PaymentMethodTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String asset = AppAssets.icPaymentCard;
-    if (method.type == 'wallet') asset = AppAssets.icPaymentWallet;
-    if (method.type == 'selcom_pesa') asset = AppAssets.icPaymentSelcomPesa;
-
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12.r),
+      borderRadius: BorderRadius.circular(14.r),
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+        height: 56.h,
+        padding: EdgeInsets.symmetric(horizontal: 20.w),
         decoration: BoxDecoration(
-          color: AppColors.surfaceSubtle,
-          borderRadius: BorderRadius.circular(12.r),
+          color: AppColors.bgVerificationSurface,
+          borderRadius: BorderRadius.circular(14.r),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.transparent,
-            width: 1.5.w,
+            color: isSelected
+                ? AppColors.primary.withValues(alpha: 0.28)
+                : AppColors.transparent,
+            width: 1.w,
           ),
         ),
         child: Row(
           children: [
-            SvgPictureAsset(
-              asset,
-              width: 24.w,
-              height: 24.w,
-              color: AppColors.textHeading,
-            ),
-            SizedBox(width: 16.w),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    method.label,
-                    style: AppTextStyles.homeSubtitle.copyWith(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textHeading,
-                    ),
-                  ),
-                  if (walletBalance != null) ...[
-                    SizedBox(height: 4.h),
-                    Text(
-                      '${walletBalance!.currency} ${walletBalance!.balance}',
-                      style: AppTextStyles.homeCaption.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ],
+              child: Text(
+                method.label,
+                style: AppTextStyles.homeSubtitle.copyWith(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textHeading,
+                  letterSpacing: -0.4,
+                ),
               ),
             ),
-            if (isSelected)
-              Icon(Icons.check_circle, color: AppColors.primary, size: 20.sp),
+            if (walletBalance != null) ...[
+              SizedBox(width: 12.w),
+              Text(
+                '${walletBalance!.currency} ${walletBalance!.balance}',
+                style: AppTextStyles.homeSubtitle.copyWith(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+            SizedBox(width: 12.w),
+            Icon(
+              Icons.chevron_right,
+              color: AppColors.textHeading,
+              size: 26.sp,
+            ),
           ],
         ),
       ),
