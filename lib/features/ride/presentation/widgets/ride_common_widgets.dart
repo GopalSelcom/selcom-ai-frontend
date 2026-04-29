@@ -73,6 +73,8 @@ class RideLocationsTimeline extends StatelessWidget {
   final String endAddress;
   final List<RideStopEntity>? stops;
   final bool showStopsAsSummary;
+  final bool showAddStopBeforeDestination;
+  final VoidCallback? onAddStopTap;
 
   const RideLocationsTimeline({
     super.key,
@@ -82,6 +84,8 @@ class RideLocationsTimeline extends StatelessWidget {
     required this.endAddress,
     this.stops,
     this.showStopsAsSummary = false,
+    this.showAddStopBeforeDestination = false,
+    this.onAddStopTap,
   });
 
   @override
@@ -106,6 +110,8 @@ class RideLocationsTimeline extends StatelessWidget {
             isMulti ? 'A' : 'P',
             color: AppColors.mapPickupMarkerBlue,
           ),
+          bottomSpacingWhenLine:
+              showAddStopBeforeDestination && filteredStops.isEmpty ? 0 : null,
           showBottomLine: true,
         ),
 
@@ -116,6 +122,7 @@ class RideLocationsTimeline extends StatelessWidget {
                 '${filteredStops.length} ${AppStrings.stop.tr}${filteredStops.length > 1 ? 's' : ''}',
             address: null,
             icon: _buildStopCountIcon(filteredStops.length),
+            bottomSpacingWhenLine: showAddStopBeforeDestination ? 0 : null,
             showBottomLine: true,
           )
         else
@@ -127,8 +134,14 @@ class RideLocationsTimeline extends StatelessWidget {
                 letters[i + 1],
                 color: AppColors.mapStopMarkerRed,
               ),
+              bottomSpacingWhenLine:
+                  showAddStopBeforeDestination && i == filteredStops.length - 1
+                  ? 0
+                  : null,
               showBottomLine: true,
             ),
+
+        if (showAddStopBeforeDestination) _buildAddStopDividerRow(),
 
         // End Location Row
         _buildLocationRow(
@@ -185,6 +198,8 @@ class RideLocationsTimeline extends StatelessWidget {
     required String title,
     String? address,
     required Widget icon,
+    Widget? trailing,
+    double? bottomSpacingWhenLine,
     required bool showBottomLine,
   }) {
     return IntrinsicHeight(
@@ -211,7 +226,9 @@ class RideLocationsTimeline extends StatelessWidget {
           SizedBox(width: 8.w),
           Expanded(
             child: Padding(
-              padding: EdgeInsets.only(bottom: showBottomLine ? 16.h : 0),
+              padding: EdgeInsets.only(
+                bottom: showBottomLine ? (bottomSpacingWhenLine ?? 16.h) : 0,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -232,12 +249,98 @@ class RideLocationsTimeline extends StatelessWidget {
                         fontFamily: AppTextStyles.metropolisFont,
                         color: AppColors.textBody,
                         fontSize: 12.sp,
-                        fontWeight: FontWeight.w400
+                        fontWeight: FontWeight.w400,
                       ),
                     ),
                   ],
                 ],
               ),
+            ),
+          ),
+          if (trailing != null) ...[
+            SizedBox(width: 8.w),
+            Padding(
+              padding: EdgeInsets.only(
+                bottom: showBottomLine ? (bottomSpacingWhenLine ?? 8.h) : 0,
+              ),
+              child: Align(alignment: Alignment.center, child: trailing),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAddStopPill() {
+    return GestureDetector(
+      onTap: onAddStopTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(999.r),
+          border: Border.all(color: AppColors.borderWalletCard),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 22.w,
+              height: 22.w,
+              decoration: const BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Icon(Icons.add, color: AppColors.white, size: 16.sp),
+            ),
+            SizedBox(width: 6.w),
+            Text(
+              AppStrings.add.tr,
+              style: AppTextStyles.homeSubtitle.copyWith(
+                color: AppColors.textMutedStrong,
+                fontSize: 18.sp / 1.2,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAddStopDividerRow() {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            width: 22.w,
+            child: Align(
+              alignment: Alignment.center,
+              child: Container(
+                width: 1.w,
+                height: double.infinity,
+                margin: EdgeInsets.zero,
+                child: CustomPaint(
+                  painter: DashedLinePainter(
+                    color: AppColors.black.withOpacity(0.5),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    height: 1.h,
+                    color: AppColors.borderWalletCard,
+                  ),
+                ),
+                _buildAddStopPill(),
+              ],
             ),
           ),
         ],
@@ -302,6 +405,7 @@ class FareBreakdownRow extends StatelessWidget {
               fontWeight: isTotal ? FontWeight.w500 : FontWeight.w400,
               color: AppColors.textBody,
               fontSize: 12.sp,
+              height: 20 / 12,
             ),
           ),
         ),
@@ -334,9 +438,7 @@ class NeedHelpRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        SvgPicture.asset(
-          AppAssets.icHeadPhone,
-        ),
+        SvgPicture.asset(AppAssets.icHeadPhone),
         // Icon(, color: AppColors.textBody, size: 24.w),
         SizedBox(width: 8.w),
         GestureDetector(

@@ -649,9 +649,9 @@ class DriverAcceptedScreen extends StatelessWidget {
             c.rideProgressTitle,
             textAlign: TextAlign.center,
             style: AppTextStyles.homeTitle.copyWith(
-              fontSize: 38.sp / 2,
               color: AppColors.textHeading,
               fontWeight: FontWeight.w700,
+              height: 34 / 20,
             ),
           ),
           SizedBox(height: 14.h),
@@ -1001,27 +1001,11 @@ class DriverAcceptedScreen extends StatelessWidget {
                 endLocation: c.destinationTitle,
                 endAddress: c.destinationAddress,
                 stops: c.ride.value?.stops,
+                showAddStopBeforeDestination:
+                    !c.isNearDestination() &&
+                    c.ride.value?.pendingStopsUpdate == null,
+                onAddStopTap: c.onEditStops,
               ),
-              if (!c.isNearDestination() &&
-                  c.ride.value?.pendingStopsUpdate == null) ...[
-                GestureDetector(
-                  onTap: c.onEditStops,
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Padding(
-                      padding: EdgeInsets.only(top: 8.h),
-                      child: Text(
-                        AppStrings.addStops.tr,
-                        style: AppTextStyles.homeCaption.copyWith(
-                          color: AppColors.primary,
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
             ],
           ),
         ),
@@ -1037,35 +1021,31 @@ class DriverAcceptedScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      AppStrings.totalFare.tr,
-                      style: AppTextStyles.homeTitle.copyWith(
-                        fontSize: 15.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textHeading,
-                      ),
-                    ),
-                    const Spacer(),
-                  ],
+                Text(
+                  AppStrings.totalFare.tr,
+                  style: AppTextStyles.homeTitle.copyWith(
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textHeading,
+                    height: 20 / 15,
+                  ),
                 ),
                 SizedBox(height: 10.h),
                 FareBreakdownRow(
                   title: AppStrings.rideCharge.tr,
                   amount: c.rideChargeLabel,
                 ),
-                SizedBox(height: 8.h),
+                SizedBox(height: 4.h),
                 FareBreakdownRow(
                   title: AppStrings.bookingFeesAndConvenienceCharges.tr,
                   amount: c.bookingFeeLabel,
                 ),
-                SizedBox(height: 8.h),
+                SizedBox(height: 4.h),
                 FareBreakdownRow(
                   title: AppStrings.paymentMode.tr,
                   amount: c.paymentModeLabel,
                 ),
-                SizedBox(height: 8.h),
+                SizedBox(height: 4.h),
                 FareBreakdownRow(
                   title: AppStrings.totalAmount.tr,
                   amount: c.totalAmountLabel,
@@ -1075,6 +1055,7 @@ class DriverAcceptedScreen extends StatelessWidget {
             ),
           ),
         ),
+        SizedBox(height: 12.h),
       ],
     );
   }
