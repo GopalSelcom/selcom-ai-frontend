@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // Brand
-  static const Color primary        = Color(0xFFF3004C);  // Red/Pink — buttons, highlights
+  static const Color primary        = Color(0xFF5CB75E);  // Red/Pink — buttons, highlights
   static const Color primaryLight   = Color(0xFFFDE8ED);  // Light red bg
 
   // Backgrounds
