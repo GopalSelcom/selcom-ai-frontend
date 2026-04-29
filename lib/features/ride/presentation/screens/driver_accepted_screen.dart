@@ -10,6 +10,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
+import '../../../../shared/widgets/app_primary_button.dart';
 import '../controllers/driver_accepted_controller.dart';
 import '../controllers/ride_share_controller.dart';
 import '../widgets/ride_common_widgets.dart';
@@ -163,7 +164,9 @@ class DriverAcceptedScreen extends StatelessWidget {
             children: [
               _iconActionChip(
                 icon: isSharing ? Icons.hourglass_top : Icons.share_outlined,
-                onTap: isSharing ? () {} : () => shareController.shareRide(c.rideId),
+                onTap: isSharing
+                    ? () {}
+                    : () => shareController.shareRide(c.rideId),
                 color: AppColors.textVerified,
               ),
               if (canRevoke) ...[
@@ -684,7 +687,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                 fontSize: 15.sp,
                 color: AppColors.textBody,
                 fontWeight: FontWeight.w500,
-                height: 1.33,
+                height: 20 / 15,
               ),
             ),
           ],
@@ -697,7 +700,7 @@ class DriverAcceptedScreen extends StatelessWidget {
             fontSize: 20.sp,
             color: AppColors.textHeading,
             fontWeight: FontWeight.w600,
-            height: 1.7,
+            height: 34 / 20,
             letterSpacing: -0.4,
           ),
         ),
@@ -712,7 +715,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                   fontSize: 15.sp,
                   color: AppColors.textBody,
-                  height: 1.33,
+                  height: 20 / 15,
                 ),
               ),
               SizedBox(width: 8.w),
@@ -849,7 +852,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                               color: AppColors.textHeading,
                               fontSize: 20.sp,
                               fontWeight: FontWeight.w600,
-                              height: 1.7,
+                              height: 34 / 20,
                             ),
                           ),
                         ),
@@ -866,7 +869,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                             color: AppColors.textDim,
                             fontSize: 15.sp,
                             fontWeight: FontWeight.w500,
-                            height: 1.33,
+                            height: 20 / 15,
                           ),
                         ),
                       ],
@@ -893,7 +896,7 @@ class DriverAcceptedScreen extends StatelessWidget {
             Obx(
               () => _roundAction(
                 icon: Icons.message_rounded,
-                color: AppColors.figmaIconGreen,
+                color: AppColors.primary,
                 onTap: c.onChatTap,
                 badge: c.unreadCount.value > 0
                     ? c.unreadCount.value.toString()
@@ -905,20 +908,11 @@ class DriverAcceptedScreen extends StatelessWidget {
         SizedBox(height: 16.h),
         SizedBox(
           width: double.infinity,
-          child: OutlinedButton(
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.primary,
-              side: const BorderSide(color: AppColors.primary, width: 1.2),
-              padding: EdgeInsets.symmetric(vertical: 16.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16.r),
-              ),
-            ),
+          child: AppPrimaryButton(
+            label: AppStrings.cancelRide.tr,
             onPressed: c.confirmCancelRide,
-            child: Text(
-              AppStrings.cancelRide.tr,
-              style: TextStyle(fontSize: 17.sp, fontWeight: FontWeight.w600),
-            ),
+            outlined: true,
+            height: 56.h,
           ),
         ),
       ],
@@ -1115,9 +1109,7 @@ class DriverAcceptedScreen extends StatelessWidget {
               width: 15.w,
               height: 15.w,
               decoration: BoxDecoration(
-                color: (color == AppColors.primary)
-                    ? AppColors.figmaIconGreen
-                    : AppColors.error,
+                color: AppColors.error,
                 shape: BoxShape.circle,
                 border: Border.all(color: AppColors.white, width: 1.5),
               ),
