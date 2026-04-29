@@ -269,7 +269,7 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildEditModeContent() {
     return Padding(
       key: const ValueKey('edit_mode'),
-      padding: EdgeInsets.symmetric(horizontal: 24.w),
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
