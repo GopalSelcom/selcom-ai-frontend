@@ -60,7 +60,7 @@ class FindingDriverController extends GetxController {
 
   final currentStatusLabel = 'Finding Your Driver'.obs;
   final currentDescriptionLabel =
-      'The driver will pick you up as soon as possible\nafter they confirm your order'
+      'The driver will pick you up as soon as possible after they confirm your order'
           .obs;
   final isRideCancelled = false.obs;
 
