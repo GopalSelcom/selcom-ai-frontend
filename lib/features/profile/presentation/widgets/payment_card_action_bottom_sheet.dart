@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 
@@ -16,6 +17,7 @@ class PaymentCardActionBottomSheet extends StatelessWidget {
   final String? secondaryButtonLabel;
   final VoidCallback? onSecondaryPressed;
   final bool isSecondaryLoading;
+  final String? iconAsset;
 
   const PaymentCardActionBottomSheet({
     super.key,
@@ -29,6 +31,7 @@ class PaymentCardActionBottomSheet extends StatelessWidget {
     this.secondaryButtonLabel,
     this.onSecondaryPressed,
     this.isSecondaryLoading = false,
+    this.iconAsset,
   });
 
   @override
@@ -62,8 +65,8 @@ class PaymentCardActionBottomSheet extends StatelessWidget {
                   title,
                   style: AppTextStyles.sectionTitle.copyWith(
                     color: AppColors.textHeading,
-                    fontSize: 32.sp * 0.6,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 20.h,
+                    fontWeight: FontWeight.w600,
                     height: 1.25,
                   ),
                 ),
@@ -76,7 +79,7 @@ class PaymentCardActionBottomSheet extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 10.h),
+          SizedBox(height: 8.h),
           RichText(
             text: TextSpan(
               children: [
@@ -84,7 +87,7 @@ class PaymentCardActionBottomSheet extends StatelessWidget {
                   text: 'VISA',
                   style: AppTextStyles.sectionTitle.copyWith(
                     color: AppColors.textBrandVisaPrimary,
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w500,
                     fontStyle: FontStyle.italic,
                     fontSize: 16.sp,
                   ),
@@ -100,12 +103,13 @@ class PaymentCardActionBottomSheet extends StatelessWidget {
               ],
             ),
           ),
-          SizedBox(height: 10.h),
+          SizedBox(height: 8.h),
           Text(
             description,
             style: AppTextStyles.body.copyWith(
               color: AppColors.textBody,
               fontSize: 14.sp,
+              fontWeight: FontWeight.w400,
               height: 1.5,
             ),
           ),
@@ -113,7 +117,7 @@ class PaymentCardActionBottomSheet extends StatelessWidget {
           if (secondaryButtonLabel == null) ...[
             AppPrimaryButton(
               label: primaryButtonLabel,
-              trailingIcon: Iconsax.arrow_right_3,
+              iconAsset: AppAssets.icArrowRight,
               isLoading: isPrimaryLoading,
               onPressed: onPrimaryPressed,
             ),
@@ -155,6 +159,7 @@ class PaymentCardActionBottomSheet extends StatelessWidget {
                     label: primaryButtonLabel,
                     isLoading: isPrimaryLoading,
                     onPressed: onPrimaryPressed,
+                    iconAsset: iconAsset,
                   ),
                 ),
               ],

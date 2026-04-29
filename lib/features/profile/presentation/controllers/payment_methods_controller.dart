@@ -274,6 +274,7 @@ class PaymentMethodsController extends GetxController {
           imageAssetPath: AppAssets.imgPaymentAddCardSuccess,
           primaryButtonLabel: 'Okay',
           onPrimaryPressed: Get.back,
+          iconAsset: AppAssets.locationIcArrowRight,
         ),
         isScrollControlled: true,
         backgroundColor: AppColors.transparent,

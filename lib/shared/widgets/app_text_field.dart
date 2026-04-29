@@ -25,6 +25,10 @@ class AppTextField extends StatefulWidget {
   final TextInputAction? textInputAction;
   final ValueChanged<String>? onSubmitted;
   final bool readOnly;
+  final double? fontSize;
+  final FontWeight? fontWeight;
+  final Color? textFieldBackgroundColor;
+  final Color? textColor;
 
   const AppTextField({
     super.key,
@@ -47,6 +51,10 @@ class AppTextField extends StatefulWidget {
     this.textInputAction,
     this.onSubmitted,
     this.readOnly = false,
+    this.fontSize,
+    this.fontWeight,
+    this.textFieldBackgroundColor,
+    this.textColor,
   });
 
   @override
@@ -109,7 +117,11 @@ class _AppTextFieldState extends State<AppTextField> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (widget.label != null) ...[
-          Text(widget.label!, style: AppTextStyles.cardTitle),
+          Text(widget.label!, style: AppTextStyles.cardTitle.copyWith(
+            color: AppColors.textMutedStrong,
+            fontWeight: FontWeight.w500,
+            fontSize: 15.h
+          ),),
           SizedBox(height: 8.h),
         ],
         ValueListenableBuilder<bool>(
@@ -143,7 +155,11 @@ class _AppTextFieldState extends State<AppTextField> {
                 maxLength: widget.maxLength,
                 autofocus: widget.autofocus,
                 inputFormatters: widget.inputFormatters,
-                style: AppTextStyles.body,
+                style: AppTextStyles.body.copyWith(
+                  fontSize: widget.fontSize ?? 14.h,
+                  fontWeight: widget.fontWeight ?? FontWeight.w400,
+                  color: widget.textColor ?? AppColors.progressTrack,
+                ),
                 decoration: InputDecoration(
                   hintText: widget.hintText,
                   hintStyle: AppTextStyles.hint,
@@ -151,7 +167,7 @@ class _AppTextFieldState extends State<AppTextField> {
                   prefixIcon: widget.prefixIcon,
                   suffixIcon: widget.suffixIcon,
                   filled: true,
-                  fillColor: AppColors.white,
+                  fillColor: widget.textFieldBackgroundColor ?? AppColors.white,
                   contentPadding: EdgeInsets.symmetric(
                     horizontal: 16.w,
                     vertical: 18.h,
@@ -195,7 +211,8 @@ class _AppTextFieldState extends State<AppTextField> {
                 return Text(
                   '$length/${widget.maxLength}',
                   style: AppTextStyles.bodySecondary.copyWith(
-                    fontSize: 12.sp,
+                    fontSize: widget.fontSize ?? 12.h,
+                    fontWeight: widget.fontWeight ?? FontWeight.w400,
                     color: length >= widget.maxLength!
                         ? AppColors.textError
                         : AppColors.borderInputMuted,

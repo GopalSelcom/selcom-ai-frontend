@@ -17,7 +17,7 @@ class LanguageEn extends Languages {
     'apply': 'APPLY',
     'apply_promo_code': 'Apply Promo code',
     'are_you_sure_want_to_add_ndelete_this_card':
-        'Are you sure want to add\\nDelete this card?',
+        'Are you sure want to add Delete this card?',
     'are_you_sure_you_want_to_cancel': 'Are you sure you want to cancel?',
     'blink_your_eyes': 'Blink Your Eyes',
     'book_ride': 'Book Ride',
@@ -292,7 +292,7 @@ class LanguageEn extends Languages {
     'you_can_still_able_to_request_money_on_selcom_pesa_using_another_number':
         'You can still able to request money on Selcom Pesa using another number.',
     'your_card_has_been_nadded_successfully':
-        'Your card has been\\nadded successfully.',
+        'Your card has been added successfully.',
     'your_driver_is_already_on_the_way': 'Your driver is already on the way.',
     'your_identity_has_been_successfully_verified_you_can_now_use_selcom_pesa':
         'Your identity has been successfully verified. You can now use Selcom Pesa.',

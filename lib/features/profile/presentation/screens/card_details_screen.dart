@@ -76,7 +76,7 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.pageBackground,
+      backgroundColor: AppColors.white,
       body: Column(
         children: [
           AppProfileHeader(title: AppStrings.cardDetail.tr),
@@ -90,10 +90,10 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                     width: double.infinity,
                     padding: EdgeInsets.symmetric(
                       horizontal: 16.w,
-                      vertical: 18.h,
+                      vertical: 16.h,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.bgCardDetailsSurface,
+                      color: AppColors.surfaceSubtle,
                       borderRadius: BorderRadius.circular(16.r),
                       border: Border.all(color: AppColors.borderWalletCard),
                     ),
@@ -113,14 +113,14 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                           widget.card.fullNumber,
                           style: AppTextStyles.body.copyWith(
                             color: AppColors.textHeading,
-                            fontSize: 17.sp,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  SizedBox(height: 16.h),
+                  SizedBox(height: 8.h),
                   Row(
                     children: [
                       Expanded(
@@ -128,6 +128,9 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                           label: 'Expiry',
                           controller: _expiryController,
                           readOnly: true,
+                          textFieldBackgroundColor: AppColors.surfaceSubtle,
+                          textColor: AppColors.textHeading,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                       SizedBox(width: 12.w),
@@ -148,18 +151,26 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                                 size: 18.w,
                               ),
                             ),
+                            textFieldBackgroundColor: AppColors.surfaceSubtle,
+                            textColor: AppColors.textHeading,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(height: 16.h),
+                  SizedBox(height: 8.h),
                   AppTextField(
                     label: 'Set a Nick name',
                     controller: _nickNameController,
                     readOnly: true,
+                    textFieldBackgroundColor: AppColors.surfaceSubtle,
+                    textColor: AppColors.textHeading,
+                    fontWeight: FontWeight.w600,
                   ),
+
                   SizedBox(height: 24.h),
+
                 ],
               ),
             ),

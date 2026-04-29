@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/svg_picture_asset.dart';
 
 class AppPrimaryButton extends StatelessWidget {
   final String label;
@@ -10,8 +11,8 @@ class AppPrimaryButton extends StatelessWidget {
   final bool isLoading;
   final double? width;
   final double? height;
-  final IconData? icon;
-  final IconData? trailingIcon;
+  final String? iconAsset;
+  final Color? iconColor;
 
   const AppPrimaryButton({
     super.key,
@@ -20,8 +21,8 @@ class AppPrimaryButton extends StatelessWidget {
     this.isLoading = false,
     this.width,
     this.height,
-    this.icon,
-    this.trailingIcon,
+    this.iconAsset,
+    this.iconColor,
   });
 
   @override
@@ -50,21 +51,33 @@ class AppPrimaryButton extends StatelessWidget {
                   strokeWidth: 2,
                 ),
               )
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (icon != null) ...[
-                    Icon(icon, size: 18.w),
-                    SizedBox(width: 8.w),
+            : SizedBox.expand(
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Text(label, style: AppTextStyles.button),
+                    if (iconAsset != null)
+                      Positioned(
+                        right: 0,
+                        child: iconAsset!.endsWith('.svg')
+                            ? SvgPictureAsset(
+                                iconAsset!,
+                                width: 18.w,
+                                height: 18.w,
+                                color: iconColor ?? AppColors.white,
+                              )
+                            : Image.asset(
+                                iconAsset!,
+                                width: 18.w,
+                                height: 18.w,
+                                color: iconColor,
+                              ),
+                      ),
                   ],
-                  Text(label, style: AppTextStyles.button),
-                  if (trailingIcon != null) ...[
-                    SizedBox(width: 8.w),
-                    Icon(trailingIcon, size: 18.w),
-                  ],
-                ],
+                ),
               ),
       ),
     );
   }
 }
+
