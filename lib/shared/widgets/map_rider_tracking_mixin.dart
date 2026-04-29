@@ -92,17 +92,11 @@ mixin MapRiderTrackingMixin on State<AppGoogleMap>, TickerProviderStateMixin<App
       _previousPosition = _currentAnimatedPosition ?? _targetPosition;
       _targetPosition = newPosition;
 
-      // Calculate duration based on 1km/hr speed (~0.27 m/s)
-      // 1km/hr = 0.0000025 degrees per second (approx)
-      const double speedDegreesPerSecond = 0.0000025;
-      final double travelDist = MapMathUtils.calculateSimpleDist(_previousPosition!, _targetPosition!);
-      
-      int durationMs = (travelDist / speedDegreesPerSecond * 1000).toInt();
-      
-      // Clamp duration between 1s and 10s to keep it responsive but smooth
-      _positionController.duration = Duration(
-        milliseconds: durationMs.clamp(1000, 10000),
-      );
+      // Continuous Glide Strategy:
+      // Since updates come every 15 seconds, we set the animation to 17 seconds.
+      // This ensures the bike is always moving and 'chasing' the next target,
+      // creating a seamless, never-stop experience.
+      _positionController.duration = const Duration(seconds: 17);
 
       // Start position animation
       _positionController.forward(from: 0.0);

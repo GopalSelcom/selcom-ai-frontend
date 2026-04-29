@@ -1301,34 +1301,56 @@ class DriverAcceptedController extends GetxController
 
 
   void trimRoutePoints(LatLng currentPos) {
-    if (routePoints.isEmpty) return;
+    if (routePoints.length < 3) return;
     
-    // Stability fix: Only search within the first 15 points to avoid skipping 
-    // ahead to unrelated route segments in case of GPS jumps or complex intersections.
-    final int searchRange = routePoints.length > 15 ? 15 : routePoints.length;
+    int bestSegmentIndex = 0;
+    double minDistanceSq = double.maxFinite;
     
-    int closestIndex = 0;
-    double minDistance = double.maxFinite;
+    // Look at the first 20 segments to find which one the bike is currently on.
+    final int range = routePoints.length > 21 ? 20 : routePoints.length - 1;
     
-    for (int i = 0; i < searchRange; i++) {
-      final distance = _calculateSimpleDist(currentPos, routePoints[i]);
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestIndex = i;
+    for (int i = 0; i < range; i++) {
+      final p1 = routePoints[i];
+      final p2 = routePoints[i+1];
+      
+      // Calculate the squared distance from currentPos to the line segment [p1, p2]
+      final distSq = _distToSegmentSquared(currentPos, p1, p2);
+      if (distSq < minDistanceSq) {
+        minDistanceSq = distSq;
+        bestSegmentIndex = i;
       }
     }
     
-    // Only trim if we found a reasonably close point (to avoid jagged lines on far GPS jumps)
-    // 0.0005 is approx 50 meters
-    if (closestIndex > 0 && minDistance < 0.0005) {
-      routePoints.removeRange(0, closestIndex);
+    // Remove all points that are definitively behind the current segment.
+    if (bestSegmentIndex > 0) {
+      routePoints.removeRange(0, bestSegmentIndex);
     }
     
-    // Always update the first point to the animated position
-    // so the blue line starts exactly at the bike icon.
+    // Snap the start of the polyline to the bike's exact animated position.
     if (routePoints.isNotEmpty) {
       routePoints[0] = currentPos;
     }
+  }
+
+  /// Helper to calculate the squared distance from a point to a line segment.
+  double _distToSegmentSquared(LatLng p, LatLng v, LatLng w) {
+    final double l2 = _distSq(v, w);
+    if (l2 == 0) return _distSq(p, v);
+    
+    double t = ((p.latitude - v.latitude) * (w.latitude - v.latitude) +
+                (p.longitude - v.longitude) * (w.longitude - v.longitude)) / l2;
+    t = t.clamp(0.0, 1.0);
+    
+    return _distSq(p, LatLng(
+      v.latitude + t * (w.latitude - v.latitude),
+      v.longitude + t * (w.longitude - v.longitude),
+    ));
+  }
+
+  double _distSq(LatLng v, LatLng w) {
+    final double dLat = v.latitude - w.latitude;
+    final double dLng = v.longitude - w.longitude;
+    return dLat * dLat + dLng * dLng;
   }
 
   double _calculateSimpleDist(LatLng a, LatLng b) {
