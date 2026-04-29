@@ -51,6 +51,7 @@ class AppColors {
   static const Color textSlateStrong = Color(0xFF0F172A);
   static const Color textSlate = Color(0xFF475569);
   static const Color textSlateSoft = Color(0xFF64748B);
+  static const Color textSectionMuted = Color(0xFF77869E);
 
   // Semantic
   static const Color success        = Color(0xFF1D9E75);  // Green
@@ -107,7 +108,7 @@ class AppColors {
   static const Color figmaTextPrimary = Color(0xFF2A3143);
   static const Color figmaTextSecondary = Color(0xFF586377);
   static const Color figmaIconGreen = Color(0xFF269441);
-  static const Color splashVectorTint = Color(0xFFCC0031);
+  static const Color splashVectorTint = Color(0xFF4AA448);
   static const Color mapPickupMarkerBlue = Color(0xFF4FA3FF);
   static const Color mapDropMarkerGreen = Color(0xFF34C759);
   static const Color mapStopMarkerRed = Color(0xFFE11D48);
@@ -119,6 +120,7 @@ class AppColors {
   static const Color iconSuccess = Color(0xFF16A34A);
   static const Color iconOrange = Color(0xFFEA580C);
   static const Color iconAmber = Color(0xFFB45309);
+  static const Color iconMutedLight = Color(0xFFCACACA);
   static const Color routeBlue = Color(0xFF3073E8);
   static const Color pinRed = Color(0xFFF52D56);
   static const Color figmaInputBlue = Color(0xFF2F6FED);

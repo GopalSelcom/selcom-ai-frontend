@@ -143,7 +143,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
                 () => controller.searchQuery.value.isEmpty
                     ? Icon(Icons.search, color: AppColors.textHint, size: 22.sp)
                     : SvgPicture.asset(
-                        AppAssets.locationIcPin,
+                        AppAssets.locationIcPickupPin,
                         width: 14.w,
                         colorFilter: const ColorFilter.mode(
                           AppColors.primary,
