@@ -13,6 +13,7 @@ class AppPrimaryButton extends StatelessWidget {
   final double? height;
   final String? iconAsset;
   final Color? iconColor;
+  final bool outlined;
 
   const AppPrimaryButton({
     super.key,
@@ -23,6 +24,7 @@ class AppPrimaryButton extends StatelessWidget {
     this.height,
     this.iconAsset,
     this.iconColor,
+    this.outlined = false,
   });
 
   @override
@@ -33,11 +35,16 @@ class AppPrimaryButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.5),
-          foregroundColor: AppColors.white,
+          backgroundColor: outlined ? AppColors.white : AppColors.primary,
+          disabledBackgroundColor: outlined
+              ? AppColors.white
+              : AppColors.primary.withValues(alpha: 0.5),
+          foregroundColor: outlined ? AppColors.primary : AppColors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.button),
+            side: outlined
+                ? const BorderSide(color: AppColors.primary, width: 1.5)
+                : BorderSide.none,
           ),
           elevation: 0,
           padding: EdgeInsets.symmetric(horizontal: 24.w),
@@ -55,7 +62,14 @@ class AppPrimaryButton extends StatelessWidget {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    Text(label, style: AppTextStyles.button),
+                    Text(
+                      label,
+                      style: AppTextStyles.button.copyWith(
+                        color: outlined ? AppColors.primary : AppColors.white,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                     if (iconAsset != null)
                       Positioned(
                         right: 0,
@@ -64,7 +78,11 @@ class AppPrimaryButton extends StatelessWidget {
                                 iconAsset!,
                                 width: 18.w,
                                 height: 18.w,
-                                color: iconColor ?? AppColors.white,
+                                color:
+                                    iconColor ??
+                                    (outlined
+                                        ? AppColors.primary
+                                        : AppColors.white),
                               )
                             : Image.asset(
                                 iconAsset!,
@@ -80,4 +98,3 @@ class AppPrimaryButton extends StatelessWidget {
     );
   }
 }
-
