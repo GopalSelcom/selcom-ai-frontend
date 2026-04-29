@@ -46,9 +46,9 @@ class AppProfileHeader extends StatelessWidget {
             ),
 
           if (title != null) ...[
-            SizedBox(height: 12.h),
+            // SizedBox(height: 12.h),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
               child: Text(
                 title!,
                 style: AppTextStyles.screenTitle.copyWith(
@@ -57,6 +57,7 @@ class AppProfileHeader extends StatelessWidget {
                 ),
               ),
             ),
+            SizedBox(height: 16.h),
           ],
 
           if (child != null) ...[

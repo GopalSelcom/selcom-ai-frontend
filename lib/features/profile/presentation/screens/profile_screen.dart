@@ -44,7 +44,7 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.pageBackground,
+      backgroundColor: AppColors.white,
       body: Stack(
         children: [
           // 1. Underlying Layout (Static spacing header + List)
@@ -75,13 +75,14 @@ class ProfileScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(height: 32.h),
+                      SizedBox(height: 16.h),
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.w),
                         child: Text(
                           AppStrings.appSettings.tr,
                           style: AppTextStyles.sectionTitle.copyWith(
                             color: AppColors.textBody,
+                            fontWeight: FontWeight.w500,
                             fontSize: 15.sp,
                           ),
                         ),
@@ -352,7 +353,7 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildSettingsList(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: AppColors.pageBackground,
         border: Border.all(color: AppColors.divider),
         borderRadius: BorderRadius.circular(16.r),
       ),

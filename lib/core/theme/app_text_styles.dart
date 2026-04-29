@@ -20,7 +20,7 @@ class AppTextStyles {
     fontSize: 18.sp,
     fontWeight: FontWeight.w600,
     color: AppColors.textHeading,
-    fontFamily: fontFamily,
+    fontFamily: metropolisFont,
   );
 
   // Card titles / list items
