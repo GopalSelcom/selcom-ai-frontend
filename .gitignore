@@ -49,3 +49,6 @@ app.*.map.json
 
 # AI Agent Context
 .agent/
+
+# FVM Version Cache
+.fvm/

@@ -26,7 +26,7 @@ class AppProfileHeader extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.only(
         top: MediaQuery.of(context).padding.top + 16.h,
-        bottom: bottomPadding ?? 32.h,
+        bottom: bottomPadding ?? 16.h,
       ),
       decoration: BoxDecoration(
         color: AppColors.primary,
@@ -41,7 +41,7 @@ class AppProfileHeader extends StatelessWidget {
         children: [
           if (canGoBack)
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              padding: EdgeInsets.symmetric(horizontal: 8.w),
               child: AppBackButton(onPressed: onBack),
             ),
 
@@ -60,7 +60,7 @@ class AppProfileHeader extends StatelessWidget {
           ],
 
           if (child != null) ...[
-            if (title == null) SizedBox(height: 24.h),
+            // if (title == null) SizedBox(height: 12.h),
             child!,
           ],
         ],

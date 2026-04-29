@@ -12,7 +12,7 @@ class AppTextStyles {
     fontSize: 24.sp,
     fontWeight: FontWeight.w700,
     color: AppColors.textHeading,
-    fontFamily: fontFamily,
+    fontFamily: metropolisFont,
   );
 
   // Section titles / modal headers
@@ -35,8 +35,8 @@ class AppTextStyles {
   static TextStyle body = TextStyle(
     fontSize: 14.sp,
     fontWeight: FontWeight.w400,
-    color: AppColors.textHeading,
-    fontFamily: fontFamily,
+    color: AppColors.progressTrack,
+    fontFamily: metropolisFont,
   );
 
   // Secondary body

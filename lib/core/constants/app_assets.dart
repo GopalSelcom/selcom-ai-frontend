@@ -37,9 +37,11 @@ class AppAssets {
   static const String imgSuccessTick = '$_imagePath/img_success_tick.png';
 
   // Profile
-  static const String walletPattern = '$_imagePath/wallet_pattern.png';
+  // static const String walletPattern = '$_imagePath/wallet_pattern.png';
   static const String icFaceScan = '$_imagePath/ic_face_scan.svg';
   static const String icAccountVerified = '$_imagePath/ic_account_verified.svg';
+  static const String icWallet = '$_imagePath/ic_wallet.svg';
+  static const String icCopy = '$_imagePath/ic_copy.svg';
 
   // ── Figma / location flow (`assets/images/figma/location/`)
   /// Prefer existing `ic_*` SVGs. Only reference `mcp_scr07/` when no equivalent exists in-repo.

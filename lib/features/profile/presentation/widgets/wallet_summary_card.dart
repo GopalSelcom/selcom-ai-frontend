@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:selcom_rides_frontend/core/constants/app_assets.dart';
 import 'package:selcom_rides_frontend/core/theme/app_colors.dart';
 import 'package:selcom_rides_frontend/core/theme/app_text_styles.dart';
@@ -22,7 +23,7 @@ class WalletSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
       decoration: BoxDecoration(
         color: AppColors.surfaceSubtle,
         border: Border.all(
@@ -37,13 +38,21 @@ class WalletSummaryCard extends StatelessWidget {
           // Left Side: Icon + Texts
           Row(
             children: [
-              Image.asset(
-                AppAssets.walletPattern,
+              Container(
                 width: 51.w,
                 height: 51.h,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) =>
-                    SizedBox(width: 51.w, height: 51.h),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                padding: EdgeInsets.all(12.w),
+                child: SvgPicture.asset(
+                  AppAssets.icWallet,
+                  colorFilter: const ColorFilter.mode(
+                    AppColors.primary,
+                    BlendMode.srcIn,
+                  ),
+                ),
               ),
               SizedBox(width: 12.w),
               Column(
@@ -73,11 +82,16 @@ class WalletSummaryCard extends StatelessWidget {
                         onTap: () {
                           Clipboard.setData(ClipboardData(text: walletNumber));
                         },
-                        child: Icon(
+
+                        child: SvgPicture.asset(
+                          AppAssets.icCopy,
+                        ),
+
+                        /*child: Icon(
                           Iconsax.copy,
                           size: 14.w,
                           color: AppColors.textHeading.withValues(alpha: 0.5),
-                        ),
+                        ),*/
                       ),
                     ],
                   ),
