@@ -13,6 +13,7 @@ import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/re
 import 'package:selcom_rides_frontend/core/data/models/responses/payment_status_response/payment_status_response.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:selcom_rides_frontend/features/ride/data/models/stop_update_models.dart';
+import 'package:selcom_rides_frontend/features/ride/data/services/ride_chat_call_signaling_service.dart';
 import 'package:selcom_rides_frontend/core/data/models/requests/validate_ride_payment_request.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
@@ -33,6 +34,13 @@ import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/map_marker_utils.dart';
+import '../../../../shared/agora_voice/domain/agora_call_invite_event.dart';
+import '../../../../shared/agora_voice/domain/agora_call_signaling_service.dart';
+import '../../../../shared/agora_voice/config/agora_voice_config.dart';
+import '../../../../shared/agora_voice/domain/agora_voice_call_session.dart';
+import '../../../../shared/agora_voice/presentation/agora_voice_call_controller.dart';
+import '../../../../shared/agora_voice/presentation/agora_voice_call_screen.dart';
+import '../../../../shared/agora_voice/service/agora_voice_engine_service.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
@@ -123,6 +131,10 @@ class DriverAcceptedController extends GetxController
   bool _isHandlingAppResume = false;
 
   final RxDouble sheetSize = 0.3.obs;
+  AgoraVoiceCallController? _inAppCallController;
+  AgoraCallSignalingService? _callSignalingService;
+  StreamSubscription<AgoraCallInviteEvent>? _callSignalSub;
+  final String _localCallClientId = const Uuid().v4();
 
   // Mid-Ride Stops State
   final isUpdatingStops = false.obs;
@@ -192,6 +204,7 @@ class DriverAcceptedController extends GetxController
     await _fetchRideDetails();
     _handleStopUpdateRecovery();
     await _initRideRoomSocket();
+    await _initCallSignaling();
   }
 
   void _handleStopUpdateRecovery() {
@@ -283,7 +296,25 @@ class DriverAcceptedController extends GetxController
     _driverLocSub?.cancel();
     _trackingSub?.cancel();
     _chatSub?.cancel();
+    _callSignalSub?.cancel();
+    _callSignalingService?.dispose();
+    final inAppCallController = _inAppCallController;
+    if (inAppCallController != null) {
+      unawaited(inAppCallController.disposeCall());
+    }
     super.onClose();
+  }
+
+  Future<void> _initCallSignaling() async {
+    if (rideId.isEmpty) return;
+    final signaling = RideChatCallSignalingService(
+      rideId: rideId,
+      socketService: _socketService,
+    );
+    await signaling.start();
+    _callSignalingService = signaling;
+    _callSignalSub?.cancel();
+    _callSignalSub = signaling.events.listen(_handleCallInviteEvent);
   }
 
   @override
@@ -749,15 +780,15 @@ class DriverAcceptedController extends GetxController
 
   void _syncBottomSheetVehicleImage(String? vehicleTypeHint) {
     final previousAsset = bottomSheetVehicleImageAsset.value;
-    bottomSheetVehicleImageAsset.value =
-        VehicleImageUtils.imageAssetForVehicleType(
-          vehicleTypeHint,
-          // Keep previously resolved vehicle image when an event payload
-          // doesn't include enough vehicle metadata (common during stop transitions).
-          fallbackAsset: previousAsset.isNotEmpty
-              ? previousAsset
-              : AppAssets.imgCab,
-        );
+    bottomSheetVehicleImageAsset
+        .value = VehicleImageUtils.imageAssetForVehicleType(
+      vehicleTypeHint,
+      // Keep previously resolved vehicle image when an event payload
+      // doesn't include enough vehicle metadata (common during stop transitions).
+      fallbackAsset: previousAsset.isNotEmpty
+          ? previousAsset
+          : AppAssets.imgCab,
+    );
   }
 
   void onMapCreated(GoogleMapController c) {
@@ -1050,7 +1081,9 @@ class DriverAcceptedController extends GetxController
 
   void _openCompletedRideDetailsScreen() {
     if (_openedCompletedRideDetails) return;
-    final normalizedCurrentStatus = currentRideStatus.value.trim().toLowerCase();
+    final normalizedCurrentStatus = currentRideStatus.value
+        .trim()
+        .toLowerCase();
     if (normalizedCurrentStatus != 'completed' &&
         normalizedCurrentStatus != 'ride_completed') {
       return;
@@ -1079,7 +1112,8 @@ class DriverAcceptedController extends GetxController
               (m) => '${m.group(1)}_${m.group(2)}',
             )
             .toLowerCase();
-        if (refreshedStatus == 'completed' || refreshedStatus == 'ride_completed') {
+        if (refreshedStatus == 'completed' ||
+            refreshedStatus == 'ride_completed') {
           _openCompletedRideDetailsScreen();
         }
       });
@@ -1404,10 +1438,7 @@ class DriverAcceptedController extends GetxController
                     if (Get.isBottomSheetOpen ?? false) {
                       Get.back();
                     }
-                    AppDialogs.showInfoDialog(
-                      title: 'Coming soon',
-                      message: 'In app calling will available soon',
-                    );
+                    _startOutgoingFullScreenCall();
                   },
                 ),
                 SizedBox(height: 10.h),
@@ -1490,6 +1521,141 @@ class DriverAcceptedController extends GetxController
         message: AppStrings.errorOpeningPhoneDialer.tr,
       );
     }
+  }
+
+  Future<void> _startOutgoingFullScreenCall() async {
+    final config = AgoraVoiceConfig.fromAppConfig();
+    if (!config.isValid) {
+      AppDialogs.showErrorDialog(
+        title: 'Voice Call',
+        message:
+            'AGORA_APP_ID is missing. Set it via --dart-define before testing.',
+      );
+      return;
+    }
+
+    final channelName = _voiceChannelName();
+    await _callSignalingService?.sendEvent(
+      AgoraCallInviteEvent(
+        type: AgoraCallInviteEventType.invite,
+        channelName: channelName,
+        rideId: rideId,
+        callerName: driverName.value.isEmpty ? 'Rider' : driverName.value,
+        callerId: _localCallClientId,
+        timestampMs: DateTime.now().millisecondsSinceEpoch,
+      ),
+    );
+
+    final controller = AgoraVoiceCallController(
+      engineService: AgoraVoiceEngineService(
+        appId: config.appId,
+        tokenProvider: config.createTokenProvider(),
+      ),
+      session: AgoraVoiceCallSession(channelName: channelName, uid: 0),
+    );
+    _inAppCallController = controller;
+
+    if (Get.isBottomSheetOpen ?? false) {
+      Get.back();
+    }
+    await Get.to(
+      () => AgoraVoiceCallScreen(
+        controller: controller,
+        displayName: 'Ride Call',
+        isIncoming: false,
+        onAccept: controller.startCall,
+        onReject: () async {
+          await _callSignalingService?.sendEvent(
+            AgoraCallInviteEvent(
+              type: AgoraCallInviteEventType.end,
+              channelName: channelName,
+              rideId: rideId,
+              callerName: 'Rider',
+              callerId: _localCallClientId,
+              timestampMs: DateTime.now().millisecondsSinceEpoch,
+            ),
+          );
+          await controller.endCall();
+          if (Get.isOverlaysOpen) Get.back();
+        },
+      ),
+      fullscreenDialog: true,
+    );
+  }
+
+  Future<void> _handleCallInviteEvent(AgoraCallInviteEvent event) async {
+    if (event.callerId == _localCallClientId) return;
+    if (event.rideId != rideId) return;
+
+    switch (event.type) {
+      case AgoraCallInviteEventType.invite:
+        await _showIncomingCallScreen(event);
+        break;
+      case AgoraCallInviteEventType.accept:
+        await _inAppCallController?.startCall();
+        break;
+      case AgoraCallInviteEventType.reject:
+      case AgoraCallInviteEventType.end:
+        await _inAppCallController?.endCall();
+        break;
+    }
+  }
+
+  Future<void> _showIncomingCallScreen(AgoraCallInviteEvent event) async {
+    final config = AgoraVoiceConfig.fromAppConfig();
+    if (!config.isValid) return;
+    final controller = AgoraVoiceCallController(
+      engineService: AgoraVoiceEngineService(
+        appId: config.appId,
+        tokenProvider: config.createTokenProvider(),
+      ),
+      session: AgoraVoiceCallSession(channelName: event.channelName, uid: 0),
+    );
+    _inAppCallController = controller;
+
+    await Get.to(
+      () => AgoraVoiceCallScreen(
+        controller: controller,
+        displayName: event.callerName,
+        isIncoming: true,
+        onAccept: () async {
+          await _callSignalingService?.sendEvent(
+            AgoraCallInviteEvent(
+              type: AgoraCallInviteEventType.accept,
+              channelName: event.channelName,
+              rideId: event.rideId,
+              callerName: 'Rider',
+              callerId: _localCallClientId,
+              timestampMs: DateTime.now().millisecondsSinceEpoch,
+            ),
+          );
+          await controller.startCall();
+        },
+        onReject: () async {
+          await _callSignalingService?.sendEvent(
+            AgoraCallInviteEvent(
+              type: AgoraCallInviteEventType.reject,
+              channelName: event.channelName,
+              rideId: event.rideId,
+              callerName: 'Rider',
+              callerId: _localCallClientId,
+              timestampMs: DateTime.now().millisecondsSinceEpoch,
+            ),
+          );
+          await controller.endCall();
+          if (Get.isOverlaysOpen) Get.back();
+        },
+      ),
+      fullscreenDialog: true,
+    );
+  }
+
+  String _voiceChannelName() {
+    final sanitized = rideId.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
+    if (sanitized.isEmpty) {
+      return 'ride_test_voice';
+    }
+    return 'ride_$sanitized';
   }
 
   void onChatTap() {
@@ -1792,7 +1958,7 @@ class DriverAcceptedController extends GetxController
       );
       return;
     }
-    stopUpdateIdempotencyKey.value = Uuid().v4();
+    stopUpdateIdempotencyKey.value = const Uuid().v4();
     Get.toNamed(AppRoutes.stopEditor, arguments: {'ride': ride.value});
   }
 
@@ -1888,8 +2054,7 @@ class DriverAcceptedController extends GetxController
           (stop.lat - destinationLat).abs() < 0.000001 &&
           (stop.lng - destinationLng).abs() < 0.000001;
       final sameAsDestinationByAddress =
-          stop.address.trim().toLowerCase() ==
-          destinationAddr.toLowerCase();
+          stop.address.trim().toLowerCase() == destinationAddr.toLowerCase();
       if (sameAsDestinationByCoord || sameAsDestinationByAddress) {
         continue;
       }
