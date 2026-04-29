@@ -249,7 +249,9 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
               left: offset.dx - 40.w,
               top: offset.dy - 70.h,
               child: _locationEditBubble(
-                label: controller.compactAddress(controller.pickupEntity.address),
+                label: controller.compactAddress(
+                  controller.pickupEntity.address,
+                ),
                 onEditTap: controller.editPickupFromMap,
               ),
             );
@@ -372,10 +374,10 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                 child: Text(
                   AppStrings.chooseRide.tr,
                   style: AppTextStyles.homeTitle.copyWith(
-                    fontSize: 20.sp,
                     fontWeight: FontWeight.w600,
                     color: AppColors.black,
                     letterSpacing: -0.4,
+                    height: 34 / 20,
                   ),
                 ),
               ),
@@ -438,7 +440,9 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
         '${drop.hour.toString().padLeft(2, '0')}:${drop.minute.toString().padLeft(2, '0')}';
 
     return Material(
-      color: selected ? AppColors.primaryLight : AppColors.surfaceSubtle,
+      color: selected
+          ? AppColors.primary.withValues(alpha: 0.12)
+          : AppColors.surfaceSubtle,
       borderRadius: BorderRadius.circular(16.r),
       child: InkWell(
         borderRadius: BorderRadius.circular(16.r),
@@ -469,7 +473,6 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                                 AppStrings.fallbackRideName.tr,
                             style: AppTextStyles.homeSubtitle.copyWith(
                               fontSize: 16.sp,
-                              fontWeight: FontWeight.w500,
                               color: AppColors.textHeading,
                               letterSpacing: -0.4,
                             ),
@@ -487,16 +490,15 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                         SizedBox(width: 4.w),
                         SvgPictureAsset(
                           AppAssets.icPaymentPerson,
-                          width: 14.w,
-                          height: 14.w,
+                          width: 12.w,
+                          height: 12.w,
                           color: AppColors.textBody,
                         ),
                         SizedBox(width: 4.w),
                         Text(
                           '${item.maxPassengers ?? 1}',
                           style: AppTextStyles.homeCaption.copyWith(
-                            color: AppColors.textBody,
-                            fontWeight: FontWeight.w500,
+                            height: 20 / 12,
                           ),
                         ),
                       ],
@@ -507,8 +509,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                         'time': dropLabel,
                       }),
                       style: AppTextStyles.homeCaption.copyWith(
-                        color: AppColors.textBody,
-                        fontWeight: FontWeight.w500,
+                        height: 20 / 12,
                       ),
                     ),
                     if ((item.waypointCharge ?? 0) > 0 ||
@@ -531,7 +532,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                 style: TextStyle(
                   fontFamily: AppTextStyles.metropolisFont,
                   fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                   color: AppColors.textHeading,
                   letterSpacing: -0.4,
                 ),

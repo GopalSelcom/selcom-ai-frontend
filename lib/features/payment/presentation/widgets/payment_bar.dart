@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../controllers/payment_method_controller.dart';
 import './payment_method_bottom_sheet.dart';
@@ -31,10 +32,7 @@ class PaymentBar extends StatelessWidget {
       return Container(
         width: double.infinity,
         padding: EdgeInsets.fromLTRB(25.w, 18.h, 25.w, 18.h),
-        decoration: BoxDecoration(
-          color: AppColors.primary,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-        ),
+        decoration: const BoxDecoration(color: AppColors.primary),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -52,26 +50,25 @@ class PaymentBar extends StatelessWidget {
                         children: [
                           Text(
                             AppStrings.payUsing.tr,
-                            style: TextStyle(
-                              color: AppColors.white.withValues(alpha: 0.9),
-                              fontSize: 15.sp,
-                              fontWeight: FontWeight.w500,
+                            style: AppTextStyles.homeCaption.copyWith(
+                              color: AppColors.white,
+                              fontSize: 14.sp,
                             ),
                           ),
                           SizedBox(width: 6.w),
                           SvgPictureAsset(
                             AppAssets.icPaymentArrowUp,
                             color: AppColors.white,
-                            width: 12.w,
+                            width: 14.w,
                           ),
                         ],
                       ),
                       SizedBox(height: 4.h),
                       Text(
                         pay?.label ?? AppStrings.selectPayment.tr,
-                        style: TextStyle(
+                        style: AppTextStyles.homeCaption.copyWith(
                           color: AppColors.white,
-                          fontSize: 18.sp,
+                          fontSize: 16.sp,
                           fontWeight: FontWeight.w600,
                         ),
                         maxLines: 1,
@@ -82,10 +79,9 @@ class PaymentBar extends StatelessWidget {
                           AppStrings
                               .cardEndingInPlaceholder
                               .tr, // Mock descriptive text from Figma
-                          style: TextStyle(
-                            color: AppColors.white.withValues(alpha: 0.85),
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w400,
+                          style: AppTextStyles.homeCaption.copyWith(
+                            color: AppColors.white,
+                            fontSize: 11.sp,
                           ),
                         ),
                     ],
@@ -96,14 +92,14 @@ class PaymentBar extends StatelessWidget {
             SizedBox(width: 12.w),
             Material(
               color: AppColors.white,
-              borderRadius: BorderRadius.circular(25.r),
+              borderRadius: BorderRadius.circular(24.r),
               child: InkWell(
-                borderRadius: BorderRadius.circular(25.r),
+                borderRadius: BorderRadius.circular(24.r),
                 onTap: loading ? null : onActionButtonPressed,
                 child: Container(
                   padding: EdgeInsets.symmetric(
                     horizontal: 24.w,
-                    vertical: 14.h,
+                    vertical: 22.h,
                   ),
                   child: loading
                       ? SizedBox(
@@ -116,9 +112,10 @@ class PaymentBar extends StatelessWidget {
                         )
                       : Text(
                           buttonLabel,
-                          style: TextStyle(
+                          style: AppTextStyles.button.copyWith(
                             color: AppColors.primary,
                             fontSize: 15.sp,
+                            fontFamily: AppTextStyles.metropolisFont,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
