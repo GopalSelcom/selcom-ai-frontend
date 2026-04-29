@@ -101,9 +101,10 @@ class DriverAcceptedController extends GetxController
   final stopIcons = <BitmapDescriptor>[].obs;
   final Rxn<Offset> assignedDriverEtaScreenPx = Rxn<Offset>();
   final assignedDriverHeading = 0.0.obs;
-  AnimationController? _moveAnimController;
+  final Rxn<LatLng> animatedRiderLocation = Rxn<LatLng>();
 
   VoidCallback? onRecenterPressed;
+  bool _firstRouteLoaded = false;
 
   GoogleMapController? mapController;
   bool _navigatedAway = false;
@@ -143,16 +144,14 @@ class DriverAcceptedController extends GetxController
   void onInit() {
     super.onInit();
     WidgetsBinding.instance.addObserver(this);
-    _moveAnimController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 1),
-    );
     _parseArgs();
     _bootstrap();
-    ever(assignedDriverLocation, (_) => scheduleAssignedEtaOverlayRefresh());
+    ever(animatedRiderLocation, (_) => scheduleAssignedEtaOverlayRefresh());
     ever(routePoints, (List<LatLng> points) {
-      if (points.length > 2) {
+      // Fit bounds only when we first get a valid route, not on every update.
+      if (points.length > 2 && _firstRouteLoaded == false) {
         recenterMap();
+        _firstRouteLoaded = true;
       }
     });
     ever(
@@ -603,18 +602,15 @@ class DriverAcceptedController extends GetxController
       final head = payload.heading;
       if (lat == null || lng == null) return;
 
-      final targetPos = LatLng(lat, lng);
-
-      double targetHeading = assignedDriverHeading.value;
+      assignedDriverLocation.value = LatLng(lat, lng);
       if (head != null) {
         if (head is num) {
-          targetHeading = head.toDouble();
+          assignedDriverHeading.value = head.toDouble();
         } else if (head is String) {
-          targetHeading = double.tryParse(head) ?? targetHeading;
+          assignedDriverHeading.value =
+              double.tryParse(head) ?? assignedDriverHeading.value;
         }
       }
-
-      _animateDriverMovement(targetPos, targetHeading);
     });
 
     _trackingSub = _socketService.trackingUpdateStatusStream.listen((
@@ -772,7 +768,7 @@ class DriverAcceptedController extends GetxController
 
   Future<void> refreshAssignedDriverEtaOverlay() async {
     final ctrl = mapController;
-    final pos = assignedDriverLocation.value;
+    final pos = animatedRiderLocation.value ?? assignedDriverLocation.value;
     if (ctrl == null || pos == null) {
       assignedDriverEtaScreenPx.value = null;
       return;
@@ -782,8 +778,11 @@ class DriverAcceptedController extends GetxController
   }
 
   void recenterMap() {
-    onRecenterPressed?.call();
-    _fitRouteBounds(force: true);
+    if (onRecenterPressed != null) {
+      onRecenterPressed!();
+    } else {
+      _fitRouteBounds(force: true);
+    }
   }
 
   Future<void> _fitRouteBounds({bool force = false}) async {
@@ -850,15 +849,34 @@ class DriverAcceptedController extends GetxController
       maxLng = maxLng > p.longitude ? maxLng : p.longitude;
     }
 
-    await ctrl.animateCamera(
-      CameraUpdate.newLatLngBounds(
-        LatLngBounds(
-          southwest: LatLng(minLat - 0.001, minLng - 0.001),
-          northeast: LatLng(maxLat + 0.001, maxLng + 0.001),
+    try {
+      // Ensure the bounds have at least some area to prevent rendering glitches
+      double latDelta = (maxLat - minLat).abs();
+      double lngDelta = (maxLng - minLng).abs();
+      if (latDelta < 0.001) {
+        minLat -= 0.001;
+        maxLat += 0.001;
+      }
+      if (lngDelta < 0.001) {
+        minLng -= 0.001;
+        maxLng += 0.001;
+      }
+
+      await ctrl.animateCamera(
+        CameraUpdate.newLatLngBounds(
+          LatLngBounds(
+            southwest: LatLng(minLat, minLng),
+            northeast: LatLng(maxLat, maxLng),
+          ),
+          72, // Slightly more padding for comfort
         ),
-        64,
-      ),
-    );
+      );
+    } catch (e) {
+      // Fallback if bounds animation fails
+      if (points.isNotEmpty) {
+        ctrl.animateCamera(CameraUpdate.newLatLngZoom(points.first, 15));
+      }
+    }
   }
 
   void _applyStatusPayload(EventRiderStatusUpdateResponse payload) {
@@ -1101,12 +1119,14 @@ class DriverAcceptedController extends GetxController
         openedFromCompletionFlow: true,
       ),
       binding: BindingsBuilder(
-        () => Get.put(
-          RideDetailsController(
-            ride: completedRide,
-            openedFromCompletionFlow: true,
-          ),
-        ),
+        () {
+          Get.put(
+            RideDetailsController(
+              ride: completedRide,
+              openedFromCompletionFlow: true,
+            ),
+          );
+        },
       ),
     );
   }
@@ -1239,63 +1259,30 @@ class DriverAcceptedController extends GetxController
       routeTarget.value = target;
       if (coords != null && coords.isNotEmpty) {
         final newPoints = _toLatLngPolyline(coords);
-        if (newPoints.length > 5) {
+        if (newPoints.isNotEmpty) {
           routePoints.assignAll(newPoints);
+          _fitRouteBounds();
         }
       }
     } else if (target == 'drop_off') {
       routeTarget.value = target;
       if (coords != null && coords.isNotEmpty) {
         final newPoints = _toLatLngPolyline(coords);
-        if (newPoints.length > 5) {
+        if (newPoints.isNotEmpty) {
           routePoints.assignAll(newPoints);
+          _fitRouteBounds();
         }
       }
     }
-    // _fitRouteBounds() removed from here to prevent frequent zoom-outs.
   }
 
-  void _animateDriverMovement(LatLng targetPos, double targetHeading) {
-    if (assignedDriverLocation.value == null) {
-      assignedDriverLocation.value = targetPos;
-      assignedDriverHeading.value = targetHeading;
-      return;
-    }
 
-    final startPos = assignedDriverLocation.value!;
-    final startHeading = assignedDriverHeading.value;
-
-    _moveAnimController?.stop();
-    _moveAnimController?.reset();
-
-    final Animation<double> curve = CurvedAnimation(
-      parent: _moveAnimController!,
-      curve: Curves.linear,
-    );
-
-    _moveAnimController?.addListener(() {
-      final t = curve.value;
-      final currentPos = _interpolateLatLng(startPos, targetPos, t);
-      assignedDriverLocation.value = currentPos;
-      assignedDriverHeading.value = _interpolateAngle(
-        startHeading,
-        targetHeading,
-        t,
-      );
-
-      // Perform real-time trimming for visual smoothness
-      _trimRoutePoints(currentPos);
-    });
-
-    _moveAnimController?.forward();
-  }
-
-  void _trimRoutePoints(LatLng currentPos) {
+  void trimRoutePoints(LatLng currentPos) {
     if (routePoints.length < 3) return;
 
     int closestIndex = -1;
-    // ~50m threshold for trimming
-    const double trimThreshold = 0.0005;
+    // 0.0001 threshold for trimming (~10m)
+    const double trimThreshold = 0.0001;
 
     // Check upcoming segments for progress
     int checkCount = routePoints.length > 8 ? 8 : routePoints.length;
@@ -1307,9 +1294,12 @@ class DriverAcceptedController extends GetxController
       }
     }
 
-    if (closestIndex > 0) {
-      routePoints.removeRange(0, closestIndex);
-      // Ensure the line starts exactly at the driver for a clean look
+    if (routePoints.isNotEmpty) {
+      if (closestIndex > 0) {
+        routePoints.removeRange(0, closestIndex);
+      }
+      // Always update the first point to the animated position
+      // so the blue line starts exactly at the bike icon.
       routePoints[0] = currentPos;
     }
   }
@@ -1318,17 +1308,6 @@ class DriverAcceptedController extends GetxController
     return (a.latitude - b.latitude).abs() + (a.longitude - b.longitude).abs();
   }
 
-  LatLng _interpolateLatLng(LatLng a, LatLng b, double t) {
-    final lat = a.latitude + (b.latitude - a.latitude) * t;
-    final lng = a.longitude + (b.longitude - a.longitude) * t;
-    return LatLng(lat, lng);
-  }
-
-  double _interpolateAngle(double a, double b, double t) {
-    // Basic linear interpolation for heading.
-    // In a production app, you might want to handle the 0/360 wrap-around smoothly.
-    return a + (b - a) * t;
-  }
 
   String _normalizeRouteTarget(String? target) {
     final t = (target ?? '').trim().toLowerCase();

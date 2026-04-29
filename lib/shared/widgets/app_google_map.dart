@@ -6,6 +6,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../core/services/app_map_service.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/map_math_utils.dart';
+import 'map_rider_tracking_mixin.dart';
 
 /// **Canonical embedded map for the app** (`lib/shared/widgets/`).
 ///
@@ -56,6 +58,7 @@ class AppGoogleMap extends StatefulWidget {
     this.onNavigationPressed,
     this.showGpsButton = false,
     this.trackRider = false,
+    this.onRiderPositionUpdate,
   });
 
   /// Optional key on the inner [GoogleMap] (per-screen identity for rebuilds).
@@ -100,21 +103,59 @@ class AppGoogleMap extends StatefulWidget {
   final VoidCallback? onNavigationPressed;
   final bool showGpsButton;
   final bool trackRider;
+  final void Function(LatLng)? onRiderPositionUpdate;
 
   @override
-  State<AppGoogleMap> createState() => _AppGoogleMapState();
+  State<AppGoogleMap> createState() => AppGoogleMapState();
 }
 
-class _AppGoogleMapState extends State<AppGoogleMap> {
+class AppGoogleMapState extends State<AppGoogleMap>
+    with TickerProviderStateMixin<AppGoogleMap>, MapRiderTrackingMixin {
   GoogleMapController? _controller;
   late bool _isTrackingRider;
+  DateTime? _lastCameraUpdateAt;
   bool _isProgrammaticMove = false;
   bool _isUserInteracting = false;
+  LatLng? _initialRiderPos;
+  bool _didAutoTrackFirstMove = false;
 
   @override
   void initState() {
     super.initState();
     _isTrackingRider = widget.trackRider;
+
+    // Link the animated marker position to the camera for smooth following
+    onAnimatedPositionUpdate = (position) {
+      final now = DateTime.now();
+
+      // Auto-focus on the first real movement of the rider
+      if (!_didAutoTrackFirstMove && _initialRiderPos != null) {
+        final dist =
+            MapMathUtils.calculateSimpleDist(position, _initialRiderPos!);
+        // If moved more than ~10 meters, auto-track
+        if (dist > 0.0001) {
+          _didAutoTrackFirstMove = true;
+          // Only auto-track if not already tracking
+          if (!_isTrackingRider) {
+            _retrack();
+          }
+        }
+      }
+
+      if (_isTrackingRider && _controller != null) {
+        // Throttle camera updates to ~10fps to prevent vibration/jitter and battery drain.
+        if (_lastCameraUpdateAt == null ||
+            now.difference(_lastCameraUpdateAt!) >
+                const Duration(milliseconds: 100)) {
+          _lastCameraUpdateAt = now;
+          // Maintain 18.5 zoom during active tracking
+          _controller!.animateCamera(
+            CameraUpdate.newLatLngZoom(position, 18.5),
+          );
+        }
+      }
+      widget.onRiderPositionUpdate?.call(position);
+    };
   }
 
   @override
@@ -123,12 +164,16 @@ class _AppGoogleMapState extends State<AppGoogleMap> {
     if (widget.trackRider != oldWidget.trackRider) {
       _isTrackingRider = widget.trackRider;
     }
-    if (_isTrackingRider) {
-      final riderMarker = _findRiderMarker();
-      if (riderMarker != null) {
+    final riderMarker = _findRiderMarker();
+    if (riderMarker != null) {
+      _initialRiderPos ??= riderMarker.position;
+      updateRiderTracking(riderMarker);
+      if (_isTrackingRider) {
         final oldRiderMarker = _findRiderMarker(markers: oldWidget.markers);
-        if (oldRiderMarker == null ||
-            oldRiderMarker.position != riderMarker.position) {
+        // Only use animateCamera for the very first time we see the rider
+        // or if tracking was just enabled. Subsequent movement is handled
+        // frame-by-frame in the mixin's onAnimatedPositionUpdate.
+        if (oldRiderMarker == null) {
           _moveToRider();
         }
       }
@@ -149,7 +194,7 @@ class _AppGoogleMapState extends State<AppGoogleMap> {
     if (rider != null && _controller != null) {
       _isProgrammaticMove = true;
       _controller!.animateCamera(
-        CameraUpdate.newLatLngZoom(rider.position, 16.0),
+        CameraUpdate.newLatLngZoom(rider.position, 18.5),
       );
     }
   }
@@ -161,6 +206,8 @@ class _AppGoogleMapState extends State<AppGoogleMap> {
     _moveToRider();
     widget.onNavigationPressed?.call();
   }
+
+  void retrack() => _retrack();
 
   @override
   Widget build(BuildContext context) {
@@ -183,7 +230,7 @@ class _AppGoogleMapState extends State<AppGoogleMap> {
               widget.onMapCreated(controller);
               if (_isTrackingRider) _moveToRider();
             },
-            markers: widget.markers,
+            markers: getAnimatedMarkers(widget.markers),
             polylines: widget.polylines,
             circles: widget.circles,
             polygons: widget.polygons,

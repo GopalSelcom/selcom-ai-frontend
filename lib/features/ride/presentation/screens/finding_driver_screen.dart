@@ -225,6 +225,7 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
         showGpsButton: true,
         onGpsPressed: c.recenterMap,
         trackRider: true,
+        onRiderPositionUpdate: (pos) => c.animatedRiderLocation.value = pos,
         onUserInteraction: () {
           if (sheetController.isAttached && sheetController.size > _sheetMin) {
             sheetController.animateTo(

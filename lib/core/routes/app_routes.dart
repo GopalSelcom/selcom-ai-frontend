@@ -103,7 +103,7 @@ class AppRoutes {
     ),
     GetPage(
       name: driverAccepted,
-      page: () => const DriverAcceptedScreen(),
+      page: () => DriverAcceptedScreen(),
       binding: DriverAcceptedBinding(),
     ),
     GetPage(

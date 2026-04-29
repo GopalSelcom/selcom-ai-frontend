@@ -51,6 +51,7 @@ class FindingDriverController extends GetxController {
 
   final remainingSeconds = searchTimeoutSeconds.obs;
   final Rxn<LatLng> assignedDriverLocation = Rxn<LatLng>();
+  final Rxn<LatLng> animatedRiderLocation = Rxn<LatLng>();
   final Rxn<BitmapDescriptor> assignedDriverMarkerIcon =
       Rxn<BitmapDescriptor>();
   final Rxn<BitmapDescriptor> pickupIcon = Rxn<BitmapDescriptor>();

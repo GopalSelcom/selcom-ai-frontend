@@ -16,12 +16,14 @@ import '../widgets/ride_common_widgets.dart';
 
 /// SCR-11 — Driver accepted (heading to pickup). See `.agent/context/frontend/SCREENS.md`.
 class DriverAcceptedScreen extends StatelessWidget {
-  const DriverAcceptedScreen({super.key});
+  DriverAcceptedScreen({super.key});
 
   static const double _sheetInitial = 0.3;
   static const double _sheetMin = 0.3;
   static const double _sheetMaxDriverAssigned = 0.54;
   static const double _sheetMaxRideStarted = 0.68;
+
+  final GlobalKey<AppGoogleMapState> mapWidgetKey = GlobalKey<AppGoogleMapState>();
 
   @override
   Widget build(BuildContext context) {
@@ -451,34 +453,20 @@ class DriverAcceptedScreen extends StatelessWidget {
       return Stack(
         children: [
           AppGoogleMap(
-            mapWidgetKey: const ValueKey('driver_accepted_map'),
-            initialCameraPosition: CameraPosition(target: mid, zoom: 13.5),
+            mapWidgetKey: mapWidgetKey,
+            initialCameraPosition: CameraPosition(target: mid, zoom: 15.5),
             padding: EdgeInsets.only(
               top: dynamicBottomPad - 40.h, // Balanced with current sheet size
               bottom: dynamicBottomPad,
             ),
-            onMapCreated: c.onMapCreated,
+            onMapCreated: (ctrl) {
+              c.onMapCreated(ctrl);
+              c.onRecenterPressed = () => mapWidgetKey.currentState?.retrack();
+            },
+            onCameraMove: (_) => c.scheduleAssignedEtaOverlayRefresh(),
             onCameraIdle: c.scheduleAssignedEtaOverlayRefresh,
             showGpsButton: true,
-            onGpsPressed: () {
-              c.recenterMap();
-              if (sheetController.isAttached) {
-                sheetController.animateTo(
-                  _sheetInitial,
-                  duration: const Duration(milliseconds: 400),
-                  curve: Curves.easeInOut,
-                );
-              }
-            },
-            onNavigationPressed: () {
-              if (sheetController.isAttached) {
-                sheetController.animateTo(
-                  _sheetInitial,
-                  duration: const Duration(milliseconds: 400),
-                  curve: Curves.easeInOut,
-                );
-              }
-            },
+            onGpsPressed: c.recenterMap,
             onUserInteraction: () {
               if (sheetController.isAttached &&
                   sheetController.size > _sheetInitial) {
@@ -493,6 +481,10 @@ class DriverAcceptedScreen extends StatelessWidget {
             polylines: polylines,
             minMaxZoomPreference: const MinMaxZoomPreference(12, 19),
             trackRider: false,
+            onRiderPositionUpdate: (pos) {
+              c.animatedRiderLocation.value = pos;
+              c.trimRoutePoints(pos);
+            },
           ),
           if (showRouteLoading)
             Positioned(
