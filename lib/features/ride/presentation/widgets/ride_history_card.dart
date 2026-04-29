@@ -77,10 +77,10 @@ class RideHistoryCard extends StatelessWidget {
             // Top Row: Vehicle & Date & Status
             Padding(
               padding: EdgeInsets.only(
-                left: 15.w,
-                right: 15.w,
+                left: 8.w,
+                right: 8.w,
                 top: 16.h,
-                bottom: 12.h,
+                bottom: 16.h,
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -134,7 +134,7 @@ class RideHistoryCard extends StatelessWidget {
 
             // Middle Locations
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 16.h),
               child: RideLocationsTimeline(
                 startLocation: ride.pickup.address.split(',').first,
                 startAddress: ride.pickup.address,
@@ -154,7 +154,7 @@ class RideHistoryCard extends StatelessWidget {
 
             // Bottom Row
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 14.h),
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 16.h),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
