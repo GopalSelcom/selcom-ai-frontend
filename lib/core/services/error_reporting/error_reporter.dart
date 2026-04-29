@@ -44,7 +44,7 @@ class ErrorReporter {
 
   // Rolling buffer for network history (max 20)
   final List<String> _logsBuffer = [];
-  final int _maxLogsSize = 20;
+  final int _maxLogsSize = 3;
 
   static const String _boxName = 'error_reports_box';
   static const String _reportsKey = 'pending_reports';
@@ -265,7 +265,9 @@ class ErrorReporter {
   Future<void> _saveReportLocally(ErrorReport report) async {
     final box = Hive.box(_boxName);
     final List<dynamic> rawReports = box.get(_reportsKey, defaultValue: []);
-    final reports = rawReports.map((e) => Map<String, dynamic>.from(e)).toList();
+    final reports = rawReports
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
 
     reports.add(report.toMap());
     await box.put(_reportsKey, reports);
@@ -283,7 +285,9 @@ class ErrorReporter {
   Future<void> _deleteReportLocally(ErrorReport report) async {
     final box = Hive.box(_boxName);
     final List<dynamic> rawReports = box.get(_reportsKey, defaultValue: []);
-    final reports = rawReports.map((e) => Map<String, dynamic>.from(e)).toList();
+    final reports = rawReports
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
 
     reports.removeWhere((e) => e['id'] == report.id);
     await box.put(_reportsKey, reports);
