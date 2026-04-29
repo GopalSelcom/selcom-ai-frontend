@@ -16,12 +16,13 @@ class ConfirmPickupController extends GetxController {
 
   GoogleMapController? mapController;
   LatLng get initialLatLng => _initialLatLng;
+  static const double _pickupMoveThreshold = 0.00005;
 
   bool get hasMovedFromInitial =>
       (selectedLatLng.value.latitude - _initialLatLng.latitude).abs() >
-          0.000001 ||
+          _pickupMoveThreshold ||
       (selectedLatLng.value.longitude - _initialLatLng.longitude).abs() >
-          0.000001;
+          _pickupMoveThreshold;
 
   @override
   void onInit() {
