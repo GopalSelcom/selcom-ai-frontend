@@ -43,35 +43,27 @@ class PaymentMethodsScreen extends StatelessWidget {
             AppProfileHeader(
               title: AppStrings.payment.tr,
               onBack: controller.handleBack,
-            ),
-            SizedBox(height: 24.h),
-
-            // Wallet Card
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: Obx(
-                () => WalletSummaryCard(
-                  balance: controller.walletBalance.value,
-                  walletNumber: controller.walletNumber.value,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: Obx(
+                      () => WalletSummaryCard(
+                    balance: controller.walletBalance.value,
+                    walletNumber: controller.walletNumber.value,
+                  ),
                 ),
               ),
             ),
-
-            SizedBox(height: 32.h),
+            SizedBox(height: 12.h),
 
             // Payment methods section
             _buildSectionTitle('Payment methods'),
             SizedBox(height: 12.h),
             Obx(() => _buildSelcomPesaCard(controller)),
-
-            SizedBox(height: 32.h),
-
+            SizedBox(height: 12.h),
             // Cards section
             _buildSectionTitle('Cards'),
             SizedBox(height: 12.h),
             _buildCardsSection(controller),
-
-            SizedBox(height: 40.h),
           ],
         ),
       ),
@@ -85,6 +77,7 @@ class PaymentMethodsScreen extends StatelessWidget {
         title,
         style: AppTextStyles.sectionTitle.copyWith(
           color: AppColors.textBody,
+          fontWeight: FontWeight.w500,
           fontSize: 15.sp,
         ),
       ),
@@ -97,7 +90,7 @@ class PaymentMethodsScreen extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w),
       child: Container(
-        padding: EdgeInsets.all(20.w),
+        padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
           color: AppColors.surfaceSubtle,
           border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
@@ -115,7 +108,8 @@ class PaymentMethodsScreen extends StatelessWidget {
                   Text(
                     AppStrings.selcomPesa.tr,
                     style: AppTextStyles.body.copyWith(
-                      fontWeight: FontWeight.w700,
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.w500,
                       color: AppColors.textHeading,
                     ),
                   ),
@@ -150,14 +144,15 @@ class PaymentMethodsScreen extends StatelessWidget {
                   ],
                 ],
               ),
-              SizedBox(height: 8.h),
+              SizedBox(height: 4.h),
               Text(
                 isLinked
                     ? 'Linked number +255 711 410 410'
                     : 'Connect your Selcom Pesa account to enable automatic, seamless ride charge deductions.',
                 style: AppTextStyles.caption.copyWith(
                   color: AppColors.textBody,
-                  fontSize: 13.sp,
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w400,
                   height: 1.5,
                 ),
               ),
@@ -167,7 +162,8 @@ class PaymentMethodsScreen extends StatelessWidget {
                   AppStrings.linkAccount.tr,
                   style: AppTextStyles.body.copyWith(
                     color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 15.h
                   ),
                 ),
               ],
@@ -232,7 +228,7 @@ class PaymentMethodsScreen extends StatelessWidget {
       child: Column(
         children: [
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
             child: Row(
               children: [
                 // Visa Logo placeholder
@@ -265,6 +261,7 @@ class PaymentMethodsScreen extends StatelessWidget {
                 Text(
                   number,
                   style: AppTextStyles.body.copyWith(
+                    fontSize: 15.h,
                     fontWeight: FontWeight.w500,
                     color: status == 'Expired'
                         ? AppColors.textBody
@@ -306,7 +303,7 @@ class PaymentMethodsScreen extends StatelessWidget {
     return InkWell(
       onTap: controller.addCard,
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
         child: Row(
           children: [
             Icon(Icons.add, color: AppColors.primary, size: 24.w),
@@ -315,7 +312,8 @@ class PaymentMethodsScreen extends StatelessWidget {
               AppStrings.addDebitCreditCard.tr,
               style: AppTextStyles.body.copyWith(
                 color: AppColors.primary,
-                fontWeight: FontWeight.w600,
+                fontSize: 15.h,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
