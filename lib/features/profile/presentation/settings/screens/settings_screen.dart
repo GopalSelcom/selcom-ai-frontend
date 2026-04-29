@@ -15,7 +15,7 @@ class SettingsScreen extends GetView<SettingsController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.pageBackground,
+      backgroundColor: AppColors.white,
       body: Column(
         children: [
           AppProfileHeader(title: AppStrings.settings.tr),
@@ -28,7 +28,7 @@ class SettingsScreen extends GetView<SettingsController> {
                       onRefresh: controller.loadSettings,
                       child: ListView(
                         physics: const AlwaysScrollableScrollPhysics(),
-                        padding: EdgeInsets.fromLTRB(16.w, 24.h, 16.w, 24.h),
+                        padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 16.h),
                         children: [
                           Text(
                             AppStrings.appSettings.tr,

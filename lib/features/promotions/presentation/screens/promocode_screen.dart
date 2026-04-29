@@ -16,13 +16,13 @@ class PromocodeScreen extends StatelessWidget {
     final PromocodeController controller = Get.put(PromocodeController());
 
     return Scaffold(
-      backgroundColor: AppColors.pageBackground,
+      backgroundColor: AppColors.white,
       body: Column(
         children: [
           AppProfileHeader(title: AppStrings.applyPromoCode.tr),
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -33,9 +33,9 @@ class PromocodeScreen extends StatelessWidget {
                       color: AppColors.textBody,
                     ),
                   ),
-                  SizedBox(height: 12.h),
+                  SizedBox(height: 16.h),
                   _buildPromoInputField(controller),
-                  SizedBox(height: 32.h),
+                  SizedBox(height: 16.h),
                   Text(
                     AppStrings.promocodeList.tr,
                     style: AppTextStyles.bodySecondary.copyWith(
@@ -43,7 +43,7 @@ class PromocodeScreen extends StatelessWidget {
                       color: AppColors.textBody,
                     ),
                   ),
-                  SizedBox(height: 12.h),
+                  SizedBox(height: 16.h),
                   Obx(
                     () => ListView.separated(
                       shrinkWrap: true,
@@ -70,7 +70,7 @@ class PromocodeScreen extends StatelessWidget {
   Widget _buildPromoInputField(PromocodeController controller) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: AppColors.surfaceSubtle,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
           color: AppColors.inputBorderDefault.withValues(alpha: 0.5),
@@ -125,7 +125,7 @@ class PromocodeScreen extends StatelessWidget {
   Widget _buildPromoCard(PromocodeModel promo, PromocodeController controller) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: AppColors.surfaceSubtle,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
           color: AppColors.inputBorderDefault.withValues(alpha: 0.5),

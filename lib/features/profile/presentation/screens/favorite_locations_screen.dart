@@ -14,7 +14,7 @@ class FavoriteLocationsScreen extends GetView<FavoriteLocationsController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.pageBackground,
+      backgroundColor: AppColors.white,
       body: Column(
         children: [
           AppProfileHeader(title: AppStrings.favouriteLocations.tr),
@@ -72,7 +72,7 @@ class FavoriteLocationsScreen extends GetView<FavoriteLocationsController> {
       child: Container(
         padding: EdgeInsets.all(12.w),
         decoration: BoxDecoration(
-          color: AppColors.white,
+          color: AppColors.surfaceSubtle,
           borderRadius: BorderRadius.circular(16.r),
           border: Border.all(color: AppColors.divider),
         ),
@@ -81,7 +81,7 @@ class FavoriteLocationsScreen extends GetView<FavoriteLocationsController> {
             Container(
               padding: EdgeInsets.all(10.w),
               decoration: const BoxDecoration(
-                color: AppColors.bgSoftCircle,
+                color: AppColors.bgSuccessBanner,
                 shape: BoxShape.circle,
               ),
               child: Icon(

@@ -16,13 +16,13 @@ class ContactUsScreen extends GetView<ContactUsController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.pageBackground,
+      backgroundColor: AppColors.white,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           AppProfileHeader(title: AppStrings.contactUs.tr),
 
-          SizedBox(height: 32.h),
+          SizedBox(height: 16.h),
 
           Expanded(
             child: Obx(() {
@@ -42,8 +42,7 @@ class ContactUsScreen extends GetView<ContactUsController> {
                       ),
                       SizedBox(height: 8.h),
                       _buildReasonDropdown(context),
-
-                      SizedBox(height: 24.h),
+                      SizedBox(height: 8.h),
                       Text(
                         AppStrings.message.tr,
                         style: AppTextStyles.homeSubtitle,
@@ -53,6 +52,8 @@ class ContactUsScreen extends GetView<ContactUsController> {
                         controller: controller.messageController,
                         hintText: AppStrings.howCanWeHelpYou.tr,
                         maxLines: 5,
+                        textColor: AppColors.textHeading,
+                        textFieldBackgroundColor: AppColors.surfaceSubtle,
                       ),
                     ],
                   ),
@@ -83,9 +84,10 @@ class ContactUsScreen extends GetView<ContactUsController> {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         decoration: BoxDecoration(
-          color: AppColors.white,
+          color: AppColors.surfaceSubtle,
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(color: AppColors.divider),
+
         ),
         child: Row(
           children: [
@@ -101,7 +103,7 @@ class ContactUsScreen extends GetView<ContactUsController> {
                 ),
               ),
             ),
-            const Icon(Iconsax.arrow_down_1, color: AppColors.textBody, size: 20),
+            const Icon(Iconsax.arrow_down_1, color: AppColors.textHeading, size: 20),
           ],
         ),
       ),
@@ -131,7 +133,9 @@ class ContactUsScreen extends GetView<ContactUsController> {
                 itemBuilder: (context, index) {
                   final reason = controller.subjects[index];
                   return ListTile(
-                    title: Text(reason, style: AppTextStyles.body),
+                    title: Text(reason, style: AppTextStyles.body.copyWith(
+                      color: AppColors.textHeading))
+                    ,
                     onTap: () {
                       controller.selectedReason.value = reason;
                       Get.back();

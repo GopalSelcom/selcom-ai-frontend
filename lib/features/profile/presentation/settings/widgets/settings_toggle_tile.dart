@@ -32,7 +32,7 @@ class SettingsToggleTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: AppColors.surfaceSubtle,
         border: Border.all(color: AppColors.divider),
         borderRadius: BorderRadius.circular(16.r),
       ),
