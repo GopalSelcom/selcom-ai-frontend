@@ -329,4 +329,7 @@ class AppStrings {
   static const String swahili = 'swahili';
   static const String switchedToEnglish = 'switched_to_english';
   static const String switchedToSwahili = 'switched_to_swahili';
+  static const String exitApp = 'exit_app';
+  static const String exitAppTitle = 'exit_app_title';
+  static const String exitAppMessage = 'exit_app_message';
 }

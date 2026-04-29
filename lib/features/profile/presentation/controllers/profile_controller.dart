@@ -168,6 +168,11 @@ class ProfileController extends GetxController {
     isLoading.value = false;
   }
 
+  void pickProfileImage() {
+    // TODO: Implement image picker logic
+    AppDialogs.showSuccessDialog(message: 'Image picker will be implemented soon');
+  }
+
   void cancelEdit() {
     nameFocusNode.unfocus();
     phoneFocusNode.unfocus();

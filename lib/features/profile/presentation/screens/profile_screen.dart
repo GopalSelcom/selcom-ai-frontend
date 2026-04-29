@@ -10,6 +10,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/utils/phone_formatter.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../controllers/profile_controller.dart';
 import '../widgets/menu_item_widget.dart';
@@ -221,36 +222,78 @@ class ProfileScreen extends StatelessWidget {
         // User Info
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 16.w),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
             children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    name,
-                    style: AppTextStyles.screenTitle.copyWith(
-                      color: AppColors.white,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  SizedBox(width: 8.w),
-                  GestureDetector(
-                    onTap: controller.toggleEditMode,
-                    child: Icon(
-                      Iconsax.user_edit,
-                      color: AppColors.white,
-                      size: 24.w,
-                    ),
-                  ),
-                ],
+              // Profile Image
+              Container(
+                width: 60.w,
+                height: 60.w,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.white, width: 2),
+                  color: AppColors.white.withValues(alpha: 0.1),
+                ),
+                child: ClipOval(
+                  child: user?.image != null && user!.image!.isNotEmpty
+                      ? CachedNetworkImage(
+                          imageUrl: user.image!,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => const Center(
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          errorWidget: (context, url, error) => Icon(
+                            Iconsax.user,
+                            color: AppColors.white,
+                            size: 30.w,
+                          ),
+                        )
+                      : Icon(
+                          Iconsax.user,
+                          color: AppColors.white,
+                          size: 30.w,
+                        ),
+                ),
               ),
-              SizedBox(height: 4.h),
-              Text(
-                mobile,
-                style: AppTextStyles.body.copyWith(
-                  color: AppColors.white.withValues(alpha: 0.8),
+              SizedBox(width: 16.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            name,
+                            style: AppTextStyles.screenTitle.copyWith(
+                              color: AppColors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 22.sp,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        SizedBox(width: 8.w),
+                        GestureDetector(
+                          onTap: controller.toggleEditMode,
+                          child: Icon(
+                            Iconsax.user_edit,
+                            color: AppColors.white,
+                            size: 20.w,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 2.h),
+                    Text(
+                      mobile,
+                      style: AppTextStyles.body.copyWith(
+                        color: AppColors.white.withValues(alpha: 0.8),
+                        fontSize: 14.sp,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -272,8 +315,64 @@ class ProfileScreen extends StatelessWidget {
       key: const ValueKey('edit_mode'),
       padding: EdgeInsets.symmetric(horizontal: 16.w),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          // Centered Profile Image with Edit Option
+          Stack(
+            children: [
+              Container(
+                width: 100.w,
+                height: 100.w,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.white, width: 3),
+                  color: AppColors.white.withValues(alpha: 0.2),
+                ),
+                child: ClipOval(
+                  child: controller.userModel.value?.image != null &&
+                          controller.userModel.value!.image!.isNotEmpty
+                      ? CachedNetworkImage(
+                          imageUrl: controller.userModel.value!.image!,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => const Center(
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          errorWidget: (context, url, error) => Icon(
+                            Iconsax.user,
+                            color: AppColors.white,
+                            size: 50.w,
+                          ),
+                        )
+                      : Icon(
+                          Iconsax.user,
+                          color: AppColors.white,
+                          size: 50.w,
+                        ),
+                ),
+              ),
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: GestureDetector(
+                  onTap: controller.pickProfileImage,
+                  child: Container(
+                    padding: EdgeInsets.all(6.w),
+                    decoration: const BoxDecoration(
+                      color: AppColors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Iconsax.camera,
+                      color: AppColors.primary,
+                      size: 18.w,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 32.h),
+
           // User Name Field
           _buildEditTextField(
             label: 'User name',

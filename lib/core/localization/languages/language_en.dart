@@ -310,6 +310,9 @@ class LanguageEn extends Languages {
     'swahili': 'Swahili',
     'switched_to_english': 'Switched to English',
     'switched_to_swahili': 'Switched to Swahili',
+    'exit_app': 'Exit App',
+    'exit_app_title': 'Exit App',
+    'exit_app_message': 'Are you sure , you want to exit the app?',
   };
 
   @override
@@ -1145,4 +1148,13 @@ class LanguageEn extends Languages {
 
   @override
   String get switchedToSwahili => values['switched_to_swahili'] ?? '';
+
+  @override
+  String get exitApp => values['exit_app'] ?? '';
+
+  @override
+  String get exitAppTitle => values['exit_app_title'] ?? '';
+
+  @override
+  String get exitAppMessage => values['exit_app_message'] ?? '';
 }

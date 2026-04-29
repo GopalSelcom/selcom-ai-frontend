@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -19,6 +20,7 @@ import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../widgets/recent_location_tile.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 
 class HomeScreen extends GetView<HomeController> {
   const HomeScreen({super.key});
@@ -28,7 +30,13 @@ class HomeScreen extends GetView<HomeController> {
   @override
   Widget build(BuildContext context) {
     controller.onHomeVisible();
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _showExitDialog(context);
+      },
+      child: Scaffold(
       backgroundColor: AppColors.pageBackground,
       body: Stack(
         children: [
@@ -94,7 +102,7 @@ class HomeScreen extends GetView<HomeController> {
           }),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildModernAddressBox() {
@@ -684,5 +692,17 @@ class HomeScreen extends GetView<HomeController> {
       default:
         return 'Active Ride';
     }
+  }
+
+  void _showExitDialog(BuildContext context) {
+    AppDialogs.showConfirmationDialog(
+      title: AppStrings.exitApp.tr,
+      message: AppStrings.exitAppMessage.tr,
+      confirmText: AppStrings.yes.tr,
+      cancelText: AppStrings.no.tr,
+      onConfirm: () {
+        SystemNavigator.pop();
+      },
+    );
   }
 }
