@@ -10,8 +10,6 @@ class AppAssets {
   static const String icOtherChip = '$_imagePath/ic_other_chip.svg';
 
   // Models
-  static const String boda = '$_imagePath/boda.png';
-  static const String bajaj = '$_imagePath/bajaj.png';
   static const String gari = '$_imagePath/gari.png';
   static const String gariPlus = '$_imagePath/gari_plus.png';
 
@@ -35,6 +33,7 @@ class AppAssets {
   static const String splashBgVector = '$_imagePath/splash_bg_vector.svg';
   static const String selcomGoLogo = '$_imagePath/selcom_go_logo.svg';
   static const String imgSuccessTick = '$_imagePath/img_success_tick.png';
+  static const String icPromotions = '$_imagePath/ic_promotions.svg';
 
   // Profile
   // static const String walletPattern = '$_imagePath/wallet_pattern.png';
