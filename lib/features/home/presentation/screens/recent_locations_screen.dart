@@ -15,7 +15,7 @@ class RecentLocationsScreen extends GetView<HomeController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.pageBackground,
+      backgroundColor: AppColors.white,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: AppColors.white,
@@ -47,21 +47,24 @@ class RecentLocationsScreen extends GetView<HomeController> {
             );
           }
 
-          return ListView.builder(
+          return ListView.separated(
             physics: const BouncingScrollPhysics(
               parent: AlwaysScrollableScrollPhysics(),
             ),
             padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
             itemCount: items.length,
+            separatorBuilder: (context, index) =>
+                Divider(height: 1.h, color: AppColors.bgSoftCircle),
             itemBuilder: (context, index) =>
-                _buildRecentLocationItem(items[index]),
+                _buildRecentLocationItem(items[index], bottomSpacing: 8, topSpacing: 8),
           );
         }),
       ),
     );
   }
 
-  Widget _buildRecentLocationItem(RecentDestinationModel loc) {
+  Widget _buildRecentLocationItem(RecentDestinationModel loc,
+      {double bottomSpacing = 24, double topSpacing = 24}) {
     return Obx(() {
       final distance = controller.calculateDistanceKm(loc.lat, loc.lng);
       final savedPlace = controller.getSavedPlaceFor(loc.address, null);
@@ -71,7 +74,10 @@ class RecentLocationsScreen extends GetView<HomeController> {
         address: loc.address,
         distance: distance,
         isFavorite: isFavorite,
-        onTap: () => controller.navigateToVehicleSelectionForRecentDestination(loc),
+        bottomSpacing: bottomSpacing,
+        topSpacing: topSpacing,
+        onTap: () =>
+            controller.navigateToVehicleSelectionForRecentDestination(loc),
         onFavoriteTap: () => controller.toggleFavoriteForRecent(loc),
       );
     });
