@@ -748,10 +748,15 @@ class DriverAcceptedController extends GetxController
   }
 
   void _syncBottomSheetVehicleImage(String? vehicleTypeHint) {
+    final previousAsset = bottomSheetVehicleImageAsset.value;
     bottomSheetVehicleImageAsset.value =
         VehicleImageUtils.imageAssetForVehicleType(
           vehicleTypeHint,
-          fallbackAsset: AppAssets.imgCab,
+          // Keep previously resolved vehicle image when an event payload
+          // doesn't include enough vehicle metadata (common during stop transitions).
+          fallbackAsset: previousAsset.isNotEmpty
+              ? previousAsset
+              : AppAssets.imgCab,
         );
   }
 

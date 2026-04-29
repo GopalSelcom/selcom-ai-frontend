@@ -2,7 +2,7 @@ name: selcom_rides_frontend
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.0.0+4
+version: 1.0.0+5
 
 environment:
   sdk: ^3.10.7
@@ -55,6 +55,7 @@ dependencies:
   path_provider: ^2.1.5
   collection: ^1.19.1
   screenshot: ^3.0.0
+  share_plus: ^12.0.2
   uuid: ^4.5.3
   hive: ^2.2.3
   hive_flutter: ^1.1.0
