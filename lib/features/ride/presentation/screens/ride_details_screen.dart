@@ -77,14 +77,14 @@ class RideDetailsScreen extends StatelessWidget {
                   AppStrings.howWasYourRide.tr,
                   style: TextStyle(
                     fontFamily: AppTextStyles.metropolisFont,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                     color: AppColors.textHeading,
                     fontSize: 15.sp,
                   ),
                 ),
-                SizedBox(height: 12.h),
+                SizedBox(height: 6.h),
                 RideRatingStars(rating: (ride.riderRating?.toDouble() ?? 0)),
-                SizedBox(height: 8.h),
+                /*SizedBox(height: 6.h),
                 Text(
                   '${ride.riderRating}/5 ${AppStrings.ratingGiven.tr}',
                   style: TextStyle(
@@ -93,7 +93,7 @@ class RideDetailsScreen extends StatelessWidget {
                     color: AppColors.textBody,
                     fontSize: 13.sp,
                   ),
-                ),
+                ),*/
               ],
             ),
           )
@@ -165,7 +165,7 @@ class RideDetailsScreen extends StatelessWidget {
             ),
             Expanded(
               child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -179,12 +179,12 @@ class RideDetailsScreen extends StatelessWidget {
                               controller.vehicleDisplayName,
                               style: TextStyle(
                                 fontFamily: AppTextStyles.metropolisFont,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w600,
                                 color: AppColors.textHeading,
                                 fontSize: 20.sp,
                               ),
                             ),
-                            SizedBox(height: 4.h),
+                            // SizedBox(height: 4.h),
                             Text(
                               RideDateFormatter.formatDate(
                                 controller.formattedDate,
@@ -200,7 +200,7 @@ class RideDetailsScreen extends StatelessWidget {
                         ),
                         Image.asset(
                           controller.vehicleImageAsset,
-                          height: 60.h,
+                          height: 50.h,
                           fit: BoxFit.contain,
                           errorBuilder: (_, __, ___) => Icon(
                             Icons.two_wheeler,
@@ -210,7 +210,7 @@ class RideDetailsScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    SizedBox(height: 24.h),
+                    SizedBox(height: 16.h),
                     if (controller.shouldPrioritizeReviewSection) ...[
                       // Completion entry: keep rating above route/fare cards.
                       reviewSection,
@@ -234,7 +234,7 @@ class RideDetailsScreen extends StatelessWidget {
                         stops: ride.stops,
                       ),
                     ),
-                    SizedBox(height: 16.h),
+                    SizedBox(height: 8.h),
                     Container(
                       padding: EdgeInsets.all(16.w),
                       decoration: BoxDecoration(
@@ -252,23 +252,23 @@ class RideDetailsScreen extends StatelessWidget {
                             AppStrings.totalFare.tr,
                             style: TextStyle(
                               fontFamily: AppTextStyles.metropolisFont,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w500,
                               color: AppColors.textHeading,
                               fontSize: 15.sp,
                             ),
                           ),
-                          SizedBox(height: 16.h),
+                          SizedBox(height: 6.h),
                           FareBreakdownRow(
                             title: AppStrings.rideCharge.tr,
                             amount: controller.rideChargeLabel,
                           ),
-                          SizedBox(height: 12.h),
+                          SizedBox(height: 6.h),
                           FareBreakdownRow(
                             title:
                                 AppStrings.bookingFeesAndConvenienceCharges.tr,
                             amount: controller.bookingFeeLabel,
                           ),
-                          SizedBox(height: 12.h),
+                          SizedBox(height: 6.h),
                           FareBreakdownRow(
                             title: AppStrings.totalAmount.tr,
                             amount: controller.totalAmountLabel,
@@ -277,15 +277,15 @@ class RideDetailsScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                    SizedBox(height: 16.h),
+                    SizedBox(height: 8.h),
                     if (!controller.shouldPrioritizeReviewSection)
                       reviewSection,
-                    SizedBox(height: 24.h),
+                    SizedBox(height: 16.h),
                     NeedHelpRow(
                       showDownloadSlip: controller.isCompleted,
                       onDownloadTap: controller.downloadSlip,
                     ),
-                    SizedBox(height: 24.h),
+                    SizedBox(height: 8.h),
                   ],
                 ),
               ),

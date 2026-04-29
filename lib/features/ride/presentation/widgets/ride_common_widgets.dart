@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+import '../../../../core/constants/app_assets.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -206,7 +208,7 @@ class RideLocationsTimeline extends StatelessWidget {
                 ),
             ],
           ),
-          SizedBox(width: 12.w),
+          SizedBox(width: 8.w),
           Expanded(
             child: Padding(
               padding: EdgeInsets.only(bottom: showBottomLine ? 16.h : 0),
@@ -217,9 +219,9 @@ class RideLocationsTimeline extends StatelessWidget {
                     title,
                     style: TextStyle(
                       fontFamily: AppTextStyles.metropolisFont,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w500,
                       color: AppColors.black,
-                      fontSize: 16.sp,
+                      fontSize: 15.sp,
                     ),
                   ),
                   if (address != null && address.trim().isNotEmpty) ...[
@@ -229,7 +231,8 @@ class RideLocationsTimeline extends StatelessWidget {
                       style: TextStyle(
                         fontFamily: AppTextStyles.metropolisFont,
                         color: AppColors.textBody,
-                        fontSize: 13.sp,
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w400
                       ),
                     ),
                   ],
@@ -298,7 +301,7 @@ class FareBreakdownRow extends StatelessWidget {
               fontFamily: AppTextStyles.metropolisFont,
               fontWeight: isTotal ? FontWeight.w500 : FontWeight.w400,
               color: AppColors.textBody,
-              fontSize: 14.sp,
+              fontSize: 12.sp,
             ),
           ),
         ),
@@ -308,7 +311,7 @@ class FareBreakdownRow extends StatelessWidget {
             fontFamily: AppTextStyles.metropolisFont,
             fontWeight: isTotal ? FontWeight.w500 : FontWeight.w500,
             color: AppColors.textBody,
-            fontSize: 14.sp,
+            fontSize: 12.sp,
           ),
         ),
       ],
@@ -331,7 +334,10 @@ class NeedHelpRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Iconsax.headphone5, color: AppColors.textBody, size: 24.w),
+        SvgPicture.asset(
+          AppAssets.icHeadPhone,
+        ),
+        // Icon(, color: AppColors.textBody, size: 24.w),
         SizedBox(width: 8.w),
         GestureDetector(
           onTap: () => Get.toNamed(AppRoutes.contactUs),
@@ -339,7 +345,7 @@ class NeedHelpRow extends StatelessWidget {
             AppStrings.needHelp.tr,
             style: TextStyle(
               fontFamily: AppTextStyles.metropolisFont,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
               color: AppColors.textBody,
               fontSize: 15.sp,
             ),
@@ -355,14 +361,14 @@ class NeedHelpRow extends StatelessWidget {
                 Icon(
                   Iconsax.document_download5,
                   color: AppColors.textBody,
-                  size: 20.w,
+                  size: 19.w,
                 ),
                 SizedBox(width: 6.w),
                 Text(
                   AppStrings.downloadSlip.tr,
                   style: TextStyle(
                     fontFamily: AppTextStyles.metropolisFont,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                     color: AppColors.textBody,
                     fontSize: 15.sp,
                   ),
@@ -380,7 +386,7 @@ class RideRatingStars extends StatelessWidget {
   final double? rating;
   final double starSize;
 
-  const RideRatingStars({super.key, this.rating, this.starSize = 44});
+  const RideRatingStars({super.key, this.rating, this.starSize = 34});
 
   @override
   Widget build(BuildContext context) {

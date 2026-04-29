@@ -42,6 +42,7 @@ class AppAssets {
   static const String icAccountVerified = '$_imagePath/ic_account_verified.svg';
   static const String icWallet = '$_imagePath/ic_wallet.svg';
   static const String icCopy = '$_imagePath/ic_copy.svg';
+  static const String icHeadPhone = '$_imagePath/headphone.svg';
 
   // ── Figma / location flow (`assets/images/figma/location/`)
   /// Prefer existing `ic_*` SVGs. Only reference `mcp_scr07/` when no equivalent exists in-repo.
