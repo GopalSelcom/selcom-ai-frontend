@@ -345,8 +345,9 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
             onTap: onTap,
             borderRadius: BorderRadius.circular(10.r),
             child: Container(
+              height: 34.h,
               constraints: BoxConstraints(minWidth: 92.w, maxWidth: 148.w),
-              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
+              padding: EdgeInsets.symmetric(horizontal: 8.w),
               decoration: BoxDecoration(
                 color: bubbleColor,
                 borderRadius: BorderRadius.circular(10.r),
@@ -360,6 +361,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   if (leadingLabel != null) ...[
                     Container(
