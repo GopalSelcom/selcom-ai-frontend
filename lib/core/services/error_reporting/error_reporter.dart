@@ -219,7 +219,7 @@ class ErrorReporter {
           : 'https://dukastaging.selcom.dev:7443';
 
       final request = ApiRequest(
-        endpoint: "report-error",
+        endpoint: "/api/v4/report-error",
         method: ApiMethod.multipart,
         customBaseUrl: errorBaseUrl,
         skipAuthInterceptor: true,
