@@ -451,7 +451,7 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                       child: Row(
                         children: [
                           SvgPicture.asset(
-                            AppAssets.locationIcPin,
+                            AppAssets.locationIcPickupPin,
                             width: 16.w,
                             colorFilter: const ColorFilter.mode(
                               AppColors.primary,
