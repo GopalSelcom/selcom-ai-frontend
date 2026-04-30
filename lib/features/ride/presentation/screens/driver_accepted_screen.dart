@@ -825,14 +825,38 @@ class DriverAcceptedScreen extends StatelessWidget {
                           color: AppColors.textDarkOlive,
                         ),
                       ),
-                      Text(
-                        c.vehicleSubtitle.value,
-                        style: AppTextStyles.homeCaption.copyWith(
-                          fontSize: 15.sp,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.black,
-                          height: 1.33,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            c.vehicleSubtitle.value,
+                            style: AppTextStyles.homeCaption.copyWith(
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.black,
+                              height: 1.33,
+                            ),
+                          ),
+                          if (c.formattedSpeedLabel.isNotEmpty) ...[
+                            Text(
+                              " • ",
+                              style: AppTextStyles.homeCaption.copyWith(
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.textMapHint,
+                              ),
+                            ),
+                            Text(
+                              c.formattedSpeedLabel,
+                              style: AppTextStyles.homeCaption.copyWith(
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.primary,
+                                height: 1.33,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ],
                   ),

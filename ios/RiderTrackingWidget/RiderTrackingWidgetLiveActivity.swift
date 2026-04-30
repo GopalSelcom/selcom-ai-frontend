@@ -80,7 +80,6 @@ struct TrackingViewModel {
     let isRiderInRide: Bool
     let isArrived: Bool
     let debugStatus: String 
-    let targetDate: Date? 
     let dataSource: String // DEBUG: "Server" or "Local"
     
     init(context: ActivityViewContext<LiveActivitiesAppAttributes>) {
@@ -235,13 +234,10 @@ struct TrackingViewModel {
         if isArrived {
             self.eta = "Arrived"
             self.shortEta = "Done"
-            self.targetDate = nil
             self.progressRatio = 1.0
         } else if etaSeconds > 0 {
             self.eta = formatDuration(etaSeconds)
             self.shortEta = formatDuration(etaSeconds, short: true)
-            
-            self.targetDate = Date().addingTimeInterval(etaSeconds)
             
             if isRiderInRide {
                 // Trip Phase: 50% -> 100%
@@ -254,12 +250,25 @@ struct TrackingViewModel {
             if normalizedStatus == "searching" || normalizedStatus == "finding_driver" || normalizedStatus == "finding driver" {
                 self.eta = "Soon"
                 self.shortEta = "Soon"
+            } else if normalizedStatus == "driver_arrived" || normalizedStatus == "driverarrived" {
+                self.eta = "Driver is here"
+                self.shortEta = "Here"
             } else {
-                self.eta = self.isArrived ? "Done" : "Soon"
-                self.shortEta = self.isArrived ? "Done" : "Soon"
+                if self.isArrived {
+                    self.eta = "Done"
+                    self.shortEta = "Done"
+                } else {
+                    // When time is 0 but not arrived yet
+                    self.eta = isRiderInRide ? "Almost there" : "Arriving"
+                    self.shortEta = isRiderInRide ? "Near" : "Arr"
+                }
             }
-            self.targetDate = nil
-            self.progressRatio = isArrived ? 1.0 : (isRiderInRide ? 0.75 : 0.25)
+            
+            if normalizedStatus == "driver_arrived" || normalizedStatus == "driverarrived" {
+                self.progressRatio = 0.5
+            } else {
+                self.progressRatio = isArrived ? 1.0 : (isRiderInRide ? 0.75 : 0.25)
+            }
         }
     }
 }
@@ -295,21 +304,18 @@ struct MainDashboardView: View {
                             Text(vm.status).font(.system(size: 16, weight: .medium)).foregroundColor(.white.opacity(0.8))
                         }
                         
-                        let isSoon = vm.eta.lowercased().contains("soon") || vm.eta.isEmpty
+                        let lowercaseEta = vm.eta.lowercased()
+                        let isSoon = lowercaseEta.contains("soon") || vm.eta.isEmpty
+                        let isSpecialStatus = lowercaseEta.contains("here") || lowercaseEta.contains("arriving") || lowercaseEta.contains("almost")
+                        
                         let term = vm.isRiderInRide ? "Drop-off" : "Pickup"
-                        let prefix = isSoon ? term : "\(term) in"
-                        let displayEta = isSoon ? "soon" : vm.eta.lowercased()
+                        
+                        let prefix = isSpecialStatus ? "" : (isSoon ? term : "\(term) in")
+                        let displayEta = isSoon ? "soon" : vm.eta
 
                         HStack(alignment: .firstTextBaseline, spacing: 4) {
-                            Text(prefix).font(.system(size: 28, weight: .bold)).foregroundColor(.white)
-                            if let target = vm.targetDate {
-                                Text(target, style: .relative)
-                                    .font(.system(size: 28, weight: .bold))
-                                    .foregroundColor(.white)
-                                    .multilineTextAlignment(.leading)
-                            } else {
-                                Text(displayEta).font(.system(size: 28, weight: .bold)).foregroundColor(.white)
-                            }
+                            Text(prefix).font(.system(size: 24, weight: .bold)).foregroundColor(.white)
+                            Text(displayEta).font(.system(size: 24, weight: .bold)).foregroundColor(.white)
                         }
                         .minimumScaleFactor(0.7)
                         .lineLimit(1)
@@ -395,12 +401,6 @@ struct RiderTrackingWidgetLiveActivity: Widget {
                         Text("Done")
                             .font(.system(size: 9.5, weight: .bold))
                             .foregroundColor(.white)
-                    } else if let target = vm.targetDate {
-                        Text(target, style: .relative)
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundColor(.white)
-                            .multilineTextAlignment(.center)
-                            .frame(width: 50)
                     } else {
                         Text(vm.shortEta.lowercased())
                             .font(.system(size: 9.5, weight: .bold))

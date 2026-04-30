@@ -104,6 +104,7 @@ class DriverAcceptedController extends GetxController
   final stopIcons = <BitmapDescriptor>[].obs;
   final Rxn<Offset> assignedDriverEtaScreenPx = Rxn<Offset>();
   final assignedDriverHeading = 0.0.obs;
+  final assignedDriverSpeed = 0.0.obs; // m/s
   final Rxn<LatLng> animatedRiderLocation = Rxn<LatLng>();
   final RxBool isInitialRouteLoaded = false.obs;
 
@@ -142,6 +143,11 @@ class DriverAcceptedController extends GetxController
 
   void updateSheetSize(double size) {
     sheetSize.value = size;
+  }
+
+  String get formattedSpeedLabel {
+    final speedKmh = (assignedDriverSpeed.value * 3.6).round();
+    return speedKmh > 1 ? '$speedKmh km/h' : '';
   }
 
   final DraggableScrollableController sheetController =
@@ -621,10 +627,11 @@ class DriverAcceptedController extends GetxController
 
       // 1. Update the base location with RAW GPS
       assignedDriverLocation.value = rawPos;
+      assignedDriverSpeed.value = speed;
 
       // 2. High-Fidelity Interpolation:
       // We calculate duration based on REAL speed for a butter-smooth glide.
-      Duration animDuration = const Duration(milliseconds: 3000);
+      Duration animDuration = const Duration(milliseconds: 3500);
 
       if (speed > 0.5) {
         final currentPos =
@@ -632,9 +639,15 @@ class DriverAcceptedController extends GetxController
             assignedDriverLocation.value!;
         final distance = _calculateDistanceInMeters(currentPos, rawPos);
 
-        // Calculate seconds, allowing for faster updates at high speed
-        final double seconds = (distance / speed).clamp(1.5, 4.0);
-        animDuration = Duration(milliseconds: (seconds * 1000).toInt());
+        // Physics-based interpolation: match the animation duration to the 
+        // actual time it takes to travel the distance at current speed.
+        // We add a 15% buffer to handle socket jitter.
+        final double seconds = (distance / speed) * 1.15;
+        animDuration = Duration(milliseconds: (seconds * 1000).toInt().clamp(1500, 8000));
+      } else {
+        // If slow or stopped, use a more conservative 4s glide to match
+        // the typical 3-5s socket frequency.
+        animDuration = const Duration(milliseconds: 4000);
       }
 
       mapWidgetKey.currentState?.updateRiderPosition(
@@ -1336,86 +1349,6 @@ class DriverAcceptedController extends GetxController
     }
   }
 
-  LatLng trimRoutePoints(LatLng currentPos, {bool isFullScan = false}) {
-    if (routePoints.length < 3) return currentPos;
-
-    int bestSegmentIndex = 0;
-    double minDistanceSq = double.maxFinite;
-
-    // PERFORMANCE OPTIMIZATION:
-    // During animation (isFullScan = false), we only look at the first few points
-    // since the bike only glides forward a tiny bit per frame.
-    // On socket updates (isFullScan = true), we scan the whole route to handle jumps.
-    final int range = isFullScan
-        ? (routePoints.length - 1)
-        : math.min(10, routePoints.length - 1);
-
-    // Threshold for being 'near' a segment (approx 25 meters squared)
-    const double nearThresholdSq = 0.0000006;
-
-    for (int i = 0; i < range; i++) {
-      final p1 = routePoints[i];
-      final p2 = routePoints[i + 1];
-
-      final distSq = _distToSegmentSquared(currentPos, p1, p2);
-
-      // Sequence-based preference: If we are near a segment, we prefer it over
-      // any previous segments because we assume the driver moves FORWARD.
-      if (distSq < nearThresholdSq) {
-        bestSegmentIndex = i;
-        minDistanceSq = distSq;
-      } else if (distSq < minDistanceSq) {
-        minDistanceSq = distSq;
-        bestSegmentIndex = i;
-      }
-    }
-
-    // Return the mathematically projected point on the closest segment.
-    final p1 = routePoints[bestSegmentIndex];
-    final p2 = routePoints[bestSegmentIndex + 1];
-    final l2 = _distSq(p1, p2);
-    if (l2 == 0) return p1;
-
-    double t =
-        ((currentPos.latitude - p1.latitude) * (p2.latitude - p1.latitude) +
-            (currentPos.longitude - p1.longitude) *
-                (p2.longitude - p1.longitude)) /
-        l2;
-    t = t.clamp(0.0, 1.0);
-
-    final snappedPos = LatLng(
-      p1.latitude + t * (p2.latitude - p1.latitude),
-      p1.longitude + t * (p2.longitude - p1.longitude),
-    );
-
-    return snappedPos;
-  }
-
-  /// Helper to calculate the squared distance from a point to a line segment.
-  double _distToSegmentSquared(LatLng p, LatLng v, LatLng w) {
-    final double l2 = _distSq(v, w);
-    if (l2 == 0) return _distSq(p, v);
-
-    double t =
-        ((p.latitude - v.latitude) * (w.latitude - v.latitude) +
-            (p.longitude - v.longitude) * (w.longitude - v.longitude)) /
-        l2;
-    t = t.clamp(0.0, 1.0);
-
-    return _distSq(
-      p,
-      LatLng(
-        v.latitude + t * (w.latitude - v.latitude),
-        v.longitude + t * (w.longitude - v.longitude),
-      ),
-    );
-  }
-
-  double _distSq(LatLng v, LatLng w) {
-    final double dLat = v.latitude - w.latitude;
-    final double dLng = v.longitude - w.longitude;
-    return dLat * dLat + dLng * dLng;
-  }
 
   double _calculateSimpleDist(LatLng a, LatLng b) {
     return (a.latitude - b.latitude).abs() + (a.longitude - b.longitude).abs();
