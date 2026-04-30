@@ -13,6 +13,7 @@ import '../../../../core/routes/app_routes.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../data/models/places_models.dart';
 import '../../../ride/data/models/ride_management_models.dart';
+import '../widgets/favorite_icon_button.dart';
 
 class SelectSavedLocationScreen extends StatefulWidget {
   const SelectSavedLocationScreen({super.key});
@@ -216,11 +217,18 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
       separatorBuilder: (_, __) => SizedBox(height: 12.h),
       itemBuilder: (context, index) {
         final loc = recentItems[index];
-        return _locationTile(
-          title: loc.address.split(',').first,
-          subtitle: loc.address,
-          onTap: () => _handleRecentSelection(loc),
-          onFavorite: () => controller.toggleFavoriteForRecent(loc),
+        return Obx(
+          () {
+            final savedPlace = controller.getSavedPlaceFor(loc.address, null);
+            final isFavorite = savedPlace?.isFavourite ?? false;
+            return _locationTile(
+              title: loc.address.split(',').first,
+              subtitle: loc.address,
+              onTap: () => _handleRecentSelection(loc),
+              onFavorite: () => controller.toggleFavoriteForRecent(loc),
+              isFavorite: isFavorite,
+            );
+          },
         );
       },
     );
@@ -231,6 +239,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
     required String subtitle,
     required VoidCallback onTap,
     VoidCallback? onFavorite,
+    bool isFavorite = false,
   }) {
     return InkWell(
       onTap: onTap,
@@ -300,17 +309,8 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
               ),
             ),
             if (onFavorite != null)
-              IconButton(
-                icon: SvgPictureAsset(
-                  AppAssets.locationIcHeartOutline,
-                  width: 22.w,
-                  height: 22.h,
-                  placeholderBuilder: (_) => Icon(
-                    Icons.favorite_border,
-                    color: AppColors.primary,
-                    size: 22.sp,
-                  ),
-                ),
+              FavoriteIconButton(
+                isFavorite: isFavorite,
                 onPressed: onFavorite,
               ),
           ],
