@@ -724,6 +724,7 @@ class VehicleSelectionController extends GetxController {
                   'destinationLat': destinationEntity.lat,
                   'destinationLng': destinationEntity.lng,
                   'destinationAddress': destinationEntity.address,
+                  'destinations': destinations.toList(),
                   'fareBreakdown': data.data?.ride?.fareBreakdown?.toJson(),
                 },
               );

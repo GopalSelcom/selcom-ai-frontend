@@ -18,3 +18,4 @@ export 'app_map_gps_button.dart';
 export 'app_map_location_summary_card.dart';
 export 'app_map_profile_chip.dart';
 export 'app_map_top_header.dart';
+export 'ride_location_summary_card.dart';

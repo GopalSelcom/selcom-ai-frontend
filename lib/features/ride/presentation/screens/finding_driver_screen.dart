@@ -86,12 +86,16 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
             right: 16,
             onProfileTap: c.openProfile,
             addressWidget: Expanded(
-              child: AppMapLocationSummaryCard(
-                label: 'Current location',
-                address: c.pickupAddress.isEmpty
-                    ? 'Selected location'
-                    : c.pickupAddress,
-                maxAddressLines: 1,
+              child: Obx(
+                () => RideLocationSummaryCard(
+                  pickupAddress: c.pickupAddress.isEmpty
+                      ? 'Current location'
+                      : c.pickupAddress,
+                  destinationAddress: c.destinationAddress.isEmpty
+                      ? 'Destination'
+                      : c.destinationAddress,
+                  intermediateStops: c.intermediateStops.toList(),
+                ),
               ),
             ),
           ),

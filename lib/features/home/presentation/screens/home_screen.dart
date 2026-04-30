@@ -25,7 +25,7 @@ import '../../../../shared/utils/app_dialogs.dart';
 class HomeScreen extends GetView<HomeController> {
   const HomeScreen({super.key});
 
-  static const double _homeSheetInitialSize = 0.30;
+  static const double _homeSheetInitialSize = 0.32;
 
   @override
   Widget build(BuildContext context) {
