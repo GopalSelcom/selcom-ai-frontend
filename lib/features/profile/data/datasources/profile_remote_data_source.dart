@@ -82,7 +82,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   }) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: URLS.auth.saveUserDetails,
+        endpoint: URLS.profile.updateProfile,
         method: imagePath != null ? ApiMethod.multipart : ApiMethod.post,
         body: {'name': name, 'emailId': emailId},
         multipartFiles: imagePath != null
