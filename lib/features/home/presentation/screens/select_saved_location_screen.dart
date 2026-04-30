@@ -62,8 +62,6 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
     return Scaffold(
       backgroundColor: AppColors.pageBackground,
       appBar: AppBar(
-        backgroundColor: AppColors.transparent,
-        elevation: 0,
         automaticallyImplyLeading: false,
         leading: canGoBack
             ? const AppBackButton(
@@ -71,14 +69,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
                 alignment: Alignment.center,
               )
             : null,
-        title: Text(
-          label,
-          style: AppTextStyles.homeTitle.copyWith(
-            fontSize: 20.sp,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
+        title: Text(label),
       ),
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: 16.w),

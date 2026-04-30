@@ -152,7 +152,7 @@ class _ConfirmStopScreenState extends State<ConfirmStopScreen> {
           Positioned(
             top: MediaQuery.of(context).padding.top + 10.h,
             left: 16.w,
-            child: const AppBackButton(),
+            child: const AppBackButton(color: AppColors.textHeading),
           ),
 
           // Bottom Panel

@@ -125,16 +125,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
     return Scaffold(
       backgroundColor: AppColors.pageBackground,
       appBar: AppBar(
-        backgroundColor: AppColors.cardBackground,
-        elevation: 0,
-        centerTitle: true,
-        title: Text(
-          AppStrings.addStops.tr,
-          style: AppTextStyles.homeTitle.copyWith(
-            height: 34 / 20,
-            letterSpacing: -0.4,
-          ),
-        ),
+        title: Text(AppStrings.addStops.tr),
         leading: const AppBackButton(
           color: AppColors.textHeading,
           alignment: Alignment.center,
