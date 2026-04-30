@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -112,8 +113,6 @@ class AppGoogleMapState extends State<AppGoogleMap>
   DateTime? _lastCameraUpdateAt;
   bool _isProgrammaticMove = false;
   bool _isUserInteracting = false;
-  LatLng? _initialRiderPos;
-  bool _didAutoTrackFirstMove = false;
 
   @override
   void initState() {
@@ -121,22 +120,8 @@ class AppGoogleMapState extends State<AppGoogleMap>
     isTrackingRider = widget.trackRider;
 
     // Link the animated marker position to the camera for smooth following
-    onAnimatedPositionUpdate = (position) {
+    onAnimatedPositionUpdate = (position, rotation) {
       final now = DateTime.now();
-
-      // Auto-focus on the first real movement of the rider
-      if (!_didAutoTrackFirstMove && _initialRiderPos != null) {
-        final dist =
-            MapMathUtils.calculateSimpleDist(position, _initialRiderPos!);
-        // If moved more than ~10 meters, auto-track
-        if (dist > 0.0001) {
-          _didAutoTrackFirstMove = true;
-          // Only auto-track if not already tracking
-          if (!isTrackingRider) {
-            _retrack();
-          }
-        }
-      }
 
       if (isTrackingRider && _controller != null) {
         // Match the 60fps animation speed for butter-smooth camera following.
@@ -145,11 +130,32 @@ class AppGoogleMapState extends State<AppGoogleMap>
                 const Duration(milliseconds: 16)) {
           _lastCameraUpdateAt = now;
 
-          const double latOffset = 0.0002; 
-          final cameraPos = LatLng(position.latitude + latOffset, position.longitude);
+          final heading = rotation;
+
+          // Google Maps Navigation Style:
+          // 1. Perspective view (tilt)
+          // 2. Rotate with rider (bearing)
+          // 3. Keep rider in the lower 1/3 of the screen (offset target)
+          
+          const double offsetDist = 0.0003; // degrees offset to push camera ahead
+          final double angleRad = (heading * math.pi / 180.0);
+          final double latOff = offsetDist * math.cos(angleRad);
+          final double lngOff = offsetDist * math.sin(angleRad);
+          
+          final cameraTarget = LatLng(
+            position.latitude + latOff,
+            position.longitude + lngOff,
+          );
 
           _controller!.moveCamera(
-            CameraUpdate.newLatLng(cameraPos),
+            CameraUpdate.newCameraPosition(
+              CameraPosition(
+                target: cameraTarget,
+                zoom: 18.5,
+                bearing: heading,
+                tilt: 50.0,
+              ),
+            ),
           );
         }
       }
@@ -165,7 +171,6 @@ class AppGoogleMapState extends State<AppGoogleMap>
     }
     final riderMarker = _findRiderMarker();
     if (riderMarker != null) {
-      _initialRiderPos ??= riderMarker.position;
       updateRiderTracking(riderMarker);
       if (isTrackingRider) {
         final oldRiderMarker = _findRiderMarker(markers: oldWidget.markers);
@@ -192,8 +197,27 @@ class AppGoogleMapState extends State<AppGoogleMap>
     final rider = _findRiderMarker();
     if (rider != null && _controller != null) {
       _isProgrammaticMove = true;
+      final heading = rider.rotation;
+      
+      const double offsetDist = 0.0003;
+      final double angleRad = (heading * math.pi / 180.0);
+      final double latOff = offsetDist * math.cos(angleRad);
+      final double lngOff = offsetDist * math.sin(angleRad);
+      
+      final cameraTarget = LatLng(
+        rider.position.latitude + latOff,
+        rider.position.longitude + lngOff,
+      );
+
       _controller!.animateCamera(
-        CameraUpdate.newLatLngZoom(rider.position, 18.5),
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: cameraTarget,
+            zoom: 18.5,
+            bearing: heading,
+            tilt: 50.0,
+          ),
+        ),
       );
     }
   }
@@ -211,10 +235,27 @@ class AppGoogleMapState extends State<AppGoogleMap>
     final rider = _findRiderMarker();
     if (rider != null && _controller != null) {
       _isProgrammaticMove = true;
-      const double latOffset = 0.0002;
-      final cameraPos = LatLng(rider.position.latitude + latOffset, rider.position.longitude);
+      final heading = rider.rotation;
+      
+      const double offsetDist = 0.0003;
+      final double angleRad = (heading * math.pi / 180.0);
+      final double latOff = offsetDist * math.cos(angleRad);
+      final double lngOff = offsetDist * math.sin(angleRad);
+      
+      final cameraTarget = LatLng(
+        rider.position.latitude + latOff,
+        rider.position.longitude + lngOff,
+      );
+
       _controller!.animateCamera(
-        CameraUpdate.newLatLngZoom(cameraPos, 17.0),
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: cameraTarget,
+            zoom: 18.5,
+            bearing: heading,
+            tilt: 50.0,
+          ),
+        ),
       );
     }
     widget.onNavigationPressed?.call();
@@ -230,16 +271,16 @@ class AppGoogleMapState extends State<AppGoogleMap>
   }
 
   /// Updates the rider's target position and starts a smooth animation towards it.
-  void updateRiderPosition(LatLng position, {Duration duration = const Duration(seconds: 4)}) {
-    super.updateRiderPosition(position, duration: duration);
+  void updateRiderPosition(LatLng position, {double rotation = 0.0, Duration duration = const Duration(seconds: 4)}) {
+    super.updateRiderPosition(position, rotation: rotation, duration: duration);
   }
 
   /// The current interpolated position of the rider icon.
   LatLng? get currentAnimatedPosition => super.currentAnimatedPosition;
 
   /// Instantly snaps the rider icon to a new position.
-  void snapRider(LatLng position) {
-    snapPosition(position);
+  void snapRider(LatLng position, {double rotation = 0.0}) {
+    snapPosition(position, rotation: rotation);
     setState(() {});
   }
 

@@ -11,10 +11,13 @@ mixin MapRiderTrackingMixin on State<AppGoogleMap>, TickerProviderStateMixin<App
   LatLng? _currentAnimatedPosition;
   LatLng? _previousPosition;
   LatLng? _targetPosition;
+  double? _currentAnimatedRotation;
+  double? _previousRotation;
+  double? _targetRotation;
   final List<int> _intervalHistory = [];
 
   /// Callback called on every frame of the position animation.
-  void Function(LatLng)? onAnimatedPositionUpdate;
+  void Function(LatLng position, double rotation)? onAnimatedPositionUpdate;
 
   /// The current interpolated position of the rider icon.
   LatLng? get currentAnimatedPosition => _currentAnimatedPosition;
@@ -35,7 +38,21 @@ mixin MapRiderTrackingMixin on State<AppGoogleMap>, TickerProviderStateMixin<App
             _targetPosition!,
             _positionController.value,
           );
-          onAnimatedPositionUpdate?.call(_currentAnimatedPosition!);
+          
+          if (_previousRotation != null && _targetRotation != null) {
+            _currentAnimatedRotation = MapMathUtils.interpolateRotation(
+              _previousRotation!,
+              _targetRotation!,
+              _positionController.value,
+            );
+          } else {
+            _currentAnimatedRotation = _targetRotation;
+          }
+
+          onAnimatedPositionUpdate?.call(
+            _currentAnimatedPosition!,
+            _currentAnimatedRotation ?? 0.0,
+          );
         });
       }
     });
@@ -57,6 +74,9 @@ mixin MapRiderTrackingMixin on State<AppGoogleMap>, TickerProviderStateMixin<App
       _currentAnimatedPosition = newPosition;
       _targetPosition = newPosition;
       _previousPosition = newPosition;
+      _currentAnimatedRotation = riderMarker.rotation;
+      _targetRotation = riderMarker.rotation;
+      _previousRotation = riderMarker.rotation;
       return;
     }
 
@@ -88,20 +108,26 @@ mixin MapRiderTrackingMixin on State<AppGoogleMap>, TickerProviderStateMixin<App
   }
 
   /// Instantly snaps the rider icon to a position without animation.
-  void snapPosition(LatLng position) {
+  void snapPosition(LatLng position, {double rotation = 0.0}) {
     _positionController.stop();
     _currentAnimatedPosition = position;
     _targetPosition = position;
     _previousPosition = position;
+    _currentAnimatedRotation = rotation;
+    _targetRotation = rotation;
+    _previousRotation = rotation;
   }
 
   /// Updates the rider's target position and starts a smooth animation towards it.
   /// [duration] should match the frequency of data updates (e.g. 3.5s for 3s updates).
-  void updateRiderPosition(LatLng newPosition, {Duration duration = const Duration(milliseconds: 3500)}) {
+  void updateRiderPosition(LatLng newPosition, {double rotation = 0.0, Duration duration = const Duration(milliseconds: 3500)}) {
     // Always start the new animation from where the bike is CURRENTLY standing.
     // This is the key to buttery-smooth movement without jumps.
     _previousPosition = _currentAnimatedPosition ?? _targetPosition ?? newPosition;
     _targetPosition = newPosition;
+
+    _previousRotation = _currentAnimatedRotation ?? _targetRotation ?? rotation;
+    _targetRotation = rotation;
 
     _positionController.duration = duration;
     _positionController.forward(from: 0.0);
@@ -115,6 +141,7 @@ mixin MapRiderTrackingMixin on State<AppGoogleMap>, TickerProviderStateMixin<App
       if (marker.markerId.value == 'assigned_driver') {
         return marker.copyWith(
           positionParam: _currentAnimatedPosition,
+          rotationParam: _currentAnimatedRotation,
         );
       }
       return marker;

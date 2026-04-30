@@ -653,11 +653,6 @@ class DriverAcceptedController extends GetxController
         animDuration = const Duration(milliseconds: 4000);
       }
 
-      mapWidgetKey.currentState?.updateRiderPosition(
-        rawPos,
-        duration: animDuration,
-      );
-
       if (head != null) {
         if (head is num) {
           assignedDriverHeading.value = head.toDouble();
@@ -666,6 +661,12 @@ class DriverAcceptedController extends GetxController
               double.tryParse(head) ?? assignedDriverHeading.value;
         }
       }
+
+      mapWidgetKey.currentState?.updateRiderPosition(
+        rawPos,
+        rotation: assignedDriverHeading.value,
+        duration: animDuration,
+      );
     });
 
     _trackingSub = _socketService.trackingUpdateStatusStream.listen((

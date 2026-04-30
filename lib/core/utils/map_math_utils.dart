@@ -32,6 +32,12 @@ class MapMathUtils {
     return LatLng(lat, lng);
   }
 
+  /// Linearly interpolates between two angles in degrees, handling wrapping.
+  static double interpolateRotation(double start, double end, double fraction) {
+    double diff = (end - start + 180) % 360 - 180;
+    return (start + diff * fraction + 360) % 360;
+  }
+
   /// Manhattan distance (approximate for short distances)
   static double calculateSimpleDist(LatLng a, LatLng b) {
     return (a.latitude - b.latitude).abs() + (a.longitude - b.longitude).abs();
