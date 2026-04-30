@@ -124,32 +124,18 @@ class PaymentCardActionBottomSheet extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: SizedBox(
+                  child: AppPrimaryButton(
+                    label: secondaryButtonLabel!,
+                    onPressed: isSecondaryLoading ? null : onSecondaryPressed,
+                    isLoading: isSecondaryLoading,
                     height: 56.h,
-                    child: OutlinedButton(
-                      onPressed: isSecondaryLoading ? null : onSecondaryPressed,
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: AppColors.primary),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16.r),
-                        ),
-                      ),
-                      child: isSecondaryLoading
-                          ? SizedBox(
-                              width: 20.w,
-                              height: 20.w,
-                              child: const CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: AppColors.primary,
-                              ),
-                            )
-                          : Text(
-                              secondaryButtonLabel!,
-                              style: AppTextStyles.button.copyWith(
-                                color: AppColors.primary,
-                              ),
-                            ),
-                    ),
+                    borderRadius: 16.r,
+                    outlined: true,
+                    backgroundColor: AppColors.white,
+                    textColor: AppColors.primary,
+                    outlinedTextColor: AppColors.primary,
+                    outlinedBorderColor: AppColors.primary,
+                    outlinedBorderWidth: 1,
                   ),
                 ),
                 SizedBox(width: 12.w),
