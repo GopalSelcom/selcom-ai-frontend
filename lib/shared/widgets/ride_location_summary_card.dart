@@ -114,7 +114,6 @@ class _RideLocationSummaryCardState extends State<RideLocationSummaryCard> {
                         AppAssets.locationIcDestinationPin,
                         width: 14.sp,
                         height: 14.sp,
-                        color: AppColors.mapDropMarkerGreen,
                       ),
                     ),
                     SizedBox(width: 10.w),
@@ -142,10 +141,10 @@ class _RideLocationSummaryCardState extends State<RideLocationSummaryCard> {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           _buildIconContainer(
-                            Icon(
-                              Icons.location_on,
-                              color: AppColors.mapStopMarkerRed,
-                              size: 14.sp,
+                            SvgPictureAsset(
+                              AppAssets.locationIcDestinationPin,
+                              width: 14.sp,
+                              height: 14.sp,
                             ),
                           ),
                           SizedBox(width: 10.w),
@@ -177,7 +176,6 @@ class _RideLocationSummaryCardState extends State<RideLocationSummaryCard> {
                         AppAssets.locationIcDestinationPin,
                         width: 14.sp,
                         height: 14.sp,
-                        color: AppColors.mapDropMarkerGreen,
                       ),
                     ),
                     SizedBox(width: 10.w),
