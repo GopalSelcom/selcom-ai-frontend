@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:selcom_rides_frontend/shared/widgets/app_google_map.dart';
 import 'package:uuid/uuid.dart';
 
@@ -103,6 +104,7 @@ class DriverAcceptedController extends GetxController
   final Rxn<Offset> assignedDriverEtaScreenPx = Rxn<Offset>();
   final assignedDriverHeading = 0.0.obs;
   final Rxn<LatLng> animatedRiderLocation = Rxn<LatLng>();
+  final RxBool isInitialRouteLoaded = false.obs;
 
   VoidCallback? onRecenterPressed;
   bool _firstRouteLoaded = false;
@@ -141,9 +143,11 @@ class DriverAcceptedController extends GetxController
     sheetSize.value = size;
   }
 
-  final DraggableScrollableController sheetController = DraggableScrollableController();
+  final DraggableScrollableController sheetController =
+      DraggableScrollableController();
   final RxBool isTrackingRider = false.obs;
-  final GlobalKey<AppGoogleMapState> mapWidgetKey = GlobalKey<AppGoogleMapState>();
+  final GlobalKey<AppGoogleMapState> mapWidgetKey =
+      GlobalKey<AppGoogleMapState>();
 
   @override
   void onInit() {
@@ -157,9 +161,9 @@ class DriverAcceptedController extends GetxController
     ever(animatedRiderLocation, (_) => scheduleAssignedEtaOverlayRefresh());
     ever(routePoints, (List<LatLng> points) {
       // Fit bounds only when we first get a valid route, not on every update.
-      if (points.length > 2 && _firstRouteLoaded == false) {
+      if (points.length > 2 && isInitialRouteLoaded.value == false) {
         recenterMap();
-        _firstRouteLoaded = true;
+        isInitialRouteLoaded.value = true;
       }
     });
     ever(
@@ -597,7 +601,8 @@ class DriverAcceptedController extends GetxController
 
     _driverLocSub = _socketService.rideDriverLocationStream.listen((payload) {
       if (payload.latitude == 0 || payload.longitude == 0) return;
-      // Strict city-region validation: Dar es Salaam is approx -6.8, 39.2
+
+      // Strict city-region validation for Dar es Salaam
       if (payload.latitude! < -15 ||
           payload.latitude! > 0 ||
           payload.longitude! < 20 ||
@@ -608,9 +613,34 @@ class DriverAcceptedController extends GetxController
       final lat = payload.latitude;
       final lng = payload.longitude;
       final head = payload.heading;
+      final speed = (payload.speed ?? 0.0).toDouble(); // m/s
       if (lat == null || lng == null) return;
 
-      assignedDriverLocation.value = LatLng(lat, lng);
+      final rawPos = LatLng(lat, lng);
+
+      // 1. Update the base location with RAW GPS
+      assignedDriverLocation.value = rawPos;
+
+      // 2. High-Fidelity Interpolation:
+      // We calculate duration based on REAL speed for a butter-smooth glide.
+      Duration animDuration = const Duration(milliseconds: 3000);
+
+      if (speed > 0.5) {
+        final currentPos =
+            mapWidgetKey.currentState?.currentAnimatedPosition ??
+            assignedDriverLocation.value!;
+        final distance = _calculateDistanceInMeters(currentPos, rawPos);
+
+        // Calculate seconds, allowing for faster updates at high speed
+        final double seconds = (distance / speed).clamp(1.5, 4.0);
+        animDuration = Duration(milliseconds: (seconds * 1000).toInt());
+      }
+
+      mapWidgetKey.currentState?.updateRiderPosition(
+        rawPos,
+        duration: animDuration,
+      );
+
       if (head != null) {
         if (head is num) {
           assignedDriverHeading.value = head.toDouble();
@@ -708,15 +738,20 @@ class DriverAcceptedController extends GetxController
 
   Future<void> loadDriverIcon({String? vehicleType}) async {
     try {
+      // Use the high-fidelity SVG rider icon as requested
+      assignedDriverMarkerIcon.value = await MapMarkerUtils.getSvgMarker(
+        'assets/images/rider.svg',
+        70, // Reduced size for better map proportions
+      );
+    } catch (e, stackTrace) {
+      developer.log(
+        "Error loading SVG rider icon: $e",
+        error: e,
+        stackTrace: stackTrace,
+      );
       final asset = VehicleImageUtils.imageAssetForVehicleType(vehicleType);
       assignedDriverMarkerIcon.value = await MapMarkerUtils.getResizedMarker(
         asset,
-        150,
-      );
-    } catch (e, stackTrace) {
-      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      assignedDriverMarkerIcon.value = await MapMarkerUtils.getResizedMarker(
-        AppAssets.imgBoda,
         150,
       );
     }
@@ -753,15 +788,15 @@ class DriverAcceptedController extends GetxController
 
   void _syncBottomSheetVehicleImage(String? vehicleTypeHint) {
     final previousAsset = bottomSheetVehicleImageAsset.value;
-    bottomSheetVehicleImageAsset.value =
-        VehicleImageUtils.imageAssetForVehicleType(
-          vehicleTypeHint,
-          // Keep previously resolved vehicle image when an event payload
-          // doesn't include enough vehicle metadata (common during stop transitions).
-          fallbackAsset: previousAsset.isNotEmpty
-              ? previousAsset
-              : AppAssets.imgCab,
-        );
+    bottomSheetVehicleImageAsset
+        .value = VehicleImageUtils.imageAssetForVehicleType(
+      vehicleTypeHint,
+      // Keep previously resolved vehicle image when an event payload
+      // doesn't include enough vehicle metadata (common during stop transitions).
+      fallbackAsset: previousAsset.isNotEmpty
+          ? previousAsset
+          : AppAssets.imgCab,
+    );
   }
 
   void onMapCreated(GoogleMapController c) {
@@ -796,7 +831,7 @@ class DriverAcceptedController extends GetxController
   Future<void> focusOnUserLocation() async {
     final ctrl = mapController;
     if (ctrl == null) return;
-    
+
     try {
       // We rely on the Google Map internal "my location" feature to animate
       // but we can also manually trigger it if we have the coordinates.
@@ -997,13 +1032,13 @@ class DriverAcceptedController extends GetxController
     if (target == 'pick_up') {
       routeTarget.value = target;
       final coords = payload.routeGeometry?.coordinates;
-      if (coords != null && coords.isNotEmpty && coords.length > 2) {
+      if (coords != null && coords.isNotEmpty) {
         routePoints.assignAll(_toLatLngPolyline(coords));
       }
     } else if (target == 'drop_off') {
       routeTarget.value = target;
       final coords = payload.routeGeometry?.coordinates;
-      if (coords != null && coords.isNotEmpty && coords.length > 2) {
+      if (coords != null && coords.isNotEmpty) {
         routePoints.assignAll(_toLatLngPolyline(coords));
       }
     } else if (status.isNotEmpty) {
@@ -1091,7 +1126,9 @@ class DriverAcceptedController extends GetxController
 
   void _openCompletedRideDetailsScreen() {
     if (_openedCompletedRideDetails) return;
-    final normalizedCurrentStatus = currentRideStatus.value.trim().toLowerCase();
+    final normalizedCurrentStatus = currentRideStatus.value
+        .trim()
+        .toLowerCase();
     if (normalizedCurrentStatus != 'completed' &&
         normalizedCurrentStatus != 'ride_completed') {
       return;
@@ -1120,7 +1157,8 @@ class DriverAcceptedController extends GetxController
               (m) => '${m.group(1)}_${m.group(2)}',
             )
             .toLowerCase();
-        if (refreshedStatus == 'completed' || refreshedStatus == 'ride_completed') {
+        if (refreshedStatus == 'completed' ||
+            refreshedStatus == 'ride_completed') {
           _openCompletedRideDetailsScreen();
         }
       });
@@ -1141,16 +1179,14 @@ class DriverAcceptedController extends GetxController
         ride: completedRide,
         openedFromCompletionFlow: true,
       ),
-      binding: BindingsBuilder(
-        () {
-          Get.put(
-            RideDetailsController(
-              ride: completedRide,
-              openedFromCompletionFlow: true,
-            ),
-          );
-        },
-      ),
+      binding: BindingsBuilder(() {
+        Get.put(
+          RideDetailsController(
+            ride: completedRide,
+            openedFromCompletionFlow: true,
+          ),
+        );
+      }),
     );
   }
 
@@ -1299,52 +1335,79 @@ class DriverAcceptedController extends GetxController
     }
   }
 
+  LatLng trimRoutePoints(LatLng currentPos, {bool isFullScan = false}) {
+    if (routePoints.length < 3) return currentPos;
 
-  void trimRoutePoints(LatLng currentPos) {
-    if (routePoints.length < 3) return;
-    
     int bestSegmentIndex = 0;
     double minDistanceSq = double.maxFinite;
-    
-    // Look at the first 20 segments to find which one the bike is currently on.
-    final int range = routePoints.length > 21 ? 20 : routePoints.length - 1;
-    
+
+    // PERFORMANCE OPTIMIZATION:
+    // During animation (isFullScan = false), we only look at the first few points
+    // since the bike only glides forward a tiny bit per frame.
+    // On socket updates (isFullScan = true), we scan the whole route to handle jumps.
+    final int range = isFullScan
+        ? (routePoints.length - 1)
+        : math.min(10, routePoints.length - 1);
+
+    // Threshold for being 'near' a segment (approx 25 meters squared)
+    const double nearThresholdSq = 0.0000006;
+
     for (int i = 0; i < range; i++) {
       final p1 = routePoints[i];
-      final p2 = routePoints[i+1];
-      
-      // Calculate the squared distance from currentPos to the line segment [p1, p2]
+      final p2 = routePoints[i + 1];
+
       final distSq = _distToSegmentSquared(currentPos, p1, p2);
-      if (distSq < minDistanceSq) {
+
+      // Sequence-based preference: If we are near a segment, we prefer it over
+      // any previous segments because we assume the driver moves FORWARD.
+      if (distSq < nearThresholdSq) {
+        bestSegmentIndex = i;
+        minDistanceSq = distSq;
+      } else if (distSq < minDistanceSq) {
         minDistanceSq = distSq;
         bestSegmentIndex = i;
       }
     }
-    
-    // Remove all points that are definitively behind the current segment.
-    if (bestSegmentIndex > 0) {
-      routePoints.removeRange(0, bestSegmentIndex);
-    }
-    
-    // Snap the start of the polyline to the bike's exact animated position.
-    if (routePoints.isNotEmpty) {
-      routePoints[0] = currentPos;
-    }
+
+    // Return the mathematically projected point on the closest segment.
+    final p1 = routePoints[bestSegmentIndex];
+    final p2 = routePoints[bestSegmentIndex + 1];
+    final l2 = _distSq(p1, p2);
+    if (l2 == 0) return p1;
+
+    double t =
+        ((currentPos.latitude - p1.latitude) * (p2.latitude - p1.latitude) +
+            (currentPos.longitude - p1.longitude) *
+                (p2.longitude - p1.longitude)) /
+        l2;
+    t = t.clamp(0.0, 1.0);
+
+    final snappedPos = LatLng(
+      p1.latitude + t * (p2.latitude - p1.latitude),
+      p1.longitude + t * (p2.longitude - p1.longitude),
+    );
+
+    return snappedPos;
   }
 
   /// Helper to calculate the squared distance from a point to a line segment.
   double _distToSegmentSquared(LatLng p, LatLng v, LatLng w) {
     final double l2 = _distSq(v, w);
     if (l2 == 0) return _distSq(p, v);
-    
-    double t = ((p.latitude - v.latitude) * (w.latitude - v.latitude) +
-                (p.longitude - v.longitude) * (w.longitude - v.longitude)) / l2;
+
+    double t =
+        ((p.latitude - v.latitude) * (w.latitude - v.latitude) +
+            (p.longitude - v.longitude) * (w.longitude - v.longitude)) /
+        l2;
     t = t.clamp(0.0, 1.0);
-    
-    return _distSq(p, LatLng(
-      v.latitude + t * (w.latitude - v.latitude),
-      v.longitude + t * (w.longitude - v.longitude),
-    ));
+
+    return _distSq(
+      p,
+      LatLng(
+        v.latitude + t * (w.latitude - v.latitude),
+        v.longitude + t * (w.longitude - v.longitude),
+      ),
+    );
   }
 
   double _distSq(LatLng v, LatLng w) {
@@ -1357,6 +1420,24 @@ class DriverAcceptedController extends GetxController
     return (a.latitude - b.latitude).abs() + (a.longitude - b.longitude).abs();
   }
 
+  /// Calculates the distance between two points in meters using Haversine formula.
+  double _calculateDistanceInMeters(LatLng p1, LatLng p2) {
+    const double earthRadius = 6371000; // meters
+    final double dLat = _degreesToRadians(p2.latitude - p1.latitude);
+    final double dLng = _degreesToRadians(p2.longitude - p1.longitude);
+    final double a =
+        math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(_degreesToRadians(p1.latitude)) *
+            math.cos(_degreesToRadians(p2.latitude)) *
+            math.sin(dLng / 2) *
+            math.sin(dLng / 2);
+    final double c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+    return earthRadius * c;
+  }
+
+  double _degreesToRadians(double degrees) {
+    return degrees * math.pi / 180;
+  }
 
   String _normalizeRouteTarget(String? target) {
     final t = (target ?? '').trim().toLowerCase();
@@ -1916,8 +1997,7 @@ class DriverAcceptedController extends GetxController
           (stop.lat - destinationLat).abs() < 0.000001 &&
           (stop.lng - destinationLng).abs() < 0.000001;
       final sameAsDestinationByAddress =
-          stop.address.trim().toLowerCase() ==
-          destinationAddr.toLowerCase();
+          stop.address.trim().toLowerCase() == destinationAddr.toLowerCase();
       if (sameAsDestinationByCoord || sameAsDestinationByAddress) {
         continue;
       }

@@ -139,19 +139,17 @@ class AppGoogleMapState extends State<AppGoogleMap>
       }
 
       if (isTrackingRider && _controller != null) {
-        // Throttle camera updates to ~10fps to prevent vibration/jitter and battery drain.
+        // Match the 60fps animation speed for butter-smooth camera following.
         if (_lastCameraUpdateAt == null ||
             now.difference(_lastCameraUpdateAt!) >
-                const Duration(milliseconds: 100)) {
+                const Duration(milliseconds: 16)) {
           _lastCameraUpdateAt = now;
 
-          // POSITIONING: Offset the camera slightly so the car is above the bottom sheet
-          // Reduced to 0.0002 to move it closer to center as requested.
           const double latOffset = 0.0002; 
           final cameraPos = LatLng(position.latitude + latOffset, position.longitude);
 
           _controller!.moveCamera(
-            CameraUpdate.newLatLngZoom(cameraPos, 17.0),
+            CameraUpdate.newLatLng(cameraPos),
           );
         }
       }
@@ -229,6 +227,20 @@ class AppGoogleMapState extends State<AppGoogleMap>
       isTrackingRider = false;
     });
     widget.onTrackingChanged?.call(false);
+  }
+
+  /// Updates the rider's target position and starts a smooth animation towards it.
+  void updateRiderPosition(LatLng position, {Duration duration = const Duration(seconds: 4)}) {
+    super.updateRiderPosition(position, duration: duration);
+  }
+
+  /// The current interpolated position of the rider icon.
+  LatLng? get currentAnimatedPosition => super.currentAnimatedPosition;
+
+  /// Instantly snaps the rider icon to a new position.
+  void snapRider(LatLng position) {
+    snapPosition(position);
+    setState(() {});
   }
 
   @override

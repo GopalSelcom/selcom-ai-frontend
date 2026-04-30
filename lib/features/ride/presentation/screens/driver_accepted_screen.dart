@@ -23,7 +23,6 @@ class DriverAcceptedScreen extends StatelessWidget {
   static const double _sheetMaxDriverAssigned = 0.54;
   static const double _sheetMaxRideStarted = 0.68;
 
-
   void _minimizeSheet(DriverAcceptedController c) {
     if (c.sheetController.isAttached) {
       Future.microtask(() {
@@ -85,20 +84,22 @@ class DriverAcceptedScreen extends StatelessWidget {
             ),
           ),
           Obx(() {
-            final px = c.assignedDriverEtaScreenPx.value;
-            if (px == null) return const SizedBox.shrink();
+            final eta = c.etaLabel.value;
+            if (eta == null) return const SizedBox.shrink();
+
             return Positioned(
-              left: px.dx - 40.w,
-              top: px.dy - 60.h, // Moved higher to avoid clashing with marker
-              child: IgnorePointer(
+              top: topPad + 82.h,
+              left: 0,
+              right: 0,
+              child: Center(
                 child: Container(
                   padding: EdgeInsets.symmetric(
-                    horizontal: 12.w,
+                    horizontal: 14.w,
                     vertical: 6.h,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.dangerDeep,
-                    borderRadius: BorderRadius.circular(12.r),
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(14.r),
                     boxShadow: [
                       BoxShadow(
                         color: AppColors.black.withValues(alpha: 0.15),
@@ -108,11 +109,11 @@ class DriverAcceptedScreen extends StatelessWidget {
                     ],
                   ),
                   child: Text(
-                    c.etaLabel.value,
-                    style: TextStyle(
+                    eta,
+                    style: AppTextStyles.homeCaption.copyWith(
                       color: AppColors.white,
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13.sp,
                     ),
                   ),
                 ),
@@ -176,7 +177,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                 final isTracking = c.assignedDriverLocation.value != null;
                 // Use the controller's state instead of the map's key state
                 final isCurrentlyTracking = c.isTrackingRider.value;
-                
+
                 if (!isCurrentlyTracking && isTracking) {
                   return Padding(
                     padding: EdgeInsets.only(right: 8.w),
@@ -205,7 +206,9 @@ class DriverAcceptedScreen extends StatelessWidget {
               SizedBox(width: 8.w),
               _iconActionChip(
                 icon: isSharing ? Icons.hourglass_top : Icons.share_outlined,
-                onTap: isSharing ? () {} : () => shareController.shareRide(c.rideId),
+                onTap: isSharing
+                    ? () {}
+                    : () => shareController.shareRide(c.rideId),
                 color: AppColors.textVerified,
               ),
               if (canRevoke) ...[
@@ -486,7 +489,7 @@ class DriverAcceptedScreen extends StatelessWidget {
         );
       }
 
-      final showRouteLoading = route.length <= 2;
+      final showRouteLoading = route.isEmpty;
       final loadingText = assigned == null
           ? "Locating driver..."
           : "Calculating best route...";
@@ -496,13 +499,11 @@ class DriverAcceptedScreen extends StatelessWidget {
           AppGoogleMap(
             key: c.mapWidgetKey,
             initialCameraPosition: CameraPosition(target: mid, zoom: 15.5),
-            padding: EdgeInsets.only(
-              top: 100.h, 
-              bottom: stableBottomPad,
-            ),
+            padding: EdgeInsets.only(top: 100.h, bottom: stableBottomPad),
             onMapCreated: (ctrl) {
               c.onMapCreated(ctrl);
-              c.onRecenterPressed = () => c.mapWidgetKey.currentState?.retrack();
+              c.onRecenterPressed = () =>
+                  c.mapWidgetKey.currentState?.retrack();
             },
             onCameraMove: (_) => c.scheduleAssignedEtaOverlayRefresh(),
             onCameraIdle: c.scheduleAssignedEtaOverlayRefresh,
@@ -515,14 +516,18 @@ class DriverAcceptedScreen extends StatelessWidget {
             polylines: polylines,
             minMaxZoomPreference: const MinMaxZoomPreference(12, 19),
             onRiderPositionUpdate: (pos) {
-              Future.microtask(() {
-                c.animatedRiderLocation.value = pos;
-                c.trimRoutePoints(pos);
-              });
+              c.animatedRiderLocation.value = pos;
             },
           ),
-          if (showRouteLoading)
-            Positioned(
+          Obx(() {
+            if (c.isInitialRouteLoaded.value) return const SizedBox.shrink();
+
+            final assigned = c.assignedDriverLocation.value;
+            final loadingText = assigned == null
+                ? "Locating driver..."
+                : "Calculating best route...";
+
+            return Positioned(
               top: MediaQuery.paddingOf(context).top + 150.h,
               left: 0,
               right: 0,
@@ -557,17 +562,18 @@ class DriverAcceptedScreen extends StatelessWidget {
                       SizedBox(width: 10.w),
                       Text(
                         loadingText,
-                        style: TextStyle(
-                          fontSize: 13.sp,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textBody,
+                        style: AppTextStyles.homeCaption.copyWith(
+                          color: AppColors.black,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12.sp,
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-            ),
+            );
+          }),
         ],
       );
     });

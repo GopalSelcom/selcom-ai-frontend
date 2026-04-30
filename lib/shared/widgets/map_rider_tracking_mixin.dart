@@ -16,6 +16,9 @@ mixin MapRiderTrackingMixin on State<AppGoogleMap>, TickerProviderStateMixin<App
   /// Callback called on every frame of the position animation.
   void Function(LatLng)? onAnimatedPositionUpdate;
 
+  /// The current interpolated position of the rider icon.
+  LatLng? get currentAnimatedPosition => _currentAnimatedPosition;
+
   @override
   void initState() {
     super.initState();
@@ -82,25 +85,26 @@ mixin MapRiderTrackingMixin on State<AppGoogleMap>, TickerProviderStateMixin<App
       _positionController.duration = const Duration(seconds: 15);
     }
     _lastUpdateAt = now;
+  }
 
-    // Only update if position actually changed significantly
-    if (newPosition != _targetPosition) {
-      // Jitter filter: ignore tiny movements (~2m) to prevent drifting while stationary
-      final dist = MapMathUtils.calculateSimpleDist(newPosition, _targetPosition!);
-      if (dist < 0.00002) return;
+  /// Instantly snaps the rider icon to a position without animation.
+  void snapPosition(LatLng position) {
+    _positionController.stop();
+    _currentAnimatedPosition = position;
+    _targetPosition = position;
+    _previousPosition = position;
+  }
 
-      _previousPosition = _currentAnimatedPosition ?? _targetPosition;
-      _targetPosition = newPosition;
+  /// Updates the rider's target position and starts a smooth animation towards it.
+  /// [duration] should match the frequency of data updates (e.g. 3.5s for 3s updates).
+  void updateRiderPosition(LatLng newPosition, {Duration duration = const Duration(milliseconds: 3500)}) {
+    // Always start the new animation from where the bike is CURRENTLY standing.
+    // This is the key to buttery-smooth movement without jumps.
+    _previousPosition = _currentAnimatedPosition ?? _targetPosition ?? newPosition;
+    _targetPosition = newPosition;
 
-      // Continuous Glide Strategy:
-      // Since updates come every 15 seconds, we set the animation to 17 seconds.
-      // This ensures the bike is always moving and 'chasing' the next target,
-      // creating a seamless, never-stop experience.
-      _positionController.duration = const Duration(seconds: 17);
-
-      // Start position animation
-      _positionController.forward(from: 0.0);
-    }
+    _positionController.duration = duration;
+    _positionController.forward(from: 0.0);
   }
 
   /// Injects the animated rider marker into the markers set
