@@ -8,8 +8,10 @@ class AppAssets {
   static const String icMessage = '$_imagePath/ic_message.svg';
   static const String icInfo = '$_imagePath/ic_info.svg';
   static const String icSend = '$_imagePath/ic_send.svg';
+  static const String icDownload = '$_imagePath/ic_download.svg';
   static const String icRequest = '$_imagePath/ic_request.svg';
   static const String icSuccess = '$_imagePath/ic_success.svg';
+  static const String icRatingStar = '$_imagePath/ic_rating_start.svg';
   static const String icHomeChip = '$_imagePath/ic_home_chip.svg';
   static const String icOfficeChip = '$_imagePath/ic_office_chip.svg';
   static const String icWorkChip = '$_imagePath/ic_work_chip.svg';

@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:iconsax/iconsax.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+
+import '../../../../core/localization/app_strings.dart';
+import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/routes/app_routes.dart';
@@ -409,22 +410,17 @@ class FareBreakdownRow extends StatelessWidget {
         Expanded(
           child: Text(
             title,
-            style: TextStyle(
-              fontFamily: AppTextStyles.metropolisFont,
+            style: AppTextStyles.homeCaption.copyWith(
               fontWeight: isTotal ? FontWeight.w500 : FontWeight.w400,
-              color: AppColors.textBody,
-              fontSize: 12.sp,
               height: 20 / 12,
             ),
           ),
         ),
         Text(
           amount,
-          style: TextStyle(
-            fontFamily: AppTextStyles.metropolisFont,
-            fontWeight: isTotal ? FontWeight.w500 : FontWeight.w500,
-            color: AppColors.textBody,
-            fontSize: 12.sp,
+          style: AppTextStyles.homeCaption.copyWith(
+            fontWeight: isTotal ? FontWeight.w500 : FontWeight.w400,
+            height: 20 / 12,
           ),
         ),
       ],
@@ -447,19 +443,23 @@ class NeedHelpRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        SvgPicture.asset(AppAssets.icHeadPhone),
-        // Icon(, color: AppColors.textBody, size: 24.w),
+        SvgPictureAsset(
+          AppAssets.icHeadPhone,
+          width: 18.w,
+          height: 18.w,
+          color: AppColors.textBody,
+          placeholderBuilder: (_) => Icon(
+            Icons.headset_mic_outlined,
+            color: AppColors.textBody,
+            size: 18.sp,
+          ),
+        ),
         SizedBox(width: 8.w),
         GestureDetector(
           onTap: () => Get.toNamed(AppRoutes.contactUs),
           child: Text(
             AppStrings.needHelp.tr,
-            style: TextStyle(
-              fontFamily: AppTextStyles.metropolisFont,
-              fontWeight: FontWeight.w500,
-              color: AppColors.textBody,
-              fontSize: 15.sp,
-            ),
+            style: AppTextStyles.homeSubtitle.copyWith(height: 20 / 15),
           ),
         ),
         if (showDownloadSlip) ...[
@@ -469,20 +469,21 @@ class NeedHelpRow extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Iconsax.document_download5,
+                SvgPictureAsset(
+                  AppAssets.icDownload,
+                  width: 19.w,
+                  height: 19.w,
                   color: AppColors.textBody,
-                  size: 19.w,
+                  placeholderBuilder: (_) => Icon(
+                    Icons.download_rounded,
+                    color: AppColors.textBody,
+                    size: 19.sp,
+                  ),
                 ),
                 SizedBox(width: 6.w),
                 Text(
                   AppStrings.downloadSlip.tr,
-                  style: TextStyle(
-                    fontFamily: AppTextStyles.metropolisFont,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textBody,
-                    fontSize: 15.sp,
-                  ),
+                  style: AppTextStyles.homeSubtitle.copyWith(height: 20 / 15),
                 ),
               ],
             ),
@@ -497,7 +498,7 @@ class RideRatingStars extends StatelessWidget {
   final double? rating;
   final double starSize;
 
-  const RideRatingStars({super.key, this.rating, this.starSize = 34});
+  const RideRatingStars({super.key, this.rating, this.starSize = 32});
 
   @override
   Widget build(BuildContext context) {
@@ -505,12 +506,16 @@ class RideRatingStars extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: List.generate(5, (index) {
         final isFilled = rating != null && index < rating!.floor();
-        return Icon(
-          Icons.star,
-          color: isFilled
-              ? AppColors.ratingStarFilled
-              : AppColors.ratingStarEmpty,
-          size: starSize.w,
+        final starColor = isFilled
+            ? AppColors.ratingStarActive
+            : AppColors.ratingStarInactive;
+        return SvgPictureAsset(
+          AppAssets.icRatingStar,
+          width: starSize.w,
+          height: starSize.w,
+          color: starColor,
+          placeholderBuilder: (_) =>
+              Icon(Icons.star, color: starColor, size: starSize.w),
         );
       }),
     );

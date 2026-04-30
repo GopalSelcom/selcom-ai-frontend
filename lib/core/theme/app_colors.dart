@@ -118,6 +118,8 @@ class AppColors {
   static const Color mapStopMarkerRed = Color(0xFFE11D48);
   static const Color ratingStarFilled = Color(0xFFFFCC00);
   static const Color ratingStarEmpty = Color(0xFFE6E9EE);
+  static const Color ratingStarActive = Color(0xFFFFCC41);
+  static const Color ratingStarInactive = Color(0xFFE7E7E7);
   static const Color iconInfo = Color(0xFF0284C7);
   static const Color iconPurple = Color(0xFF6D28D9);
   static const Color iconWarning = Color(0xFFD97706);
