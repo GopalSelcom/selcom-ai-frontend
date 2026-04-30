@@ -52,8 +52,10 @@ class AppProfileHeader extends StatelessWidget {
               child: Text(
                 title!,
                 style: AppTextStyles.screenTitle.copyWith(
+                  fontSize: 30,
                   color: AppColors.white,
                   fontWeight: FontWeight.w800,
+                  height: 38 / 30,
                 ),
               ),
             ),

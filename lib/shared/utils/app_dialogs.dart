@@ -8,6 +8,7 @@ import '../../core/theme/app_text_styles.dart';
 import '../../core/constants/app_assets.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/services/storage_service.dart';
+import '../widgets/app_primary_button.dart';
 
 class AppDialogs {
   static bool _isErrorDialogVisible = false;
@@ -267,6 +268,7 @@ class AppDialogs {
                   title,
                   style: AppTextStyles.onboardingTitle.copyWith(
                     fontSize: 20.sp,
+                    letterSpacing: -0.4,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -364,9 +366,10 @@ class AppDialogs {
                 // Title
                 Text(
                   title,
-                  style: AppTextStyles.onboardingTitle.copyWith(
-                    fontSize: 20.sp,
-                    color: AppColors.textHeading,
+                  style: AppTextStyles.homeTitle.copyWith(
+                    height: 34 / 20,
+                    letterSpacing: -0.4,
+                    fontWeight: FontWeight.w600,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -375,71 +378,43 @@ class AppDialogs {
                 // Message
                 Text(
                   message,
-                  style: AppTextStyles.onboardingSubtitle.copyWith(
+                  style: AppTextStyles.homeChip.copyWith(
                     fontSize: 14.sp,
-                    color: AppColors.textBody,
+                    fontWeight: FontWeight.w400,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 32.h),
+                SizedBox(height: 24.h),
 
                 // Buttons
                 Row(
                   children: [
-                    // Cancel Button
                     Expanded(
-                      child: InkWell(
-                        onTap: handleCancel,
-                        child: Container(
-                          height: 50.h,
-                          decoration: BoxDecoration(
-                            color: AppColors.transparent,
-                            border: Border.all(color: AppColors.divider),
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                          child: Center(
-                            child: Text(
-                              cancelText,
-                              style: AppTextStyles.body.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textBody,
-                              ),
-                            ),
-                          ),
-                        ),
+                      child: AppPrimaryButton(
+                        label: cancelText,
+                        onPressed: handleCancel,
+                        height: 50.h,
+                        outlined: true,
+                        backgroundColor: AppColors.transparent,
+                        textColor: AppColors.textBody,
+                        outlinedTextColor: AppColors.textBody,
+                        outlinedBorderColor: AppColors.divider,
+                        outlinedBorderWidth: 1,
+                        borderRadius: 12.r,
                       ),
                     ),
                     SizedBox(width: 12.w),
-                    // Confirm Button
                     Expanded(
-                      child: InkWell(
-                        onTap: () {
+                      child: AppPrimaryButton(
+                        label: confirmText,
+                        onPressed: () {
                           Get.back();
                           onConfirm();
                         },
-                        child: Container(
-                          height: 50.h,
-                          decoration: BoxDecoration(
-                            color: confirmColor ?? AppColors.primary,
-                            borderRadius: BorderRadius.circular(12.r),
-                            boxShadow: [
-                              BoxShadow(
-                                color: (confirmColor ?? AppColors.primary)
-                                    .withValues(alpha: 0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Center(
-                            child: Text(
-                              confirmText,
-                              style: AppTextStyles.onboardingButton.copyWith(
-                                fontSize: 16.sp,
-                              ),
-                            ),
-                          ),
-                        ),
+                        height: 50.h,
+                        backgroundColor: confirmColor ?? AppColors.primary,
+                        textColor: AppColors.white,
+                        borderRadius: 12.r,
                       ),
                     ),
                   ],
@@ -572,7 +547,10 @@ class AppDialogs {
                   if (onCancel != null) onCancel();
                 },
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: AppColors.borderSubtle, width: 1.2),
+                  side: const BorderSide(
+                    color: AppColors.borderSubtle,
+                    width: 1.2,
+                  ),
                   minimumSize: Size(double.infinity, 56.h),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30.r),
@@ -638,7 +616,9 @@ class AppDialogs {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.successBadge.withValues(alpha: 0.2),
+                            color: AppColors.successBadge.withValues(
+                              alpha: 0.2,
+                            ),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),

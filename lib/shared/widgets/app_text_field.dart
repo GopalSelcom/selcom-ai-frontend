@@ -29,6 +29,7 @@ class AppTextField extends StatefulWidget {
   final FontWeight? fontWeight;
   final Color? textFieldBackgroundColor;
   final Color? textColor;
+  final bool enableEnhancedStyle;
 
   const AppTextField({
     super.key,
@@ -55,6 +56,7 @@ class AppTextField extends StatefulWidget {
     this.fontWeight,
     this.textFieldBackgroundColor,
     this.textColor,
+    this.enableEnhancedStyle = false,
   });
 
   @override
@@ -131,7 +133,7 @@ class _AppTextFieldState extends State<AppTextField> {
               duration: const Duration(milliseconds: 160),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(AppRadius.input),
-                boxShadow: focused && !hasError
+                boxShadow: widget.enableEnhancedStyle && focused && !hasError
                     ? const [
                         BoxShadow(
                           color: Color(0x400F67FE),
@@ -183,7 +185,11 @@ class _AppTextFieldState extends State<AppTextField> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.input),
-                    borderSide: const BorderSide(color: AppColors.inputBorderActive),
+                    borderSide: BorderSide(
+                      color: widget.enableEnhancedStyle
+                          ? AppColors.inputBorderActive
+                          : AppColors.inputBorderDefault,
+                    ),
                   ),
                   errorBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.input),

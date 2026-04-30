@@ -260,7 +260,7 @@ class HomeScreen extends GetView<HomeController> {
                   ),
                 ),
               ),
-              SizedBox(height: 8.h),
+              SizedBox(height: 12.h),
               Obx(
                 () => controller.savedPlaces.isEmpty
                     ? const SizedBox.shrink()

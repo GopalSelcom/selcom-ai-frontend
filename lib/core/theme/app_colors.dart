@@ -15,8 +15,8 @@ class AppColors {
   static const Color surfaceSubtle = Color(0xFFF8F9FD);
   static const Color bgSoftCircle = Color(0xFFF1F5F9);
   static const Color bgSuccessBanner = Color(0xFFEAF9F1);
-  static const Color bgPaymentPending = Color(0xFFE6DCCD);
-  static const Color bgPaymentSuccess = Color(0xFFD6EADC);
+  static const Color bgPaymentRequest = Color(0x1FFF9900); // 12% of #FF9900
+  static const Color bgPaymentSuccess = Color(0x1F0EAD36); // 12% of #0EAD36
   static const Color bgVerificationSurface = Color(0xFFF2F5F9);
   static const Color bgUnreadNotification = Color(0xFFF0F9FF);
   static const Color bgAvatarLightPink = Color(0xFFFFD2DE);
@@ -55,6 +55,7 @@ class AppColors {
   static const Color textSafetyNotice = Color(0xFF1F2024);
   static const Color textDriverTime = Color(0xFFA1A1BC);
   static const Color textMessageHint = Color(0xFF1B1A57);
+  static const Color textPaymentDialogMessage = Color(0xFF132235);
 
   // Semantic
   static const Color success        = Color(0xFF0EAD36);  // Green
@@ -117,6 +118,8 @@ class AppColors {
   static const Color mapStopMarkerRed = Color(0xFFE11D48);
   static const Color ratingStarFilled = Color(0xFFFFCC00);
   static const Color ratingStarEmpty = Color(0xFFE6E9EE);
+  static const Color ratingStarActive = Color(0xFFFFCC41);
+  static const Color ratingStarInactive = Color(0xFFE7E7E7);
   static const Color iconInfo = Color(0xFF0284C7);
   static const Color iconPurple = Color(0xFF6D28D9);
   static const Color iconWarning = Color(0xFFD97706);
@@ -124,8 +127,11 @@ class AppColors {
   static const Color iconOrange = Color(0xFFEA580C);
   static const Color iconAmber = Color(0xFFB45309);
   static const Color iconMutedLight = Color(0xFFCACACA);
+  static const Color iconPaymentRequest = Color(0xFFFF9900);
+  static const Color iconPaymentSuccess = success;
   static const Color iconHeartOutline = Color(0xFF292D32);
   static const Color iconHeartFilled = Color(0xFFF3004C);
+  static const Color textNeutralButton = Color(0xFF7F7F7F);
   static const Color promotionBlue = Color(0xFF2668D2);
   static const Color previousPickupBlue = Color(0xFF3B83ED);
   static const Color previousPickupHalo = Color(0xFFB9D0EE);
