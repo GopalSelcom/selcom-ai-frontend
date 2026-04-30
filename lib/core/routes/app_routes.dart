@@ -29,7 +29,6 @@ import '../../features/profile/presentation/screens/favorite_locations_screen.da
 import '../../features/profile/presentation/bindings/favorite_locations_binding.dart';
 import '../../features/ride/presentation/bindings/ride_message_binding.dart';
 import '../../features/ride/presentation/screens/ride_message_screen.dart';
-import '../../features/ride/presentation/screens/cancel_dialog_gallery_screen.dart';
 import '../../features/profile/presentation/screens/payment_methods_screen.dart';
 import '../../features/profile/presentation/settings/bindings/settings_binding.dart';
 import '../../features/profile/presentation/settings/screens/settings_screen.dart';
@@ -57,7 +56,6 @@ class AppRoutes {
   static const String favoriteLocations = '/favorite-locations';
   static const String notifications = '/notifications';
   static const String rideMessage = '/ride/message';
-  static const String cancelDialogGallery = '/cancel-dialog-gallery';
   static const String paymentMethods = '/payment-methods';
   static const String settings = '/settings';
   static const String selectSavedLocation = '/select-saved-location';
@@ -79,7 +77,11 @@ class AppRoutes {
     ),
     GetPage(name: otp, page: () => const OtpScreen(), binding: AuthBinding()),
     GetPage(name: profileLoading, page: () => const ProfileLoadingScreen()),
-    GetPage(name: signUp, page: () => const SignUpScreen(), binding: AuthBinding()),
+    GetPage(
+      name: signUp,
+      page: () => const SignUpScreen(),
+      binding: AuthBinding(),
+    ),
     GetPage(name: home, page: () => const HomeScreen(), binding: HomeBinding()),
     GetPage(
       name: locationSelection,
@@ -122,10 +124,6 @@ class AppRoutes {
       name: rideMessage,
       page: () => const RideMessageScreen(),
       binding: RideMessageBinding(),
-    ),
-    GetPage(
-      name: cancelDialogGallery,
-      page: () => const CancelDialogGalleryScreen(),
     ),
     GetPage(name: paymentMethods, page: () => const PaymentMethodsScreen()),
     GetPage(
