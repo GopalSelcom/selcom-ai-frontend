@@ -889,6 +889,7 @@ class DriverAcceptedScreen extends StatelessWidget {
             ),
             _roundAction(
               icon: Icons.call,
+              iconAsset: AppAssets.icCall,
               color: AppColors.primary,
               onTap: c.callDriver,
             ),
@@ -896,6 +897,7 @@ class DriverAcceptedScreen extends StatelessWidget {
             Obx(
               () => _roundAction(
                 icon: Icons.message_rounded,
+                iconAsset: AppAssets.icMessage,
                 color: AppColors.primary,
                 onTap: c.onChatTap,
                 badge: c.unreadCount.value > 0
@@ -1062,6 +1064,7 @@ class DriverAcceptedScreen extends StatelessWidget {
 
   Widget _roundAction({
     required IconData icon,
+    required String iconAsset,
     required Color color,
     required VoidCallback onTap,
     String? badge,
@@ -1078,7 +1081,16 @@ class DriverAcceptedScreen extends StatelessWidget {
             child: SizedBox(
               width: 33.81.w,
               height: 33.81.w,
-              child: Icon(icon, size: 14.sp, color: AppColors.white),
+              child: Center(
+                child: SvgPictureAsset(
+                  iconAsset,
+                  width: 14.w,
+                  height: 14.w,
+                  color: AppColors.white,
+                  placeholderBuilder: (_) =>
+                      Icon(icon, size: 14.sp, color: AppColors.white),
+                ),
+              ),
             ),
           ),
         ),
