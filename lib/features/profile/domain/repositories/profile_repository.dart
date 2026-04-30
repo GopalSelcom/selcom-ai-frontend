@@ -13,6 +13,7 @@ abstract class ProfileRepository {
   Future<Either<Failure, UserModel>> saveUserAdditionalDetails({
     required String name,
     required String emailId,
+    String? imagePath,
   });
   Future<Either<Failure, GetSavedPlacesResponseModel?>> getSavedPlaces();
   Future<Either<Failure, GetSavedPlacesResponseModel?>> getFavoritePlaces();

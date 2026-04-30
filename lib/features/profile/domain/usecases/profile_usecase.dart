@@ -21,8 +21,13 @@ class ProfileUseCase {
   Future<Either<Failure, UserModel>> saveUserAdditionalDetails({
     required String name,
     required String emailId,
+    String? imagePath,
   }) {
-    return repository.saveUserAdditionalDetails(name: name, emailId: emailId);
+    return repository.saveUserAdditionalDetails(
+      name: name,
+      emailId: emailId,
+      imagePath: imagePath,
+    );
   }
 
   Future<Either<Failure, WalletBalanceModel>> getWalletBalance() {

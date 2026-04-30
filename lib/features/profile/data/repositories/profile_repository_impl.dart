@@ -41,11 +41,13 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<Either<Failure, UserModel>> saveUserAdditionalDetails({
     required String name,
     required String emailId,
+    String? imagePath,
   }) async {
     try {
       final result = await remoteDataSource.saveUserAdditionalDetails(
         name: name,
         emailId: emailId,
+        imagePath: imagePath,
       );
       return Right(result);
     } catch (e, stackTrace) {

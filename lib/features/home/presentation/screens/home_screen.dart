@@ -25,7 +25,7 @@ import '../../../../shared/utils/app_dialogs.dart';
 class HomeScreen extends GetView<HomeController> {
   const HomeScreen({super.key});
 
-  static const double _homeSheetInitialSize = 0.45;
+  static const double _homeSheetInitialSize = 0.32;
 
   @override
   Widget build(BuildContext context) {
@@ -198,13 +198,23 @@ class HomeScreen extends GetView<HomeController> {
   */
 
   Widget _buildFigmaDraggableSheet() {
-    return AppDraggableBottomSheet(
-      initialChildSize: _homeSheetInitialSize,
-      minChildSize: _homeSheetInitialSize,
-      maxChildSize: 0.9,
-      snap: true,
-      snapSizes: const [_homeSheetInitialSize, 0.9],
-      childBuilder: (scrollController) {
+    return Obx(() {
+      final double maxContentSize = _calculateMaxSheetSize();
+
+      // Ensure snapSizes are in strictly ascending order to avoid assertion errors.
+      // We only add the maxContentSize as a snap point if it's meaningfully larger than the initial size.
+      final List<double> snaps = [_homeSheetInitialSize];
+      if (maxContentSize > _homeSheetInitialSize + 0.05) {
+        snaps.add(maxContentSize);
+      }
+
+      return AppDraggableBottomSheet(
+        initialChildSize: _homeSheetInitialSize,
+        minChildSize: _homeSheetInitialSize,
+        maxChildSize: maxContentSize > _homeSheetInitialSize ? maxContentSize : _homeSheetInitialSize + 0.01,
+        snap: snaps.length > 1,
+        snapSizes: snaps,
+        childBuilder: (scrollController) {
         return ListView(
           controller: scrollController,
           physics: const BouncingScrollPhysics(
@@ -362,6 +372,7 @@ class HomeScreen extends GetView<HomeController> {
         );
       },
     );
+   });
   }
 
   Widget _buildSavedPlaceChip(SavedPlace place) {
@@ -733,5 +744,39 @@ class HomeScreen extends GetView<HomeController> {
         SystemNavigator.pop();
       },
     );
+  }
+
+  double _calculateMaxSheetSize() {
+    // 1. Base content height (handle + search bar + padding)
+    double contentHeight = 50.h;
+
+    // 2. Saved Places Chip height
+    if (controller.savedPlaces.isNotEmpty) {
+      contentHeight += 60.h;
+    }
+
+    // 3. Recent Locations Section
+    if (controller.shouldShowRecentSection) {
+      contentHeight += 40.h; // Header
+      // Each recent location item is approximately 68.h including dividers
+      contentHeight += controller.recentDestinationsPreview.length * 68.h;
+    }
+
+    // 4. Vehicle Section
+    if (controller.shouldShowVehicleSection) {
+      contentHeight += 40.h; // Header
+      contentHeight += 130.h; // Horizontal list + caption
+    }
+
+    // 5. Bottom spacing
+    contentHeight += 24.h;
+
+    // Convert to fraction of screen height
+    final double screenHeight = 1.sh > 0 ? 1.sh : 812; // Fallback to standard iPhone height
+    double size = contentHeight / screenHeight;
+
+    // Clamp values to ensure usability. Minimum is the peek height, 
+    // maximum is 0.9 to avoid overlapping with top status bar too much.
+    return size.clamp(_homeSheetInitialSize, 0.9);
   }
 }

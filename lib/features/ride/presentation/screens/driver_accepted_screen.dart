@@ -67,12 +67,27 @@ class DriverAcceptedScreen extends StatelessWidget {
             right: 16,
             onProfileTap: c.openProfile,
             addressWidget: Expanded(
-              child: AppMapLocationSummaryCard(
-                label: 'Current location',
-                address: c.pickupAddress.isEmpty
-                    ? 'Selected location'
-                    : c.pickupAddress,
-                maxAddressLines: 1,
+              child: Obx(
+                () {
+                  final List<String> stops = c.ride.value?.stops
+                          .map((s) => s.address)
+                          .toList() ??
+                      [];
+                  // If stops include the destination, we remove the last one
+                  // because the card already shows the destination separately.
+                  if (stops.isNotEmpty) {
+                    stops.removeLast();
+                  }
+                  return RideLocationSummaryCard(
+                    pickupAddress: c.pickupAddress.isEmpty
+                        ? 'Current location'
+                        : c.pickupAddress,
+                    destinationAddress: c.destinationAddress.isEmpty
+                        ? 'Destination'
+                        : c.destinationAddress,
+                    intermediateStops: stops,
+                  );
+                },
               ),
             ),
           ),

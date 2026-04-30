@@ -329,25 +329,31 @@ class ProfileScreen extends StatelessWidget {
                   color: AppColors.white.withValues(alpha: 0.2),
                 ),
                 child: ClipOval(
-                  child: controller.userModel.value?.image != null &&
-                          controller.userModel.value!.image!.isNotEmpty
-                      ? CachedNetworkImage(
-                          imageUrl: controller.userModel.value!.image!,
+                  child: controller.pickedImage.value != null
+                      ? Image.file(
+                          controller.pickedImage.value!,
                           fit: BoxFit.cover,
-                          placeholder: (context, url) => const Center(
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                          errorWidget: (context, url, error) => Icon(
-                            Iconsax.user,
-                            color: AppColors.white,
-                            size: 50.w,
-                          ),
                         )
-                      : Icon(
-                          Iconsax.user,
-                          color: AppColors.white,
-                          size: 50.w,
-                        ),
+                      : controller.userModel.value?.image != null &&
+                              controller.userModel.value!.image!.isNotEmpty
+                          ? CachedNetworkImage(
+                              imageUrl: controller.userModel.value!.image!,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => const Center(
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                              errorWidget: (context, url, error) => Icon(
+                                Iconsax.user,
+                                color: AppColors.white,
+                                size: 50.w,
+                              ),
+                            )
+                          : Icon(
+                              Iconsax.user,
+                              color: AppColors.white,
+                              size: 50.w,
+                            ),
                 ),
               ),
               Positioned(

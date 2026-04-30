@@ -1,7 +1,9 @@
 import 'dart:convert';
 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/network/urls.dart';
@@ -34,6 +36,7 @@ class ProfileController extends GetxController {
   final Rxn<UserModel> userModel = Rxn<UserModel>();
   final RxString walletBalance = '43,829'.obs;
   final RxString walletNumber = '16010 00000 034'.obs;
+  final Rxn<File> pickedImage = Rxn<File>();
 
   // Controllers for text fields
   late TextEditingController nameTextController;
@@ -142,6 +145,7 @@ class ProfileController extends GetxController {
     final result = await profileUseCase.saveUserAdditionalDetails(
       name: nameTextController.text.trim(),
       emailId: userModel.value?.emailId ?? '',
+      imagePath: pickedImage.value?.path,
     );
 
     result.fold(
@@ -158,6 +162,7 @@ class ProfileController extends GetxController {
         // Update local state
         _updateLocalUserState(updatedUser);
 
+        pickedImage.value = null;
         isEditing.value = false;
         AppDialogs.showSuccessDialog(
           message: AppStrings.userProfileUpdatedSuccessfully.tr,
@@ -168,9 +173,20 @@ class ProfileController extends GetxController {
     isLoading.value = false;
   }
 
-  void pickProfileImage() {
-    // TODO: Implement image picker logic
-    AppDialogs.showSuccessDialog(message: 'Image picker will be implemented soon');
+  Future<void> pickProfileImage() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 70, // Optimize image size
+      );
+
+      if (image != null) {
+        pickedImage.value = File(image.path);
+      }
+    } catch (e) {
+      AppDialogs.showErrorDialog(message: 'Error picking image: $e');
+    }
   }
 
   void cancelEdit() {
@@ -179,6 +195,7 @@ class ProfileController extends GetxController {
     if (userModel.value != null) {
       _updateLocalUserState(userModel.value!);
     }
+    pickedImage.value = null;
     isEditing.value = false;
   }
 
