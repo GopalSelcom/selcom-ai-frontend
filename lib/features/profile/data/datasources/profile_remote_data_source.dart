@@ -18,6 +18,7 @@ abstract class ProfileRemoteDataSource {
   Future<UserModel> saveUserAdditionalDetails({
     required String name,
     required String emailId,
+    String? imagePath,
   });
 
   Future<GetSavedPlacesResponseModel?> getSavedPlaces();
@@ -77,12 +78,21 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   Future<UserModel> saveUserAdditionalDetails({
     required String name,
     required String emailId,
+    String? imagePath,
   }) async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.auth.saveUserDetails,
-        method: ApiMethod.post,
+        method: imagePath != null ? ApiMethod.multipart : ApiMethod.post,
         body: {'name': name, 'emailId': emailId},
+        multipartFiles: imagePath != null
+            ? [
+                LocalMultipartFile(
+                  name: 'image',
+                  path: imagePath,
+                ),
+              ]
+            : null,
       ),
     );
 
