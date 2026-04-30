@@ -166,6 +166,8 @@ class LiveActivityManager {
     return tokens;
   }
 
+  bool isTracking(String orderId) => _orderToActivityId.containsKey(orderId);
+
   static const int _maxConcurrentIOSActivities = 5;
   int get _iosActivityCount =>
       _orderToActivityId.values.where((v) => v != 'android').length;

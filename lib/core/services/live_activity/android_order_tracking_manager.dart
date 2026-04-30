@@ -67,13 +67,23 @@ class AndroidOrderTrackingManager {
     );
   }
 
-  String _formatDuration(int totalMinutes) {
+  String _formatDuration(int totalSeconds) {
+    if (totalSeconds < 60) {
+      return '${totalSeconds}s';
+    }
+    
+    final int totalMinutes = (totalSeconds / 60).ceil();
     if (totalMinutes >= 60) {
       final int h = totalMinutes ~/ 60;
       final int m = totalMinutes % 60;
-      return '${h}h ${m}m';
+      final String hStr = h == 1 ? 'hr' : 'hrs';
+      if (m > 0) {
+        final String mStr = m == 1 ? 'min' : 'mins';
+        return '$h $hStr $m $mStr';
+      }
+      return '$h $hStr';
     }
-    return '$totalMinutes mins';
+    return '$totalMinutes ${totalMinutes == 1 ? "min" : "mins"}';
   }
 
   Future<void> show({
@@ -171,7 +181,7 @@ class AndroidOrderTrackingManager {
       if (effectiveIsCompleted) {
         displayEta = 'Arrived';
       } else if (effectiveEtaSeconds > 0) {
-        displayEta = _formatDuration((effectiveEtaSeconds / 60.0).ceil());
+        displayEta = _formatDuration(effectiveEtaSeconds.toInt());
       }
 
       String etaDetail = '';

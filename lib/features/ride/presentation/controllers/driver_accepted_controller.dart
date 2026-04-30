@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math' as math;
 import 'package:selcom_rides_frontend/shared/widgets/app_google_map.dart';
 import 'package:uuid/uuid.dart';
@@ -1822,14 +1823,18 @@ class DriverAcceptedController extends GetxController
     EventRiderStatusUpdateResponse payload,
   ) async {
     try {
-      if (rideId.isEmpty) return;
-      final status = (payload.status ?? '').toString().toUpperCase();
-
-      // Handle termination for cancellation, but keep it alive for COMPLETED
+      final status = (payload.status ?? '').toString().trim().toUpperCase();
+      
+      // Handle Terminal States
       if (status.contains('CANCELLED') || status.contains('NO_DRIVER_FOUND')) {
         await LiveActivityManager().endActivity(rideId);
         return;
       }
+
+      // 📝 Only CREATE if not already tracking (iOS only).
+      // For iOS, subsequent updates are handled by the backend via APNs push.
+      // For Android, we must continue to push updates from Dart.
+      if (Platform.isIOS && LiveActivityManager().isTracking(rideId)) return;
 
       // If completed, sync one last time as isCompleted: true (handled by the handoff model update logic if needed,
       // but here we just ensure we don't 'END' it).
@@ -1840,7 +1845,10 @@ class DriverAcceptedController extends GetxController
         await LiveActivityManager().startActivity(
           orderId: rideId,
           status: status,
-          isCompleted: true,
+          isCompleted: status.contains('COMPLETED'),
+          etaSeconds: currentEtaSeconds.value,
+          driverLatitude: assignedDriverLocation.value?.latitude,
+          driverLongitude: assignedDriverLocation.value?.longitude,
         );
         return;
       }

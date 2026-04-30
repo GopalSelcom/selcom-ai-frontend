@@ -75,6 +75,7 @@ struct TrackingViewModel {
     let vehicleName: String
     let plateNumber: String
     let eta: String
+    let shortEta: String
     let progressRatio: Double
     let isRiderInRide: Bool
     let isArrived: Bool
@@ -118,17 +119,19 @@ struct TrackingViewModel {
         self.debugStatus       = rawStatus
         let normalizedStatus   = rawStatus.lowercased()
         
-        let etaSecondsStr      = read("eta_seconds") ?? "0"
-        var etaSeconds         = Double(etaSecondsStr) ?? 0
+        let rawEtaSecondsStr   = read("eta_seconds") ?? "0"
+        var etaSeconds         = Double(rawEtaSecondsStr) ?? 0
         
         let isCompletedStr     = read("is_completed") ?? "false"
         self.isArrived         = isCompletedStr.lowercased() == "true" || normalizedStatus.contains("completed")
 
-        // 📝 Ignored 0 ETA as requested: "if the backend sent 0 eta without completed the task then don't accept that in the timer"
-        if etaSeconds == 0 && !self.isArrived {
+        // 🕰️ Robust ETA: If server sends 0 but we aren't arrived, try to use cached value.
+        // We also check if the "Server" value was actually 0 to ensure we don't overwrite a deliberate 0.
+        if (etaSeconds <= 0) && !self.isArrived {
             if let cachedEtaStr = ud?.string(forKey: attrs.prefixedKey("eta_seconds")),
                let cachedEta = Double(cachedEtaStr), cachedEta > 0 {
                 etaSeconds = cachedEta
+                currentDataSource = "Local (Recovered)"
             }
         }
 
@@ -198,14 +201,46 @@ struct TrackingViewModel {
             self.vehicleName = rawVehicleName
         }
         
+        func formatDuration(_ seconds: Double, short: Bool = false) -> String {
+            let totalSeconds = Int(max(0, seconds))
+            if totalSeconds < 60 {
+                return "\(totalSeconds)s"
+            }
+            
+            let hours = totalSeconds / 3600
+            let minutes = (totalSeconds % 3600) / 60
+            
+            if hours > 0 {
+                if short {
+                    return "\(hours)h \(minutes)m"
+                } else {
+                    let hPart = "\(hours) \(hours == 1 ? "hr" : "hrs")"
+                    if minutes > 0 {
+                        let mPart = "\(minutes) \(minutes == 1 ? "min" : "mins")"
+                        return "\(hPart) \(mPart)"
+                    } else {
+                        return hPart
+                    }
+                }
+            } else {
+                if short {
+                    return "\(minutes)m"
+                } else {
+                    return "\(minutes) \(minutes == 1 ? "min" : "mins")"
+                }
+            }
+        }
+
         // 🕰️ ETA & Progress Logic
         if isArrived {
             self.eta = "Arrived"
+            self.shortEta = "Done"
             self.targetDate = nil
             self.progressRatio = 1.0
         } else if etaSeconds > 0 {
-            let mins = Int(ceil(etaSeconds / 60.0))
-            self.eta = mins <= 1 ? "1 min" : "\(mins) mins"
+            self.eta = formatDuration(etaSeconds)
+            self.shortEta = formatDuration(etaSeconds, short: true)
+            
             self.targetDate = Date().addingTimeInterval(etaSeconds)
             
             if isRiderInRide {
@@ -215,16 +250,13 @@ struct TrackingViewModel {
                 // Pickup Phase: 0% -> 50%
                 self.progressRatio = 0.1 + (0.4 * (1.0 - min(etaSeconds / 1200.0, 1.0)))
             }
-        } else if etaSeconds < 0 {
-            let lateMins = Int(abs(floor(etaSeconds / 60.0)))
-            self.eta = lateMins <= 1 ? "1 min delayed" : "\(lateMins) mins delayed"
-            self.targetDate = nil
-            self.progressRatio = 1.0
         } else {
             if normalizedStatus == "searching" || normalizedStatus == "finding_driver" || normalizedStatus == "finding driver" {
                 self.eta = "Soon"
+                self.shortEta = "Soon"
             } else {
-                self.eta = self.isArrived ? "Done" : "Delayed"
+                self.eta = self.isArrived ? "Done" : "Soon"
+                self.shortEta = self.isArrived ? "Done" : "Soon"
             }
             self.targetDate = nil
             self.progressRatio = isArrived ? 1.0 : (isRiderInRide ? 0.75 : 0.25)
@@ -271,11 +303,10 @@ struct MainDashboardView: View {
                         HStack(alignment: .firstTextBaseline, spacing: 4) {
                             Text(prefix).font(.system(size: 28, weight: .bold)).foregroundColor(.white)
                             if let target = vm.targetDate {
-                                Text(target, style: .timer)
+                                Text(target, style: .relative)
                                     .font(.system(size: 28, weight: .bold))
                                     .foregroundColor(.white)
                                     .multilineTextAlignment(.leading)
-                                    .frame(width: 80, alignment: .leading)
                             } else {
                                 Text(displayEta).font(.system(size: 28, weight: .bold)).foregroundColor(.white)
                             }
@@ -365,15 +396,16 @@ struct RiderTrackingWidgetLiveActivity: Widget {
                             .font(.system(size: 9.5, weight: .bold))
                             .foregroundColor(.white)
                     } else if let target = vm.targetDate {
-                        Text(target, style: .timer)
+                        Text(target, style: .relative)
                             .font(.system(size: 10, weight: .bold))
                             .foregroundColor(.white)
                             .multilineTextAlignment(.center)
-                            .frame(width: 38)
+                            .frame(width: 50)
                     } else {
-                        Text(vm.eta.lowercased())
+                        Text(vm.shortEta.lowercased())
                             .font(.system(size: 9.5, weight: .bold))
                             .foregroundColor(.white)
+                            .multilineTextAlignment(.center)
                     }
                 }
                 .padding(.leading, 6)
