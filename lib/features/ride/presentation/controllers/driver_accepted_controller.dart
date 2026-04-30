@@ -639,11 +639,14 @@ class DriverAcceptedController extends GetxController
             assignedDriverLocation.value!;
         final distance = _calculateDistanceInMeters(currentPos, rawPos);
 
-        // Physics-based interpolation: match the animation duration to the 
-        // actual time it takes to travel the distance at current speed.
-        // We add a 15% buffer to handle socket jitter.
-        final double seconds = (distance / speed) * 1.15;
-        animDuration = Duration(milliseconds: (seconds * 1000).toInt().clamp(1500, 8000));
+        // 🏎️ High-Speed Optimization: 
+        // Use a tighter buffer (5% instead of 15%) to prevent lag accumulation.
+        // Cap duration more aggressively at 5s to force catch-up.
+        double secondsNeeded = (distance / speed) * 1.05; 
+        int millis = (secondsNeeded * 1000).toInt();
+        
+        millis = millis.clamp(1200, 5000); 
+        animDuration = Duration(milliseconds: millis);
       } else {
         // If slow or stopped, use a more conservative 4s glide to match
         // the typical 3-5s socket frequency.
