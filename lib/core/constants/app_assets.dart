@@ -8,6 +8,8 @@ class AppAssets {
   static const String icMessage = '$_imagePath/ic_message.svg';
   static const String icInfo = '$_imagePath/ic_info.svg';
   static const String icSend = '$_imagePath/ic_send.svg';
+  static const String icRequest = '$_imagePath/ic_request.svg';
+  static const String icSuccess = '$_imagePath/ic_success.svg';
   static const String icHomeChip = '$_imagePath/ic_home_chip.svg';
   static const String icOfficeChip = '$_imagePath/ic_office_chip.svg';
   static const String icWorkChip = '$_imagePath/ic_work_chip.svg';
@@ -79,8 +81,6 @@ class AppAssets {
   static const String icPaymentCard = '$_paymentPath/ic_card.svg';
   static const String icPaymentArrowUp = '$_paymentPath/ic_arrow_up.svg';
   static const String icPaymentPerson = '$_paymentPath/ic_person.svg';
-  static const String icPaymentPending = '$_paymentPath/ic_payment_pending.svg';
-  static const String icPaymentSuccess = '$_paymentPath/ic_payment_success.svg';
   static const String imgPaymentAddCardSuccess =
       '$_paymentPath/add_card_success.png';
   static const String imgPaymentDeleteCardConfirm =
