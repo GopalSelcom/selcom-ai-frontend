@@ -138,25 +138,27 @@ struct TrackingViewModel {
         let tripPhaseStatus = ["ride_started", "ridestarted", "ride_in_progress", "rideinprogress", "near_destination", "neardestination"]
         self.isRiderInRide = tripPhaseStatus.contains(normalizedStatus)
 
+        let isNearZero = etaSeconds <= 0 && !self.isArrived
+        
         switch normalizedStatus {
             case "ride_completed", "completed":
                 self.status = "You have arrived!"
             case "near_destination", "neardestination":
-                self.status = "Almost There"
+                self.status = isNearZero ? "Destination Nearby" : "Almost There"
             case "ride_in_progress", "rideinprogress":
-                self.status = "On Your Way"
+                self.status = isNearZero ? "Destination Nearby" : "On Your Way"
             case "ride_started", "ridestarted":
-                self.status = "Ride Started"
+                self.status = isNearZero ? "Destination Nearby" : "Ride Started"
             case "driver_arrived", "driverarrived":
                 self.status = "Driver Arrived"
             case "driver_arriving", "driverarriving":
-                self.status = "Driver En Route"
+                self.status = isNearZero ? "Driver is Nearby" : "Driver En Route"
             case "searching", "finding driver", "finding_driver":
                 self.status = "Finding Driver"
             case "driver_assigned", "driverassigned", "assigned":
-                self.status = "Driver Assigned"
+                self.status = isNearZero ? "Driver is Nearby" : "Driver Assigned"
             case "driver_assigning", "driverassigning":
-                self.status = "Driver Assigned"
+                self.status = isNearZero ? "Driver is Nearby" : "Driver Assigned"
             default:
                 self.status = rawStatus.replacingOccurrences(of: "_", with: " ").capitalized
         }
@@ -314,7 +316,9 @@ struct MainDashboardView: View {
                         let displayEta = isSoon ? "soon" : vm.eta
 
                         HStack(alignment: .firstTextBaseline, spacing: 4) {
-                            Text(prefix).font(.system(size: 24, weight: .bold)).foregroundColor(.white)
+                            if !prefix.isEmpty {
+                                Text(prefix).font(.system(size: 24, weight: .bold)).foregroundColor(.white)
+                            }
                             Text(displayEta).font(.system(size: 24, weight: .bold)).foregroundColor(.white)
                         }
                         .minimumScaleFactor(0.7)

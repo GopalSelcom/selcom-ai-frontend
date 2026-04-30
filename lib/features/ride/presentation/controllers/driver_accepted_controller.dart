@@ -1307,12 +1307,20 @@ class DriverAcceptedController extends GetxController
     }
 
     final eta = payload.eta;
-    if (eta != null && eta > 0) {
+    if (eta != null) {
       currentEtaSeconds.value = eta.toDouble();
-      final convertedTime = eta / 60;
-      etaLabel.value = '${convertedTime.toInt()} Mins';
-      arrivalLabel.value =
-          'Driver will arriving in ${convertedTime.toInt() <= 1 ? '1 min' : '${convertedTime.toInt()} mins'}...';
+      if (eta > 0) {
+        final minutes = (eta / 60).ceil();
+        etaLabel.value = '$minutes ${minutes == 1 ? 'Min' : 'Mins'}';
+        arrivalLabel.value =
+            'Driver will arrive in $minutes ${minutes == 1 ? 'min' : 'mins'}...';
+      } else {
+        final status = (payload.status ?? currentRideStatus.value).toLowerCase();
+        final inRide =
+            status.contains('progress') || status.contains('started');
+        etaLabel.value = inRide ? 'Nearby' : 'Arriving';
+        arrivalLabel.value = inRide ? 'Almost there' : 'Driver is arriving...';
+      }
     }
 
     String target = _normalizeRouteTarget(payload.routeTarget);
