@@ -4,6 +4,9 @@ class AppAssets {
   // Home Screen
   static const String mapBackground = '$_imagePath/map_background.png';
   static const String icGps = '$_imagePath/ic_gps.svg';
+  static const String icCall = '$_imagePath/ic_call.svg';
+  static const String icInfo = '$_imagePath/ic_info.svg';
+  static const String icSend = '$_imagePath/ic_send.svg';
   static const String icHomeChip = '$_imagePath/ic_home_chip.svg';
   static const String icOfficeChip = '$_imagePath/ic_office_chip.svg';
   static const String icWorkChip = '$_imagePath/ic_work_chip.svg';

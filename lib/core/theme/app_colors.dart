@@ -52,6 +52,9 @@ class AppColors {
   static const Color textSlate = Color(0xFF475569);
   static const Color textSlateSoft = Color(0xFF64748B);
   static const Color textSectionMuted = Color(0xFF77869E);
+  static const Color textSafetyNotice = Color(0xFF1F2024);
+  static const Color textDriverTime = Color(0xFFA1A1BC);
+  static const Color textMessageHint = Color(0xFF1B1A57);
 
   // Semantic
   static const Color success        = Color(0xFF1D9E75);  // Green
