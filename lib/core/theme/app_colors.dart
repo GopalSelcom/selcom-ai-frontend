@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // Brand
-  static const Color primary        = Color(0xFF5CB75E);  // Red/Pink — buttons, highlights
-  static const Color primaryLight   = Color(0xFFFDE8ED);  // Light red bg
+  static const Color primary        = Color(0xFF5CB75E);  // Green — buttons, highlights
+  static const Color primaryLight   = Color(0xFFE8FDE8);  // Light geen bg
 
   // Backgrounds
   static const Color pageBackground = Color(0xFFF8FAFC);  // Gray/Shade 7
@@ -57,7 +57,7 @@ class AppColors {
   static const Color textMessageHint = Color(0xFF1B1A57);
 
   // Semantic
-  static const Color success        = Color(0xFF1D9E75);  // Green
+  static const Color success        = Color(0xFF0EAD36);  // Green
   static const Color error          = Color(0xFFE24B4A);  // Red error
   static const Color warning        = Color(0xFFEF9F27);  // Orange/amber
   static const Color info           = Color(0xFF378ADD);  // Blue

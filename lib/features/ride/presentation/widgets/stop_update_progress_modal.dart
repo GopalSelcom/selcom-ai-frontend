@@ -11,6 +11,7 @@ class StopUpdateProgressModal extends GetView<DriverAcceptedController> {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       padding: EdgeInsets.all(24.w),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
@@ -26,7 +27,7 @@ class StopUpdateProgressModal extends GetView<DriverAcceptedController> {
               const CircularProgressIndicator(color: AppColors.primary),
               SizedBox(height: 24.h),
             ] else ...[
-              const Icon(Icons.check_circle, color: AppColors.success, size: 64),
+              Icon(Icons.check_circle, color: AppColors.success, size: 64.sp),
               SizedBox(height: 16.h),
             ],
             Text(

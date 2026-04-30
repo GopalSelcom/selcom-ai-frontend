@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../shared/widgets/map_widgets.dart';
+import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../home/presentation/controllers/home_controller.dart';
 
@@ -148,13 +152,7 @@ class _ConfirmStopScreenState extends State<ConfirmStopScreen> {
           Positioned(
             top: MediaQuery.of(context).padding.top + 10.h,
             left: 16.w,
-            child: CircleAvatar(
-              backgroundColor: AppColors.cardBackground,
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back, color: AppColors.textHeading),
-                onPressed: () => Get.back(),
-              ),
-            ),
+            child: const AppBackButton(),
           ),
 
           // Bottom Panel
@@ -178,14 +176,25 @@ class _ConfirmStopScreenState extends State<ConfirmStopScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.place, color: AppColors.primary, size: 24.sp),
+                      SvgPictureAsset(
+                        AppAssets.locationIcDestinationPin,
+                        width: 24.w,
+                        height: 24.h,
+                        color: AppColors.primary,
+                        placeholderBuilder: (_) => Icon(
+                          Icons.place,
+                          color: AppColors.primary,
+                          size: 24.sp,
+                        ),
+                      ),
                       SizedBox(width: 12.w),
                       Expanded(
                         child: Obx(
                           () => Text(
                             _resolvedAddress.value,
                             style: AppTextStyles.body.copyWith(
-                              fontWeight: FontWeight.w600,
+                              color: AppColors.textBody,
+                              fontWeight: FontWeight.w500,
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -197,8 +206,8 @@ class _ConfirmStopScreenState extends State<ConfirmStopScreen> {
                   SizedBox(height: 24.h),
                   SizedBox(
                     width: double.infinity,
-                    height: 56.h,
-                    child: ElevatedButton(
+                    child: AppPrimaryButton(
+                      label: 'Confirm Stop',
                       onPressed: () {
                         Get.back(
                           result: {
@@ -208,18 +217,7 @@ class _ConfirmStopScreenState extends State<ConfirmStopScreen> {
                           },
                         );
                       },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16.r),
-                        ),
-                      ),
-                      child: Text(
-                        'Confirm Stop',
-                        style: AppTextStyles.button.copyWith(
-                          color: AppColors.white,
-                        ),
-                      ),
+                      height: 56.h,
                     ),
                   ),
                   SizedBox(height: MediaQuery.of(context).padding.bottom),

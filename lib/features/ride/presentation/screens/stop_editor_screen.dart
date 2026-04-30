@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import '../../../../core/constants/app_assets.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -127,7 +130,10 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
         centerTitle: true,
         title: Text(
           AppStrings.addStops.tr,
-          style: AppTextStyles.homeTitle.copyWith(fontSize: 18.sp),
+          style: AppTextStyles.homeTitle.copyWith(
+            height: 34 / 20,
+            letterSpacing: -0.4,
+          ),
         ),
         leading: const AppBackButton(
           color: AppColors.textHeading,
@@ -143,7 +149,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                 _buildStaticPoint(
                   'Pickup Point',
                   controller.pickupAddress,
-                  AppColors.info,
+                  AppColors.mapPickupMarkerBlue,
                   isPickup: true,
                 ),
                 ReorderableListView.builder(
@@ -165,14 +171,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                         padding: EdgeInsets.all(12.w),
                         decoration: BoxDecoration(
                           color: AppColors.cardBackground,
-                          borderRadius: BorderRadius.circular(12.r),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.black.withOpacity(0.04),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
+                          borderRadius: BorderRadius.circular(AppRadius.card),
                         ),
                         child: Row(
                           children: [
@@ -202,7 +201,8 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: AppTextStyles.body.copyWith(
-                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.textBody,
+                                      fontWeight: FontWeight.w400,
                                     ),
                                   ),
                                 ],
@@ -211,8 +211,8 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                             IconButton(
                               icon: Icon(
                                 Icons.remove_circle,
-                                color: AppColors.error,
-                                size: 24.sp,
+                                color: AppColors.primary,
+                                size: 20.sp,
                               ),
                               onPressed: () => _removeStop(index),
                             ),
@@ -227,7 +227,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                 _buildStaticPoint(
                   'Destination',
                   controller.destinationAddress,
-                  AppColors.success,
+                  AppColors.mapDropMarkerGreen,
                 ),
               ],
             ),
@@ -261,21 +261,26 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
       padding: EdgeInsets.only(bottom: 12.h),
       child: InkWell(
         onTap: _addStop,
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(AppRadius.button),
         child: Container(
           padding: EdgeInsets.all(12.w),
           decoration: BoxDecoration(
-            color: AppColors.primaryLight,
-            borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+            borderRadius: BorderRadius.circular(AppRadius.button),
+            border: Border.all(color: AppColors.primary),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.add_circle_outline,
+              SvgPictureAsset(
+                AppAssets.locationIcAdd,
+                width: 18.w,
+                height: 18.w,
                 color: AppColors.primary,
-                size: 20.sp,
+                placeholderBuilder: (_) => Icon(
+                  Icons.add_circle,
+                  color: AppColors.primary,
+                  size: 20.sp,
+                ),
               ),
               SizedBox(width: 8.w),
               Text(
@@ -308,10 +313,12 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
         padding: EdgeInsets.all(20.w),
         decoration: BoxDecoration(
           color: AppColors.cardBackground,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppRadius.card),
+          ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.black.withOpacity(0.08),
+              color: AppColors.black.withValues(alpha: 0.08),
               blurRadius: 15,
               offset: const Offset(0, -5),
             ),
@@ -328,7 +335,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                 ),
                 Text(
                   'TZS ${controller.priceFormatter(preview.newFareEstimate)}',
-                  style: AppTextStyles.price.copyWith(fontSize: 18.sp),
+                  style: AppTextStyles.price.copyWith(fontSize: 16.sp),
                 ),
               ],
             ),
@@ -338,20 +345,20 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
               children: [
                 Text(
                   'Fare Difference:',
-                  style: AppTextStyles.homeCaption.copyWith(fontSize: 13.sp),
+                  style: AppTextStyles.homeCaption.copyWith(fontSize: 12.sp),
                 ),
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(6.r),
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(AppRadius.small),
                   ),
                   child: Text(
                     '$sign TZS ${controller.priceFormatter(preview.deltaAmount)}',
-                    style: AppTextStyles.homeCaption.copyWith(
+                    style: AppTextStyles.price.copyWith(
                       color: color,
                       fontWeight: FontWeight.w700,
-                      fontSize: 13.sp,
+                      fontSize: 12.sp,
                     ),
                   ),
                 ),
@@ -361,10 +368,25 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
               SizedBox(height: 12.h),
               Row(
                 children: [
-                  Icon(
-                    Icons.info_outline,
-                    color: AppColors.warning,
-                    size: 16.sp,
+                  Container(
+                    width: 15.w,
+                    height: 15.w,
+                    padding: EdgeInsets.all(3.w),
+                    decoration: const BoxDecoration(
+                      color: AppColors.warning,
+                      shape: BoxShape.circle,
+                    ),
+                    child: SvgPictureAsset(
+                      AppAssets.icInfo,
+                      width: 10.w,
+                      height: 10.h,
+                      color: AppColors.white,
+                      placeholderBuilder: (_) => Icon(
+                        Icons.info,
+                        color: AppColors.warning,
+                        size: 18.sp,
+                      ),
+                    ),
                   ),
                   SizedBox(width: 6.w),
                   Expanded(
@@ -397,14 +419,24 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
         decoration: BoxDecoration(
           color: AppColors.pageBackground,
           borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: AppColors.shade5.withOpacity(0.5)),
+          border: Border.all(color: AppColors.shade5.withValues(alpha: 0.5)),
         ),
         child: Row(
           children: [
-            Icon(
-              isPickup ? Icons.circle : Icons.location_on,
-              color: color,
-              size: 20.sp,
+            SizedBox(
+              width: 20.w,
+              height: 20.h,
+              child: SvgPictureAsset(
+                isPickup
+                    ? AppAssets.locationIcPickupPin
+                    : AppAssets.locationIcDestinationPin,
+                color: color,
+                placeholderBuilder: (_) => Icon(
+                  isPickup ? Icons.location_on : Icons.push_pin,
+                  color: color,
+                  size: 20.sp,
+                ),
+              ),
             ),
             SizedBox(width: 12.w),
             Expanded(
@@ -414,6 +446,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                   Text(
                     title,
                     style: AppTextStyles.caption.copyWith(
+                      fontSize: 13.sp,
                       fontWeight: FontWeight.w600,
                       color: color,
                     ),

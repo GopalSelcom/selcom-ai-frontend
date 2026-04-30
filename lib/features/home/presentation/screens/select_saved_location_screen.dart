@@ -6,6 +6,7 @@ import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_back_button.dart';
 import '../controllers/home_controller.dart';
 import '../../../../core/routes/app_routes.dart';
@@ -266,10 +267,16 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
                 color: AppColors.bgSoftCircle,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                Icons.access_time_outlined,
+              child: SvgPictureAsset(
+                AppAssets.locationIcTime,
+                width: 20.w,
+                height: 20.h,
                 color: AppColors.textHint,
-                size: 20.sp,
+                placeholderBuilder: (_) => Icon(
+                  Icons.access_time_outlined,
+                  color: AppColors.textHint,
+                  size: 20.sp,
+                ),
               ),
             ),
             SizedBox(width: 16.w),
@@ -303,10 +310,15 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
             ),
             if (onFavorite != null)
               IconButton(
-                icon: Icon(
-                  Icons.favorite_border,
-                  color: AppColors.primary,
-                  size: 22.sp,
+                icon: SvgPictureAsset(
+                  AppAssets.locationIcHeartOutline,
+                  width: 22.w,
+                  height: 22.h,
+                  placeholderBuilder: (_) => Icon(
+                    Icons.favorite_border,
+                    color: AppColors.primary,
+                    size: 22.sp,
+                  ),
                 ),
                 onPressed: onFavorite,
               ),
