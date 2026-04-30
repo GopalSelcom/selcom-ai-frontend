@@ -284,23 +284,32 @@ class RideLocationsTimeline extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 22.w,
-              height: 22.w,
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
-                shape: BoxShape.circle,
+            SvgPicture.asset(
+              AppAssets.locationIcAdd,
+              width: 18.w,
+              height: 18.w,
+              colorFilter: const ColorFilter.mode(
+                AppColors.primary,
+                BlendMode.srcIn,
               ),
-              alignment: Alignment.center,
-              child: Icon(Icons.add, color: AppColors.white, size: 16.sp),
+              placeholderBuilder: (_) => Container(
+                width: 18.w,
+                height: 18.w,
+                decoration: const BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Icon(Icons.add, color: AppColors.white, size: 14.sp),
+              ),
             ),
             SizedBox(width: 6.w),
             Text(
               AppStrings.add.tr,
               style: AppTextStyles.homeSubtitle.copyWith(
                 color: AppColors.textMutedStrong,
-                fontSize: 18.sp / 1.2,
-                fontWeight: FontWeight.w500,
+                fontSize: 15.sp,
+                height: 20 / 15,
               ),
             ),
           ],
