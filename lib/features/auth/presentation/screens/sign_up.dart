@@ -46,6 +46,7 @@ class SignUpScreen extends GetView<SignUpController> {
                 () => Column(
                   children: [
                     AppTextField(
+                      enableEnhancedStyle: true,
                       label: 'Full name',
                       hintText: 'Enter your full name',
                       controller: controller.nameController,
@@ -56,6 +57,7 @@ class SignUpScreen extends GetView<SignUpController> {
                     ),
                     SizedBox(height: 14.h),
                     AppTextField(
+                      enableEnhancedStyle: true,
                       label: 'Email',
                       hintText: 'Enter your email (optional)',
                       controller: controller.emailController,
