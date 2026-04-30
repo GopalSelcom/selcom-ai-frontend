@@ -43,7 +43,7 @@ class AppSocketService {
 
   AppSocketService._internal();
 
-  static const String defaultBaseUrl = 'http://82.112.227.6:5010';
+  static const String defaultBaseUrl = 'https://dukastaging.selcom.dev:7443';
 
   // ---------------- EVENTS ----------------
 
@@ -146,6 +146,7 @@ class AppSocketService {
       io.OptionBuilder()
           .setTransports(['websocket'])
           .enableReconnection()
+          .setPath('/go-socket.io')
           .setReconnectionAttempts(_maxReconnectAttempts)
           .setReconnectionDelay(1000)
           .setTimeout(12000)

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:developer' as developer;
 
 import 'package:flutter/foundation.dart';
@@ -51,6 +52,7 @@ class FindingDriverController extends GetxController {
 
   final remainingSeconds = searchTimeoutSeconds.obs;
   final Rxn<LatLng> assignedDriverLocation = Rxn<LatLng>();
+  final Rxn<LatLng> animatedRiderLocation = Rxn<LatLng>();
   final Rxn<BitmapDescriptor> assignedDriverMarkerIcon =
       Rxn<BitmapDescriptor>();
   final Rxn<BitmapDescriptor> pickupIcon = Rxn<BitmapDescriptor>();
@@ -239,8 +241,8 @@ class FindingDriverController extends GetxController {
 
   Future<void> _syncLiveActivity() async {
     try {
-      if (rideId.isEmpty) return;
-
+      if (Platform.isIOS && LiveActivityManager().isTracking(rideId)) return;
+      
       await LiveActivityManager().startActivity(
         orderId: rideId,
         status: 'SEARCHING',

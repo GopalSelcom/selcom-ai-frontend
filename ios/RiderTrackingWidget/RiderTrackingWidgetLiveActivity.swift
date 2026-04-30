@@ -75,11 +75,11 @@ struct TrackingViewModel {
     let vehicleName: String
     let plateNumber: String
     let eta: String
+    let shortEta: String
     let progressRatio: Double
     let isRiderInRide: Bool
     let isArrived: Bool
     let debugStatus: String 
-    let targetDate: Date? 
     let dataSource: String // DEBUG: "Server" or "Local"
     
     init(context: ActivityViewContext<LiveActivitiesAppAttributes>) {
@@ -118,17 +118,19 @@ struct TrackingViewModel {
         self.debugStatus       = rawStatus
         let normalizedStatus   = rawStatus.lowercased()
         
-        let etaSecondsStr      = read("eta_seconds") ?? "0"
-        var etaSeconds         = Double(etaSecondsStr) ?? 0
+        let rawEtaSecondsStr   = read("eta_seconds") ?? "0"
+        var etaSeconds         = Double(rawEtaSecondsStr) ?? 0
         
         let isCompletedStr     = read("is_completed") ?? "false"
         self.isArrived         = isCompletedStr.lowercased() == "true" || normalizedStatus.contains("completed")
 
-        // 📝 Ignored 0 ETA as requested: "if the backend sent 0 eta without completed the task then don't accept that in the timer"
-        if etaSeconds == 0 && !self.isArrived {
+        // 🕰️ Robust ETA: If server sends 0 but we aren't arrived, try to use cached value.
+        // We also check if the "Server" value was actually 0 to ensure we don't overwrite a deliberate 0.
+        if (etaSeconds <= 0) && !self.isArrived {
             if let cachedEtaStr = ud?.string(forKey: attrs.prefixedKey("eta_seconds")),
                let cachedEta = Double(cachedEtaStr), cachedEta > 0 {
                 etaSeconds = cachedEta
+                currentDataSource = "Local (Recovered)"
             }
         }
 
@@ -136,25 +138,27 @@ struct TrackingViewModel {
         let tripPhaseStatus = ["ride_started", "ridestarted", "ride_in_progress", "rideinprogress", "near_destination", "neardestination"]
         self.isRiderInRide = tripPhaseStatus.contains(normalizedStatus)
 
+        let isNearZero = etaSeconds <= 0 && !self.isArrived
+        
         switch normalizedStatus {
             case "ride_completed", "completed":
                 self.status = "You have arrived!"
             case "near_destination", "neardestination":
-                self.status = "Almost There"
+                self.status = isNearZero ? "Destination Nearby" : "Almost There"
             case "ride_in_progress", "rideinprogress":
-                self.status = "On Your Way"
+                self.status = isNearZero ? "Destination Nearby" : "On Your Way"
             case "ride_started", "ridestarted":
-                self.status = "Ride Started"
+                self.status = isNearZero ? "Destination Nearby" : "Ride Started"
             case "driver_arrived", "driverarrived":
                 self.status = "Driver Arrived"
             case "driver_arriving", "driverarriving":
-                self.status = "Driver En Route"
+                self.status = isNearZero ? "Driver is Nearby" : "Driver En Route"
             case "searching", "finding driver", "finding_driver":
                 self.status = "Finding Driver"
             case "driver_assigned", "driverassigned", "assigned":
-                self.status = "Driver Assigned"
+                self.status = isNearZero ? "Driver is Nearby" : "Driver Assigned"
             case "driver_assigning", "driverassigning":
-                self.status = "Driver Assigned"
+                self.status = isNearZero ? "Driver is Nearby" : "Driver Assigned"
             default:
                 self.status = rawStatus.replacingOccurrences(of: "_", with: " ").capitalized
         }
@@ -198,15 +202,44 @@ struct TrackingViewModel {
             self.vehicleName = rawVehicleName
         }
         
+        func formatDuration(_ seconds: Double, short: Bool = false) -> String {
+            let totalSeconds = Int(max(0, seconds))
+            if totalSeconds < 60 {
+                return "\(totalSeconds)s"
+            }
+            
+            let hours = totalSeconds / 3600
+            let minutes = (totalSeconds % 3600) / 60
+            
+            if hours > 0 {
+                if short {
+                    return "\(hours)h \(minutes)m"
+                } else {
+                    let hPart = "\(hours) \(hours == 1 ? "hr" : "hrs")"
+                    if minutes > 0 {
+                        let mPart = "\(minutes) \(minutes == 1 ? "min" : "mins")"
+                        return "\(hPart) \(mPart)"
+                    } else {
+                        return hPart
+                    }
+                }
+            } else {
+                if short {
+                    return "\(minutes)m"
+                } else {
+                    return "\(minutes) \(minutes == 1 ? "min" : "mins")"
+                }
+            }
+        }
+
         // 🕰️ ETA & Progress Logic
         if isArrived {
             self.eta = "Arrived"
-            self.targetDate = nil
+            self.shortEta = "Done"
             self.progressRatio = 1.0
         } else if etaSeconds > 0 {
-            let mins = Int(ceil(etaSeconds / 60.0))
-            self.eta = mins <= 1 ? "1 min" : "\(mins) mins"
-            self.targetDate = Date().addingTimeInterval(etaSeconds)
+            self.eta = formatDuration(etaSeconds)
+            self.shortEta = formatDuration(etaSeconds, short: true)
             
             if isRiderInRide {
                 // Trip Phase: 50% -> 100%
@@ -215,19 +248,29 @@ struct TrackingViewModel {
                 // Pickup Phase: 0% -> 50%
                 self.progressRatio = 0.1 + (0.4 * (1.0 - min(etaSeconds / 1200.0, 1.0)))
             }
-        } else if etaSeconds < 0 {
-            let lateMins = Int(abs(floor(etaSeconds / 60.0)))
-            self.eta = lateMins <= 1 ? "1 min delayed" : "\(lateMins) mins delayed"
-            self.targetDate = nil
-            self.progressRatio = 1.0
         } else {
             if normalizedStatus == "searching" || normalizedStatus == "finding_driver" || normalizedStatus == "finding driver" {
                 self.eta = "Soon"
+                self.shortEta = "Soon"
+            } else if normalizedStatus == "driver_arrived" || normalizedStatus == "driverarrived" {
+                self.eta = "Driver is here"
+                self.shortEta = "Here"
             } else {
-                self.eta = self.isArrived ? "Done" : "Delayed"
+                if self.isArrived {
+                    self.eta = "Done"
+                    self.shortEta = "Done"
+                } else {
+                    // When time is 0 but not arrived yet
+                    self.eta = isRiderInRide ? "Almost there" : "Arriving"
+                    self.shortEta = isRiderInRide ? "Near" : "Arr"
+                }
             }
-            self.targetDate = nil
-            self.progressRatio = isArrived ? 1.0 : (isRiderInRide ? 0.75 : 0.25)
+            
+            if normalizedStatus == "driver_arrived" || normalizedStatus == "driverarrived" {
+                self.progressRatio = 0.5
+            } else {
+                self.progressRatio = isArrived ? 1.0 : (isRiderInRide ? 0.75 : 0.25)
+            }
         }
     }
 }
@@ -263,22 +306,20 @@ struct MainDashboardView: View {
                             Text(vm.status).font(.system(size: 16, weight: .medium)).foregroundColor(.white.opacity(0.8))
                         }
                         
-                        let isSoon = vm.eta.lowercased().contains("soon") || vm.eta.isEmpty
+                        let lowercaseEta = vm.eta.lowercased()
+                        let isSoon = lowercaseEta.contains("soon") || vm.eta.isEmpty
+                        let isSpecialStatus = lowercaseEta.contains("here") || lowercaseEta.contains("arriving") || lowercaseEta.contains("almost")
+                        
                         let term = vm.isRiderInRide ? "Drop-off" : "Pickup"
-                        let prefix = isSoon ? term : "\(term) in"
-                        let displayEta = isSoon ? "soon" : vm.eta.lowercased()
+                        
+                        let prefix = isSpecialStatus ? "" : (isSoon ? term : "\(term) in")
+                        let displayEta = isSoon ? "soon" : vm.eta
 
                         HStack(alignment: .firstTextBaseline, spacing: 4) {
-                            Text(prefix).font(.system(size: 28, weight: .bold)).foregroundColor(.white)
-                            if let target = vm.targetDate {
-                                Text(target, style: .timer)
-                                    .font(.system(size: 28, weight: .bold))
-                                    .foregroundColor(.white)
-                                    .multilineTextAlignment(.leading)
-                                    .frame(width: 80, alignment: .leading)
-                            } else {
-                                Text(displayEta).font(.system(size: 28, weight: .bold)).foregroundColor(.white)
+                            if !prefix.isEmpty {
+                                Text(prefix).font(.system(size: 24, weight: .bold)).foregroundColor(.white)
                             }
+                            Text(displayEta).font(.system(size: 24, weight: .bold)).foregroundColor(.white)
                         }
                         .minimumScaleFactor(0.7)
                         .lineLimit(1)
@@ -364,16 +405,11 @@ struct RiderTrackingWidgetLiveActivity: Widget {
                         Text("Done")
                             .font(.system(size: 9.5, weight: .bold))
                             .foregroundColor(.white)
-                    } else if let target = vm.targetDate {
-                        Text(target, style: .timer)
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundColor(.white)
-                            .multilineTextAlignment(.center)
-                            .frame(width: 38)
                     } else {
-                        Text(vm.eta.lowercased())
+                        Text(vm.shortEta.lowercased())
                             .font(.system(size: 9.5, weight: .bold))
                             .foregroundColor(.white)
+                            .multilineTextAlignment(.center)
                     }
                 }
                 .padding(.leading, 6)
