@@ -180,10 +180,10 @@ class _CancelReasonSelectionDialogState
             Text(
               AppStrings.whyDoYouWantToCancel.tr,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textSlateStrong,
+              style: AppTextStyles.homeTitle.copyWith(
+                fontWeight: FontWeight.w600,
+                height: 34 / 20,
+                letterSpacing: -0.4,
               ),
             ),
             SizedBox(height: 24.h),
@@ -210,12 +210,12 @@ class _CancelReasonSelectionDialogState
                           Expanded(
                             child: Text(
                               reason,
-                              style: TextStyle(
-                                fontSize: 14.sp,
+                              style: AppTextStyles.homeSubtitle.copyWith(
+                                color: AppColors.black,
                                 fontWeight: isSelected
                                     ? FontWeight.w600
-                                    : FontWeight.w400,
-                                color: AppColors.textSlate,
+                                    : FontWeight.w500,
+                                height: 20 / 15,
                               ),
                             ),
                           ),
@@ -227,8 +227,8 @@ class _CancelReasonSelectionDialogState
                               border: Border.all(
                                 color: isSelected
                                     ? AppColors.primary
-                                    : AppColors.skeletonBase,
-                                width: 1.2,
+                                    : AppColors.iconHeartOutline,
+                                width: 1.5,
                               ),
                               color: isSelected
                                   ? AppColors.primary
@@ -308,88 +308,97 @@ class CancellationChargesDialog extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Cancellation charges',
+              AppStrings.areYouSureYouWantToCancel.tr,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textSlateStrong,
+              style: AppTextStyles.homeTitle.copyWith(
+                fontWeight: FontWeight.w600,
+                height: 26 / 20,
+                letterSpacing: -0.4,
               ),
             ),
-            SizedBox(height: 16.h),
             Text(
-              policyLabel.trim().isEmpty
-                  ? (canCancel
-                        ? 'A cancellation fee may apply for this ride status.'
-                        : 'This ride cannot be cancelled at the current status.')
-                  : policyLabel,
+              AppStrings.yourDriverIsAlreadyOnTheWay.tr,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: AppColors.textSlate,
-                height: 1.4,
+              style: AppTextStyles.homeTitle.copyWith(
+                fontWeight: FontWeight.w600,
+                height: 26 / 20,
+                letterSpacing: -0.4,
               ),
             ),
-            SizedBox(height: 18.h),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(14.r),
-                border: Border.all(color: AppColors.bgSoftCircle),
-              ),
-              child: Column(
+            SizedBox(height: 14.h),
+            RichText(
+              textAlign: TextAlign.center,
+              text: TextSpan(
+                style: AppTextStyles.homeSubtitle.copyWith(
+                  color: AppColors.textSlate,
+                  fontWeight: FontWeight.w500,
+                  height: 1.4,
+                ),
                 children: [
-                  _chargesRow('Cancellation fee', feeLabel),
-                  SizedBox(height: 8.h),
-                  _chargesRow('Net refund', refundLabel),
+                  const TextSpan(text: 'A cancellation fee of '),
+                  TextSpan(
+                    text: feeLabel,
+                    style: AppTextStyles.price.copyWith(
+                      fontSize: 15.sp,
+                      height: 1.4,
+                      color: AppColors.error,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const TextSpan(
+                    text: ' will be charged since your driver is on the way.',
+                  ),
+                  const TextSpan(text: '\n'),
+                  TextSpan(
+                    text: 'Net amount refunded: ',
+                    style: AppTextStyles.homeSubtitle.copyWith(
+                      color: AppColors.textSlate,
+                      fontWeight: FontWeight.w500,
+                      height: 1.4,
+                    ),
+                  ),
+                  TextSpan(
+                    text: refundLabel,
+                    style: AppTextStyles.price.copyWith(
+                      fontSize: 15.sp,
+                      height: 1.4,
+                      color: AppColors.success,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  if (policyLabel.trim().isNotEmpty)
+                    TextSpan(
+                      text: '\n$policyLabel',
+                      style: AppTextStyles.homeCaption.copyWith(
+                        color: AppColors.textSlate,
+                        fontWeight: FontWeight.w400,
+                        height: 1.4,
+                      ),
+                    ),
                 ],
               ),
             ),
-            SizedBox(height: 24.h),
+            SizedBox(height: 20.h),
+            Divider(height: 1.h, color: AppColors.bgSoftCircle),
+            SizedBox(height: 20.h),
             _ActionButton(
-              title: canCancel ? 'Continue' : AppStrings.keepRide.tr,
+              title: AppStrings.keepRide.tr,
               color: AppColors.primary,
               textColor: AppColors.white,
-              onTap: () => Get.back(result: canCancel),
+              onTap: () => Get.back(result: false),
             ),
             SizedBox(height: 10.h),
             _ActionButton(
-              title: AppStrings.no.tr,
+              title: 'Cancel & Pay',
               color: AppColors.white,
               textColor: AppColors.textNeutralButton,
               outlined: true,
               outlinedBorderColor: AppColors.textNeutralButton,
-              onTap: () => Get.back(result: false),
+              onTap: canCancel ? () => Get.back(result: true) : null,
             ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _chargesRow(String title, String value) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            title,
-            style: TextStyle(
-              fontSize: 13.sp,
-              color: AppColors.textSlate,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 13.sp,
-            color: AppColors.textSlateStrong,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ],
     );
   }
 }
