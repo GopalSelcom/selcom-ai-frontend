@@ -146,9 +146,7 @@ class ProfileScreen extends StatelessWidget {
                   onTap: controller.cancelEdit,
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 4.0, sigmaY: 4.0),
-                    child: Container(
-                      color: AppColors.overlayGray43,
-                    ),
+                    child: Container(color: AppColors.overlayGray43),
                   ),
                 ),
               ),
@@ -208,7 +206,9 @@ class ProfileScreen extends StatelessWidget {
     final user = controller.userModel.value;
     final name = user?.name ?? '';
     final mobile = user?.mobileNumber != null
-        ? '+${user!.countryCode} ${TanzaniaPhoneFormatter.formatString(user.mobileNumber.toString())}'
+        ? TanzaniaPhoneFormatter.formatInternational(
+            user!.mobileNumber.toString(),
+          )
         : '';
     final balance = controller.walletBalance.value;
     final walletNum = controller.walletNumber.value;

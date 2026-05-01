@@ -105,7 +105,7 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
                           ),
                         ),
                         label: "Booking for ${c.passengerName.value}",
-                        address: "Phone: +${TanzaniaPhoneFormatter.formatString(c.passengerPhone.value ?? '')}",
+                        address: "Phone: ${TanzaniaPhoneFormatter.formatInternational(c.passengerPhone.value ?? '')}",
                         maxAddressLines: 1,
                       )
                     : AppMapLocationSummaryCard(

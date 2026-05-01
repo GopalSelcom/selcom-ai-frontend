@@ -278,7 +278,7 @@ class RideDetailsScreen extends StatelessWidget {
                                   ),
                                   if (ride.passengerPhone != null)
                                     Text(
-                                      "Phone: +${TanzaniaPhoneFormatter.formatString(ride.passengerPhone!)}",
+                                      "Phone: ${TanzaniaPhoneFormatter.formatInternational(ride.passengerPhone ?? '')}",
                                       style: TextStyle(
                                         fontFamily: AppTextStyles.metropolisFont,
                                         fontWeight: FontWeight.w500,

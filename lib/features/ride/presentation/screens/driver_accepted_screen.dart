@@ -95,7 +95,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                           ),
                         ),
                         label: "Booking for ${ride.passengerName}",
-                        address: "Phone: +${TanzaniaPhoneFormatter.formatString(ride.passengerPhone ?? '')}",
+                        address: "Phone: ${TanzaniaPhoneFormatter.formatInternational(ride.passengerPhone ?? '')}",
                         maxAddressLines: 1,
                       )
                     : AppMapLocationSummaryCard(
