@@ -268,4 +268,7 @@ abstract class Languages {
   String get swahili;
   String get switchedToEnglish;
   String get switchedToSwahili;
+  String get exitApp;
+  String get exitAppTitle;
+  String get exitAppMessage;
 }

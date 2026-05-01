@@ -273,7 +273,10 @@ class LanguageSw extends Languages {
     'english': '',
     'swahili': '',
     'switched_to_english': '',
-    'switched_to_swahili': '',
+    'switched_to_swahili': 'Imebadilishwa kwenda Kiswahili',
+    'exit_app': 'Ondoka kwenye App',
+    'exit_app_title': 'Ondoka kwenye App',
+    'exit_app_message': 'Je, una uhakika unataka kuondoka kwenye app?',
   };
 
   @override
@@ -1109,4 +1112,13 @@ class LanguageSw extends Languages {
 
   @override
   String get switchedToSwahili => values['switched_to_swahili'] ?? '';
+
+  @override
+  String get exitApp => values['exit_app'] ?? '';
+
+  @override
+  String get exitAppTitle => values['exit_app_title'] ?? '';
+
+  @override
+  String get exitAppMessage => values['exit_app_message'] ?? '';
 }

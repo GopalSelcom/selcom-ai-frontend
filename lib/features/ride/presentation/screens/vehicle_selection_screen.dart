@@ -48,42 +48,85 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
             Positioned(
               top: MediaQuery.paddingOf(context).top + 8.h,
               left: 16.w,
-              child: const Material(
-                color: AppColors.white,
-                shape: CircleBorder(),
-                elevation: 2,
-                child: AppBackButton(
-                  color: AppColors.textHeading,
-                  alignment: Alignment.center,
-                ),
+              child: const AppBackButton(
+                color: AppColors.textHeading,
+                alignment: Alignment.center,
               ),
             ),
           Positioned(
             top: MediaQuery.paddingOf(context).top + 14.h,
             right: 16.w,
+            child: GestureDetector(
+              onTap: controller.openPromotions,
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                decoration: BoxDecoration(
+                  color: AppColors.promotionBlue,
+                  borderRadius: BorderRadius.circular(18.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.promotionBlue.withValues(alpha: 0.24),
+                      blurRadius: 14.r,
+                      offset: Offset(0, 6.h),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      // width: 22.w,
+                      // height: 22.w,
+                      child: SvgPictureAsset(
+                        AppAssets.icPromotions,
+                        width: 20.w,
+                        height: 20.w,
+                        placeholderBuilder: (_) => Container(
+                          width: 20.w,
+                          height: 20.w,
+                          decoration: const BoxDecoration(
+                            color: AppColors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.percent,
+                            color: AppColors.promotionBlue,
+                            size: 14.sp,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 6.w),
+                    Text(
+                      AppStrings.promotions.tr,
+                      style: AppTextStyles.homeCaption.copyWith(
+                        color: AppColors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12.sp,
+                        height: 16 / 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: MediaQuery.paddingOf(context).top + 58.h,
+            right: 16.w,
             child: Obx(
               () => Container(
                 padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
                 decoration: BoxDecoration(
-                  color: AppColors.white.withValues(alpha: 0.94),
-                  borderRadius: BorderRadius.circular(12.r),
-                  border: Border.all(color: AppColors.skeletonBase),
+                  color: controller.socketDriverStatusBackground,
+                  borderRadius: BorderRadius.circular(14.r),
                 ),
                 child: Text(
-                  controller.isSocketConnected.value
-                      ? AppStrings.socketOnDrivers.trParams({
-                          'count': '${controller.nearbyDriverCount.value}',
-                        })
-                      : (controller.lastSocketError.value.isNotEmpty
-                            ? AppStrings.socketOffError.trParams({
-                                'error': controller.lastSocketError.value,
-                              })
-                            : AppStrings.socketOff.tr),
+                  controller.socketDriverStatusText,
                   style: AppTextStyles.homeCaption.copyWith(
-                    color: controller.isSocketConnected.value
-                        ? AppColors.success
-                        : AppColors.error,
-                    fontWeight: FontWeight.w600,
+                    color: controller.socketDriverStatusColor,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11.sp,
                   ),
                 ),
               ),
@@ -246,11 +289,18 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
             final offset = controller.pickupOverlayOffset.value;
             if (offset == null) return const SizedBox.shrink();
             return Positioned(
-              left: offset.dx - 40.w,
-              top: offset.dy - 70.h,
-              child: _locationEditBubble(
-                label: controller.compactAddress(controller.pickupEntity.address),
-                onEditTap: controller.editPickupFromMap,
+              left: offset.dx,
+              top: offset.dy - 8.h,
+              child: FractionalTranslation(
+                translation: const Offset(-0.5, -1.0),
+                child: _locationEditBubble(
+                  label: controller.pickupMapLabel,
+                  onTap: controller.editPickupFromMap,
+                  bubbleColor: AppColors.textHeading,
+                  textColor: AppColors.white,
+                  leadingLabel: null,
+                  onEditTap: controller.editPickupFromMap,
+                ),
               ),
             );
           }),
@@ -258,13 +308,18 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
             final offset = controller.dropOverlayOffset.value;
             if (offset == null) return const SizedBox.shrink();
             return Positioned(
-              left: offset.dx - 40.w,
-              top: offset.dy - 70.h,
-              child: _locationEditBubble(
-                label: controller.compactAddress(
-                  controller.destinationEntity.address,
+              left: offset.dx,
+              top: offset.dy - 8.h,
+              child: FractionalTranslation(
+                translation: const Offset(-0.5, -1.0),
+                child: _locationEditBubble(
+                  label: controller.destinationMapLabel,
+                  onTap: controller.editDropFromMap,
+                  bubbleColor: AppColors.pinRed,
+                  textColor: AppColors.white,
+                  leadingLabel: controller.destinationEtaBadgeText,
+                  onEditTap: controller.editDropFromMap,
                 ),
-                onEditTap: controller.editDropFromMap,
               ),
             );
           }),
@@ -275,63 +330,87 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
 
   Widget _locationEditBubble({
     required String label,
+    required VoidCallback onTap,
+    required Color bubbleColor,
+    required Color textColor,
+    required String? leadingLabel,
     required VoidCallback onEditTap,
   }) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: 80.w,
-          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(14.r),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.black.withValues(alpha: 0.1),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.homeSubtitle.copyWith(
-                    color: AppColors.textHeading,
-                    fontSize: 9.sp,
-                    fontWeight: FontWeight.w600,
+        Material(
+          color: AppColors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(10.r),
+            child: Container(
+              height: 34.h,
+              constraints: BoxConstraints(minWidth: 92.w, maxWidth: 148.w),
+              padding: EdgeInsets.symmetric(horizontal: 8.w),
+              decoration: BoxDecoration(
+                color: bubbleColor,
+                borderRadius: BorderRadius.circular(10.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: bubbleColor.withValues(alpha: 0.28),
+                    blurRadius: 12.r,
+                    offset: Offset(0, 6.h),
                   ),
-                ),
+                ],
               ),
-              SizedBox(width: 8.w),
-              Material(
-                color: AppColors.bgSoftCircle,
-                shape: const CircleBorder(),
-                child: InkWell(
-                  customBorder: const CircleBorder(),
-                  onTap: onEditTap,
-                  child: Padding(
-                    padding: EdgeInsets.all(1.w),
-                    child: Icon(
-                      Icons.edit,
-                      color: AppColors.textMapHint,
-                      size: 12.sp,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  if (leadingLabel != null) ...[
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 8.w,
+                        vertical: 4.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.white,
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      child: Text(
+                        leadingLabel,
+                        style: AppTextStyles.homeCaption.copyWith(
+                          color: bubbleColor,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12.sp,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 6.w),
+                  ],
+                  Flexible(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.homeSubtitle.copyWith(
+                        color: textColor,
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
-                ),
+                  SizedBox(width: 6.w),
+                  Icon(Icons.chevron_right, color: textColor, size: 16.sp),
+                ],
               ),
-            ],
+            ),
           ),
         ),
         Container(
           width: 2.w,
-          height: 12.h,
-          color: AppColors.black.withValues(alpha: 0.8),
+          height: 16.h,
+          margin: EdgeInsets.only(bottom: 16.h),
+          decoration: BoxDecoration(
+            color: bubbleColor.withValues(alpha: 0.95),
+            borderRadius: BorderRadius.circular(999.r),
+          ),
         ),
       ],
     );
@@ -372,10 +451,10 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                 child: Text(
                   AppStrings.chooseRide.tr,
                   style: AppTextStyles.homeTitle.copyWith(
-                    fontSize: 20.sp,
                     fontWeight: FontWeight.w600,
                     color: AppColors.black,
                     letterSpacing: -0.4,
+                    height: 34 / 20,
                   ),
                 ),
               ),
@@ -438,7 +517,9 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
         '${drop.hour.toString().padLeft(2, '0')}:${drop.minute.toString().padLeft(2, '0')}';
 
     return Material(
-      color: selected ? AppColors.primaryLight : AppColors.surfaceSubtle,
+      color: selected
+          ? AppColors.primary.withValues(alpha: 0.12)
+          : AppColors.surfaceSubtle,
       borderRadius: BorderRadius.circular(16.r),
       child: InkWell(
         borderRadius: BorderRadius.circular(16.r),
@@ -469,7 +550,6 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                                 AppStrings.fallbackRideName.tr,
                             style: AppTextStyles.homeSubtitle.copyWith(
                               fontSize: 16.sp,
-                              fontWeight: FontWeight.w500,
                               color: AppColors.textHeading,
                               letterSpacing: -0.4,
                             ),
@@ -487,16 +567,15 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                         SizedBox(width: 4.w),
                         SvgPictureAsset(
                           AppAssets.icPaymentPerson,
-                          width: 14.w,
-                          height: 14.w,
+                          width: 12.w,
+                          height: 12.w,
                           color: AppColors.textBody,
                         ),
                         SizedBox(width: 4.w),
                         Text(
                           '${item.maxPassengers ?? 1}',
                           style: AppTextStyles.homeCaption.copyWith(
-                            color: AppColors.textBody,
-                            fontWeight: FontWeight.w500,
+                            height: 20 / 12,
                           ),
                         ),
                       ],
@@ -507,8 +586,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                         'time': dropLabel,
                       }),
                       style: AppTextStyles.homeCaption.copyWith(
-                        color: AppColors.textBody,
-                        fontWeight: FontWeight.w500,
+                        height: 20 / 12,
                       ),
                     ),
                     if ((item.waypointCharge ?? 0) > 0 ||
@@ -531,7 +609,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                 style: TextStyle(
                   fontFamily: AppTextStyles.metropolisFont,
                   fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                   color: AppColors.textHeading,
                   letterSpacing: -0.4,
                 ),

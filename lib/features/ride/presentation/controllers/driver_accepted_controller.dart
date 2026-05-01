@@ -369,7 +369,7 @@ class DriverAcceptedController extends GetxController
     developer.log(
       "💧 Hydrating socket seed payloads from args",
       name: 'ORDER_TRACKING',
-      error: jsonEncode(args),
+      error: args.toString(),
     );
     final statusRaw = args['statusPayload'];
     if (statusRaw is Map) {
@@ -1281,13 +1281,22 @@ class DriverAcceptedController extends GetxController
   }
 
   String get rideProgressSubtitle {
+    final etaSeconds = currentEtaSeconds.value;
+    final etaMinutes = etaSeconds > 0 ? (etaSeconds / 60).ceil() : 0;
+    final hasEta = etaMinutes > 0;
     switch (currentRideStatus.value) {
       case 'near_destination':
-        return 'Approaching your destination';
+        return hasEta
+            ? 'Arrived in ${etaMinutes.toString()} mins'
+            : 'Approaching your destination';
       case 'ride_in_progress':
-        return 'Heading to your destination';
+        return hasEta
+            ? 'Arrived in ${etaMinutes.toString()} mins'
+            : 'Heading to your destination';
       case 'ride_started':
-        return 'Trip has started';
+        return hasEta
+            ? 'Arrived in ${etaMinutes.toString()} mins'
+            : 'Trip has started';
       case 'driver_arrived':
         return 'Driver has reached pickup';
       case 'driver_arriving':
@@ -1297,8 +1306,24 @@ class DriverAcceptedController extends GetxController
       case 'completed':
         return arrivalDateLabel;
       default:
-        return 'Arrived in ${etaLabel.value.toLowerCase()}';
+        return hasEta
+            ? 'Arrived in ${etaMinutes.toString()} mins'
+            : 'Trip has started';
     }
+  }
+
+  int get rideEtaMinutes {
+    final etaSeconds = currentEtaSeconds.value;
+    if (etaSeconds <= 0) return 0;
+    return (etaSeconds / 60).ceil();
+  }
+
+  bool get shouldShowRideEtaBadge {
+    final status = currentRideStatus.value;
+    if (rideEtaMinutes <= 0) return false;
+    return status == 'ride_started' ||
+        status == 'ride_in_progress' ||
+        status == 'near_destination';
   }
 
   void _applyTrackingPayload(TrackingUpdateSocketResponse payload) {

@@ -735,6 +735,7 @@ class VehicleSelectionController extends GetxController {
                   'destinationLat': destinationEntity.lat,
                   'destinationLng': destinationEntity.lng,
                   'destinationAddress': destinationEntity.address,
+                  'destinations': destinations.toList(),
                   'fareBreakdown': data.data?.ride?.fareBreakdown?.toJson(),
                   'isBookedForOther': isBookedForOther,
                   'passengerName': passengerName,
@@ -970,6 +971,37 @@ class VehicleSelectionController extends GetxController {
     if (trimmed.isEmpty) return 'Selected location';
     final first = trimmed.split(',').first.trim();
     return first.isEmpty ? trimmed : first;
+  }
+
+  String get pickupMapLabel => compactAddress(pickupEntity.address);
+
+  String get destinationMapLabel => compactAddress(destinationEntity.address);
+
+  String get destinationEtaBadgeText {
+    final minutes = selectedEstimate?.durationMinutes ?? 0;
+    return minutes > 0 ? '$minutes Mins' : 'ETA';
+  }
+
+  String get socketDriverStatusText {
+    if (isSocketConnected.value) {
+      return '$nearbyDriverCount drivers online';
+    }
+    if (lastSocketError.value.isNotEmpty) {
+      return 'Socket disconnected';
+    }
+    return 'Connecting drivers...';
+  }
+
+  Color get socketDriverStatusColor =>
+      isSocketConnected.value ? AppColors.success : AppColors.warningStrong;
+
+  Color get socketDriverStatusBackground =>
+      isSocketConnected.value
+          ? AppColors.bgSuccessBanner
+          : AppColors.bgWarningLight;
+
+  void openPromotions() {
+    Get.toNamed(AppRoutes.promotions);
   }
 
   Future<void> editPickupFromMap() async {

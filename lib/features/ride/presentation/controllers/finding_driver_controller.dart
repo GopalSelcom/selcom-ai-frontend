@@ -25,6 +25,7 @@ import '../../../../core/services/live_activity/live_activity_manager.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../widgets/cancel_ride_dialogs.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
+import '../../../../core/domain/entities/location_entity.dart';
 
 /// SCR-10 — finding driver: search UI only; on assignment navigates to [AppRoutes.driverAccepted].
 class FindingDriverController extends GetxController {
@@ -43,6 +44,8 @@ class FindingDriverController extends GetxController {
   late final String destinationAddress;
   late final String? requestedVehicleType;
   late final Map<String, dynamic>? fareBreakdown;
+  final intermediateStops = <String>[].obs;
+  final destinations = <LocationEntity>[].obs;
 
   final nearbyDriverCount = 0.obs;
   final driverMarkerPoints = <LatLng>[].obs;
@@ -62,7 +65,7 @@ class FindingDriverController extends GetxController {
 
   final currentStatusLabel = 'Finding Your Driver'.obs;
   final currentDescriptionLabel =
-      'The driver will pick you up as soon as possible\nafter they confirm your order'
+      'The driver will pick you up as soon as possible after they confirm your order'
           .obs;
   final isRideCancelled = false.obs;
 
@@ -176,6 +179,34 @@ class FindingDriverController extends GetxController {
     pickupAddress = (args['pickupAddress'] as String?)?.trim() ?? '';
     destinationAddress = (args['destinationAddress'] as String?)?.trim() ?? '';
     requestedVehicleType = args['vehicleType'] as String?;
+
+    final List<dynamic>? ds = args['destinations'];
+    if (ds != null && ds.isNotEmpty) {
+      try {
+        final List<LocationEntity> locs = ds.map((e) {
+          if (e is LocationEntity) return e;
+          if (e is Map<String, dynamic>) {
+            return LocationEntity(
+              lat: (e['lat'] as num?)?.toDouble() ?? 0.0,
+              lng: (e['lng'] as num?)?.toDouble() ?? 0.0,
+              address: (e['address'] as String?) ?? '',
+            );
+          }
+          return null;
+        }).whereType<LocationEntity>().toList();
+
+        destinations.assignAll(locs);
+        if (locs.length > 1) {
+          // All except the last one (which is the main destination) are intermediate stops
+          intermediateStops.assignAll(
+            locs.take(locs.length - 1).map((e) => e.address).toList(),
+          );
+        }
+      } catch (e) {
+        debugPrint('Error parsing destinations: $e');
+      }
+    }
+
     final rawFareBreakdown = args['fareBreakdown'];
     fareBreakdown = rawFareBreakdown is Map
         ? Map<String, dynamic>.from(rawFareBreakdown)
@@ -326,6 +357,7 @@ class FindingDriverController extends GetxController {
         'destinationLat': destinationLatLng.latitude,
         'destinationLng': destinationLatLng.longitude,
         'destinationAddress': destinationAddress,
+        'destinations': destinations.toList(),
         'statusPayload': statusPayload?.toJson(),
         'driverLocationPayload': driverLocPayload?.toJson(),
         'trackingPayload': trackingPayload?.toJson(),
@@ -715,6 +747,7 @@ class FindingDriverController extends GetxController {
         'destination': destinationAddress,
         'destinationLat': destinationLatLng.latitude,
         'destinationLng': destinationLatLng.longitude,
+        'destinations': destinations.toList(),
       },
     );
   }

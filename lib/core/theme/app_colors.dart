@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // Brand
-  static const Color primary        = Color(0xFFF3004C);  // Red/Pink — buttons, highlights
-  static const Color primaryLight   = Color(0xFFFDE8ED);  // Light red bg
+  static const Color primary        = Color(0xFF5CB75E);  // Green — buttons, highlights
+  static const Color primaryLight   = Color(0xFFE8FDE8);  // Light geen bg
 
   // Backgrounds
   static const Color pageBackground = Color(0xFFF8FAFC);  // Gray/Shade 7
@@ -15,8 +15,8 @@ class AppColors {
   static const Color surfaceSubtle = Color(0xFFF8F9FD);
   static const Color bgSoftCircle = Color(0xFFF1F5F9);
   static const Color bgSuccessBanner = Color(0xFFEAF9F1);
-  static const Color bgPaymentPending = Color(0xFFE6DCCD);
-  static const Color bgPaymentSuccess = Color(0xFFD6EADC);
+  static const Color bgPaymentRequest = Color(0x1FFF9900); // 12% of #FF9900
+  static const Color bgPaymentSuccess = Color(0x1F0EAD36); // 12% of #0EAD36
   static const Color bgVerificationSurface = Color(0xFFF2F5F9);
   static const Color bgUnreadNotification = Color(0xFFF0F9FF);
   static const Color bgAvatarLightPink = Color(0xFFFFD2DE);
@@ -28,6 +28,7 @@ class AppColors {
   static const Color bgMintLight = Color(0xFFECFDF5);
   static const Color bgGreenLight = Color(0xFFDCFCE7);
   static const Color bgOrangeLight = Color(0xFFFFEDD5);
+  static const Color bgEtaBlueSoft = Color(0x2E0088FF); // 18% of #0088FF
 
   // Text / Shades
   static const Color textHeading    = Color(0xFF132235);  // Primary heading/title text
@@ -51,9 +52,15 @@ class AppColors {
   static const Color textSlateStrong = Color(0xFF0F172A);
   static const Color textSlate = Color(0xFF475569);
   static const Color textSlateSoft = Color(0xFF64748B);
+  static const Color textSectionMuted = Color(0xFF77869E);
+  static const Color textSafetyNotice = Color(0xFF1F2024);
+  static const Color textDriverTime = Color(0xFFA1A1BC);
+  static const Color textMessageHint = Color(0xFF1B1A57);
+  static const Color textPaymentDialogMessage = Color(0xFF132235);
+  static const Color textEtaBlue = Color(0xFF0088FF);
 
   // Semantic
-  static const Color success        = Color(0xFF1D9E75);  // Green
+  static const Color success        = Color(0xFF0EAD36);  // Green
   static const Color error          = Color(0xFFE24B4A);  // Red error
   static const Color warning        = Color(0xFFEF9F27);  // Orange/amber
   static const Color info           = Color(0xFF378ADD);  // Blue
@@ -107,18 +114,32 @@ class AppColors {
   static const Color figmaTextPrimary = Color(0xFF2A3143);
   static const Color figmaTextSecondary = Color(0xFF586377);
   static const Color figmaIconGreen = Color(0xFF269441);
-  static const Color splashVectorTint = Color(0xFFCC0031);
+  static const Color splashVectorTint = Color(0xFF4AA448);
   static const Color mapPickupMarkerBlue = Color(0xFF4FA3FF);
   static const Color mapDropMarkerGreen = Color(0xFF34C759);
   static const Color mapStopMarkerRed = Color(0xFFE11D48);
   static const Color ratingStarFilled = Color(0xFFFFCC00);
   static const Color ratingStarEmpty = Color(0xFFE6E9EE);
+  static const Color ratingStarActive = Color(0xFFFFCC41);
+  static const Color ratingStarInactive = Color(0xFFE7E7E7);
+  static const Color otpErrorBorder = Color(0xFFFA4D5E);
+  static const Color otpFocusShadow = Color(0x400F67FE); // 25%
+  static const Color otpErrorShadow = Color(0x40FA4D5E); // 25%
   static const Color iconInfo = Color(0xFF0284C7);
   static const Color iconPurple = Color(0xFF6D28D9);
   static const Color iconWarning = Color(0xFFD97706);
   static const Color iconSuccess = Color(0xFF16A34A);
   static const Color iconOrange = Color(0xFFEA580C);
   static const Color iconAmber = Color(0xFFB45309);
+  static const Color iconMutedLight = Color(0xFFCACACA);
+  static const Color iconPaymentRequest = Color(0xFFFF9900);
+  static const Color iconPaymentSuccess = success;
+  static const Color iconHeartOutline = Color(0xFF292D32);
+  static const Color iconHeartFilled = Color(0xFFF3004C);
+  static const Color textNeutralButton = Color(0xFF7F7F7F);
+  static const Color promotionBlue = Color(0xFF2668D2);
+  static const Color previousPickupBlue = Color(0xFF3B83ED);
+  static const Color previousPickupHalo = Color(0xFFB9D0EE);
   static const Color routeBlue = Color(0xFF3073E8);
   static const Color pinRed = Color(0xFFF52D56);
   static const Color figmaInputBlue = Color(0xFF2F6FED);

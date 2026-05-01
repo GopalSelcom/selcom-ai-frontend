@@ -1,7 +1,9 @@
 import 'dart:convert';
 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/network/urls.dart';
@@ -11,9 +13,9 @@ import '../../../../core/services/storage_service.dart';
 import '../../../../shared/utils/phone_formatter.dart';
 import '../../../../shared/widgets/web_view_screen.dart';
 import '../../../ride/presentation/screens/my_rides_screen.dart';
+import '../../data/models/request/update_profile_request.dart';
 import '../../domain/usecases/profile_usecase.dart';
 import '../../../../core/data/models/user_model.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 
 class ProfileController extends GetxController {
@@ -34,6 +36,7 @@ class ProfileController extends GetxController {
   final Rxn<UserModel> userModel = Rxn<UserModel>();
   final RxString walletBalance = '43,829'.obs;
   final RxString walletNumber = '16010 00000 034'.obs;
+  final Rxn<File> pickedImage = Rxn<File>();
 
   // Controllers for text fields
   late TextEditingController nameTextController;
@@ -139,9 +142,15 @@ class ProfileController extends GetxController {
 
     isLoading.value = true;
 
-    final result = await profileUseCase.saveUserAdditionalDetails(
-      name: nameTextController.text.trim(),
-      emailId: userModel.value?.emailId ?? '',
+    final result = await profileUseCase.updateProfile(
+      UserProfileUpdateRequest(
+        image: pickedImage.value,
+        name: nameTextController.text.trim(),
+        emailId: "",
+        userId: userModel.value?.id ?? '',
+        dob: "",
+        nidaNumber: ""
+      ),
     );
 
     result.fold(
@@ -149,15 +158,21 @@ class ProfileController extends GetxController {
         AppDialogs.showErrorDialog(message: failure.message);
       },
       (updatedUser) async {
+
+        UserModel userModel = UserModel.fromJson(
+          updatedUser.response!.toJson(),
+        );
+
         // Save to storage
         await StorageService().write(
           StorageKeys.user,
-          jsonEncode(updatedUser.toJson()),
+          jsonEncode(userModel.toJson()),
         );
 
         // Update local state
-        _updateLocalUserState(updatedUser);
+        _updateLocalUserState(userModel);
 
+        pickedImage.value = null;
         isEditing.value = false;
         AppDialogs.showSuccessDialog(
           message: AppStrings.userProfileUpdatedSuccessfully.tr,
@@ -168,12 +183,29 @@ class ProfileController extends GetxController {
     isLoading.value = false;
   }
 
+  Future<void> pickProfileImage() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 70, // Optimize image size
+      );
+
+      if (image != null) {
+        pickedImage.value = File(image.path);
+      }
+    } catch (e) {
+      AppDialogs.showErrorDialog(message: 'Error picking image: $e');
+    }
+  }
+
   void cancelEdit() {
     nameFocusNode.unfocus();
     phoneFocusNode.unfocus();
     if (userModel.value != null) {
       _updateLocalUserState(userModel.value!);
     }
+    pickedImage.value = null;
     isEditing.value = false;
   }
 
@@ -225,9 +257,8 @@ class ProfileController extends GetxController {
   void logout() {
     AppDialogs.showConfirmationDialog(
       title: AppStrings.logout.tr,
-      message: 'Are you sure you want to logout from the app?',
+      message: 'Are you sure, you want to logout from the app?',
       confirmText: 'Logout',
-      confirmColor: AppColors.error,
       onConfirm: () async {
         await StorageService().deleteAll();
         Get.offAllNamed(AppRoutes.phone);

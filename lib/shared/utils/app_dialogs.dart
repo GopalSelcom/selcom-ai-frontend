@@ -8,6 +8,7 @@ import '../../core/theme/app_text_styles.dart';
 import '../../core/constants/app_assets.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/services/storage_service.dart';
+import '../widgets/app_primary_button.dart';
 
 class AppDialogs {
   static bool _isErrorDialogVisible = false;
@@ -113,32 +114,11 @@ class AppDialogs {
                       SizedBox(height: 32.h),
 
                       // OK Button
-                      InkWell(
-                        onTap: () => handleAction(invokeConfirm: true),
-                        child: Container(
-                          height: 54.h,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(16.r),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.primary.withValues(alpha: 0.2),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Center(
-                            child: Text(
-                              AppStrings.ok.tr,
-                              style: AppTextStyles.onboardingButton.copyWith(
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
+                      AppPrimaryButton(
+                        label: AppStrings.ok.tr,
+                        onPressed: () => handleAction(invokeConfirm: true),
+                        height: 54.h,
+                        borderRadius: 16.r,
                       ),
                     ],
                   ),
@@ -189,25 +169,14 @@ class AppDialogs {
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 32.h),
-              InkWell(
-                onTap: () {
+              AppPrimaryButton(
+                label: AppStrings.gotIt.tr,
+                onPressed: () {
                   Get.back();
                   if (onConfirm != null) onConfirm();
                 },
-                child: Container(
-                  height: 50.h,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child: Center(
-                    child: Text(
-                      AppStrings.gotIt.tr,
-                      style: AppTextStyles.onboardingButton,
-                    ),
-                  ),
-                ),
+                height: 50.h,
+                borderRadius: 12.r,
               ),
             ],
           ),
@@ -267,6 +236,7 @@ class AppDialogs {
                   title,
                   style: AppTextStyles.onboardingTitle.copyWith(
                     fontSize: 20.sp,
+                    letterSpacing: -0.4,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -279,22 +249,12 @@ class AppDialogs {
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 32.h),
-                InkWell(
-                  onTap: handleAction,
-                  child: Container(
-                    height: 50.h,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: AppColors.successBadge,
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                    child: Center(
-                      child: Text(
-                        AppStrings.continueLabel.tr,
-                        style: AppTextStyles.onboardingButton,
-                      ),
-                    ),
-                  ),
+                AppPrimaryButton(
+                  label: AppStrings.continueLabel.tr,
+                  onPressed: handleAction,
+                  height: 50.h,
+                  borderRadius: 12.r,
+                  backgroundColor: AppColors.successBadge,
                 ),
               ],
             ),
@@ -364,9 +324,10 @@ class AppDialogs {
                 // Title
                 Text(
                   title,
-                  style: AppTextStyles.onboardingTitle.copyWith(
-                    fontSize: 20.sp,
-                    color: AppColors.textHeading,
+                  style: AppTextStyles.homeTitle.copyWith(
+                    height: 34 / 20,
+                    letterSpacing: -0.4,
+                    fontWeight: FontWeight.w600,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -375,71 +336,43 @@ class AppDialogs {
                 // Message
                 Text(
                   message,
-                  style: AppTextStyles.onboardingSubtitle.copyWith(
+                  style: AppTextStyles.homeChip.copyWith(
                     fontSize: 14.sp,
-                    color: AppColors.textBody,
+                    fontWeight: FontWeight.w400,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 32.h),
+                SizedBox(height: 24.h),
 
                 // Buttons
                 Row(
                   children: [
-                    // Cancel Button
                     Expanded(
-                      child: InkWell(
-                        onTap: handleCancel,
-                        child: Container(
-                          height: 50.h,
-                          decoration: BoxDecoration(
-                            color: AppColors.transparent,
-                            border: Border.all(color: AppColors.divider),
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                          child: Center(
-                            child: Text(
-                              cancelText,
-                              style: AppTextStyles.body.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textBody,
-                              ),
-                            ),
-                          ),
-                        ),
+                      child: AppPrimaryButton(
+                        label: cancelText,
+                        onPressed: handleCancel,
+                        height: 50.h,
+                        outlined: true,
+                        backgroundColor: AppColors.transparent,
+                        textColor: AppColors.textBody,
+                        outlinedTextColor: AppColors.textBody,
+                        outlinedBorderColor: AppColors.divider,
+                        outlinedBorderWidth: 1,
+                        borderRadius: 12.r,
                       ),
                     ),
                     SizedBox(width: 12.w),
-                    // Confirm Button
                     Expanded(
-                      child: InkWell(
-                        onTap: () {
+                      child: AppPrimaryButton(
+                        label: confirmText,
+                        onPressed: () {
                           Get.back();
                           onConfirm();
                         },
-                        child: Container(
-                          height: 50.h,
-                          decoration: BoxDecoration(
-                            color: confirmColor ?? AppColors.primary,
-                            borderRadius: BorderRadius.circular(12.r),
-                            boxShadow: [
-                              BoxShadow(
-                                color: (confirmColor ?? AppColors.primary)
-                                    .withValues(alpha: 0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Center(
-                            child: Text(
-                              confirmText,
-                              style: AppTextStyles.onboardingButton.copyWith(
-                                fontSize: 16.sp,
-                              ),
-                            ),
-                          ),
-                        ),
+                        height: 50.h,
+                        backgroundColor: confirmColor ?? AppColors.primary,
+                        textColor: AppColors.white,
+                        borderRadius: 12.r,
                       ),
                     ),
                   ],
@@ -541,51 +474,32 @@ class AppDialogs {
               SizedBox(height: 32.h),
 
               // Open Settings Button (Primary)
-              ElevatedButton(
+              AppPrimaryButton(
+                label: AppStrings.openSettings.tr,
                 onPressed: () {
                   Get.back();
                   onOpenSettings();
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.white,
-                  minimumSize: Size(double.infinity, 56.h),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30.r),
-                  ),
-                  elevation: 0,
-                ),
-                child: Text(
-                  AppStrings.openSettings.tr,
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                height: 56.h,
+                borderRadius: 30.r,
               ),
               SizedBox(height: 12.h),
 
               // Cancel Button (Secondary)
-              OutlinedButton(
+              AppPrimaryButton(
+                label: AppStrings.maybeLater.tr,
                 onPressed: () {
                   Get.back();
                   if (onCancel != null) onCancel();
                 },
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: AppColors.borderSubtle, width: 1.2),
-                  minimumSize: Size(double.infinity, 56.h),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30.r),
-                  ),
-                ),
-                child: Text(
-                  AppStrings.maybeLater.tr,
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    color: AppColors.textMuted,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                height: 56.h,
+                borderRadius: 30.r,
+                outlined: true,
+                backgroundColor: AppColors.white,
+                textColor: AppColors.textMuted,
+                outlinedTextColor: AppColors.textMuted,
+                outlinedBorderColor: AppColors.borderSubtle,
+                outlinedBorderWidth: 1.2,
               ),
             ],
           ),
@@ -638,7 +552,9 @@ class AppDialogs {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.successBadge.withValues(alpha: 0.2),
+                            color: AppColors.successBadge.withValues(
+                              alpha: 0.2,
+                            ),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -680,28 +596,14 @@ class AppDialogs {
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 32.h),
-                  InkWell(
-                    onTap: () {
+                  AppPrimaryButton(
+                    label: AppStrings.gotIt.tr,
+                    onPressed: () {
                       Get.back();
                       if (onConfirm != null) onConfirm();
                     },
-                    child: Container(
-                      padding: EdgeInsets.symmetric(vertical: 16.h),
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(16.r),
-                      ),
-                      child: Center(
-                        child: Text(
-                          AppStrings.gotIt.tr,
-                          style: AppTextStyles.body.copyWith(
-                            color: AppColors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
+                    height: 56.h,
+                    borderRadius: 16.r,
                   ),
                 ],
               ),
@@ -803,28 +705,14 @@ class AppDialogs {
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 32.h),
-                  InkWell(
-                    onTap: () {
+                  AppPrimaryButton(
+                    label: AppStrings.gotIt.tr,
+                    onPressed: () {
                       Get.back();
                       if (onConfirm != null) onConfirm();
                     },
-                    child: Container(
-                      padding: EdgeInsets.symmetric(vertical: 16.h),
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(16.r),
-                      ),
-                      child: Center(
-                        child: Text(
-                          AppStrings.gotIt.tr,
-                          style: AppTextStyles.body.copyWith(
-                            color: AppColors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
+                    height: 56.h,
+                    borderRadius: 16.r,
                   ),
                 ],
               ),

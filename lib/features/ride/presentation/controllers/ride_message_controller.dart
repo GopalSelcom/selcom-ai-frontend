@@ -293,8 +293,6 @@ class RideMessageController extends GetxController {
   /// **TODO(static → API):** Attachments (camera, gallery, files) per backend contract.
   void onTapComposerAttach() {}
 
-  void goBack() => Get.back();
-
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!scrollController.hasClients) return;

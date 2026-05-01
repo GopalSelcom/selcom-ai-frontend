@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import '../../../../core/data/models/user_profile_models.dart';
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
@@ -9,15 +11,18 @@ import '../../../../core/network/api_service.dart';
 import '../../../../core/network/urls.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../models/contact_us_models.dart';
+import '../models/request/update_profile_request.dart';
+import '../models/update_profile_response.dart';
 
 abstract class ProfileRemoteDataSource {
   Future<UserModel> getProfile();
 
-  Future<bool> updateProfile(Map<String, dynamic> data);
+  Future<UserProfileUpdateResponse> updateProfile(UserProfileUpdateRequest profileRequest);
 
   Future<UserModel> saveUserAdditionalDetails({
     required String name,
     required String emailId,
+    String? imagePath,
   });
 
   Future<GetSavedPlacesResponseModel?> getSavedPlaces();
@@ -62,26 +67,41 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   }
 
   @override
-  Future<bool> updateProfile(Map<String, dynamic> data) async {
+  Future<UserProfileUpdateResponse> updateProfile(UserProfileUpdateRequest profileRequest) async {
+
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.profile.updateProfile,
-        method: ApiMethod.post,
-        body: data,
+        method: profileRequest.image != null ? ApiMethod.multipart : ApiMethod.post,
+        body: profileRequest.toJson(),
+        multipartFiles: profileRequest.image != null
+            ? [
+          LocalMultipartFile(
+            name: "image",
+            path: profileRequest.image?.path ?? "",
+          ),
+        ]
+            : null,
       ),
     );
-    return response.statusCode == 200;
+
+    if (response.statusCode == 200 && response.data != null) {
+      return UserProfileUpdateResponse.fromJson(response.data);
+    }
+    throw Exception(response.data['message'] ?? 'Failed to update profile');
   }
 
   @override
   Future<UserModel> saveUserAdditionalDetails({
     required String name,
     required String emailId,
+    String? imagePath,
   }) async {
+
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.auth.saveUserDetails,
-        method: ApiMethod.post,
+        method: imagePath != null ? ApiMethod.multipart : ApiMethod.post,
         body: {'name': name, 'emailId': emailId},
       ),
     );

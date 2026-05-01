@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../controllers/add_card_controller.dart';
+import '../../../../core/constants/app_assets.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/app_text_field.dart';
@@ -29,7 +29,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.pageBackground,
+      backgroundColor: AppColors.white,
       body: Column(
         children: [
           AppProfileHeader(title: AppStrings.addNewCard.tr, onBack: Get.back),
@@ -53,6 +53,10 @@ class _AddCardScreenState extends State<AddCardScreen> {
                               onSubmitted: (_) => controller.focusCardNumber(),
                               onChanged: (_) => controller.onFieldChanged(),
                               errorText: controller.fullNameError.value,
+                              fontSize: 15.h,
+                              fontWeight: FontWeight.w500,
+                              textFieldBackgroundColor: AppColors.pageBackground,
+                              textColor: AppColors.textHeading,
                             ),
                           ),
                           SizedBox(height: 16.h),
@@ -72,6 +76,10 @@ class _AddCardScreenState extends State<AddCardScreen> {
                                 LengthLimitingTextInputFormatter(16),
                                 _CardNumberFormatter(),
                               ],
+                              fontSize: 15.h,
+                              fontWeight: FontWeight.w500,
+                              textFieldBackgroundColor: AppColors.pageBackground,
+                              textColor: AppColors.textHeading,
                             ),
                           ),
                           SizedBox(height: 16.h),
@@ -95,6 +103,10 @@ class _AddCardScreenState extends State<AddCardScreen> {
                                       LengthLimitingTextInputFormatter(4),
                                       _CardExpiryFormatter(),
                                     ],
+                                    fontSize: 15.h,
+                                    fontWeight: FontWeight.w500,
+                                    textFieldBackgroundColor: AppColors.pageBackground,
+                                    textColor: AppColors.textHeading,
                                   ),
                                 ),
                               ),
@@ -129,6 +141,10 @@ class _AddCardScreenState extends State<AddCardScreen> {
                                       FilteringTextInputFormatter.digitsOnly,
                                       LengthLimitingTextInputFormatter(3),
                                     ],
+                                    fontSize: 15.h,
+                                    fontWeight: FontWeight.w500,
+                                    textFieldBackgroundColor: AppColors.pageBackground,
+                                    textColor: AppColors.textHeading,
                                   ),
                                 ),
                               ),
@@ -141,7 +157,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                   Obx(
                     () => AppPrimaryButton(
                       label: 'Add Card',
-                      trailingIcon: Iconsax.arrow_right_3,
+                      iconAsset: AppAssets.locationIcArrowRight,
                       isLoading: controller.isSubmitting.value,
                       onPressed: controller.isSubmitting.value
                           ? null

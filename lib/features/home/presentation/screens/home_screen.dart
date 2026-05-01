@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -19,16 +20,23 @@ import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../widgets/recent_location_tile.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 
 class HomeScreen extends GetView<HomeController> {
   const HomeScreen({super.key});
 
-  static const double _homeSheetInitialSize = 0.45;
+  static const double _homeSheetInitialSize = 0.32;
 
   @override
   Widget build(BuildContext context) {
     controller.onHomeVisible();
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _showExitDialog(context);
+      },
+      child: Scaffold(
       backgroundColor: AppColors.pageBackground,
       body: Stack(
         children: [
@@ -94,7 +102,7 @@ class HomeScreen extends GetView<HomeController> {
           }),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildModernAddressBox() {
@@ -137,10 +145,11 @@ class HomeScreen extends GetView<HomeController> {
                 )
               : Row(
                   children: [
-                    Icon(
-                      Icons.location_on,
+                    SvgPictureAsset(
+                      AppAssets.locationIcPickupPin,
+                      width: 21.sp,
+                      height: 24.sp,
                       color: AppColors.figmaIconGreen,
-                      size: 28.sp,
                     ),
                     SizedBox(width: 8.w),
                     Expanded(
@@ -151,19 +160,17 @@ class HomeScreen extends GetView<HomeController> {
                           Text(
                             'Current location',
                             style: AppTextStyles.homeSubtitle.copyWith(
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w500,
                               color: AppColors.figmaTextPrimary,
-                              fontSize: 14.sp,
-                              height: 1.2,
+                              fontSize: 15.sp,
                             ),
                           ),
                           Text(
                             address,
                             style: AppTextStyles.homeSubtitle.copyWith(
-                              fontSize: 13.sp,
-                              fontWeight: FontWeight.w400,
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.w500,
                               color: AppColors.figmaTextSecondary,
-                              height: 1.2,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -191,13 +198,23 @@ class HomeScreen extends GetView<HomeController> {
   */
 
   Widget _buildFigmaDraggableSheet() {
-    return AppDraggableBottomSheet(
-      initialChildSize: _homeSheetInitialSize,
-      minChildSize: _homeSheetInitialSize,
-      maxChildSize: 0.9,
-      snap: true,
-      snapSizes: const [_homeSheetInitialSize, 0.9],
-      childBuilder: (scrollController) {
+    return Obx(() {
+      final double maxContentSize = _calculateMaxSheetSize();
+
+      // Ensure snapSizes are in strictly ascending order to avoid assertion errors.
+      // We only add the maxContentSize as a snap point if it's meaningfully larger than the initial size.
+      final List<double> snaps = [_homeSheetInitialSize];
+      if (maxContentSize > _homeSheetInitialSize + 0.05) {
+        snaps.add(maxContentSize);
+      }
+
+      return AppDraggableBottomSheet(
+        initialChildSize: _homeSheetInitialSize,
+        minChildSize: _homeSheetInitialSize,
+        maxChildSize: maxContentSize > _homeSheetInitialSize ? maxContentSize : _homeSheetInitialSize + 0.01,
+        snap: snaps.length > 1,
+        snapSizes: snaps,
+        childBuilder: (scrollController) {
         return ListView(
           controller: scrollController,
           physics: const BouncingScrollPhysics(
@@ -216,7 +233,7 @@ class HomeScreen extends GetView<HomeController> {
                   ),
                 ),
               ),
-              SizedBox(height: 24.h),
+              SizedBox(height: 8.h),
               GestureDetector(
                 onTap: () => controller.openLocationSelection(),
                 child: Container(
@@ -225,7 +242,7 @@ class HomeScreen extends GetView<HomeController> {
                     vertical: 14.h,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.pageBackground,
+                    color: AppColors.surfaceSubtle,
                     borderRadius: BorderRadius.circular(16.r),
                     border: Border.all(
                       color: AppColors.skeletonBase,
@@ -234,21 +251,26 @@ class HomeScreen extends GetView<HomeController> {
                   ),
                   child: Row(
                     children: [
-                      Icon(
-                        Icons.location_on,
+                      SvgPictureAsset(
+                        AppAssets.locationIcDestinationPin,
                         color: AppColors.primary,
-                        size: 24.sp,
+                        width: 19.sp,
+                        height: 19.sp,
                       ),
                       SizedBox(width: 12.w),
                       Text(
                         AppStrings.whereAreYouGoing.tr,
-                        style: AppTextStyles.homeSubtitle,
+                        style: AppTextStyles.homeSubtitle.copyWith(
+                          color: AppColors.black,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 15.sp
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
-              SizedBox(height: 20.h),
+              SizedBox(height: 12.h),
               Obx(
                 () => controller.savedPlaces.isEmpty
                     ? const SizedBox.shrink()
@@ -266,7 +288,7 @@ class HomeScreen extends GetView<HomeController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (controller.shouldShowRecentSection) ...[
-                      SizedBox(height: 28.h),
+                      SizedBox(height: 16.h),
                       Row(
                         children: [
                           Expanded(
@@ -274,7 +296,7 @@ class HomeScreen extends GetView<HomeController> {
                               AppStrings.recentLocation.tr,
                               style: AppTextStyles.homeSubtitle.copyWith(
                                 fontSize: 15.sp,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
@@ -299,12 +321,32 @@ class HomeScreen extends GetView<HomeController> {
                             ),
                         ],
                       ),
-                      SizedBox(height: 16.h),
+                      SizedBox(height: 8.h),
                       if (controller.isLoadingHomeData.value)
-                        ...List.generate(3, (_) => _buildRecentLocationSkeleton())
+                        ...List.generate(3, (index) {
+                          final bool isLast = index == 2;
+                          return Column(
+                            children: [
+                              _buildRecentLocationSkeleton(bottomSpacing: 0),
+                              if (!isLast)
+                                Divider(height: 1.h, color: AppColors.bgSoftCircle),
+                            ],
+                          );
+                        })
                       else
-                        ...controller.recentDestinationsPreview.map(
-                          (loc) => _buildRecentLocationItem(loc),
+                        ...controller.recentDestinationsPreview.asMap().entries.map(
+                          (entry) {
+                            final bool isLast = entry.key ==
+                                controller.recentDestinationsPreview.length - 1;
+                            return Column(
+                              children: [
+                                _buildRecentLocationItem(entry.value,
+                                    bottomSpacing: 8, topSpacing: 8),
+                                if (!isLast)
+                                  Divider(height: 1.h, color: AppColors.bgSoftCircle),
+                              ],
+                            );
+                          },
                         ),
                     ],
                     if (controller.shouldShowVehicleSection) ...[
@@ -316,7 +358,7 @@ class HomeScreen extends GetView<HomeController> {
                         AppStrings.exploreVehicle.tr,
                         style: AppTextStyles.homeSubtitle.copyWith(
                           fontSize: 15.sp,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                       SizedBox(height: 16.h),
@@ -325,11 +367,12 @@ class HomeScreen extends GetView<HomeController> {
                   ],
                 ),
               ),
-              SizedBox(height: 40.h),
+              SizedBox(height: 20.h),
           ],
         );
       },
     );
+   });
   }
 
   Widget _buildSavedPlaceChip(SavedPlace place) {
@@ -338,10 +381,10 @@ class HomeScreen extends GetView<HomeController> {
       onTap: () => controller.navigateToVehicleSelectionForSavedLabel(label),
       onLongPress: () => Get.toNamed(AppRoutes.selectSavedLocation, arguments: label),
       child: Container(
-        margin: EdgeInsets.only(right: 12.w),
+        margin: EdgeInsets.only(right: 8.w),
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surfaceSubtle,
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(color: const Color(0xFFE2E8F0), width: 0.8),
         ),
@@ -349,7 +392,7 @@ class HomeScreen extends GetView<HomeController> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: EdgeInsets.all(4.w),
+              padding: EdgeInsets.all(2.w),
               decoration: const BoxDecoration(
                 color: Color(0xFFFEF3C7),
                 shape: BoxShape.circle,
@@ -364,7 +407,8 @@ class HomeScreen extends GetView<HomeController> {
             Text(
               label,
               style: AppTextStyles.homeChip.copyWith(
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
+                fontSize: 14.sp,
                 color: AppColors.textHeading,
               ),
             ),
@@ -419,7 +463,8 @@ class HomeScreen extends GetView<HomeController> {
     return sorted;
   }
 
-  Widget _buildRecentLocationItem(RecentDestinationModel loc) {
+  Widget _buildRecentLocationItem(RecentDestinationModel loc,
+      {double bottomSpacing = 24,double topSpacing = 24}) {
     return Obx(() {
       final distance = controller.calculateDistanceKm(loc.lat, loc.lng);
       final savedPlace = controller.getSavedPlaceFor(loc.address, null);
@@ -429,15 +474,18 @@ class HomeScreen extends GetView<HomeController> {
         address: loc.address,
         distance: distance,
         isFavorite: isFavorite,
-        onTap: () => controller.navigateToVehicleSelectionForRecentDestination(loc),
+        bottomSpacing: bottomSpacing,
+        topSpacing: topSpacing,
+        onTap: () =>
+            controller.navigateToVehicleSelectionForRecentDestination(loc),
         onFavoriteTap: () => controller.toggleFavoriteForRecent(loc),
       );
     });
   }
 
-  Widget _buildRecentLocationSkeleton() {
+  Widget _buildRecentLocationSkeleton({double bottomSpacing = 24}) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 24.h),
+      padding: EdgeInsets.only(bottom: bottomSpacing.h),
       child: Row(
         children: [
           Container(
@@ -504,11 +552,11 @@ class HomeScreen extends GetView<HomeController> {
         child: Column(
           children: [
             Container(
-              width: 86.w,
-              height: 72.h,
+              width: 80.w,
+              height: 60.h,
               padding: EdgeInsets.all(8.w),
               decoration: BoxDecoration(
-                color: AppColors.pageBackground,
+                color: AppColors.white,
                 borderRadius: BorderRadius.circular(16.r),
               ),
               child: Image.asset(
@@ -684,5 +732,51 @@ class HomeScreen extends GetView<HomeController> {
       default:
         return 'Active Ride';
     }
+  }
+
+  void _showExitDialog(BuildContext context) {
+    AppDialogs.showConfirmationDialog(
+      title: AppStrings.exitApp.tr,
+      message: AppStrings.exitAppMessage.tr,
+      confirmText: AppStrings.yes.tr,
+      cancelText: AppStrings.no.tr,
+      onConfirm: () {
+        SystemNavigator.pop();
+      },
+    );
+  }
+
+  double _calculateMaxSheetSize() {
+    // 1. Base content height (handle + search bar + padding)
+    double contentHeight = 50.h;
+
+    // 2. Saved Places Chip height
+    if (controller.savedPlaces.isNotEmpty) {
+      contentHeight += 60.h;
+    }
+
+    // 3. Recent Locations Section
+    if (controller.shouldShowRecentSection) {
+      contentHeight += 40.h; // Header
+      // Each recent location item is approximately 68.h including dividers
+      contentHeight += controller.recentDestinationsPreview.length * 68.h;
+    }
+
+    // 4. Vehicle Section
+    if (controller.shouldShowVehicleSection) {
+      contentHeight += 40.h; // Header
+      contentHeight += 130.h; // Horizontal list + caption
+    }
+
+    // 5. Bottom spacing
+    contentHeight += 24.h;
+
+    // Convert to fraction of screen height
+    final double screenHeight = 1.sh > 0 ? 1.sh : 812; // Fallback to standard iPhone height
+    double size = contentHeight / screenHeight;
+
+    // Clamp values to ensure usability. Minimum is the peek height, 
+    // maximum is 0.9 to avoid overlapping with top status bar too much.
+    return size.clamp(_homeSheetInitialSize, 0.9);
   }
 }

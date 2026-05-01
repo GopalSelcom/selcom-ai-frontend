@@ -18,7 +18,7 @@ class NotificationScreen extends StatelessWidget {
     final controller = Get.put(sl<NotificationController>());
 
     return Scaffold(
-      backgroundColor: AppColors.pageBackground,
+      backgroundColor: AppColors.white,
       body: Column(
         children: [
           /// Header + Mark All Read
@@ -137,7 +137,7 @@ class NotificationScreen extends StatelessWidget {
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
           color: notification.isRead
-              ? AppColors.white
+              ? AppColors.surfaceSubtle
               : AppColors.bgUnreadNotification,
           borderRadius: BorderRadius.circular(16.r),
           border: notification.isRead

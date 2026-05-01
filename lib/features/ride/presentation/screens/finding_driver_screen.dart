@@ -8,6 +8,7 @@ import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
+import '../../../../shared/widgets/app_primary_button.dart';
 import '../controllers/finding_driver_controller.dart';
 import '../../../../shared/utils/phone_formatter.dart';
 
@@ -81,43 +82,25 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
               ),
             ),
           ),
-          Obx(() {
-            final isForOther = c.isBookedForOther.value;
-
-            return AppMapTopHeader(
-              top: topPad + 8.h,
-              left: 16,
-              right: 16,
-              onProfileTap: c.openProfile,
-              addressWidget: Expanded(
-                child: isForOther
-                    ? AppMapLocationSummaryCard(
-                        leading: Container(
-                          padding: EdgeInsets.all(6.w),
-                          decoration: const BoxDecoration(
-                            color: AppColors.surfaceSubtle,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Iconsax.user,
-                            color: AppColors.primary,
-                            size: 20.sp,
-                          ),
-                        ),
-                        label: "Booking for ${c.passengerName.value}",
-                        address: "Phone: ${TanzaniaPhoneFormatter.formatInternational(c.passengerPhone.value ?? '')}",
-                        maxAddressLines: 1,
-                      )
-                    : AppMapLocationSummaryCard(
-                        label: 'Current location',
-                        address: c.pickupAddress.isEmpty
-                            ? 'Selected location'
-                            : c.pickupAddress,
-                        maxAddressLines: 1,
-                      ),
+          AppMapTopHeader(
+            top: topPad + 8.h,
+            left: 16,
+            right: 16,
+            onProfileTap: c.openProfile,
+            addressWidget: Expanded(
+              child: Obx(
+                () => RideLocationSummaryCard(
+                  pickupAddress: c.pickupAddress.isEmpty
+                      ? 'Current location'
+                      : c.pickupAddress,
+                  destinationAddress: c.destinationAddress.isEmpty
+                      ? 'Destination'
+                      : c.destinationAddress,
+                  intermediateStops: c.intermediateStops.toList(),
+                ),
               ),
-            );
-          }),
+            ),
+          ),
           Obx(() {
             final isSearching = c.assignedDriverLocation.value == null;
             return AppDraggableBottomSheet(
@@ -311,26 +294,26 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
                 textAlign: TextAlign.center,
                 style: AppTextStyles.homeTitle.copyWith(
                   fontSize: 20.sp,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w700,
                   color: AppColors.textHeading,
                 ),
               ),
               SizedBox(height: 8.h),
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: 13.w),
+                padding: EdgeInsets.symmetric(horizontal: 12.w),
                 child: Text(
                   c.currentDescriptionLabel.value,
                   textAlign: TextAlign.center,
                   style: AppTextStyles.homeCaption.copyWith(
                     fontSize: 14.sp,
-                    color: AppColors.figmaTextSecondary,
+                    color: AppColors.textBody,
                     height: 1.4,
                   ),
                 ),
               ),
 
               if (!c.isRideCancelled.value) ...[
-                SizedBox(height: 42.h),
+                SizedBox(height: 36.h),
 
                 // 2. Bolt-like Linear Progress Bar
                 Padding(
@@ -396,49 +379,20 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
                 children: [
                   SizedBox(
                     width: double.infinity,
-                    child: ElevatedButton(
+                    child: AppPrimaryButton(
+                      label: 'Search Again',
                       onPressed: c.searchAgain,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        padding: EdgeInsets.symmetric(vertical: 18.h),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16.r),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: Text(
-                        'Search Again',
-                        style: AppTextStyles.button.copyWith(
-                          color: Colors.white,
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
+                      height: 56.h,
                     ),
                   ),
                   SizedBox(height: 16.h),
                   SizedBox(
                     width: double.infinity,
-                    child: OutlinedButton(
+                    child: AppPrimaryButton(
+                      label: 'Back to Home',
                       onPressed: () => Get.offAllNamed(AppRoutes.home),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(
-                          color: AppColors.borderNeutralStrong,
-                          width: 1.5,
-                        ),
-                        padding: EdgeInsets.symmetric(vertical: 18.h),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16.r),
-                        ),
-                      ),
-                      child: Text(
-                        'Back to Home',
-                        style: AppTextStyles.button.copyWith(
-                          color: AppColors.textHeading,
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
+                      outlined: true,
+                      height: 56.h,
                     ),
                   ),
                 ],
@@ -447,23 +401,11 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
           }
           return Padding(
             padding: EdgeInsets.symmetric(horizontal: 10.w),
-            child: OutlinedButton(
+            child: AppPrimaryButton(
+              label: 'Cancel Ride',
               onPressed: c.confirmCancelRide,
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppColors.primary, width: 1.5),
-                padding: EdgeInsets.symmetric(vertical: 18.h),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16.r),
-                ),
-              ),
-              child: Text(
-                'Cancel Ride',
-                style: AppTextStyles.button.copyWith(
-                  color: AppColors.primary,
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              outlined: true,
+              height: 56.h,
             ),
           );
         }),

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+
+import '../../../../core/constants/app_assets.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../controllers/ride_rating_controller.dart';
 
@@ -19,6 +22,10 @@ class RideRatingInputSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    TextStyle titleStyle = AppTextStyles.homeSubtitle.copyWith(
+      color: AppColors.black,
+      height: 20 / 15,
+    );
     return Obx(
       () => Container(
         width: double.infinity,
@@ -31,41 +38,31 @@ class RideRatingInputSection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              AppStrings.howWasYourRide.tr,
-              style: AppTextStyles.homeTitle.copyWith(
-                fontSize: 15.sp,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textHeading,
-              ),
-            ),
-            SizedBox(height: 10.h),
+            Text(AppStrings.howWasYourRide.tr, style: titleStyle),
+            SizedBox(height: 12.h),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: List.generate(5, (index) {
                 final star = index + 1;
+                final starColor = star <= controller.selectedRating.value
+                    ? AppColors.ratingStarActive
+                    : AppColors.ratingStarInactive;
                 return GestureDetector(
                   onTap: () => controller.onRatingSelected(star),
-                  child: Icon(
-                    Icons.star,
-                    size: starSize.w,
-                    color: star <= controller.selectedRating.value
-                        ? AppColors.ratingStarFilled
-                        : AppColors.borderDefault,
+                  child: SvgPictureAsset(
+                    AppAssets.icRatingStar,
+                    width: starSize.w,
+                    height: starSize.w,
+                    color: starColor,
+                    placeholderBuilder: (_) =>
+                        Icon(Icons.star, size: starSize.w, color: starColor),
                   ),
                 );
               }),
             ),
             if (controller.hasSelectedRating) ...[
-              SizedBox(height: 12.h),
-              Text(
-                AppStrings.whatStoodOut.tr,
-                style: AppTextStyles.homeTitle.copyWith(
-                  fontSize: 15.sp,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textHeading,
-                ),
-              ),
+              SizedBox(height: 18.h),
+              Text(AppStrings.whatStoodOut.tr, style: titleStyle),
               SizedBox(height: 6.h),
               Text(
                 AppStrings.pickAnyTagsThatMatchThisTrip.tr,
@@ -115,14 +112,10 @@ class RideRatingInputSection extends StatelessWidget {
                   }).toList(),
                 ),
               if (controller.selectedRating.value <= 2) ...[
-                SizedBox(height: 12.h),
+                SizedBox(height: 18.h),
                 Text(
                   AppStrings.pleaseTellUsWhatWentWrongOrHowWeCanImprove.tr,
-                  style: AppTextStyles.homeTitle.copyWith(
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textHeading,
-                  ),
+                  style: titleStyle,
                 ),
                 SizedBox(height: 10.h),
                 AppTextField(

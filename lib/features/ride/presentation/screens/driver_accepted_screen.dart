@@ -11,6 +11,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
+import '../../../../shared/widgets/app_primary_button.dart';
 import '../controllers/driver_accepted_controller.dart';
 import '../controllers/ride_share_controller.dart';
 import '../widgets/ride_common_widgets.dart';
@@ -70,44 +71,32 @@ class DriverAcceptedScreen extends StatelessWidget {
               ),
             ),
           ),
-          Obx(() {
-            final ride = c.ride.value;
-            final isForOther = ride?.isBookedForOther ?? false;
-
-            return AppMapTopHeader(
-              top: topPad + 8.h,
-              left: 16,
-              right: 16,
-              onProfileTap: c.openProfile,
-              addressWidget: Expanded(
-                child: isForOther && ride != null
-                    ? AppMapLocationSummaryCard(
-                        leading: Container(
-                          padding: EdgeInsets.all(6.w),
-                          decoration: const BoxDecoration(
-                            color: AppColors.surfaceSubtle,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Iconsax.user,
-                            color: AppColors.primary,
-                            size: 20.sp,
-                          ),
-                        ),
-                        label: "Booking for ${ride.passengerName}",
-                        address: "Phone: ${TanzaniaPhoneFormatter.formatInternational(ride.passengerPhone ?? '')}",
-                        maxAddressLines: 1,
-                      )
-                    : AppMapLocationSummaryCard(
-                        label: 'Current location',
-                        address: c.pickupAddress.isEmpty
-                            ? 'Selected location'
-                            : c.pickupAddress,
-                        maxAddressLines: 1,
-                      ),
-              ),
-            );
-          }),
+          AppMapTopHeader(
+            top: topPad + 8.h,
+            left: 16,
+            right: 16,
+            onProfileTap: c.openProfile,
+            addressWidget: Expanded(
+              child: Obx(() {
+                final List<String> stops =
+                    c.ride.value?.stops.map((s) => s.address).toList() ?? [];
+                // If stops include the destination, we remove the last one
+                // because the card already shows the destination separately.
+                if (stops.isNotEmpty) {
+                  stops.removeLast();
+                }
+                return RideLocationSummaryCard(
+                  pickupAddress: c.pickupAddress.isEmpty
+                      ? 'Current location'
+                      : c.pickupAddress,
+                  destinationAddress: c.destinationAddress.isEmpty
+                      ? 'Destination'
+                      : c.destinationAddress,
+                  intermediateStops: stops,
+                );
+              }),
+            ),
+          ),
           Obx(() {
             final eta = c.etaLabel.value;
 
@@ -698,9 +687,9 @@ class DriverAcceptedScreen extends StatelessWidget {
             c.rideProgressTitle,
             textAlign: TextAlign.center,
             style: AppTextStyles.homeTitle.copyWith(
-              fontSize: 38.sp / 2,
               color: AppColors.textHeading,
               fontWeight: FontWeight.w700,
+              height: 34 / 20,
             ),
           ),
           SizedBox(height: 14.h),
@@ -736,7 +725,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                 fontSize: 15.sp,
                 color: AppColors.textBody,
                 fontWeight: FontWeight.w500,
-                height: 1.33,
+                height: 20 / 15,
               ),
             ),
           ],
@@ -749,7 +738,7 @@ class DriverAcceptedScreen extends StatelessWidget {
             fontSize: 20.sp,
             color: AppColors.textHeading,
             fontWeight: FontWeight.w600,
-            height: 1.7,
+            height: 34 / 20,
             letterSpacing: -0.4,
           ),
         ),
@@ -764,7 +753,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                   fontSize: 15.sp,
                   color: AppColors.textBody,
-                  height: 1.33,
+                  height: 20 / 15,
                 ),
               ),
               SizedBox(width: 8.w),
@@ -925,7 +914,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                               color: AppColors.textHeading,
                               fontSize: 20.sp,
                               fontWeight: FontWeight.w600,
-                              height: 1.7,
+                              height: 34 / 20,
                             ),
                           ),
                         ),
@@ -942,7 +931,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                             color: AppColors.textDim,
                             fontSize: 15.sp,
                             fontWeight: FontWeight.w500,
-                            height: 1.33,
+                            height: 20 / 15,
                           ),
                         ),
                       ],
@@ -962,6 +951,7 @@ class DriverAcceptedScreen extends StatelessWidget {
             ),
             _roundAction(
               icon: Icons.call,
+              iconAsset: AppAssets.icCall,
               color: AppColors.primary,
               onTap: c.callDriver,
             ),
@@ -969,7 +959,8 @@ class DriverAcceptedScreen extends StatelessWidget {
             Obx(
               () => _roundAction(
                 icon: Icons.message_rounded,
-                color: AppColors.figmaIconGreen,
+                iconAsset: AppAssets.icMessage,
+                color: AppColors.primary,
                 onTap: c.onChatTap,
                 badge: c.unreadCount.value > 0
                     ? c.unreadCount.value.toString()
@@ -981,20 +972,11 @@ class DriverAcceptedScreen extends StatelessWidget {
         SizedBox(height: 16.h),
         SizedBox(
           width: double.infinity,
-          child: OutlinedButton(
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.primary,
-              side: const BorderSide(color: AppColors.primary, width: 1.2),
-              padding: EdgeInsets.symmetric(vertical: 16.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16.r),
-              ),
-            ),
+          child: AppPrimaryButton(
+            label: AppStrings.cancelRide.tr,
             onPressed: c.confirmCancelRide,
-            child: Text(
-              AppStrings.cancelRide.tr,
-              style: TextStyle(fontSize: 17.sp, fontWeight: FontWeight.w600),
-            ),
+            outlined: true,
+            height: 56.h,
           ),
         ),
       ],
@@ -1042,14 +1024,47 @@ class DriverAcceptedScreen extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: 2.h),
-                  Text(
-                    c.rideProgressSubtitle,
-                    style: AppTextStyles.homeCaption.copyWith(
-                      fontSize: 15.sp,
-                      color: AppColors.textBody,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+                  c.shouldShowRideEtaBadge
+                      ? Row(
+                          children: [
+                            Text(
+                              'Arrived in',
+                              style: AppTextStyles.homeCaption.copyWith(
+                                fontSize: 15.sp,
+                                color: AppColors.textBody,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            SizedBox(width: 6.w),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 8.w,
+                                vertical: 2.h,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.bgEtaBlueSoft,
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                              child: Text(
+                                '${c.rideEtaMinutes} mins',
+                                style: AppTextStyles.homeCaption.copyWith(
+                                  fontSize: 15.sp,
+                                  color: AppColors.textEtaBlue,
+                                  fontWeight: FontWeight.w700,
+                                  height: 20 / 15,
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : Text(
+                          c.rideProgressSubtitle,
+                          style: AppTextStyles.homeCaption.copyWith(
+                            fontSize: 15.sp,
+                            color: AppColors.textBody,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                 ],
               ),
             ),
@@ -1083,6 +1098,10 @@ class DriverAcceptedScreen extends StatelessWidget {
                 endLocation: c.destinationTitle,
                 endAddress: c.destinationAddress,
                 stops: c.ride.value?.stops,
+                showAddStopBeforeDestination:
+                    !c.isNearDestination() &&
+                    c.ride.value?.pendingStopsUpdate == null,
+                onAddStopTap: c.onEditStops,
               ),
               if (!c.isNearDestination() &&
                   c.ride.value?.pendingStopsUpdate == null &&
@@ -1120,35 +1139,31 @@ class DriverAcceptedScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      AppStrings.totalFare.tr,
-                      style: AppTextStyles.homeTitle.copyWith(
-                        fontSize: 15.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textHeading,
-                      ),
-                    ),
-                    const Spacer(),
-                  ],
+                Text(
+                  AppStrings.totalFare.tr,
+                  style: AppTextStyles.homeTitle.copyWith(
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textHeading,
+                    height: 20 / 15,
+                  ),
                 ),
                 SizedBox(height: 10.h),
                 FareBreakdownRow(
                   title: AppStrings.rideCharge.tr,
                   amount: c.rideChargeLabel,
                 ),
-                SizedBox(height: 8.h),
+                SizedBox(height: 4.h),
                 FareBreakdownRow(
                   title: AppStrings.bookingFeesAndConvenienceCharges.tr,
                   amount: c.bookingFeeLabel,
                 ),
-                SizedBox(height: 8.h),
+                SizedBox(height: 4.h),
                 FareBreakdownRow(
                   title: AppStrings.paymentMode.tr,
                   amount: c.paymentModeLabel,
                 ),
-                SizedBox(height: 8.h),
+                SizedBox(height: 4.h),
                 FareBreakdownRow(
                   title: AppStrings.totalAmount.tr,
                   amount: c.totalAmountLabel,
@@ -1158,12 +1173,14 @@ class DriverAcceptedScreen extends StatelessWidget {
             ),
           ),
         ),
+        SizedBox(height: 12.h),
       ],
     );
   }
 
   Widget _roundAction({
     required IconData icon,
+    required String iconAsset,
     required Color color,
     required VoidCallback onTap,
     String? badge,
@@ -1180,7 +1197,16 @@ class DriverAcceptedScreen extends StatelessWidget {
             child: SizedBox(
               width: 33.81.w,
               height: 33.81.w,
-              child: Icon(icon, size: 14.sp, color: AppColors.white),
+              child: Center(
+                child: SvgPictureAsset(
+                  iconAsset,
+                  width: 14.w,
+                  height: 14.w,
+                  color: AppColors.white,
+                  placeholderBuilder: (_) =>
+                      Icon(icon, size: 14.sp, color: AppColors.white),
+                ),
+              ),
             ),
           ),
         ),
@@ -1192,9 +1218,7 @@ class DriverAcceptedScreen extends StatelessWidget {
               width: 15.w,
               height: 15.w,
               decoration: BoxDecoration(
-                color: (color == AppColors.primary)
-                    ? AppColors.figmaIconGreen
-                    : AppColors.error,
+                color: AppColors.error,
                 shape: BoxShape.circle,
                 border: Border.all(color: AppColors.white, width: 1.5),
               ),

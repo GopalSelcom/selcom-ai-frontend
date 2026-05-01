@@ -12,6 +12,7 @@ import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_back_button.dart';
 import '../controllers/home_controller.dart';
 import '../controllers/location_selection_controller.dart';
+import '../widgets/favorite_icon_button.dart';
 import '../../data/models/places_models.dart';
 import '../../../../core/routes/app_routes.dart';
 
@@ -25,30 +26,49 @@ class LocationSelectionScreen extends StatefulWidget {
 
 class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
   HomeController get controller => Get.find<HomeController>();
+
   LocationSelectionController get locationController =>
       Get.find<LocationSelectionController>();
+
   TextEditingController get pickupController =>
       locationController.pickupController;
+
   TextEditingController get destinationController =>
       locationController.destinationController;
+
   FocusNode get pickupFocusNode => locationController.pickupFocusNode;
+
   FocusNode get destinationFocusNode => locationController.destinationFocusNode;
+
   RxInt get _activeSegmentIndex => locationController.activeSegmentIndex;
+
   RxList<TextEditingController> get _extraDestinationControllers =>
       locationController.extraDestinationControllers;
+
   RxList<FocusNode> get _extraDestinationFocusNodes =>
       locationController.extraDestinationFocusNodes;
+
   RxBool get pickupEditedByUser => locationController.pickupEditedByUser;
+
   RxnString get _destinationPlaceId => locationController.destinationPlaceId;
+
   RxnDouble get _routePickupLat => locationController.routePickupLat;
+
   RxnDouble get _routePickupLng => locationController.routePickupLng;
+
   RxnDouble get _routeDestinationLat => locationController.routeDestinationLat;
+
   RxnDouble get _routeDestinationLng => locationController.routeDestinationLng;
+
   RxnString get _preferredVehicleTypeId =>
       locationController.preferredVehicleTypeId;
-  RxnString get _preferredVehicleName => locationController.preferredVehicleName;
+
+  RxnString get _preferredVehicleName =>
+      locationController.preferredVehicleName;
+
   bool get _isVehicleSelectionEditMode =>
       locationController.isVehicleSelectionEditMode.value;
+
   int get _maxExtraStops => LocationSelectionController.maxExtraStops;
 
   void _onAddDestinationStop() => locationController.onAddDestinationStop();
@@ -67,14 +87,14 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           child: Stack(
             children: [
               Padding(
-                padding: EdgeInsets.fromLTRB(16.w, 59.h, 16.w, 88.h),
+                padding: EdgeInsets.fromLTRB(16.w, 60.h, 16.w, 92.h),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _pickupDestinationCard(),
-                    SizedBox(height: 9.h),
-                    _chipsRow(),
                     SizedBox(height: 12.h),
+                    _chipsRow(),
+                    SizedBox(height: 16.h),
                     Expanded(child: _buildSearchContent()),
                   ],
                 ),
@@ -108,7 +128,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
               Positioned(
                 left: 16.w,
                 right: 16.w,
-                bottom: 22.h,
+                bottom: 26.h,
                 child: _bookRideButton(),
               ),
             ],
@@ -120,91 +140,74 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
 
   Widget _pickupDestinationCard() {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(16.r),
-      child: Stack(
-        fit: StackFit.loose,
-        children: [
-          Positioned.fill(
-            child: SvgPictureAsset(
-              AppAssets.locationCardBackground,
-              fit: BoxFit.fill,
-              placeholderBuilder: (_) => Container(color: AppColors.white),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.fromLTRB(20.w, 16.h, 10.w, 16.h),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(child: _integratedLocationFields()),
-                SizedBox(width: 6.w),
-                Material(
-                  color: AppColors.transparent,
-                  child: Opacity(
-                    opacity:
-                        _extraDestinationControllers.length >= _maxExtraStops
-                        ? 0.45
-                        : 1.0,
-                    child: InkWell(
-                      onTap:
-                          _extraDestinationControllers.length >= _maxExtraStops
-                          ? null
-                          : _onAddDestinationStop,
-                      borderRadius: BorderRadius.circular(20.r),
-                      child: SizedBox(
-                        width: 81.28.w,
-                        height: 43.03.h,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            SvgPictureAsset(
-                              AppAssets.locationAddPillBackground,
-                              fit: BoxFit.fill,
-                              placeholderBuilder: (_) => Container(
-                                decoration: BoxDecoration(
-                                  color: AppColors.bgNeutralSoft,
-                                  borderRadius: BorderRadius.circular(20.r),
-                                  border: Border.all(
-                                    color: AppColors.borderNeutral,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                SvgPictureAsset(
-                                  AppAssets.locationIcAdd,
-                                  width: 21.5.w,
-                                  height: 21.5.h,
-                                  placeholderBuilder: (_) => const Icon(
-                                    Icons.add_circle_outline,
-                                    size: 16,
-                                    color: AppColors.textMutedStrong,
-                                  ),
-                                ),
-                                SizedBox(width: 4.72.w),
-                                Text(
-                                  AppStrings.add.tr,
-                                  style: AppTextStyles.homeCaption.copyWith(
-                                    color: AppColors.textMutedStrong,
-                                    fontSize: 14.34.sp,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+      clipBehavior: Clip.antiAlias,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.cardBackground,
+          border: Border.all(color: AppColors.borderDefault),
+          borderRadius: BorderRadius.all(Radius.circular(16.r)),
+        ),
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(20.w, 16.h, 10.w, 16.h),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(child: _integratedLocationFields()),
+              Material(
+                color: AppColors.transparent,
+                child: Opacity(
+                  opacity: _extraDestinationControllers.length >= _maxExtraStops
+                      ? 0.45
+                      : 1.0,
+                  child: InkWell(
+                    onTap: _extraDestinationControllers.length >= _maxExtraStops
+                        ? null
+                        : _onAddDestinationStop,
+                    borderRadius: BorderRadius.circular(20.r),
+                    child: Container(
+                      width: 81.28.w,
+                      height: 43.03.h,
+                      decoration: BoxDecoration(
+                        color: AppColors.bgNeutralSoft,
+                        borderRadius: BorderRadius.circular(20.r),
+                        border: Border.all(
+                          color: AppColors.borderNeutral,
+                          width: 1.2,
                         ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SvgPictureAsset(
+                            AppAssets.locationIcAdd,
+                            width: 16.74.w,
+                            height: 16.74.w,
+                            color: AppColors.iconMutedLight,
+                            placeholderBuilder: (_) => const Icon(
+                              Icons.add_circle,
+                              size: 16,
+                              color: AppColors.iconMutedLight,
+                            ),
+                          ),
+                          SizedBox(width: 4.72.w),
+                          Text(
+                            AppStrings.add.tr,
+                            style: AppTextStyles.homeCaption.copyWith(
+                              color: AppColors.textMutedStrong,
+                              fontSize: 14.34.sp,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -221,7 +224,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         Row(
           children: [
             SizedBox(
-              width: 14.w,
+              width: 18.w,
               child: Center(child: icon),
             ),
             SizedBox(width: 12.w),
@@ -230,34 +233,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           ],
         ),
         if (showDivider)
-          Row(
-            children: [
-              SizedBox(
-                width: 14.w,
-                child: Center(
-                  child: Container(
-                    width: 1.w,
-                    height: 17.h,
-                    color: AppColors.borderNeutral,
-                  ),
-                ),
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8.h),
-                  child: SvgPictureAsset(
-                    AppAssets.locationFieldDivider,
-                    fit: BoxFit.fitWidth,
-                    width: double.infinity,
-                    height: 1.h,
-                    placeholderBuilder: (_) =>
-                        Container(height: 1.h, color: AppColors.borderNeutral),
-                  ),
-                ),
-              ),
-            ],
-          ),
+          const Divider(color: AppColors.borderNeutral, endIndent: 0),
       ],
     );
   }
@@ -277,11 +253,11 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     rows.add(
       _pinFieldRow(
         icon: SvgPictureAsset(
-          AppAssets.locationIcPin,
+          AppAssets.locationIcPickupPin,
           width: 12.6.w,
           height: 16.4.h,
           placeholderBuilder: (_) =>
-              const Icon(Icons.location_on, color: AppColors.pinRed, size: 14),
+              const Icon(Icons.location_on, color: AppColors.pinRed, size: 16),
         ),
         field: TextField(
           controller: pickupController,
@@ -314,7 +290,17 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     // 2. Destination
     rows.add(
       _pinFieldRow(
-        icon: const Icon(Icons.push_pin, color: AppColors.mapDropMarkerGreen, size: 14),
+        icon: SvgPictureAsset(
+          AppAssets.locationIcDestinationPin,
+          width: 12.6.w,
+          height: 16.4.h,
+          color: AppColors.mapDropMarkerGreen,
+          placeholderBuilder: (_) => Icon(
+            Icons.push_pin,
+            color: AppColors.mapDropMarkerGreen,
+            size: 16.w,
+          ),
+        ),
         field: TextField(
           controller: destinationController,
           focusNode: destinationFocusNode,
@@ -346,14 +332,20 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       final segment = 2 + i;
       rows.add(
         _pinFieldRow(
-          icon: const Icon(Icons.push_pin, color: AppColors.mapDropMarkerGreen, size: 14),
+          icon: SvgPictureAsset(
+            AppAssets.locationIcDestinationPin,
+            width: 12.6.w,
+            height: 16.4.h,
+            color: AppColors.mapDropMarkerGreen,
+            placeholderBuilder: (_) => Icon(
+              Icons.push_pin,
+              color: AppColors.mapDropMarkerGreen,
+              size: 16.w,
+            ),
+          ),
           trailing: InkWell(
             onTap: () => _onRemoveDestinationStop(i),
-            child: Icon(
-              Icons.close,
-              color: AppColors.textHint,
-              size: 16.sp,
-            ),
+            child: Icon(Icons.close, color: AppColors.textHint, size: 16.sp),
           ),
           field: TextField(
             controller: _extraDestinationControllers[i],
@@ -412,9 +404,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           : SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                children: _sortedSavedPlaces(controller.savedPlaces)
-                    .map((place) => _chip(place))
-                    .toList(),
+                children: _sortedSavedPlaces(
+                  controller.savedPlaces,
+                ).map((place) => _chip(place)).toList(),
               ),
             ),
     );
@@ -456,11 +448,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                padding: EdgeInsets.all(4.w),
-                decoration: const BoxDecoration(
-                  color:  AppColors.bgWarningLight,
-                  shape: BoxShape.circle,
-                ),
+                decoration: const BoxDecoration(shape: BoxShape.circle),
                 child: SvgPictureAsset(
                   _chipIconForLabel(label),
                   width: 16.w,
@@ -562,8 +550,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           isFavorite: isFavorite,
           showFavorite: showFavorite,
           onTap: () => _onSuggestionSelected(item),
-          onFavoriteTap: () =>
-              controller.toggleAddAddressBottomSheet(item),
+          onFavoriteTap: () => controller.toggleAddAddressBottomSheet(item),
         );
       },
     );
@@ -576,7 +563,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         return Center(
           child: Text(
             AppStrings.startTypingDestination.tr,
-            style: AppTextStyles.homeCaption.copyWith(color: AppColors.textBody),
+            style: AppTextStyles.homeCaption.copyWith(
+              color: AppColors.textBody,
+            ),
           ),
         );
       }
@@ -591,7 +580,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             SizedBox(height: 24.h),
           ],
           if (controller.recentDestinations.isNotEmpty) ...[
-            _sectionHeader('Recent History'),
+            _sectionHeader('Recent Locations'),
             SizedBox(height: 12.h),
             ListView.separated(
               shrinkWrap: true,
@@ -721,10 +710,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             );
             controller.isDestinationSelected.value = true;
           },
-          onFavoriteTap: () =>
-              controller.toggleAddAddressBottomSheetForAddress(
-                address: recentText,
-              ),
+          onFavoriteTap: () => controller.toggleAddAddressBottomSheetForAddress(
+            address: recentText,
+          ),
         );
       },
     );
@@ -771,12 +759,11 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             );
             controller.isDestinationSelected.value = true;
           },
-          onFavoriteTap: () =>
-              controller.toggleAddAddressBottomSheetForAddress(
-                address: place.address ?? '',
-                lat: place.lat,
-                lng: place.lng,
-              ),
+          onFavoriteTap: () => controller.toggleAddAddressBottomSheetForAddress(
+            address: place.address ?? '',
+            lat: place.lat,
+            lng: place.lng,
+          ),
         );
       },
     );
@@ -785,9 +772,8 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
   Widget _sectionHeader(String title) {
     return Text(
       title,
-      style: AppTextStyles.homeTitle.copyWith(
-        fontSize: 16.sp,
-        color: AppColors.textHeading,
+      style: AppTextStyles.homeSubtitle.copyWith(
+        color: AppColors.textSectionMuted,
       ),
     );
   }
@@ -818,10 +804,15 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.access_time_outlined,
-                        color: AppColors.textHint,
-                        size: 20.sp,
+                      SvgPictureAsset(
+                        AppAssets.locationIcTime,
+                        width: 20.w,
+                        height: 20.h,
+                        placeholderBuilder: (_) => Icon(
+                          Icons.access_time_outlined,
+                          color: AppColors.iconMutedLight,
+                          size: 20.sp,
+                        ),
                       ),
                       SizedBox(height: 4.h),
                       Text(
@@ -872,37 +863,15 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                   ),
                 ),
                 if (showFavorite)
-                  IconButton(
+                  FavoriteIconButton(
+                    isFavorite: isFavorite,
+                    onPressed: onFavoriteTap,
+                    size: 24,
                     padding: EdgeInsets.zero,
                     constraints: BoxConstraints(
                       minWidth: 48.w,
                       minHeight: 48.h,
                     ),
-                    onPressed: onFavoriteTap,
-                    icon: isFavorite
-                        ? SvgPictureAsset(
-                            AppAssets.locationIcHeartFilled,
-                            width: 24.w,
-                            height: 24.h,
-                            placeholderBuilder: (_) => const Icon(
-                              Icons.favorite,
-                              color: AppColors.primary,
-                              size: 20,
-                            ),
-                          )
-                        : Opacity(
-                            opacity: 0.5,
-                            child: SvgPictureAsset(
-                              AppAssets.locationIcHeartOutline,
-                              width: 24.w,
-                              height: 24.w,
-                              placeholderBuilder: (_) => Icon(
-                                Icons.favorite_border,
-                                color: AppColors.textHeading.withValues(alpha: 0.5),
-                                size: 20,
-                              ),
-                            ),
-                          ),
                   ),
               ],
             ),
@@ -936,7 +905,8 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                     );
                     if (payload == null) {
                       AppDialogs.showErrorDialog(
-                        message: 'Please select valid pickup and destination locations.',
+                        message:
+                            'Please select valid pickup and destination locations.',
                       );
                       return;
                     }

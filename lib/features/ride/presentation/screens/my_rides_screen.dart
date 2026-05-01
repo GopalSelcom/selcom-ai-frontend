@@ -68,7 +68,7 @@ class MyRidesScreen extends StatelessWidget {
                     child: Padding(
                       padding: EdgeInsets.symmetric(
                         horizontal: 16.w,
-                        vertical: 24.h,
+                        vertical: 16.h,
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,12 +79,12 @@ class MyRidesScreen extends StatelessWidget {
                               AppStrings.past.tr,
                               style: AppTextStyles.body.copyWith(
                                 color: AppColors.textBody,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w500,
                                 fontSize: 15.sp,
                               ),
                             ),
                           ),
-                          SizedBox(height: 16.h),
+                          SizedBox(height: 8.h),
 
                           // Map Dynamic Data
                           ...controller.pastRides.map(
