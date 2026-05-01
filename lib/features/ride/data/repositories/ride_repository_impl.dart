@@ -251,4 +251,25 @@ class RideRepositoryImpl implements RideRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, CheckBookModeResult>> checkBookMode({
+    required double riderLat,
+    required double riderLng,
+    required double pickupLat,
+    required double pickupLng,
+  }) async {
+    try {
+      final result = await remoteDataSource.checkBookMode(
+        riderLat: riderLat,
+        riderLng: riderLng,
+        pickupLat: pickupLat,
+        pickupLng: pickupLng,
+      );
+      return Right(result);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

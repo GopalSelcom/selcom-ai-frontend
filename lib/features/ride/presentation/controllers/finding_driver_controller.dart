@@ -77,6 +77,10 @@ class FindingDriverController extends GetxController {
   final driverName = ''.obs;
   final driverPhone = ''.obs;
 
+  final isBookedForOther = false.obs;
+  final passengerName = RxnString();
+  final passengerPhone = RxnString();
+
   GoogleMapController? mapController;
 
   Timer? _countdownTimer;
@@ -176,6 +180,11 @@ class FindingDriverController extends GetxController {
     fareBreakdown = rawFareBreakdown is Map
         ? Map<String, dynamic>.from(rawFareBreakdown)
         : null;
+
+    isBookedForOther.value = (args['isBookedForOther'] as bool?) ?? false;
+    passengerName.value = args['passengerName'] as String?;
+    passengerPhone.value = args['passengerPhone'] as String?;
+
     _buildDummyRoute(plat, plng, dlat, dlng);
     _setPickupRouteFallback();
   }

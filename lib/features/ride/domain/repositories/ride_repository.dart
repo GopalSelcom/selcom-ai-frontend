@@ -55,4 +55,10 @@ abstract class RideRepository {
   });
 
   Future<Either<Failure, void>> cancelPendingStops(String rideId);
+  Future<Either<Failure, CheckBookModeResult>> checkBookMode({
+    required double riderLat,
+    required double riderLng,
+    required double pickupLat,
+    required double pickupLng,
+  });
 }
