@@ -30,6 +30,12 @@ class RideCallHttpTokenProvider implements AgoraVoiceTokenProvider {
     }
     final path = tokenPathBuilder(rideId.trim());
     final headers = await headersProvider?.call() ?? const <String, dynamic>{};
+    if (kDebugMode) {
+      final hasAuth = headers.keys.any(
+        (k) => k.toLowerCase() == 'authorization' || k.toLowerCase() == 'access_token',
+      );
+      debugPrint('[AGORA_TOKEN] POST $path ride=$rideId authHeader=$hasAuth');
+    }
 
     final response = await _dio.post<dynamic>(
       path,
@@ -54,6 +60,12 @@ class RideCallHttpTokenProvider implements AgoraVoiceTokenProvider {
         debugPrint('[AGORA_TOKEN] invalid payload keys=${payload.keys.toList()}');
       }
       throw const FormatException('Agora token: missing app_id/channel');
+    }
+    if (kDebugMode) {
+      debugPrint(
+        '[AGORA_TOKEN] minted channel=${creds.channel} uid=${creds.uid} '
+        'expiresAt=${creds.expiresAt?.toIso8601String() ?? 'n/a'}',
+      );
     }
     return creds;
   }

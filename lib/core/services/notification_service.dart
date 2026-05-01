@@ -28,6 +28,8 @@ class NotificationService {
 
   bool _isInitialized = false;
   String? _deviceToken;
+  static const String _defaultChannelId = 'high_importance_channel';
+  static const String _incomingCallChannelId = 'go_incoming_calls';
 
   /// Returns the cached device token or an empty string.
   String get deviceToken => _deviceToken ?? "";
@@ -170,7 +172,7 @@ class NotificationService {
 
   Future<void> _createAndroidNotificationChannel() async {
     const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      'high_importance_channel', // id
+      _defaultChannelId, // id
       'High Importance Notifications', // title
       description:
           'This channel is used for important notifications.', // description
@@ -178,17 +180,45 @@ class NotificationService {
       playSound: true,
       enableVibration: true,
     );
+    const AndroidNotificationChannel incomingCallChannel =
+        AndroidNotificationChannel(
+          _incomingCallChannelId,
+          'Incoming Calls',
+          description: 'Incoming in-app voice calls',
+          importance: Importance.max,
+          playSound: true,
+          enableVibration: true,
+        );
 
     await _localNotifications
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
         >()
         ?.createNotificationChannel(channel);
+    await _localNotifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.createNotificationChannel(incomingCallChannel);
   }
 
   void _onForegroundMessage(RemoteMessage message) {
     _logger.d("Foreground Message received: ${message.messageId}");
     final data = FCMNotificationData.fromJson(message.data);
+    final type = (message.data['type'] ?? '').toString().toLowerCase();
+
+    if (type == 'incoming_call') {
+      final role = (message.data['caller_role'] ?? 'rider').toString();
+      final title = role == 'driver' ? 'Incoming call from driver' : 'Incoming call from rider';
+      final body = 'Tap to open incoming call screen';
+      showIncomingCallNotification(
+        id: message.messageId.hashCode,
+        title: title,
+        body: body,
+        payload: jsonEncode(message.data),
+      );
+      return;
+    }
 
     String? title = message.notification?.title ?? data.title;
     String? body = message.notification?.body ?? data.body;
@@ -292,7 +322,7 @@ class NotificationService {
         body,
         const NotificationDetails(
           android: AndroidNotificationDetails(
-            'high_importance_channel',
+            _defaultChannelId,
             'High Importance Notifications',
             channelDescription:
                 'This channel is used for important notifications.',
@@ -313,6 +343,47 @@ class NotificationService {
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       debugPrint("Error in _localNotifications.show: $e");
+    }
+  }
+
+  Future<void> showIncomingCallNotification({
+    int? id,
+    String? title,
+    String? body,
+    String? payload,
+  }) async {
+    _idCounter++;
+    final finalId = id ?? _idCounter;
+    try {
+      await _localNotifications.show(
+        finalId,
+        title ?? 'Incoming call',
+        body ?? 'Tap to answer',
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            _incomingCallChannelId,
+            'Incoming Calls',
+            channelDescription: 'Incoming in-app voice calls',
+            importance: Importance.max,
+            priority: Priority.max,
+            category: AndroidNotificationCategory.call,
+            fullScreenIntent: true,
+            ticker: 'incoming_call',
+            icon: '@mipmap/ic_launcher',
+            ongoing: true,
+            autoCancel: true,
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
+        ),
+        payload: payload,
+      );
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      _logger.e('Error showing incoming call notification: $e');
     }
   }
 }

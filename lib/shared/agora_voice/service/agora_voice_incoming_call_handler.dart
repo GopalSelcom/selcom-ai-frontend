@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
 import '../domain/agora_call_invite_event.dart';
+import '../domain/agora_incoming_call_signal.dart';
 import '../domain/agora_call_signaling_service.dart';
 import '../domain/agora_voice_call_state.dart';
 import '../presentation/agora_voice_call_controller.dart';
@@ -45,6 +47,12 @@ class AgoraVoiceIncomingCallHandler {
 
   /// Entry point from host signaling listeners.
   Future<void> handleEvent(AgoraCallInviteEvent event) async {
+    if (kDebugMode) {
+      debugPrint(
+        '[AGORA_SIGNAL] event=${event.type.name} ride=${event.rideId} '
+        'channel=${event.channelName} callerId=${event.callerId}',
+      );
+    }
     if (event.callerId == localClientId) return;
     if (event.rideId != rideId) return;
 
@@ -63,8 +71,34 @@ class AgoraVoiceIncomingCallHandler {
     }
   }
 
+  /// Entry point for backend push payloads (`type=incoming_call`).
+  ///
+  /// This allows FCM/APNs wake signals to reuse the same in-app incoming-call UI
+  /// flow as socket invite events.
+  Future<void> handleIncomingCallPush(
+    Map<String, dynamic> payload, {
+    String callerId = 'backend_push',
+    String? callerName,
+  }) async {
+    if (kDebugMode) {
+      debugPrint('[AGORA_SIGNAL] incoming push payload=$payload');
+    }
+    final signal = AgoraIncomingCallSignal.fromMap(payload);
+    if (signal == null) return;
+    final invite = signal.toInviteEvent(
+      callerId: callerId,
+      callerName: callerName,
+    );
+    await handleEvent(invite);
+  }
+
   Future<void> _showIncomingCallScreen(AgoraCallInviteEvent event) async {
-    if (!canStartCall()) return;
+    if (!canStartCall()) {
+      if (kDebugMode) {
+        debugPrint('[AGORA_SIGNAL] cannot start call for incoming invite');
+      }
+      return;
+    }
 
     final controller = buildController(event);
     setActiveController(controller);
@@ -76,6 +110,9 @@ class AgoraVoiceIncomingCallHandler {
         displayName: event.callerName,
         isIncoming: true,
         onAccept: () async {
+          if (kDebugMode) {
+            debugPrint('[AGORA_SIGNAL] incoming accept tapped ride=${event.rideId}');
+          }
           await signalingService.sendEvent(
             AgoraCallInviteEvent(
               type: AgoraCallInviteEventType.accept,
@@ -89,6 +126,9 @@ class AgoraVoiceIncomingCallHandler {
           await controller.startCall();
         },
         onReject: () async {
+          if (kDebugMode) {
+            debugPrint('[AGORA_SIGNAL] incoming reject tapped ride=${event.rideId}');
+          }
           await signalingService.sendEvent(
             AgoraCallInviteEvent(
               type: AgoraCallInviteEventType.reject,

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:uuid/uuid.dart';
 
 import 'dart:developer' as developer;
@@ -36,7 +37,9 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/agora_voice/domain/agora_call_invite_event.dart';
 import '../../../../shared/agora_voice/domain/agora_call_signaling_service.dart';
-import '../../../../core/integration/agora_voice_selcom.dart';
+import '../../../../core/config/app_config.dart';
+import '../../../../shared/agora_voice/data/ride_call_http_token_provider.dart';
+import '../../../../shared/agora_voice/domain/agora_voice_token_provider.dart';
 import '../../../../shared/agora_voice/domain/agora_voice_call_session.dart';
 import '../../../../shared/agora_voice/domain/agora_voice_call_state.dart';
 import '../../../../shared/agora_voice/presentation/agora_voice_call_controller.dart';
@@ -59,8 +62,6 @@ enum RideBottomSheetState { driverAssigned, rideStarted }
 
 class DriverAcceptedController extends GetxController
     with GetSingleTickerProviderStateMixin, WidgetsBindingObserver {
-  static const int _staticAgoraUid = 7001;
-
   DriverAcceptedController({
     required this.rideRepository,
     required this.analyticsService,
@@ -317,6 +318,7 @@ class DriverAcceptedController extends GetxController
 
   Future<void> _initCallSignaling() async {
     if (rideId.isEmpty) return;
+    debugPrint('[AGORA_RIDE] init signaling ride=$rideId');
     final signaling = RideChatCallSignalingService(
       rideId: rideId,
       socketService: _socketService,
@@ -329,12 +331,9 @@ class DriverAcceptedController extends GetxController
       localClientId: _localCallClientId,
       rideId: rideId,
       localDisplayName: 'Rider',
-      canStartCall: AgoraVoiceSelcom.canStartCall,
+      canStartCall: _hasCallApiConfig,
       buildController: (event) {
-        final tokenProvider = AgoraVoiceSelcom.buildRiderTokenProvider(
-          fallbackChannel: event.channelName,
-          fallbackUid: _staticAgoraUid,
-        );
+        final tokenProvider = _buildRiderTokenProvider();
         return AgoraVoiceCallController(
           engineService: AgoraVoiceEngineService(tokenProvider: tokenProvider),
           session: AgoraVoiceCallSession(rideId: event.rideId),
@@ -374,7 +373,9 @@ class DriverAcceptedController extends GetxController
     final args = raw is Map
         ? Map<String, dynamic>.from(raw)
         : <String, dynamic>{};
+    debugPrint('[AGORA_RIDE] parse args=$args');
     rideId = (args['rideId'] as String?)?.trim() ?? '';
+    debugPrint('[AGORA_RIDE] resolved rideId=$rideId');
     final plat = (args['pickupLat'] as num?)?.toDouble() ?? -6.7924;
     final plng = (args['pickupLng'] as num?)?.toDouble() ?? 39.2083;
     final dlat = (args['destinationLat'] as num?)?.toDouble() ?? (plat - 0.018);
@@ -1555,16 +1556,18 @@ class DriverAcceptedController extends GetxController
   }
 
   Future<void> _startOutgoingFullScreenCall() async {
-    if (!AgoraVoiceSelcom.canStartCall()) {
+    debugPrint('[AGORA_RIDE] outgoing call tapped ride=$rideId');
+    if (!_hasCallApiConfig()) {
       AppDialogs.showErrorDialog(
         title: 'Voice Call',
         message:
-            'Agora is not configured. Set AGORA_APP_ID (or ride token API) via env / dart-define.',
+            'Call API is not configured. Set AGORA_TOKEN_MODE=ride_api and valid API base URL.',
       );
       return;
     }
 
     final channelName = _voiceChannelName();
+    debugPrint('[AGORA_RIDE] invite send ride=$rideId channel=$channelName');
     await _callSignalingService?.sendEvent(
       AgoraCallInviteEvent(
         type: AgoraCallInviteEventType.invite,
@@ -1576,14 +1579,13 @@ class DriverAcceptedController extends GetxController
       ),
     );
 
-    final tokenProvider = AgoraVoiceSelcom.buildRiderTokenProvider(
-      fallbackChannel: channelName,
-      fallbackUid: _staticAgoraUid,
-    );
+    final tokenProvider = _buildRiderTokenProvider();
     final controller = AgoraVoiceCallController(
       engineService: AgoraVoiceEngineService(tokenProvider: tokenProvider),
       session: AgoraVoiceCallSession(rideId: rideId),
     );
+    debugPrint('[AGORA_RIDE] trigger caller startCall ride=$rideId');
+    unawaited(controller.startCall());
     _inAppCallController = controller;
     _attachInAppCallStateListener(controller);
 
@@ -1618,6 +1620,10 @@ class DriverAcceptedController extends GetxController
   }
 
   Future<void> _handleCallInviteEvent(AgoraCallInviteEvent event) async {
+    debugPrint(
+      '[AGORA_RIDE] signaling event type=${event.type.name} '
+      'ride=${event.rideId} channel=${event.channelName}',
+    );
     await _incomingCallHandler?.handleEvent(event);
   }
 
@@ -1643,7 +1649,42 @@ class DriverAcceptedController extends GetxController
   }
 
   String _voiceChannelName() {
-    return 'gopal_testing';
+    final sanitized = rideId.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
+    if (sanitized.isEmpty) return 'ride_unknown';
+    return 'ride_$sanitized';
+  }
+
+  bool _hasCallApiConfig() {
+    final baseUrl = AppConfig.baseUrl.trim();
+    final mode = AppConfig.agoraTokenMode.trim().toLowerCase();
+    return baseUrl.isNotEmpty && (mode == 'ride_api' || mode.isEmpty || mode == 'none');
+  }
+
+  AgoraVoiceTokenProvider _buildRiderTokenProvider() {
+    var base = AppConfig.baseUrl.trim();
+    if (base.endsWith('/')) {
+      base = base.substring(0, base.length - 1);
+    }
+    final dio = Dio(
+      BaseOptions(
+        baseUrl: base,
+        connectTimeout: const Duration(seconds: 20),
+        receiveTimeout: const Duration(seconds: 20),
+      ),
+    );
+    return RideCallHttpTokenProvider(
+      dio: dio,
+      tokenPathBuilder: (id) => '/v4/go/rides/${id.trim()}/call/token',
+      headersProvider: () async {
+        final storage = StorageService();
+        final token =
+            (await storage.read(StorageKeys.accessToken)) ??
+            (await storage.read(StorageKeys.authorizationToken)) ??
+            '';
+        if (token.isEmpty) return const {};
+        return <String, dynamic>{'Authorization': 'Bearer $token'};
+      },
+    );
   }
 
   void onChatTap() {

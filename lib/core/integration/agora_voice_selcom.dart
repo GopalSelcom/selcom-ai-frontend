@@ -1,9 +1,9 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import '../config/app_config.dart';
 import '../services/storage_service.dart';
 import '../../shared/agora_voice/data/ride_call_http_token_provider.dart';
-import '../../shared/agora_voice/data/static_voice_token_provider.dart';
 import '../../shared/agora_voice/domain/agora_voice_token_provider.dart';
 
 /// Selcom-specific wiring for the portable `lib/shared/agora_voice/` module.
@@ -17,15 +17,17 @@ class AgoraVoiceSelcom {
     final mode = AppConfig.agoraTokenMode.trim().toLowerCase();
     final ep = AppConfig.agoraTokenEndpoint.trim();
     if (mode == 'ride_api' ||
+        mode == 'none' ||
+        mode.isEmpty ||
         (mode == 'api' && ep.contains('{rideId}'))) {
       return AppConfig.baseUrl.trim().isNotEmpty;
     }
-    return AppConfig.agoraAppId.trim().isNotEmpty;
+    return mode == 'api' && ep.isNotEmpty;
   }
 
   /// Token provider for rider app (see `brain/docs/AGORA-FRONTEND-GUIDE.md`).
   ///
-  /// - `none` / unknown: [StaticVoiceTokenProvider] (tokenless / dev project).
+  /// - `none` / empty: defaults to rider POST mint (`ride_api`) to avoid static-token fallback.
   /// - `api` + endpoint without `{rideId}`: legacy GET token (channel + uid query).
   /// - `api` + endpoint with `{rideId}` OR `ride_api`: POST mint using [AppConfig.baseUrl].
   static AgoraVoiceTokenProvider buildRiderTokenProvider({
@@ -65,12 +67,22 @@ class AgoraVoiceSelcom {
   }) {
     final mode = AppConfig.agoraTokenMode.trim().toLowerCase();
     final ep = AppConfig.agoraTokenEndpoint.trim();
+    if (kDebugMode) {
+      debugPrint(
+        '[AGORA_CONFIG] mode=$mode endpoint=${ep.isEmpty ? '<empty>' : ep} '
+        'baseUrl=${AppConfig.baseUrl}',
+      );
+    }
 
     if (mode == 'ride_api' ||
+        mode == 'none' ||
+        mode.isEmpty ||
         (mode == 'api' && ep.contains('{rideId}'))) {
       final d = dio ?? _defaultDio();
       final template =
-          mode == 'ride_api' ? rideMintPathTemplate : ep;
+          (mode == 'ride_api' || mode == 'none' || mode.isEmpty)
+          ? rideMintPathTemplate
+          : ep;
       return RideCallHttpTokenProvider(
         dio: d,
         tokenPathBuilder: (rideId) =>
@@ -90,10 +102,9 @@ class AgoraVoiceSelcom {
       );
     }
 
-    return StaticVoiceTokenProvider(
-      appId: AppConfig.agoraAppId.trim(),
-      channel: fallbackChannel,
-      uid: fallbackUid,
+    throw StateError(
+      'Unsupported AGORA_TOKEN_MODE="$mode". '
+      'Use ride_api or api.',
     );
   }
 
@@ -121,6 +132,9 @@ class AgoraVoiceSelcom {
         (await storage.read(StorageKeys.authorizationToken)) ??
         '';
     if (token.isEmpty) return const {};
+    if (kDebugMode) {
+      debugPrint('[AGORA_CONFIG] auth header present for token mint');
+    }
     return <String, dynamic>{'Authorization': 'Bearer $token'};
   }
 }

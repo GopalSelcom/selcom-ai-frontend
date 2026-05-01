@@ -1,4 +1,5 @@
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -24,18 +25,42 @@ class AgoraVoiceCallController extends GetxController {
   /// Main join flow used by both outgoing and incoming accept.
   /// If anything fails here, UI goes to [AgoraVoiceCallState.error].
   Future<void> startCall() async {
-    if (callState.value == AgoraVoiceCallState.connecting) return;
+    if (callState.value == AgoraVoiceCallState.connecting ||
+        callState.value == AgoraVoiceCallState.connected) {
+      if (kDebugMode) {
+        debugPrint(
+          '[AGORA_FLOW] startCall skipped state=${callState.value.name} '
+          'ride=${session.rideId}',
+        );
+      }
+      return;
+    }
     callState.value = AgoraVoiceCallState.connecting;
     errorMessage.value = '';
     try {
+      if (kDebugMode) {
+        debugPrint(
+          '[AGORA_FLOW] startCall ride=${session.rideId} '
+          'provider=${engineService.tokenProvider.runtimeType}',
+        );
+      }
       final hasMicPermission = await _ensureMicrophonePermission();
       if (!hasMicPermission) {
+        if (kDebugMode) {
+          debugPrint('[AGORA_FLOW] startCall blocked: mic permission denied');
+        }
         return;
       }
 
       final creds = await engineService.tokenProvider.fetchCredentials(
         rideId: session.rideId,
       );
+      if (kDebugMode) {
+        debugPrint(
+          '[AGORA_FLOW] credentials ride=${session.rideId} '
+          'channel=${creds.channel} uid=${creds.uid}',
+        );
+      }
 
       await engineService.ensureInitialized(
         appId: creds.appId,
@@ -45,7 +70,14 @@ class AgoraVoiceCallController extends GetxController {
       await engineService.setSpeakerEnabled(isSpeakerEnabled.value);
       await engineService.setMuted(isMuted.value);
       callState.value = AgoraVoiceCallState.connected;
-    } catch (_) {
+      if (kDebugMode) {
+        debugPrint('[AGORA_FLOW] startCall success ride=${session.rideId}');
+      }
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('[AGORA_FLOW] startCall failed ride=${session.rideId} error=$e');
+        debugPrint('$st');
+      }
       callState.value = AgoraVoiceCallState.error;
       errorMessage.value = 'Unable to connect call. Please try again.';
     }
@@ -55,6 +87,9 @@ class AgoraVoiceCallController extends GetxController {
   /// Returns false after showing the appropriate permission dialog.
   Future<bool> _ensureMicrophonePermission() async {
     final currentStatus = await Permission.microphone.status;
+    if (kDebugMode) {
+      debugPrint('[AGORA_FLOW] mic status current=${currentStatus.name}');
+    }
     if (currentStatus.isGranted) return true;
 
     if (currentStatus.isPermanentlyDenied || currentStatus.isRestricted) {
@@ -66,6 +101,9 @@ class AgoraVoiceCallController extends GetxController {
     }
 
     final requestStatus = await Permission.microphone.request();
+    if (kDebugMode) {
+      debugPrint('[AGORA_FLOW] mic status requested=${requestStatus.name}');
+    }
     if (requestStatus.isGranted) return true;
 
     if (requestStatus.isPermanentlyDenied || requestStatus.isRestricted) {
@@ -94,6 +132,9 @@ class AgoraVoiceCallController extends GetxController {
 
   /// Leaves Agora channel and marks the call as ended.
   Future<void> endCall() async {
+    if (kDebugMode) {
+      debugPrint('[AGORA_FLOW] endCall ride=${session.rideId}');
+    }
     await engineService.leave();
     callState.value = AgoraVoiceCallState.ended;
   }
@@ -102,6 +143,9 @@ class AgoraVoiceCallController extends GetxController {
   Future<void> toggleMute() async {
     final next = !isMuted.value;
     isMuted.value = next;
+    if (kDebugMode) {
+      debugPrint('[AGORA_FLOW] toggleMute next=$next ride=${session.rideId}');
+    }
     await engineService.setMuted(next);
   }
 
@@ -109,6 +153,9 @@ class AgoraVoiceCallController extends GetxController {
   Future<void> toggleSpeaker() async {
     final next = !isSpeakerEnabled.value;
     isSpeakerEnabled.value = next;
+    if (kDebugMode) {
+      debugPrint('[AGORA_FLOW] toggleSpeaker next=$next ride=${session.rideId}');
+    }
     await engineService.setSpeakerEnabled(next);
   }
 
@@ -126,9 +173,18 @@ class AgoraVoiceCallController extends GetxController {
         rideId: session.rideId,
       );
       if (fresh.token.isNotEmpty) {
+        if (kDebugMode) {
+          debugPrint(
+            '[AGORA_FLOW] renew token ride=${session.rideId} '
+            'channel=${fresh.channel} uid=${fresh.uid}',
+          );
+        }
         await engineService.renewRtcToken(fresh.token);
       }
-    } catch (_) {
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[AGORA_FLOW] renew token failed ride=${session.rideId} error=$e');
+      }
       // Agora disconnects on hard expiry; avoid noisy UI here.
     }
   }
@@ -138,17 +194,29 @@ class AgoraVoiceCallController extends GetxController {
     engineService.setEventHandler(
       RtcEngineEventHandler(
         onJoinChannelSuccess: (_, __) {
+          if (kDebugMode) {
+            debugPrint('[AGORA_FLOW] onJoinChannelSuccess ride=${session.rideId}');
+          }
           callState.value = AgoraVoiceCallState.connected;
         },
         onTokenPrivilegeWillExpire: (_, __) {
+          if (kDebugMode) {
+            debugPrint('[AGORA_FLOW] onTokenPrivilegeWillExpire ride=${session.rideId}');
+          }
           _refreshRtcToken();
         },
         onConnectionStateChanged: (_, state, __) {
+          if (kDebugMode) {
+            debugPrint('[AGORA_FLOW] connectionState=${state.name} ride=${session.rideId}');
+          }
           if (state == ConnectionStateType.connectionStateDisconnected) {
             callState.value = AgoraVoiceCallState.ended;
           }
         },
-        onError: (_, __) {
+        onError: (_, err) {
+          if (kDebugMode) {
+            debugPrint('[AGORA_FLOW] agora onError code=$err ride=${session.rideId}');
+          }
           callState.value = AgoraVoiceCallState.error;
           errorMessage.value =
               'Agora error occurred while handling voice call.';

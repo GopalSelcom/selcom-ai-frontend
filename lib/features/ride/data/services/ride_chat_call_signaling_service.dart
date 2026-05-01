@@ -50,6 +50,9 @@ class RideChatCallSignalingService implements AgoraCallSignalingService {
 
   @override
   Future<void> dispose() async {
+    if (kDebugMode) {
+      debugPrint('[CALL_SOCKET] dispose signaling ride=$rideId');
+    }
     await _chatSub?.cancel();
     await _eventsController.close();
   }

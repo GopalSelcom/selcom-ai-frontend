@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -25,11 +26,60 @@ import 'core/data/models/notification_model.dart';
 import 'core/services/error_reporting/error_reporter.dart';
 import 'package:screenshot/screenshot.dart';
 
+Future<void> _showAndroidIncomingCallNotification(RemoteMessage message) async {
+  final type = (message.data['type'] ?? '').toString().toLowerCase();
+  if (type != 'incoming_call') return;
+
+  final plugin = FlutterLocalNotificationsPlugin();
+  const initSettings = InitializationSettings(
+    android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+  );
+  await plugin.initialize(initSettings);
+
+  const channel = AndroidNotificationChannel(
+    'go_incoming_calls',
+    'Incoming Calls',
+    description: 'Incoming in-app voice calls',
+    importance: Importance.max,
+    playSound: true,
+    enableVibration: true,
+  );
+  await plugin
+      .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+      >()
+      ?.createNotificationChannel(channel);
+
+  final role = (message.data['caller_role'] ?? 'rider').toString();
+  final title = role == 'driver'
+      ? 'Incoming call from driver'
+      : 'Incoming call from rider';
+  await plugin.show(
+    message.messageId.hashCode,
+    title,
+    'Tap to open incoming call screen',
+    const NotificationDetails(
+      android: AndroidNotificationDetails(
+        'go_incoming_calls',
+        'Incoming Calls',
+        channelDescription: 'Incoming in-app voice calls',
+        importance: Importance.max,
+        priority: Priority.max,
+        category: AndroidNotificationCategory.call,
+        fullScreenIntent: true,
+        icon: '@mipmap/ic_launcher',
+      ),
+    ),
+    payload: message.data.toString(),
+  );
+}
+
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   debugPrint('📩 Background FCM: ${message.data}');
   debugPrint("Handling a background message: ${message.messageId}");
+  await _showAndroidIncomingCallNotification(message);
 
   final data = FCMNotificationData.fromJson(message.data);
 
