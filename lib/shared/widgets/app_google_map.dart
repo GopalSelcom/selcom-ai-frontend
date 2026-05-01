@@ -136,12 +136,13 @@ class AppGoogleMapState extends State<AppGoogleMap>
           // 1. Perspective view (tilt)
           // 2. Rotate with rider (bearing)
           // 3. Keep rider in the lower 1/3 of the screen (offset target)
-          
-          const double offsetDist = 0.0003; // degrees offset to push camera ahead
+
+          const double offsetDist =
+              0.0003; // degrees offset to push camera ahead
           final double angleRad = (heading * math.pi / 180.0);
           final double latOff = offsetDist * math.cos(angleRad);
           final double lngOff = offsetDist * math.sin(angleRad);
-          
+
           final cameraTarget = LatLng(
             position.latitude + latOff,
             position.longitude + lngOff,
@@ -153,7 +154,7 @@ class AppGoogleMapState extends State<AppGoogleMap>
                 target: cameraTarget,
                 zoom: 18.5,
                 bearing: heading,
-                tilt: 50.0,
+                // tilt: 50.0,
               ),
             ),
           );
@@ -198,12 +199,12 @@ class AppGoogleMapState extends State<AppGoogleMap>
     if (rider != null && _controller != null) {
       _isProgrammaticMove = true;
       final heading = rider.rotation;
-      
+
       const double offsetDist = 0.0003;
       final double angleRad = (heading * math.pi / 180.0);
       final double latOff = offsetDist * math.cos(angleRad);
       final double lngOff = offsetDist * math.sin(angleRad);
-      
+
       final cameraTarget = LatLng(
         rider.position.latitude + latOff,
         rider.position.longitude + lngOff,
@@ -215,7 +216,7 @@ class AppGoogleMapState extends State<AppGoogleMap>
             target: cameraTarget,
             zoom: 18.5,
             bearing: heading,
-            tilt: 50.0,
+            // tilt: 50.0,
           ),
         ),
       );
@@ -236,12 +237,12 @@ class AppGoogleMapState extends State<AppGoogleMap>
     if (rider != null && _controller != null) {
       _isProgrammaticMove = true;
       final heading = rider.rotation;
-      
+
       const double offsetDist = 0.0003;
       final double angleRad = (heading * math.pi / 180.0);
       final double latOff = offsetDist * math.cos(angleRad);
       final double lngOff = offsetDist * math.sin(angleRad);
-      
+
       final cameraTarget = LatLng(
         rider.position.latitude + latOff,
         rider.position.longitude + lngOff,
@@ -253,7 +254,7 @@ class AppGoogleMapState extends State<AppGoogleMap>
             target: cameraTarget,
             zoom: 18.5,
             bearing: heading,
-            tilt: 50.0,
+            // tilt: 50.0,
           ),
         ),
       );
@@ -271,7 +272,11 @@ class AppGoogleMapState extends State<AppGoogleMap>
   }
 
   /// Updates the rider's target position and starts a smooth animation towards it.
-  void updateRiderPosition(LatLng position, {double rotation = 0.0, Duration duration = const Duration(seconds: 4)}) {
+  void updateRiderPosition(
+    LatLng position, {
+    double rotation = 0.0,
+    Duration duration = const Duration(seconds: 4),
+  }) {
     super.updateRiderPosition(position, rotation: rotation, duration: duration);
   }
 
@@ -286,7 +291,6 @@ class AppGoogleMapState extends State<AppGoogleMap>
 
   @override
   Widget build(BuildContext context) {
-
     return Stack(
       children: [
         Listener(
@@ -379,4 +383,3 @@ class AppGoogleMapState extends State<AppGoogleMap>
     );
   }
 }
-
