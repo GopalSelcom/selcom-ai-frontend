@@ -6,10 +6,12 @@ import '../../../../core/data/models/user_model.dart';
 import '../../../../core/data/models/requests/create_saved_place_request.dart';
 import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
 import '../../data/models/contact_us_models.dart';
+import '../../data/models/request/update_profile_request.dart';
+import '../../data/models/update_profile_response.dart';
 
 abstract class ProfileRepository {
   Future<Either<Failure, UserModel>> getProfile();
-  Future<Either<Failure, bool>> updateProfile(Map<String, dynamic> data);
+  Future<Either<Failure, UserProfileUpdateResponse>> updateProfile(UserProfileUpdateRequest profileRequest);
   Future<Either<Failure, UserModel>> saveUserAdditionalDetails({
     required String name,
     required String emailId,

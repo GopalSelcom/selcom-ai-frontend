@@ -3,6 +3,8 @@ import '../../../../core/errors/failures.dart';
 import '../../../../core/data/models/user_profile_models.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
+import '../../data/models/request/update_profile_request.dart';
+import '../../data/models/update_profile_response.dart';
 import '../repositories/profile_repository.dart';
 
 class ProfileUseCase {
@@ -14,8 +16,8 @@ class ProfileUseCase {
     return repository.getProfile();
   }
 
-  Future<Either<Failure, bool>> updateProfile(Map<String, dynamic> data) {
-    return repository.updateProfile(data);
+  Future<Either<Failure, UserProfileUpdateResponse>> updateProfile(UserProfileUpdateRequest profileRequest) {
+    return repository.updateProfile(profileRequest);
   }
 
   Future<Either<Failure, UserModel>> saveUserAdditionalDetails({
