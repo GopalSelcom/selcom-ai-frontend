@@ -29,6 +29,9 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
   @override
   void initState() {
     super.initState();
+    // Do not carry stale preview panel from previous editor session.
+    controller.stopUpdatePreview.value = null;
+
     final ride = Get.arguments['ride'] as RideEntity?;
     final destAddr = controller.destinationAddress.trim().toLowerCase();
 
