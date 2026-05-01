@@ -120,6 +120,9 @@ class AppColors {
   static const Color ratingStarEmpty = Color(0xFFE6E9EE);
   static const Color ratingStarActive = Color(0xFFFFCC41);
   static const Color ratingStarInactive = Color(0xFFE7E7E7);
+  static const Color otpErrorBorder = Color(0xFFFA4D5E);
+  static const Color otpFocusShadow = Color(0x400F67FE); // 25%
+  static const Color otpErrorShadow = Color(0x40FA4D5E); // 25%
   static const Color iconInfo = Color(0xFF0284C7);
   static const Color iconPurple = Color(0xFF6D28D9);
   static const Color iconWarning = Color(0xFFD97706);

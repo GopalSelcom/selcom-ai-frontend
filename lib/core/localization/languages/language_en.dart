@@ -312,7 +312,7 @@ class LanguageEn extends Languages {
     'switched_to_swahili': 'Switched to Swahili',
     'exit_app': 'Exit App',
     'exit_app_title': 'Exit App',
-    'exit_app_message': 'Are you sure , you want to exit the app?',
+    'exit_app_message': 'Are you sure, you want to exit the app?',
   };
 
   @override

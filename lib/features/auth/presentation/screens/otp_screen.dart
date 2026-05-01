@@ -74,7 +74,7 @@ class OtpScreen extends GetView<AuthController> {
                         InkWell(
                           onTap: () => Get.back(),
                           child: Text(
-                            '${AppStrings.editYourPhoneNumber.tr}?',
+                            AppStrings.editYourPhoneNumber.tr,
                             style: AppTextStyles.homeSubtitle.copyWith(
                               fontSize: 17.sp,
                               color: AppColors.figmaInputBlue,
@@ -149,12 +149,13 @@ class OtpScreen extends GetView<AuthController> {
                                   ),
                                   Text(
                                     "00:${controller.resendTimer.value.toString().padLeft(2, '0')}",
-                                    style: AppTextStyles.onboardingFooter.copyWith(
-                                      color: AppColors.primary,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 13.sp,
-                                      height: 18 / 13,
-                                    ),
+                                    style: AppTextStyles.onboardingFooter
+                                        .copyWith(
+                                          color: AppColors.primary,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 13.sp,
+                                          height: 18 / 13,
+                                        ),
                                   ),
                                 ],
                               );
