@@ -134,8 +134,15 @@ class CancelAssignmentWarningDialog extends StatelessWidget {
 
 class CancelReasonSelectionDialog extends StatefulWidget {
   final List<String>? reasons;
+  final Future<void> Function(String reason)? onContinueTap;
+  final RxBool? isProcessing;
 
-  const CancelReasonSelectionDialog({super.key, this.reasons});
+  const CancelReasonSelectionDialog({
+    super.key,
+    this.reasons,
+    this.onContinueTap,
+    this.isProcessing,
+  });
 
   @override
   State<CancelReasonSelectionDialog> createState() =>
@@ -167,109 +174,122 @@ class _CancelReasonSelectionDialogState
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
-      backgroundColor: AppColors.cardBackground,
-      insetPadding: EdgeInsets.symmetric(horizontal: 13.w),
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 32.h, horizontal: 24.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              AppStrings.whyDoYouWantToCancel.tr,
-              textAlign: TextAlign.center,
-              style: AppTextStyles.homeTitle.copyWith(
-                fontWeight: FontWeight.w600,
-                height: 34 / 20,
-                letterSpacing: -0.4,
+    return PopScope(
+      canPop: false,
+      child: Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
+        backgroundColor: AppColors.cardBackground,
+        insetPadding: EdgeInsets.symmetric(horizontal: 13.w),
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 32.h, horizontal: 24.w),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                AppStrings.whyDoYouWantToCancel.tr,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.homeTitle.copyWith(
+                  fontWeight: FontWeight.w600,
+                  height: 34 / 20,
+                  letterSpacing: -0.4,
+                ),
               ),
-            ),
-            SizedBox(height: 24.h),
-            Flexible(
-              child: ListView.separated(
-                shrinkWrap: true,
-                padding: EdgeInsets.zero,
-                itemCount: _reasons.length,
-                separatorBuilder: (_, __) =>
-                    Divider(height: 1.h, color: AppColors.bgSoftCircle),
-                itemBuilder: (context, index) {
-                  final reason = _reasons[index];
-                  final isSelected = _selectedReason == reason;
-                  return InkWell(
-                    onTap: () {
-                      setState(() {
-                        _selectedReason = reason;
-                      });
-                    },
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 14.h),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              reason,
-                              style: AppTextStyles.homeSubtitle.copyWith(
-                                color: AppColors.black,
-                                fontWeight: isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.w500,
-                                height: 20 / 15,
+              SizedBox(height: 24.h),
+              Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  padding: EdgeInsets.zero,
+                  itemCount: _reasons.length,
+                  separatorBuilder: (_, __) =>
+                      Divider(height: 1.h, color: AppColors.bgSoftCircle),
+                  itemBuilder: (context, index) {
+                    final reason = _reasons[index];
+                    final isSelected = _selectedReason == reason;
+                    return InkWell(
+                      onTap: () {
+                        setState(() {
+                          _selectedReason = reason;
+                        });
+                      },
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 14.h),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                reason,
+                                style: AppTextStyles.homeSubtitle.copyWith(
+                                  color: AppColors.black,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.w500,
+                                  height: 20 / 15,
+                                ),
                               ),
                             ),
-                          ),
-                          Container(
-                            width: 20.w,
-                            height: 20.w,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(6.r),
-                              border: Border.all(
+                            Container(
+                              width: 20.w,
+                              height: 20.w,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(6.r),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? AppColors.primary
+                                      : AppColors.iconHeartOutline,
+                                  width: 1.5,
+                                ),
                                 color: isSelected
                                     ? AppColors.primary
-                                    : AppColors.iconHeartOutline,
-                                width: 1.5,
+                                    : AppColors.transparent,
                               ),
-                              color: isSelected
-                                  ? AppColors.primary
-                                  : AppColors.transparent,
+                              child: isSelected
+                                  ? Icon(
+                                      Icons.check,
+                                      size: 14.sp,
+                                      color: AppColors.white,
+                                    )
+                                  : null,
                             ),
-                            child: isSelected
-                                ? Icon(
-                                    Icons.check,
-                                    size: 14.sp,
-                                    color: AppColors.white,
-                                  )
-                                : null,
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
-            ),
-            SizedBox(height: 32.h),
-            _ActionButton(
-              title: AppStrings.continueLabel.tr,
-              color: isSelected
-                  ? AppColors.primary
-                  : AppColors.primary.withValues(alpha: 0.5),
-              textColor: AppColors.white,
-              onTap: _selectedReason == null
-                  ? null
-                  : () => Get.back(result: _selectedReason),
-            ),
-            SizedBox(height: 12.h),
-            _ActionButton(
-              title: AppStrings.no.tr,
-              color: AppColors.white,
-              textColor: AppColors.textNeutralButton,
-              outlined: true,
-              outlinedBorderColor: AppColors.textNeutralButton,
-              onTap: () => Get.back(),
-            ),
-          ],
+              SizedBox(height: 32.h),
+              Obx(() {
+                final loading = widget.isProcessing?.value ?? false;
+                return _ActionButton(
+                  title: AppStrings.continueLabel.tr,
+                  color: isSelected
+                      ? AppColors.primary
+                      : AppColors.primary.withValues(alpha: 0.5),
+                  textColor: AppColors.white,
+                  isLoading: loading,
+                  onTap: _selectedReason == null || loading
+                      ? null
+                      : () async {
+                          if (widget.onContinueTap != null) {
+                            await widget.onContinueTap!.call(_selectedReason!);
+                          } else {
+                            Get.back(result: _selectedReason);
+                          }
+                        },
+                );
+              }),
+              SizedBox(height: 12.h),
+              _ActionButton(
+                title: AppStrings.no.tr,
+                color: AppColors.white,
+                textColor: AppColors.textNeutralButton,
+                outlined: true,
+                outlinedBorderColor: AppColors.textNeutralButton,
+                onTap: () => Get.back(),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -285,28 +305,34 @@ class CancellationChargesDialog extends StatelessWidget {
     required this.cancellationFee,
     required this.netRefund,
     required this.policyLabel,
+    this.onConfirmTap,
+    this.isProcessing,
   });
 
   final bool canCancel;
   final int cancellationFee;
   final int netRefund;
   final String policyLabel;
+  final Future<void> Function()? onConfirmTap;
+  final RxBool? isProcessing;
 
   @override
   Widget build(BuildContext context) {
     final feeLabel = 'TZS $cancellationFee';
     final refundLabel = 'TZS $netRefund';
 
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
-      backgroundColor: AppColors.cardBackground,
-      insetPadding: EdgeInsets.symmetric(horizontal: 13.w),
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 28.h, horizontal: 24.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+    return PopScope(
+      canPop: false,
+      child: Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
+        backgroundColor: AppColors.cardBackground,
+        insetPadding: EdgeInsets.symmetric(horizontal: 13.w),
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 28.h, horizontal: 24.w),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
             Text(
               AppStrings.areYouSureYouWantToCancel.tr,
               textAlign: TextAlign.center,
@@ -388,15 +414,28 @@ class CancellationChargesDialog extends StatelessWidget {
               onTap: () => Get.back(result: false),
             ),
             SizedBox(height: 10.h),
-            _ActionButton(
-              title: 'Cancel & Pay',
-              color: AppColors.white,
-              textColor: AppColors.textNeutralButton,
-              outlined: true,
-              outlinedBorderColor: AppColors.textNeutralButton,
-              onTap: canCancel ? () => Get.back(result: true) : null,
-            ),
-          ],
+              Obx(() {
+                final loading = isProcessing?.value ?? false;
+                return _ActionButton(
+                  title: 'Cancel & Pay',
+                  color: AppColors.white,
+                  textColor: AppColors.textNeutralButton,
+                  outlined: true,
+                  outlinedBorderColor: AppColors.textNeutralButton,
+                  isLoading: loading,
+                  onTap: !canCancel || loading
+                      ? null
+                      : () async {
+                          if (onConfirmTap != null) {
+                            await onConfirmTap!.call();
+                          } else {
+                            Get.back(result: true);
+                          }
+                        },
+                );
+              }),
+            ],
+          ),
         ),
       ),
     );
@@ -411,6 +450,7 @@ class _ActionButton extends StatelessWidget {
     required this.onTap,
     this.outlined = false,
     this.outlinedBorderColor,
+    this.isLoading = false,
   });
 
   final String title;
@@ -419,12 +459,14 @@ class _ActionButton extends StatelessWidget {
   final VoidCallback? onTap;
   final bool outlined;
   final Color? outlinedBorderColor;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
     return AppPrimaryButton(
       label: title,
       onPressed: onTap,
+      isLoading: isLoading,
       height: 54.h,
       borderRadius: 100.r,
       backgroundColor: color,

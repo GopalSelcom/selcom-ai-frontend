@@ -93,6 +93,8 @@ class DriverAcceptedController extends GetxController
   final rideBottomSheetState = RideBottomSheetState.driverAssigned.obs;
   final currentRideStatus = 'driver_assigned'.obs;
   final selectedRideRating = 4.obs;
+  final isReasonProcessing = false.obs;
+  final isCancelPayProcessing = false.obs;
 
   final Rxn<BitmapDescriptor> assignedDriverMarkerIcon =
       Rxn<BitmapDescriptor>();
@@ -1662,9 +1664,13 @@ class DriverAcceptedController extends GetxController
 
     if (confirmResult != true) return;
 
-    // 2. Reason Selection
-    final String? reason = await Get.dialog<String>(
-      const CancelReasonSelectionDialog(
+    // 2. Reason Selection + Charges Fetch (keep first dialog open while loading)
+    String? selectedReason;
+    dynamic cancellationData;
+    String selectedPolicyLabel = '';
+
+    await Get.dialog<void>(
+      CancelReasonSelectionDialog(
         reasons: [
           'Driver asked to cancel',
           'Driver asked to pay offline',
@@ -1673,67 +1679,84 @@ class DriverAcceptedController extends GetxController
           'Booked by mistake',
           'Others',
         ],
+        isProcessing: isReasonProcessing,
+        onContinueTap: (reason) async {
+          if (rideId.isEmpty) {
+            AppDialogs.showErrorDialog(
+              title: AppStrings.cancelFailed.tr,
+              message: AppStrings.rideIdIsMissing.tr,
+            );
+            return;
+          }
+          isReasonProcessing.value = true;
+          final charges = await rideRepository.getCancellationCharges(rideId);
+          isReasonProcessing.value = false;
+          await charges.fold(
+            (_) async {
+              AppDialogs.showErrorDialog(
+                title: AppStrings.cancelFailed.tr,
+                message: AppStrings.couldNotCancelTryAgain.tr,
+              );
+            },
+            (data) async {
+              final selectedPolicy = data.policy.firstWhereOrNull(
+                (p) =>
+                    p.status.toLowerCase() == data.currentStatus.toLowerCase(),
+              );
+              selectedReason = reason;
+              cancellationData = data;
+              selectedPolicyLabel = selectedPolicy?.label ?? '';
+              Get.back();
+            },
+          );
+        },
       ),
       barrierDismissible: false,
       barrierColor: AppColors.overlayBlack12,
     );
+    if (selectedReason == null || cancellationData == null) return;
 
-    if (reason == null) return;
-    if (rideId.isEmpty) {
-      AppDialogs.showErrorDialog(
-        title: AppStrings.cancelFailed.tr,
-        message: AppStrings.rideIdIsMissing.tr,
-      );
-      return;
-    }
-
-    final charges = await rideRepository.getCancellationCharges(rideId);
-    bool canProceed = false;
-    await charges.fold(
-      (_) async {
-        AppDialogs.showErrorDialog(
-          title: AppStrings.cancelFailed.tr,
-          message: AppStrings.couldNotCancelTryAgain.tr,
-        );
-      },
-      (data) async {
-        final selectedPolicy = data.policy.firstWhereOrNull(
-          (p) => p.status.toLowerCase() == data.currentStatus.toLowerCase(),
-        );
-        final proceed = await Get.dialog<bool>(
-          CancellationChargesDialog(
-            canCancel: data.canCancel,
-            cancellationFee: data.cancellationFee,
-            netRefund: data.netRefund,
-            policyLabel: selectedPolicy?.label ?? '',
-          ),
-          barrierDismissible: false,
-          barrierColor: AppColors.overlayBlack12,
-        );
-        canProceed = proceed == true;
-      },
-    );
-    if (!canProceed) return;
-
-    // 3. Perform Cancellation
-    final result = await rideRepository.cancelRide(rideId, 'rider_cancelled');
-    result.fold(
-      (_) => AppDialogs.showErrorDialog(
-        title: AppStrings.cancelFailed.tr,
-        message: AppStrings.couldNotCancelTryAgain.tr,
-      ),
-      (success) async {
-        if (success) {
+    // 3. Charges dialog + Cancel API (loading on Cancel & Pay button)
+    await Get.dialog<bool>(
+      CancellationChargesDialog(
+        canCancel: cancellationData.canCancel,
+        cancellationFee: cancellationData.cancellationFee,
+        netRefund: cancellationData.netRefund,
+        policyLabel: selectedPolicyLabel,
+        isProcessing: isCancelPayProcessing,
+        onConfirmTap: () async {
           _navigatedAway = true;
-          await LiveActivityManager().endActivity(rideId);
-          Get.offAllNamed(AppRoutes.home);
-        } else {
-          AppDialogs.showErrorDialog(
-            title: AppStrings.cancelFailed.tr,
-            message: AppStrings.pleaseTryAgain.tr,
+          isCancelPayProcessing.value = true;
+          final result = await rideRepository.cancelRide(
+            rideId,
+            'rider_cancelled',
           );
-        }
-      },
+          isCancelPayProcessing.value = false;
+          result.fold(
+            (_) {
+              _navigatedAway = false;
+              AppDialogs.showErrorDialog(
+                title: AppStrings.cancelFailed.tr,
+                message: AppStrings.couldNotCancelTryAgain.tr,
+              );
+            },
+            (success) async {
+              if (success) {
+                await Get.offAllNamed(AppRoutes.home);
+                unawaited(LiveActivityManager().endActivity(rideId));
+              } else {
+                _navigatedAway = false;
+                AppDialogs.showErrorDialog(
+                  title: AppStrings.cancelFailed.tr,
+                  message: AppStrings.pleaseTryAgain.tr,
+                );
+              }
+            },
+          );
+        },
+      ),
+      barrierDismissible: false,
+      barrierColor: AppColors.overlayBlack12,
     );
   }
 
