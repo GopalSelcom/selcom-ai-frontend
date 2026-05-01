@@ -36,8 +36,9 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/agora_voice/domain/agora_call_invite_event.dart';
 import '../../../../shared/agora_voice/domain/agora_call_signaling_service.dart';
-import '../../../../shared/agora_voice/config/agora_voice_config.dart';
+import '../../../../core/integration/agora_voice_selcom.dart';
 import '../../../../shared/agora_voice/domain/agora_voice_call_session.dart';
+import '../../../../shared/agora_voice/domain/agora_voice_call_state.dart';
 import '../../../../shared/agora_voice/presentation/agora_voice_call_controller.dart';
 import '../../../../shared/agora_voice/presentation/agora_voice_call_screen.dart';
 import '../../../../shared/agora_voice/service/agora_voice_engine_service.dart';
@@ -57,6 +58,8 @@ enum RideBottomSheetState { driverAssigned, rideStarted }
 
 class DriverAcceptedController extends GetxController
     with GetSingleTickerProviderStateMixin, WidgetsBindingObserver {
+  static const int _staticAgoraUid = 7001;
+
   DriverAcceptedController({
     required this.rideRepository,
     required this.analyticsService,
@@ -132,6 +135,7 @@ class DriverAcceptedController extends GetxController
 
   final RxDouble sheetSize = 0.3.obs;
   AgoraVoiceCallController? _inAppCallController;
+  Worker? _inAppCallStateWorker;
   AgoraCallSignalingService? _callSignalingService;
   StreamSubscription<AgoraCallInviteEvent>? _callSignalSub;
   final String _localCallClientId = const Uuid().v4();
@@ -298,6 +302,8 @@ class DriverAcceptedController extends GetxController
     _chatSub?.cancel();
     _callSignalSub?.cancel();
     _callSignalingService?.dispose();
+    _inAppCallStateWorker?.dispose();
+    _inAppCallStateWorker = null;
     final inAppCallController = _inAppCallController;
     if (inAppCallController != null) {
       unawaited(inAppCallController.disposeCall());
@@ -1443,6 +1449,17 @@ class DriverAcceptedController extends GetxController
                 ),
                 SizedBox(height: 10.h),
                 _callOptionTile(
+                  title: 'Join call',
+                  icon: Icons.call_rounded,
+                  onTap: () {
+                    if (Get.isBottomSheetOpen ?? false) {
+                      Get.back();
+                    }
+                    _joinCallForTesting();
+                  },
+                ),
+                SizedBox(height: 10.h),
+                _callOptionTile(
                   title: 'Normal call',
                   icon: Icons.call_outlined,
                   onTap: () {
@@ -1524,12 +1541,11 @@ class DriverAcceptedController extends GetxController
   }
 
   Future<void> _startOutgoingFullScreenCall() async {
-    final config = AgoraVoiceConfig.fromAppConfig();
-    if (!config.isValid) {
+    if (!AgoraVoiceSelcom.canStartCall()) {
       AppDialogs.showErrorDialog(
         title: 'Voice Call',
         message:
-            'AGORA_APP_ID is missing. Set it via --dart-define before testing.',
+            'Agora is not configured. Set AGORA_APP_ID (or ride token API) via env / dart-define.',
       );
       return;
     }
@@ -1546,14 +1562,16 @@ class DriverAcceptedController extends GetxController
       ),
     );
 
+    final tokenProvider = AgoraVoiceSelcom.buildRiderTokenProvider(
+      fallbackChannel: channelName,
+      fallbackUid: _staticAgoraUid,
+    );
     final controller = AgoraVoiceCallController(
-      engineService: AgoraVoiceEngineService(
-        appId: config.appId,
-        tokenProvider: config.createTokenProvider(),
-      ),
-      session: AgoraVoiceCallSession(channelName: channelName, uid: 0),
+      engineService: AgoraVoiceEngineService(tokenProvider: tokenProvider),
+      session: AgoraVoiceCallSession(rideId: rideId),
     );
     _inAppCallController = controller;
+    _attachInAppCallStateListener(controller);
 
     if (Get.isBottomSheetOpen ?? false) {
       Get.back();
@@ -1576,11 +1594,51 @@ class DriverAcceptedController extends GetxController
             ),
           );
           await controller.endCall();
-          if (Get.isOverlaysOpen) Get.back();
+          _closeInAppCallScreenIfOpen();
         },
       ),
       fullscreenDialog: true,
     );
+    _clearInAppCallStateListener();
+    _inAppCallController = null;
+  }
+
+  Future<void> _joinCallForTesting() async {
+    if (!AgoraVoiceSelcom.canStartCall()) {
+      AppDialogs.showErrorDialog(
+        title: 'Voice Call',
+        message:
+            'Agora is not configured. Set AGORA_APP_ID (or ride token API) via env / dart-define.',
+      );
+      return;
+    }
+
+    final tokenProvider = AgoraVoiceSelcom.buildRiderTokenProvider(
+      fallbackChannel: _voiceChannelName(),
+      fallbackUid: _staticAgoraUid,
+    );
+    final controller = AgoraVoiceCallController(
+      engineService: AgoraVoiceEngineService(tokenProvider: tokenProvider),
+      session: AgoraVoiceCallSession(rideId: rideId),
+    );
+    _inAppCallController = controller;
+    _attachInAppCallStateListener(controller);
+
+    await Get.to(
+      () => AgoraVoiceCallScreen(
+        controller: controller,
+        displayName: 'Join ${_voiceChannelName()}',
+        isIncoming: true,
+        onAccept: controller.startCall,
+        onReject: () async {
+          await controller.endCall();
+          _closeInAppCallScreenIfOpen();
+        },
+      ),
+      fullscreenDialog: true,
+    );
+    _clearInAppCallStateListener();
+    _inAppCallController = null;
   }
 
   Future<void> _handleCallInviteEvent(AgoraCallInviteEvent event) async {
@@ -1597,21 +1655,23 @@ class DriverAcceptedController extends GetxController
       case AgoraCallInviteEventType.reject:
       case AgoraCallInviteEventType.end:
         await _inAppCallController?.endCall();
+        _closeInAppCallScreenIfOpen();
         break;
     }
   }
 
   Future<void> _showIncomingCallScreen(AgoraCallInviteEvent event) async {
-    final config = AgoraVoiceConfig.fromAppConfig();
-    if (!config.isValid) return;
+    if (!AgoraVoiceSelcom.canStartCall()) return;
+    final tokenProvider = AgoraVoiceSelcom.buildRiderTokenProvider(
+      fallbackChannel: event.channelName,
+      fallbackUid: _staticAgoraUid,
+    );
     final controller = AgoraVoiceCallController(
-      engineService: AgoraVoiceEngineService(
-        appId: config.appId,
-        tokenProvider: config.createTokenProvider(),
-      ),
-      session: AgoraVoiceCallSession(channelName: event.channelName, uid: 0),
+      engineService: AgoraVoiceEngineService(tokenProvider: tokenProvider),
+      session: AgoraVoiceCallSession(rideId: event.rideId),
     );
     _inAppCallController = controller;
+    _attachInAppCallStateListener(controller);
 
     await Get.to(
       () => AgoraVoiceCallScreen(
@@ -1643,19 +1703,38 @@ class DriverAcceptedController extends GetxController
             ),
           );
           await controller.endCall();
-          if (Get.isOverlaysOpen) Get.back();
+          _closeInAppCallScreenIfOpen();
         },
       ),
       fullscreenDialog: true,
     );
+    _clearInAppCallStateListener();
+    _inAppCallController = null;
+  }
+
+  void _attachInAppCallStateListener(AgoraVoiceCallController controller) {
+    _inAppCallStateWorker?.dispose();
+    _inAppCallStateWorker = ever(controller.callState, (state) {
+      if (state == AgoraVoiceCallState.ended) {
+        _closeInAppCallScreenIfOpen();
+      }
+    });
+  }
+
+  void _clearInAppCallStateListener() {
+    _inAppCallStateWorker?.dispose();
+    _inAppCallStateWorker = null;
+  }
+
+  void _closeInAppCallScreenIfOpen() {
+    final canPop = Get.key.currentState?.canPop() ?? false;
+    if (canPop) {
+      Get.back();
+    }
   }
 
   String _voiceChannelName() {
-    final sanitized = rideId.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
-    if (sanitized.isEmpty) {
-      return 'ride_test_voice';
-    }
-    return 'ride_$sanitized';
+    return 'gopal_testing';
   }
 
   void onChatTap() {

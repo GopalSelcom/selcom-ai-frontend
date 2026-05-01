@@ -21,23 +21,29 @@ class AgoraVoiceCallController extends GetxController {
   final isMuted = false.obs;
   final isSpeakerEnabled = true.obs;
 
+  /// Main join flow used by both outgoing and incoming accept.
+  /// If anything fails here, UI goes to [AgoraVoiceCallState.error].
   Future<void> startCall() async {
     if (callState.value == AgoraVoiceCallState.connecting) return;
     callState.value = AgoraVoiceCallState.connecting;
     errorMessage.value = '';
     try {
-      final micStatus = await Permission.microphone.request();
-      if (!micStatus.isGranted) {
-        callState.value = AgoraVoiceCallState.error;
-        errorMessage.value =
-            'Microphone permission is required for voice calls.';
+      final hasMicPermission = await _ensureMicrophonePermission();
+      if (!hasMicPermission) {
         return;
       }
 
-      await engineService.ensureInitialized(registerEvents: _bindEvents);
+      final creds = await engineService.tokenProvider.fetchCredentials(
+        rideId: session.rideId,
+      );
+
+      await engineService.ensureInitialized(
+        appId: creds.appId,
+        registerEvents: _bindEvents,
+      );
+      await engineService.join(creds);
       await engineService.setSpeakerEnabled(isSpeakerEnabled.value);
       await engineService.setMuted(isMuted.value);
-      await engineService.join(session);
       callState.value = AgoraVoiceCallState.connected;
     } catch (_) {
       callState.value = AgoraVoiceCallState.error;
@@ -45,34 +51,97 @@ class AgoraVoiceCallController extends GetxController {
     }
   }
 
+  /// Ensures mic permission is granted before joining RTC.
+  /// Returns false after showing the appropriate permission dialog.
+  Future<bool> _ensureMicrophonePermission() async {
+    final currentStatus = await Permission.microphone.status;
+    if (currentStatus.isGranted) return true;
+
+    if (currentStatus.isPermanentlyDenied || currentStatus.isRestricted) {
+      _showMicrophonePermissionDialog();
+      callState.value = AgoraVoiceCallState.error;
+      errorMessage.value =
+          'Microphone access is disabled. Enable it in Settings to continue.';
+      return false;
+    }
+
+    final requestStatus = await Permission.microphone.request();
+    if (requestStatus.isGranted) return true;
+
+    if (requestStatus.isPermanentlyDenied || requestStatus.isRestricted) {
+      _showMicrophonePermissionDialog();
+    } else {
+      AppDialogs.showErrorDialog(
+        title: 'Microphone Permission',
+        message: 'Microphone permission is required for voice calls.',
+      );
+    }
+
+    callState.value = AgoraVoiceCallState.error;
+    errorMessage.value = 'Microphone permission is required for voice calls.';
+    return false;
+  }
+
+  /// Opens the shared "Open Settings" permission dialog.
+  void _showMicrophonePermissionDialog() {
+    AppDialogs.showPermissionDialog(
+      title: 'Microphone Permission Required',
+      message:
+          'Please enable microphone access in Settings to make or receive voice calls.',
+      onOpenSettings: openAppSettings,
+    );
+  }
+
+  /// Leaves Agora channel and marks the call as ended.
   Future<void> endCall() async {
     await engineService.leave();
     callState.value = AgoraVoiceCallState.ended;
   }
 
+  /// Toggles local microphone publish state.
   Future<void> toggleMute() async {
     final next = !isMuted.value;
     isMuted.value = next;
     await engineService.setMuted(next);
   }
 
+  /// Toggles speakerphone route.
   Future<void> toggleSpeaker() async {
     final next = !isSpeakerEnabled.value;
     isSpeakerEnabled.value = next;
     await engineService.setSpeakerEnabled(next);
   }
 
+  /// Retry helper: end old session and run full start flow again.
   Future<void> restartCall() async {
     await endCall();
     callState.value = AgoraVoiceCallState.idle;
     await startCall();
   }
 
+  /// Refreshes RTC token during long calls when Agora signals expiry.
+  Future<void> _refreshRtcToken() async {
+    try {
+      final fresh = await engineService.tokenProvider.fetchCredentials(
+        rideId: session.rideId,
+      );
+      if (fresh.token.isNotEmpty) {
+        await engineService.renewRtcToken(fresh.token);
+      }
+    } catch (_) {
+      // Agora disconnects on hard expiry; avoid noisy UI here.
+    }
+  }
+
+  /// Registers runtime Agora callbacks that drive call UI state.
   void _bindEvents(RtcEngineEventHandler _) {
     engineService.setEventHandler(
       RtcEngineEventHandler(
         onJoinChannelSuccess: (_, __) {
           callState.value = AgoraVoiceCallState.connected;
+        },
+        onTokenPrivilegeWillExpire: (_, __) {
+          _refreshRtcToken();
         },
         onConnectionStateChanged: (_, state, __) {
           if (state == ConnectionStateType.connectionStateDisconnected) {
@@ -88,6 +157,7 @@ class AgoraVoiceCallController extends GetxController {
     );
   }
 
+  /// Human-readable state label for debug/status UI.
   String stateLabel() {
     switch (callState.value) {
       case AgoraVoiceCallState.idle:
@@ -103,6 +173,7 @@ class AgoraVoiceCallController extends GetxController {
     }
   }
 
+  /// Shows one error dialog when state transitions to error.
   void showErrorIfNeeded() {
     if (callState.value != AgoraVoiceCallState.error ||
         errorMessage.value.isEmpty) {
@@ -114,6 +185,7 @@ class AgoraVoiceCallController extends GetxController {
     );
   }
 
+  /// Explicit disposal entry used by host feature controller.
   Future<void> disposeCall() async {
     await engineService.dispose();
   }

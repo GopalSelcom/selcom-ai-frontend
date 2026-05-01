@@ -7,6 +7,7 @@ class AppConfig {
   static late String baseUrl;
   static late String socketUrl;
   static late String agoraAppId;
+  /// `none` (default) | `ride_api` POST mint per brain guide | `api` GET legacy **or** POST if endpoint contains `{rideId}`.
   static late String agoraTokenMode;
   static late String agoraTokenEndpoint;
 

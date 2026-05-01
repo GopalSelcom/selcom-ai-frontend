@@ -525,7 +525,7 @@ class ApiService {
           if (data is Map) {
             message = data['message'] ?? 'Bad response from server';
           } else {
-            message = 'Server Error (${statusCode})';
+            message = 'Server Error ($statusCode)';
           }
         } catch (_) {
           message = 'Bad response from server';

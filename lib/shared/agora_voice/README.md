@@ -1,69 +1,55 @@
-# Agora Voice Module
+# Agora Voice (`lib/shared/agora_voice/`)
 
-Portable in-app voice calling module for Flutter using Agora RTC.
+Portable **audio-only** Agora RTC integration aligned with `brain/docs/AGORA-FRONTEND-GUIDE.md`.
 
-## Folder copy scope
+## Copy to another app
 
-Copy this folder to another app:
+Copy the whole folder:
 
 - `lib/shared/agora_voice/`
 
-And copy/update only the integration touchpoints:
+Do **not** copy Selcom wiring — recreate a thin bridge (see `lib/core/integration/agora_voice_selcom.dart` in this repo as a template).
 
-- App config values (`AGORA_APP_ID`, `AGORA_TOKEN_MODE`, `AGORA_TOKEN_ENDPOINT`)
-- One UI trigger (button/tile) that opens `AgoraVoiceCallBottomSheet`
-- One UI trigger (button/tile) that opens `AgoraVoiceCallScreen`
-- One signaling adapter implementation for your app transport
-- Optional mic permission text in platform files
-
-## Dependencies
+### Dependencies (host `pubspec.yaml`)
 
 - `agora_rtc_engine`
 - `permission_handler`
-- `get` (for controller observables)
+- `dio` (for backend token mint)
+- `get` (controller observables; optional — you can re-skin presentation without GetX)
 
-## Required config
+## Architecture
 
-Provide via `--dart-define`:
+| Layer | Role |
+|--------|------|
+| `domain/agora_voice_token_provider.dart` | Host implements how tokens are fetched (`rideId` → credentials). |
+| `domain/agora_rtc_join_credentials.dart` | Parsed backend payload: `app_id`, `channel`, `token`, `uid`, `expires_at`. |
+| `data/static_voice_token_provider.dart` | No-backend / tokenless dev: fixed `channel` + `uid` + optional empty token. |
+| `data/ride_call_http_token_provider.dart` | `RideCallHttpTokenProvider` (POST mint) + `ChannelQueryTokenProvider` (legacy GET). |
+| `service/agora_voice_engine_service.dart` | Engine lifecycle, join options per guide (`communication` profile, publish mic, auto-subscribe audio), `renewToken` on expiry callback from controller. |
+| `presentation/` | GetX UI/controller; swap for your state management if needed. |
 
-- `AGORA_APP_ID`
-- `AGORA_TOKEN_MODE=none|api`
-- `AGORA_TOKEN_ENDPOINT` (required when mode is `api`)
+## Backend token (recommended)
 
-## Integration steps
+1. Implement POST `.../rides/:rideId/call/token` on your server (see brain guide).
+2. Provide a `RideCallHttpTokenProvider` with:
+   - `Dio` using your API `baseUrl`
+   - `tokenPathBuilder(rideId)` → path or full URL containing the ride id
+   - `headersProvider` → `Authorization` (or your driver header scheme)
+3. Build `AgoraVoiceEngineService(tokenProvider: ...)`.
+4. Build `AgoraVoiceCallSession(rideId: ...)` — **must** be the same ride the backend mints tokens for.
 
-1. Build a `AgoraVoiceConfig` using `AgoraVoiceConfig.fromAppConfig()`.
-2. Create `AgoraVoiceEngineService` with:
-   - `appId: config.appId`
-   - `tokenProvider: config.createTokenProvider()`
-3. Create `AgoraVoiceCallController` with:
-   - `session.channelName` (for example: `ride_<rideId>`)
-   - `session.uid` (`0` for auto in test mode)
-4. Open `AgoraVoiceCallScreen` for outgoing and incoming call flows.
-5. Implement `AgoraCallSignalingService` in your app layer and connect invite events.
+### Config modes (Selcom reference: `AgoraVoiceSelcom`)
 
-## Signaling abstraction
+- **`AGORA_TOKEN_MODE=ride_api`** — POST relative path from guide (`/v4/go/rides/...` or `/v4/agent/go/rides/...` depending on rider vs driver factory).
+- **`AGORA_TOKEN_MODE=api`** + `AGORA_TOKEN_ENDPOINT` containing `{rideId}` — POST to that template (full URL allowed).
+- **`AGORA_TOKEN_MODE=api`** + endpoint **without** `{rideId}` — legacy **GET** token (`ChannelQueryTokenProvider`, channel + uid query).
+- **Else** — `StaticVoiceTokenProvider` (needs `AGORA_APP_ID` + local channel/uid).
 
-The module includes:
+## Signaling
 
-- `AgoraCallSignalingService`
-- `AgoraCallInviteEvent`
+Invite/accept over socket/FCM stays **outside** this folder — keep `AgoraCallInviteEvent` + your `AgoraCallSignalingService` implementation in the host app. **Signaling `channelName` must match** the backend `channel` field when using minted tokens.
 
-You must implement signaling in your host app (socket/chat/push/websocket) and map:
+## Security
 
-- `invite` -> show incoming call screen
-- `accept` -> start/join Agora channel
-- `reject`/`end` -> leave call and close screen
-
-## Switch from test mode to dynamic token
-
-Current test mode:
-
-- `AGORA_TOKEN_MODE=none`
-
-Switch to backend token:
-
-1. Set `AGORA_TOKEN_MODE=api`
-2. Set `AGORA_TOKEN_ENDPOINT=https://<your-backend>/...`
-
-No widget-level changes are required.
+- Never log full RTC tokens in production.
+- Never ship Agora **certificate** in the client (server-only).

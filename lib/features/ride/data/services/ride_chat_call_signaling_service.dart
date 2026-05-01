@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../shared/agora_voice/domain/agora_call_invite_event.dart';
 import '../../../../shared/agora_voice/domain/agora_call_signaling_service.dart';
@@ -23,6 +25,9 @@ class RideChatCallSignalingService implements AgoraCallSignalingService {
 
   @override
   Future<void> start() async {
+    if (kDebugMode) {
+      debugPrint('[CALL_SOCKET] start signaling ride=$rideId');
+    }
     await _socketService.connect();
     _socketService.joinRideRoom(rideId: rideId);
     _chatSub?.cancel();
@@ -31,6 +36,12 @@ class RideChatCallSignalingService implements AgoraCallSignalingService {
 
   @override
   Future<void> sendEvent(AgoraCallInviteEvent event) async {
+    if (kDebugMode) {
+      debugPrint(
+        '[CALL_SOCKET] send type=${event.type.name} '
+        'channel=${event.channelName} ride=${event.rideId}',
+      );
+    }
     _socketService.sendMessage(
       rideId: rideId,
       message: jsonEncode(event.toJson()),
@@ -46,7 +57,14 @@ class RideChatCallSignalingService implements AgoraCallSignalingService {
   void _handleChatPayload(Map<String, dynamic> payload) {
     final payloadRideId =
         (payload['ride_id'] ?? payload['rideId'])?.toString().trim() ?? '';
-    if (payloadRideId != rideId) return;
+    if (payloadRideId != rideId) {
+      if (kDebugMode) {
+        debugPrint(
+          '[CALL_SOCKET] skip payload ride=$payloadRideId expected=$rideId',
+        );
+      }
+      return;
+    }
     final messageRaw = payload['message']?.toString().trim() ?? '';
     if (messageRaw.isEmpty) return;
 
@@ -61,9 +79,25 @@ class RideChatCallSignalingService implements AgoraCallSignalingService {
     } catch (_) {
       map = null;
     }
-    if (map == null) return;
+    if (map == null) {
+      if (kDebugMode) {
+        debugPrint('[CALL_SOCKET] skip non-json chat message');
+      }
+      return;
+    }
     final event = AgoraCallInviteEvent.fromJson(map);
-    if (event == null) return;
+    if (event == null) {
+      if (kDebugMode) {
+        debugPrint('[CALL_SOCKET] skip non-call payload');
+      }
+      return;
+    }
+    if (kDebugMode) {
+      debugPrint(
+        '[CALL_SOCKET] receive type=${event.type.name} '
+        'channel=${event.channelName} ride=${event.rideId}',
+      );
+    }
     _eventsController.add(event);
   }
 }
