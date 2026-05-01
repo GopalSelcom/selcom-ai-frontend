@@ -88,17 +88,38 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
             right: 16,
             onProfileTap: c.openProfile,
             addressWidget: Expanded(
-              child: Obx(
-                () => RideLocationSummaryCard(
-                  pickupAddress: c.pickupAddress.isEmpty
-                      ? 'Current location'
-                      : c.pickupAddress,
-                  destinationAddress: c.destinationAddress.isEmpty
-                      ? 'Destination'
-                      : c.destinationAddress,
-                  intermediateStops: c.intermediateStops.toList(),
-                ),
-              ),
+              child: Obx(() {
+                final isForOther = c.isBookedForOther.value;
+
+                return isForOther
+                    ? AppMapLocationSummaryCard(
+                        leading: Container(
+                          padding: EdgeInsets.all(6.w),
+                          decoration: const BoxDecoration(
+                            color: AppColors.surfaceSubtle,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Iconsax.user,
+                            color: AppColors.primary,
+                            size: 20.sp,
+                          ),
+                        ),
+                        label: "Booking for ${c.passengerName.value}",
+                        address:
+                            "Phone: ${TanzaniaPhoneFormatter.formatInternational(c.passengerPhone.value ?? '')}",
+                        maxAddressLines: 1,
+                      )
+                    : RideLocationSummaryCard(
+                        pickupAddress: c.pickupAddress.isEmpty
+                            ? 'Current location'
+                            : c.pickupAddress,
+                        destinationAddress: c.destinationAddress.isEmpty
+                            ? 'Destination'
+                            : c.destinationAddress,
+                        intermediateStops: c.intermediateStops.toList(),
+                      );
+              }),
             ),
           ),
           Obx(() {

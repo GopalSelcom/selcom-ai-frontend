@@ -78,6 +78,8 @@ class DriverAcceptedScreen extends StatelessWidget {
             onProfileTap: c.openProfile,
             addressWidget: Expanded(
               child: Obx(() {
+                final ride = c.ride.value;
+                final isForOther = ride?.isBookedForOther ?? false;
                 final List<String> stops =
                     c.ride.value?.stops.map((s) => s.address).toList() ?? [];
                 // If stops include the destination, we remove the last one
@@ -85,7 +87,24 @@ class DriverAcceptedScreen extends StatelessWidget {
                 if (stops.isNotEmpty) {
                   stops.removeLast();
                 }
-                return RideLocationSummaryCard(
+                return  isForOther && ride != null
+                    ? AppMapLocationSummaryCard(
+                  leading: Container(
+                    padding: EdgeInsets.all(6.w),
+                    decoration: const BoxDecoration(
+                      color: AppColors.surfaceSubtle,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Iconsax.user,
+                      color: AppColors.primary,
+                      size: 20.sp,
+                    ),
+                  ),
+                  label: "Booking for ${ride.passengerName}",
+                  address: "Phone: ${TanzaniaPhoneFormatter.formatInternational(ride.passengerPhone ?? '')}",
+                  maxAddressLines: 1,
+                ):RideLocationSummaryCard(
                   pickupAddress: c.pickupAddress.isEmpty
                       ? 'Current location'
                       : c.pickupAddress,
