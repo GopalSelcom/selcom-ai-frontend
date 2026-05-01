@@ -639,13 +639,13 @@ class DriverAcceptedController extends GetxController
             assignedDriverLocation.value!;
         final distance = _calculateDistanceInMeters(currentPos, rawPos);
 
-        // 🏎️ High-Speed Optimization: 
+        // 🏎️ High-Speed Optimization:
         // Use a tighter buffer (5% instead of 15%) to prevent lag accumulation.
         // Cap duration more aggressively at 5s to force catch-up.
-        double secondsNeeded = (distance / speed) * 1.05; 
+        double secondsNeeded = (distance / speed) * 1.05;
         int millis = (secondsNeeded * 1000).toInt();
-        
-        millis = millis.clamp(1200, 5000); 
+
+        millis = millis.clamp(1200, 5000);
         animDuration = Duration(milliseconds: millis);
       } else {
         // If slow or stopped, use a more conservative 4s glide to match
@@ -756,17 +756,31 @@ class DriverAcceptedController extends GetxController
 
   Future<void> loadDriverIcon({String? vehicleType}) async {
     try {
-      // Use the high-fidelity SVG rider icon as requested
+      final type = (vehicleType ?? '').toLowerCase();
+      String assetPath = 'assets/images/rider.svg';
+
+      if (type.contains('car') ||
+          type.contains('cab') ||
+          type.contains('taxi')) {
+        assetPath = 'assets/images/car.svg';
+      } else if (type.contains('bajaj') ||
+          type.contains('rickshaw') ||
+          type.contains('tuk') ||
+          type.contains('auto')) {
+        assetPath = 'assets/images/rickshaw.svg';
+      }
+
       assignedDriverMarkerIcon.value = await MapMarkerUtils.getSvgMarker(
-        'assets/images/rider.svg',
-        70, // Reduced size for better map proportions
+        assetPath,
+        70, // Consistent size for SVG markers
       );
     } catch (e, stackTrace) {
       developer.log(
-        "Error loading SVG rider icon: $e",
+        "Error loading SVG marker icon ($vehicleType): $e",
         error: e,
         stackTrace: stackTrace,
       );
+      // Robust fallback to existing PNG assets
       final asset = VehicleImageUtils.imageAssetForVehicleType(vehicleType);
       assignedDriverMarkerIcon.value = await MapMarkerUtils.getResizedMarker(
         asset,
@@ -1319,7 +1333,8 @@ class DriverAcceptedController extends GetxController
         arrivalLabel.value =
             'Driver will arrive in $minutes ${minutes == 1 ? 'min' : 'mins'}...';
       } else {
-        final status = (payload.status ?? currentRideStatus.value).toLowerCase();
+        final status = (payload.status ?? currentRideStatus.value)
+            .toLowerCase();
         final inRide =
             status.contains('progress') || status.contains('started');
         etaLabel.value = inRide ? 'Nearby' : 'Arriving';
@@ -1360,7 +1375,6 @@ class DriverAcceptedController extends GetxController
       }
     }
   }
-
 
   double _calculateSimpleDist(LatLng a, LatLng b) {
     return (a.latitude - b.latitude).abs() + (a.longitude - b.longitude).abs();
@@ -1769,7 +1783,7 @@ class DriverAcceptedController extends GetxController
   ) async {
     try {
       final status = (payload.status ?? '').toString().trim().toUpperCase();
-      
+
       // Handle Terminal States
       if (status.contains('CANCELLED') || status.contains('NO_DRIVER_FOUND')) {
         await LiveActivityManager().endActivity(rideId);
