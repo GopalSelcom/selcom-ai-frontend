@@ -1,55 +1,142 @@
 # Agora Voice (`lib/shared/agora_voice/`)
 
-Portable **audio-only** Agora RTC integration aligned with `brain/docs/AGORA-FRONTEND-GUIDE.md`.
+Portable **audio-only** Agora calling module for Flutter, ready to reuse in another app.
 
-## Copy to another app
+This module covers:
+- token-driven Agora join flow
+- outgoing/incoming in-app call screens
+- shared incoming call event handling (`invite` / `accept` / `reject` / `end`)
+- token refresh on expiry callback
 
-Copy the whole folder:
+---
+
+## 1) Copy To Another Project
+
+Copy this folder as-is:
 
 - `lib/shared/agora_voice/`
 
-Do **not** copy Selcom wiring — recreate a thin bridge (see `lib/core/integration/agora_voice_selcom.dart` in this repo as a template).
+Do **not** copy Selcom-specific bridge files. In your target project, create your own integration file (similar to `lib/core/integration/agora_voice_selcom.dart`) to wire:
+- app config
+- auth headers
+- token endpoint path
 
-### Dependencies (host `pubspec.yaml`)
+---
 
-- `agora_rtc_engine`
-- `permission_handler`
-- `dio` (for backend token mint)
-- `get` (controller observables; optional — you can re-skin presentation without GetX)
+## 2) Commands To Run In Other Project
 
-## Architecture
+Run these in the other project root:
 
-| Layer | Role |
-|--------|------|
-| `domain/agora_voice_token_provider.dart` | Host implements how tokens are fetched (`rideId` → credentials). |
-| `domain/agora_rtc_join_credentials.dart` | Parsed backend payload: `app_id`, `channel`, `token`, `uid`, `expires_at`. |
-| `data/static_voice_token_provider.dart` | No-backend / tokenless dev: fixed `channel` + `uid` + optional empty token. |
-| `data/ride_call_http_token_provider.dart` | `RideCallHttpTokenProvider` (POST mint) + `ChannelQueryTokenProvider` (legacy GET). |
-| `service/agora_voice_engine_service.dart` | Engine lifecycle, join options per guide (`communication` profile, publish mic, auto-subscribe audio), `renewToken` on expiry callback from controller. |
-| `presentation/` | GetX UI/controller; swap for your state management if needed. |
+```bash
+flutter pub add agora_rtc_engine permission_handler dio get
+```
 
-## Backend token (recommended)
+Then refresh packages:
 
-1. Implement POST `.../rides/:rideId/call/token` on your server (see brain guide).
-2. Provide a `RideCallHttpTokenProvider` with:
-   - `Dio` using your API `baseUrl`
-   - `tokenPathBuilder(rideId)` → path or full URL containing the ride id
-   - `headersProvider` → `Authorization` (or your driver header scheme)
-3. Build `AgoraVoiceEngineService(tokenProvider: ...)`.
-4. Build `AgoraVoiceCallSession(rideId: ...)` — **must** be the same ride the backend mints tokens for.
+```bash
+flutter pub get
+```
 
-### Config modes (Selcom reference: `AgoraVoiceSelcom`)
+Optional sanity check:
 
-- **`AGORA_TOKEN_MODE=ride_api`** — POST relative path from guide (`/v4/go/rides/...` or `/v4/agent/go/rides/...` depending on rider vs driver factory).
-- **`AGORA_TOKEN_MODE=api`** + `AGORA_TOKEN_ENDPOINT` containing `{rideId}` — POST to that template (full URL allowed).
-- **`AGORA_TOKEN_MODE=api`** + endpoint **without** `{rideId}` — legacy **GET** token (`ChannelQueryTokenProvider`, channel + uid query).
-- **Else** — `StaticVoiceTokenProvider` (needs `AGORA_APP_ID` + local channel/uid).
+```bash
+flutter analyze lib/shared/agora_voice
+```
 
-## Signaling
+---
 
-Invite/accept over socket/FCM stays **outside** this folder — keep `AgoraCallInviteEvent` + your `AgoraCallSignalingService` implementation in the host app. **Signaling `channelName` must match** the backend `channel` field when using minted tokens.
+## 3) Platform Permissions
 
-## Security
+### Android (`android/app/src/main/AndroidManifest.xml`)
 
-- Never log full RTC tokens in production.
-- Never ship Agora **certificate** in the client (server-only).
+```xml
+<uses-permission android:name="android.permission.RECORD_AUDIO"/>
+```
+
+### iOS (`ios/Runner/Info.plist`)
+
+```xml
+<key>NSMicrophoneUsageDescription</key>
+<string>App needs microphone access for in-app voice calls.</string>
+```
+
+---
+
+## 4) Module Architecture
+
+| Layer | File | Purpose |
+|---|---|---|
+| Domain | `domain/agora_voice_token_provider.dart` | Contract: fetch credentials by `rideId`. |
+| Domain | `domain/agora_rtc_join_credentials.dart` | Parsed backend payload (`app_id`, `channel`, `token`, `uid`, `expires_at`). |
+| Domain | `domain/agora_call_invite_event.dart` | Shared signaling payload (`invite/accept/reject/end`). |
+| Data | `data/ride_call_http_token_provider.dart` | Backend token providers (POST ride mint + legacy GET). |
+| Data | `data/static_voice_token_provider.dart` | Static credentials for test/no-backend mode. |
+| Service | `service/agora_voice_engine_service.dart` | Engine init/join/leave/mute/speaker/token-renew lifecycle. |
+| Service | `service/agora_voice_incoming_call_handler.dart` | Reusable incoming-call orchestrator for signaling events. |
+| Presentation | `presentation/agora_voice_call_controller.dart` | Call state + permission + start/end/toggle logic. |
+| Presentation | `presentation/agora_voice_call_screen.dart` | Full-screen incoming/outgoing call UI. |
+| Presentation | `presentation/agora_voice_call_bottom_sheet.dart` | Optional bottom-sheet style call UI. |
+
+---
+
+## 5) Minimal Integration Steps
+
+1. Implement your signaling adapter using:
+   - `AgoraCallSignalingService`
+2. Create a token provider:
+   - `RideCallHttpTokenProvider` (recommended backend flow), or
+   - `StaticVoiceTokenProvider` (testing)
+3. Build controller:
+   - `AgoraVoiceCallController(engineService: AgoraVoiceEngineService(...), session: AgoraVoiceCallSession(rideId: ...))`
+4. Show call screen:
+   - `AgoraVoiceCallScreen(...)`
+5. Wire incoming signaling events through:
+   - `AgoraVoiceIncomingCallHandler.handleEvent(event)`
+
+---
+
+## 6) Backend Token Contract (Recommended)
+
+Expected token payload (`data` object):
+
+```json
+{
+  "app_id": "your_agora_app_id",
+  "channel": "ride_<rideId>",
+  "token": "<rtc_token>",
+  "uid": 12345,
+  "expires_at": "2026-04-29T15:00:00.000Z"
+}
+```
+
+Important:
+- signaling `channelName` should match backend `channel`
+- both caller and receiver must join the same channel
+- caller and receiver should use different UIDs
+
+---
+
+## 7) Suggested Runtime Config Keys
+
+- `AGORA_TOKEN_MODE=ride_api` (recommended)
+- `AGORA_TOKEN_ENDPOINT` (optional; required if using `api` mode templates)
+- `AGORA_APP_ID` (used in static/legacy modes)
+
+---
+
+## 8) Common Debug Checklist
+
+If call fails:
+- verify mic permission granted
+- verify token response contains valid `app_id`, `channel`, `token`, `uid`
+- verify both apps use same channel
+- verify caller/receiver UIDs are different
+- verify signaling event reaches receiver (`invite`)
+- verify token not expired
+
+---
+
+## 9) Security Notes
+
+- Never log full RTC token in production.
+- Never ship Agora certificate in the client app.
