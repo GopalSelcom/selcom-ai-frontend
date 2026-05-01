@@ -6,8 +6,10 @@ import 'package:iconsax/iconsax.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import 'package:selcom_rides_frontend/core/localization/localization.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/phone_formatter.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -148,9 +150,7 @@ class ProfileScreen extends StatelessWidget {
                   onTap: controller.cancelEdit,
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 4.0, sigmaY: 4.0),
-                    child: Container(
-                      color: AppColors.overlayGray43,
-                    ),
+                    child: Container(color: AppColors.overlayGray43),
                   ),
                 ),
               ),
@@ -214,6 +214,7 @@ class ProfileScreen extends StatelessWidget {
         : '';
     final balance = controller.walletBalance.value;
     final walletNum = controller.walletNumber.value;
+    final avgRating = (user?.goAvgRating ?? 0).toDouble();
 
     return Column(
       key: const ValueKey('normal_mode'),
@@ -247,11 +248,7 @@ class ProfileScreen extends StatelessWidget {
                             size: 30.w,
                           ),
                         )
-                      : Icon(
-                          Iconsax.user,
-                          color: AppColors.white,
-                          size: 30.w,
-                        ),
+                      : Icon(Iconsax.user, color: AppColors.white, size: 30.w),
                 ),
               ),
               SizedBox(width: 16.w),
@@ -292,6 +289,31 @@ class ProfileScreen extends StatelessWidget {
                         color: AppColors.white.withValues(alpha: 0.8),
                         fontSize: 14.sp,
                       ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Row(
+                      children: [
+                        SvgPictureAsset(
+                          AppAssets.icRatingStar,
+                          width: 14.w,
+                          height: 14.w,
+                          color: AppColors.ratingStarActive,
+                          placeholderBuilder: (_) => Icon(
+                            Icons.star,
+                            color: AppColors.ratingStarActive,
+                            size: 14.sp,
+                          ),
+                        ),
+                        SizedBox(width: 4.w),
+                        Text(
+                          avgRating.toStringAsFixed(1),
+                          style: AppTextStyles.homeCaption.copyWith(
+                            color: AppColors.white.withValues(alpha: 0.92),
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -335,25 +357,20 @@ class ProfileScreen extends StatelessWidget {
                           fit: BoxFit.cover,
                         )
                       : controller.userModel.value?.image != null &&
-                              controller.userModel.value!.image!.isNotEmpty
-                          ? CachedNetworkImage(
-                              imageUrl: controller.userModel.value!.image!,
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) => const Center(
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
-                              ),
-                              errorWidget: (context, url, error) => Icon(
-                                Iconsax.user,
-                                color: AppColors.white,
-                                size: 50.w,
-                              ),
-                            )
-                          : Icon(
-                              Iconsax.user,
-                              color: AppColors.white,
-                              size: 50.w,
-                            ),
+                            controller.userModel.value!.image!.isNotEmpty
+                      ? CachedNetworkImage(
+                          imageUrl: controller.userModel.value!.image!,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => const Center(
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          errorWidget: (context, url, error) => Icon(
+                            Iconsax.user,
+                            color: AppColors.white,
+                            size: 50.w,
+                          ),
+                        )
+                      : Icon(Iconsax.user, color: AppColors.white, size: 50.w),
                 ),
               ),
               Positioned(
