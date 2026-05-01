@@ -31,6 +31,9 @@ class RideModel extends RideEntity {
     super.vehicleSnapshot,
     required super.createdAt,
     super.pendingStopsUpdate,
+    super.isBookedForOther = false,
+    super.passengerName,
+    super.passengerPhone,
   });
 
   factory RideModel.fromJson(Map<String, dynamic> json) {
@@ -126,6 +129,9 @@ class RideModel extends RideEntity {
           : null,
       createdAt: DateTime.parse(createdAtStr),
       pendingStopsUpdate: pendingStopsUpdate,
+      isBookedForOther: json['is_booked_for_other'] ?? false,
+      passengerName: json['passenger_name'],
+      passengerPhone: json['passenger_phone'],
     );
   }
 
@@ -188,6 +194,9 @@ class RideModel extends RideEntity {
       vehicleSnapshot: vehicleSnapshot ?? this.vehicleSnapshot,
       createdAt: createdAt ?? this.createdAt,
       pendingStopsUpdate: pendingStopsUpdate ?? this.pendingStopsUpdate,
+      isBookedForOther: isBookedForOther ?? this.isBookedForOther,
+      passengerName: passengerName ?? this.passengerName,
+      passengerPhone: passengerPhone ?? this.passengerPhone,
     );
   }
 

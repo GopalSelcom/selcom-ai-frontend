@@ -52,6 +52,7 @@ class _RideEndpoints {
   String shareRide(String rideId) => "$base/$rideId/share";
   String updateStops(String rideId) => "$base/$rideId/stops";
   String cancelPendingStops(String rideId) => "$base/$rideId/stops/pending";
+  final checkBookMode = "go/check-book-mode";
   final base = "go/rides";
 }
 

@@ -8,6 +8,9 @@ class BookRideRequest {
   final List<LocationEntity>? destinations;
   final String vehicleTypeId;
   final String paymentMethod;
+  final bool isBookedForOther;
+  final String? passengerName;
+  final String? passengerPhone;
 
   const BookRideRequest({
     required this.validationId,
@@ -17,6 +20,9 @@ class BookRideRequest {
     this.destinations,
     required this.vehicleTypeId,
     required this.paymentMethod,
+    this.isBookedForOther = false,
+    this.passengerName,
+    this.passengerPhone,
   });
 
   Map<String, dynamic> toJson() {
@@ -30,7 +36,13 @@ class BookRideRequest {
       },
       'vehicle_type_id': vehicleTypeId,
       'payment_method': paymentMethod,
+      'is_booked_for_other': isBookedForOther,
     };
+
+    if (isBookedForOther) {
+      if (passengerName != null) data['passenger_name'] = passengerName;
+      if (passengerPhone != null) data['passenger_phone'] = passengerPhone;
+    }
 
     if (destinations != null && destinations!.isNotEmpty) {
       data['destinations'] = destinations!

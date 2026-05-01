@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:selcom_rides_frontend/shared/widgets/map_widgets.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+import 'package:iconsax/iconsax.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -13,6 +14,7 @@ import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../controllers/driver_accepted_controller.dart';
 import '../controllers/ride_share_controller.dart';
 import '../widgets/ride_common_widgets.dart';
+import '../../../../shared/utils/phone_formatter.dart';
 
 /// SCR-11 — Driver accepted (heading to pickup). See `.agent/context/frontend/SCREENS.md`.
 class DriverAcceptedScreen extends StatelessWidget {
@@ -68,24 +70,46 @@ class DriverAcceptedScreen extends StatelessWidget {
               ),
             ),
           ),
-          AppMapTopHeader(
-            top: topPad + 8.h,
-            left: 16,
-            right: 16,
-            onProfileTap: c.openProfile,
-            addressWidget: Expanded(
-              child: AppMapLocationSummaryCard(
-                label: 'Current location',
-                address: c.pickupAddress.isEmpty
-                    ? 'Selected location'
-                    : c.pickupAddress,
-                maxAddressLines: 1,
+          Obx(() {
+            final ride = c.ride.value;
+            final isForOther = ride?.isBookedForOther ?? false;
+
+            return AppMapTopHeader(
+              top: topPad + 8.h,
+              left: 16,
+              right: 16,
+              onProfileTap: c.openProfile,
+              addressWidget: Expanded(
+                child: isForOther && ride != null
+                    ? AppMapLocationSummaryCard(
+                        leading: Container(
+                          padding: EdgeInsets.all(6.w),
+                          decoration: const BoxDecoration(
+                            color: AppColors.surfaceSubtle,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Iconsax.user,
+                            color: AppColors.primary,
+                            size: 20.sp,
+                          ),
+                        ),
+                        label: "Booking for ${ride.passengerName}",
+                        address: "Phone: +${TanzaniaPhoneFormatter.formatString(ride.passengerPhone ?? '')}",
+                        maxAddressLines: 1,
+                      )
+                    : AppMapLocationSummaryCard(
+                        label: 'Current location',
+                        address: c.pickupAddress.isEmpty
+                            ? 'Selected location'
+                            : c.pickupAddress,
+                        maxAddressLines: 1,
+                      ),
               ),
-            ),
-          ),
+            );
+          }),
           Obx(() {
             final eta = c.etaLabel.value;
-            if (eta == null) return const SizedBox.shrink();
 
             return Positioned(
               top: topPad + 82.h,
@@ -488,11 +512,6 @@ class DriverAcceptedScreen extends StatelessWidget {
           ),
         );
       }
-
-      final showRouteLoading = route.isEmpty;
-      final loadingText = assigned == null
-          ? "Locating driver..."
-          : "Calculating best route...";
 
       return Stack(
         children: [
@@ -1066,7 +1085,8 @@ class DriverAcceptedScreen extends StatelessWidget {
                 stops: c.ride.value?.stops,
               ),
               if (!c.isNearDestination() &&
-                  c.ride.value?.pendingStopsUpdate == null) ...[
+                  c.ride.value?.pendingStopsUpdate == null &&
+                  c.ride.value?.isBookedForOther != true) ...[
                 GestureDetector(
                   onTap: c.onEditStops,
                   child: Align(

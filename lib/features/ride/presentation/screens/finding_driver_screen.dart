@@ -3,11 +3,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:selcom_rides_frontend/shared/widgets/map_widgets.dart';
+import 'package:iconsax/iconsax.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../controllers/finding_driver_controller.dart';
+import '../../../../shared/utils/phone_formatter.dart';
 
 class FindingDriverScreen extends StatefulWidget {
   const FindingDriverScreen({super.key});
@@ -79,21 +81,43 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
               ),
             ),
           ),
-          AppMapTopHeader(
-            top: topPad + 8.h,
-            left: 16,
-            right: 16,
-            onProfileTap: c.openProfile,
-            addressWidget: Expanded(
-              child: AppMapLocationSummaryCard(
-                label: 'Current location',
-                address: c.pickupAddress.isEmpty
-                    ? 'Selected location'
-                    : c.pickupAddress,
-                maxAddressLines: 1,
+          Obx(() {
+            final isForOther = c.isBookedForOther.value;
+
+            return AppMapTopHeader(
+              top: topPad + 8.h,
+              left: 16,
+              right: 16,
+              onProfileTap: c.openProfile,
+              addressWidget: Expanded(
+                child: isForOther
+                    ? AppMapLocationSummaryCard(
+                        leading: Container(
+                          padding: EdgeInsets.all(6.w),
+                          decoration: const BoxDecoration(
+                            color: AppColors.surfaceSubtle,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Iconsax.user,
+                            color: AppColors.primary,
+                            size: 20.sp,
+                          ),
+                        ),
+                        label: "Booking for ${c.passengerName.value}",
+                        address: "Phone: +${TanzaniaPhoneFormatter.formatString(c.passengerPhone.value ?? '')}",
+                        maxAddressLines: 1,
+                      )
+                    : AppMapLocationSummaryCard(
+                        label: 'Current location',
+                        address: c.pickupAddress.isEmpty
+                            ? 'Selected location'
+                            : c.pickupAddress,
+                        maxAddressLines: 1,
+                      ),
               ),
-            ),
-          ),
+            );
+          }),
           Obx(() {
             final isSearching = c.assignedDriverLocation.value == null;
             return AppDraggableBottomSheet(

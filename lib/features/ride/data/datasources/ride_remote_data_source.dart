@@ -41,6 +41,12 @@ abstract class RideRemoteDataSource {
     required String idempotencyKey,
   });
   Future<void> cancelPendingStops(String rideId);
+  Future<CheckBookModeResult> checkBookMode({
+    required double riderLat,
+    required double riderLng,
+    required double pickupLat,
+    required double pickupLng,
+  });
 }
 
 class RideRemoteDataSourceImpl implements RideRemoteDataSource {
@@ -369,5 +375,33 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       developer.log("Error cancelling pending stops: $e");
     }
+  }
+
+  @override
+  Future<CheckBookModeResult> checkBookMode({
+    required double riderLat,
+    required double riderLng,
+    required double pickupLat,
+    required double pickupLng,
+  }) async {
+    final response = await apiService.call(
+      request: ApiRequest(
+        endpoint: URLS.ride.checkBookMode,
+        method: ApiMethod.get,
+        queryParams: {
+          'rider_lat': riderLat,
+          'rider_lng': riderLng,
+          'pickup_lat': pickupLat,
+          'pickup_lng': pickupLng,
+        },
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      return CheckBookModeResult.fromJson(
+        Map<String, dynamic>.from(response.data),
+      );
+    }
+    throw Exception('Failed to check book mode');
   }
 }
