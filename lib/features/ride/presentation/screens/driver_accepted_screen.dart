@@ -67,28 +67,24 @@ class DriverAcceptedScreen extends StatelessWidget {
             right: 16,
             onProfileTap: c.openProfile,
             addressWidget: Expanded(
-              child: Obx(
-                () {
-                  final List<String> stops = c.ride.value?.stops
-                          .map((s) => s.address)
-                          .toList() ??
-                      [];
-                  // If stops include the destination, we remove the last one
-                  // because the card already shows the destination separately.
-                  if (stops.isNotEmpty) {
-                    stops.removeLast();
-                  }
-                  return RideLocationSummaryCard(
-                    pickupAddress: c.pickupAddress.isEmpty
-                        ? 'Current location'
-                        : c.pickupAddress,
-                    destinationAddress: c.destinationAddress.isEmpty
-                        ? 'Destination'
-                        : c.destinationAddress,
-                    intermediateStops: stops,
-                  );
-                },
-              ),
+              child: Obx(() {
+                final List<String> stops =
+                    c.ride.value?.stops.map((s) => s.address).toList() ?? [];
+                // If stops include the destination, we remove the last one
+                // because the card already shows the destination separately.
+                if (stops.isNotEmpty) {
+                  stops.removeLast();
+                }
+                return RideLocationSummaryCard(
+                  pickupAddress: c.pickupAddress.isEmpty
+                      ? 'Current location'
+                      : c.pickupAddress,
+                  destinationAddress: c.destinationAddress.isEmpty
+                      ? 'Destination'
+                      : c.destinationAddress,
+                  intermediateStops: stops,
+                );
+              }),
             ),
           ),
           Obx(() {
@@ -977,14 +973,47 @@ class DriverAcceptedScreen extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: 2.h),
-                  Text(
-                    c.rideProgressSubtitle,
-                    style: AppTextStyles.homeCaption.copyWith(
-                      fontSize: 15.sp,
-                      color: AppColors.textBody,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+                  c.shouldShowRideEtaBadge
+                      ? Row(
+                          children: [
+                            Text(
+                              'Arrived in',
+                              style: AppTextStyles.homeCaption.copyWith(
+                                fontSize: 15.sp,
+                                color: AppColors.textBody,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            SizedBox(width: 6.w),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 8.w,
+                                vertical: 2.h,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.bgEtaBlueSoft,
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                              child: Text(
+                                '${c.rideEtaMinutes} mins',
+                                style: AppTextStyles.homeCaption.copyWith(
+                                  fontSize: 15.sp,
+                                  color: AppColors.textEtaBlue,
+                                  fontWeight: FontWeight.w700,
+                                  height: 20 / 15,
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : Text(
+                          c.rideProgressSubtitle,
+                          style: AppTextStyles.homeCaption.copyWith(
+                            fontSize: 15.sp,
+                            color: AppColors.textBody,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                 ],
               ),
             ),

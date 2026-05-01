@@ -28,6 +28,7 @@ class AppColors {
   static const Color bgMintLight = Color(0xFFECFDF5);
   static const Color bgGreenLight = Color(0xFFDCFCE7);
   static const Color bgOrangeLight = Color(0xFFFFEDD5);
+  static const Color bgEtaBlueSoft = Color(0x2E0088FF); // 18% of #0088FF
 
   // Text / Shades
   static const Color textHeading    = Color(0xFF132235);  // Primary heading/title text
@@ -56,6 +57,7 @@ class AppColors {
   static const Color textDriverTime = Color(0xFFA1A1BC);
   static const Color textMessageHint = Color(0xFF1B1A57);
   static const Color textPaymentDialogMessage = Color(0xFF132235);
+  static const Color textEtaBlue = Color(0xFF0088FF);
 
   // Semantic
   static const Color success        = Color(0xFF0EAD36);  // Green
