@@ -13,6 +13,7 @@ import '../../../../core/services/storage_service.dart';
 import '../../../../shared/utils/phone_formatter.dart';
 import '../../../../shared/widgets/web_view_screen.dart';
 import '../../../ride/presentation/screens/my_rides_screen.dart';
+import '../../data/models/request/update_profile_request.dart';
 import '../../domain/usecases/profile_usecase.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -142,10 +143,15 @@ class ProfileController extends GetxController {
 
     isLoading.value = true;
 
-    final result = await profileUseCase.saveUserAdditionalDetails(
-      name: nameTextController.text.trim(),
-      emailId: userModel.value?.emailId ?? '',
-      imagePath: pickedImage.value?.path,
+    final result = await profileUseCase.updateProfile(
+      UserProfileUpdateRequest(
+        image: pickedImage.value,
+        name: nameTextController.text.trim(),
+        emailId: "",
+        userId: userModel.value?.id ?? '',
+        dob: "",
+        nidaNumber: ""
+      ),
     );
 
     result.fold(
@@ -153,14 +159,19 @@ class ProfileController extends GetxController {
         AppDialogs.showErrorDialog(message: failure.message);
       },
       (updatedUser) async {
+
+        UserModel userModel = UserModel.fromJson(
+          updatedUser.response!.toJson(),
+        );
+
         // Save to storage
         await StorageService().write(
           StorageKeys.user,
-          jsonEncode(updatedUser.toJson()),
+          jsonEncode(userModel.toJson()),
         );
 
         // Update local state
-        _updateLocalUserState(updatedUser);
+        _updateLocalUserState(userModel);
 
         pickedImage.value = null;
         isEditing.value = false;
