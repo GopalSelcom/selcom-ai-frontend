@@ -3,14 +3,16 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_back_button.dart';
+import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/map_widgets.dart';
-import '../controllers/home_controller.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../controllers/home_controller.dart';
 
 class CheckPickupPointScreen extends StatefulWidget {
   const CheckPickupPointScreen({super.key});
@@ -286,15 +288,11 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                 SizedBox(height: 24.h),
                 SizedBox(
                   width: double.infinity,
-                  height: 56.h,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16.r),
-                      ),
-                      elevation: 0,
-                    ),
+                  child: AppPrimaryButton(
+                    label: AppStrings.confirmPickup.tr,
+                    height: 56.h,
+                    iconAsset: AppAssets.locationIcArrowRight,
+                    iconColor: AppColors.white,
                     onPressed: () {
                       _showConfirmationDialog(
                         title: _title.value,
@@ -318,20 +316,6 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                         },
                       );
                     },
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          AppStrings.confirmPickup.tr,
-                          style: AppTextStyles.body.copyWith(
-                            color: AppColors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(width: 8.w),
-                        const Icon(Icons.arrow_forward, color: AppColors.white),
-                      ],
-                    ),
                   ),
                 ),
               ],
@@ -493,33 +477,14 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                       width: double.infinity,
                       height: 50.h,
                       child: Obx(
-                        () => ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(25.r),
-                            ),
-                            elevation: 0,
-                          ),
+                        () => AppPrimaryButton(
+                          label: AppStrings.yes.tr,
+                          height: 50.h,
+                          borderRadius: 25.r,
+                          isLoading: controller.isSavingPlace.value,
                           onPressed: controller.isSavingPlace.value
                               ? null
                               : onConfirm,
-                          child: controller.isSavingPlace.value
-                              ? SizedBox(
-                                  width: 20.w,
-                                  height: 20.h,
-                                  child: const CircularProgressIndicator(
-                                    color: AppColors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Text(
-                                  AppStrings.yes.tr,
-                                  style: AppTextStyles.body.copyWith(
-                                    color: AppColors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
                         ),
                       ),
                     ),
@@ -528,23 +493,19 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                       width: double.infinity,
                       height: 50.h,
                       child: Obx(
-                        () => OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: AppColors.skeletonBase),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(25.r),
-                            ),
-                          ),
+                        () => AppPrimaryButton(
+                          label: AppStrings.changeLocation.tr,
+                          height: 50.h,
+                          borderRadius: 25.r,
+                          outlined: true,
+                          backgroundColor: AppColors.white,
+                          textColor: AppColors.textBody,
+                          outlinedTextColor: AppColors.textBody,
+                          outlinedBorderColor: AppColors.skeletonBase,
+                          outlinedBorderWidth: 1,
                           onPressed: controller.isSavingPlace.value
                               ? null
                               : () => Get.back(),
-                          child: Text(
-                            AppStrings.changeLocation.tr,
-                            style: AppTextStyles.body.copyWith(
-                              color: AppColors.textBody,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
                         ),
                       ),
                     ),

@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:selcom_rides_frontend/core/constants/app_assets.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+
+import '../../../../core/constants/app_assets.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../../domain/entities/payment_card.dart';
@@ -177,24 +179,17 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
           ),
           Padding(
             padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 24.h),
-            child: SizedBox(
+            child: AppPrimaryButton(
+              label: AppStrings.deleteCard.tr,
+              onPressed: _openDeleteConfirmationSheet,
               height: 56.h,
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: _openDeleteConfirmationSheet,
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: AppColors.primary),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16.r),
-                  ),
-                ),
-                child: Text(
-                  AppStrings.deleteCard.tr,
-                  style: AppTextStyles.button.copyWith(
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
+              borderRadius: 16.r,
+              outlined: true,
+              backgroundColor: AppColors.white,
+              textColor: AppColors.primary,
+              outlinedTextColor: AppColors.primary,
+              outlinedBorderColor: AppColors.primary,
+              outlinedBorderWidth: 1,
             ),
           ),
         ],

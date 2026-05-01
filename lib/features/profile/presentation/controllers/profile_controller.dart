@@ -16,7 +16,6 @@ import '../../../ride/presentation/screens/my_rides_screen.dart';
 import '../../data/models/request/update_profile_request.dart';
 import '../../domain/usecases/profile_usecase.dart';
 import '../../../../core/data/models/user_model.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 
 class ProfileController extends GetxController {
@@ -258,9 +257,8 @@ class ProfileController extends GetxController {
   void logout() {
     AppDialogs.showConfirmationDialog(
       title: AppStrings.logout.tr,
-      message: 'Are you sure you want to logout from the app?',
+      message: 'Are you sure, you want to logout from the app?',
       confirmText: 'Logout',
-      confirmColor: AppColors.error,
       onConfirm: () async {
         await StorageService().deleteAll();
         Get.offAllNamed(AppRoutes.phone);
