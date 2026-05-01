@@ -351,7 +351,7 @@ class DriverAcceptedController extends GetxController
     developer.log(
       "💧 Hydrating socket seed payloads from args",
       name: 'ORDER_TRACKING',
-      error: jsonEncode(args),
+      error: args.toString(),
     );
     final statusRaw = args['statusPayload'];
     if (statusRaw is Map) {
@@ -749,15 +749,15 @@ class DriverAcceptedController extends GetxController
 
   void _syncBottomSheetVehicleImage(String? vehicleTypeHint) {
     final previousAsset = bottomSheetVehicleImageAsset.value;
-    bottomSheetVehicleImageAsset.value =
-        VehicleImageUtils.imageAssetForVehicleType(
-          vehicleTypeHint,
-          // Keep previously resolved vehicle image when an event payload
-          // doesn't include enough vehicle metadata (common during stop transitions).
-          fallbackAsset: previousAsset.isNotEmpty
-              ? previousAsset
-              : AppAssets.imgCab,
-        );
+    bottomSheetVehicleImageAsset
+        .value = VehicleImageUtils.imageAssetForVehicleType(
+      vehicleTypeHint,
+      // Keep previously resolved vehicle image when an event payload
+      // doesn't include enough vehicle metadata (common during stop transitions).
+      fallbackAsset: previousAsset.isNotEmpty
+          ? previousAsset
+          : AppAssets.imgCab,
+    );
   }
 
   void onMapCreated(GoogleMapController c) {
@@ -1050,7 +1050,9 @@ class DriverAcceptedController extends GetxController
 
   void _openCompletedRideDetailsScreen() {
     if (_openedCompletedRideDetails) return;
-    final normalizedCurrentStatus = currentRideStatus.value.trim().toLowerCase();
+    final normalizedCurrentStatus = currentRideStatus.value
+        .trim()
+        .toLowerCase();
     if (normalizedCurrentStatus != 'completed' &&
         normalizedCurrentStatus != 'ride_completed') {
       return;
@@ -1079,7 +1081,8 @@ class DriverAcceptedController extends GetxController
               (m) => '${m.group(1)}_${m.group(2)}',
             )
             .toLowerCase();
-        if (refreshedStatus == 'completed' || refreshedStatus == 'ride_completed') {
+        if (refreshedStatus == 'completed' ||
+            refreshedStatus == 'ride_completed') {
           _openCompletedRideDetailsScreen();
         }
       });
@@ -1888,8 +1891,7 @@ class DriverAcceptedController extends GetxController
           (stop.lat - destinationLat).abs() < 0.000001 &&
           (stop.lng - destinationLng).abs() < 0.000001;
       final sameAsDestinationByAddress =
-          stop.address.trim().toLowerCase() ==
-          destinationAddr.toLowerCase();
+          stop.address.trim().toLowerCase() == destinationAddr.toLowerCase();
       if (sameAsDestinationByCoord || sameAsDestinationByAddress) {
         continue;
       }
