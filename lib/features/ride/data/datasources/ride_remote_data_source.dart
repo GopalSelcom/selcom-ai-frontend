@@ -2,6 +2,7 @@ import '../../../../core/data/models/responses/rides/active_ride_response.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../models/ride_management_models.dart';
+import '../models/emergency_contacts_response.dart';
 import '../models/stop_update_models.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/urls.dart';
@@ -47,6 +48,7 @@ abstract class RideRemoteDataSource {
     required double pickupLat,
     required double pickupLng,
   });
+  Future<EmergencyContactsResponse> getEmergencyContacts();
 }
 
 class RideRemoteDataSourceImpl implements RideRemoteDataSource {
@@ -403,5 +405,31 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       );
     }
     throw Exception('Failed to check book mode');
+  }
+
+  @override
+  Future<EmergencyContactsResponse> getEmergencyContacts() async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.ride.emergencyContacts,
+        method: ApiMethod.get,
+        errorPresentationType: ErrorPresentationType.none,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      final raw = response.data;
+      if (raw is Map<String, dynamic>) {
+        return EmergencyContactsResponse.fromJson(
+          Map<String, dynamic>.from(raw),
+        );
+      }
+      if (raw is Map) {
+        return EmergencyContactsResponse.fromJson(
+          Map<String, dynamic>.from(raw),
+        );
+      }
+    }
+    throw Exception('Failed to fetch emergency contacts');
   }
 }

@@ -3,6 +3,7 @@ import '../../../../core/data/models/requests/validate_ride_payment_request.dart
 import '../../../../core/data/models/responses/rides/active_ride_response.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/data/models/ride_model.dart';
+import '../../data/models/emergency_contacts_response.dart';
 import '../../data/models/ride_management_models.dart';
 
 abstract class RideRepository {
@@ -61,4 +62,6 @@ abstract class RideRepository {
     required double pickupLat,
     required double pickupLng,
   });
+
+  Future<Either<Failure, EmergencyContactsResponse>> getEmergencyContacts();
 }

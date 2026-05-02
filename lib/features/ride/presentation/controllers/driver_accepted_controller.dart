@@ -15,6 +15,7 @@ import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/re
 import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/ride_stops_update_response.dart';
 import 'package:selcom_rides_frontend/core/data/models/responses/payment_status_response/payment_status_response.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:selcom_rides_frontend/features/ride/data/models/emergency_contacts_response.dart';
 import 'package:selcom_rides_frontend/features/ride/data/models/stop_update_models.dart';
 import 'package:selcom_rides_frontend/core/data/models/requests/validate_ride_payment_request.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
@@ -129,6 +130,10 @@ class DriverAcceptedController extends GetxController
   StreamSubscription<PaymentStatusUpdateResponse>? _paymentStatusSub;
   bool _didJoinRideRoom = false;
   bool _isHandlingAppResume = false;
+  bool _emergencyContactsLoadedOnce = false;
+
+  /// API-driven rows for the safety sheet (label = title, primary `phone` for `tel:`).
+  final emergencyContacts = <EmergencyContactModel>[].obs;
 
   final RxDouble sheetSize = 0.3.obs;
 
@@ -212,6 +217,52 @@ class DriverAcceptedController extends GetxController
     await _fetchRideDetails();
     _handleStopUpdateRecovery();
     await _initRideRoomSocket();
+  }
+
+  /// Called once from [DriverAcceptedScreen] after first frame.
+  Future<void> loadEmergencyContactsOnceOnScreenOpen() async {
+    if (_emergencyContactsLoadedOnce) return;
+    _emergencyContactsLoadedOnce = true;
+    final result = await rideRepository.getEmergencyContacts();
+    result.fold(
+      (f) => developer.log(
+        'emergency_contacts request failed',
+        name: 'EmergencyContacts',
+        error: f.message,
+      ),
+      (EmergencyContactsResponse res) {
+        emergencyContacts.assignAll(res.data.contacts);
+      },
+    );
+  }
+
+  IconData emergencyContactIconFor(String id) {
+    switch (id) {
+      case 'police':
+        return Icons.local_police_outlined;
+      case 'selcom_go_support':
+        return Icons.support_agent_outlined;
+      default:
+        return Icons.phone_in_talk_outlined;
+    }
+  }
+
+  Future<void> dialEmergencyContact(EmergencyContactModel contact) async {
+    final primary = contact.phone.trim();
+    final secondary = contact.secondaryPhone?.trim() ?? '';
+    final phone = primary.isNotEmpty ? primary : secondary;
+    if (phone.isEmpty) {
+      AppDialogs.showErrorDialog(
+        title: contact.label.isEmpty ? AppStrings.call.tr : contact.label,
+        message: AppStrings.phoneNumberUnavailable.tr,
+      );
+      return;
+    }
+    await _launchSystemPhoneDialer(
+      phone: phone,
+      errorDialogTitle:
+          contact.label.isEmpty ? AppStrings.call.tr : contact.label,
+    );
   }
 
   void _handleStopUpdateRecovery() {
@@ -1514,7 +1565,7 @@ class DriverAcceptedController extends GetxController
                     if (Get.isBottomSheetOpen ?? false) {
                       Get.back();
                     }
-                    _callDriverViaPhoneDialer(phone);
+                    unawaited(_callDriverViaPhoneDialer(phone));
                   },
                 ),
               ],
@@ -1567,22 +1618,38 @@ class DriverAcceptedController extends GetxController
   }
 
   Future<void> _callDriverViaPhoneDialer(String phone) async {
-    // Clean string for tel: link
+    await _launchSystemPhoneDialer(
+      phone: phone,
+      errorDialogTitle: AppStrings.call.tr,
+    );
+  }
+
+  /// Opens the OS phone app with [phone] (`tel:`). [errorDialogTitle] uses API `label` for emergency rows.
+  Future<void> _launchSystemPhoneDialer({
+    required String phone,
+    required String errorDialogTitle,
+  }) async {
     final cleanPhone = phone.replaceAll(RegExp(r'[^0-9+]'), '');
+    if (cleanPhone.isEmpty) {
+      AppDialogs.showErrorDialog(
+        title: errorDialogTitle,
+        message: AppStrings.phoneNumberUnavailable.tr,
+      );
+      return;
+    }
     final uri = Uri(scheme: 'tel', path: cleanPhone);
 
     try {
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri);
       } else {
-        // Fallback: try launch regardless if canLaunch fails on some systems
         await launchUrl(uri);
       }
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       debugPrint("Error launching dialer: $e");
       AppDialogs.showErrorDialog(
-        title: AppStrings.call.tr,
+        title: errorDialogTitle,
         message: AppStrings.errorOpeningPhoneDialer.tr,
       );
     }

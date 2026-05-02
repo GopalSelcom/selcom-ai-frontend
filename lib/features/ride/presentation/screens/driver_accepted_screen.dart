@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -46,7 +48,8 @@ class DriverAcceptedScreen extends StatelessWidget {
     // Use the controller's persistent sheet controller
     final sheetController = c.sheetController;
 
-    return Scaffold(
+    return _DriverAcceptedEmergencyContactsBootstrap(
+      child: Scaffold(
       backgroundColor: AppColors.pageBackground,
       body: Stack(
         fit: StackFit.expand,
@@ -183,6 +186,7 @@ class DriverAcceptedScreen extends StatelessWidget {
             );
           }),
         ],
+      ),
       ),
     );
   }
@@ -344,30 +348,28 @@ class DriverAcceptedScreen extends StatelessWidget {
                     shareController.shareRide(c.rideId);
                   },
                 ),
-                SizedBox(height: 10.h),
-                _safetyOptionTile(
-                  title: AppStrings.selcomGoSosHelpline.tr,
-                  icon: Icons.support_agent_outlined,
-                  onTap: () {
-                    if (Get.isBottomSheetOpen ?? false) Get.back();
-                    Get.snackbar(
-                      AppStrings.safety.tr,
-                      AppStrings.shareFeatureComingSoon.tr,
-                    );
-                  },
-                ),
-                SizedBox(height: 10.h),
-                _safetyOptionTile(
-                  title: AppStrings.callPolice.tr,
-                  icon: Icons.local_police_outlined,
-                  onTap: () {
-                    if (Get.isBottomSheetOpen ?? false) Get.back();
-                    Get.snackbar(
-                      AppStrings.safety.tr,
-                      AppStrings.shareFeatureComingSoon.tr,
-                    );
-                  },
-                ),
+                Obx(() {
+                  final contacts = c.emergencyContacts;
+                  if (contacts.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final contact in contacts) ...[
+                        SizedBox(height: 10.h),
+                        _safetyOptionTile(
+                          title: contact.label,
+                          icon: c.emergencyContactIconFor(contact.id),
+                          onTap: () {
+                            if (Get.isBottomSheetOpen ?? false) Get.back();
+                            unawaited(c.dialEmergencyContact(contact));
+                          },
+                        ),
+                      ],
+                    ],
+                  );
+                }),
               ],
             ),
           ),
@@ -1256,4 +1258,33 @@ class DriverAcceptedScreen extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Triggers `GET /v4/go/emergency-contacts` once when SCR-11 mounts (see controller).
+class _DriverAcceptedEmergencyContactsBootstrap extends StatefulWidget {
+  const _DriverAcceptedEmergencyContactsBootstrap({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_DriverAcceptedEmergencyContactsBootstrap> createState() =>
+      _DriverAcceptedEmergencyContactsBootstrapState();
+}
+
+class _DriverAcceptedEmergencyContactsBootstrapState
+    extends State<_DriverAcceptedEmergencyContactsBootstrap> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(
+        Get.find<DriverAcceptedController>()
+            .loadEmergencyContactsOnceOnScreenOpen(),
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
