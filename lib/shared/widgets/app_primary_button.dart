@@ -81,8 +81,8 @@ class AppPrimaryButton extends StatelessWidget {
             ? SizedBox(
                 width: 24.w,
                 height: 24.w,
-                child: const CircularProgressIndicator(
-                  color: AppColors.white,
+                child: CircularProgressIndicator(
+                  color: outlined ? effectiveOutlinedTextColor : effectiveTextColor,
                   strokeWidth: 2,
                 ),
               )

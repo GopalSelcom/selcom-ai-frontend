@@ -68,6 +68,8 @@ class FindingDriverController extends GetxController {
       'The driver will pick you up as soon as possible after they confirm your order'
           .obs;
   final isRideCancelled = false.obs;
+  final isReasonProcessing = false.obs;
+  final isCancelPayProcessing = false.obs;
 
   final currentEtaSeconds = 0.0.obs;
   final sheetSize = 0.42.obs;
@@ -96,6 +98,8 @@ class FindingDriverController extends GetxController {
   StreamSubscription<String>? _nearbyDriversErrorSub;
 
   bool _didNavigateToAccepted = false;
+  bool _isUserInitiatedCancellation = false;
+  bool _isNavigatingHomeAfterCancel = false;
 
   void updateSheetSize(double size) {
     sheetSize.value = size;
@@ -183,17 +187,20 @@ class FindingDriverController extends GetxController {
     final List<dynamic>? ds = args['destinations'];
     if (ds != null && ds.isNotEmpty) {
       try {
-        final List<LocationEntity> locs = ds.map((e) {
-          if (e is LocationEntity) return e;
-          if (e is Map<String, dynamic>) {
-            return LocationEntity(
-              lat: (e['lat'] as num?)?.toDouble() ?? 0.0,
-              lng: (e['lng'] as num?)?.toDouble() ?? 0.0,
-              address: (e['address'] as String?) ?? '',
-            );
-          }
-          return null;
-        }).whereType<LocationEntity>().toList();
+        final List<LocationEntity> locs = ds
+            .map((e) {
+              if (e is LocationEntity) return e;
+              if (e is Map<String, dynamic>) {
+                return LocationEntity(
+                  lat: (e['lat'] as num?)?.toDouble() ?? 0.0,
+                  lng: (e['lng'] as num?)?.toDouble() ?? 0.0,
+                  address: (e['address'] as String?) ?? '',
+                );
+              }
+              return null;
+            })
+            .whereType<LocationEntity>()
+            .toList();
 
         destinations.assignAll(locs);
         if (locs.length > 1) {
@@ -425,6 +432,7 @@ class FindingDriverController extends GetxController {
           currentDescriptionLabel.value = 'You have reached your destination.';
           break;
         case 'cancelled':
+          if (_isUserInitiatedCancellation) return;
           isRideCancelled.value = true;
           currentStatusLabel.value = 'Ride Cancelled';
           currentDescriptionLabel.value = 'The ride has been cancelled.';
@@ -433,6 +441,7 @@ class FindingDriverController extends GetxController {
           break;
         case 'no_driver_found':
         case 'no_drivers_found':
+          if (_isUserInitiatedCancellation) return;
           isRideCancelled.value = true;
           currentStatusLabel.value = 'No Driver Found';
           currentDescriptionLabel.value = 'We couldn\'t find a driver nearby.';
@@ -663,9 +672,13 @@ class FindingDriverController extends GetxController {
 
     if (confirmResult != true) return;
 
-    // 2. Reason Selection
-    final String? reason = await Get.dialog<String>(
-      const CancelReasonSelectionDialog(
+    // 2. Reason Selection + Charges Fetch (keeps first dialog open while loading)
+    String? selectedReason;
+    dynamic cancellationData;
+    String selectedPolicyLabel = '';
+
+    await Get.dialog<void>(
+      CancelReasonSelectionDialog(
         reasons: [
           'Taking too long to confirm the ride',
           'Wait time too long',
@@ -675,65 +688,86 @@ class FindingDriverController extends GetxController {
           'Changed my mind',
           'Others',
         ],
+        isProcessing: isReasonProcessing,
+        onContinueTap: (reason) async {
+          if (rideId.isEmpty) {
+            AppDialogs.showErrorDialog(
+              title: AppStrings.cancelFailed.tr,
+              message: AppStrings.rideIdIsMissing.tr,
+            );
+            return;
+          }
+          isReasonProcessing.value = true;
+          final charges = await rideRepository.getCancellationCharges(rideId);
+          isReasonProcessing.value = false;
+          await charges.fold(
+            (_) async {
+              AppDialogs.showErrorDialog(
+                title: AppStrings.cancelFailed.tr,
+                message: AppStrings.couldNotCancelTryAgain.tr,
+              );
+            },
+            (data) async {
+              final selectedPolicy = data.policy.firstWhereOrNull(
+                (p) =>
+                    p.status.toLowerCase() == data.currentStatus.toLowerCase(),
+              );
+              selectedReason = reason;
+              cancellationData = data;
+              selectedPolicyLabel = selectedPolicy?.label ?? '';
+              Get.back();
+            },
+          );
+        },
       ),
       barrierDismissible: false,
       barrierColor: AppColors.overlayBlack12,
     );
+    if (selectedReason == null || cancellationData == null) return;
 
-    if (reason == null) return;
-    if (rideId.isEmpty) {
-      AppDialogs.showErrorDialog(
-        title: AppStrings.cancelFailed.tr,
-        message: AppStrings.rideIdIsMissing.tr,
-      );
-      return;
-    }
-
-    final charges = await rideRepository.getCancellationCharges(rideId);
-    bool canProceed = false;
-    await charges.fold(
-      (_) async {
-        AppDialogs.showErrorDialog(
-          title: AppStrings.cancelFailed.tr,
-          message: AppStrings.couldNotCancelTryAgain.tr,
-        );
-      },
-      (data) async {
-        final selectedPolicy = data.policy.firstWhereOrNull(
-          (p) => p.status.toLowerCase() == data.currentStatus.toLowerCase(),
-        );
-        final proceed = await Get.dialog<bool>(
-          CancellationChargesDialog(
-            canCancel: data.canCancel,
-            cancellationFee: data.cancellationFee,
-            netRefund: data.netRefund,
-            policyLabel: selectedPolicy?.label ?? '',
-          ),
-          barrierDismissible: false,
-          barrierColor: AppColors.overlayBlack12,
-        );
-        canProceed = proceed == true;
-      },
-    );
-    if (!canProceed) return;
-
-    // 3. Perform Cancellation
-    final result = await rideRepository.cancelRide(rideId, reason);
-    result.fold(
-      (_) => AppDialogs.showErrorDialog(
-        title: AppStrings.cancelFailed.tr,
-        message: AppStrings.couldNotCancelTryAgain.tr,
-      ),
-      (success) async {
-        if (!success) {
-          AppDialogs.showErrorDialog(
-            title: AppStrings.cancelFailed.tr,
-            message: AppStrings.pleaseTryAgain.tr,
+    // 3. Charges dialog + Cancel API (loading on Cancel & Pay button)
+    await Get.dialog<bool>(
+      CancellationChargesDialog(
+        canCancel: cancellationData.canCancel,
+        cancellationFee: cancellationData.cancellationFee,
+        netRefund: cancellationData.netRefund,
+        policyLabel: selectedPolicyLabel,
+        isProcessing: isCancelPayProcessing,
+        onConfirmTap: () async {
+          _isUserInitiatedCancellation = true;
+          isCancelPayProcessing.value = true;
+          final result = await rideRepository.cancelRide(
+            rideId,
+            selectedReason!,
           );
-        } else {
-          await LiveActivityManager().endActivity(rideId);
-        }
-      },
+          isCancelPayProcessing.value = false;
+          result.fold(
+            (_) {
+              _isUserInitiatedCancellation = false;
+              AppDialogs.showErrorDialog(
+                title: AppStrings.cancelFailed.tr,
+                message: AppStrings.couldNotCancelTryAgain.tr,
+              );
+            },
+            (success) async {
+              if (!success) {
+                _isUserInitiatedCancellation = false;
+                AppDialogs.showErrorDialog(
+                  title: AppStrings.cancelFailed.tr,
+                  message: AppStrings.pleaseTryAgain.tr,
+                );
+              } else {
+                if (_isNavigatingHomeAfterCancel) return;
+                _isNavigatingHomeAfterCancel = true;
+                await Get.offAllNamed(AppRoutes.home);
+                unawaited(LiveActivityManager().endActivity(rideId));
+              }
+            },
+          );
+        },
+      ),
+      barrierDismissible: false,
+      barrierColor: AppColors.overlayBlack12,
     );
   }
 
