@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/map_widgets.dart';
@@ -434,13 +434,10 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                       ),
                       child: Row(
                         children: [
-                          SvgPicture.asset(
+                          SvgPictureAsset(
                             AppAssets.locationIcPickupPin,
                             width: 16.w,
-                            colorFilter: const ColorFilter.mode(
-                              AppColors.primary,
-                              BlendMode.srcIn,
-                            ),
+                            color: AppColors.primary,
                           ),
                           SizedBox(width: 12.w),
                           Expanded(
@@ -526,13 +523,10 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
     if (label.toLowerCase() == 'office') asset = AppAssets.icOfficeChip;
     if (label.toLowerCase() == 'other') asset = AppAssets.icOtherChip;
 
-    return SvgPicture.asset(
+    return SvgPictureAsset(
       asset,
       width: 16.w,
-      colorFilter: const ColorFilter.mode(
-        AppColors.iconAmber,
-        BlendMode.srcIn,
-      ),
+      color: AppColors.iconAmber,
     );
   }
 }

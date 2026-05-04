@@ -10,7 +10,6 @@ import 'package:http_parser/http_parser.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 
 import '../constants/app_assets.dart';
@@ -18,6 +17,7 @@ import '../routes/app_routes.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../services/storage_service.dart';
+import '../widgets/svg_picture_asset.dart';
 import 'failed_request_queue.dart';
 import 'retry_manager.dart';
 import '../../shared/utils/app_dialogs.dart';
@@ -675,7 +675,7 @@ class ApiService {
             mainAxisSize: MainAxisSize.min,
             children: [
               // App Logo
-              SvgPicture.asset(AppAssets.selcomGoLogo, height: 48.h),
+              SvgPictureAsset(AppAssets.selcomGoLogo, height: 48.h),
               SizedBox(height: 24.h),
 
               // Title

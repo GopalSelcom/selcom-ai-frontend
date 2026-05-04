@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/localization/app_strings.dart';
@@ -285,14 +284,11 @@ class RideLocationsTimeline extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SvgPicture.asset(
+            SvgPictureAsset(
               AppAssets.locationIcAdd,
               width: 18.w,
               height: 18.w,
-              colorFilter: const ColorFilter.mode(
-                AppColors.primary,
-                BlendMode.srcIn,
-              ),
+              color: AppColors.primary,
               placeholderBuilder: (_) => Container(
                 width: 18.w,
                 height: 18.w,
