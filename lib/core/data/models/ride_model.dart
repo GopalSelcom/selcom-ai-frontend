@@ -169,6 +169,9 @@ class RideModel extends RideEntity {
     VehicleSnapshotEntity? vehicleSnapshot,
     DateTime? createdAt,
     PendingStopsUpdateEntity? pendingStopsUpdate,
+    bool? isBookedForOther,
+    String? passengerName,
+    String? passengerPhone,
     List<PdfLinkEntity>? pdfLinks,
   }) {
     return RideModel(

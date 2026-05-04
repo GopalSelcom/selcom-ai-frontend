@@ -31,7 +31,7 @@ class RideDetailsController extends GetxController {
     this.openedFromCompletionFlow = false,
   });
 
-  final RideEntity ride;
+  RideEntity ride;
   final bool openedFromCompletionFlow;
 
   late final RideRatingController ratingController;
@@ -161,30 +161,22 @@ class RideDetailsController extends GetxController {
     try {
       AppDialogs.showLoadingDialog();
 
-      // 1. Check if we already have a valid PDF link in the ride object
-      PdfLinkEntity? validLink;
+      // 1. Check if we already have a PDF link in the ride object
+      String? shareUrl;
       if (ride.pdfLinks != null && ride.pdfLinks!.isNotEmpty) {
+        final now = DateTime.now().toUtc();
         // Sort to get the most recent one
         final sortedLinks = List<PdfLinkEntity>.from(ride.pdfLinks!)
           ..sort(
-            (a, b) => (b.uploadedAt ?? DateTime.now()).compareTo(
-              a.uploadedAt ?? DateTime.now(),
+            (a, b) => (b.uploadedAt ?? now).compareTo(
+              a.uploadedAt ?? now,
             ),
           );
-
-        final latestLink = sortedLinks.first;
-        // Check if link is expired (compare with today's date)
-        if (latestLink.expiresAt == null ||
-            latestLink.expiresAt!.isAfter(DateTime.now())) {
-          validLink = latestLink;
-        }
+        shareUrl = sortedLinks.first.url;
       }
 
-      String? shareUrl;
-      if (validLink != null) {
-        shareUrl = validLink.url;
-      } else {
-        // 2. No valid link exists, generate PDF and upload it
+      if (shareUrl == null) {
+        // 2. No link exists, generate PDF and upload it
         final rideRepository = di.sl<RideRepository>();
         final response = await rideRepository.getReceipt(ride.id);
         final receiptModel = response.fold((l) => null, (r) => r);
@@ -212,19 +204,22 @@ class RideDetailsController extends GetxController {
           return;
         }
 
-        shareUrl = uploadResult.fold((l) => null, (r) => r.url);
+        final newLink = uploadResult.fold((l) => null, (r) => r)!;
+        // Update local ride object to prevent redundant uploads in the same session
+        final updatedLinks = <PdfLinkEntity>[...(ride.pdfLinks ?? []), newLink];
+        ride = ride.copyWith(pdfLinks: updatedLinks);
+
+        shareUrl = newLink.url;
       }
 
       if (Get.isDialogOpen ?? false) Get.back(); // Hide loading
 
-      if (shareUrl != null) {
-        await Share.share(
-          'Check out my ride receipt: $shareUrl',
+      await SharePlus.instance.share(
+        ShareParams(
+          text: 'Check out my ride receipt: $shareUrl',
           subject: 'Selcom Go Ride Receipt',
-        );
-      } else {
-        AppDialogs.showErrorDialog(message: 'Could not generate share link.');
-      }
+        ),
+      );
     } catch (e, stackTrace) {
       if (Get.isDialogOpen ?? false) Get.back();
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
