@@ -14,6 +14,16 @@ abstract class URLS {
   static const places = _PlacesEndpoints();
   static const wallet = _WalletEndpoints();
   static const notification = _NotificationEndpoints();
+  static const pdf = _PdfEndpoints();
+}
+
+/// ─────────────────────────────────
+/// PDF ENDPOINTS
+/// ─────────────────────────────────
+class _PdfEndpoints {
+  const _PdfEndpoints();
+
+  final upload = "go/pdf/upload";
 }
 
 /// ─────────────────────────────────

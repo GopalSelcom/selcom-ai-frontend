@@ -133,6 +133,7 @@ class RideEntity {
   final bool isBookedForOther;
   final String? passengerName;
   final String? passengerPhone;
+  final List<PdfLinkEntity>? pdfLinks;
 
   const RideEntity({
     required this.id,
@@ -166,5 +167,22 @@ class RideEntity {
     this.isBookedForOther = false,
     this.passengerName,
     this.passengerPhone,
+    this.pdfLinks,
+  });
+}
+
+class PdfLinkEntity {
+  final String url;
+  final String token;
+  final String originalName;
+  final DateTime? expiresAt;
+  final DateTime? uploadedAt;
+
+  const PdfLinkEntity({
+    required this.url,
+    required this.token,
+    required this.originalName,
+    this.expiresAt,
+    this.uploadedAt,
   });
 }

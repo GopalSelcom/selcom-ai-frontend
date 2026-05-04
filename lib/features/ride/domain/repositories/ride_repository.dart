@@ -64,4 +64,8 @@ abstract class RideRepository {
   });
 
   Future<Either<Failure, EmergencyContactsResponse>> getEmergencyContacts();
+  Future<Either<Failure, PdfLinkModel>> uploadReceiptPdf({
+    required String rideId,
+    required String pdfPath,
+  });
 }

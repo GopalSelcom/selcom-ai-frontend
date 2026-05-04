@@ -285,4 +285,21 @@ class RideRepositoryImpl implements RideRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, PdfLinkModel>> uploadReceiptPdf({
+    required String rideId,
+    required String pdfPath,
+  }) async {
+    try {
+      final result = await remoteDataSource.uploadReceiptPdf(
+        rideId: rideId,
+        pdfPath: pdfPath,
+      );
+      return Right(result);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

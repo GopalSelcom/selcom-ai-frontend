@@ -49,6 +49,10 @@ abstract class RideRemoteDataSource {
     required double pickupLng,
   });
   Future<EmergencyContactsResponse> getEmergencyContacts();
+  Future<PdfLinkModel> uploadReceiptPdf({
+    required String rideId,
+    required String pdfPath,
+  });
 }
 
 class RideRemoteDataSourceImpl implements RideRemoteDataSource {
@@ -431,5 +435,33 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       }
     }
     throw Exception('Failed to fetch emergency contacts');
+  }
+
+  @override
+  Future<PdfLinkModel> uploadReceiptPdf({
+    required String rideId,
+    required String pdfPath,
+  }) async {
+    final response = await apiService.call(
+      request: ApiRequest(
+        endpoint: URLS.pdf.upload,
+        method: ApiMethod.multipart,
+        multipartFiles: [
+          LocalMultipartFile(
+            name: 'pdf',
+            path: pdfPath,
+            contentType: 'application/pdf',
+          ),
+        ],
+        body: {'ride_id': rideId},
+        errorPresentationType: ErrorPresentationType.none,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      final data = response.data['data'] ?? {};
+      return PdfLinkModel.fromJson(data);
+    }
+    throw Exception(response.data?['message'] ?? 'Failed to upload PDF');
   }
 }
