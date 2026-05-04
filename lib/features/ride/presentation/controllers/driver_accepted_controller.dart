@@ -48,6 +48,7 @@ import '../../../../shared/agora_voice/domain/agora_voice_call_session.dart';
 import '../../../../shared/agora_voice/domain/agora_voice_call_state.dart';
 import '../../../../shared/agora_voice/presentation/agora_voice_call_controller.dart';
 import '../../../../shared/agora_voice/presentation/agora_voice_call_screen.dart';
+import '../../../../shared/agora_voice/service/agora_incoming_call_notification_bridge.dart';
 import '../../../../shared/agora_voice/service/agora_voice_engine_service.dart';
 import '../../../../shared/agora_voice/service/agora_voice_incoming_call_handler.dart';
 import '../../../../shared/utils/app_dialogs.dart';
@@ -84,6 +85,7 @@ class DriverAcceptedController extends GetxController
   int? _seedRideCharge;
   int? _seedBookingFee;
   int? _seedTotalAmount;
+  Map<String, dynamic>? _pendingIncomingCallPayload;
 
   final Rxn<LatLng> assignedDriverLocation = Rxn<LatLng>();
   final routePoints = <LatLng>[].obs;
@@ -367,6 +369,7 @@ class DriverAcceptedController extends GetxController
 
   @override
   void onClose() {
+    AgoraIncomingCallNotificationBridge.instance.unregister(rideId);
     WidgetsBinding.instance.removeObserver(this);
     _connectionSub?.cancel();
     _rideStatusSub?.cancel();
@@ -416,6 +419,38 @@ class DriverAcceptedController extends GetxController
     );
     _callSignalSub?.cancel();
     _callSignalSub = signaling.events.listen(_handleCallInviteEvent);
+
+    AgoraIncomingCallNotificationBridge.instance.register(
+      rideId: rideId,
+      onIncoming: (raw) async {
+        final h = _incomingCallHandler;
+        if (h == null) return;
+        await h.handleIncomingCallPush(
+          raw,
+          callerId: 'fcm',
+          callerName: _remoteCallerLabelFromPush(raw),
+        );
+      },
+    );
+
+    if (_pendingIncomingCallPayload != null) {
+      final pending = _pendingIncomingCallPayload!;
+      _pendingIncomingCallPayload = null;
+      await _incomingCallHandler?.handleIncomingCallPush(
+        pending,
+        callerId: 'fcm',
+        callerName: _remoteCallerLabelFromPush(pending),
+      );
+    }
+  }
+
+  String _remoteCallerLabelFromPush(Map<String, dynamic> raw) {
+    final name = raw['caller_name']?.toString().trim();
+    if (name != null && name.isNotEmpty) return name;
+    final role = (raw['caller_role'] ?? '').toString().toLowerCase();
+    if (role == 'driver') return 'Your Driver';
+    if (role == 'rider') return 'Your Rider';
+    return 'Incoming call';
   }
 
   @override
@@ -447,6 +482,10 @@ class DriverAcceptedController extends GetxController
     debugPrint('[AGORA_RIDE] parse args=$args');
     rideId = (args['rideId'] as String?)?.trim() ?? '';
     debugPrint('[AGORA_RIDE] resolved rideId=$rideId');
+    final pending = args['pendingIncomingCallPayload'];
+    if (pending is Map) {
+      _pendingIncomingCallPayload = Map<String, dynamic>.from(pending);
+    }
     final plat = (args['pickupLat'] as num?)?.toDouble() ?? -6.7924;
     final plng = (args['pickupLng'] as num?)?.toDouble() ?? 39.2083;
     final dlat = (args['destinationLat'] as num?)?.toDouble() ?? (plat - 0.018);

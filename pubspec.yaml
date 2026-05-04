@@ -76,6 +76,8 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    # Required for flutter_dotenv: `dotenv.load(fileName: '.env')` reads from the asset bundle.
+    - .env
     - assets/images/
     - assets/images/payment/
     - assets/images/location/

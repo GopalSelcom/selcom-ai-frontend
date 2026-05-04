@@ -15,6 +15,8 @@ class AgoraVoiceCallScreen extends StatelessWidget {
     required this.isIncoming,
     required this.onAccept,
     required this.onReject,
+    /// When set, used for incoming calls after connected (sends `end` to peer).
+    this.onHangUp,
   });
 
   final AgoraVoiceCallController controller;
@@ -22,6 +24,7 @@ class AgoraVoiceCallScreen extends StatelessWidget {
   final bool isIncoming;
   final VoidCallback onAccept;
   final VoidCallback onReject;
+  final VoidCallback? onHangUp;
 
   @override
   Widget build(BuildContext context) {
@@ -129,7 +132,11 @@ class AgoraVoiceCallScreen extends StatelessWidget {
                         ? 'End Call'
                         : 'Cancel',
                     color: AppColors.error,
-                    onTap: onReject,
+                    onTap: isIncoming &&
+                            state == AgoraVoiceCallState.connected &&
+                            onHangUp != null
+                        ? onHangUp!
+                        : onReject,
                   ),
               ],
             ),

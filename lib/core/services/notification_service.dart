@@ -10,6 +10,7 @@ import 'package:get/get.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../di/injection_container.dart';
 import '../../features/ride/domain/repositories/ride_repository.dart';
+import '../../shared/agora_voice/service/agora_incoming_call_notification_bridge.dart';
 import '../../shared/utils/ride_active_navigation.dart';
 import '../../shared/utils/app_dialogs.dart';
 import '../data/models/notification_model.dart';
@@ -208,15 +209,7 @@ class NotificationService {
     final type = (message.data['type'] ?? '').toString().toLowerCase();
 
     if (type == 'incoming_call') {
-      final role = (message.data['caller_role'] ?? 'rider').toString();
-      final title = role == 'driver' ? 'Incoming call from driver' : 'Incoming call from rider';
-      final body = 'Tap to open incoming call screen';
-      showIncomingCallNotification(
-        id: message.messageId.hashCode,
-        title: title,
-        body: body,
-        payload: jsonEncode(message.data),
-      );
+      unawaited(_handleForegroundIncomingCall(message));
       return;
     }
 
@@ -248,8 +241,11 @@ class NotificationService {
 
   void _onMessageOpenedApp(RemoteMessage message) {
     _logger.d("Message opened app: ${message.messageId}");
-    final data = FCMNotificationData.fromJson(message.data);
-    _handleNotificationNavigation(data);
+    unawaited(
+      _handleNotificationNavigationRaw(
+        Map<String, dynamic>.from(message.data),
+      ),
+    );
   }
 
   void _onDidReceiveNotificationResponse(NotificationResponse response) {
@@ -257,8 +253,7 @@ class NotificationService {
     if (response.payload != null) {
       try {
         final Map<String, dynamic> rawData = jsonDecode(response.payload!);
-        final data = FCMNotificationData.fromJson(rawData);
-        _handleNotificationNavigation(data);
+        unawaited(_handleNotificationNavigationRaw(rawData));
       } catch (e, stackTrace) {
         ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
         _logger.e("Error decoding notification payload: $e");
@@ -266,8 +261,44 @@ class NotificationService {
     }
   }
 
-  Future<void> _handleNotificationNavigation(FCMNotificationData data) async {
-    final rideId = data.rideId;
+  /// Foreground: show in-app incoming UI when already on the live ride screen;
+  /// otherwise show the incoming-call channel notification.
+  Future<void> _handleForegroundIncomingCall(RemoteMessage message) async {
+    final raw = Map<String, dynamic>.from(message.data);
+    if (await AgoraIncomingCallNotificationBridge.instance.deliverIfMatching(
+          raw,
+        )) {
+      return;
+    }
+    final role = (message.data['caller_role'] ?? 'rider').toString();
+    final title = role == 'driver'
+        ? 'Incoming call from driver'
+        : 'Incoming call from rider';
+    const body = 'Tap to open incoming call screen';
+    await showIncomingCallNotification(
+      id: message.messageId.hashCode,
+      title: title,
+      body: body,
+      payload: jsonEncode(raw),
+    );
+  }
+
+  Future<void> _handleNotificationNavigationRaw(
+    Map<String, dynamic> raw,
+  ) async {
+    final type = (raw['type'] ?? '').toString().toLowerCase();
+    final rideId = raw['ride_id']?.toString() ?? raw['rideId']?.toString();
+
+    if (type == 'incoming_call' &&
+        rideId != null &&
+        rideId.isNotEmpty) {
+      if (await AgoraIncomingCallNotificationBridge.instance.deliverIfMatching(
+            raw,
+          )) {
+        return;
+      }
+    }
+
     if (rideId == null || rideId.isEmpty) {
       _logger.w("No ride_id found in notification data");
       return;
@@ -294,13 +325,20 @@ class NotificationService {
           );
         },
         (ride) {
-          navigateToDriverAcceptedForRide(ride);
+          if (type == 'incoming_call') {
+            navigateToDriverAcceptedForRide(
+              ride,
+              pendingIncomingCallPayload: raw,
+            );
+          } else {
+            navigateToDriverAcceptedForRide(ride);
+          }
         },
       );
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       if (Get.isDialogOpen ?? false) Get.back();
-      _logger.e("Exception in _handleNotificationNavigation: $e");
+      _logger.e("Exception in _handleNotificationNavigationRaw: $e");
     }
   }
 

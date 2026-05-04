@@ -142,6 +142,23 @@ class AgoraVoiceIncomingCallHandler {
           await controller.endCall();
           closeCallRouteIfOpen();
         },
+        onHangUp: () async {
+          if (kDebugMode) {
+            debugPrint('[AGORA_SIGNAL] incoming hang up ride=${event.rideId}');
+          }
+          await signalingService.sendEvent(
+            AgoraCallInviteEvent(
+              type: AgoraCallInviteEventType.end,
+              channelName: event.channelName,
+              rideId: event.rideId,
+              callerName: localDisplayName,
+              callerId: localClientId,
+              timestampMs: DateTime.now().millisecondsSinceEpoch,
+            ),
+          );
+          await controller.endCall();
+          closeCallRouteIfOpen();
+        },
       ),
       fullscreenDialog: true,
     );

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -24,14 +26,20 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void _navigateToNext() async {
-    // Preload app-level settings/features once at startup.
-    await sl<AppSettingsService>().preload();
+    // Preload app settings in the background. Do not await: a slow or hung
+    // settings API (or DNS / connectivity checks in ApiService) would block
+    // leaving the user on the splash screen.
+    unawaited(sl<AppSettingsService>().preload());
     await Future.delayed(const Duration(milliseconds: 2500));
+
+    if (!mounted) return;
 
     // Check for existing valid session token
     final token = await StorageService().read(StorageKeys.authorizationToken);
     final signupCompleted =
         await StorageService().read(StorageKeys.signupCompleted);
+
+    if (!mounted) return;
 
     if (token != null && token.isNotEmpty) {
       if (signupCompleted == 'false') {

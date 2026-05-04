@@ -26,7 +26,13 @@ String rideStatusToApiValue(RideStatus status) {
 }
 
 /// Same navigation payload as [HomeController.openActiveRide].
-void navigateToDriverAcceptedForRide(RideModel rideValue) {
+///
+/// When [pendingIncomingCallPayload] is set (e.g. FCM `type=incoming_call`),
+/// [DriverAcceptedController] shows the in-app incoming-call UI after signaling loads.
+void navigateToDriverAcceptedForRide(
+  RideModel rideValue, {
+  Map<String, dynamic>? pendingIncomingCallPayload,
+}) {
   final driver = rideValue.driverSnapshot;
   final vehicle = rideValue.vehicleSnapshot;
 
@@ -78,6 +84,8 @@ void navigateToDriverAcceptedForRide(RideModel rideValue) {
               'booking_fee': rideValue.fareBreakdown!.bookingFee,
               'total_amount': rideValue.fareBreakdown!.totalAmount,
             },
+      if (pendingIncomingCallPayload != null)
+        'pendingIncomingCallPayload': pendingIncomingCallPayload,
     },
   );
 }

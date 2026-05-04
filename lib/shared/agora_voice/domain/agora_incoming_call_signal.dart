@@ -23,22 +23,30 @@ class AgoraIncomingCallSignal {
   final int timestampMs;
 
   static AgoraIncomingCallSignal? fromMap(Map<String, dynamic> json) {
-    final type = (json['type'] as String?)?.trim().toLowerCase() ?? '';
+    final type = (json['type'] ?? '').toString().trim().toLowerCase();
     if (type != 'incoming_call') return null;
 
     final rideId = (json['ride_id'] ?? json['rideId'])?.toString().trim() ?? '';
-    final channel = (json['channel'] ?? json['channel_name'])
-            ?.toString()
-            .trim() ??
-        '';
-    final callerRole = (json['caller_role'] ?? json['callerRole'])
+    var channel =
+        (json['channel'] ?? json['channel_name'])?.toString().trim() ?? '';
+    if (channel.isEmpty && rideId.isNotEmpty) {
+      final sanitized = rideId.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
+      if (sanitized.isNotEmpty) {
+        channel = 'ride_$sanitized';
+      }
+    }
+    var callerRole = (json['caller_role'] ?? json['callerRole'])
             ?.toString()
             .trim()
             .toLowerCase() ??
         '';
+    if (callerRole.isEmpty) {
+      callerRole = 'driver';
+    } else if (callerRole != 'rider' && callerRole != 'driver') {
+      return null;
+    }
 
     if (rideId.isEmpty || channel.isEmpty) return null;
-    if (callerRole != 'rider' && callerRole != 'driver') return null;
 
     return AgoraIncomingCallSignal(
       rideId: rideId,

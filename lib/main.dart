@@ -102,8 +102,16 @@ void main() async {
       WidgetsFlutterBinding.ensureInitialized();
       try {
         await dotenv.load(fileName: '.env');
-      } catch (_) {
-        // Keep startup resilient in case .env is missing in CI or local setup.
+      } catch (e, st) {
+        // Usually means `.env` was not listed under `flutter: assets:` in pubspec.yaml,
+        // or the file is missing at build time. App continues with dart-define / defaults.
+        if (kDebugMode) {
+          debugPrint(
+            'flutter_dotenv: could not load .env ($e). '
+            'Ensure pubspec lists `- .env` under flutter assets and the file exists.',
+          );
+          debugPrint('$st');
+        }
       }
 
       // Initialize Google Maps Renderer for Android
