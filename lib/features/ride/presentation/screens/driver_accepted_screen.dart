@@ -1124,27 +1124,6 @@ class DriverAcceptedScreen extends StatelessWidget {
                     c.ride.value?.pendingStopsUpdate == null,
                 onAddStopTap: c.onEditStops,
               ),
-              if (!c.isNearDestination() &&
-                  c.ride.value?.pendingStopsUpdate == null &&
-                  c.ride.value?.isBookedForOther != true) ...[
-                GestureDetector(
-                  onTap: c.onEditStops,
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Padding(
-                      padding: EdgeInsets.only(top: 8.h),
-                      child: Text(
-                        AppStrings.addStops.tr,
-                        style: AppTextStyles.homeCaption.copyWith(
-                          color: AppColors.primary,
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
             ],
           ),
         ),

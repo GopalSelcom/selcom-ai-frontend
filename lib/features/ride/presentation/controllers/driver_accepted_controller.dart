@@ -38,6 +38,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
@@ -478,6 +479,9 @@ class DriverAcceptedController extends GetxController
       (r) {
         ride.value = r;
         _applyRide(r);
+        // HTTP details can show completion before/without a matching socket tick;
+        // keep bottom-sheet state and completion navigation in sync with the model.
+        _applyBottomSheetStateForStatus(rideStatusToApiValue(r.status));
         _syncLiveActivityFromDetails(r);
         _loadMarkerIcons(); // Refresh icons with new ride context
 
