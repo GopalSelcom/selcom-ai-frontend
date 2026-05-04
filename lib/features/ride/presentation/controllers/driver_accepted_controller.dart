@@ -814,17 +814,17 @@ class DriverAcceptedController extends GetxController
   Future<void> loadDriverIcon({String? vehicleType}) async {
     try {
       final type = (vehicleType ?? '').toLowerCase();
-      String assetPath = 'assets/images/rider.svg';
+      String assetPath = AppAssets.mapVehicleRiderSvg;
 
       if (type.contains('car') ||
           type.contains('cab') ||
           type.contains('taxi')) {
-        assetPath = 'assets/images/car.svg';
+        assetPath = AppAssets.mapVehicleCarSvg;
       } else if (type.contains('bajaj') ||
           type.contains('rickshaw') ||
           type.contains('tuk') ||
           type.contains('auto')) {
-        assetPath = 'assets/images/rickshaw.svg';
+        assetPath = AppAssets.mapVehicleRickshawSvg;
       }
 
       assignedDriverMarkerIcon.value = await MapMarkerUtils.getSvgMarker(
