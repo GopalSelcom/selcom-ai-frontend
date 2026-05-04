@@ -17,6 +17,7 @@ import 'package:selcom_rides_frontend/core/data/models/responses/payment_status_
 import 'package:url_launcher/url_launcher.dart';
 import 'package:selcom_rides_frontend/features/ride/data/models/emergency_contacts_response.dart';
 import 'package:selcom_rides_frontend/features/ride/data/models/stop_update_models.dart';
+import 'package:selcom_rides_frontend/features/ride/data/models/destination_update_models.dart';
 import 'package:selcom_rides_frontend/core/data/models/requests/validate_ride_payment_request.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
@@ -66,9 +67,9 @@ class DriverAcceptedController extends GetxController
 
   late final String rideId;
   late final LatLng pickupLatLng;
-  late final LatLng destinationLatLng;
+  late LatLng destinationLatLng;
   late final String pickupAddress;
-  late final String destinationAddress;
+  late String destinationAddress;
   int? _seedRideCharge;
   int? _seedBookingFee;
   int? _seedTotalAmount;
@@ -113,7 +114,6 @@ class DriverAcceptedController extends GetxController
   final RxBool isInitialRouteLoaded = false.obs;
 
   VoidCallback? onRecenterPressed;
-  bool _firstRouteLoaded = false;
 
   GoogleMapController? mapController;
   bool _navigatedAway = false;
@@ -149,6 +149,13 @@ class DriverAcceptedController extends GetxController
       0.obs; // 0: Idle, 1: Payment, 2: Route, 3: Success
   final stopUpdateWorkingStops = <RideStopEntity>[].obs;
 
+  final RxBool isUpdatingDestination = false.obs;
+  final RxBool isDestinationUpdateFlow = false.obs;
+  final Rxn<DestinationUpdatePreviewModel> destinationUpdatePreview =
+      Rxn<DestinationUpdatePreviewModel>();
+  double? _pendingDestinationTargetLat;
+  double? _pendingDestinationTargetLng;
+
   void updateSheetSize(double size) {
     sheetSize.value = size;
   }
@@ -181,10 +188,8 @@ class DriverAcceptedController extends GetxController
         isInitialRouteLoaded.value = true;
       }
     });
-    ever(
-      isUpdatingStops,
-      (bool updating) => _handleStopUpdateProgress(updating),
-    );
+    ever(isUpdatingStops, (_) => _handleRouteUpdateProgress());
+    ever(isUpdatingDestination, (_) => _handleRouteUpdateProgress());
     _loadPersistedIdempotencyKey();
     arrivalLabel.value = AppStrings.driverWillArrivingInMinutes.trParams({
       'minutes': '1',
@@ -465,6 +470,18 @@ class DriverAcceptedController extends GetxController
   //   } catch (_) {}
   // }
 
+  void _syncDestinationFromRide(RideModel? r) {
+    if (r == null) return;
+    final d = r.destination;
+    if (d.lat != 0 && d.lng != 0) {
+      destinationLatLng = LatLng(d.lat, d.lng);
+    }
+    final addr = d.address.trim();
+    if (addr.isNotEmpty) {
+      destinationAddress = addr;
+    }
+  }
+
   Future<void> _fetchRideDetails() async {
     if (rideId.isEmpty) {
       _applyMockContent();
@@ -482,6 +499,7 @@ class DriverAcceptedController extends GetxController
       (r) {
         ride.value = r;
         _applyRide(r);
+        _syncDestinationFromRide(r);
         // HTTP details can show completion before/without a matching socket tick;
         // keep bottom-sheet state and completion navigation in sync with the model.
         _applyBottomSheetStateForStatus(rideStatusToApiValue(r.status));
@@ -510,6 +528,23 @@ class DriverAcceptedController extends GetxController
             _clearIdempotencyKey();
             stopUpdateProgressStep.value = 3; // Success!
             isUpdatingStops.value = false;
+          }
+        }
+
+        if (isUpdatingDestination.value && stopUpdateProgressStep.value == 2) {
+          final dest = r.destination;
+          final tLat = _pendingDestinationTargetLat;
+          final tLng = _pendingDestinationTargetLng;
+          if (tLat != null &&
+              tLng != null &&
+              (dest.lat - tLat).abs() < 0.00002 &&
+              (dest.lng - tLng).abs() < 0.00002) {
+            stopUpdateProgressStep.value = 3;
+            isUpdatingDestination.value = false;
+            isDestinationUpdateFlow.value = false;
+            _pendingDestinationTargetLat = null;
+            _pendingDestinationTargetLng = null;
+            _setDropRouteFallback();
           }
         }
       },
@@ -1493,10 +1528,6 @@ class DriverAcceptedController extends GetxController
     }
   }
 
-  double _calculateSimpleDist(LatLng a, LatLng b) {
-    return (a.latitude - b.latitude).abs() + (a.longitude - b.longitude).abs();
-  }
-
   /// Calculates the distance between two points in meters using Haversine formula.
   double _calculateDistanceInMeters(LatLng p1, LatLng p2) {
     const double earthRadius = 6371000; // meters
@@ -2195,27 +2226,267 @@ class DriverAcceptedController extends GetxController
     );
   }
 
-  void _handleStopUpdateProgress(bool updating) {
-    if (updating) {
-      Get.bottomSheet(
-        const StopUpdateProgressModal(),
-        isDismissible: false,
-        enableDrag: false,
-        backgroundColor: AppColors.transparent,
-      );
+  void cancelDestinationUpdate() {
+    isUpdatingDestination.value = false;
+    stopUpdateProgressStep.value = 0;
+    isDestinationUpdateFlow.value = false;
+    _pendingDestinationTargetLat = null;
+    _pendingDestinationTargetLng = null;
+  }
+
+  Future<void> cancelRouteOrStopsUpdate() async {
+    if (isUpdatingDestination.value) {
+      cancelDestinationUpdate();
+    } else {
+      await cancelStopUpdate();
+    }
+  }
+
+  void _handleRouteUpdateProgress() {
+    final active = isUpdatingStops.value || isUpdatingDestination.value;
+    if (active) {
+      if (!(Get.isBottomSheetOpen ?? false)) {
+        Get.bottomSheet(
+          const StopUpdateProgressModal(),
+          isDismissible: false,
+          enableDrag: false,
+          backgroundColor: AppColors.transparent,
+        );
+      }
     } else {
       if (Get.isBottomSheetOpen ?? false) {
         if (stopUpdateProgressStep.value == 3) {
           Future.delayed(const Duration(seconds: 3), () {
             if (Get.isBottomSheetOpen ?? false) Get.back();
             stopUpdateProgressStep.value = 0;
+            isDestinationUpdateFlow.value = false;
           });
         } else {
           Get.back();
           stopUpdateProgressStep.value = 0;
+          isDestinationUpdateFlow.value = false;
         }
       }
     }
+  }
+
+  Future<void> onChangeDropLocation() async {
+    if (rideId.isEmpty) return;
+    if (isUpdatingStops.value || isUpdatingDestination.value) {
+      AppDialogs.showInfoDialog(
+        title: 'Update in progress',
+        message: 'A previous update is still being processed.',
+      );
+      return;
+    }
+    if (isNearDestination()) return;
+    if (ride.value?.pendingStopsUpdate != null) return;
+    Get.toNamed(
+      AppRoutes.changeDropLocationEditor,
+      arguments: {'ride': ride.value, 'editorMode': 'destination'},
+    );
+  }
+
+  // Opens stop-style picker and returns one destination (lat/lng/address).
+  // This keeps destination selection UX consistent with add-stop selection.
+  Future<Map<String, dynamic>?> pickNewDropLocation() async {
+    final dynamic raw = await Get.toNamed(
+      AppRoutes.selectSavedLocation,
+      arguments: {
+        'isSelectingStop': true,
+        'label': AppStrings.changeDropLocation.tr,
+      },
+    );
+    if (raw == null || raw is! Map) return null;
+    final mapped = _extractDestinationFromLocationSelectionResult(
+      Map<String, dynamic>.from(raw),
+    );
+    if (mapped == null) return null;
+    return mapped;
+  }
+
+  Future<void> previewDropLocationUpdate(Map<String, dynamic> destination) async {
+    destinationUpdatePreview.value = null;
+    final dest = _buildDestinationPayload(destination);
+    if (dest == null) {
+      AppDialogs.showErrorDialog(
+        title: AppStrings.error.tr,
+        message: AppStrings.addressMissing.tr,
+      );
+      return;
+    }
+    // Step 1: preview update-destination (confirm=false).
+    final previewRes = await rideRepository.previewUpdateDestination(rideId, dest);
+    previewRes.fold(
+      (f) => AppDialogs.showErrorDialog(
+        title: AppStrings.error.tr,
+        message: f.message,
+      ),
+      (preview) {
+        destinationUpdatePreview.value = preview;
+      },
+    );
+  }
+
+  Future<bool> applyDropLocationUpdate(Map<String, dynamic> destination) async {
+    final dest = _buildDestinationPayload(destination);
+    if (dest == null) {
+      AppDialogs.showErrorDialog(
+        title: AppStrings.error.tr,
+        message: AppStrings.addressMissing.tr,
+      );
+      return false;
+    }
+    // Step 2: apply update-destination (confirm=true).
+    return _applyDestinationConfirm(dest);
+  }
+
+  Map<String, dynamic>? _buildDestinationPayload(Map<String, dynamic> result) {
+    final lat = (result['lat'] as num?)?.toDouble();
+    final lng = (result['lng'] as num?)?.toDouble();
+    final address = result['address']?.toString().trim() ?? '';
+    if (lat == null || lng == null || address.isEmpty) return null;
+    return <String, dynamic>{'lat': lat, 'lng': lng, 'address': address};
+  }
+
+  Map<String, dynamic>? _extractDestinationFromLocationSelectionResult(
+    Map<String, dynamic> payload,
+  ) {
+    // Location selection edit mode returns:
+    // { pickup, pickupLat, pickupLng, destinations: [{address, lat, lng}, ...] }
+    // For this feature we only need the first destination.
+    final destinations = payload['destinations'];
+    if (destinations is List && destinations.isNotEmpty) {
+      final first = destinations.first;
+      if (first is Map) {
+        final map = Map<String, dynamic>.from(first);
+        return {
+          'lat': (map['lat'] as num?)?.toDouble(),
+          'lng': (map['lng'] as num?)?.toDouble(),
+          'address': map['address']?.toString().trim(),
+        };
+      }
+    }
+
+    // Backward compatibility if any picker returns direct lat/lng/address.
+    return {
+      'lat': (payload['lat'] as num?)?.toDouble(),
+      'lng': (payload['lng'] as num?)?.toDouble(),
+      'address': payload['address']?.toString().trim(),
+    };
+  }
+
+  Future<bool> _applyDestinationConfirm(Map<String, dynamic> dest) async {
+    final lat = (dest['lat'] as num).toDouble();
+    final lng = (dest['lng'] as num).toDouble();
+    _pendingDestinationTargetLat = lat;
+    _pendingDestinationTargetLng = lng;
+
+    isDestinationUpdateFlow.value = true;
+    isUpdatingDestination.value = true;
+    stopUpdateProgressStep.value = 1;
+
+    // Step 2: apply destination update (confirm=true).
+    final result = await rideRepository.confirmUpdateDestination(rideId, dest);
+    var success = false;
+    result.fold(
+      (f) {
+        isUpdatingDestination.value = false;
+        stopUpdateProgressStep.value = 0;
+        isDestinationUpdateFlow.value = false;
+        _pendingDestinationTargetLat = null;
+        _pendingDestinationTargetLng = null;
+        AppDialogs.showErrorDialog(
+          title: AppStrings.error.tr,
+          message: f.message,
+        );
+      },
+      (DestinationUpdateAppliedModel applied) {
+        success = true;
+        destinationUpdatePreview.value = null;
+        unawaited(_finalizeDestinationConfirm(applied));
+      },
+    );
+    return success;
+  }
+
+  Future<void> _finalizeDestinationConfirm(
+    DestinationUpdateAppliedModel applied,
+  ) async {
+    final priorFare = ride.value?.fareEstimate ?? _seedRideCharge ?? 0;
+    // If backend requires payment block update, run payment-hold flow first.
+    // Otherwise mark success and refresh ride immediately.
+    if (applied.blockUpdateRequired &&
+        (applied.blockUpdateValidationId ?? '').isNotEmpty) {
+      final dir = applied.fareEstimate > priorFare
+          ? 'up'
+          : applied.fareEstimate < priorFare
+          ? 'down'
+          : '';
+      await _processDestinationPaymentHold(
+        applied.blockUpdateValidationId!,
+        dir,
+      );
+    } else {
+      stopUpdateProgressStep.value = 3;
+      isUpdatingDestination.value = false;
+      isDestinationUpdateFlow.value = false;
+      await _fetchRideDetails();
+      _setDropRouteFallback();
+    }
+  }
+
+  Future<void> _processDestinationPaymentHold(
+    String validationId,
+    String direction,
+  ) async {
+    // Mirrors stop-update payment behavior:
+    // - up: request payment authorization
+    // - down/flat: skip to route sync step
+    if (direction == 'up') {
+      stopUpdateProgressStep.value = 1;
+      await rideRepository.walletDummyPaymentRequest(
+        DummyPaymentRequest(
+          result: 'SUCCESS',
+          transId: 'TXN-${const Uuid().v4()}',
+          validationId: validationId,
+        ),
+      );
+    } else if (direction == 'down') {
+      stopUpdateProgressStep.value = 2;
+    } else {
+      stopUpdateProgressStep.value = 2;
+    }
+    _startDestinationUpdateTimeout();
+  }
+
+  void _startDestinationUpdateTimeout() {
+    // Safety timeout + polling fallback in case socket events are delayed/missed.
+    Future.delayed(const Duration(seconds: 90), () {
+      if (isUpdatingDestination.value) {
+        isUpdatingDestination.value = false;
+        stopUpdateProgressStep.value = 0;
+        isDestinationUpdateFlow.value = false;
+        _pendingDestinationTargetLat = null;
+        _pendingDestinationTargetLng = null;
+        AppDialogs.showInfoDialog(
+          title: 'Taking longer than expected',
+          message: 'The update is taking some time. Please check back shortly.',
+        );
+        unawaited(_fetchRideDetails());
+      }
+    });
+    _pollForDestinationUpdateResult();
+  }
+
+  void _pollForDestinationUpdateResult() {
+    Future.delayed(const Duration(seconds: 8), () {
+      if (!isUpdatingDestination.value || stopUpdateProgressStep.value != 2) {
+        return;
+      }
+      unawaited(_fetchRideDetails());
+      _pollForDestinationUpdateResult();
+    });
   }
 
   String priceFormatter(int? amount) {

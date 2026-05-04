@@ -4,6 +4,7 @@ import '../../../../core/data/models/requests/validate_ride_payment_request.dart
 import '../models/ride_management_models.dart';
 import '../models/emergency_contacts_response.dart';
 import '../models/stop_update_models.dart';
+import '../models/destination_update_models.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/urls.dart';
 import 'dart:developer' as developer;
@@ -17,7 +18,11 @@ abstract class RideRemoteDataSource {
   Future<RideModel> getRideDetails(String rideId);
   Future<RideCancellationChargesModel> getCancellationCharges(String rideId);
   Future<bool> cancelRide(String rideId, String reason);
-  Future<bool> updateDestination(
+  Future<DestinationUpdatePreviewModel> previewUpdateDestination(
+    String rideId,
+    Map<String, dynamic> destination,
+  );
+  Future<DestinationUpdateAppliedModel> confirmUpdateDestination(
     String rideId,
     Map<String, dynamic> destination,
   );
@@ -158,7 +163,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   }
 
   @override
-  Future<bool> updateDestination(
+  Future<DestinationUpdatePreviewModel> previewUpdateDestination(
     String rideId,
     Map<String, dynamic> destination,
   ) async {
@@ -166,10 +171,59 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       request: ApiRequest(
         endpoint: "${URLS.ride.base}/$rideId/update-destination",
         method: ApiMethod.put,
-        body: {'destination': destination},
+        body: {
+          'destination': destination,
+          'confirm': false,
+        },
+        errorPresentationType: ErrorPresentationType.none,
       ),
     );
-    return response.statusCode == 200;
+    if (response.statusCode == 200 && response.data != null) {
+      final raw = response.data['data'];
+      if (raw is Map<String, dynamic>) {
+        return DestinationUpdatePreviewModel.fromJson(raw);
+      }
+      if (raw is Map) {
+        return DestinationUpdatePreviewModel.fromJson(
+          Map<String, dynamic>.from(raw),
+        );
+      }
+    }
+    throw Exception(
+      response.data?['message']?.toString() ?? 'Failed to preview destination',
+    );
+  }
+
+  @override
+  Future<DestinationUpdateAppliedModel> confirmUpdateDestination(
+    String rideId,
+    Map<String, dynamic> destination,
+  ) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: "${URLS.ride.base}/$rideId/update-destination",
+        method: ApiMethod.put,
+        body: {
+          'destination': destination,
+          'confirm': true,
+        },
+        errorPresentationType: ErrorPresentationType.none,
+      ),
+    );
+    if (response.statusCode == 200 && response.data != null) {
+      final raw = response.data['data'];
+      if (raw is Map<String, dynamic>) {
+        return DestinationUpdateAppliedModel.fromJson(raw);
+      }
+      if (raw is Map) {
+        return DestinationUpdateAppliedModel.fromJson(
+          Map<String, dynamic>.from(raw),
+        );
+      }
+    }
+    throw Exception(
+      response.data?['message']?.toString() ?? 'Failed to update destination',
+    );
   }
 
   @override

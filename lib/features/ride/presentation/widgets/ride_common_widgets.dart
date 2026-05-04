@@ -75,6 +75,9 @@ class RideLocationsTimeline extends StatelessWidget {
   final bool showStopsAsSummary;
   final bool showAddStopBeforeDestination;
   final VoidCallback? onAddStopTap;
+  /// When true, shows a red text action under the destination (ride-started sheet only).
+  final bool showChangeDropLocationLink;
+  final VoidCallback? onChangeDropLocationTap;
 
   const RideLocationsTimeline({
     super.key,
@@ -86,6 +89,8 @@ class RideLocationsTimeline extends StatelessWidget {
     this.showStopsAsSummary = false,
     this.showAddStopBeforeDestination = false,
     this.onAddStopTap,
+    this.showChangeDropLocationLink = false,
+    this.onChangeDropLocationTap,
   });
 
   @override
@@ -152,6 +157,24 @@ class RideLocationsTimeline extends StatelessWidget {
             color: AppColors.mapDropMarkerGreen,
           ),
           showBottomLine: false,
+          footer: showChangeDropLocationLink && onChangeDropLocationTap != null
+              ? Padding(
+                  padding: EdgeInsets.only(top: 8.h),
+                  child: GestureDetector(
+                    onTap: onChangeDropLocationTap,
+                    child: Text(
+                      AppStrings.changeDropLocation.tr,
+                      style: TextStyle(
+                        fontFamily: AppTextStyles.metropolisFont,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                        fontSize: 14.sp,
+                        height: 20 / 14,
+                      ),
+                    ),
+                  ),
+                )
+              : null,
         ),
       ],
     );
@@ -201,6 +224,7 @@ class RideLocationsTimeline extends StatelessWidget {
     Widget? trailing,
     double? bottomSpacingWhenLine,
     required bool showBottomLine,
+    Widget? footer,
   }) {
     return IntrinsicHeight(
       child: Row(
@@ -253,6 +277,7 @@ class RideLocationsTimeline extends StatelessWidget {
                       ),
                     ),
                   ],
+                  if (footer != null) footer,
                 ],
               ),
             ),

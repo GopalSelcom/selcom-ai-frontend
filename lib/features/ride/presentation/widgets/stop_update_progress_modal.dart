@@ -19,6 +19,7 @@ class StopUpdateProgressModal extends GetView<DriverAcceptedController> {
       ),
       child: Obx(() {
         final step = controller.stopUpdateProgressStep.value;
+        final destFlow = controller.isDestinationUpdateFlow.value;
 
         return Column(
           mainAxisSize: MainAxisSize.min,
@@ -31,21 +32,21 @@ class StopUpdateProgressModal extends GetView<DriverAcceptedController> {
               SizedBox(height: 16.h),
             ],
             Text(
-              _getTitle(step),
+              _getTitle(step, destFlow),
               style: AppTextStyles.onboardingTitle.copyWith(fontSize: 20.sp),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 12.h),
             SizedBox(height: 12.h),
             Text(
-              _getMessage(step),
+              _getMessage(step, destFlow),
               style: AppTextStyles.onboardingSubtitle.copyWith(fontSize: 14.sp),
               textAlign: TextAlign.center,
             ),
             if (step == 1 || step == 2) ...[
               SizedBox(height: 24.h),
               TextButton(
-                onPressed: () => controller.cancelStopUpdate(),
+                onPressed: () => controller.cancelRouteOrStopsUpdate(),
                 child: Text(
                   'Cancel Update',
                   style: AppTextStyles.onboardingSubtitle.copyWith(
@@ -62,27 +63,29 @@ class StopUpdateProgressModal extends GetView<DriverAcceptedController> {
     );
   }
 
-  String _getTitle(int step) {
+  String _getTitle(int step, bool destinationFlow) {
     switch (step) {
       case 1:
         return 'Updating Payment';
       case 2:
         return 'Recalculating Route';
       case 3:
-        return 'Route Updated!';
+        return destinationFlow ? 'Drop-off updated!' : 'Route Updated!';
       default:
         return 'Processing...';
     }
   }
 
-  String _getMessage(int step) {
+  String _getMessage(int step, bool destinationFlow) {
     switch (step) {
       case 1:
         return 'We\'re adjusting your payment hold for the new route.';
       case 2:
-        return 'Syncing the new destination with your driver.';
+        return 'Syncing the new route with your driver.';
       case 3:
-        return 'Your driver has received the new stops.';
+        return destinationFlow
+            ? 'Your driver has received the new drop-off location.'
+            : 'Your driver has received the new stops.';
       default:
         return 'Please wait while we process your request.';
     }

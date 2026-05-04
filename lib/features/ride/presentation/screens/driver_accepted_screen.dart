@@ -720,7 +720,7 @@ class DriverAcceptedScreen extends StatelessWidget {
             child: ListView(
               controller: scrollController,
               padding: EdgeInsets.zero,
-              children: [_rideProgressBody(c)],
+              children: [_rideProgressBody(c, showChangeDropLink: true)],
             ),
           ),
         ],
@@ -1025,12 +1025,15 @@ class DriverAcceptedScreen extends StatelessWidget {
         SizedBox(height: 14.h),
         const Divider(color: AppColors.borderWalletCard, height: 1),
         SizedBox(height: 16.h),
-        _rideProgressBody(c),
+        _rideProgressBody(c, showChangeDropLink: false),
       ],
     );
   }
 
-  Widget _rideProgressBody(DriverAcceptedController c) {
+  Widget _rideProgressBody(
+    DriverAcceptedController c, {
+    bool showChangeDropLink = false,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -1118,16 +1121,25 @@ class DriverAcceptedScreen extends StatelessWidget {
           ),
           child: Column(
             children: [
-              RideLocationsTimeline(
-                startLocation: c.pickupTitle,
-                startAddress: c.pickupAddress,
-                endLocation: c.destinationTitle,
-                endAddress: c.destinationAddress,
-                stops: c.ride.value?.stops,
-                showAddStopBeforeDestination:
-                    !c.isNearDestination() &&
-                    c.ride.value?.pendingStopsUpdate == null,
-                onAddStopTap: c.onEditStops,
+              Obx(
+                () => RideLocationsTimeline(
+                  startLocation: c.pickupTitle,
+                  startAddress: c.pickupAddress,
+                  endLocation: c.destinationTitle,
+                  endAddress: c.destinationAddress,
+                  stops: c.ride.value?.stops,
+                  showAddStopBeforeDestination:
+                      !c.isNearDestination() &&
+                      c.ride.value?.pendingStopsUpdate == null,
+                  onAddStopTap: c.onEditStops,
+                  showChangeDropLocationLink:
+                      showChangeDropLink &&
+                      !c.isNearDestination() &&
+                      c.ride.value?.pendingStopsUpdate == null &&
+                      !c.isUpdatingStops.value &&
+                      !c.isUpdatingDestination.value,
+                  onChangeDropLocationTap: c.onChangeDropLocation,
+                ),
               ),
             ],
           ),
