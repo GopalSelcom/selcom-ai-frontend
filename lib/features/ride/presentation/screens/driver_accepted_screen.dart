@@ -740,27 +740,32 @@ class DriverAcceptedScreen extends StatelessWidget {
               color: AppColors.textBody,
             ),
             SizedBox(width: 2.w), // 2px gap from Figma
-            Text(
-              c.arrivalLabel.value,
-              style: AppTextStyles.homeCaption.copyWith(
-                fontSize: 15.sp,
-                color: AppColors.textBody,
-                fontWeight: FontWeight.w500,
-                height: 20 / 15,
+            Flexible(
+              child: Text(
+                c.arrivalLabel.value,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.homeCaption.copyWith(
+                  fontSize: 15.sp,
+                  color: AppColors.textBody,
+                  fontWeight: FontWeight.w500,
+                  height: 20 / 15,
+                ),
               ),
             ),
           ],
         ),
         SizedBox(height: 2.h),
-        Text(
-          AppStrings.driverIsHeadingToYourLocation.tr,
-          textAlign: TextAlign.center,
-          style: AppTextStyles.homeTitle.copyWith(
-            fontSize: 20.sp,
-            color: AppColors.textHeading,
-            fontWeight: FontWeight.w600,
-            height: 34 / 20,
-            letterSpacing: -0.4,
+        Obx(
+          () => Text(
+            c.driverPickupPhaseHeadline,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.homeTitle.copyWith(
+              fontSize: 20.sp,
+              color: AppColors.textHeading,
+              fontWeight: FontWeight.w600,
+              height: 34 / 20,
+              letterSpacing: -0.4,
+            ),
           ),
         ),
         SizedBox(height: 17.h),
