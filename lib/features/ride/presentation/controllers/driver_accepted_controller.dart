@@ -186,6 +186,9 @@ class DriverAcceptedController extends GetxController
       (bool updating) => _handleStopUpdateProgress(updating),
     );
     _loadPersistedIdempotencyKey();
+    arrivalLabel.value = AppStrings.driverWillArrivingInMinutes.trParams({
+      'minutes': '1',
+    });
     analyticsService.logEvent('driver_assigned_screen_viewed');
   }
 
@@ -526,7 +529,9 @@ class DriverAcceptedController extends GetxController
     plateLineSecondary.value = 'BBE';
     vehicleSubtitle.value = 'Toyota corolla, White';
     otpDigits.assignAll(['2', '7', '5', '6']);
-    arrivalLabel.value = 'Driver will arriving in 1 min...';
+    arrivalLabel.value = AppStrings.driverWillArrivingInMinutes.trParams({
+      'minutes': '1',
+    });
     currentRideStatus.value = 'driver_assigned';
   }
 
@@ -1206,12 +1211,27 @@ class DriverAcceptedController extends GetxController
     }
 
     rideBottomSheetState.value = nextState;
+    if (normalizedStatus == 'driver_arrived') {
+      _syncDriverArrivedPickupMessages();
+    }
     final isCompletedStatus =
         normalizedStatus == 'completed' || normalizedStatus == 'ride_completed';
     if (isCompletedStatus) {
       _openCompletedRideDetailsScreen();
     }
   }
+
+  /// Pickup sheet + map chip copy when the driver is at pickup ([driver_arrived]).
+  void _syncDriverArrivedPickupMessages() {
+    arrivalLabel.value = AppStrings.driverArrivedPickupPrimary.tr;
+    etaLabel.value = AppStrings.driverArrivedMapBadge.tr;
+  }
+
+  /// Second line on the driver-assigned pickup sheet (below the ETA row).
+  String get driverPickupPhaseHeadline =>
+      currentRideStatus.value.toLowerCase() == 'driver_arrived'
+          ? AppStrings.driverArrivedPickupSecondary.tr
+          : AppStrings.driverIsHeadingToYourLocation.tr;
 
   void _openCompletedRideDetailsScreen() {
     if (_openedCompletedRideDetails) return;
@@ -1355,7 +1375,7 @@ class DriverAcceptedController extends GetxController
             ? 'Arrived in ${etaMinutes.toString()} mins'
             : 'Trip has started';
       case 'driver_arrived':
-        return 'Driver has reached pickup';
+        return AppStrings.driverArrivedPickupPrimary.tr;
       case 'driver_arriving':
       case 'driver_assigned':
         return 'Driver is heading to pickup';
@@ -1384,43 +1404,58 @@ class DriverAcceptedController extends GetxController
   }
 
   void _applyTrackingPayload(TrackingUpdateSocketResponse payload) {
-    final status = (payload.status ?? '').toString().trim().toLowerCase();
-    if (status.isNotEmpty) {
+    final trackingStatus =
+        (payload.status ?? '').toString().trim().toLowerCase();
+    if (trackingStatus.isNotEmpty) {
       // Only trigger state updates from tracking payloads if it's a major transition.
       // High-frequency tracking often contains stale 'assigned' statuses.
-      if (status.contains('started') ||
-          status.contains('progress') ||
-          status.contains('complete') ||
-          status.contains('arrived')) {
-        _applyBottomSheetStateForStatus(status);
+      if (trackingStatus.contains('started') ||
+          trackingStatus.contains('progress') ||
+          trackingStatus.contains('complete') ||
+          trackingStatus.contains('arrived')) {
+        _applyBottomSheetStateForStatus(trackingStatus);
       }
     }
 
-    if (status == 'cancelled' || status == 'no_driver_found') {
+    if (trackingStatus == 'cancelled' || trackingStatus == 'no_driver_found') {
       _navigatedAway = true;
       _showCancelDialogThenGoHome(
-        status == 'no_driver_found'
+        trackingStatus == 'no_driver_found'
             ? AppStrings.noDriverFoundForYourRequestPleaseTryAgain.tr
             : AppStrings.rideCancelled.tr,
       );
       return;
     }
 
+    final isPickupArrived = trackingStatus == 'driver_arrived';
+    if (isPickupArrived) {
+      _syncDriverArrivedPickupMessages();
+    }
+
     final eta = payload.eta;
     if (eta != null) {
       currentEtaSeconds.value = eta.toDouble();
-      if (eta > 0) {
+      if (!isPickupArrived && eta > 0) {
         final minutes = (eta / 60).ceil();
         etaLabel.value = '$minutes ${minutes == 1 ? 'Min' : 'Mins'}';
-        arrivalLabel.value =
-            'Driver will arrive in $minutes ${minutes == 1 ? 'min' : 'mins'}...';
-      } else {
-        final status = (payload.status ?? currentRideStatus.value)
+        final rideStatus = currentRideStatus.value.toLowerCase();
+        final isPickupPhase = rideStatus == 'driver_assigned' ||
+            rideStatus == 'driver_arriving' ||
+            rideStatus == 'accepted';
+        if (isPickupPhase) {
+          arrivalLabel.value =
+              AppStrings.driverWillArrivingInMinutes.trParams({
+            'minutes': '$minutes',
+          });
+        }
+      } else if (!isPickupArrived && eta <= 0) {
+        final statusForEta = (payload.status ?? currentRideStatus.value)
             .toLowerCase();
-        final inRide =
-            status.contains('progress') || status.contains('started');
+        final inRide = statusForEta.contains('progress') ||
+            statusForEta.contains('started');
         etaLabel.value = inRide ? 'Nearby' : 'Arriving';
-        arrivalLabel.value = inRide ? 'Almost there' : 'Driver is arriving...';
+        arrivalLabel.value =
+            inRide ? 'Almost there' : 'Driver is arriving...';
       }
     }
 
