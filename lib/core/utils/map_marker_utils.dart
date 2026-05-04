@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../theme/app_colors.dart';
 
@@ -19,6 +20,32 @@ class MapMarkerUtils {
     final ByteData? bytes = await fi.image.toByteData(
       format: ui.ImageByteFormat.png,
     );
+    return BitmapDescriptor.fromBytes(bytes!.buffer.asUint8List());
+  }
+
+  /// Converts an SVG asset to a Google Maps marker.
+  static Future<BitmapDescriptor> getSvgMarker(
+    String path,
+    int width,
+  ) async {
+    final pictureInfo = await vg.loadPicture(SvgAssetLoader(path), null);
+
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+
+    final double scale = width / pictureInfo.size.width;
+    final double height = pictureInfo.size.height * scale;
+
+    canvas.scale(scale, scale);
+    canvas.drawPicture(pictureInfo.picture);
+
+    final ui.Image image =
+        await recorder.endRecording().toImage(width, height.toInt());
+    final ByteData? bytes =
+        await image.toByteData(format: ui.ImageByteFormat.png);
+
+    pictureInfo.picture.dispose();
+
     return BitmapDescriptor.fromBytes(bytes!.buffer.asUint8List());
   }
 

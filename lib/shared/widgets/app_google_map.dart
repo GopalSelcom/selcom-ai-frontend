@@ -1,11 +1,12 @@
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../core/services/app_map_service.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/utils/map_math_utils.dart';
+import 'map_rider_tracking_mixin.dart';
 
 /// **Canonical embedded map for the app** (`lib/shared/widgets/`).
 ///
@@ -48,18 +49,16 @@ class AppGoogleMap extends StatefulWidget {
     this.onCameraMoveStarted,
     this.onTap,
     this.onLongPress,
-    this.mapWidgetKey,
-    this.cloudMapId,
+    this.mapId,
     this.style,
     this.onUserInteraction,
     this.onGpsPressed,
     this.onNavigationPressed,
     this.showGpsButton = false,
     this.trackRider = false,
+    this.onTrackingChanged,
+    this.onRiderPositionUpdate,
   });
-
-  /// Optional key on the inner [GoogleMap] (per-screen identity for rebuilds).
-  final Key? mapWidgetKey;
 
   final CameraPosition initialCameraPosition;
   final void Function(GoogleMapController controller) onMapCreated;
@@ -93,42 +92,93 @@ class AppGoogleMap extends StatefulWidget {
   final ArgumentCallback<LatLng>? onTap;
   final ArgumentCallback<LatLng>? onLongPress;
 
-  final String? cloudMapId;
+  final String? mapId;
   final String? style;
   final VoidCallback? onUserInteraction;
   final VoidCallback? onGpsPressed;
   final VoidCallback? onNavigationPressed;
   final bool showGpsButton;
   final bool trackRider;
+  final ValueChanged<bool>? onTrackingChanged;
+  final ValueChanged<LatLng>? onRiderPositionUpdate;
 
   @override
-  State<AppGoogleMap> createState() => _AppGoogleMapState();
+  State<AppGoogleMap> createState() => AppGoogleMapState();
 }
 
-class _AppGoogleMapState extends State<AppGoogleMap> {
+class AppGoogleMapState extends State<AppGoogleMap>
+    with TickerProviderStateMixin<AppGoogleMap>, MapRiderTrackingMixin {
   GoogleMapController? _controller;
-  late bool _isTrackingRider;
+  late bool isTrackingRider;
+  DateTime? _lastCameraUpdateAt;
   bool _isProgrammaticMove = false;
   bool _isUserInteracting = false;
 
   @override
   void initState() {
     super.initState();
-    _isTrackingRider = widget.trackRider;
+    isTrackingRider = widget.trackRider;
+
+    // Link the animated marker position to the camera for smooth following
+    onAnimatedPositionUpdate = (position, rotation) {
+      final now = DateTime.now();
+
+      if (isTrackingRider && _controller != null) {
+        // Match the 60fps animation speed for butter-smooth camera following.
+        if (_lastCameraUpdateAt == null ||
+            now.difference(_lastCameraUpdateAt!) >
+                const Duration(milliseconds: 16)) {
+          _lastCameraUpdateAt = now;
+
+          final heading = rotation;
+
+          // Google Maps Navigation Style:
+          // 1. Perspective view (tilt)
+          // 2. Rotate with rider (bearing)
+          // 3. Keep rider in the lower 1/3 of the screen (offset target)
+
+          const double offsetDist =
+              0.0003; // degrees offset to push camera ahead
+          final double angleRad = (heading * math.pi / 180.0);
+          final double latOff = offsetDist * math.cos(angleRad);
+          final double lngOff = offsetDist * math.sin(angleRad);
+
+          final cameraTarget = LatLng(
+            position.latitude + latOff,
+            position.longitude + lngOff,
+          );
+
+          _controller!.moveCamera(
+            CameraUpdate.newCameraPosition(
+              CameraPosition(
+                target: cameraTarget,
+                zoom: 18.5,
+                bearing: heading,
+                // tilt: 50.0,
+              ),
+            ),
+          );
+        }
+      }
+      widget.onRiderPositionUpdate?.call(position);
+    };
   }
 
   @override
   void didUpdateWidget(AppGoogleMap oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.trackRider != oldWidget.trackRider) {
-      _isTrackingRider = widget.trackRider;
+      isTrackingRider = widget.trackRider;
     }
-    if (_isTrackingRider) {
-      final riderMarker = _findRiderMarker();
-      if (riderMarker != null) {
+    final riderMarker = _findRiderMarker();
+    if (riderMarker != null) {
+      updateRiderTracking(riderMarker);
+      if (isTrackingRider) {
         final oldRiderMarker = _findRiderMarker(markers: oldWidget.markers);
-        if (oldRiderMarker == null ||
-            oldRiderMarker.position != riderMarker.position) {
+        // Only use animateCamera for the very first time we see the rider
+        // or if tracking was just enabled. Subsequent movement is handled
+        // frame-by-frame in the mixin's onAnimatedPositionUpdate.
+        if (oldRiderMarker == null) {
           _moveToRider();
         }
       }
@@ -148,24 +198,99 @@ class _AppGoogleMapState extends State<AppGoogleMap> {
     final rider = _findRiderMarker();
     if (rider != null && _controller != null) {
       _isProgrammaticMove = true;
+      final heading = rider.rotation;
+
+      const double offsetDist = 0.0003;
+      final double angleRad = (heading * math.pi / 180.0);
+      final double latOff = offsetDist * math.cos(angleRad);
+      final double lngOff = offsetDist * math.sin(angleRad);
+
+      final cameraTarget = LatLng(
+        rider.position.latitude + latOff,
+        rider.position.longitude + lngOff,
+      );
+
       _controller!.animateCamera(
-        CameraUpdate.newLatLngZoom(rider.position, 16.0),
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: cameraTarget,
+            zoom: 18.5,
+            bearing: heading,
+            // tilt: 50.0,
+          ),
+        ),
       );
     }
   }
 
   void _retrack() {
     setState(() {
-      _isTrackingRider = true;
+      isTrackingRider = true;
     });
-    _moveToRider();
+    widget.onTrackingChanged?.call(true);
+    _retrackCamera();
+  }
+
+  void _retrackCamera() {
+    // Trigger an animated move to the rider's position for the initial focus
+    final rider = _findRiderMarker();
+    if (rider != null && _controller != null) {
+      _isProgrammaticMove = true;
+      final heading = rider.rotation;
+
+      const double offsetDist = 0.0003;
+      final double angleRad = (heading * math.pi / 180.0);
+      final double latOff = offsetDist * math.cos(angleRad);
+      final double lngOff = offsetDist * math.sin(angleRad);
+
+      final cameraTarget = LatLng(
+        rider.position.latitude + latOff,
+        rider.position.longitude + lngOff,
+      );
+
+      _controller!.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: cameraTarget,
+            zoom: 18.5,
+            bearing: heading,
+            // tilt: 50.0,
+          ),
+        ),
+      );
+    }
     widget.onNavigationPressed?.call();
+  }
+
+  void retrack() => _retrack();
+
+  void stopTracking() {
+    setState(() {
+      isTrackingRider = false;
+    });
+    widget.onTrackingChanged?.call(false);
+  }
+
+  /// Updates the rider's target position and starts a smooth animation towards it.
+  void updateRiderPosition(
+    LatLng position, {
+    double rotation = 0.0,
+    Duration duration = const Duration(seconds: 4),
+  }) {
+    super.updateRiderPosition(position, rotation: rotation, duration: duration);
+  }
+
+  /// The current interpolated position of the rider icon.
+  LatLng? get currentAnimatedPosition => super.currentAnimatedPosition;
+
+  /// Instantly snaps the rider icon to a new position.
+  void snapRider(LatLng position, {double rotation = 0.0}) {
+    snapPosition(position, rotation: rotation);
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    final hasRider = _findRiderMarker() != null;
-
     return Stack(
       children: [
         Listener(
@@ -176,14 +301,13 @@ class _AppGoogleMapState extends State<AppGoogleMap> {
           onPointerUp: (_) => _isUserInteracting = false,
           onPointerCancel: (_) => _isUserInteracting = false,
           child: GoogleMap(
-            key: widget.mapWidgetKey,
             initialCameraPosition: widget.initialCameraPosition,
             onMapCreated: (controller) {
               _controller = controller;
               widget.onMapCreated(controller);
-              if (_isTrackingRider) _moveToRider();
+              if (isTrackingRider) _moveToRider();
             },
-            markers: widget.markers,
+            markers: getAnimatedMarkers(widget.markers),
             polylines: widget.polylines,
             circles: widget.circles,
             polygons: widget.polygons,
@@ -213,24 +337,28 @@ class _AppGoogleMapState extends State<AppGoogleMap> {
             onCameraMoveStarted: () {
               if (_isUserInteracting && !_isProgrammaticMove) {
                 setState(() {
-                  _isTrackingRider = false;
+                  isTrackingRider = false;
                 });
+                widget.onTrackingChanged?.call(false);
+                widget.onUserInteraction?.call();
               }
               widget.onCameraMoveStarted?.call();
             },
             onTap: widget.onTap,
             onLongPress: widget.onLongPress,
-            cloudMapId: widget.cloudMapId,
+            mapId: widget.mapId,
             style: widget.style,
           ),
         ),
+        // Internal buttons are now hidden as they are moved to the main screen chips.
+        /*
         Positioned(
           top: MediaQuery.paddingOf(context).top + 110.h,
           right: 16.w,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (hasRider && !_isTrackingRider) ...[
+              if (hasRider && !isTrackingRider) ...[
                 _IconActionButton(
                   icon: Icons.navigation,
                   onPressed: _retrack,
@@ -241,53 +369,17 @@ class _AppGoogleMapState extends State<AppGoogleMap> {
               if (widget.showGpsButton)
                 _IconActionButton(
                   icon: Icons.gps_fixed,
-                  onPressed: widget.onGpsPressed,
+                  onPressed: () {
+                    setState(() => isTrackingRider = false);
+                    widget.onGpsPressed?.call();
+                  },
                   color: AppColors.textMapHint,
                 ),
             ],
           ),
         ),
+        */
       ],
-    );
-  }
-}
-
-class _IconActionButton extends StatelessWidget {
-  const _IconActionButton({
-    required this.icon,
-    this.onPressed,
-    required this.color,
-  });
-
-  final IconData icon;
-  final VoidCallback? onPressed;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.white,
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadow,
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: AppColors.transparent,
-        child: InkWell(
-          onTap: onPressed,
-          borderRadius: BorderRadius.circular(32),
-          child: Padding(
-            padding: const EdgeInsets.all(10),
-            child: Icon(icon, color: color, size: 20),
-          ),
-        ),
-      ),
     );
   }
 }

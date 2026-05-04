@@ -271,4 +271,5 @@ abstract class Languages {
   String get exitApp;
   String get exitAppTitle;
   String get exitAppMessage;
+  String get savedLocations;
 }

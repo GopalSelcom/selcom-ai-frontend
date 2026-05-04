@@ -27,7 +27,7 @@ class ConfirmPickupScreen extends StatelessWidget {
           Positioned.fill(
             child: Obx(
               () => AppGoogleMap(
-                mapWidgetKey: const ValueKey('confirm_pickup_map'),
+                key: const ValueKey('confirm_pickup_map'),
                 initialCameraPosition: CameraPosition(
                   target: c.selectedLatLng.value,
                   zoom: 16,

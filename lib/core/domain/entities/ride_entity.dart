@@ -130,6 +130,9 @@ class RideEntity {
   final VehicleSnapshotEntity? vehicleSnapshot;
   final DateTime createdAt;
   final PendingStopsUpdateEntity? pendingStopsUpdate;
+  final bool isBookedForOther;
+  final String? passengerName;
+  final String? passengerPhone;
 
   const RideEntity({
     required this.id,
@@ -160,5 +163,8 @@ class RideEntity {
     this.vehicleSnapshot,
     required this.createdAt,
     this.pendingStopsUpdate,
+    this.isBookedForOther = false,
+    this.passengerName,
+    this.passengerPhone,
   });
 }

@@ -12,6 +12,7 @@ import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_back_button.dart';
 import '../controllers/home_controller.dart';
 import '../controllers/location_selection_controller.dart';
+import '../widgets/favorite_icon_button.dart';
 import '../../data/models/places_models.dart';
 import '../../../../core/routes/app_routes.dart';
 
@@ -862,39 +863,15 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                   ),
                 ),
                 if (showFavorite)
-                  IconButton(
+                  FavoriteIconButton(
+                    isFavorite: isFavorite,
+                    onPressed: onFavoriteTap,
+                    size: 24,
                     padding: EdgeInsets.zero,
                     constraints: BoxConstraints(
                       minWidth: 48.w,
                       minHeight: 48.h,
                     ),
-                    onPressed: onFavoriteTap,
-                    icon: isFavorite
-                        ? SvgPictureAsset(
-                            AppAssets.locationIcHeartFilled,
-                            width: 24.w,
-                            height: 24.h,
-                            placeholderBuilder: (_) => const Icon(
-                              Icons.favorite,
-                              color: AppColors.primary,
-                              size: 20,
-                            ),
-                          )
-                        : Opacity(
-                            opacity: 0.5,
-                            child: SvgPictureAsset(
-                              AppAssets.locationIcHeartOutline,
-                              width: 24.w,
-                              height: 24.w,
-                              placeholderBuilder: (_) => Icon(
-                                Icons.favorite_border,
-                                color: AppColors.textHeading.withValues(
-                                  alpha: 0.5,
-                                ),
-                                size: 20,
-                              ),
-                            ),
-                          ),
                   ),
               ],
             ),

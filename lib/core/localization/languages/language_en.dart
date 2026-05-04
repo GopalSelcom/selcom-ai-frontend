@@ -87,6 +87,7 @@ class LanguageEn extends Languages {
     'failed_to_update_favorite_status': 'Failed to update favorite status',
     'fallback_ride_name': 'Ride',
     'favourite_locations': 'Favourite Locations',
+    'saved_locations': 'Saved Locations',
     'get_started': 'Get Started',
     'got_it': 'Got it',
     'help': 'Help',
@@ -312,7 +313,7 @@ class LanguageEn extends Languages {
     'switched_to_swahili': 'Switched to Swahili',
     'exit_app': 'Exit App',
     'exit_app_title': 'Exit App',
-    'exit_app_message': 'Are you sure , you want to exit the app?',
+    'exit_app_message': 'Are you sure, you want to exit the app?',
   };
 
   @override
@@ -1157,4 +1158,8 @@ class LanguageEn extends Languages {
 
   @override
   String get exitAppMessage => values['exit_app_message'] ?? '';
+
+  @override
+  // TODO: implement savedLocations
+  String get savedLocations => values['saved_locations'] ?? '';
 }

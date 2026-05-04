@@ -14,6 +14,12 @@ class AppPrimaryButton extends StatelessWidget {
   final String? iconAsset;
   final Color? iconColor;
   final bool outlined;
+  final Color? backgroundColor;
+  final Color? textColor;
+  final Color? outlinedBorderColor;
+  final Color? outlinedTextColor;
+  final double? borderRadius;
+  final double? outlinedBorderWidth;
 
   const AppPrimaryButton({
     super.key,
@@ -25,25 +31,47 @@ class AppPrimaryButton extends StatelessWidget {
     this.iconAsset,
     this.iconColor,
     this.outlined = false,
+    this.backgroundColor,
+    this.textColor,
+    this.outlinedBorderColor,
+    this.outlinedTextColor,
+    this.borderRadius,
+    this.outlinedBorderWidth,
   });
 
   @override
   Widget build(BuildContext context) {
+    final Color effectiveBackgroundColor =
+        backgroundColor ?? (outlined ? AppColors.white : AppColors.primary);
+    final Color effectiveOutlinedBorderColor =
+        outlinedBorderColor ?? AppColors.primary;
+    final Color effectiveTextColor =
+        textColor ?? (outlined ? AppColors.primary : AppColors.white);
+    final Color effectiveOutlinedTextColor =
+        outlinedTextColor ?? effectiveTextColor;
+    final double effectiveBorderRadius = borderRadius ?? AppRadius.button;
+    final double effectiveOutlinedBorderWidth = outlinedBorderWidth ?? 1.5;
+
     return SizedBox(
       width: width ?? double.infinity,
       height: height ?? 56.h,
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: outlined ? AppColors.white : AppColors.primary,
+          backgroundColor: effectiveBackgroundColor,
           disabledBackgroundColor: outlined
-              ? AppColors.white
-              : AppColors.primary.withValues(alpha: 0.5),
-          foregroundColor: outlined ? AppColors.primary : AppColors.white,
+              ? effectiveBackgroundColor
+              : effectiveBackgroundColor.withValues(alpha: 0.5),
+          foregroundColor: outlined
+              ? effectiveOutlinedTextColor
+              : effectiveTextColor,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.button),
+            borderRadius: BorderRadius.circular(effectiveBorderRadius),
             side: outlined
-                ? const BorderSide(color: AppColors.primary, width: 1.5)
+                ? BorderSide(
+                    color: effectiveOutlinedBorderColor,
+                    width: effectiveOutlinedBorderWidth,
+                  )
                 : BorderSide.none,
           ),
           elevation: 0,
@@ -53,8 +81,8 @@ class AppPrimaryButton extends StatelessWidget {
             ? SizedBox(
                 width: 24.w,
                 height: 24.w,
-                child: const CircularProgressIndicator(
-                  color: AppColors.white,
+                child: CircularProgressIndicator(
+                  color: outlined ? effectiveOutlinedTextColor : effectiveTextColor,
                   strokeWidth: 2,
                 ),
               )
@@ -65,7 +93,9 @@ class AppPrimaryButton extends StatelessWidget {
                     Text(
                       label,
                       style: AppTextStyles.button.copyWith(
-                        color: outlined ? AppColors.primary : AppColors.white,
+                        color: outlined
+                            ? effectiveOutlinedTextColor
+                            : effectiveTextColor,
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w700,
                       ),
@@ -81,8 +111,8 @@ class AppPrimaryButton extends StatelessWidget {
                                 color:
                                     iconColor ??
                                     (outlined
-                                        ? AppColors.primary
-                                        : AppColors.white),
+                                        ? effectiveOutlinedTextColor
+                                        : effectiveTextColor),
                               )
                             : Image.asset(
                                 iconAsset!,

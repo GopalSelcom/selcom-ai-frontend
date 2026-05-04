@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:iconsax/iconsax.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+
+import '../../../../core/localization/app_strings.dart';
+import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/routes/app_routes.dart';
@@ -73,6 +74,8 @@ class RideLocationsTimeline extends StatelessWidget {
   final String endAddress;
   final List<RideStopEntity>? stops;
   final bool showStopsAsSummary;
+  final bool showAddStopBeforeDestination;
+  final VoidCallback? onAddStopTap;
 
   const RideLocationsTimeline({
     super.key,
@@ -82,6 +85,8 @@ class RideLocationsTimeline extends StatelessWidget {
     required this.endAddress,
     this.stops,
     this.showStopsAsSummary = false,
+    this.showAddStopBeforeDestination = false,
+    this.onAddStopTap,
   });
 
   @override
@@ -106,6 +111,8 @@ class RideLocationsTimeline extends StatelessWidget {
             isMulti ? 'A' : 'P',
             color: AppColors.mapPickupMarkerBlue,
           ),
+          bottomSpacingWhenLine:
+              showAddStopBeforeDestination && filteredStops.isEmpty ? 0 : null,
           showBottomLine: true,
         ),
 
@@ -116,6 +123,7 @@ class RideLocationsTimeline extends StatelessWidget {
                 '${filteredStops.length} ${AppStrings.stop.tr}${filteredStops.length > 1 ? 's' : ''}',
             address: null,
             icon: _buildStopCountIcon(filteredStops.length),
+            bottomSpacingWhenLine: showAddStopBeforeDestination ? 0 : null,
             showBottomLine: true,
           )
         else
@@ -127,8 +135,14 @@ class RideLocationsTimeline extends StatelessWidget {
                 letters[i + 1],
                 color: AppColors.mapStopMarkerRed,
               ),
+              bottomSpacingWhenLine:
+                  showAddStopBeforeDestination && i == filteredStops.length - 1
+                  ? 0
+                  : null,
               showBottomLine: true,
             ),
+
+        if (showAddStopBeforeDestination) _buildAddStopDividerRow(),
 
         // End Location Row
         _buildLocationRow(
@@ -185,6 +199,8 @@ class RideLocationsTimeline extends StatelessWidget {
     required String title,
     String? address,
     required Widget icon,
+    Widget? trailing,
+    double? bottomSpacingWhenLine,
     required bool showBottomLine,
   }) {
     return IntrinsicHeight(
@@ -211,7 +227,9 @@ class RideLocationsTimeline extends StatelessWidget {
           SizedBox(width: 8.w),
           Expanded(
             child: Padding(
-              padding: EdgeInsets.only(bottom: showBottomLine ? 16.h : 0),
+              padding: EdgeInsets.only(
+                bottom: showBottomLine ? (bottomSpacingWhenLine ?? 16.h) : 0,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -232,12 +250,107 @@ class RideLocationsTimeline extends StatelessWidget {
                         fontFamily: AppTextStyles.metropolisFont,
                         color: AppColors.textBody,
                         fontSize: 12.sp,
-                        fontWeight: FontWeight.w400
+                        fontWeight: FontWeight.w400,
                       ),
                     ),
                   ],
                 ],
               ),
+            ),
+          ),
+          if (trailing != null) ...[
+            SizedBox(width: 8.w),
+            Padding(
+              padding: EdgeInsets.only(
+                bottom: showBottomLine ? (bottomSpacingWhenLine ?? 8.h) : 0,
+              ),
+              child: Align(alignment: Alignment.center, child: trailing),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAddStopPill() {
+    return GestureDetector(
+      onTap: onAddStopTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(999.r),
+          border: Border.all(color: AppColors.borderWalletCard),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SvgPicture.asset(
+              AppAssets.locationIcAdd,
+              width: 18.w,
+              height: 18.w,
+              colorFilter: const ColorFilter.mode(
+                AppColors.primary,
+                BlendMode.srcIn,
+              ),
+              placeholderBuilder: (_) => Container(
+                width: 18.w,
+                height: 18.w,
+                decoration: const BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Icon(Icons.add, color: AppColors.white, size: 14.sp),
+              ),
+            ),
+            SizedBox(width: 6.w),
+            Text(
+              AppStrings.add.tr,
+              style: AppTextStyles.homeSubtitle.copyWith(
+                color: AppColors.textMutedStrong,
+                fontSize: 15.sp,
+                height: 20 / 15,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAddStopDividerRow() {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            width: 22.w,
+            child: Align(
+              alignment: Alignment.center,
+              child: Container(
+                width: 1.w,
+                height: double.infinity,
+                margin: EdgeInsets.zero,
+                child: CustomPaint(
+                  painter: DashedLinePainter(
+                    color: AppColors.black.withOpacity(0.5),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    height: 1.h,
+                    color: AppColors.borderWalletCard,
+                  ),
+                ),
+                _buildAddStopPill(),
+              ],
             ),
           ),
         ],
@@ -297,21 +410,17 @@ class FareBreakdownRow extends StatelessWidget {
         Expanded(
           child: Text(
             title,
-            style: TextStyle(
-              fontFamily: AppTextStyles.metropolisFont,
+            style: AppTextStyles.homeCaption.copyWith(
               fontWeight: isTotal ? FontWeight.w500 : FontWeight.w400,
-              color: AppColors.textBody,
-              fontSize: 12.sp,
+              height: 20 / 12,
             ),
           ),
         ),
         Text(
           amount,
-          style: TextStyle(
-            fontFamily: AppTextStyles.metropolisFont,
-            fontWeight: isTotal ? FontWeight.w500 : FontWeight.w500,
-            color: AppColors.textBody,
-            fontSize: 12.sp,
+          style: AppTextStyles.homeCaption.copyWith(
+            fontWeight: isTotal ? FontWeight.w500 : FontWeight.w400,
+            height: 20 / 12,
           ),
         ),
       ],
@@ -334,21 +443,23 @@ class NeedHelpRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        SvgPicture.asset(
+        SvgPictureAsset(
           AppAssets.icHeadPhone,
+          width: 18.w,
+          height: 18.w,
+          color: AppColors.textBody,
+          placeholderBuilder: (_) => Icon(
+            Icons.headset_mic_outlined,
+            color: AppColors.textBody,
+            size: 18.sp,
+          ),
         ),
-        // Icon(, color: AppColors.textBody, size: 24.w),
         SizedBox(width: 8.w),
         GestureDetector(
           onTap: () => Get.toNamed(AppRoutes.contactUs),
           child: Text(
             AppStrings.needHelp.tr,
-            style: TextStyle(
-              fontFamily: AppTextStyles.metropolisFont,
-              fontWeight: FontWeight.w500,
-              color: AppColors.textBody,
-              fontSize: 15.sp,
-            ),
+            style: AppTextStyles.homeSubtitle.copyWith(height: 20 / 15),
           ),
         ),
         if (showDownloadSlip) ...[
@@ -358,20 +469,21 @@ class NeedHelpRow extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Iconsax.document_download5,
+                SvgPictureAsset(
+                  AppAssets.icDownload,
+                  width: 19.w,
+                  height: 19.w,
                   color: AppColors.textBody,
-                  size: 19.w,
+                  placeholderBuilder: (_) => Icon(
+                    Icons.download_rounded,
+                    color: AppColors.textBody,
+                    size: 19.sp,
+                  ),
                 ),
                 SizedBox(width: 6.w),
                 Text(
                   AppStrings.downloadSlip.tr,
-                  style: TextStyle(
-                    fontFamily: AppTextStyles.metropolisFont,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textBody,
-                    fontSize: 15.sp,
-                  ),
+                  style: AppTextStyles.homeSubtitle.copyWith(height: 20 / 15),
                 ),
               ],
             ),
@@ -386,7 +498,7 @@ class RideRatingStars extends StatelessWidget {
   final double? rating;
   final double starSize;
 
-  const RideRatingStars({super.key, this.rating, this.starSize = 34});
+  const RideRatingStars({super.key, this.rating, this.starSize = 32});
 
   @override
   Widget build(BuildContext context) {
@@ -394,12 +506,16 @@ class RideRatingStars extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: List.generate(5, (index) {
         final isFilled = rating != null && index < rating!.floor();
-        return Icon(
-          Icons.star,
-          color: isFilled
-              ? AppColors.ratingStarFilled
-              : AppColors.ratingStarEmpty,
-          size: starSize.w,
+        final starColor = isFilled
+            ? AppColors.ratingStarActive
+            : AppColors.ratingStarInactive;
+        return SvgPictureAsset(
+          AppAssets.icRatingStar,
+          width: starSize.w,
+          height: starSize.w,
+          color: starColor,
+          placeholderBuilder: (_) =>
+              Icon(Icons.star, color: starColor, size: starSize.w),
         );
       }),
     );

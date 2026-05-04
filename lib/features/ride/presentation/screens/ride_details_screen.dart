@@ -12,6 +12,8 @@ import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../ride_rating/presentation/widgets/ride_rating_input_section.dart';
 import '../controllers/ride_details_controller.dart';
 import '../widgets/ride_common_widgets.dart';
+import 'package:iconsax/iconsax.dart';
+import '../../../../shared/utils/phone_formatter.dart';
 
 class RideDetailsScreen extends StatelessWidget {
   final RideEntity ride;
@@ -75,25 +77,13 @@ class RideDetailsScreen extends StatelessWidget {
               children: [
                 Text(
                   AppStrings.howWasYourRide.tr,
-                  style: TextStyle(
-                    fontFamily: AppTextStyles.metropolisFont,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textHeading,
-                    fontSize: 15.sp,
+                  style: AppTextStyles.homeSubtitle.copyWith(
+                    color: AppColors.black,
+                    height: 20 / 15,
                   ),
                 ),
                 SizedBox(height: 6.h),
                 RideRatingStars(rating: (ride.riderRating?.toDouble() ?? 0)),
-                /*SizedBox(height: 6.h),
-                Text(
-                  '${ride.riderRating}/5 ${AppStrings.ratingGiven.tr}',
-                  style: TextStyle(
-                    fontFamily: AppTextStyles.metropolisFont,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textBody,
-                    fontSize: 13.sp,
-                  ),
-                ),*/
               ],
             ),
           )
@@ -177,23 +167,18 @@ class RideDetailsScreen extends StatelessWidget {
                           children: [
                             Text(
                               controller.vehicleDisplayName,
-                              style: TextStyle(
-                                fontFamily: AppTextStyles.metropolisFont,
+                              style: AppTextStyles.homeTitle.copyWith(
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.textHeading,
-                                fontSize: 20.sp,
+                                height: 34 / 20,
+                                letterSpacing: -0.4,
                               ),
                             ),
-                            // SizedBox(height: 4.h),
                             Text(
                               RideDateFormatter.formatDate(
                                 controller.formattedDate,
                               ),
-                              style: TextStyle(
-                                fontFamily: AppTextStyles.metropolisFont,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.textBody,
-                                fontSize: 15.sp,
+                              style: AppTextStyles.homeSubtitle.copyWith(
+                                height: 20 / 15,
                               ),
                             ),
                           ],
@@ -234,6 +219,63 @@ class RideDetailsScreen extends StatelessWidget {
                         stops: ride.stops,
                       ),
                     ),
+                    if (ride.isBookedForOther) ...[
+                      SizedBox(height: 16.h),
+                      Container(
+                        padding: EdgeInsets.all(16.w),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceSubtle,
+                          border: Border.all(
+                            color: AppColors.borderWalletCard,
+                            width: 0.78,
+                          ),
+                          borderRadius: BorderRadius.circular(16.r),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(8.w),
+                              decoration: const BoxDecoration(
+                                color: AppColors.white,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Iconsax.user,
+                                size: 20.sp,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Booking for ${ride.passengerName ?? 'Someone'}",
+                                    style: TextStyle(
+                                      fontFamily: AppTextStyles.metropolisFont,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.textHeading,
+                                      fontSize: 15.sp,
+                                    ),
+                                  ),
+                                  if (ride.passengerPhone != null)
+                                    Text(
+                                      "Phone: ${TanzaniaPhoneFormatter.formatInternational(ride.passengerPhone ?? '')}",
+                                      style: TextStyle(
+                                        fontFamily: AppTextStyles.metropolisFont,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppColors.textBody,
+                                        fontSize: 13.sp,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                     SizedBox(height: 8.h),
                     Container(
                       padding: EdgeInsets.all(16.w),
@@ -250,11 +292,9 @@ class RideDetailsScreen extends StatelessWidget {
                         children: [
                           Text(
                             AppStrings.totalFare.tr,
-                            style: TextStyle(
-                              fontFamily: AppTextStyles.metropolisFont,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.textHeading,
-                              fontSize: 15.sp,
+                            style: AppTextStyles.homeSubtitle.copyWith(
+                              color: AppColors.black,
+                              height: 20 / 15,
                             ),
                           ),
                           SizedBox(height: 6.h),

@@ -2,15 +2,18 @@ import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:get/get.dart' hide Response;
 
+import '../../shared/widgets/app_primary_button.dart';
+import '../localization/app_strings.dart';
+import '../services/error_reporting/error_reporter.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
 import 'api_service.dart';
 import 'failed_request_queue.dart';
 import 'network_connectivity_service.dart';
-import '../services/error_reporting/error_reporter.dart';
 
 /// Orchestrates API retry operations and manages popup state
 class RetryManager {
@@ -81,52 +84,43 @@ class RetryManager {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: const BoxDecoration(
-                  color: AppColors.errorBackground,
-                  shape: BoxShape.circle,
-                ),
+              CircleAvatar(
+                radius: 24.r,
+                backgroundColor: AppColors.primaryLight,
                 child: const Icon(
                   Icons.wifi_off_rounded,
-                  color: AppColors.error,
+                  color: AppColors.primary,
                   size: 28,
                 ),
               ),
               const SizedBox(height: 16),
               Text(
                 AppStrings.connectionError.tr,
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textHeading,
+                style: AppTextStyles.onboardingTitle.copyWith(
+                  fontSize: 20.sp,
+                  letterSpacing: -0.4,
                 ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 "We couldn't complete your request. Please try again.",
-                style: TextStyle(fontSize: 15, color: AppColors.textBody),
+                style: AppTextStyles.onboardingSubtitle.copyWith(
+                  fontSize: 14.sp,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.white,
-                    minimumSize: const Size(double.infinity, 52),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    elevation: 0,
-                  ),
+                child: AppPrimaryButton(
+                  label: AppStrings.retry.tr,
                   onPressed: () {
                     Get.back();
                     retryAll();
                   },
-                  child: Text(AppStrings.retry.tr),
+                  height: 52.h,
+                  borderRadius: 14.r,
                 ),
               ),
             ],

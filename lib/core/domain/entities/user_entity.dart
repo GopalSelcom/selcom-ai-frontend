@@ -27,6 +27,10 @@ class UserEntity {
   final String? appUuid;
   final int? accountNumber;
   final String? uniqueId;
+  final bool? goRidePinEnabled;
+  final num? goAvgRating;
+  final int? goRatingCount;
+  final String? lastUsedPaymentMethod;
 
   const UserEntity({
     required this.id,
@@ -57,5 +61,9 @@ class UserEntity {
     this.appUuid,
     this.accountNumber,
     this.uniqueId,
+    this.goRidePinEnabled,
+    this.goAvgRating,
+    this.goRatingCount,
+    this.lastUsedPaymentMethod,
   });
 }

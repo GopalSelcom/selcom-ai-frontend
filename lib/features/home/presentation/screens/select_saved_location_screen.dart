@@ -6,12 +6,14 @@ import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_back_button.dart';
 import '../controllers/home_controller.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../data/models/places_models.dart';
 import '../../../ride/data/models/ride_management_models.dart';
+import '../widgets/favorite_icon_button.dart';
 
 class SelectSavedLocationScreen extends StatefulWidget {
   const SelectSavedLocationScreen({super.key});
@@ -61,8 +63,6 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
     return Scaffold(
       backgroundColor: AppColors.pageBackground,
       appBar: AppBar(
-        backgroundColor: AppColors.transparent,
-        elevation: 0,
         automaticallyImplyLeading: false,
         leading: canGoBack
             ? const AppBackButton(
@@ -70,14 +70,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
                 alignment: Alignment.center,
               )
             : null,
-        title: Text(
-          label,
-          style: AppTextStyles.homeTitle.copyWith(
-            fontSize: 20.sp,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
+        title: Text(label),
       ),
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: 16.w),
@@ -224,11 +217,18 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
       separatorBuilder: (_, __) => SizedBox(height: 12.h),
       itemBuilder: (context, index) {
         final loc = recentItems[index];
-        return _locationTile(
-          title: loc.address.split(',').first,
-          subtitle: loc.address,
-          onTap: () => _handleRecentSelection(loc),
-          onFavorite: () => controller.toggleFavoriteForRecent(loc),
+        return Obx(
+          () {
+            final savedPlace = controller.getSavedPlaceFor(loc.address, null);
+            final isFavorite = savedPlace?.isFavourite ?? false;
+            return _locationTile(
+              title: loc.address.split(',').first,
+              subtitle: loc.address,
+              onTap: () => _handleRecentSelection(loc),
+              onFavorite: () => controller.toggleFavoriteForRecent(loc),
+              isFavorite: isFavorite,
+            );
+          },
         );
       },
     );
@@ -239,6 +239,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
     required String subtitle,
     required VoidCallback onTap,
     VoidCallback? onFavorite,
+    bool isFavorite = false,
   }) {
     return InkWell(
       onTap: onTap,
@@ -266,10 +267,16 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
                 color: AppColors.bgSoftCircle,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                Icons.access_time_outlined,
+              child: SvgPictureAsset(
+                AppAssets.locationIcTime,
+                width: 20.w,
+                height: 20.h,
                 color: AppColors.textHint,
-                size: 20.sp,
+                placeholderBuilder: (_) => Icon(
+                  Icons.access_time_outlined,
+                  color: AppColors.textHint,
+                  size: 20.sp,
+                ),
               ),
             ),
             SizedBox(width: 16.w),
@@ -302,12 +309,8 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
               ),
             ),
             if (onFavorite != null)
-              IconButton(
-                icon: Icon(
-                  Icons.favorite_border,
-                  color: AppColors.primary,
-                  size: 22.sp,
-                ),
+              FavoriteIconButton(
+                isFavorite: isFavorite,
                 onPressed: onFavorite,
               ),
           ],

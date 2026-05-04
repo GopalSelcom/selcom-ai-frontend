@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
-import 'package:selcom_rides_frontend/core/theme/app_colors.dart';
+
+import '../../../../core/localization/app_strings.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_primary_button.dart';
 
 class CancelConfirmationDialog extends StatelessWidget {
   const CancelConfirmationDialog({super.key});
@@ -14,32 +17,33 @@ class CancelConfirmationDialog extends StatelessWidget {
       backgroundColor: AppColors.cardBackground,
       insetPadding: EdgeInsets.symmetric(horizontal: 13.w),
       child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 32.h, horizontal: 24.w),
+        padding: EdgeInsets.symmetric(vertical: 28.h, horizontal: 24.w),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               AppStrings.areYouSureYouWantToCancel.tr,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textSlateStrong,
-                height: 1.2,
+              style: AppTextStyles.homeTitle.copyWith(
+                fontWeight: FontWeight.w600,
+                height: 34 / 20,
+                letterSpacing: -0.4,
               ),
             ),
-            SizedBox(height: 32.h),
+            SizedBox(height: 24.h),
             _ActionButton(
               title: AppStrings.yesCancel.tr,
               color: AppColors.primary,
               textColor: AppColors.white,
               onTap: () => Get.back(result: true),
             ),
-            SizedBox(height: 12.h),
+            SizedBox(height: 16.h),
             _ActionButton(
               title: AppStrings.no.tr,
-              color: AppColors.bgSoftCircle,
-              textColor: AppColors.textSlateSoft,
+              color: AppColors.white,
+              textColor: AppColors.textNeutralButton,
+              outlined: true,
+              outlinedBorderColor: AppColors.textNeutralButton,
               onTap: () => Get.back(result: false),
             ),
           ],
@@ -130,8 +134,15 @@ class CancelAssignmentWarningDialog extends StatelessWidget {
 
 class CancelReasonSelectionDialog extends StatefulWidget {
   final List<String>? reasons;
+  final Future<void> Function(String reason)? onContinueTap;
+  final RxBool? isProcessing;
 
-  const CancelReasonSelectionDialog({super.key, this.reasons});
+  const CancelReasonSelectionDialog({
+    super.key,
+    this.reasons,
+    this.onContinueTap,
+    this.isProcessing,
+  });
 
   @override
   State<CancelReasonSelectionDialog> createState() =>
@@ -163,107 +174,122 @@ class _CancelReasonSelectionDialogState
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
-      backgroundColor: AppColors.cardBackground,
-      insetPadding: EdgeInsets.symmetric(horizontal: 13.w),
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 32.h, horizontal: 24.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              AppStrings.whyDoYouWantToCancel.tr,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textSlateStrong,
+    return PopScope(
+      canPop: false,
+      child: Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
+        backgroundColor: AppColors.cardBackground,
+        insetPadding: EdgeInsets.symmetric(horizontal: 13.w),
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 32.h, horizontal: 24.w),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                AppStrings.whyDoYouWantToCancel.tr,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.homeTitle.copyWith(
+                  fontWeight: FontWeight.w600,
+                  height: 34 / 20,
+                  letterSpacing: -0.4,
+                ),
               ),
-            ),
-            SizedBox(height: 24.h),
-            Flexible(
-              child: ListView.separated(
-                shrinkWrap: true,
-                padding: EdgeInsets.zero,
-                itemCount: _reasons.length,
-                separatorBuilder: (_, __) =>
-                    Divider(height: 1.h, color: AppColors.bgSoftCircle),
-                itemBuilder: (context, index) {
-                  final reason = _reasons[index];
-                  final isSelected = _selectedReason == reason;
-                  return InkWell(
-                    onTap: () {
-                      setState(() {
-                        _selectedReason = reason;
-                      });
-                    },
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 14.h),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              reason,
-                              style: TextStyle(
-                                fontSize: 14.sp,
-                                fontWeight: isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.w400,
-                                color: AppColors.textSlate,
+              SizedBox(height: 24.h),
+              Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  padding: EdgeInsets.zero,
+                  itemCount: _reasons.length,
+                  separatorBuilder: (_, __) =>
+                      Divider(height: 1.h, color: AppColors.bgSoftCircle),
+                  itemBuilder: (context, index) {
+                    final reason = _reasons[index];
+                    final isSelected = _selectedReason == reason;
+                    return InkWell(
+                      onTap: () {
+                        setState(() {
+                          _selectedReason = reason;
+                        });
+                      },
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 14.h),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                reason,
+                                style: AppTextStyles.homeSubtitle.copyWith(
+                                  color: AppColors.black,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.w500,
+                                  height: 20 / 15,
+                                ),
                               ),
                             ),
-                          ),
-                          Container(
-                            width: 20.w,
-                            height: 20.w,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(6.r),
-                              border: Border.all(
+                            Container(
+                              width: 20.w,
+                              height: 20.w,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(6.r),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? AppColors.primary
+                                      : AppColors.iconHeartOutline,
+                                  width: 1.5,
+                                ),
                                 color: isSelected
                                     ? AppColors.primary
-                                    : AppColors.skeletonBase,
-                                width: 1.2,
+                                    : AppColors.transparent,
                               ),
-                              color: isSelected
-                                  ? AppColors.primary
-                                  : AppColors.transparent,
+                              child: isSelected
+                                  ? Icon(
+                                      Icons.check,
+                                      size: 14.sp,
+                                      color: AppColors.white,
+                                    )
+                                  : null,
                             ),
-                            child: isSelected
-                                ? Icon(
-                                    Icons.check,
-                                    size: 14.sp,
-                                    color: AppColors.white,
-                                  )
-                                : null,
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
-            ),
-            SizedBox(height: 32.h),
-            _ActionButton(
-              title: AppStrings.continueLabel.tr,
-              color: isSelected
-                  ? AppColors.primary
-                  : AppColors.primary.withValues(alpha: 0.5),
-              textColor: AppColors.white,
-              onTap: _selectedReason == null
-                  ? null
-                  : () => Get.back(result: _selectedReason),
-            ),
-            SizedBox(height: 12.h),
-            _ActionButton(
-              title: AppStrings.no.tr,
-              color: AppColors.bgSoftCircle,
-              textColor: AppColors.textSlateSoft,
-              onTap: () => Get.back(),
-            ),
-          ],
+              SizedBox(height: 32.h),
+              Obx(() {
+                final loading = widget.isProcessing?.value ?? false;
+                return _ActionButton(
+                  title: AppStrings.continueLabel.tr,
+                  color: isSelected
+                      ? AppColors.primary
+                      : AppColors.primary.withValues(alpha: 0.5),
+                  textColor: AppColors.white,
+                  isLoading: loading,
+                  onTap: _selectedReason == null || loading
+                      ? null
+                      : () async {
+                          if (widget.onContinueTap != null) {
+                            await widget.onContinueTap!.call(_selectedReason!);
+                          } else {
+                            Get.back(result: _selectedReason);
+                          }
+                        },
+                );
+              }),
+              SizedBox(height: 12.h),
+              _ActionButton(
+                title: AppStrings.no.tr,
+                color: AppColors.white,
+                textColor: AppColors.textNeutralButton,
+                outlined: true,
+                outlinedBorderColor: AppColors.textNeutralButton,
+                onTap: () => Get.back(),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -279,109 +305,139 @@ class CancellationChargesDialog extends StatelessWidget {
     required this.cancellationFee,
     required this.netRefund,
     required this.policyLabel,
+    this.onConfirmTap,
+    this.isProcessing,
   });
 
   final bool canCancel;
   final int cancellationFee;
   final int netRefund;
   final String policyLabel;
+  final Future<void> Function()? onConfirmTap;
+  final RxBool? isProcessing;
 
   @override
   Widget build(BuildContext context) {
     final feeLabel = 'TZS $cancellationFee';
     final refundLabel = 'TZS $netRefund';
 
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
-      backgroundColor: AppColors.cardBackground,
-      insetPadding: EdgeInsets.symmetric(horizontal: 13.w),
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 28.h, horizontal: 24.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+    return PopScope(
+      canPop: false,
+      child: Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
+        backgroundColor: AppColors.cardBackground,
+        insetPadding: EdgeInsets.symmetric(horizontal: 13.w),
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 28.h, horizontal: 24.w),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
             Text(
-              'Cancellation charges',
+              AppStrings.areYouSureYouWantToCancel.tr,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textSlateStrong,
+              style: AppTextStyles.homeTitle.copyWith(
+                fontWeight: FontWeight.w600,
+                height: 26 / 20,
+                letterSpacing: -0.4,
               ),
             ),
-            SizedBox(height: 16.h),
             Text(
-              policyLabel.trim().isEmpty
-                  ? (canCancel
-                      ? 'A cancellation fee may apply for this ride status.'
-                      : 'This ride cannot be cancelled at the current status.')
-                  : policyLabel,
+              AppStrings.yourDriverIsAlreadyOnTheWay.tr,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: AppColors.textSlate,
-                height: 1.4,
+              style: AppTextStyles.homeTitle.copyWith(
+                fontWeight: FontWeight.w600,
+                height: 26 / 20,
+                letterSpacing: -0.4,
               ),
             ),
-            SizedBox(height: 18.h),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(14.r),
-                border: Border.all(color: AppColors.bgSoftCircle),
-              ),
-              child: Column(
+            SizedBox(height: 14.h),
+            RichText(
+              textAlign: TextAlign.center,
+              text: TextSpan(
+                style: AppTextStyles.homeSubtitle.copyWith(
+                  color: AppColors.textSlate,
+                  fontWeight: FontWeight.w500,
+                  height: 1.4,
+                ),
                 children: [
-                  _chargesRow('Cancellation fee', feeLabel),
-                  SizedBox(height: 8.h),
-                  _chargesRow('Net refund', refundLabel),
+                  const TextSpan(text: 'A cancellation fee of '),
+                  TextSpan(
+                    text: feeLabel,
+                    style: AppTextStyles.price.copyWith(
+                      fontSize: 15.sp,
+                      height: 1.4,
+                      color: AppColors.error,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const TextSpan(
+                    text: ' will be charged since your driver is on the way.',
+                  ),
+                  const TextSpan(text: '\n'),
+                  TextSpan(
+                    text: 'Net amount refunded: ',
+                    style: AppTextStyles.homeSubtitle.copyWith(
+                      color: AppColors.textSlate,
+                      fontWeight: FontWeight.w500,
+                      height: 1.4,
+                    ),
+                  ),
+                  TextSpan(
+                    text: refundLabel,
+                    style: AppTextStyles.price.copyWith(
+                      fontSize: 15.sp,
+                      height: 1.4,
+                      color: AppColors.success,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  if (policyLabel.trim().isNotEmpty)
+                    TextSpan(
+                      text: '\n$policyLabel',
+                      style: AppTextStyles.homeCaption.copyWith(
+                        color: AppColors.textSlate,
+                        fontWeight: FontWeight.w400,
+                        height: 1.4,
+                      ),
+                    ),
                 ],
               ),
             ),
-            SizedBox(height: 24.h),
+            SizedBox(height: 20.h),
+            Divider(height: 1.h, color: AppColors.bgSoftCircle),
+            SizedBox(height: 20.h),
             _ActionButton(
-              title: canCancel ? 'Continue' : AppStrings.keepRide.tr,
+              title: AppStrings.keepRide.tr,
               color: AppColors.primary,
               textColor: AppColors.white,
-              onTap: () => Get.back(result: canCancel),
-            ),
-            SizedBox(height: 10.h),
-            _ActionButton(
-              title: AppStrings.no.tr,
-              color: AppColors.bgSoftCircle,
-              textColor: AppColors.textSlateSoft,
               onTap: () => Get.back(result: false),
             ),
-          ],
+            SizedBox(height: 10.h),
+              Obx(() {
+                final loading = isProcessing?.value ?? false;
+                return _ActionButton(
+                  title: 'Cancel & Pay',
+                  color: AppColors.white,
+                  textColor: AppColors.textNeutralButton,
+                  outlined: true,
+                  outlinedBorderColor: AppColors.textNeutralButton,
+                  isLoading: loading,
+                  onTap: !canCancel || loading
+                      ? null
+                      : () async {
+                          if (onConfirmTap != null) {
+                            await onConfirmTap!.call();
+                          } else {
+                            Get.back(result: true);
+                          }
+                        },
+                );
+              }),
+            ],
+          ),
         ),
       ),
-    );
-  }
-
-  Widget _chargesRow(String title, String value) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            title,
-            style: TextStyle(
-              fontSize: 13.sp,
-              color: AppColors.textSlate,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 13.sp,
-            color: AppColors.textSlateStrong,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ],
     );
   }
 }
@@ -392,35 +448,33 @@ class _ActionButton extends StatelessWidget {
     required this.color,
     required this.textColor,
     required this.onTap,
+    this.outlined = false,
+    this.outlinedBorderColor,
+    this.isLoading = false,
   });
 
   final String title;
   final Color color;
   final Color textColor;
   final VoidCallback? onTap;
+  final bool outlined;
+  final Color? outlinedBorderColor;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
+    return AppPrimaryButton(
+      label: title,
+      onPressed: onTap,
+      isLoading: isLoading,
       height: 54.h,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          foregroundColor: textColor,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(100.r),
-          ),
-          disabledBackgroundColor: color.withValues(alpha: 0.4),
-          padding: EdgeInsets.zero,
-        ),
-        onPressed: onTap,
-        child: Text(
-          title,
-          style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700),
-        ),
-      ),
+      borderRadius: 100.r,
+      backgroundColor: color,
+      textColor: textColor,
+      outlined: outlined,
+      outlinedBorderColor: outlinedBorderColor,
+      outlinedBorderWidth: outlined ? 1.0 : null,
+      outlinedTextColor: textColor,
     );
   }
 }

@@ -279,8 +279,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     return recentDestinations.take(3).toList(growable: false);
   }
 
-  bool get canViewMoreRecentLocations =>
-      recentDestinations.length > 3;
+  bool get canViewMoreRecentLocations => recentDestinations.length > 3;
 
   Future<void> openRecentLocationsScreen() async {
     await Get.to<void>(() => const RecentLocationsScreen());
@@ -1564,7 +1563,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       message: 'Are you sure you want to remove this saved address?',
       confirmText: 'Remove',
       cancelText: 'Cancel',
-      confirmColor: AppColors.error,
       onConfirm: () async {
         final result = await profileRepository.deleteSavedPlace(savedPlaceId);
         result.fold(

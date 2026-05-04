@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -142,7 +143,10 @@ class PhoneInputScreen extends GetView<AuthController> {
                                 ),
                                 maxLength: 11,
                                 onChanged: (v) {
-                                  controller.mobileNumber.value = v.replaceAll(' ', '');
+                                  controller.mobileNumber.value = v.replaceAll(
+                                    ' ',
+                                    '',
+                                  );
                                 },
                                 hintText: AppStrings.eG7XxXxxXxx.tr,
                                 hintStyle: AppTextStyles.hint.copyWith(
@@ -171,7 +175,9 @@ class PhoneInputScreen extends GetView<AuthController> {
                               padding: EdgeInsets.symmetric(horizontal: 12.w),
                               decoration: BoxDecoration(
                                 color: AppColors.white,
-                                border: Border.all(color: AppColors.borderDefault),
+                                border: Border.all(
+                                  color: AppColors.borderDefault,
+                                ),
                                 borderRadius: BorderRadius.circular(16.r),
                                 boxShadow: const [
                                   BoxShadow(

@@ -30,6 +30,10 @@ class UserModel extends UserEntity {
     super.appUuid,
     super.accountNumber,
     super.uniqueId,
+    super.goRidePinEnabled,
+    super.goAvgRating,
+    super.goRatingCount,
+    super.lastUsedPaymentMethod,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -67,6 +71,10 @@ class UserModel extends UserEntity {
       appUuid: json['app_uuid'],
       accountNumber: json['account_number'],
       uniqueId: json['unique_id'],
+      goRidePinEnabled: json['go_ride_pin_enabled'] as bool?,
+      goAvgRating: json['go_avg_rating'] as num?,
+      goRatingCount: (json['go_rating_count'] as num?)?.toInt(),
+      lastUsedPaymentMethod: json['last_used_payment_method']?.toString(),
     );
   }
 
@@ -102,6 +110,10 @@ class UserModel extends UserEntity {
       'app_uuid': appUuid,
       'account_number': accountNumber,
       'unique_id': uniqueId,
+      'go_ride_pin_enabled': goRidePinEnabled,
+      'go_avg_rating': goAvgRating,
+      'go_rating_count': goRatingCount,
+      'last_used_payment_method': lastUsedPaymentMethod,
     };
   }
 }

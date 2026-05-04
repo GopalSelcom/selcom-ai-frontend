@@ -5,6 +5,7 @@ import '../../../../core/errors/failures.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../datasources/ride_remote_data_source.dart';
 import '../../../../core/data/models/ride_model.dart';
+import '../models/emergency_contacts_response.dart';
 import '../models/ride_management_models.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
@@ -246,6 +247,39 @@ class RideRepositoryImpl implements RideRepository {
     try {
       await remoteDataSource.cancelPendingStops(rideId);
       return const Right(null);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, CheckBookModeResult>> checkBookMode({
+    required double riderLat,
+    required double riderLng,
+    required double pickupLat,
+    required double pickupLng,
+  }) async {
+    try {
+      final result = await remoteDataSource.checkBookMode(
+        riderLat: riderLat,
+        riderLng: riderLng,
+        pickupLat: pickupLat,
+        pickupLng: pickupLng,
+      );
+      return Right(result);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, EmergencyContactsResponse>>
+  getEmergencyContacts() async {
+    try {
+      final result = await remoteDataSource.getEmergencyContacts();
+      return Right(result);
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));

@@ -7,6 +7,8 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:selcom_rides_frontend/core/utils/map_marker_utils.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:flutter/material.dart';
 
 import '../../../../core/data/models/requests/book_ride_request.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
@@ -28,6 +30,8 @@ import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
+
+enum BookingMode { self, other }
 
 /// SCR-09 — vehicle + fare selection.
 class VehicleSelectionController extends GetxController {
@@ -617,6 +621,10 @@ class VehicleSelectionController extends GetxController {
       );
       if (!refreshedOk) return;
 
+      final isBookedForOther = (confirmed['isBookedForOther'] as bool?) ?? false;
+      final passengerName = confirmed['passengerName'] as String?;
+      final passengerPhone = confirmed['passengerPhone'] as String?;
+
       // 1) Validate payment first (Validate Ride Payment - Block).
       final refreshedSelectedEstimate = selectedEstimate;
       final validateRequest = ValidateRidePaymentRequest(
@@ -690,6 +698,9 @@ class VehicleSelectionController extends GetxController {
             destinations: destinations.toList(),
             vehicleTypeId: resolvedVehicleTypeId,
             paymentMethod: pay.type,
+            isBookedForOther: isBookedForOther,
+            passengerName: isBookedForOther ? passengerName : null,
+            passengerPhone: isBookedForOther ? passengerPhone : null,
           );
           final result = await homeRepository.bookRide(request);
           await result.fold<Future<void>>(
@@ -724,7 +735,11 @@ class VehicleSelectionController extends GetxController {
                   'destinationLat': destinationEntity.lat,
                   'destinationLng': destinationEntity.lng,
                   'destinationAddress': destinationEntity.address,
+                  'destinations': destinations.toList(),
                   'fareBreakdown': data.data?.ride?.fareBreakdown?.toJson(),
+                  'isBookedForOther': isBookedForOther,
+                  'passengerName': passengerName,
+                  'passengerPhone': passengerPhone,
                 },
               );
             },

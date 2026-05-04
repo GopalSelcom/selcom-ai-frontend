@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_back_button.dart';
 import '../../../ride/data/models/ride_management_models.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/recent_location_tile.dart';
@@ -17,16 +18,11 @@ class RecentLocationsScreen extends GetView<HomeController> {
     return Scaffold(
       backgroundColor: AppColors.white,
       appBar: AppBar(
-        elevation: 0,
-        backgroundColor: AppColors.white,
-        foregroundColor: AppColors.textHeading,
-        title: Text(
-          AppStrings.recentLocation.tr,
-          style: AppTextStyles.homeSubtitle.copyWith(
-            fontWeight: FontWeight.w700,
-            fontSize: 16.sp,
-          ),
+        leading: const AppBackButton(
+          color: AppColors.textHeading,
+          alignment: Alignment.center,
         ),
+        title: Text(AppStrings.recentLocation.tr),
       ),
       body: RefreshIndicator(
         onRefresh: controller.refreshRecentDestinations,
