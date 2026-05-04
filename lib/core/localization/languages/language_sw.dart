@@ -80,6 +80,7 @@ class LanguageSw extends Languages {
     'failed_to_update_favorite_status': '',
     'fallback_ride_name': '',
     'favourite_locations': '',
+    'saved_locations': '',
     'get_started': '',
     'got_it': '',
     'help': '',
@@ -1121,4 +1122,8 @@ class LanguageSw extends Languages {
 
   @override
   String get exitAppMessage => values['exit_app_message'] ?? '';
+
+  @override
+  // TODO: implement savedLocations
+  String get savedLocations => values['saved_locations'] ?? '';
 }

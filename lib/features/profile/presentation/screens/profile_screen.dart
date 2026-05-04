@@ -511,7 +511,7 @@ class ProfileScreen extends StatelessWidget {
             ),
             MenuItemWidget(
               icon: Iconsax.heart,
-              title: AppStrings.favouriteLocations.tr,
+              title: AppStrings.savedLocations.tr,
               onTap: controller.openFavoriteLocations,
             ),
             MenuItemWidget(

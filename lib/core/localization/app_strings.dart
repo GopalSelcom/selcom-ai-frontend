@@ -92,6 +92,7 @@ class AppStrings {
       'failed_to_update_favorite_status';
   static const String fallbackRideName = 'fallback_ride_name';
   static const String favouriteLocations = 'favourite_locations';
+  static const String savedLocations = 'saved_locations';
   static const String getStarted = 'get_started';
   static const String gotIt = 'got_it';
   static const String help = 'help';
