@@ -1,10 +1,11 @@
 import 'dart:async';
+import 'package:audioplayers/audioplayers.dart';
 
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:vibration/vibration.dart';
 
 import '../../utils/app_dialogs.dart';
 import '../domain/agora_voice_call_end_reason.dart';
@@ -26,6 +27,8 @@ class AgoraVoiceCallController extends GetxController {
     this.onCallEnded,
     this.onCallRejected,
     this.onCallMissed,
+    this.ringbackAssetPath = 'sound/waiting_ring.mp3',
+    this.incomingRingtoneAssetPath = 'sound/caller_ring.mp3',
   });
 
   final AgoraVoiceEngineService engineService;
@@ -40,6 +43,8 @@ class AgoraVoiceCallController extends GetxController {
   final Future<void> Function(AgoraVoiceCallEndReason reason)? onCallEnded;
   final Future<void> Function()? onCallRejected;
   final Future<void> Function()? onCallMissed;
+  final String ringbackAssetPath;
+  final String incomingRingtoneAssetPath;
 
   final callState = AgoraVoiceCallState.idle.obs;
   final errorMessage = ''.obs;
@@ -47,11 +52,41 @@ class AgoraVoiceCallController extends GetxController {
   final isSpeakerEnabled = true.obs;
   final connectedDurationSeconds = 0.obs;
   final endReason = Rxn<AgoraVoiceCallEndReason>();
-  Timer? _ringbackTimer;
-  Timer? _incomingRingtoneTimer;
   Timer? _unansweredTimeoutTimer;
   Timer? _connectedDurationTimer;
+  AudioPlayer? _ringbackPlayer;
+  AudioPlayer? _incomingRingtonePlayer;
   bool _isEnding = false;
+
+  Future<void> _markConnectedIfNeeded({required String source}) async {
+    if (callState.value == AgoraVoiceCallState.connected ||
+        callState.value == AgoraVoiceCallState.ended ||
+        callState.value == AgoraVoiceCallState.error ||
+        callState.value == AgoraVoiceCallState.idle) {
+      return;
+    }
+    if (kDebugMode) {
+      debugPrint('[AGORA_FLOW] markConnected source=$source ride=${session.rideId}');
+    }
+    _stopRingbackTone();
+    _stopUnansweredTimeout();
+    callState.value = AgoraVoiceCallState.connected;
+    _startConnectedDurationTimer();
+    try {
+      await onCallConnected?.call();
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('[AGORA_FLOW] onCallConnected callback failed: $e');
+        debugPrint('$st');
+      }
+    }
+  }
+
+  /// Marks the call as connected when backend `call_joined` arrives before
+  /// Agora `onUserJoined`. This is deduped with SDK callbacks.
+  Future<void> markConnectedFromSignal() async {
+    await _markConnectedIfNeeded(source: 'call_joined');
+  }
 
   /// Main join flow used by both outgoing and incoming accept.
   /// If anything fails here, UI goes to [AgoraVoiceCallState.error].
@@ -78,10 +113,12 @@ class AgoraVoiceCallController extends GetxController {
     try {
       if (kDebugMode) {
         debugPrint(
-          '[AGORA_FLOW] startCall ride=${session.rideId} '
+          '[AGORA_FLOW] startCall triggered ride=${session.rideId} '
           'provider=${engineService.tokenProvider.runtimeType}',
         );
       }
+      
+      if (kDebugMode) debugPrint('[AGORA_FLOW] Checking microphone permission...');
       final hasMicPermission = await _ensureMicrophonePermission();
       if (!hasMicPermission) {
         if (kDebugMode) {
@@ -89,31 +126,34 @@ class AgoraVoiceCallController extends GetxController {
         }
         return;
       }
+      if (kDebugMode) debugPrint('[AGORA_FLOW] Microphone permission granted.');
 
+      if (kDebugMode) debugPrint('[AGORA_FLOW] Fetching credentials for ride=${session.rideId}...');
       final creds = await engineService.tokenProvider.fetchCredentials(
         rideId: session.rideId,
       );
       if (kDebugMode) {
         debugPrint(
-          '[AGORA_FLOW] credentials ride=${session.rideId} '
+          '[AGORA_FLOW] Credentials fetched: appId=${creds.appId.substring(0, 5)}... '
           'channel=${creds.channel} uid=${creds.uid}',
         );
       }
 
+      if (kDebugMode) debugPrint('[AGORA_FLOW] Initializing Agora engine...');
       await engineService.ensureInitialized(
         appId: creds.appId,
         registerEvents: _bindEvents,
       );
+      if (kDebugMode) debugPrint('[AGORA_FLOW] Engine initialized. Joining channel...');
+
       await engineService.join(creds);
+      if (kDebugMode) debugPrint('[AGORA_FLOW] Join command sent to SDK.');
+
       await engineService.setSpeakerEnabled(isSpeakerEnabled.value);
       await engineService.setMuted(isMuted.value);
-      _stopRingbackTone();
-      _stopUnansweredTimeout();
-      callState.value = AgoraVoiceCallState.connected;
-      _startConnectedDurationTimer();
-      await onCallConnected?.call();
+      
       if (kDebugMode) {
-        debugPrint('[AGORA_FLOW] startCall success ride=${session.rideId}');
+        debugPrint('[AGORA_FLOW] startCall execution finished successfully for ride=${session.rideId}');
       }
     } catch (e, st) {
       _stopRingbackTone();
@@ -322,55 +362,62 @@ class AgoraVoiceCallController extends GetxController {
   }
 
   /// Plays a lightweight caller ringback while waiting for peer answer.
-  ///
-  /// Uses [SystemSoundType.alert] so shared module has no external audio asset
-  /// dependency. Pattern: two quick beeps, then pause.
-  void _startRingbackTone() {
+  void _startRingbackTone() async {
     _stopRingbackTone();
-    _ringbackTimer = Timer.periodic(const Duration(milliseconds: 1700), (_) {
-      if (callState.value != AgoraVoiceCallState.connecting) {
-        _stopRingbackTone();
-        return;
+    _ringbackPlayer = AudioPlayer();
+    try {
+      // AudioPlayer uses assets folder by default for AssetSource
+      await _ringbackPlayer?.play(AssetSource(ringbackAssetPath));
+      await _ringbackPlayer?.setReleaseMode(ReleaseMode.loop);
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[AGORA_FLOW] Error playing ringback ($ringbackAssetPath): $e');
       }
-      SystemSound.play(SystemSoundType.alert);
-      Future<void>.delayed(const Duration(milliseconds: 420), () {
-        if (callState.value == AgoraVoiceCallState.connecting) {
-          SystemSound.play(SystemSoundType.alert);
-        }
-      });
-    });
-    // Trigger immediately so user hears feedback right away.
-    SystemSound.play(SystemSoundType.alert);
+    }
   }
 
   void _stopRingbackTone() {
-    _ringbackTimer?.cancel();
-    _ringbackTimer = null;
+    _ringbackPlayer?.stop();
+    _ringbackPlayer?.dispose();
+    _ringbackPlayer = null;
   }
 
   /// Starts incoming ringtone loop for callee-side incoming screen.
-  ///
-  /// Shared-module safe implementation using [SystemSoundType.alert] so no
-  /// project-specific audio assets are required.
-  void startIncomingRingtone() {
+  Future<void> startIncomingRingtone() async {
     if (!enableIncomingRingtone) return;
     stopIncomingRingtone();
-    _incomingRingtoneTimer = Timer.periodic(const Duration(milliseconds: 2200), (_) {
-      if (callState.value == AgoraVoiceCallState.connected ||
-          callState.value == AgoraVoiceCallState.ended ||
-          callState.value == AgoraVoiceCallState.error) {
-        stopIncomingRingtone();
-        return;
+    _incomingRingtonePlayer = AudioPlayer();
+    try {
+      await _incomingRingtonePlayer?.setReleaseMode(ReleaseMode.loop);
+      await _incomingRingtonePlayer?.play(
+        AssetSource(incomingRingtoneAssetPath),
+        volume: 1.0,
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint(
+          '[AGORA_FLOW] Error playing incoming ringtone '
+          '($incomingRingtoneAssetPath): $e',
+        );
       }
-      SystemSound.play(SystemSoundType.alert);
+    }
+
+    // Start vibration loop
+    Vibration.hasVibrator().then((hasVibrator) {
+      if (hasVibrator == true) {
+        Vibration.vibrate(
+          pattern: [500, 1000, 500, 1000],
+          repeat: 0,
+        );
+      }
     });
-    // Immediate cue so callee hears ring right when screen opens.
-    SystemSound.play(SystemSoundType.alert);
   }
 
   void stopIncomingRingtone() {
-    _incomingRingtoneTimer?.cancel();
-    _incomingRingtoneTimer = null;
+    _incomingRingtonePlayer?.stop();
+    _incomingRingtonePlayer?.dispose();
+    _incomingRingtonePlayer = null;
+    Vibration.cancel();
   }
 
   void _startUnansweredTimeout() {
@@ -439,7 +486,12 @@ class AgoraVoiceCallController extends GetxController {
           if (kDebugMode) {
             debugPrint('[AGORA_FLOW] onJoinChannelSuccess ride=${session.rideId}');
           }
-          callState.value = AgoraVoiceCallState.connected;
+        },
+        onUserJoined: (connection, remoteUid, elapsed) {
+          if (kDebugMode) {
+            debugPrint('[AGORA_FLOW] onUserJoined remoteUid=$remoteUid ride=${session.rideId}');
+          }
+          unawaited(_markConnectedIfNeeded(source: 'onUserJoined'));
         },
         /// Remote user left the channel (hang up, quit, or dropped) — see Agora
         /// [RtcEngineEventHandler.onUserOffline] in the Voice/Video SDK docs.

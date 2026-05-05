@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import '../../shared/agora_voice/service/agora_call_kit_service.dart';
 import '../services/storage_service.dart';
 import 'package:logger/logger.dart';
 import 'package:get/get.dart';
@@ -11,6 +12,7 @@ import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../di/injection_container.dart';
 import '../../features/ride/domain/repositories/ride_repository.dart';
 import '../../shared/agora_voice/service/agora_call_cancel_notification_bridge.dart';
+import '../../shared/agora_voice/service/agora_call_joined_notification_bridge.dart';
 import '../../shared/agora_voice/service/agora_incoming_call_notification_bridge.dart';
 import '../../shared/utils/ride_active_navigation.dart';
 import '../../shared/utils/app_dialogs.dart';
@@ -234,6 +236,10 @@ class NotificationService {
       unawaited(_handleForegroundCallCancelled(message));
       return;
     }
+    if (type == 'call_joined') {
+      unawaited(_handleForegroundCallJoined(message));
+      return;
+    }
 
     String? title = message.notification?.title ?? data.title;
     String? body = message.notification?.body ?? data.body;
@@ -333,6 +339,16 @@ class NotificationService {
     await cancelIncomingCallNotification(rideId: rideId);
   }
 
+  Future<void> _handleForegroundCallJoined(RemoteMessage message) async {
+    final raw = Map<String, dynamic>.from(message.data);
+    if (await AgoraCallJoinedNotificationBridge.instance.deliverIfMatching(raw)) {
+      final rideId = raw['ride_id']?.toString() ?? raw['rideId']?.toString();
+      await cancelIncomingCallNotification(rideId: rideId);
+      return;
+    }
+    _queueOrHandleNavigationRaw(raw);
+  }
+
   Future<void> _handleNotificationNavigationRaw(
     Map<String, dynamic> raw,
   ) async {
@@ -354,6 +370,12 @@ class NotificationService {
       await cancelIncomingCallNotification(rideId: rideId);
       await AgoraCallCancelNotificationBridge.instance.deliverIfMatching(raw);
       return;
+    }
+    if (type == 'call_joined' && rideId != null && rideId.isNotEmpty) {
+      await cancelIncomingCallNotification(rideId: rideId);
+      if (await AgoraCallJoinedNotificationBridge.instance.deliverIfMatching(raw)) {
+        return;
+      }
     }
 
     if (rideId == null || rideId.isEmpty) {

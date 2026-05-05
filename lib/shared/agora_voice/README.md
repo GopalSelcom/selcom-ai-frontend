@@ -290,3 +290,13 @@ If call fails:
 
 - Never log full RTC token in production.
 - Never ship Agora certificate in client builds.
+
+---
+
+## 14) Critical Bug Fixes (Handoff Notes)
+
+### SDK Initialization Race Condition (May 2026)
+**Issue**: The call would connect at the SDK level, but the app would never receive events (like `onUserJoined`), leading to a 35-second timeout even if the other person answered.
+**Cause**: In `AgoraVoiceEngineService.ensureInitialized`, the `registerEvents` callback was being executed *before* the internal `_engine` reference was saved. Because the reference was null, the event handler registration was skipped.
+**Fix**: Reordered the initialization sequence in `AgoraVoiceEngineService.dart` to save the `_engine` reference **before** calling `registerEvents`.
+**Verification**: Confirmed that `[AGORA_FLOW] onJoinChannelSuccess` and `[AGORA_FLOW] onUserJoined` logs now trigger correctly.

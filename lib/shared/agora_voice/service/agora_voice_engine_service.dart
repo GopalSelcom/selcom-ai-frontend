@@ -43,9 +43,9 @@ class AgoraVoiceEngineService {
     await engine.enableAudio();
     await engine.disableVideo();
 
-    registerEvents(const RtcEngineEventHandler());
     _engine = engine;
     _initializedAppId = appId;
+    registerEvents(const RtcEngineEventHandler());
   }
 
   /// Sets/overrides event handlers from the call controller layer.
@@ -74,6 +74,11 @@ class AgoraVoiceEngineService {
       );
     }
 
+    if (kDebugMode) {
+      debugPrint(
+        '[AGORA_SDK] Joining channel=${creds.channel} with uid=${creds.uid}...',
+      );
+    }
     await engine.joinChannel(
       token: creds.token,
       channelId: creds.channel,
@@ -85,6 +90,7 @@ class AgoraVoiceEngineService {
         autoSubscribeAudio: true,
       ),
     );
+    if (kDebugMode) debugPrint('[AGORA_SDK] joinChannel call completed.');
     _joined = true;
   }
 

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -30,6 +31,9 @@ class AgoraVoiceCallScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (kDebugMode) {
+      debugPrint('[AGORA_UI] AgoraVoiceCallScreen building for $displayName (isIncoming: $isIncoming)');
+    }
     final titleStyle = Theme.of(context).textTheme.titleLarge?.copyWith(
           color: _white,
           fontSize: 20.sp,

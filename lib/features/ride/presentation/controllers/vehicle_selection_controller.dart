@@ -662,13 +662,15 @@ class VehicleSelectionController extends GetxController {
           _socketService.joinPaymentRoom(validationId: validationId);
           String txnId = generateTransactionId();
 
-          rideRepository.walletDummyPaymentRequest(
-            DummyPaymentRequest(
-              result: "SUCCESS",
-              transId: txnId,
-              validationId: validationId,
-            ),
-          );
+         Future.delayed(const Duration(seconds: 5), () {
+           rideRepository.walletDummyPaymentRequest(
+             DummyPaymentRequest(
+               result: "SUCCESS",
+               transId: txnId,
+               validationId: validationId,
+             ),
+           );
+         });
           _showPaymentStatusDialog();
 
           final blockOk = await _waitForPaymentBlockStatus(

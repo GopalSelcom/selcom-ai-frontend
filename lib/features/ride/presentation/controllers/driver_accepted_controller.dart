@@ -52,6 +52,7 @@ import '../../../../shared/agora_voice/presentation/agora_voice_call_controller.
 import '../../../../shared/agora_voice/presentation/agora_voice_call_screen.dart';
 import '../../../../shared/agora_voice/service/agora_incoming_call_notification_bridge.dart';
 import '../../../../shared/agora_voice/service/agora_call_cancel_notification_bridge.dart';
+import '../../../../shared/agora_voice/service/agora_call_joined_notification_bridge.dart';
 import '../../../../shared/agora_voice/service/agora_voice_engine_service.dart';
 import '../../../../shared/agora_voice/service/agora_voice_incoming_call_handler.dart';
 import '../../../../shared/utils/app_dialogs.dart';
@@ -374,6 +375,7 @@ class DriverAcceptedController extends GetxController
   void onClose() {
     AgoraIncomingCallNotificationBridge.instance.unregister(rideId);
     AgoraCallCancelNotificationBridge.instance.unregister(rideId);
+    AgoraCallJoinedNotificationBridge.instance.unregister(rideId);
     WidgetsBinding.instance.removeObserver(this);
     _connectionSub?.cancel();
     _rideStatusSub?.cancel();
@@ -458,6 +460,15 @@ class DriverAcceptedController extends GetxController
           reason: AgoraVoiceCallEndReason.remoteEnded,
         );
         _closeInAppCallScreenIfOpen();
+      },
+    );
+    AgoraCallJoinedNotificationBridge.instance.register(
+      rideId: rideId,
+      onJoined: (_) async {
+        final controller = _inAppCallController;
+        if (controller == null) return;
+        controller.stopIncomingRingtone();
+        await controller.markConnectedFromSignal();
       },
     );
 
