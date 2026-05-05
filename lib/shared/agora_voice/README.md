@@ -152,6 +152,21 @@ Token is never sent in push payload; receiver mints its own token on answer.
    - FCM/APNs payload -> `AgoraVoiceIncomingCallHandler.handleIncomingCallPush(...)`
 5. On answer:
    - `startCall()` (it fetches receiver-side token and joins)
+6. Optional behavior knobs (portable defaults):
+   - `enableRingbackOnConnectFlow` (default: `true`)
+   - `enableIncomingRingtone` (default: `true`)
+   - `enableUnansweredTimeout` (default: `true`)
+   - `unansweredTimeout` (default: `35s`)
+   - `onUnansweredTimeout` (hook for host-app toast/dialog)
+   - `onLocalEndRequested` (single place to emit signaling `type=end`)
+   - `onCallConnected` (hook for analytics/start marker)
+   - `onCallRejected` (hook when remote sends `type=reject`)
+   - `onCallMissed` (hook when unanswered timeout fires)
+   - `onCallEnded(reason)` (one callback with normalized end reason)
+7. Built-in call duration:
+   - `connectedDurationSeconds` (`RxInt`)
+   - `connectedDurationLabel()` (`MM:SS`)
+   - starts on `connected`, stops on any end/disconnect.
 
 ---
 
@@ -162,6 +177,30 @@ Token is never sent in push payload; receiver mints its own token on answer.
 - `AGORA_APP_ID` (public app id, needed for static/legacy mode)
 
 If backend returns `503 FEATURE_DISABLED`, host app should hide/disable call CTA.
+
+### Example: outgoing call with timeout UX + symmetric end signal
+
+```dart
+final controller = AgoraVoiceCallController(
+  engineService: AgoraVoiceEngineService(tokenProvider: tokenProvider),
+  session: AgoraVoiceCallSession(rideId: rideId),
+  onLocalEndRequested: () async {
+    await signalingService.sendEvent(
+      AgoraCallInviteEvent(
+        type: AgoraCallInviteEventType.end,
+        channelName: 'ride_$rideId',
+        rideId: rideId,
+        callerName: 'Rider',
+        callerId: localClientId,
+        timestampMs: DateTime.now().millisecondsSinceEpoch,
+      ),
+    );
+  },
+  onUnansweredTimeout: () async {
+    // host app UI feedback (snackbar/dialog/analytics)
+  },
+);
+```
 
 ---
 
@@ -188,7 +227,52 @@ Host-app alignment change done in current repo:
 
 ---
 
-## 10) Debug Checklist
+## 10) End Reason Semantics
+
+Controller normalizes how a call ended via:
+- `AgoraVoiceCallEndReason.localHangup`
+- `AgoraVoiceCallEndReason.remoteEnded`
+- `AgoraVoiceCallEndReason.remoteRejected`
+- `AgoraVoiceCallEndReason.remoteOffline`
+- `AgoraVoiceCallEndReason.unansweredTimeout`
+- `AgoraVoiceCallEndReason.disconnected`
+
+UI helper:
+- `endReasonLabel()` returns user-friendly text such as:
+  - `Call declined`
+  - `No answer`
+  - `Connection lost`
+  - `Call ended by other side`
+
+Loop prevention rule implemented:
+- Local hangup emits `type=end` once (through `onLocalEndRequested`).
+- Remote `type=end`/`type=reject` ends locally via `endCallFromRemote(...)` without re-emitting.
+- Duplicate local end actions are guarded in controller (`_isEnding`).
+
+---
+
+## 11) QA Checklist (Both Apps)
+
+Run these on two real devices/emulators in the same `ride_<rideId>`:
+
+1. A calls B, B answers:
+   - A hears ringback while connecting.
+   - B hears incoming ringtone.
+   - On connect, ring sounds stop on both; duration starts (`MM:SS`).
+2. A ends connected call:
+   - B receives signaling `type=end`.
+   - Both UIs close / move to ended once.
+3. B rejects incoming call:
+   - A gets remote-rejected path (`remoteRejected`) and correct message.
+4. A calls B, B does not answer:
+   - timeout fires (default 35s).
+   - A triggers `onUnansweredTimeout` + ends with `unansweredTimeout`.
+5. Network drop during active call:
+   - call ends with `disconnected` and no ringtone/timer leak.
+
+---
+
+## 12) Debug Checklist
 
 If call fails:
 
@@ -202,7 +286,7 @@ If call fails:
 
 ---
 
-## 11) Security Notes
+## 13) Security Notes
 
 - Never log full RTC token in production.
 - Never ship Agora certificate in client builds.

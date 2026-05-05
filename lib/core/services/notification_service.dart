@@ -10,6 +10,7 @@ import 'package:get/get.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../di/injection_container.dart';
 import '../../features/ride/domain/repositories/ride_repository.dart';
+import '../../shared/agora_voice/service/agora_call_cancel_notification_bridge.dart';
 import '../../shared/agora_voice/service/agora_incoming_call_notification_bridge.dart';
 import '../../shared/utils/ride_active_navigation.dart';
 import '../../shared/utils/app_dialogs.dart';
@@ -29,6 +30,7 @@ class NotificationService {
 
   bool _isInitialized = false;
   String? _deviceToken;
+  Map<String, dynamic>? _pendingNavigationRaw;
   static const String _defaultChannelId = 'high_importance_channel';
   static const String _incomingCallChannelId = 'go_incoming_calls';
 
@@ -82,6 +84,22 @@ class NotificationService {
       initializationSettings,
       onDidReceiveNotificationResponse: _onDidReceiveNotificationResponse,
     );
+
+    // Handle app launch from a local notification tap (background/terminated).
+    final launchDetails = await _localNotifications
+        .getNotificationAppLaunchDetails();
+    if (launchDetails?.didNotificationLaunchApp ?? false) {
+      final payload = launchDetails?.notificationResponse?.payload;
+      if (payload != null && payload.isNotEmpty) {
+        try {
+          final rawData = Map<String, dynamic>.from(jsonDecode(payload));
+          _queueOrHandleNavigationRaw(rawData);
+        } catch (e, stackTrace) {
+          ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+          _logger.e("Error decoding launched notification payload: $e");
+        }
+      }
+    }
 
     // Request permissions for iOS immediately
     if (Platform.isIOS) {
@@ -212,6 +230,10 @@ class NotificationService {
       unawaited(_handleForegroundIncomingCall(message));
       return;
     }
+    if (type == 'call_cancelled') {
+      unawaited(_handleForegroundCallCancelled(message));
+      return;
+    }
 
     String? title = message.notification?.title ?? data.title;
     String? body = message.notification?.body ?? data.body;
@@ -241,11 +263,7 @@ class NotificationService {
 
   void _onMessageOpenedApp(RemoteMessage message) {
     _logger.d("Message opened app: ${message.messageId}");
-    unawaited(
-      _handleNotificationNavigationRaw(
-        Map<String, dynamic>.from(message.data),
-      ),
-    );
+    _queueOrHandleNavigationRaw(Map<String, dynamic>.from(message.data));
   }
 
   void _onDidReceiveNotificationResponse(NotificationResponse response) {
@@ -253,12 +271,31 @@ class NotificationService {
     if (response.payload != null) {
       try {
         final Map<String, dynamic> rawData = jsonDecode(response.payload!);
-        unawaited(_handleNotificationNavigationRaw(rawData));
+        _queueOrHandleNavigationRaw(rawData);
       } catch (e, stackTrace) {
         ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
         _logger.e("Error decoding notification payload: $e");
       }
     }
+  }
+
+  void _queueOrHandleNavigationRaw(Map<String, dynamic> raw) {
+    if (_isNavigationReady()) {
+      unawaited(_handleNotificationNavigationRaw(raw));
+      return;
+    }
+    _pendingNavigationRaw = raw;
+  }
+
+  bool _isNavigationReady() {
+    return Get.key.currentState != null;
+  }
+
+  Future<void> flushPendingNavigationIfAny() async {
+    final raw = _pendingNavigationRaw;
+    if (raw == null || !_isNavigationReady()) return;
+    _pendingNavigationRaw = null;
+    await _handleNotificationNavigationRaw(raw);
   }
 
   /// Foreground: show in-app incoming UI when already on the live ride screen;
@@ -270,17 +307,30 @@ class NotificationService {
         )) {
       return;
     }
+    // If user is already in app, open the ride incoming-call flow directly.
+    _queueOrHandleNavigationRaw(raw);
+
     final role = (message.data['caller_role'] ?? 'rider').toString();
     final title = role == 'driver'
         ? 'Incoming call from driver'
         : 'Incoming call from rider';
     const body = 'Tap to open incoming call screen';
+    final rideId = raw['ride_id']?.toString();
     await showIncomingCallNotification(
-      id: message.messageId.hashCode,
+      id: _incomingCallNotificationId(rideId),
       title: title,
       body: body,
       payload: jsonEncode(raw),
     );
+  }
+
+  Future<void> _handleForegroundCallCancelled(RemoteMessage message) async {
+    final raw = Map<String, dynamic>.from(message.data);
+    if (await AgoraCallCancelNotificationBridge.instance.deliverIfMatching(raw)) {
+      return;
+    }
+    final rideId = raw['ride_id']?.toString() ?? raw['rideId']?.toString();
+    await cancelIncomingCallNotification(rideId: rideId);
   }
 
   Future<void> _handleNotificationNavigationRaw(
@@ -297,6 +347,13 @@ class NotificationService {
           )) {
         return;
       }
+    }
+    if (type == 'call_cancelled' &&
+        rideId != null &&
+        rideId.isNotEmpty) {
+      await cancelIncomingCallNotification(rideId: rideId);
+      await AgoraCallCancelNotificationBridge.instance.deliverIfMatching(raw);
+      return;
     }
 
     if (rideId == null || rideId.isEmpty) {
@@ -406,10 +463,13 @@ class NotificationService {
             priority: Priority.max,
             category: AndroidNotificationCategory.call,
             fullScreenIntent: true,
+            audioAttributesUsage: AudioAttributesUsage.notificationRingtone,
+            visibility: NotificationVisibility.public,
             ticker: 'incoming_call',
             icon: '@mipmap/ic_launcher',
             ongoing: true,
             autoCancel: true,
+            timeoutAfter: 30000,
           ),
           iOS: DarwinNotificationDetails(
             presentAlert: true,
@@ -422,6 +482,22 @@ class NotificationService {
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       _logger.e('Error showing incoming call notification: $e');
+    }
+  }
+
+  int _incomingCallNotificationId(String? rideId) {
+    final normalized = rideId?.trim() ?? '';
+    if (normalized.isEmpty) return 700001;
+    return 'incoming_call_$normalized'.hashCode;
+  }
+
+  Future<void> cancelIncomingCallNotification({String? rideId}) async {
+    final id = _incomingCallNotificationId(rideId);
+    try {
+      await _localNotifications.cancel(id);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      _logger.e('Error cancelling incoming call notification: $e');
     }
   }
 }

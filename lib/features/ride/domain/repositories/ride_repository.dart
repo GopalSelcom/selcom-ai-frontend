@@ -18,6 +18,7 @@ abstract class RideRepository {
     String rideId,
   );
   Future<Either<Failure, bool>> cancelRide(String rideId, String reason);
+  Future<Either<Failure, bool>> cancelVoiceCall(String rideId);
   Future<Either<Failure, bool>> updateDestination(
     String rideId,
     Map<String, dynamic> destination,

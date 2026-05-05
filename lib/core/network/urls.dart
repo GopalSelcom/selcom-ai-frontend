@@ -54,6 +54,7 @@ class _RideEndpoints {
   String cancelPendingStops(String rideId) => "$base/$rideId/stops/pending";
   final checkBookMode = "go/check-book-mode";
   final emergencyContacts = "go/emergency-contacts";
+  String cancelVoiceCall(String rideId) => "$base/$rideId/call/cancel";
   final base = "go/rides";
 }
 

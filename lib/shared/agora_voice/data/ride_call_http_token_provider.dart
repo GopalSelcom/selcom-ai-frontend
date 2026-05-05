@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -17,11 +18,13 @@ class RideCallHttpTokenProvider implements AgoraVoiceTokenProvider {
     required Dio dio,
     required this.tokenPathBuilder,
     this.headersProvider,
+    this.max429Retries = 3,
   }) : _dio = dio;
 
   final Dio _dio;
   final String Function(String rideId) tokenPathBuilder;
   final AgoraHttpHeadersProvider? headersProvider;
+  final int max429Retries;
 
   @override
   Future<AgoraRtcJoinCredentials> fetchCredentials({required String rideId}) async {
@@ -37,9 +40,10 @@ class RideCallHttpTokenProvider implements AgoraVoiceTokenProvider {
       debugPrint('[AGORA_TOKEN] POST $path ride=$rideId authHeader=$hasAuth');
     }
 
-    final response = await _dio.post<dynamic>(
-      path,
-      options: Options(headers: headers),
+    final response = await _postWithRateLimitRetry(
+      path: path,
+      headers: headers,
+      rideId: rideId,
     );
 
     final data = response.data;
@@ -68,6 +72,61 @@ class RideCallHttpTokenProvider implements AgoraVoiceTokenProvider {
       );
     }
     return creds;
+  }
+
+  Future<Response<dynamic>> _postWithRateLimitRetry({
+    required String path,
+    required Map<String, dynamic> headers,
+    required String rideId,
+  }) async {
+    DioException? lastRateLimitError;
+    for (var attempt = 0; attempt <= max429Retries; attempt++) {
+      try {
+        return await _dio.post<dynamic>(
+          path,
+          options: Options(headers: headers),
+        );
+      } on DioException catch (e) {
+        final statusCode = e.response?.statusCode;
+        if (statusCode != 429) rethrow;
+        lastRateLimitError = e;
+        if (attempt >= max429Retries) break;
+
+        final retryAfter = _retryAfterDurationFromHeaders(e.response?.headers);
+        final fallbackSeconds = math.min(1 << attempt, 8);
+        final wait = retryAfter ?? Duration(seconds: fallbackSeconds);
+        if (kDebugMode) {
+          debugPrint(
+            '[AGORA_TOKEN] rate-limited ride=$rideId '
+            'attempt=${attempt + 1}/${max429Retries + 1} '
+            'waitingMs=${wait.inMilliseconds}',
+          );
+        }
+        await Future<void>.delayed(wait);
+      }
+    }
+
+    throw DioException(
+      requestOptions: lastRateLimitError?.requestOptions ??
+          RequestOptions(path: path),
+      response: lastRateLimitError?.response,
+      type: DioExceptionType.badResponse,
+      error:
+          'Token mint endpoint rate-limited (429). Please try again in a moment.',
+      message:
+          'Token mint endpoint rate-limited (429). Please try again in a moment.',
+    );
+  }
+
+  Duration? _retryAfterDurationFromHeaders(Headers? headers) {
+    if (headers == null) return null;
+    final raw = headers.value('retry-after')?.trim();
+    if (raw == null || raw.isEmpty) return null;
+    final seconds = int.tryParse(raw);
+    if (seconds != null && seconds > 0) {
+      return Duration(seconds: seconds);
+    }
+    return null;
   }
 }
 

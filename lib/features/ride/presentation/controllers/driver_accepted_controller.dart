@@ -42,13 +42,16 @@ import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/agora_voice/domain/agora_call_invite_event.dart';
 import '../../../../shared/agora_voice/domain/agora_call_signaling_service.dart';
 import '../../../../core/config/app_config.dart';
+import '../../../../core/network/headers.dart';
 import '../../../../shared/agora_voice/data/ride_call_http_token_provider.dart';
 import '../../../../shared/agora_voice/domain/agora_voice_token_provider.dart';
 import '../../../../shared/agora_voice/domain/agora_voice_call_session.dart';
+import '../../../../shared/agora_voice/domain/agora_voice_call_end_reason.dart';
 import '../../../../shared/agora_voice/domain/agora_voice_call_state.dart';
 import '../../../../shared/agora_voice/presentation/agora_voice_call_controller.dart';
 import '../../../../shared/agora_voice/presentation/agora_voice_call_screen.dart';
 import '../../../../shared/agora_voice/service/agora_incoming_call_notification_bridge.dart';
+import '../../../../shared/agora_voice/service/agora_call_cancel_notification_bridge.dart';
 import '../../../../shared/agora_voice/service/agora_voice_engine_service.dart';
 import '../../../../shared/agora_voice/service/agora_voice_incoming_call_handler.dart';
 import '../../../../shared/utils/app_dialogs.dart';
@@ -370,6 +373,7 @@ class DriverAcceptedController extends GetxController
   @override
   void onClose() {
     AgoraIncomingCallNotificationBridge.instance.unregister(rideId);
+    AgoraCallCancelNotificationBridge.instance.unregister(rideId);
     WidgetsBinding.instance.removeObserver(this);
     _connectionSub?.cancel();
     _rideStatusSub?.cancel();
@@ -411,11 +415,20 @@ class DriverAcceptedController extends GetxController
         return AgoraVoiceCallController(
           engineService: AgoraVoiceEngineService(tokenProvider: tokenProvider),
           session: AgoraVoiceCallSession(rideId: event.rideId),
+          onLocalEndRequested: () => _sendCallEndSignal(
+            channelName: event.channelName,
+            rideIdForSignal: event.rideId,
+          ),
+          enableRingbackOnConnectFlow: false,
+          enableUnansweredTimeout: false,
         );
       },
       getActiveController: () => _inAppCallController,
       setActiveController: (controller) => _inAppCallController = controller,
       closeCallRouteIfOpen: _closeInAppCallScreenIfOpen,
+      onRejectCallApi: (rideId) async {
+        await rideRepository.cancelVoiceCall(rideId);
+      },
     );
     _callSignalSub?.cancel();
     _callSignalSub = signaling.events.listen(_handleCallInviteEvent);
@@ -430,6 +443,21 @@ class DriverAcceptedController extends GetxController
           callerId: 'fcm',
           callerName: _remoteCallerLabelFromPush(raw),
         );
+      },
+    );
+    AgoraCallCancelNotificationBridge.instance.register(
+      rideId: rideId,
+      onCancelled: (_) async {
+        final controller = _inAppCallController;
+        if (controller == null) {
+          _closeInAppCallScreenIfOpen();
+          return;
+        }
+        controller.stopIncomingRingtone();
+        await controller.endCallFromRemote(
+          reason: AgoraVoiceCallEndReason.remoteEnded,
+        );
+        _closeInAppCallScreenIfOpen();
       },
     );
 
@@ -1779,9 +1807,29 @@ class DriverAcceptedController extends GetxController
     );
 
     final tokenProvider = _buildRiderTokenProvider();
-    final controller = AgoraVoiceCallController(
+    late final AgoraVoiceCallController controller;
+    controller = AgoraVoiceCallController(
       engineService: AgoraVoiceEngineService(tokenProvider: tokenProvider),
       session: AgoraVoiceCallSession(rideId: rideId),
+      onLocalEndRequested: () async {
+        await rideRepository.cancelVoiceCall(rideId);
+        await _sendCallEndSignal(
+          channelName: channelName,
+          rideIdForSignal: rideId,
+        );
+      },
+      onUnansweredTimeout: () async {
+        AppDialogs.showErrorDialog(
+          title: 'Voice Call',
+          message: 'No answer from the other side. Please try again.',
+        );
+      },
+      onCallRejected: () async {
+        AppDialogs.showErrorDialog(
+          title: 'Voice Call',
+          message: 'Call was declined by the other side.',
+        );
+      },
     );
     debugPrint('[AGORA_RIDE] trigger caller startCall ride=$rideId');
     unawaited(controller.startCall());
@@ -1798,17 +1846,22 @@ class DriverAcceptedController extends GetxController
         isIncoming: false,
         onAccept: controller.startCall,
         onReject: () async {
-          await _callSignalingService?.sendEvent(
-            AgoraCallInviteEvent(
-              type: AgoraCallInviteEventType.end,
-              channelName: channelName,
-              rideId: rideId,
-              callerName: 'Rider',
-              callerId: _localCallClientId,
-              timestampMs: DateTime.now().millisecondsSinceEpoch,
-            ),
-          );
-          await controller.endCall();
+          final isConnected =
+              controller.callState.value == AgoraVoiceCallState.connected;
+          await rideRepository.cancelVoiceCall(rideId);
+          if (isConnected) {
+            await _callSignalingService?.sendEvent(
+              AgoraCallInviteEvent(
+                type: AgoraCallInviteEventType.end,
+                channelName: channelName,
+                rideId: rideId,
+                callerName: 'Rider',
+                callerId: _localCallClientId,
+                timestampMs: DateTime.now().millisecondsSinceEpoch,
+              ),
+            );
+          }
+          await controller.endCall(notifyRemote: false);
           _closeInAppCallScreenIfOpen();
         },
       ),
@@ -1875,15 +1928,29 @@ class DriverAcceptedController extends GetxController
       dio: dio,
       tokenPathBuilder: (id) => '/v4/go/rides/${id.trim()}/call/token',
       headersProvider: () async {
-        final storage = StorageService();
-        final token =
-            (await storage.read(StorageKeys.accessToken)) ??
-            (await storage.read(StorageKeys.authorizationToken)) ??
-            '';
-        if (token.isEmpty) return const {};
-        return <String, dynamic>{'Authorization': 'Bearer $token'};
+        return await commonHeaders(accessTokenRequired: true);
       },
     );
+  }
+
+  Future<void> _sendCallEndSignal({
+    required String channelName,
+    required String rideIdForSignal,
+  }) async {
+    await _callSignalingService?.sendEvent(
+      AgoraCallInviteEvent(
+        type: AgoraCallInviteEventType.end,
+        channelName: channelName,
+        rideId: rideIdForSignal,
+        callerName: localDisplayNameForSignal(),
+        callerId: _localCallClientId,
+        timestampMs: DateTime.now().millisecondsSinceEpoch,
+      ),
+    );
+  }
+
+  String localDisplayNameForSignal() {
+    return driverName.value.isEmpty ? 'Rider' : driverName.value;
   }
 
   void onChatTap() {

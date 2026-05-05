@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -28,13 +29,21 @@ import 'package:screenshot/screenshot.dart';
 
 Future<void> _showAndroidIncomingCallNotification(RemoteMessage message) async {
   final type = (message.data['type'] ?? '').toString().toLowerCase();
-  if (type != 'incoming_call') return;
-
   final plugin = FlutterLocalNotificationsPlugin();
   const initSettings = InitializationSettings(
     android: AndroidInitializationSettings('@mipmap/ic_launcher'),
   );
   await plugin.initialize(initSettings);
+
+  final rideId =
+      message.data['ride_id']?.toString() ?? message.data['rideId']?.toString();
+  final notificationId = _incomingCallNotificationId(rideId);
+
+  if (type == 'call_cancelled') {
+    await plugin.cancel(notificationId);
+    return;
+  }
+  if (type != 'incoming_call') return;
 
   const channel = AndroidNotificationChannel(
     'go_incoming_calls',
@@ -55,10 +64,10 @@ Future<void> _showAndroidIncomingCallNotification(RemoteMessage message) async {
       ? 'Incoming call from driver'
       : 'Incoming call from rider';
   await plugin.show(
-    message.messageId.hashCode,
+    notificationId,
     title,
     'Tap to open incoming call screen',
-    const NotificationDetails(
+    NotificationDetails(
       android: AndroidNotificationDetails(
         'go_incoming_calls',
         'Incoming Calls',
@@ -67,11 +76,22 @@ Future<void> _showAndroidIncomingCallNotification(RemoteMessage message) async {
         priority: Priority.max,
         category: AndroidNotificationCategory.call,
         fullScreenIntent: true,
+        audioAttributesUsage: AudioAttributesUsage.notificationRingtone,
+        visibility: NotificationVisibility.public,
+        ongoing: true,
+        autoCancel: true,
+        timeoutAfter: 30000,
         icon: '@mipmap/ic_launcher',
       ),
     ),
-    payload: message.data.toString(),
+    payload: jsonEncode(message.data),
   );
+}
+
+int _incomingCallNotificationId(String? rideId) {
+  final normalized = rideId?.trim() ?? '';
+  if (normalized.isEmpty) return 700001;
+  return 'incoming_call_$normalized'.hashCode;
 }
 
 @pragma('vm:entry-point')
@@ -209,6 +229,9 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     unawaited(_loadSavedLocale());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(NotificationService().flushPendingNavigationIfAny());
+    });
   }
 
   Future<void> _loadSavedLocale() async {

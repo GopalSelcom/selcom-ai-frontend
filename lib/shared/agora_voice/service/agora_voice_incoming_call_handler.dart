@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import '../domain/agora_call_invite_event.dart';
 import '../domain/agora_incoming_call_signal.dart';
 import '../domain/agora_call_signaling_service.dart';
+import '../domain/agora_voice_call_end_reason.dart';
 import '../domain/agora_voice_call_state.dart';
 import '../presentation/agora_voice_call_controller.dart';
 import '../presentation/agora_voice_call_screen.dart';
@@ -31,6 +32,7 @@ class AgoraVoiceIncomingCallHandler {
     required this.getActiveController,
     required this.setActiveController,
     required this.closeCallRouteIfOpen,
+    this.onRejectCallApi,
   });
 
   final AgoraCallSignalingService signalingService;
@@ -42,6 +44,7 @@ class AgoraVoiceIncomingCallHandler {
   final AgoraVoiceControllerAccessor getActiveController;
   final AgoraVoiceControllerSetter setActiveController;
   final AgoraRouteCloser closeCallRouteIfOpen;
+  final Future<void> Function(String rideId)? onRejectCallApi;
 
   Worker? _callStateWorker;
 
@@ -64,8 +67,29 @@ class AgoraVoiceIncomingCallHandler {
         await getActiveController()?.startCall();
         break;
       case AgoraCallInviteEventType.reject:
+        if (kDebugMode) {
+          debugPrint(
+            '[AGORA_SIGNAL] remote reject received '
+            'ride=${event.rideId} channel=${event.channelName} '
+            'callerId=${event.callerId}',
+          );
+        }
+        await getActiveController()?.endCallFromRemote(
+          reason: AgoraVoiceCallEndReason.remoteRejected,
+        );
+        closeCallRouteIfOpen();
+        break;
       case AgoraCallInviteEventType.end:
-        await getActiveController()?.endCall();
+        if (kDebugMode) {
+          debugPrint(
+            '[AGORA_SIGNAL] remote end received '
+            'ride=${event.rideId} channel=${event.channelName} '
+            'callerId=${event.callerId}',
+          );
+        }
+        await getActiveController()?.endCallFromRemote(
+          reason: AgoraVoiceCallEndReason.remoteEnded,
+        );
         closeCallRouteIfOpen();
         break;
     }
@@ -103,6 +127,7 @@ class AgoraVoiceIncomingCallHandler {
     final controller = buildController(event);
     setActiveController(controller);
     _attachCallStateListener(controller);
+    controller.startIncomingRingtone();
 
     await Get.to(
       () => AgoraVoiceCallScreen(
@@ -113,6 +138,7 @@ class AgoraVoiceIncomingCallHandler {
           if (kDebugMode) {
             debugPrint('[AGORA_SIGNAL] incoming accept tapped ride=${event.rideId}');
           }
+          controller.stopIncomingRingtone();
           await signalingService.sendEvent(
             AgoraCallInviteEvent(
               type: AgoraCallInviteEventType.accept,
@@ -123,12 +149,14 @@ class AgoraVoiceIncomingCallHandler {
               timestampMs: DateTime.now().millisecondsSinceEpoch,
             ),
           );
+          // Once incoming call is accepted, stop caller-style ringback/timeout behavior.
           await controller.startCall();
         },
         onReject: () async {
           if (kDebugMode) {
             debugPrint('[AGORA_SIGNAL] incoming reject tapped ride=${event.rideId}');
           }
+          controller.stopIncomingRingtone();
           await signalingService.sendEvent(
             AgoraCallInviteEvent(
               type: AgoraCallInviteEventType.reject,
@@ -139,23 +167,24 @@ class AgoraVoiceIncomingCallHandler {
               timestampMs: DateTime.now().millisecondsSinceEpoch,
             ),
           );
-          await controller.endCall();
+          if (onRejectCallApi != null) {
+            try {
+              await onRejectCallApi?.call(event.rideId);
+            } catch (e) {
+              if (kDebugMode) {
+                debugPrint('[AGORA_SIGNAL] onRejectCallApi failed: $e');
+              }
+            }
+          }
+          // Reject already notified peer. Avoid sending end again.
+          await controller.endCall(notifyRemote: false);
           closeCallRouteIfOpen();
         },
         onHangUp: () async {
           if (kDebugMode) {
             debugPrint('[AGORA_SIGNAL] incoming hang up ride=${event.rideId}');
           }
-          await signalingService.sendEvent(
-            AgoraCallInviteEvent(
-              type: AgoraCallInviteEventType.end,
-              channelName: event.channelName,
-              rideId: event.rideId,
-              callerName: localDisplayName,
-              callerId: localClientId,
-              timestampMs: DateTime.now().millisecondsSinceEpoch,
-            ),
-          );
+          controller.stopIncomingRingtone();
           await controller.endCall();
           closeCallRouteIfOpen();
         },
@@ -163,6 +192,7 @@ class AgoraVoiceIncomingCallHandler {
       fullscreenDialog: true,
     );
 
+    controller.stopIncomingRingtone();
     _detachCallStateListener();
     setActiveController(null);
   }

@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../domain/agora_voice_call_state.dart';
 import 'agora_voice_call_controller.dart';
 
@@ -25,11 +23,33 @@ class AgoraVoiceCallScreen extends StatelessWidget {
   final VoidCallback onAccept;
   final VoidCallback onReject;
   final VoidCallback? onHangUp;
+  static const Color _bgColor = Color(0xFF121212);
+  static const Color _white = Colors.white;
+  static const Color _danger = Color(0xFFE53935);
+  static const Color _success = Color(0xFF2E7D32);
 
   @override
   Widget build(BuildContext context) {
+    final titleStyle = Theme.of(context).textTheme.titleLarge?.copyWith(
+          color: _white,
+          fontSize: 20.sp,
+          fontWeight: FontWeight.w700,
+        );
+    final nameStyle = Theme.of(context).textTheme.headlineSmall?.copyWith(
+          color: _white,
+          fontSize: 24.sp,
+          fontWeight: FontWeight.w700,
+        );
+    final subtitleStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: _white.withValues(alpha: 0.9),
+        );
+    final chipStyle = Theme.of(context).textTheme.labelLarge?.copyWith(
+          color: _white,
+          fontWeight: FontWeight.w600,
+        );
+
     return Scaffold(
-      backgroundColor: AppColors.textHeading,
+      backgroundColor: _bgColor,
       body: SafeArea(
         child: Obx(() {
           final state = controller.callState.value;
@@ -41,19 +61,15 @@ class AgoraVoiceCallScreen extends StatelessWidget {
                 Text(
                   isIncoming ? 'Incoming Voice Call' : 'Calling...',
                   textAlign: TextAlign.center,
-                  style: AppTextStyles.homeTitle.copyWith(
-                    color: AppColors.white,
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: titleStyle,
                 ),
                 SizedBox(height: 18.h),
                 CircleAvatar(
                   radius: 42.r,
-                  backgroundColor: AppColors.white.withValues(alpha: 0.16),
+                  backgroundColor: _white.withValues(alpha: 0.16),
                   child: Icon(
                     Icons.person,
-                    color: AppColors.white,
+                    color: _white,
                     size: 42.sp,
                   ),
                 ),
@@ -61,26 +77,53 @@ class AgoraVoiceCallScreen extends StatelessWidget {
                 Text(
                   displayName,
                   textAlign: TextAlign.center,
-                  style: AppTextStyles.homeTitle.copyWith(
-                    color: AppColors.white,
-                    fontSize: 24.sp,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: nameStyle,
                 ),
                 SizedBox(height: 8.h),
                 Text(
-                  'State: ${controller.stateLabel()}',
+                  _statusTextFor(state),
                   textAlign: TextAlign.center,
-                  style: AppTextStyles.homeSubtitle.copyWith(
-                    color: AppColors.white.withValues(alpha: 0.9),
+                  style: subtitleStyle,
+                ),
+                SizedBox(height: 8.h),
+                Align(
+                  alignment: Alignment.center,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                    decoration: BoxDecoration(
+                      color: _white.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(999.r),
+                      border: Border.all(color: _white.withValues(alpha: 0.22)),
+                    ),
+                    child: Text(
+                      _statusChipLabelFor(state),
+                      style: chipStyle,
+                    ),
                   ),
                 ),
+                if (state == AgoraVoiceCallState.ended) ...[
+                  SizedBox(height: 6.h),
+                  Text(
+                    controller.endReasonLabel(),
+                    textAlign: TextAlign.center,
+                    style: subtitleStyle,
+                  ),
+                ],
+                if (state == AgoraVoiceCallState.connected) ...[
+                  SizedBox(height: 6.h),
+                  Text(
+                    'Duration: ${controller.connectedDurationLabel()}',
+                    textAlign: TextAlign.center,
+                    style: subtitleStyle,
+                  ),
+                ],
                 const Spacer(),
                 if (state == AgoraVoiceCallState.connected)
                   Row(
                     children: [
                       Expanded(
                         child: _secondaryAction(
+                          context: context,
                           icon: controller.isMuted.value
                               ? Icons.mic_off_outlined
                               : Icons.mic_none_outlined,
@@ -91,6 +134,7 @@ class AgoraVoiceCallScreen extends StatelessWidget {
                       SizedBox(width: 12.w),
                       Expanded(
                         child: _secondaryAction(
+                          context: context,
                           icon: controller.isSpeakerEnabled.value
                               ? Icons.volume_up_outlined
                               : Icons.hearing_disabled_outlined,
@@ -110,7 +154,7 @@ class AgoraVoiceCallScreen extends StatelessWidget {
                         child: _primaryAction(
                           icon: Icons.call_end_outlined,
                           label: 'Reject',
-                          color: AppColors.error,
+                          color: _danger,
                           onTap: onReject,
                         ),
                       ),
@@ -119,7 +163,7 @@ class AgoraVoiceCallScreen extends StatelessWidget {
                         child: _primaryAction(
                           icon: Icons.call_outlined,
                           label: 'Accept',
-                          color: AppColors.successBadge,
+                          color: _success,
                           onTap: onAccept,
                         ),
                       ),
@@ -131,7 +175,7 @@ class AgoraVoiceCallScreen extends StatelessWidget {
                     label: state == AgoraVoiceCallState.connected
                         ? 'End Call'
                         : 'Cancel',
-                    color: AppColors.error,
+                    color: _danger,
                     onTap: isIncoming &&
                             state == AgoraVoiceCallState.connected &&
                             onHangUp != null
@@ -147,6 +191,7 @@ class AgoraVoiceCallScreen extends StatelessWidget {
   }
 
   Widget _secondaryAction({
+    required BuildContext context,
     required IconData icon,
     required String label,
     required VoidCallback onTap,
@@ -157,19 +202,19 @@ class AgoraVoiceCallScreen extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.symmetric(vertical: 12.h),
         decoration: BoxDecoration(
-          color: AppColors.white.withValues(alpha: 0.12),
+          color: _white.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(14.r),
-          border: Border.all(color: AppColors.white.withValues(alpha: 0.25)),
+          border: Border.all(color: _white.withValues(alpha: 0.25)),
         ),
         child: Column(
           children: [
-            Icon(icon, color: AppColors.white),
+            Icon(icon, color: _white),
             SizedBox(height: 4.h),
             Text(
               label,
-              style: AppTextStyles.homeSubtitle.copyWith(
-                color: AppColors.white,
-              ),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: _white,
+                  ),
             ),
           ],
         ),
@@ -186,7 +231,7 @@ class AgoraVoiceCallScreen extends StatelessWidget {
     return ElevatedButton.icon(
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
-        foregroundColor: AppColors.white,
+        foregroundColor: _white,
         padding: EdgeInsets.symmetric(vertical: 14.h),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14.r),
@@ -196,5 +241,35 @@ class AgoraVoiceCallScreen extends StatelessWidget {
       icon: Icon(icon),
       label: Text(label),
     );
+  }
+
+  String _statusTextFor(AgoraVoiceCallState state) {
+    switch (state) {
+      case AgoraVoiceCallState.idle:
+        return 'Ready to call';
+      case AgoraVoiceCallState.connecting:
+        return 'Connecting call...';
+      case AgoraVoiceCallState.connected:
+        return 'Call in progress';
+      case AgoraVoiceCallState.ended:
+        return 'Call finished';
+      case AgoraVoiceCallState.error:
+        return 'Call error';
+    }
+  }
+
+  String _statusChipLabelFor(AgoraVoiceCallState state) {
+    switch (state) {
+      case AgoraVoiceCallState.idle:
+        return 'Ready';
+      case AgoraVoiceCallState.connecting:
+        return 'Connecting';
+      case AgoraVoiceCallState.connected:
+        return 'Connected';
+      case AgoraVoiceCallState.ended:
+        return 'Ended';
+      case AgoraVoiceCallState.error:
+        return 'Error';
+    }
   }
 }

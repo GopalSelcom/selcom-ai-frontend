@@ -17,6 +17,7 @@ abstract class RideRemoteDataSource {
   Future<RideModel> getRideDetails(String rideId);
   Future<RideCancellationChargesModel> getCancellationCharges(String rideId);
   Future<bool> cancelRide(String rideId, String reason);
+  Future<bool> cancelVoiceCall(String rideId);
   Future<bool> updateDestination(
     String rideId,
     Map<String, dynamic> destination,
@@ -148,6 +149,17 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
         endpoint: URLS.ride.cancelRide(rideId),
         method: ApiMethod.put,
         body: {'reason': reason},
+      ),
+    );
+    return response.statusCode == 200 || response.statusCode == 201;
+  }
+
+  @override
+  Future<bool> cancelVoiceCall(String rideId) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.ride.cancelVoiceCall(rideId),
+        method: ApiMethod.post,
       ),
     );
     return response.statusCode == 200 || response.statusCode == 201;
