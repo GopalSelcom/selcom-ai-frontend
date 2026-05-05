@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import '../../../../core/data/models/user_profile_models.dart';
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
@@ -11,6 +9,7 @@ import '../../../../core/network/api_service.dart';
 import '../../../../core/network/urls.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../models/contact_us_models.dart';
+import '../models/profile_response_model.dart';
 import '../models/request/update_profile_request.dart';
 import '../models/update_profile_response.dart';
 
@@ -59,9 +58,10 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      return UserModel.fromJson(
-        response.data['data'] ?? response.data['response'] ?? {},
+      final profileResponse = UserProfileResponseModel.fromJson(
+        Map<String, dynamic>.from(response.data),
       );
+      return profileResponse.data.toUserModel();
     }
     throw Exception('Failed to get profile');
   }

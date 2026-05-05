@@ -94,7 +94,7 @@ class _ProfileEndpoints {
   const _ProfileEndpoints();
 
   final updateProfile = "edit_profile";
-  final getProfile = "get_profile";
+  final getProfile = "go/user/profile";
   final paymentMethods = "go/user/payment-methods";
   final getEmailSubject = "go/get_email_subject";
   final sendEmail = "go/send_email";

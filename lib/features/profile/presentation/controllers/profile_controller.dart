@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -55,7 +53,7 @@ class ProfileController extends GetxController {
     nameFocusNode = FocusNode();
     phoneFocusNode = FocusNode();
 
-    loadUserFromStorage();
+    fetchProfile();
     fetchWalletBalance();
     syncSettingsVisibility();
     ever<Map<String, bool>>(appSettingsService.features, (_) {
@@ -67,14 +65,16 @@ class ProfileController extends GetxController {
     showSettingsOption.value = appSettingsService.hasAnyFeatureEnabled;
   }
 
-  Future<void> loadUserFromStorage() async {
-    final data = await StorageService().read(StorageKeys.user);
-
-    if (data != null) {
-      final json = jsonDecode(data);
-      final user = UserModel.fromJson(json);
-      _updateLocalUserState(user);
-    }
+  Future<void> fetchProfile() async {
+    final result = await profileUseCase.getProfile();
+    result.fold(
+      (failure) {
+        AppDialogs.showErrorDialog(message: failure.message);
+      },
+      (user) {
+        _updateLocalUserState(user);
+      },
+    );
   }
 
   void _updateLocalUserState(UserModel user) {
@@ -158,19 +158,20 @@ class ProfileController extends GetxController {
         AppDialogs.showErrorDialog(message: failure.message);
       },
       (updatedUser) async {
-
-        UserModel userModel = UserModel.fromJson(
-          updatedUser.response!.toJson(),
+        // Refresh from source of truth after update.
+        final refreshed = await profileUseCase.getProfile();
+        refreshed.fold(
+          (_) {
+            // Fallback to update response payload if profile refresh fails.
+            final userModel = UserModel.fromJson(
+              updatedUser.response?.toJson() ?? const {},
+            );
+            _updateLocalUserState(userModel);
+          },
+          (freshUser) {
+            _updateLocalUserState(freshUser);
+          },
         );
-
-        // Save to storage
-        await StorageService().write(
-          StorageKeys.user,
-          jsonEncode(userModel.toJson()),
-        );
-
-        // Update local state
-        _updateLocalUserState(userModel);
 
         pickedImage.value = null;
         isEditing.value = false;
