@@ -20,6 +20,7 @@ import '../services/storage_service.dart';
 import '../widgets/svg_picture_asset.dart';
 import 'failed_request_queue.dart';
 import 'retry_manager.dart';
+import 'network_connectivity_service.dart';
 import '../../shared/utils/app_dialogs.dart';
 import '../services/error_reporting/error_reporter.dart';
 import '../services/error_reporting/models/error_constants.dart';
@@ -192,6 +193,9 @@ class ApiService {
         "🌐 No Internet → ${client.options.baseUrl}${request.endpoint}",
         name: 'ApiService',
       );
+
+      // Mark offline so retry manager starts/continues reconnect polling.
+      NetworkConnectivityService.instance.notifyOffline();
 
       if (request.shouldQueue && !request.skipAuthInterceptor) {
         final completer = Completer<Response>();
@@ -571,6 +575,8 @@ class ApiService {
         e.type == DioExceptionType.unknown;
 
     if (isNetworkError && request.shouldQueue && !request.skipAuthInterceptor) {
+      // Network-level Dio errors should also flip connectivity state to offline.
+      NetworkConnectivityService.instance.notifyOffline();
       developer.log(
         "📥 Queueing failed request: ${request.endpoint}",
         name: 'ApiService',
