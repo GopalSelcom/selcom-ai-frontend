@@ -20,72 +20,85 @@ class SettingsScreen extends GetView<SettingsController> {
         children: [
           AppProfileHeader(title: AppStrings.settings.tr),
           Expanded(
-            child: Obx(
-              () => controller.isLoading.value
-                  ? const Center(child: CircularProgressIndicator())
-                  : RefreshIndicator(
-                      color: AppColors.primary,
-                      onRefresh: controller.loadSettings,
-                      child: ListView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 16.h),
-                        children: [
-                          Text(
-                            AppStrings.appSettings.tr,
-                            style: AppTextStyles.sectionTitle.copyWith(
-                              color: AppColors.textBody,
-                              fontSize: 15.sp,
+            child: Obx(() {
+              if (controller.isLoading.value) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (!controller.shouldShowRidePinSetting) {
+                return RefreshIndicator(
+                  color: AppColors.primary,
+                  onRefresh: controller.loadSettings,
+                  child: CustomScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    slivers: [
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: Center(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 32.w),
+                            child: Text(
+                              AppStrings
+                                  .noConfigurableSettingsAreAvailableRightNow
+                                  .tr,
+                              textAlign: TextAlign.center,
+                              style: AppTextStyles.body.copyWith(
+                                color: AppColors.textBody,
+                              ),
                             ),
                           ),
-                          SizedBox(height: 8.h),
-                          Text(
-                            AppStrings
-                                .securityAndPreferenceControlsMoreSettingsWillAppearHereAsTheyAreEnable
-                                .tr,
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.textBody,
-                            ),
-                          ),
-                          SizedBox(height: 14.h),
-                          if (!controller.hasRidePinFeature)
-                            Container(
-                              padding: EdgeInsets.all(16.w),
-                              decoration: BoxDecoration(
-                                color: AppColors.cardBackground,
-                                border: Border.all(color: AppColors.divider),
-                                borderRadius: BorderRadius.circular(16.r),
-                              ),
-                              child: Text(
-                                AppStrings
-                                    .noConfigurableSettingsAreAvailableRightNow
-                                    .tr,
-                                style: AppTextStyles.body.copyWith(
-                                  color: AppColors.textBody,
-                                ),
-                              ),
-                            )
-                          else
-                            Obx(
-                              () => SettingsToggleTile(
-                                icon: Iconsax.shield_security,
-                                title: AppStrings.ridePinProtection.tr,
-                                subtitle: controller.canToggleRidePin
-                                    ? 'Require a verification PIN before starting a ride.'
-                                    : 'Ride PIN is required by admin and cannot be turned off.',
-                                statusText:
-                                    controller.effectiveRequiredRidePin.value
-                                    ? 'Current status: required'
-                                    : 'Current status: optional',
-                                value: controller.ridePinSwitchValue,
-                                enabled: controller.canToggleRidePin,
-                                isSaving: controller.isSaving.value,
-                                onChanged: controller.onToggleRidePin,
-                              ),
-                            ),
-                        ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return RefreshIndicator(
+                color: AppColors.primary,
+                onRefresh: controller.loadSettings,
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 16.h),
+                  children: [
+                    Text(
+                      AppStrings.appSettings.tr,
+                      style: AppTextStyles.sectionTitle.copyWith(
+                        color: AppColors.textBody,
+                        fontSize: 15.sp,
                       ),
                     ),
-            ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      AppStrings
+                          .securityAndPreferenceControlsMoreSettingsWillAppearHereAsTheyAreEnable
+                          .tr,
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.textBody,
+                      ),
+                    ),
+                    SizedBox(height: 14.h),
+                    Obx(
+                      () => SettingsToggleTile(
+                        icon: Iconsax.shield_security,
+                        title: AppStrings.ridePinProtection.tr,
+                        subtitle: controller.canToggleRidePin
+                            ? 'Require a verification PIN before starting a ride.'
+                            : 'Ride PIN is required by admin and cannot be turned off.',
+                        statusText:
+                            controller.effectiveRequiredRidePin.value
+                            ? 'Current status: required'
+                            : 'Current status: optional',
+                        value: controller.ridePinSwitchValue,
+                        enabled: controller.canToggleRidePin,
+                        isSaving: controller.isSaving.value,
+                        onChanged: controller.onToggleRidePin,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
           ),
         ],
       ),
