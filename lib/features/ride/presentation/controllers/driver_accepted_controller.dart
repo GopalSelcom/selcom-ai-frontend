@@ -1932,7 +1932,7 @@ class DriverAcceptedController extends GetxController
           isCancelPayProcessing.value = true;
           final result = await rideRepository.cancelRide(
             rideId,
-            'rider_cancelled',
+            selectedReason!,
           );
           isCancelPayProcessing.value = false;
           result.fold(
