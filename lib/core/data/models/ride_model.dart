@@ -34,6 +34,7 @@ class RideModel extends RideEntity {
     super.isBookedForOther = false,
     super.passengerName,
     super.passengerPhone,
+    super.pdfLinks,
   });
 
   factory RideModel.fromJson(Map<String, dynamic> json) {
@@ -85,6 +86,9 @@ class RideModel extends RideEntity {
         ? PendingStopsUpdateModel.fromJson(pendingUpdateJson)
         : null;
 
+    final pdfLinksJson = json['pdf_links'] as List?;
+    final pdfLinks = pdfLinksJson?.map((e) => PdfLinkModel.fromJson(e)).toList();
+
     return RideModel(
       id: json['_id'] ?? '',
       riderId: json['rider_id'] ?? '',
@@ -132,6 +136,7 @@ class RideModel extends RideEntity {
       isBookedForOther: json['is_booked_for_other'] ?? false,
       passengerName: json['passenger_name'],
       passengerPhone: json['passenger_phone'],
+      pdfLinks: pdfLinks,
     );
   }
 
@@ -164,6 +169,10 @@ class RideModel extends RideEntity {
     VehicleSnapshotEntity? vehicleSnapshot,
     DateTime? createdAt,
     PendingStopsUpdateEntity? pendingStopsUpdate,
+    bool? isBookedForOther,
+    String? passengerName,
+    String? passengerPhone,
+    List<PdfLinkEntity>? pdfLinks,
   }) {
     return RideModel(
       id: id ?? this.id,
@@ -197,6 +206,7 @@ class RideModel extends RideEntity {
       isBookedForOther: isBookedForOther ?? this.isBookedForOther,
       passengerName: passengerName ?? this.passengerName,
       passengerPhone: passengerPhone ?? this.passengerPhone,
+      pdfLinks: pdfLinks ?? this.pdfLinks,
     );
   }
 
@@ -354,6 +364,26 @@ class PendingStopsUpdateModel extends PendingStopsUpdateEntity {
           ? DateTime.parse(json['expires_at'])
           : null,
       idempotencyKey: json['idempotency_key'],
+    );
+  }
+}
+
+class PdfLinkModel extends PdfLinkEntity {
+  const PdfLinkModel({
+    required super.url,
+    required super.token,
+    required super.originalName,
+    super.expiresAt,
+    super.uploadedAt,
+  });
+
+  factory PdfLinkModel.fromJson(Map<String, dynamic> json) {
+    return PdfLinkModel(
+      url: json['url'] ?? '',
+      token: json['token'] ?? '',
+      originalName: json['original_name'] ?? '',
+      expiresAt: json['expires_at'] != null ? DateTime.tryParse(json['expires_at']) : null,
+      uploadedAt: json['uploaded_at'] != null ? DateTime.tryParse(json['uploaded_at']) : null,
     );
   }
 }

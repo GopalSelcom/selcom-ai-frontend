@@ -62,7 +62,13 @@ class LanguageEn extends Languages {
         'Do not share your personal Details with rider Be safe and always check your luggage',
     'done': 'Done',
     'download_slip': 'Download Slip',
-    'driver_is_heading_to_your_location': 'Driver is heading to your location',
+    'driver_arrived_map_badge': 'Driver arrived',
+    'driver_arrived_pickup_primary': 'Driver arrived at pickup',
+    'driver_arrived_pickup_secondary': 'Meet your driver at pickup',
+    'driver_is_heading_to_your_location':
+        'Driver is heading to your location',
+    'driver_will_arriving_in_minutes':
+        'Driver will arrive in @minutes min...',
     'e_g123': 'e.g. 123',
     'e_g7_xx_xxx_xxx': 'e.g. 7XX XXX XXX',
     'e_gjohn_doe': 'e.g. John Doe',
@@ -489,8 +495,23 @@ class LanguageEn extends Languages {
   String get downloadSlip => values['download_slip'] ?? '';
 
   @override
+  String get driverArrivedMapBadge => values['driver_arrived_map_badge'] ?? '';
+
+  @override
+  String get driverArrivedPickupPrimary =>
+      values['driver_arrived_pickup_primary'] ?? '';
+
+  @override
+  String get driverArrivedPickupSecondary =>
+      values['driver_arrived_pickup_secondary'] ?? '';
+
+  @override
   String get driverIsHeadingToYourLocation =>
       values['driver_is_heading_to_your_location'] ?? '';
+
+  @override
+  String get driverWillArrivingInMinutes =>
+      values['driver_will_arriving_in_minutes'] ?? '';
 
   @override
   String get eG123 => values['e_g123'] ?? '';

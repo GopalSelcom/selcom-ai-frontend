@@ -133,6 +133,7 @@ class RideEntity {
   final bool isBookedForOther;
   final String? passengerName;
   final String? passengerPhone;
+  final List<PdfLinkEntity>? pdfLinks;
 
   const RideEntity({
     required this.id,
@@ -166,5 +167,92 @@ class RideEntity {
     this.isBookedForOther = false,
     this.passengerName,
     this.passengerPhone,
+    this.pdfLinks,
+  });
+
+  RideEntity copyWith({
+    String? id,
+    String? riderId,
+    String? driverId,
+    String? vehicleTypeId,
+    String? vehicleKey,
+    String? vehicleDisplayName,
+    RideStatus? status,
+    LocationEntity? pickup,
+    LocationEntity? destination,
+    List<RideStopEntity>? stops,
+    bool? isMultiStop,
+    int? currentStopIndex,
+    int? fareEstimate,
+    int? finalFare,
+    double? distanceKm,
+    int? durationMinutes,
+    String? pinCode,
+    bool? pinRequired,
+    PaymentMethod? paymentMethod,
+    PaymentStatus? paymentStatus,
+    int? cancellationFee,
+    int? riderRating,
+    bool? showReviewUi,
+    FareBreakdownEntity? fareBreakdown,
+    DriverSnapshotEntity? driverSnapshot,
+    VehicleSnapshotEntity? vehicleSnapshot,
+    DateTime? createdAt,
+    PendingStopsUpdateEntity? pendingStopsUpdate,
+    bool? isBookedForOther,
+    String? passengerName,
+    String? passengerPhone,
+    List<PdfLinkEntity>? pdfLinks,
+  }) {
+    return RideEntity(
+      id: id ?? this.id,
+      riderId: riderId ?? this.riderId,
+      driverId: driverId ?? this.driverId,
+      vehicleTypeId: vehicleTypeId ?? this.vehicleTypeId,
+      vehicleKey: vehicleKey ?? this.vehicleKey,
+      vehicleDisplayName: vehicleDisplayName ?? this.vehicleDisplayName,
+      status: status ?? this.status,
+      pickup: pickup ?? this.pickup,
+      destination: destination ?? this.destination,
+      stops: stops ?? this.stops,
+      isMultiStop: isMultiStop ?? this.isMultiStop,
+      currentStopIndex: currentStopIndex ?? this.currentStopIndex,
+      fareEstimate: fareEstimate ?? this.fareEstimate,
+      finalFare: finalFare ?? this.finalFare,
+      distanceKm: distanceKm ?? this.distanceKm,
+      durationMinutes: durationMinutes ?? this.durationMinutes,
+      pinCode: pinCode ?? this.pinCode,
+      pinRequired: pinRequired ?? this.pinRequired,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      paymentStatus: paymentStatus ?? this.paymentStatus,
+      cancellationFee: cancellationFee ?? this.cancellationFee,
+      riderRating: riderRating ?? this.riderRating,
+      showReviewUi: showReviewUi ?? this.showReviewUi,
+      fareBreakdown: fareBreakdown ?? this.fareBreakdown,
+      driverSnapshot: driverSnapshot ?? this.driverSnapshot,
+      vehicleSnapshot: vehicleSnapshot ?? this.vehicleSnapshot,
+      createdAt: createdAt ?? this.createdAt,
+      pendingStopsUpdate: pendingStopsUpdate ?? this.pendingStopsUpdate,
+      isBookedForOther: isBookedForOther ?? this.isBookedForOther,
+      passengerName: passengerName ?? this.passengerName,
+      passengerPhone: passengerPhone ?? this.passengerPhone,
+      pdfLinks: pdfLinks ?? this.pdfLinks,
+    );
+  }
+}
+
+class PdfLinkEntity {
+  final String url;
+  final String token;
+  final String originalName;
+  final DateTime? expiresAt;
+  final DateTime? uploadedAt;
+
+  const PdfLinkEntity({
+    required this.url,
+    required this.token,
+    required this.originalName,
+    this.expiresAt,
+    this.uploadedAt,
   });
 }

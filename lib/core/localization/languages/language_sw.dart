@@ -57,7 +57,11 @@ class LanguageSw extends Languages {
         '',
     'done': '',
     'download_slip': '',
+    'driver_arrived_map_badge': '',
+    'driver_arrived_pickup_primary': '',
+    'driver_arrived_pickup_secondary': '',
     'driver_is_heading_to_your_location': '',
+    'driver_will_arriving_in_minutes': '',
     'e_g123': '',
     'e_g7_xx_xxx_xxx': '',
     'e_gjohn_doe': '',
@@ -453,8 +457,23 @@ class LanguageSw extends Languages {
   String get downloadSlip => values['download_slip'] ?? '';
 
   @override
+  String get driverArrivedMapBadge => values['driver_arrived_map_badge'] ?? '';
+
+  @override
+  String get driverArrivedPickupPrimary =>
+      values['driver_arrived_pickup_primary'] ?? '';
+
+  @override
+  String get driverArrivedPickupSecondary =>
+      values['driver_arrived_pickup_secondary'] ?? '';
+
+  @override
   String get driverIsHeadingToYourLocation =>
       values['driver_is_heading_to_your_location'] ?? '';
+
+  @override
+  String get driverWillArrivingInMinutes =>
+      values['driver_will_arriving_in_minutes'] ?? '';
 
   @override
   String get eG123 => values['e_g123'] ?? '';

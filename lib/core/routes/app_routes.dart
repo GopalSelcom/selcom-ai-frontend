@@ -62,6 +62,7 @@ class AppRoutes {
   static const String checkPickupPoint = '/check-pickup-point';
   static const String stopEditor = '/stop-editor';
   static const String confirmStop = '/confirm-stop';
+  static const String changeDropLocationEditor = '/change-drop-location-editor';
 
   static List<GetPage> get pages => [
     GetPage(name: splash, page: () => const SplashScreen()),
@@ -142,6 +143,7 @@ class AppRoutes {
       binding: HomeBinding(),
     ),
     GetPage(name: stopEditor, page: () => const StopEditorScreen()),
+    GetPage(name: changeDropLocationEditor, page: () => const StopEditorScreen()),
     GetPage(
       name: confirmStop,
       page: () => const ConfirmStopScreen(),

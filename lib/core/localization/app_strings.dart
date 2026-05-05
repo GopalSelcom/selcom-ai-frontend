@@ -64,8 +64,15 @@ class AppStrings {
       'do_not_share_your_personal_details_with_rider_be_safe_and_always_check_your_luggage';
   static const String done = 'done';
   static const String downloadSlip = 'download_slip';
+  static const String driverArrivedMapBadge = 'driver_arrived_map_badge';
+  static const String driverArrivedPickupPrimary =
+      'driver_arrived_pickup_primary';
+  static const String driverArrivedPickupSecondary =
+      'driver_arrived_pickup_secondary';
   static const String driverIsHeadingToYourLocation =
       'driver_is_heading_to_your_location';
+  static const String driverWillArrivingInMinutes =
+      'driver_will_arriving_in_minutes';
   static const String eG123 = 'e_g123';
   static const String eG7XxXxxXxx = 'e_g7_xx_xxx_xxx';
   static const String eGJohnDoe = 'e_gjohn_doe';

@@ -720,7 +720,7 @@ class DriverAcceptedScreen extends StatelessWidget {
             child: ListView(
               controller: scrollController,
               padding: EdgeInsets.zero,
-              children: [_rideProgressBody(c)],
+              children: [_rideProgressBody(c, showChangeDropLink: true)],
             ),
           ),
         ],
@@ -740,27 +740,32 @@ class DriverAcceptedScreen extends StatelessWidget {
               color: AppColors.textBody,
             ),
             SizedBox(width: 2.w), // 2px gap from Figma
-            Text(
-              c.arrivalLabel.value,
-              style: AppTextStyles.homeCaption.copyWith(
-                fontSize: 15.sp,
-                color: AppColors.textBody,
-                fontWeight: FontWeight.w500,
-                height: 20 / 15,
+            Flexible(
+              child: Text(
+                c.arrivalLabel.value,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.homeCaption.copyWith(
+                  fontSize: 15.sp,
+                  color: AppColors.textBody,
+                  fontWeight: FontWeight.w500,
+                  height: 20 / 15,
+                ),
               ),
             ),
           ],
         ),
         SizedBox(height: 2.h),
-        Text(
-          AppStrings.driverIsHeadingToYourLocation.tr,
-          textAlign: TextAlign.center,
-          style: AppTextStyles.homeTitle.copyWith(
-            fontSize: 20.sp,
-            color: AppColors.textHeading,
-            fontWeight: FontWeight.w600,
-            height: 34 / 20,
-            letterSpacing: -0.4,
+        Obx(
+          () => Text(
+            c.driverPickupPhaseHeadline,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.homeTitle.copyWith(
+              fontSize: 20.sp,
+              color: AppColors.textHeading,
+              fontWeight: FontWeight.w600,
+              height: 34 / 20,
+              letterSpacing: -0.4,
+            ),
           ),
         ),
         SizedBox(height: 17.h),
@@ -1020,12 +1025,15 @@ class DriverAcceptedScreen extends StatelessWidget {
         SizedBox(height: 14.h),
         const Divider(color: AppColors.borderWalletCard, height: 1),
         SizedBox(height: 16.h),
-        _rideProgressBody(c),
+        _rideProgressBody(c, showChangeDropLink: false),
       ],
     );
   }
 
-  Widget _rideProgressBody(DriverAcceptedController c) {
+  Widget _rideProgressBody(
+    DriverAcceptedController c, {
+    bool showChangeDropLink = false,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -1113,38 +1121,26 @@ class DriverAcceptedScreen extends StatelessWidget {
           ),
           child: Column(
             children: [
-              RideLocationsTimeline(
-                startLocation: c.pickupTitle,
-                startAddress: c.pickupAddress,
-                endLocation: c.destinationTitle,
-                endAddress: c.destinationAddress,
-                stops: c.ride.value?.stops,
-                showAddStopBeforeDestination:
-                    !c.isNearDestination() &&
-                    c.ride.value?.pendingStopsUpdate == null,
-                onAddStopTap: c.onEditStops,
-              ),
-              if (!c.isNearDestination() &&
-                  c.ride.value?.pendingStopsUpdate == null &&
-                  c.ride.value?.isBookedForOther != true) ...[
-                GestureDetector(
-                  onTap: c.onEditStops,
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Padding(
-                      padding: EdgeInsets.only(top: 8.h),
-                      child: Text(
-                        AppStrings.addStops.tr,
-                        style: AppTextStyles.homeCaption.copyWith(
-                          color: AppColors.primary,
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
+              Obx(
+                () => RideLocationsTimeline(
+                  startLocation: c.pickupTitle,
+                  startAddress: c.pickupAddress,
+                  endLocation: c.destinationTitle,
+                  endAddress: c.destinationAddress,
+                  stops: c.ride.value?.stops,
+                  showAddStopBeforeDestination:
+                      !c.isNearDestination() &&
+                      c.ride.value?.pendingStopsUpdate == null,
+                  onAddStopTap: c.onEditStops,
+                  showChangeDropLocationLink:
+                      showChangeDropLink &&
+                      !c.isNearDestination() &&
+                      c.ride.value?.pendingStopsUpdate == null &&
+                      !c.isUpdatingStops.value &&
+                      !c.isUpdatingDestination.value,
+                  onChangeDropLocationTap: c.onChangeDropLocation,
                 ),
-              ],
+              ),
             ],
           ),
         ),

@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 
 class CancelConfirmationDialog extends StatelessWidget {
@@ -423,9 +424,16 @@ class CancellationChargesDialog extends StatelessWidget {
                   outlined: true,
                   outlinedBorderColor: AppColors.textNeutralButton,
                   isLoading: loading,
-                  onTap: !canCancel || loading
+                  onTap: loading
                       ? null
                       : () async {
+                          if (!canCancel) {
+                            AppDialogs.showErrorDialog(
+                              title: AppStrings.cancelFailed.tr,
+                              message: AppStrings.couldNotCancelTryAgain.tr,
+                            );
+                            return;
+                          }
                           if (onConfirmTap != null) {
                             await onConfirmTap!.call();
                           } else {

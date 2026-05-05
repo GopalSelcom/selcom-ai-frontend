@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../controllers/sign_up_controller.dart';
@@ -70,7 +70,7 @@ class SignUpScreen extends GetView<SignUpController> {
               children: [
                 SizedBox(height: 16.h),
                 Center(
-                  child: SvgPicture.asset(
+                  child: SvgPictureAsset(
                     AppAssets.selcomGoLogo,
                     width: 154.w,
                     fit: BoxFit.contain,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/localization/app_strings.dart';
@@ -76,6 +75,9 @@ class RideLocationsTimeline extends StatelessWidget {
   final bool showStopsAsSummary;
   final bool showAddStopBeforeDestination;
   final VoidCallback? onAddStopTap;
+  /// When true, shows a red text action under the destination (ride-started sheet only).
+  final bool showChangeDropLocationLink;
+  final VoidCallback? onChangeDropLocationTap;
 
   const RideLocationsTimeline({
     super.key,
@@ -87,6 +89,8 @@ class RideLocationsTimeline extends StatelessWidget {
     this.showStopsAsSummary = false,
     this.showAddStopBeforeDestination = false,
     this.onAddStopTap,
+    this.showChangeDropLocationLink = false,
+    this.onChangeDropLocationTap,
   });
 
   @override
@@ -153,6 +157,24 @@ class RideLocationsTimeline extends StatelessWidget {
             color: AppColors.mapDropMarkerGreen,
           ),
           showBottomLine: false,
+          footer: showChangeDropLocationLink && onChangeDropLocationTap != null
+              ? Padding(
+                  padding: EdgeInsets.only(top: 8.h),
+                  child: GestureDetector(
+                    onTap: onChangeDropLocationTap,
+                    child: Text(
+                      AppStrings.changeDropLocation.tr,
+                      style: TextStyle(
+                        fontFamily: AppTextStyles.metropolisFont,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                        fontSize: 14.sp,
+                        height: 20 / 14,
+                      ),
+                    ),
+                  ),
+                )
+              : null,
         ),
       ],
     );
@@ -202,6 +224,7 @@ class RideLocationsTimeline extends StatelessWidget {
     Widget? trailing,
     double? bottomSpacingWhenLine,
     required bool showBottomLine,
+    Widget? footer,
   }) {
     return IntrinsicHeight(
       child: Row(
@@ -254,6 +277,8 @@ class RideLocationsTimeline extends StatelessWidget {
                       ),
                     ),
                   ],
+                  /// todo: skip change drop location
+                  // if (footer != null) footer,
                 ],
               ),
             ),
@@ -285,14 +310,11 @@ class RideLocationsTimeline extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SvgPicture.asset(
+            SvgPictureAsset(
               AppAssets.locationIcAdd,
               width: 18.w,
               height: 18.w,
-              colorFilter: const ColorFilter.mode(
-                AppColors.primary,
-                BlendMode.srcIn,
-              ),
+              color: AppColors.primary,
               placeholderBuilder: (_) => Container(
                 width: 18.w,
                 height: 18.w,

@@ -10,7 +10,6 @@ import 'package:http_parser/http_parser.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 
 import '../constants/app_assets.dart';
@@ -18,8 +17,10 @@ import '../routes/app_routes.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../services/storage_service.dart';
+import '../widgets/svg_picture_asset.dart';
 import 'failed_request_queue.dart';
 import 'retry_manager.dart';
+import 'network_connectivity_service.dart';
 import '../../shared/utils/app_dialogs.dart';
 import '../services/error_reporting/error_reporter.dart';
 import '../services/error_reporting/models/error_constants.dart';
@@ -192,6 +193,9 @@ class ApiService {
         "🌐 No Internet → ${client.options.baseUrl}${request.endpoint}",
         name: 'ApiService',
       );
+
+      // Mark offline so retry manager starts/continues reconnect polling.
+      NetworkConnectivityService.instance.notifyOffline();
 
       if (request.shouldQueue && !request.skipAuthInterceptor) {
         final completer = Completer<Response>();
@@ -571,6 +575,8 @@ class ApiService {
         e.type == DioExceptionType.unknown;
 
     if (isNetworkError && request.shouldQueue && !request.skipAuthInterceptor) {
+      // Network-level Dio errors should also flip connectivity state to offline.
+      NetworkConnectivityService.instance.notifyOffline();
       developer.log(
         "📥 Queueing failed request: ${request.endpoint}",
         name: 'ApiService',
@@ -675,7 +681,7 @@ class ApiService {
             mainAxisSize: MainAxisSize.min,
             children: [
               // App Logo
-              SvgPicture.asset(AppAssets.selcomGoLogo, height: 48.h),
+              SvgPictureAsset(AppAssets.selcomGoLogo, height: 48.h),
               SizedBox(height: 24.h),
 
               // Title

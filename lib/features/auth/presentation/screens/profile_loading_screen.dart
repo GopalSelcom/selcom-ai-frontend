@@ -1,13 +1,15 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
-import 'dart:ui';
-import '../../../../core/theme/app_colors.dart';
+
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/svg_picture_asset.dart';
 import '../controllers/auth_controller.dart';
 
 class ProfileLoadingScreen extends StatefulWidget {
@@ -131,7 +133,7 @@ class _ProfileLoadingScreenState extends State<ProfileLoadingScreen>
                               color: AppColors.bgVerificationSurface,
                               borderRadius: BorderRadius.circular(16.r),
                             ),
-                            child: SvgPicture.asset(
+                            child: const SvgPictureAsset(
                               AppAssets.icVerificationSuccess,
                               fit: BoxFit.contain,
                             ),
@@ -188,14 +190,11 @@ class _ProfileLoadingScreenState extends State<ProfileLoadingScreen>
                                     ),
                                   ),
                                   SizedBox(width: 4.w),
-                                  SvgPicture.asset(
+                                  SvgPictureAsset(
                                     AppAssets.icTickCircle,
                                     height: 24.h,
                                     width: 24.w,
-                                    colorFilter: const ColorFilter.mode(
-                                      AppColors.white,
-                                      BlendMode.srcIn,
-                                    ),
+                                    color: AppColors.white,
                                   ),
                                 ],
                               ),

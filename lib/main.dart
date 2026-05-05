@@ -182,7 +182,7 @@ void main() async {
       const envString = String.fromEnvironment('ENV', defaultValue: 'dev');
       final env = Environment.values.firstWhere(
         (e) => e.toString() == 'Environment.$envString',
-        orElse: () => Environment.dev,
+        orElse: () => Environment.staging,
       );
 
       AppConfig.init(env: env);

@@ -4,6 +4,7 @@ import '../../../../core/data/models/responses/rides/active_ride_response.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../data/models/emergency_contacts_response.dart';
+import '../../data/models/destination_update_models.dart';
 import '../../data/models/ride_management_models.dart';
 
 abstract class RideRepository {
@@ -19,7 +20,11 @@ abstract class RideRepository {
   );
   Future<Either<Failure, bool>> cancelRide(String rideId, String reason);
   Future<Either<Failure, bool>> cancelVoiceCall(String rideId);
-  Future<Either<Failure, bool>> updateDestination(
+  Future<Either<Failure, DestinationUpdatePreviewModel>> previewUpdateDestination(
+    String rideId,
+    Map<String, dynamic> destination,
+  );
+  Future<Either<Failure, DestinationUpdateAppliedModel>> confirmUpdateDestination(
     String rideId,
     Map<String, dynamic> destination,
   );
@@ -65,4 +70,8 @@ abstract class RideRepository {
   });
 
   Future<Either<Failure, EmergencyContactsResponse>> getEmergencyContacts();
+  Future<Either<Failure, PdfLinkModel>> uploadReceiptPdf({
+    required String rideId,
+    required String pdfPath,
+  });
 }

@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/localization/app_strings.dart';
+import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
-import '../../../../shared/widgets/app_back_button.dart';
-import '../controllers/home_controller.dart';
-import '../../../../core/routes/app_routes.dart';
 import '../../../../shared/utils/app_dialogs.dart';
-import '../../data/models/places_models.dart';
+import '../../../../shared/widgets/app_back_button.dart';
 import '../../../ride/data/models/ride_management_models.dart';
+import '../../data/models/places_models.dart';
+import '../controllers/home_controller.dart';
 import '../widgets/favorite_icon_button.dart';
 
 class SelectSavedLocationScreen extends StatefulWidget {
@@ -135,13 +135,10 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
               child: Obx(
                 () => controller.searchQuery.value.isEmpty
                     ? Icon(Icons.search, color: AppColors.textHint, size: 22.sp)
-                    : SvgPicture.asset(
+                    : SvgPictureAsset(
                         AppAssets.locationIcPickupPin,
                         width: 14.w,
-                        colorFilter: const ColorFilter.mode(
-                          AppColors.primary,
-                          BlendMode.srcIn,
-                        ),
+                        color: AppColors.primary,
                       ),
               ),
             ),
