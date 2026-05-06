@@ -30,6 +30,7 @@ import '../../../../core/data/models/responses/nearbyRiders/response/rider_statu
 import '../../../../core/data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
+import '../../../../core/domain/entities/location_entity.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/app_map_service.dart';
@@ -70,6 +71,7 @@ class DriverAcceptedController extends GetxController
   late LatLng destinationLatLng;
   late final String pickupAddress;
   late String destinationAddress;
+  final summaryIntermediateStops = <String>[].obs;
   int? _seedRideCharge;
   int? _seedBookingFee;
   int? _seedTotalAmount;
@@ -401,6 +403,52 @@ class DriverAcceptedController extends GetxController
     destinationLatLng = LatLng(dlat, dlng);
     pickupAddress = (args['pickupAddress'] as String?)?.trim() ?? '';
     destinationAddress = (args['destinationAddress'] as String?)?.trim() ?? '';
+    final List<dynamic>? ds = args['destinations'];
+    if (ds != null && ds.isNotEmpty) {
+      try {
+        // Normalize destinations payload from navigation:
+        // last item = final destination, previous items = intermediate stops.
+        final List<LocationEntity> locs = ds
+            .map((e) {
+              if (e is LocationEntity) return e;
+              if (e is Map<String, dynamic>) {
+                return LocationEntity(
+                  lat: (e['lat'] as num?)?.toDouble() ?? 0.0,
+                  lng: (e['lng'] as num?)?.toDouble() ?? 0.0,
+                  address: (e['address'] as String?)?.trim() ?? '',
+                );
+              }
+              if (e is Map) {
+                final m = Map<String, dynamic>.from(e);
+                return LocationEntity(
+                  lat: (m['lat'] as num?)?.toDouble() ?? 0.0,
+                  lng: (m['lng'] as num?)?.toDouble() ?? 0.0,
+                  address: (m['address'] as String?)?.trim() ?? '',
+                );
+              }
+              return null;
+            })
+            .whereType<LocationEntity>()
+            .toList();
+
+        if (locs.isNotEmpty) {
+          final finalDestination = locs.last;
+          if (finalDestination.lat != 0 && finalDestination.lng != 0) {
+            destinationLatLng = LatLng(finalDestination.lat, finalDestination.lng);
+          }
+          if (finalDestination.address.trim().isNotEmpty) {
+            destinationAddress = finalDestination.address.trim();
+          }
+          summaryIntermediateStops.assignAll(
+            locs
+                .take(locs.length - 1)
+                .map((e) => e.address.trim())
+                .where((e) => e.isNotEmpty)
+                .toList(),
+          );
+        }
+      } catch (_) {}
+    }
     final rawFareBreakdown = args['fareBreakdown'];
     if (rawFareBreakdown is Map) {
       final fareBreakdown = Map<String, dynamic>.from(rawFareBreakdown);
@@ -480,6 +528,33 @@ class DriverAcceptedController extends GetxController
     if (addr.isNotEmpty) {
       destinationAddress = addr;
     }
+    final stops = r.stops;
+    if (stops.isEmpty) {
+      summaryIntermediateStops.clear();
+      return;
+    }
+    final normalizedDestinationAddress = destinationAddress.trim().toLowerCase();
+    final last = stops.last;
+    final lastMatchesDestinationByAddress =
+        normalizedDestinationAddress.isNotEmpty &&
+        last.address.trim().toLowerCase() == normalizedDestinationAddress;
+    final lastMatchesDestinationByCoord =
+        (last.lat - destinationLatLng.latitude).abs() < 0.000001 &&
+        (last.lng - destinationLatLng.longitude).abs() < 0.000001;
+    // If backend stops includes final destination, exclude it from
+    // intermediate summary list to avoid duplicate rendering in header card.
+    final lastIsDestination =
+        lastMatchesDestinationByAddress || lastMatchesDestinationByCoord;
+
+    final intermediates = lastIsDestination
+        ? stops.take(stops.length - 1).toList()
+        : stops;
+    summaryIntermediateStops.assignAll(
+      intermediates
+          .map((s) => s.address.trim())
+          .where((e) => e.isNotEmpty)
+          .toList(),
+    );
   }
 
   Future<void> _fetchRideDetails() async {

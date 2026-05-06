@@ -83,13 +83,6 @@ class DriverAcceptedScreen extends StatelessWidget {
               child: Obx(() {
                 final ride = c.ride.value;
                 final isForOther = ride?.isBookedForOther ?? false;
-                final List<String> stops =
-                    c.ride.value?.stops.map((s) => s.address).toList() ?? [];
-                // If stops include the destination, we remove the last one
-                // because the card already shows the destination separately.
-                if (stops.isNotEmpty) {
-                  stops.removeLast();
-                }
                 return  isForOther && ride != null
                     ? AppMapLocationSummaryCard(
                   leading: Container(
@@ -114,7 +107,8 @@ class DriverAcceptedScreen extends StatelessWidget {
                   destinationAddress: c.destinationAddress.isEmpty
                       ? 'Destination'
                       : c.destinationAddress,
-                  intermediateStops: stops,
+                  // Controller already normalizes this as: all stops except final destination.
+                  intermediateStops: c.summaryIntermediateStops.toList(),
                 );
               }),
             ),
