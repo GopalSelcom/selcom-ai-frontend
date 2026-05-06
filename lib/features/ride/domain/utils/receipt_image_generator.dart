@@ -63,8 +63,10 @@ class ReceiptImageGenerator {
       ),
     );
 
-    final Uint8List imageBytes = await screenshotController.captureFromWidget(
+    // Use long-widget capture to avoid vertical overflow for tall receipts.
+    final Uint8List imageBytes = await screenshotController.captureFromLongWidget(
       widget,
+      context: null,
       delay: const Duration(milliseconds: 50), // slight delay to ensure rendering
     );
 
