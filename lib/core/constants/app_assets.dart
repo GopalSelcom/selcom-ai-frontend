@@ -40,7 +40,15 @@ class AppAssets {
   // Branding
   static const String splashBgVector = '$_imagePath/splash_bg_vector.svg';
   static const String selcomGoLogo = '$_imagePath/selcom_go_logo.svg';
+  /// PNG variant (e.g. PDF / non-SVG pipelines).
+  static const String selcomGoLogoPng = '$_imagePath/selcom_go_logo.png';
+  static const String selcomGoLogoRedSvg = '$_imagePath/Selcom Go logo-red.svg';
   static const String imgSuccessTick = '$_imagePath/img_success_tick.png';
+
+  /// Map marker silhouettes (SVG → bitmap via [MapMarkerUtils]).
+  static const String mapVehicleRiderSvg = '$_imagePath/rider.svg';
+  static const String mapVehicleCarSvg = '$_imagePath/car.svg';
+  static const String mapVehicleRickshawSvg = '$_imagePath/rickshaw.svg';
   static const String icPromotions = '$_imagePath/ic_promotions.svg';
 
   // Profile

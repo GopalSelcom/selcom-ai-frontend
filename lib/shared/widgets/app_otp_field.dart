@@ -4,7 +4,7 @@ import 'package:pin_code_fields/pin_code_fields.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 
-class AppOtpField extends StatelessWidget {
+class AppOtpField extends StatefulWidget {
   final int length;
   final Function(String) onCompleted;
   final Function(String)? onChanged;
@@ -29,34 +29,107 @@ class AppOtpField extends StatelessWidget {
   });
 
   @override
+  State<AppOtpField> createState() => _AppOtpFieldState();
+}
+
+class _AppOtpFieldState extends State<AppOtpField> {
+  final FocusNode _focusNode = FocusNode();
+  final ValueNotifier<bool> _isFocused = ValueNotifier<bool>(false);
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(_onFocusChanged);
+  }
+
+  void _onFocusChanged() {
+    _isFocused.value = _focusNode.hasFocus;
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_onFocusChanged);
+    _focusNode.dispose();
+    _isFocused.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return PinCodeTextField(
-      appContext: context,
-      length: length,
-      controller: controller,
-      onChanged: onChanged ?? (v) {},
-      onCompleted: onCompleted,
-      keyboardType: TextInputType.number,
-      animationType: AnimationType.fade,
-      mainAxisAlignment: mainAxisAlignment,
-      pinTheme: PinTheme(
-        shape: PinCodeFieldShape.box,
-        borderRadius: BorderRadius.circular(16.r),
-        fieldHeight: fieldHeight ?? 64.h,
-        fieldWidth: fieldWidth ?? 64.w,
-        activeFillColor: AppColors.white,
-        selectedFillColor: AppColors.white,
-        inactiveFillColor: AppColors.white,
-        activeColor: hasError ? AppColors.error : AppColors.inputBorderActive,
-        selectedColor: hasError ? AppColors.error : AppColors.inputBorderActive,
-        inactiveColor: hasError ? AppColors.error : AppColors.inputBorderDefault,
-        borderWidth: 1.w,
-      ),
-      cursorColor: AppColors.inputBorderActive,
-      animationDuration: const Duration(milliseconds: 300),
-      enableActiveFill: true,
-      textStyle: textStyle ?? AppTextStyles.screenTitle,
-      beforeTextPaste: (text) => true,
+    final h = widget.fieldHeight ?? 64.h;
+    final w = widget.fieldWidth ?? 64.w;
+    final borderColor = widget.hasError
+        ? AppColors.otpErrorBorder
+        : AppColors.inputBorderActive;
+    final glowColor = widget.hasError
+        ? AppColors.otpErrorShadow
+        : AppColors.otpFocusShadow;
+
+    return ValueListenableBuilder<bool>(
+      valueListenable: _isFocused,
+      builder: (_, isFocused, __) {
+        return SizedBox(
+          height: h,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              IgnorePointer(
+                child: Row(
+                  mainAxisAlignment: widget.mainAxisAlignment,
+                  children: List.generate(
+                    widget.length,
+                    (_) => Container(
+                      width: w,
+                      height: h,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(18.r),
+                        boxShadow: (isFocused || widget.hasError)
+                            ? [
+                                BoxShadow(
+                                  color: glowColor,
+                                  blurRadius: 0,
+                                  spreadRadius: 4,
+                                ),
+                              ]
+                            : const [],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              PinCodeTextField(
+                appContext: context,
+                length: widget.length,
+                controller: widget.controller,
+                focusNode: _focusNode,
+                onChanged: widget.onChanged ?? (v) {},
+                onCompleted: widget.onCompleted,
+                keyboardType: TextInputType.number,
+                animationType: AnimationType.fade,
+                mainAxisAlignment: widget.mainAxisAlignment,
+                pinTheme: PinTheme(
+                  shape: PinCodeFieldShape.box,
+                  borderRadius: BorderRadius.circular(16.r),
+                  fieldHeight: h,
+                  fieldWidth: w,
+                  activeFillColor: AppColors.white,
+                  selectedFillColor: AppColors.white,
+                  inactiveFillColor: AppColors.white,
+                  activeColor: borderColor,
+                  selectedColor: borderColor,
+                  inactiveColor: borderColor,
+                  borderWidth: 1.2.w,
+                ),
+                cursorColor: AppColors.inputBorderActive,
+                animationDuration: const Duration(milliseconds: 300),
+                enableActiveFill: true,
+                textStyle: widget.textStyle ?? AppTextStyles.screenTitle,
+                beforeTextPaste: (text) => true,
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

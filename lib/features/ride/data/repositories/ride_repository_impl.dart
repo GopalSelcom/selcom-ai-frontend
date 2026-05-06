@@ -5,6 +5,8 @@ import '../../../../core/errors/failures.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../datasources/ride_remote_data_source.dart';
 import '../../../../core/data/models/ride_model.dart';
+import '../models/destination_update_models.dart';
+import '../models/emergency_contacts_response.dart';
 import '../models/ride_management_models.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
@@ -90,12 +92,29 @@ class RideRepositoryImpl implements RideRepository {
   }
 
   @override
-  Future<Either<Failure, bool>> updateDestination(
+  Future<Either<Failure, DestinationUpdatePreviewModel>> previewUpdateDestination(
     String rideId,
     Map<String, dynamic> destination,
   ) async {
     try {
-      final result = await remoteDataSource.updateDestination(
+      final result = await remoteDataSource.previewUpdateDestination(
+        rideId,
+        destination,
+      );
+      return Right(result);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, DestinationUpdateAppliedModel>> confirmUpdateDestination(
+    String rideId,
+    Map<String, dynamic> destination,
+  ) async {
+    try {
+      final result = await remoteDataSource.confirmUpdateDestination(
         rideId,
         destination,
       );
@@ -246,6 +265,56 @@ class RideRepositoryImpl implements RideRepository {
     try {
       await remoteDataSource.cancelPendingStops(rideId);
       return const Right(null);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, CheckBookModeResult>> checkBookMode({
+    required double riderLat,
+    required double riderLng,
+    required double pickupLat,
+    required double pickupLng,
+  }) async {
+    try {
+      final result = await remoteDataSource.checkBookMode(
+        riderLat: riderLat,
+        riderLng: riderLng,
+        pickupLat: pickupLat,
+        pickupLng: pickupLng,
+      );
+      return Right(result);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, EmergencyContactsResponse>>
+  getEmergencyContacts() async {
+    try {
+      final result = await remoteDataSource.getEmergencyContacts();
+      return Right(result);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, PdfLinkModel>> uploadReceiptPdf({
+    required String rideId,
+    required String pdfPath,
+  }) async {
+    try {
+      final result = await remoteDataSource.uploadReceiptPdf(
+        rideId: rideId,
+        pdfPath: pdfPath,
+      );
+      return Right(result);
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));

@@ -14,6 +14,16 @@ abstract class URLS {
   static const places = _PlacesEndpoints();
   static const wallet = _WalletEndpoints();
   static const notification = _NotificationEndpoints();
+  static const pdf = _PdfEndpoints();
+}
+
+/// ─────────────────────────────────
+/// PDF ENDPOINTS
+/// ─────────────────────────────────
+class _PdfEndpoints {
+  const _PdfEndpoints();
+
+  final upload = "go/pdf/upload";
 }
 
 /// ─────────────────────────────────
@@ -52,6 +62,8 @@ class _RideEndpoints {
   String shareRide(String rideId) => "$base/$rideId/share";
   String updateStops(String rideId) => "$base/$rideId/stops";
   String cancelPendingStops(String rideId) => "$base/$rideId/stops/pending";
+  final checkBookMode = "go/check-book-mode";
+  final emergencyContacts = "go/emergency-contacts";
   final base = "go/rides";
 }
 
@@ -82,7 +94,7 @@ class _ProfileEndpoints {
   const _ProfileEndpoints();
 
   final updateProfile = "edit_profile";
-  final getProfile = "get_profile";
+  final getProfile = "go/user/profile";
   final paymentMethods = "go/user/payment-methods";
   final getEmailSubject = "go/get_email_subject";
   final sendEmail = "go/send_email";

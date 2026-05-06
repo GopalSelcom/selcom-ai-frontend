@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -142,7 +143,10 @@ class PhoneInputScreen extends GetView<AuthController> {
                                 ),
                                 maxLength: 11,
                                 onChanged: (v) {
-                                  controller.mobileNumber.value = v.replaceAll(' ', '');
+                                  controller.mobileNumber.value = v.replaceAll(
+                                    ' ',
+                                    '',
+                                  );
                                 },
                                 hintText: AppStrings.eG7XxXxxXxx.tr,
                                 hintStyle: AppTextStyles.hint.copyWith(
@@ -153,86 +157,6 @@ class PhoneInputScreen extends GetView<AuthController> {
                                 ),
                                 contentPadding: EdgeInsets.symmetric(
                                   horizontal: 16.w,
-                                  vertical: 16.h,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        SizedBox(height: 12.h),
-
-                        // Email Input Field
-                        Row(
-                          children: [
-                            Container(
-                              height: 56.h,
-                              width: 115.w,
-                              padding: EdgeInsets.symmetric(horizontal: 12.w),
-                              decoration: BoxDecoration(
-                                color: AppColors.white,
-                                border: Border.all(color: AppColors.borderDefault),
-                                borderRadius: BorderRadius.circular(16.r),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: AppColors.shadowSoft,
-                                    blurRadius: 2,
-                                    offset: Offset(0, 1),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                children: [
-                                  SvgPictureAsset(
-                                    AppAssets.icSms,
-                                    height: 24.h,
-                                    width: 24.w,
-                                    color: AppColors.textHeading,
-                                  ),
-                                  SizedBox(width: 8.w),
-                                  Text(
-                                    'Email',
-                                    style: AppTextStyles.body.copyWith(
-                                      fontFamily: AppTextStyles.metropolisFont,
-                                      fontWeight: FontWeight.w400,
-                                      fontSize: 17.sp,
-                                      color: AppColors.textHeading,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  Transform.rotate(
-                                    angle: -1.5708,
-                                    child: Icon(
-                                      Icons.keyboard_arrow_down,
-                                      size: 12.sp,
-                                      color: AppColors.textBody,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SizedBox(width: 8.w),
-                            Expanded(
-                              child: AppFocusInputField(
-                                height: 56.h,
-                                keyboardType: TextInputType.emailAddress,
-                                style: AppTextStyles.body.copyWith(
-                                  fontFamily: 'Plus Jakarta Sans',
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 16.sp,
-                                  color: AppColors.figmaInputBlue,
-                                  letterSpacing: -0.16,
-                                ),
-                                onChanged: controller.onEmailChanged,
-                                hintText: AppStrings.eGNameEmailComOptional.tr,
-                                hintStyle: AppTextStyles.hint.copyWith(
-                                  fontFamily: 'Plus Jakarta Sans',
-                                  fontSize: 16.sp,
-                                  color: AppColors.figmaInputBlue,
-                                  letterSpacing: -0.16,
-                                ),
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 12.w,
                                   vertical: 16.h,
                                 ),
                               ),

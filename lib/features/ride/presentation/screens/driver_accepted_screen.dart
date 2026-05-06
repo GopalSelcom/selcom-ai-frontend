@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:selcom_rides_frontend/shared/widgets/map_widgets.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+import 'package:iconsax/iconsax.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -14,6 +17,7 @@ import '../../../../shared/widgets/app_primary_button.dart';
 import '../controllers/driver_accepted_controller.dart';
 import '../controllers/ride_share_controller.dart';
 import '../widgets/ride_common_widgets.dart';
+import '../../../../shared/utils/phone_formatter.dart';
 
 /// SCR-11 — Driver accepted (heading to pickup). See `.agent/context/frontend/SCREENS.md`.
 class DriverAcceptedScreen extends StatelessWidget {
@@ -24,19 +28,28 @@ class DriverAcceptedScreen extends StatelessWidget {
   static const double _sheetMaxDriverAssigned = 0.54;
   static const double _sheetMaxRideStarted = 0.68;
 
+  void _minimizeSheet(DriverAcceptedController c) {
+    if (c.sheetController.isAttached) {
+      Future.microtask(() {
+        c.sheetController.animateTo(
+          _sheetMin,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = Get.find<DriverAcceptedController>();
     final shareController = Get.find<RideShareController>();
     final topPad = MediaQuery.of(context).padding.top;
-    final sheetController = DraggableScrollableController();
+    // Use the controller's persistent sheet controller
+    final sheetController = c.sheetController;
 
-    // Listen to sheet size changes and update controller
-    sheetController.addListener(() {
-      c.updateSheetSize(sheetController.size);
-    });
-
-    return Scaffold(
+    return _DriverAcceptedEmergencyContactsBootstrap(
+      child: Scaffold(
       backgroundColor: AppColors.pageBackground,
       body: Stack(
         fit: StackFit.expand,
@@ -67,30 +80,61 @@ class DriverAcceptedScreen extends StatelessWidget {
             right: 16,
             onProfileTap: c.openProfile,
             addressWidget: Expanded(
-              child: AppMapLocationSummaryCard(
-                label: 'Current location',
-                address: c.pickupAddress.isEmpty
-                    ? 'Selected location'
-                    : c.pickupAddress,
-                maxAddressLines: 1,
-              ),
+              child: Obx(() {
+                final ride = c.ride.value;
+                final isForOther = ride?.isBookedForOther ?? false;
+                final List<String> stops =
+                    c.ride.value?.stops.map((s) => s.address).toList() ?? [];
+                // If stops include the destination, we remove the last one
+                // because the card already shows the destination separately.
+                if (stops.isNotEmpty) {
+                  stops.removeLast();
+                }
+                return  isForOther && ride != null
+                    ? AppMapLocationSummaryCard(
+                  leading: Container(
+                    padding: EdgeInsets.all(6.w),
+                    decoration: const BoxDecoration(
+                      color: AppColors.surfaceSubtle,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Iconsax.user,
+                      color: AppColors.primary,
+                      size: 20.sp,
+                    ),
+                  ),
+                  label: "Booking for ${ride.passengerName}",
+                  address: "Phone: ${TanzaniaPhoneFormatter.formatInternational(ride.passengerPhone ?? '')}",
+                  maxAddressLines: 1,
+                ):RideLocationSummaryCard(
+                  pickupAddress: c.pickupAddress.isEmpty
+                      ? 'Current location'
+                      : c.pickupAddress,
+                  destinationAddress: c.destinationAddress.isEmpty
+                      ? 'Destination'
+                      : c.destinationAddress,
+                  intermediateStops: stops,
+                );
+              }),
             ),
           ),
           Obx(() {
-            final px = c.assignedDriverEtaScreenPx.value;
-            if (px == null) return const SizedBox.shrink();
+            final eta = c.etaLabel.value;
+
             return Positioned(
-              left: px.dx - 40.w,
-              top: px.dy - 60.h, // Moved higher to avoid clashing with marker
-              child: IgnorePointer(
+              top: topPad + 82.h,
+              left: 0,
+              right: 0,
+              child: Center(
                 child: Container(
                   padding: EdgeInsets.symmetric(
-                    horizontal: 12.w,
+                    horizontal: 14.w,
                     vertical: 6.h,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.dangerDeep,
-                    borderRadius: BorderRadius.circular(12.r),
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(14.r),
                     boxShadow: [
                       BoxShadow(
                         color: AppColors.black.withValues(alpha: 0.15),
@@ -100,11 +144,11 @@ class DriverAcceptedScreen extends StatelessWidget {
                     ],
                   ),
                   child: Text(
-                    c.etaLabel.value,
-                    style: TextStyle(
+                    eta,
+                    style: AppTextStyles.homeCaption.copyWith(
                       color: AppColors.white,
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13.sp,
                     ),
                   ),
                 ),
@@ -143,6 +187,7 @@ class DriverAcceptedScreen extends StatelessWidget {
           }),
         ],
       ),
+      ),
     );
   }
 
@@ -162,6 +207,39 @@ class DriverAcceptedScreen extends StatelessWidget {
           return Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Navigation / Track Rider Chip
+              // Navigation / Track Rider Chip
+              Obx(() {
+                final isTracking = c.assignedDriverLocation.value != null;
+                // Use the controller's state instead of the map's key state
+                final isCurrentlyTracking = c.isTrackingRider.value;
+
+                if (!isCurrentlyTracking && isTracking) {
+                  return Padding(
+                    padding: EdgeInsets.only(right: 8.w),
+                    child: _iconActionChip(
+                      icon: Icons.navigation,
+                      onTap: () {
+                        c.mapWidgetKey.currentState?.retrack();
+                        _minimizeSheet(c);
+                      },
+                      color: AppColors.primary,
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              }),
+              // Current Location GPS Chip
+              _iconActionChip(
+                icon: Icons.gps_fixed,
+                onTap: () {
+                  c.mapWidgetKey.currentState?.stopTracking();
+                  c.focusOnUserLocation();
+                  _minimizeSheet(c);
+                },
+                color: AppColors.textMapHint,
+              ),
+              SizedBox(width: 8.w),
               _iconActionChip(
                 icon: isSharing ? Icons.hourglass_top : Icons.share_outlined,
                 onTap: isSharing
@@ -270,30 +348,28 @@ class DriverAcceptedScreen extends StatelessWidget {
                     shareController.shareRide(c.rideId);
                   },
                 ),
-                SizedBox(height: 10.h),
-                _safetyOptionTile(
-                  title: AppStrings.selcomGoSosHelpline.tr,
-                  icon: Icons.support_agent_outlined,
-                  onTap: () {
-                    if (Get.isBottomSheetOpen ?? false) Get.back();
-                    Get.snackbar(
-                      AppStrings.safety.tr,
-                      AppStrings.shareFeatureComingSoon.tr,
-                    );
-                  },
-                ),
-                SizedBox(height: 10.h),
-                _safetyOptionTile(
-                  title: AppStrings.callPolice.tr,
-                  icon: Icons.local_police_outlined,
-                  onTap: () {
-                    if (Get.isBottomSheetOpen ?? false) Get.back();
-                    Get.snackbar(
-                      AppStrings.safety.tr,
-                      AppStrings.shareFeatureComingSoon.tr,
-                    );
-                  },
-                ),
+                Obx(() {
+                  final contacts = c.emergencyContacts;
+                  if (contacts.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final contact in contacts) ...[
+                        SizedBox(height: 10.h),
+                        _safetyOptionTile(
+                          title: contact.label,
+                          icon: c.emergencyContactIconFor(contact.id),
+                          onTap: () {
+                            if (Get.isBottomSheetOpen ?? false) Get.back();
+                            unawaited(c.dialEmergencyContact(contact));
+                          },
+                        ),
+                      ],
+                    ],
+                  );
+                }),
               ],
             ),
           ),
@@ -351,8 +427,9 @@ class DriverAcceptedScreen extends StatelessWidget {
     final screenHeight = MediaQuery.sizeOf(context).height;
 
     return Obx(() {
-      final currentSheetSize = c.sheetSize.value;
-      final dynamicBottomPad = screenHeight * currentSheetSize;
+      // Use a stable padding instead of tracking the sheet's pixel-by-pixel size.
+      // This prevents the "!_dirty" assertion error and keeps the map stable.
+      final stableBottomPad = screenHeight * _sheetMin;
 
       final pickup = c.pickupLatLng;
       final destination = c.destinationLatLng;
@@ -446,59 +523,40 @@ class DriverAcceptedScreen extends StatelessWidget {
         );
       }
 
-      final showRouteLoading = route.length <= 2;
-      final loadingText = assigned == null
-          ? "Locating driver..."
-          : "Calculating best route...";
-
       return Stack(
         children: [
           AppGoogleMap(
-            mapWidgetKey: const ValueKey('driver_accepted_map'),
-            initialCameraPosition: CameraPosition(target: mid, zoom: 13.5),
-            padding: EdgeInsets.only(
-              top: dynamicBottomPad - 40.h, // Balanced with current sheet size
-              bottom: dynamicBottomPad,
-            ),
-            onMapCreated: c.onMapCreated,
+            key: c.mapWidgetKey,
+            initialCameraPosition: CameraPosition(target: mid, zoom: 15.5),
+            padding: EdgeInsets.only(top: 100.h, bottom: stableBottomPad),
+            onMapCreated: (ctrl) {
+              c.onMapCreated(ctrl);
+              c.onRecenterPressed = () =>
+                  c.mapWidgetKey.currentState?.retrack();
+            },
+            onCameraMove: (_) => c.scheduleAssignedEtaOverlayRefresh(),
             onCameraIdle: c.scheduleAssignedEtaOverlayRefresh,
             showGpsButton: true,
-            onGpsPressed: () {
-              c.recenterMap();
-              if (sheetController.isAttached) {
-                sheetController.animateTo(
-                  _sheetInitial,
-                  duration: const Duration(milliseconds: 400),
-                  curve: Curves.easeInOut,
-                );
-              }
-            },
-            onNavigationPressed: () {
-              if (sheetController.isAttached) {
-                sheetController.animateTo(
-                  _sheetInitial,
-                  duration: const Duration(milliseconds: 400),
-                  curve: Curves.easeInOut,
-                );
-              }
-            },
-            onUserInteraction: () {
-              if (sheetController.isAttached &&
-                  sheetController.size > _sheetInitial) {
-                sheetController.animateTo(
-                  _sheetInitial,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOut,
-                );
-              }
-            },
+            onGpsPressed: c.focusOnUserLocation,
+            onUserInteraction: () => _minimizeSheet(c),
+            trackRider: c.isTrackingRider.value,
+            onTrackingChanged: (tracking) => c.isTrackingRider.value = tracking,
             markers: markers,
             polylines: polylines,
             minMaxZoomPreference: const MinMaxZoomPreference(12, 19),
-            trackRider: false,
+            onRiderPositionUpdate: (pos) {
+              c.animatedRiderLocation.value = pos;
+            },
           ),
-          if (showRouteLoading)
-            Positioned(
+          Obx(() {
+            if (c.isInitialRouteLoaded.value) return const SizedBox.shrink();
+
+            final assigned = c.assignedDriverLocation.value;
+            final loadingText = assigned == null
+                ? "Locating driver..."
+                : "Calculating best route...";
+
+            return Positioned(
               top: MediaQuery.paddingOf(context).top + 150.h,
               left: 0,
               right: 0,
@@ -533,17 +591,18 @@ class DriverAcceptedScreen extends StatelessWidget {
                       SizedBox(width: 10.w),
                       Text(
                         loadingText,
-                        style: TextStyle(
-                          fontSize: 13.sp,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textBody,
+                        style: AppTextStyles.homeCaption.copyWith(
+                          color: AppColors.black,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12.sp,
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-            ),
+            );
+          }),
         ],
       );
     });
@@ -661,7 +720,7 @@ class DriverAcceptedScreen extends StatelessWidget {
             child: ListView(
               controller: scrollController,
               padding: EdgeInsets.zero,
-              children: [_rideProgressBody(c)],
+              children: [_rideProgressBody(c, showChangeDropLink: true)],
             ),
           ),
         ],
@@ -681,27 +740,32 @@ class DriverAcceptedScreen extends StatelessWidget {
               color: AppColors.textBody,
             ),
             SizedBox(width: 2.w), // 2px gap from Figma
-            Text(
-              c.arrivalLabel.value,
-              style: AppTextStyles.homeCaption.copyWith(
-                fontSize: 15.sp,
-                color: AppColors.textBody,
-                fontWeight: FontWeight.w500,
-                height: 20 / 15,
+            Flexible(
+              child: Text(
+                c.arrivalLabel.value,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.homeCaption.copyWith(
+                  fontSize: 15.sp,
+                  color: AppColors.textBody,
+                  fontWeight: FontWeight.w500,
+                  height: 20 / 15,
+                ),
               ),
             ),
           ],
         ),
         SizedBox(height: 2.h),
-        Text(
-          AppStrings.driverIsHeadingToYourLocation.tr,
-          textAlign: TextAlign.center,
-          style: AppTextStyles.homeTitle.copyWith(
-            fontSize: 20.sp,
-            color: AppColors.textHeading,
-            fontWeight: FontWeight.w600,
-            height: 34 / 20,
-            letterSpacing: -0.4,
+        Obx(
+          () => Text(
+            c.driverPickupPhaseHeadline,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.homeTitle.copyWith(
+              fontSize: 20.sp,
+              color: AppColors.textHeading,
+              fontWeight: FontWeight.w600,
+              height: 34 / 20,
+              letterSpacing: -0.4,
+            ),
           ),
         ),
         SizedBox(height: 17.h),
@@ -795,14 +859,38 @@ class DriverAcceptedScreen extends StatelessWidget {
                           color: AppColors.textDarkOlive,
                         ),
                       ),
-                      Text(
-                        c.vehicleSubtitle.value,
-                        style: AppTextStyles.homeCaption.copyWith(
-                          fontSize: 15.sp,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.black,
-                          height: 1.33,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            c.vehicleSubtitle.value,
+                            style: AppTextStyles.homeCaption.copyWith(
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.black,
+                              height: 1.33,
+                            ),
+                          ),
+                          if (c.formattedSpeedLabel.isNotEmpty) ...[
+                            Text(
+                              " • ",
+                              style: AppTextStyles.homeCaption.copyWith(
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.textMapHint,
+                              ),
+                            ),
+                            Text(
+                              c.formattedSpeedLabel,
+                              style: AppTextStyles.homeCaption.copyWith(
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.primary,
+                                height: 1.33,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ],
                   ),
@@ -937,12 +1025,15 @@ class DriverAcceptedScreen extends StatelessWidget {
         SizedBox(height: 14.h),
         const Divider(color: AppColors.borderWalletCard, height: 1),
         SizedBox(height: 16.h),
-        _rideProgressBody(c),
+        _rideProgressBody(c, showChangeDropLink: false),
       ],
     );
   }
 
-  Widget _rideProgressBody(DriverAcceptedController c) {
+  Widget _rideProgressBody(
+    DriverAcceptedController c, {
+    bool showChangeDropLink = false,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -962,14 +1053,47 @@ class DriverAcceptedScreen extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: 2.h),
-                  Text(
-                    c.rideProgressSubtitle,
-                    style: AppTextStyles.homeCaption.copyWith(
-                      fontSize: 15.sp,
-                      color: AppColors.textBody,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+                  c.shouldShowRideEtaBadge
+                      ? Row(
+                          children: [
+                            Text(
+                              'Arrived in',
+                              style: AppTextStyles.homeCaption.copyWith(
+                                fontSize: 15.sp,
+                                color: AppColors.textBody,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            SizedBox(width: 6.w),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 8.w,
+                                vertical: 2.h,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.bgEtaBlueSoft,
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                              child: Text(
+                                '${c.rideEtaMinutes} mins',
+                                style: AppTextStyles.homeCaption.copyWith(
+                                  fontSize: 15.sp,
+                                  color: AppColors.textEtaBlue,
+                                  fontWeight: FontWeight.w700,
+                                  height: 20 / 15,
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : Text(
+                          c.rideProgressSubtitle,
+                          style: AppTextStyles.homeCaption.copyWith(
+                            fontSize: 15.sp,
+                            color: AppColors.textBody,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                 ],
               ),
             ),
@@ -997,16 +1121,25 @@ class DriverAcceptedScreen extends StatelessWidget {
           ),
           child: Column(
             children: [
-              RideLocationsTimeline(
-                startLocation: c.pickupTitle,
-                startAddress: c.pickupAddress,
-                endLocation: c.destinationTitle,
-                endAddress: c.destinationAddress,
-                stops: c.ride.value?.stops,
-                showAddStopBeforeDestination:
-                    !c.isNearDestination() &&
-                    c.ride.value?.pendingStopsUpdate == null,
-                onAddStopTap: c.onEditStops,
+              Obx(
+                () => RideLocationsTimeline(
+                  startLocation: c.pickupTitle,
+                  startAddress: c.pickupAddress,
+                  endLocation: c.destinationTitle,
+                  endAddress: c.destinationAddress,
+                  stops: c.ride.value?.stops,
+                  showAddStopBeforeDestination:
+                      !c.isNearDestination() &&
+                      c.ride.value?.pendingStopsUpdate == null,
+                  onAddStopTap: c.onEditStops,
+                  showChangeDropLocationLink:
+                      showChangeDropLink &&
+                      !c.isNearDestination() &&
+                      c.ride.value?.pendingStopsUpdate == null &&
+                      !c.isUpdatingStops.value &&
+                      !c.isUpdatingDestination.value,
+                  onChangeDropLocationTap: c.onChangeDropLocation,
+                ),
               ),
             ],
           ),
@@ -1121,4 +1254,33 @@ class DriverAcceptedScreen extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Triggers `GET /v4/go/emergency-contacts` once when SCR-11 mounts (see controller).
+class _DriverAcceptedEmergencyContactsBootstrap extends StatefulWidget {
+  const _DriverAcceptedEmergencyContactsBootstrap({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_DriverAcceptedEmergencyContactsBootstrap> createState() =>
+      _DriverAcceptedEmergencyContactsBootstrapState();
+}
+
+class _DriverAcceptedEmergencyContactsBootstrapState
+    extends State<_DriverAcceptedEmergencyContactsBootstrap> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(
+        Get.find<DriverAcceptedController>()
+            .loadEmergencyContactsOnceOnScreenOpen(),
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

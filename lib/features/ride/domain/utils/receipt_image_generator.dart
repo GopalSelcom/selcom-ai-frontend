@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../../../../core/constants/app_assets.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../data/models/ride_management_models.dart';
 
@@ -20,7 +21,8 @@ class ReceiptImageGenerator {
   static Future<File> generateReceiptImage({
     required ReceiptModel receipt,
   }) async {
-    final String svgString = await rootBundle.loadString('assets/images/Selcom Go logo-red.svg');
+    final String svgString =
+        await rootBundle.loadString(AppAssets.selcomGoLogoRedSvg);
 
     final screenshotController = ScreenshotController();
 

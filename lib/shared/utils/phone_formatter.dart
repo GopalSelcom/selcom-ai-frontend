@@ -28,4 +28,15 @@ class TanzaniaPhoneFormatter extends TextInputFormatter {
     }
     return buffer.toString();
   }
+
+  static String formatInternational(String number) {
+    if (number.isEmpty) return '';
+    String clean = number.replaceAll(RegExp(r'[\s+]'), '');
+    if (clean.startsWith('255')) {
+      clean = clean.substring(3);
+    } else if (clean.startsWith('0')) {
+      clean = clean.substring(1);
+    }
+    return '+255 ${formatString(clean)}';
+  }
 }

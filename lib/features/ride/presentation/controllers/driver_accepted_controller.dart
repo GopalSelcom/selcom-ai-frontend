@@ -1,5 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+import 'dart:math' as math;
+import 'package:selcom_rides_frontend/shared/widgets/app_google_map.dart';
 import 'package:uuid/uuid.dart';
 
 import 'dart:developer' as developer;
@@ -12,7 +15,9 @@ import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/re
 import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/ride_stops_update_response.dart';
 import 'package:selcom_rides_frontend/core/data/models/responses/payment_status_response/payment_status_response.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:selcom_rides_frontend/features/ride/data/models/emergency_contacts_response.dart';
 import 'package:selcom_rides_frontend/features/ride/data/models/stop_update_models.dart';
+import 'package:selcom_rides_frontend/features/ride/data/models/destination_update_models.dart';
 import 'package:selcom_rides_frontend/core/data/models/requests/validate_ride_payment_request.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
@@ -34,6 +39,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
@@ -61,9 +67,9 @@ class DriverAcceptedController extends GetxController
 
   late final String rideId;
   late final LatLng pickupLatLng;
-  late final LatLng destinationLatLng;
+  late LatLng destinationLatLng;
   late final String pickupAddress;
-  late final String destinationAddress;
+  late String destinationAddress;
   int? _seedRideCharge;
   int? _seedBookingFee;
   int? _seedTotalAmount;
@@ -93,6 +99,8 @@ class DriverAcceptedController extends GetxController
   final rideBottomSheetState = RideBottomSheetState.driverAssigned.obs;
   final currentRideStatus = 'driver_assigned'.obs;
   final selectedRideRating = 4.obs;
+  final isReasonProcessing = false.obs;
+  final isCancelPayProcessing = false.obs;
 
   final Rxn<BitmapDescriptor> assignedDriverMarkerIcon =
       Rxn<BitmapDescriptor>();
@@ -101,7 +109,9 @@ class DriverAcceptedController extends GetxController
   final stopIcons = <BitmapDescriptor>[].obs;
   final Rxn<Offset> assignedDriverEtaScreenPx = Rxn<Offset>();
   final assignedDriverHeading = 0.0.obs;
-  AnimationController? _moveAnimController;
+  final assignedDriverSpeed = 0.0.obs; // m/s
+  final Rxn<LatLng> animatedRiderLocation = Rxn<LatLng>();
+  final RxBool isInitialRouteLoaded = false.obs;
 
   VoidCallback? onRecenterPressed;
 
@@ -121,6 +131,10 @@ class DriverAcceptedController extends GetxController
   StreamSubscription<PaymentStatusUpdateResponse>? _paymentStatusSub;
   bool _didJoinRideRoom = false;
   bool _isHandlingAppResume = false;
+  bool _emergencyContactsLoadedOnce = false;
+
+  /// API-driven rows for the safety sheet (label = title, primary `phone` for `tel:`).
+  final emergencyContacts = <EmergencyContactModel>[].obs;
 
   final RxDouble sheetSize = 0.3.obs;
 
@@ -135,31 +149,51 @@ class DriverAcceptedController extends GetxController
       0.obs; // 0: Idle, 1: Payment, 2: Route, 3: Success
   final stopUpdateWorkingStops = <RideStopEntity>[].obs;
 
+  final RxBool isUpdatingDestination = false.obs;
+  final RxBool isDestinationUpdateFlow = false.obs;
+  final Rxn<DestinationUpdatePreviewModel> destinationUpdatePreview =
+      Rxn<DestinationUpdatePreviewModel>();
+  double? _pendingDestinationTargetLat;
+  double? _pendingDestinationTargetLng;
+
   void updateSheetSize(double size) {
     sheetSize.value = size;
   }
 
+  String get formattedSpeedLabel {
+    final speedKmh = (assignedDriverSpeed.value * 3.6).round();
+    return speedKmh > 1 ? '$speedKmh km/h' : '';
+  }
+
+  final DraggableScrollableController sheetController =
+      DraggableScrollableController();
+  final RxBool isTrackingRider = false.obs;
+  final GlobalKey<AppGoogleMapState> mapWidgetKey =
+      GlobalKey<AppGoogleMapState>();
+
   @override
   void onInit() {
     super.onInit();
+    sheetController.addListener(() {
+      updateSheetSize(sheetController.size);
+    });
     WidgetsBinding.instance.addObserver(this);
-    _moveAnimController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 1),
-    );
     _parseArgs();
     _bootstrap();
-    ever(assignedDriverLocation, (_) => scheduleAssignedEtaOverlayRefresh());
+    ever(animatedRiderLocation, (_) => scheduleAssignedEtaOverlayRefresh());
     ever(routePoints, (List<LatLng> points) {
-      if (points.length > 2) {
+      // Fit bounds only when we first get a valid route, not on every update.
+      if (points.length > 2 && isInitialRouteLoaded.value == false) {
         recenterMap();
+        isInitialRouteLoaded.value = true;
       }
     });
-    ever(
-      isUpdatingStops,
-      (bool updating) => _handleStopUpdateProgress(updating),
-    );
+    ever(isUpdatingStops, (_) => _handleRouteUpdateProgress());
+    ever(isUpdatingDestination, (_) => _handleRouteUpdateProgress());
     _loadPersistedIdempotencyKey();
+    arrivalLabel.value = AppStrings.driverWillArrivingInMinutes.trParams({
+      'minutes': '1',
+    });
     analyticsService.logEvent('driver_assigned_screen_viewed');
   }
 
@@ -192,6 +226,52 @@ class DriverAcceptedController extends GetxController
     await _fetchRideDetails();
     _handleStopUpdateRecovery();
     await _initRideRoomSocket();
+  }
+
+  /// Called once from [DriverAcceptedScreen] after first frame.
+  Future<void> loadEmergencyContactsOnceOnScreenOpen() async {
+    if (_emergencyContactsLoadedOnce) return;
+    _emergencyContactsLoadedOnce = true;
+    final result = await rideRepository.getEmergencyContacts();
+    result.fold(
+      (f) => developer.log(
+        'emergency_contacts request failed',
+        name: 'EmergencyContacts',
+        error: f.message,
+      ),
+      (EmergencyContactsResponse res) {
+        emergencyContacts.assignAll(res.data.contacts);
+      },
+    );
+  }
+
+  IconData emergencyContactIconFor(String id) {
+    switch (id) {
+      case 'police':
+        return Icons.local_police_outlined;
+      case 'selcom_go_support':
+        return Icons.support_agent_outlined;
+      default:
+        return Icons.phone_in_talk_outlined;
+    }
+  }
+
+  Future<void> dialEmergencyContact(EmergencyContactModel contact) async {
+    final primary = contact.phone.trim();
+    final secondary = contact.secondaryPhone?.trim() ?? '';
+    final phone = primary.isNotEmpty ? primary : secondary;
+    if (phone.isEmpty) {
+      AppDialogs.showErrorDialog(
+        title: contact.label.isEmpty ? AppStrings.call.tr : contact.label,
+        message: AppStrings.phoneNumberUnavailable.tr,
+      );
+      return;
+    }
+    await _launchSystemPhoneDialer(
+      phone: phone,
+      errorDialogTitle:
+          contact.label.isEmpty ? AppStrings.call.tr : contact.label,
+    );
   }
 
   void _handleStopUpdateRecovery() {
@@ -351,7 +431,7 @@ class DriverAcceptedController extends GetxController
     developer.log(
       "💧 Hydrating socket seed payloads from args",
       name: 'ORDER_TRACKING',
-      error: jsonEncode(args),
+      error: args.toString(),
     );
     final statusRaw = args['statusPayload'];
     if (statusRaw is Map) {
@@ -390,6 +470,18 @@ class DriverAcceptedController extends GetxController
   //   } catch (_) {}
   // }
 
+  void _syncDestinationFromRide(RideModel? r) {
+    if (r == null) return;
+    final d = r.destination;
+    if (d.lat != 0 && d.lng != 0) {
+      destinationLatLng = LatLng(d.lat, d.lng);
+    }
+    final addr = d.address.trim();
+    if (addr.isNotEmpty) {
+      destinationAddress = addr;
+    }
+  }
+
   Future<void> _fetchRideDetails() async {
     if (rideId.isEmpty) {
       _applyMockContent();
@@ -407,6 +499,10 @@ class DriverAcceptedController extends GetxController
       (r) {
         ride.value = r;
         _applyRide(r);
+        _syncDestinationFromRide(r);
+        // HTTP details can show completion before/without a matching socket tick;
+        // keep bottom-sheet state and completion navigation in sync with the model.
+        _applyBottomSheetStateForStatus(rideStatusToApiValue(r.status));
         _syncLiveActivityFromDetails(r);
         _loadMarkerIcons(); // Refresh icons with new ride context
 
@@ -434,10 +530,27 @@ class DriverAcceptedController extends GetxController
             isUpdatingStops.value = false;
           }
         }
+
+        if (isUpdatingDestination.value && stopUpdateProgressStep.value == 2) {
+          final dest = r.destination;
+          final tLat = _pendingDestinationTargetLat;
+          final tLng = _pendingDestinationTargetLng;
+          if (tLat != null &&
+              tLng != null &&
+              (dest.lat - tLat).abs() < 0.00002 &&
+              (dest.lng - tLng).abs() < 0.00002) {
+            stopUpdateProgressStep.value = 3;
+            isUpdatingDestination.value = false;
+            isDestinationUpdateFlow.value = false;
+            _pendingDestinationTargetLat = null;
+            _pendingDestinationTargetLng = null;
+            _setDropRouteFallback();
+          }
+        }
       },
     );
     isLoadingRide.value = false;
-    _fitRouteBounds(force: true);
+    // Removed automatic _fitRouteBounds here to prevent unwanted zoom-out during navigation.
   }
 
   void _applyMockContent() {
@@ -451,7 +564,9 @@ class DriverAcceptedController extends GetxController
     plateLineSecondary.value = 'BBE';
     vehicleSubtitle.value = 'Toyota corolla, White';
     otpDigits.assignAll(['2', '7', '5', '6']);
-    arrivalLabel.value = 'Driver will arriving in 1 min...';
+    arrivalLabel.value = AppStrings.driverWillArrivingInMinutes.trParams({
+      'minutes': '1',
+    });
     currentRideStatus.value = 'driver_assigned';
   }
 
@@ -590,7 +705,8 @@ class DriverAcceptedController extends GetxController
 
     _driverLocSub = _socketService.rideDriverLocationStream.listen((payload) {
       if (payload.latitude == 0 || payload.longitude == 0) return;
-      // Strict city-region validation: Dar es Salaam is approx -6.8, 39.2
+
+      // Strict city-region validation for Dar es Salaam
       if (payload.latitude! < -15 ||
           payload.latitude! > 0 ||
           payload.longitude! < 20 ||
@@ -601,20 +717,53 @@ class DriverAcceptedController extends GetxController
       final lat = payload.latitude;
       final lng = payload.longitude;
       final head = payload.heading;
+      final speed = (payload.speed ?? 0.0).toDouble(); // m/s
       if (lat == null || lng == null) return;
 
-      final targetPos = LatLng(lat, lng);
+      final rawPos = LatLng(lat, lng);
 
-      double targetHeading = assignedDriverHeading.value;
+      // 1. Update the base location with RAW GPS
+      assignedDriverLocation.value = rawPos;
+      assignedDriverSpeed.value = speed;
+
+      // 2. High-Fidelity Interpolation:
+      // We calculate duration based on REAL speed for a butter-smooth glide.
+      Duration animDuration = const Duration(milliseconds: 3500);
+
+      if (speed > 0.5) {
+        final currentPos =
+            mapWidgetKey.currentState?.currentAnimatedPosition ??
+            assignedDriverLocation.value!;
+        final distance = _calculateDistanceInMeters(currentPos, rawPos);
+
+        // 🏎️ High-Speed Optimization:
+        // Use a tighter buffer (5% instead of 15%) to prevent lag accumulation.
+        // Cap duration more aggressively at 5s to force catch-up.
+        double secondsNeeded = (distance / speed) * 1.05;
+        int millis = (secondsNeeded * 1000).toInt();
+
+        millis = millis.clamp(1200, 5000);
+        animDuration = Duration(milliseconds: millis);
+      } else {
+        // If slow or stopped, use a more conservative 4s glide to match
+        // the typical 3-5s socket frequency.
+        animDuration = const Duration(milliseconds: 4000);
+      }
+
       if (head != null) {
         if (head is num) {
-          targetHeading = head.toDouble();
+          assignedDriverHeading.value = head.toDouble();
         } else if (head is String) {
-          targetHeading = double.tryParse(head) ?? targetHeading;
+          assignedDriverHeading.value =
+              double.tryParse(head) ?? assignedDriverHeading.value;
         }
       }
 
-      _animateDriverMovement(targetPos, targetHeading);
+      mapWidgetKey.currentState?.updateRiderPosition(
+        rawPos,
+        rotation: assignedDriverHeading.value,
+        duration: animDuration,
+      );
     });
 
     _trackingSub = _socketService.trackingUpdateStatusStream.listen((
@@ -704,15 +853,34 @@ class DriverAcceptedController extends GetxController
 
   Future<void> loadDriverIcon({String? vehicleType}) async {
     try {
+      final type = (vehicleType ?? '').toLowerCase();
+      String assetPath = AppAssets.mapVehicleRiderSvg;
+
+      if (type.contains('car') ||
+          type.contains('cab') ||
+          type.contains('taxi')) {
+        assetPath = AppAssets.mapVehicleCarSvg;
+      } else if (type.contains('bajaj') ||
+          type.contains('rickshaw') ||
+          type.contains('tuk') ||
+          type.contains('auto')) {
+        assetPath = AppAssets.mapVehicleRickshawSvg;
+      }
+
+      assignedDriverMarkerIcon.value = await MapMarkerUtils.getSvgMarker(
+        assetPath,
+        70, // Consistent size for SVG markers
+      );
+    } catch (e, stackTrace) {
+      developer.log(
+        "Error loading SVG marker icon ($vehicleType): $e",
+        error: e,
+        stackTrace: stackTrace,
+      );
+      // Robust fallback to existing PNG assets
       final asset = VehicleImageUtils.imageAssetForVehicleType(vehicleType);
       assignedDriverMarkerIcon.value = await MapMarkerUtils.getResizedMarker(
         asset,
-        150,
-      );
-    } catch (e, stackTrace) {
-      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      assignedDriverMarkerIcon.value = await MapMarkerUtils.getResizedMarker(
-        AppAssets.imgBoda,
         150,
       );
     }
@@ -749,15 +917,15 @@ class DriverAcceptedController extends GetxController
 
   void _syncBottomSheetVehicleImage(String? vehicleTypeHint) {
     final previousAsset = bottomSheetVehicleImageAsset.value;
-    bottomSheetVehicleImageAsset.value =
-        VehicleImageUtils.imageAssetForVehicleType(
-          vehicleTypeHint,
-          // Keep previously resolved vehicle image when an event payload
-          // doesn't include enough vehicle metadata (common during stop transitions).
-          fallbackAsset: previousAsset.isNotEmpty
-              ? previousAsset
-              : AppAssets.imgCab,
-        );
+    bottomSheetVehicleImageAsset
+        .value = VehicleImageUtils.imageAssetForVehicleType(
+      vehicleTypeHint,
+      // Keep previously resolved vehicle image when an event payload
+      // doesn't include enough vehicle metadata (common during stop transitions).
+      fallbackAsset: previousAsset.isNotEmpty
+          ? previousAsset
+          : AppAssets.imgCab,
+    );
   }
 
   void onMapCreated(GoogleMapController c) {
@@ -772,7 +940,7 @@ class DriverAcceptedController extends GetxController
 
   Future<void> refreshAssignedDriverEtaOverlay() async {
     final ctrl = mapController;
-    final pos = assignedDriverLocation.value;
+    final pos = animatedRiderLocation.value ?? assignedDriverLocation.value;
     if (ctrl == null || pos == null) {
       assignedDriverEtaScreenPx.value = null;
       return;
@@ -782,8 +950,26 @@ class DriverAcceptedController extends GetxController
   }
 
   void recenterMap() {
-    onRecenterPressed?.call();
-    _fitRouteBounds(force: true);
+    if (onRecenterPressed != null) {
+      onRecenterPressed!();
+    } else {
+      _fitRouteBounds(force: true);
+    }
+  }
+
+  Future<void> focusOnUserLocation() async {
+    final ctrl = mapController;
+    if (ctrl == null) return;
+
+    try {
+      // We rely on the Google Map internal "my location" feature to animate
+      // but we can also manually trigger it if we have the coordinates.
+      // For now, we'll trigger a fitBounds on the whole route as a fallback
+      // but the UI button is now decoupled from Rider Tracking.
+      _fitRouteBounds(force: true);
+    } catch (e) {
+      developer.log("Error focusing on user location: $e");
+    }
   }
 
   Future<void> _fitRouteBounds({bool force = false}) async {
@@ -850,15 +1036,34 @@ class DriverAcceptedController extends GetxController
       maxLng = maxLng > p.longitude ? maxLng : p.longitude;
     }
 
-    await ctrl.animateCamera(
-      CameraUpdate.newLatLngBounds(
-        LatLngBounds(
-          southwest: LatLng(minLat - 0.001, minLng - 0.001),
-          northeast: LatLng(maxLat + 0.001, maxLng + 0.001),
+    try {
+      // Ensure the bounds have at least some area to prevent rendering glitches
+      double latDelta = (maxLat - minLat).abs();
+      double lngDelta = (maxLng - minLng).abs();
+      if (latDelta < 0.001) {
+        minLat -= 0.001;
+        maxLat += 0.001;
+      }
+      if (lngDelta < 0.001) {
+        minLng -= 0.001;
+        maxLng += 0.001;
+      }
+
+      await ctrl.animateCamera(
+        CameraUpdate.newLatLngBounds(
+          LatLngBounds(
+            southwest: LatLng(minLat, minLng),
+            northeast: LatLng(maxLat, maxLng),
+          ),
+          72, // Slightly more padding for comfort
         ),
-        64,
-      ),
-    );
+      );
+    } catch (e) {
+      // Fallback if bounds animation fails
+      if (points.isNotEmpty) {
+        ctrl.animateCamera(CameraUpdate.newLatLngZoom(points.first, 15));
+      }
+    }
   }
 
   void _applyStatusPayload(EventRiderStatusUpdateResponse payload) {
@@ -956,13 +1161,13 @@ class DriverAcceptedController extends GetxController
     if (target == 'pick_up') {
       routeTarget.value = target;
       final coords = payload.routeGeometry?.coordinates;
-      if (coords != null && coords.isNotEmpty && coords.length > 2) {
+      if (coords != null && coords.isNotEmpty) {
         routePoints.assignAll(_toLatLngPolyline(coords));
       }
     } else if (target == 'drop_off') {
       routeTarget.value = target;
       final coords = payload.routeGeometry?.coordinates;
-      if (coords != null && coords.isNotEmpty && coords.length > 2) {
+      if (coords != null && coords.isNotEmpty) {
         routePoints.assignAll(_toLatLngPolyline(coords));
       }
     } else if (status.isNotEmpty) {
@@ -1041,6 +1246,9 @@ class DriverAcceptedController extends GetxController
     }
 
     rideBottomSheetState.value = nextState;
+    if (normalizedStatus == 'driver_arrived') {
+      _syncDriverArrivedPickupMessages();
+    }
     final isCompletedStatus =
         normalizedStatus == 'completed' || normalizedStatus == 'ride_completed';
     if (isCompletedStatus) {
@@ -1048,9 +1256,23 @@ class DriverAcceptedController extends GetxController
     }
   }
 
+  /// Pickup sheet + map chip copy when the driver is at pickup ([driver_arrived]).
+  void _syncDriverArrivedPickupMessages() {
+    arrivalLabel.value = AppStrings.driverArrivedPickupPrimary.tr;
+    etaLabel.value = AppStrings.driverArrivedMapBadge.tr;
+  }
+
+  /// Second line on the driver-assigned pickup sheet (below the ETA row).
+  String get driverPickupPhaseHeadline =>
+      currentRideStatus.value.toLowerCase() == 'driver_arrived'
+          ? AppStrings.driverArrivedPickupSecondary.tr
+          : AppStrings.driverIsHeadingToYourLocation.tr;
+
   void _openCompletedRideDetailsScreen() {
     if (_openedCompletedRideDetails) return;
-    final normalizedCurrentStatus = currentRideStatus.value.trim().toLowerCase();
+    final normalizedCurrentStatus = currentRideStatus.value
+        .trim()
+        .toLowerCase();
     if (normalizedCurrentStatus != 'completed' &&
         normalizedCurrentStatus != 'ride_completed') {
       return;
@@ -1079,7 +1301,8 @@ class DriverAcceptedController extends GetxController
               (m) => '${m.group(1)}_${m.group(2)}',
             )
             .toLowerCase();
-        if (refreshedStatus == 'completed' || refreshedStatus == 'ride_completed') {
+        if (refreshedStatus == 'completed' ||
+            refreshedStatus == 'ride_completed') {
           _openCompletedRideDetailsScreen();
         }
       });
@@ -1100,14 +1323,14 @@ class DriverAcceptedController extends GetxController
         ride: completedRide,
         openedFromCompletionFlow: true,
       ),
-      binding: BindingsBuilder(
-        () => Get.put(
+      binding: BindingsBuilder(() {
+        Get.put(
           RideDetailsController(
             ride: completedRide,
             openedFromCompletionFlow: true,
           ),
-        ),
-      ),
+        );
+      }),
     );
   }
 
@@ -1170,15 +1393,24 @@ class DriverAcceptedController extends GetxController
   }
 
   String get rideProgressSubtitle {
+    final etaSeconds = currentEtaSeconds.value;
+    final etaMinutes = etaSeconds > 0 ? (etaSeconds / 60).ceil() : 0;
+    final hasEta = etaMinutes > 0;
     switch (currentRideStatus.value) {
       case 'near_destination':
-        return 'Approaching your destination';
+        return hasEta
+            ? 'Arrived in ${etaMinutes.toString()} mins'
+            : 'Approaching your destination';
       case 'ride_in_progress':
-        return 'Heading to your destination';
+        return hasEta
+            ? 'Arrived in ${etaMinutes.toString()} mins'
+            : 'Heading to your destination';
       case 'ride_started':
-        return 'Trip has started';
+        return hasEta
+            ? 'Arrived in ${etaMinutes.toString()} mins'
+            : 'Trip has started';
       case 'driver_arrived':
-        return 'Driver has reached pickup';
+        return AppStrings.driverArrivedPickupPrimary.tr;
       case 'driver_arriving':
       case 'driver_assigned':
         return 'Driver is heading to pickup';
@@ -1186,40 +1418,80 @@ class DriverAcceptedController extends GetxController
       case 'completed':
         return arrivalDateLabel;
       default:
-        return 'Arrived in ${etaLabel.value.toLowerCase()}';
+        return hasEta
+            ? 'Arrived in ${etaMinutes.toString()} mins'
+            : 'Trip has started';
     }
   }
 
+  int get rideEtaMinutes {
+    final etaSeconds = currentEtaSeconds.value;
+    if (etaSeconds <= 0) return 0;
+    return (etaSeconds / 60).ceil();
+  }
+
+  bool get shouldShowRideEtaBadge {
+    final status = currentRideStatus.value;
+    if (rideEtaMinutes <= 0) return false;
+    return status == 'ride_started' ||
+        status == 'ride_in_progress' ||
+        status == 'near_destination';
+  }
+
   void _applyTrackingPayload(TrackingUpdateSocketResponse payload) {
-    final status = (payload.status ?? '').toString().trim().toLowerCase();
-    if (status.isNotEmpty) {
+    final trackingStatus =
+        (payload.status ?? '').toString().trim().toLowerCase();
+    if (trackingStatus.isNotEmpty) {
       // Only trigger state updates from tracking payloads if it's a major transition.
       // High-frequency tracking often contains stale 'assigned' statuses.
-      if (status.contains('started') ||
-          status.contains('progress') ||
-          status.contains('complete') ||
-          status.contains('arrived')) {
-        _applyBottomSheetStateForStatus(status);
+      if (trackingStatus.contains('started') ||
+          trackingStatus.contains('progress') ||
+          trackingStatus.contains('complete') ||
+          trackingStatus.contains('arrived')) {
+        _applyBottomSheetStateForStatus(trackingStatus);
       }
     }
 
-    if (status == 'cancelled' || status == 'no_driver_found') {
+    if (trackingStatus == 'cancelled' || trackingStatus == 'no_driver_found') {
       _navigatedAway = true;
       _showCancelDialogThenGoHome(
-        status == 'no_driver_found'
+        trackingStatus == 'no_driver_found'
             ? AppStrings.noDriverFoundForYourRequestPleaseTryAgain.tr
             : AppStrings.rideCancelled.tr,
       );
       return;
     }
 
+    final isPickupArrived = trackingStatus == 'driver_arrived';
+    if (isPickupArrived) {
+      _syncDriverArrivedPickupMessages();
+    }
+
     final eta = payload.eta;
-    if (eta != null && eta > 0) {
+    if (eta != null) {
       currentEtaSeconds.value = eta.toDouble();
-      final convertedTime = eta / 60;
-      etaLabel.value = '${convertedTime.toInt()} Mins';
-      arrivalLabel.value =
-          'Driver will arriving in ${convertedTime.toInt() <= 1 ? '1 min' : '${convertedTime.toInt()} mins'}...';
+      if (!isPickupArrived && eta > 0) {
+        final minutes = (eta / 60).ceil();
+        etaLabel.value = '$minutes ${minutes == 1 ? 'Min' : 'Mins'}';
+        final rideStatus = currentRideStatus.value.toLowerCase();
+        final isPickupPhase = rideStatus == 'driver_assigned' ||
+            rideStatus == 'driver_arriving' ||
+            rideStatus == 'accepted';
+        if (isPickupPhase) {
+          arrivalLabel.value =
+              AppStrings.driverWillArrivingInMinutes.trParams({
+            'minutes': '$minutes',
+          });
+        }
+      } else if (!isPickupArrived && eta <= 0) {
+        final statusForEta = (payload.status ?? currentRideStatus.value)
+            .toLowerCase();
+        final inRide = statusForEta.contains('progress') ||
+            statusForEta.contains('started');
+        etaLabel.value = inRide ? 'Nearby' : 'Arriving';
+        arrivalLabel.value =
+            inRide ? 'Almost there' : 'Driver is arriving...';
+      }
     }
 
     String target = _normalizeRouteTarget(payload.routeTarget);
@@ -1239,95 +1511,40 @@ class DriverAcceptedController extends GetxController
       routeTarget.value = target;
       if (coords != null && coords.isNotEmpty) {
         final newPoints = _toLatLngPolyline(coords);
-        if (newPoints.length > 5) {
+        if (newPoints.isNotEmpty) {
           routePoints.assignAll(newPoints);
+          _fitRouteBounds();
         }
       }
     } else if (target == 'drop_off') {
       routeTarget.value = target;
       if (coords != null && coords.isNotEmpty) {
         final newPoints = _toLatLngPolyline(coords);
-        if (newPoints.length > 5) {
+        if (newPoints.isNotEmpty) {
           routePoints.assignAll(newPoints);
+          _fitRouteBounds();
         }
       }
     }
-    // _fitRouteBounds() removed from here to prevent frequent zoom-outs.
   }
 
-  void _animateDriverMovement(LatLng targetPos, double targetHeading) {
-    if (assignedDriverLocation.value == null) {
-      assignedDriverLocation.value = targetPos;
-      assignedDriverHeading.value = targetHeading;
-      return;
-    }
-
-    final startPos = assignedDriverLocation.value!;
-    final startHeading = assignedDriverHeading.value;
-
-    _moveAnimController?.stop();
-    _moveAnimController?.reset();
-
-    final Animation<double> curve = CurvedAnimation(
-      parent: _moveAnimController!,
-      curve: Curves.linear,
-    );
-
-    _moveAnimController?.addListener(() {
-      final t = curve.value;
-      final currentPos = _interpolateLatLng(startPos, targetPos, t);
-      assignedDriverLocation.value = currentPos;
-      assignedDriverHeading.value = _interpolateAngle(
-        startHeading,
-        targetHeading,
-        t,
-      );
-
-      // Perform real-time trimming for visual smoothness
-      _trimRoutePoints(currentPos);
-    });
-
-    _moveAnimController?.forward();
+  /// Calculates the distance between two points in meters using Haversine formula.
+  double _calculateDistanceInMeters(LatLng p1, LatLng p2) {
+    const double earthRadius = 6371000; // meters
+    final double dLat = _degreesToRadians(p2.latitude - p1.latitude);
+    final double dLng = _degreesToRadians(p2.longitude - p1.longitude);
+    final double a =
+        math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(_degreesToRadians(p1.latitude)) *
+            math.cos(_degreesToRadians(p2.latitude)) *
+            math.sin(dLng / 2) *
+            math.sin(dLng / 2);
+    final double c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+    return earthRadius * c;
   }
 
-  void _trimRoutePoints(LatLng currentPos) {
-    if (routePoints.length < 3) return;
-
-    int closestIndex = -1;
-    // ~50m threshold for trimming
-    const double trimThreshold = 0.0005;
-
-    // Check upcoming segments for progress
-    int checkCount = routePoints.length > 8 ? 8 : routePoints.length;
-    for (int i = 0; i < checkCount; i++) {
-      final dist = _calculateSimpleDist(currentPos, routePoints[i]);
-      if (dist < trimThreshold) {
-        closestIndex = i;
-        break;
-      }
-    }
-
-    if (closestIndex > 0) {
-      routePoints.removeRange(0, closestIndex);
-      // Ensure the line starts exactly at the driver for a clean look
-      routePoints[0] = currentPos;
-    }
-  }
-
-  double _calculateSimpleDist(LatLng a, LatLng b) {
-    return (a.latitude - b.latitude).abs() + (a.longitude - b.longitude).abs();
-  }
-
-  LatLng _interpolateLatLng(LatLng a, LatLng b, double t) {
-    final lat = a.latitude + (b.latitude - a.latitude) * t;
-    final lng = a.longitude + (b.longitude - a.longitude) * t;
-    return LatLng(lat, lng);
-  }
-
-  double _interpolateAngle(double a, double b, double t) {
-    // Basic linear interpolation for heading.
-    // In a production app, you might want to handle the 0/360 wrap-around smoothly.
-    return a + (b - a) * t;
+  double _degreesToRadians(double degrees) {
+    return degrees * math.pi / 180;
   }
 
   String _normalizeRouteTarget(String? target) {
@@ -1418,7 +1635,7 @@ class DriverAcceptedController extends GetxController
                     if (Get.isBottomSheetOpen ?? false) {
                       Get.back();
                     }
-                    _callDriverViaPhoneDialer(phone);
+                    unawaited(_callDriverViaPhoneDialer(phone));
                   },
                 ),
               ],
@@ -1471,22 +1688,38 @@ class DriverAcceptedController extends GetxController
   }
 
   Future<void> _callDriverViaPhoneDialer(String phone) async {
-    // Clean string for tel: link
+    await _launchSystemPhoneDialer(
+      phone: phone,
+      errorDialogTitle: AppStrings.call.tr,
+    );
+  }
+
+  /// Opens the OS phone app with [phone] (`tel:`). [errorDialogTitle] uses API `label` for emergency rows.
+  Future<void> _launchSystemPhoneDialer({
+    required String phone,
+    required String errorDialogTitle,
+  }) async {
     final cleanPhone = phone.replaceAll(RegExp(r'[^0-9+]'), '');
+    if (cleanPhone.isEmpty) {
+      AppDialogs.showErrorDialog(
+        title: errorDialogTitle,
+        message: AppStrings.phoneNumberUnavailable.tr,
+      );
+      return;
+    }
     final uri = Uri(scheme: 'tel', path: cleanPhone);
 
     try {
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri);
       } else {
-        // Fallback: try launch regardless if canLaunch fails on some systems
         await launchUrl(uri);
       }
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       debugPrint("Error launching dialer: $e");
       AppDialogs.showErrorDialog(
-        title: AppStrings.call.tr,
+        title: errorDialogTitle,
         message: AppStrings.errorOpeningPhoneDialer.tr,
       );
     }
@@ -1634,9 +1867,13 @@ class DriverAcceptedController extends GetxController
 
     if (confirmResult != true) return;
 
-    // 2. Reason Selection
-    final String? reason = await Get.dialog<String>(
-      const CancelReasonSelectionDialog(
+    // 2. Reason Selection + Charges Fetch (keep first dialog open while loading)
+    String? selectedReason;
+    dynamic cancellationData;
+    String selectedPolicyLabel = '';
+
+    await Get.dialog<void>(
+      CancelReasonSelectionDialog(
         reasons: [
           'Driver asked to cancel',
           'Driver asked to pay offline',
@@ -1645,67 +1882,84 @@ class DriverAcceptedController extends GetxController
           'Booked by mistake',
           'Others',
         ],
+        isProcessing: isReasonProcessing,
+        onContinueTap: (reason) async {
+          if (rideId.isEmpty) {
+            AppDialogs.showErrorDialog(
+              title: AppStrings.cancelFailed.tr,
+              message: AppStrings.rideIdIsMissing.tr,
+            );
+            return;
+          }
+          isReasonProcessing.value = true;
+          final charges = await rideRepository.getCancellationCharges(rideId);
+          isReasonProcessing.value = false;
+          await charges.fold(
+            (_) async {
+              AppDialogs.showErrorDialog(
+                title: AppStrings.cancelFailed.tr,
+                message: AppStrings.couldNotCancelTryAgain.tr,
+              );
+            },
+            (data) async {
+              final selectedPolicy = data.policy.firstWhereOrNull(
+                (p) =>
+                    p.status.toLowerCase() == data.currentStatus.toLowerCase(),
+              );
+              selectedReason = reason;
+              cancellationData = data;
+              selectedPolicyLabel = selectedPolicy?.label ?? '';
+              Get.back();
+            },
+          );
+        },
       ),
       barrierDismissible: false,
       barrierColor: AppColors.overlayBlack12,
     );
+    if (selectedReason == null || cancellationData == null) return;
 
-    if (reason == null) return;
-    if (rideId.isEmpty) {
-      AppDialogs.showErrorDialog(
-        title: AppStrings.cancelFailed.tr,
-        message: AppStrings.rideIdIsMissing.tr,
-      );
-      return;
-    }
-
-    final charges = await rideRepository.getCancellationCharges(rideId);
-    bool canProceed = false;
-    await charges.fold(
-      (_) async {
-        AppDialogs.showErrorDialog(
-          title: AppStrings.cancelFailed.tr,
-          message: AppStrings.couldNotCancelTryAgain.tr,
-        );
-      },
-      (data) async {
-        final selectedPolicy = data.policy.firstWhereOrNull(
-          (p) => p.status.toLowerCase() == data.currentStatus.toLowerCase(),
-        );
-        final proceed = await Get.dialog<bool>(
-          CancellationChargesDialog(
-            canCancel: data.canCancel,
-            cancellationFee: data.cancellationFee,
-            netRefund: data.netRefund,
-            policyLabel: selectedPolicy?.label ?? '',
-          ),
-          barrierDismissible: false,
-          barrierColor: AppColors.overlayBlack12,
-        );
-        canProceed = proceed == true;
-      },
-    );
-    if (!canProceed) return;
-
-    // 3. Perform Cancellation
-    final result = await rideRepository.cancelRide(rideId, 'rider_cancelled');
-    result.fold(
-      (_) => AppDialogs.showErrorDialog(
-        title: AppStrings.cancelFailed.tr,
-        message: AppStrings.couldNotCancelTryAgain.tr,
-      ),
-      (success) async {
-        if (success) {
+    // 3. Charges dialog + Cancel API (loading on Cancel & Pay button)
+    await Get.dialog<bool>(
+      CancellationChargesDialog(
+        canCancel: cancellationData.canCancel,
+        cancellationFee: cancellationData.cancellationFee,
+        netRefund: cancellationData.netRefund,
+        policyLabel: selectedPolicyLabel,
+        isProcessing: isCancelPayProcessing,
+        onConfirmTap: () async {
           _navigatedAway = true;
-          await LiveActivityManager().endActivity(rideId);
-          Get.offAllNamed(AppRoutes.home);
-        } else {
-          AppDialogs.showErrorDialog(
-            title: AppStrings.cancelFailed.tr,
-            message: AppStrings.pleaseTryAgain.tr,
+          isCancelPayProcessing.value = true;
+          final result = await rideRepository.cancelRide(
+            rideId,
+            selectedReason!,
           );
-        }
-      },
+          isCancelPayProcessing.value = false;
+          result.fold(
+            (_) {
+              _navigatedAway = false;
+              AppDialogs.showErrorDialog(
+                title: AppStrings.cancelFailed.tr,
+                message: AppStrings.couldNotCancelTryAgain.tr,
+              );
+            },
+            (success) async {
+              if (success) {
+                await Get.offAllNamed(AppRoutes.home);
+                unawaited(LiveActivityManager().endActivity(rideId));
+              } else {
+                _navigatedAway = false;
+                AppDialogs.showErrorDialog(
+                  title: AppStrings.cancelFailed.tr,
+                  message: AppStrings.pleaseTryAgain.tr,
+                );
+              }
+            },
+          );
+        },
+      ),
+      barrierDismissible: false,
+      barrierColor: AppColors.overlayBlack12,
     );
   }
 
@@ -1713,14 +1967,18 @@ class DriverAcceptedController extends GetxController
     EventRiderStatusUpdateResponse payload,
   ) async {
     try {
-      if (rideId.isEmpty) return;
-      final status = (payload.status ?? '').toString().toUpperCase();
+      final status = (payload.status ?? '').toString().trim().toUpperCase();
 
-      // Handle termination for cancellation, but keep it alive for COMPLETED
+      // Handle Terminal States
       if (status.contains('CANCELLED') || status.contains('NO_DRIVER_FOUND')) {
         await LiveActivityManager().endActivity(rideId);
         return;
       }
+
+      // 📝 Only CREATE if not already tracking (iOS only).
+      // For iOS, subsequent updates are handled by the backend via APNs push.
+      // For Android, we must continue to push updates from Dart.
+      if (Platform.isIOS && LiveActivityManager().isTracking(rideId)) return;
 
       // If completed, sync one last time as isCompleted: true (handled by the handoff model update logic if needed,
       // but here we just ensure we don't 'END' it).
@@ -1731,7 +1989,10 @@ class DriverAcceptedController extends GetxController
         await LiveActivityManager().startActivity(
           orderId: rideId,
           status: status,
-          isCompleted: true,
+          isCompleted: status.contains('COMPLETED'),
+          etaSeconds: currentEtaSeconds.value,
+          driverLatitude: assignedDriverLocation.value?.latitude,
+          driverLongitude: assignedDriverLocation.value?.longitude,
         );
         return;
       }
@@ -1888,8 +2149,7 @@ class DriverAcceptedController extends GetxController
           (stop.lat - destinationLat).abs() < 0.000001 &&
           (stop.lng - destinationLng).abs() < 0.000001;
       final sameAsDestinationByAddress =
-          stop.address.trim().toLowerCase() ==
-          destinationAddr.toLowerCase();
+          stop.address.trim().toLowerCase() == destinationAddr.toLowerCase();
       if (sameAsDestinationByCoord || sameAsDestinationByAddress) {
         continue;
       }
@@ -1966,27 +2226,267 @@ class DriverAcceptedController extends GetxController
     );
   }
 
-  void _handleStopUpdateProgress(bool updating) {
-    if (updating) {
-      Get.bottomSheet(
-        const StopUpdateProgressModal(),
-        isDismissible: false,
-        enableDrag: false,
-        backgroundColor: AppColors.transparent,
-      );
+  void cancelDestinationUpdate() {
+    isUpdatingDestination.value = false;
+    stopUpdateProgressStep.value = 0;
+    isDestinationUpdateFlow.value = false;
+    _pendingDestinationTargetLat = null;
+    _pendingDestinationTargetLng = null;
+  }
+
+  Future<void> cancelRouteOrStopsUpdate() async {
+    if (isUpdatingDestination.value) {
+      cancelDestinationUpdate();
+    } else {
+      await cancelStopUpdate();
+    }
+  }
+
+  void _handleRouteUpdateProgress() {
+    final active = isUpdatingStops.value || isUpdatingDestination.value;
+    if (active) {
+      if (!(Get.isBottomSheetOpen ?? false)) {
+        Get.bottomSheet(
+          const StopUpdateProgressModal(),
+          isDismissible: false,
+          enableDrag: false,
+          backgroundColor: AppColors.transparent,
+        );
+      }
     } else {
       if (Get.isBottomSheetOpen ?? false) {
         if (stopUpdateProgressStep.value == 3) {
           Future.delayed(const Duration(seconds: 3), () {
             if (Get.isBottomSheetOpen ?? false) Get.back();
             stopUpdateProgressStep.value = 0;
+            isDestinationUpdateFlow.value = false;
           });
         } else {
           Get.back();
           stopUpdateProgressStep.value = 0;
+          isDestinationUpdateFlow.value = false;
         }
       }
     }
+  }
+
+  Future<void> onChangeDropLocation() async {
+    if (rideId.isEmpty) return;
+    if (isUpdatingStops.value || isUpdatingDestination.value) {
+      AppDialogs.showInfoDialog(
+        title: 'Update in progress',
+        message: 'A previous update is still being processed.',
+      );
+      return;
+    }
+    if (isNearDestination()) return;
+    if (ride.value?.pendingStopsUpdate != null) return;
+    Get.toNamed(
+      AppRoutes.changeDropLocationEditor,
+      arguments: {'ride': ride.value, 'editorMode': 'destination'},
+    );
+  }
+
+  // Opens stop-style picker and returns one destination (lat/lng/address).
+  // This keeps destination selection UX consistent with add-stop selection.
+  Future<Map<String, dynamic>?> pickNewDropLocation() async {
+    final dynamic raw = await Get.toNamed(
+      AppRoutes.selectSavedLocation,
+      arguments: {
+        'isSelectingStop': true,
+        'label': AppStrings.changeDropLocation.tr,
+      },
+    );
+    if (raw == null || raw is! Map) return null;
+    final mapped = _extractDestinationFromLocationSelectionResult(
+      Map<String, dynamic>.from(raw),
+    );
+    if (mapped == null) return null;
+    return mapped;
+  }
+
+  Future<void> previewDropLocationUpdate(Map<String, dynamic> destination) async {
+    destinationUpdatePreview.value = null;
+    final dest = _buildDestinationPayload(destination);
+    if (dest == null) {
+      AppDialogs.showErrorDialog(
+        title: AppStrings.error.tr,
+        message: AppStrings.addressMissing.tr,
+      );
+      return;
+    }
+    // Step 1: preview update-destination (confirm=false).
+    final previewRes = await rideRepository.previewUpdateDestination(rideId, dest);
+    previewRes.fold(
+      (f) => AppDialogs.showErrorDialog(
+        title: AppStrings.error.tr,
+        message: f.message,
+      ),
+      (preview) {
+        destinationUpdatePreview.value = preview;
+      },
+    );
+  }
+
+  Future<bool> applyDropLocationUpdate(Map<String, dynamic> destination) async {
+    final dest = _buildDestinationPayload(destination);
+    if (dest == null) {
+      AppDialogs.showErrorDialog(
+        title: AppStrings.error.tr,
+        message: AppStrings.addressMissing.tr,
+      );
+      return false;
+    }
+    // Step 2: apply update-destination (confirm=true).
+    return _applyDestinationConfirm(dest);
+  }
+
+  Map<String, dynamic>? _buildDestinationPayload(Map<String, dynamic> result) {
+    final lat = (result['lat'] as num?)?.toDouble();
+    final lng = (result['lng'] as num?)?.toDouble();
+    final address = result['address']?.toString().trim() ?? '';
+    if (lat == null || lng == null || address.isEmpty) return null;
+    return <String, dynamic>{'lat': lat, 'lng': lng, 'address': address};
+  }
+
+  Map<String, dynamic>? _extractDestinationFromLocationSelectionResult(
+    Map<String, dynamic> payload,
+  ) {
+    // Location selection edit mode returns:
+    // { pickup, pickupLat, pickupLng, destinations: [{address, lat, lng}, ...] }
+    // For this feature we only need the first destination.
+    final destinations = payload['destinations'];
+    if (destinations is List && destinations.isNotEmpty) {
+      final first = destinations.first;
+      if (first is Map) {
+        final map = Map<String, dynamic>.from(first);
+        return {
+          'lat': (map['lat'] as num?)?.toDouble(),
+          'lng': (map['lng'] as num?)?.toDouble(),
+          'address': map['address']?.toString().trim(),
+        };
+      }
+    }
+
+    // Backward compatibility if any picker returns direct lat/lng/address.
+    return {
+      'lat': (payload['lat'] as num?)?.toDouble(),
+      'lng': (payload['lng'] as num?)?.toDouble(),
+      'address': payload['address']?.toString().trim(),
+    };
+  }
+
+  Future<bool> _applyDestinationConfirm(Map<String, dynamic> dest) async {
+    final lat = (dest['lat'] as num).toDouble();
+    final lng = (dest['lng'] as num).toDouble();
+    _pendingDestinationTargetLat = lat;
+    _pendingDestinationTargetLng = lng;
+
+    isDestinationUpdateFlow.value = true;
+    isUpdatingDestination.value = true;
+    stopUpdateProgressStep.value = 1;
+
+    // Step 2: apply destination update (confirm=true).
+    final result = await rideRepository.confirmUpdateDestination(rideId, dest);
+    var success = false;
+    result.fold(
+      (f) {
+        isUpdatingDestination.value = false;
+        stopUpdateProgressStep.value = 0;
+        isDestinationUpdateFlow.value = false;
+        _pendingDestinationTargetLat = null;
+        _pendingDestinationTargetLng = null;
+        AppDialogs.showErrorDialog(
+          title: AppStrings.error.tr,
+          message: f.message,
+        );
+      },
+      (DestinationUpdateAppliedModel applied) {
+        success = true;
+        destinationUpdatePreview.value = null;
+        unawaited(_finalizeDestinationConfirm(applied));
+      },
+    );
+    return success;
+  }
+
+  Future<void> _finalizeDestinationConfirm(
+    DestinationUpdateAppliedModel applied,
+  ) async {
+    final priorFare = ride.value?.fareEstimate ?? _seedRideCharge ?? 0;
+    // If backend requires payment block update, run payment-hold flow first.
+    // Otherwise mark success and refresh ride immediately.
+    if (applied.blockUpdateRequired &&
+        (applied.blockUpdateValidationId ?? '').isNotEmpty) {
+      final dir = applied.fareEstimate > priorFare
+          ? 'up'
+          : applied.fareEstimate < priorFare
+          ? 'down'
+          : '';
+      await _processDestinationPaymentHold(
+        applied.blockUpdateValidationId!,
+        dir,
+      );
+    } else {
+      stopUpdateProgressStep.value = 3;
+      isUpdatingDestination.value = false;
+      isDestinationUpdateFlow.value = false;
+      await _fetchRideDetails();
+      _setDropRouteFallback();
+    }
+  }
+
+  Future<void> _processDestinationPaymentHold(
+    String validationId,
+    String direction,
+  ) async {
+    // Mirrors stop-update payment behavior:
+    // - up: request payment authorization
+    // - down/flat: skip to route sync step
+    if (direction == 'up') {
+      stopUpdateProgressStep.value = 1;
+      await rideRepository.walletDummyPaymentRequest(
+        DummyPaymentRequest(
+          result: 'SUCCESS',
+          transId: 'TXN-${const Uuid().v4()}',
+          validationId: validationId,
+        ),
+      );
+    } else if (direction == 'down') {
+      stopUpdateProgressStep.value = 2;
+    } else {
+      stopUpdateProgressStep.value = 2;
+    }
+    _startDestinationUpdateTimeout();
+  }
+
+  void _startDestinationUpdateTimeout() {
+    // Safety timeout + polling fallback in case socket events are delayed/missed.
+    Future.delayed(const Duration(seconds: 90), () {
+      if (isUpdatingDestination.value) {
+        isUpdatingDestination.value = false;
+        stopUpdateProgressStep.value = 0;
+        isDestinationUpdateFlow.value = false;
+        _pendingDestinationTargetLat = null;
+        _pendingDestinationTargetLng = null;
+        AppDialogs.showInfoDialog(
+          title: 'Taking longer than expected',
+          message: 'The update is taking some time. Please check back shortly.',
+        );
+        unawaited(_fetchRideDetails());
+      }
+    });
+    _pollForDestinationUpdateResult();
+  }
+
+  void _pollForDestinationUpdateResult() {
+    Future.delayed(const Duration(seconds: 8), () {
+      if (!isUpdatingDestination.value || stopUpdateProgressStep.value != 2) {
+        return;
+      }
+      unawaited(_fetchRideDetails());
+      _pollForDestinationUpdateResult();
+    });
   }
 
   String priceFormatter(int? amount) {

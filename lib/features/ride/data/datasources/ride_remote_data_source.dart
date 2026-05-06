@@ -2,7 +2,9 @@ import '../../../../core/data/models/responses/rides/active_ride_response.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../models/ride_management_models.dart';
+import '../models/emergency_contacts_response.dart';
 import '../models/stop_update_models.dart';
+import '../models/destination_update_models.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/urls.dart';
 import 'dart:developer' as developer;
@@ -16,7 +18,11 @@ abstract class RideRemoteDataSource {
   Future<RideModel> getRideDetails(String rideId);
   Future<RideCancellationChargesModel> getCancellationCharges(String rideId);
   Future<bool> cancelRide(String rideId, String reason);
-  Future<bool> updateDestination(
+  Future<DestinationUpdatePreviewModel> previewUpdateDestination(
+    String rideId,
+    Map<String, dynamic> destination,
+  );
+  Future<DestinationUpdateAppliedModel> confirmUpdateDestination(
     String rideId,
     Map<String, dynamic> destination,
   );
@@ -41,6 +47,17 @@ abstract class RideRemoteDataSource {
     required String idempotencyKey,
   });
   Future<void> cancelPendingStops(String rideId);
+  Future<CheckBookModeResult> checkBookMode({
+    required double riderLat,
+    required double riderLng,
+    required double pickupLat,
+    required double pickupLng,
+  });
+  Future<EmergencyContactsResponse> getEmergencyContacts();
+  Future<PdfLinkModel> uploadReceiptPdf({
+    required String rideId,
+    required String pdfPath,
+  });
 }
 
 class RideRemoteDataSourceImpl implements RideRemoteDataSource {
@@ -146,7 +163,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   }
 
   @override
-  Future<bool> updateDestination(
+  Future<DestinationUpdatePreviewModel> previewUpdateDestination(
     String rideId,
     Map<String, dynamic> destination,
   ) async {
@@ -154,10 +171,59 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       request: ApiRequest(
         endpoint: "${URLS.ride.base}/$rideId/update-destination",
         method: ApiMethod.put,
-        body: {'destination': destination},
+        body: {
+          'destination': destination,
+          'confirm': false,
+        },
+        errorPresentationType: ErrorPresentationType.none,
       ),
     );
-    return response.statusCode == 200;
+    if (response.statusCode == 200 && response.data != null) {
+      final raw = response.data['data'];
+      if (raw is Map<String, dynamic>) {
+        return DestinationUpdatePreviewModel.fromJson(raw);
+      }
+      if (raw is Map) {
+        return DestinationUpdatePreviewModel.fromJson(
+          Map<String, dynamic>.from(raw),
+        );
+      }
+    }
+    throw Exception(
+      response.data?['message']?.toString() ?? 'Failed to preview destination',
+    );
+  }
+
+  @override
+  Future<DestinationUpdateAppliedModel> confirmUpdateDestination(
+    String rideId,
+    Map<String, dynamic> destination,
+  ) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: "${URLS.ride.base}/$rideId/update-destination",
+        method: ApiMethod.put,
+        body: {
+          'destination': destination,
+          'confirm': true,
+        },
+        errorPresentationType: ErrorPresentationType.none,
+      ),
+    );
+    if (response.statusCode == 200 && response.data != null) {
+      final raw = response.data['data'];
+      if (raw is Map<String, dynamic>) {
+        return DestinationUpdateAppliedModel.fromJson(raw);
+      }
+      if (raw is Map) {
+        return DestinationUpdateAppliedModel.fromJson(
+          Map<String, dynamic>.from(raw),
+        );
+      }
+    }
+    throw Exception(
+      response.data?['message']?.toString() ?? 'Failed to update destination',
+    );
   }
 
   @override
@@ -369,5 +435,87 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       developer.log("Error cancelling pending stops: $e");
     }
+  }
+
+  @override
+  Future<CheckBookModeResult> checkBookMode({
+    required double riderLat,
+    required double riderLng,
+    required double pickupLat,
+    required double pickupLng,
+  }) async {
+    final response = await apiService.call(
+      request: ApiRequest(
+        endpoint: URLS.ride.checkBookMode,
+        method: ApiMethod.get,
+        queryParams: {
+          'rider_lat': riderLat,
+          'rider_lng': riderLng,
+          'pickup_lat': pickupLat,
+          'pickup_lng': pickupLng,
+        },
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      return CheckBookModeResult.fromJson(
+        Map<String, dynamic>.from(response.data),
+      );
+    }
+    throw Exception('Failed to check book mode');
+  }
+
+  @override
+  Future<EmergencyContactsResponse> getEmergencyContacts() async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.ride.emergencyContacts,
+        method: ApiMethod.get,
+        errorPresentationType: ErrorPresentationType.none,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      final raw = response.data;
+      if (raw is Map<String, dynamic>) {
+        return EmergencyContactsResponse.fromJson(
+          Map<String, dynamic>.from(raw),
+        );
+      }
+      if (raw is Map) {
+        return EmergencyContactsResponse.fromJson(
+          Map<String, dynamic>.from(raw),
+        );
+      }
+    }
+    throw Exception('Failed to fetch emergency contacts');
+  }
+
+  @override
+  Future<PdfLinkModel> uploadReceiptPdf({
+    required String rideId,
+    required String pdfPath,
+  }) async {
+    final response = await apiService.call(
+      request: ApiRequest(
+        endpoint: URLS.pdf.upload,
+        method: ApiMethod.multipart,
+        multipartFiles: [
+          LocalMultipartFile(
+            name: 'pdf',
+            path: pdfPath,
+            contentType: 'application/pdf',
+          ),
+        ],
+        body: {'ride_id': rideId},
+        errorPresentationType: ErrorPresentationType.none,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      final data = response.data['data'] ?? {};
+      return PdfLinkModel.fromJson(data);
+    }
+    throw Exception(response.data?['message'] ?? 'Failed to upload PDF');
   }
 }

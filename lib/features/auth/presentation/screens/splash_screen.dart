@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+
+import '../../../../core/constants/app_assets.dart';
+import '../../../../core/di/injection_container.dart';
+import '../../../../core/routes/app_routes.dart';
+import '../../../../core/services/app_settings_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/constants/app_assets.dart';
-import '../../../../core/routes/app_routes.dart';
-import '../../../../core/di/injection_container.dart';
-import '../../../../core/services/app_settings_service.dart';
+import '../../../../core/widgets/svg_picture_asset.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -56,14 +57,11 @@ class _SplashScreenState extends State<SplashScreen> {
           Positioned(
             bottom: -175.h,
             right: -225.w,
-            child: SvgPicture.asset(
+            child: SvgPictureAsset(
               AppAssets.splashBgVector,
               width: 574.w,
               height: 576.h,
-              colorFilter: const ColorFilter.mode(
-                AppColors.splashVectorTint,
-                BlendMode.srcIn,
-              ),
+              color: AppColors.splashVectorTint,
             ),
           ),
           // Centered Logo
@@ -71,7 +69,7 @@ class _SplashScreenState extends State<SplashScreen> {
             left: 0,
             right: 0,
             top: 300.h,
-            child: SvgPicture.asset(
+            child: SvgPictureAsset(
               AppAssets.selcomGoLogo,
               width: 180.w,
               fit: BoxFit.contain,

@@ -166,6 +166,8 @@ class LiveActivityManager {
     return tokens;
   }
 
+  bool isTracking(String orderId) => _orderToActivityId.containsKey(orderId);
+
   static const int _maxConcurrentIOSActivities = 5;
   int get _iosActivityCount =>
       _orderToActivityId.values.where((v) => v != 'android').length;
@@ -448,13 +450,6 @@ class LiveActivityManager {
       final String? activityId = _orderToActivityId[orderId];
       if (activityId == null || activityId == 'android') return;
 
-      if (_isIOS) {
-        developer.log(
-          "⏳ updateActivity ignored for iOS (Live Activity is updated via APNs)",
-          name: 'LIVE_ACTIVITY',
-        );
-        return;
-      }
 
       final updateData = <String, dynamic>{
         'status': status,

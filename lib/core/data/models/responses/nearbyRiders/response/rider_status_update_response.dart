@@ -43,7 +43,7 @@ class EventRiderStatusUpdateResponse {
 
   factory EventRiderStatusUpdateResponse.fromJson(Map<String, dynamic> json) =>
       EventRiderStatusUpdateResponse(
-        rideId: json["ride_id"],
+        rideId: json["ride_id"] ?? json["rideId"],
         status: json["status"],
         driverSnapshot: json["driver_snapshot"] == null
             ? null
@@ -53,10 +53,12 @@ class EventRiderStatusUpdateResponse {
             : VehicleSnapshot.fromJson(json["vehicle_snapshot"]),
         finalFare: json["final_fare"],
         cancellationFee: json["cancellation_fee"],
-        routeGeometry: json["route_geometry"] == null
+        routeGeometry: (json["route_geometry"] ?? json["routeGeometry"]) == null
             ? null
-            : EventRouteGeometry.fromJson(json["route_geometry"]),
-        routeTarget: json["route_target"],
+            : EventRouteGeometry.fromJson(
+                json["route_geometry"] ?? json["routeGeometry"],
+              ),
+        routeTarget: json["route_target"] ?? json["routeTarget"],
         pinCode: json["pin_code"],
         pinRequired: json["pin_required"],
         currentStopIndex: json["current_stop_index"],

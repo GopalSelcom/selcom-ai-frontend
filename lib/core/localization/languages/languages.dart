@@ -66,7 +66,11 @@ abstract class Languages {
   get doNotShareYourPersonalDetailsWithRiderBeSafeAndAlwaysCheckYourLuggage;
   String get done;
   String get downloadSlip;
+  String get driverArrivedMapBadge;
+  String get driverArrivedPickupPrimary;
+  String get driverArrivedPickupSecondary;
   String get driverIsHeadingToYourLocation;
+  String get driverWillArrivingInMinutes;
   String get eG123;
   String get eG7XxXxxXxx;
   String get eGJohnDoe;
@@ -271,4 +275,5 @@ abstract class Languages {
   String get exitApp;
   String get exitAppTitle;
   String get exitAppMessage;
+  String get savedLocations;
 }

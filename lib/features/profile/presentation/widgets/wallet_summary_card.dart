@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get_utils/src/extensions/internacionalization.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:selcom_rides_frontend/core/constants/app_assets.dart';
-import 'package:selcom_rides_frontend/core/theme/app_colors.dart';
-import 'package:selcom_rides_frontend/core/theme/app_text_styles.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
-import 'package:get/get.dart';
+
+import '../../../../core/constants/app_assets.dart';
+import '../../../../core/localization/app_strings.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/svg_picture_asset.dart';
 
 class WalletSummaryCard extends StatelessWidget {
   final String balance;
@@ -46,12 +47,9 @@ class WalletSummaryCard extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 padding: EdgeInsets.all(12.w),
-                child: SvgPicture.asset(
+                child: const SvgPictureAsset(
                   AppAssets.icWallet,
-                  colorFilter: const ColorFilter.mode(
-                    AppColors.primary,
-                    BlendMode.srcIn,
-                  ),
+                  color: AppColors.primary,
                 ),
               ),
               SizedBox(width: 12.w),
@@ -83,9 +81,7 @@ class WalletSummaryCard extends StatelessWidget {
                           Clipboard.setData(ClipboardData(text: walletNumber));
                         },
 
-                        child: SvgPicture.asset(
-                          AppAssets.icCopy,
-                        ),
+                        child: const SvgPictureAsset(AppAssets.icCopy),
 
                         /*child: Icon(
                           Iconsax.copy,

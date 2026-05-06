@@ -7,8 +7,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
-import '../../data/models/ride_management_models.dart';
+import '../../../../core/constants/app_assets.dart';
 import '../../../../shared/utils/currency_formatter.dart';
+import '../../data/models/ride_management_models.dart';
 
 // Brand colours (matching Selcom Go)
 const _primary = PdfColor.fromInt(0xFFF3004C); // Red
@@ -22,9 +23,7 @@ class ReceiptPdfGenerator {
   static Future<File> generateReceiptPdf({
     required ReceiptModel receipt,
   }) async {
-    final ByteData logoData = await rootBundle.load(
-      'assets/images/selcom_go_logo.png',
-    );
+    final ByteData logoData = await rootBundle.load(AppAssets.selcomGoLogoPng);
     final pw.MemoryImage logoImage = pw.MemoryImage(
       logoData.buffer.asUint8List(),
     );

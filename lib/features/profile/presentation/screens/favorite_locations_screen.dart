@@ -20,7 +20,7 @@ class FavoriteLocationsScreen extends GetView<FavoriteLocationsController> {
       backgroundColor: AppColors.white,
       body: Column(
         children: [
-          AppProfileHeader(title: AppStrings.favouriteLocations.tr),
+          AppProfileHeader(title: AppStrings.savedLocations.tr),
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value) {

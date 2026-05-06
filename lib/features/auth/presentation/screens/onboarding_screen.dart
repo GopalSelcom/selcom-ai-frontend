@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
-import '../../../../core/theme/app_colors.dart';
+
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/localization/app_strings.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/svg_picture_asset.dart';
 import '../controllers/onboarding_controller.dart';
 
 class OnboardingScreen extends GetView<OnboardingController> {
@@ -28,7 +29,7 @@ class OnboardingScreen extends GetView<OnboardingController> {
                 itemCount: controller.slides.length,
                 itemBuilder: (context, index) {
                   final slide = controller.slides[index];
-                  return SvgPicture.asset(
+                  return SvgPictureAsset(
                     slide.image,
                     width: double.infinity,
                     fit: BoxFit.contain,
@@ -127,12 +128,9 @@ class OnboardingScreen extends GetView<OnboardingController> {
                                 style: AppTextStyles.onboardingButton,
                               ),
                               SizedBox(width: 12.w),
-                              SvgPicture.asset(
+                              SvgPictureAsset(
                                 AppAssets.icArrowRight,
-                                colorFilter: const ColorFilter.mode(
-                                  AppColors.white,
-                                  BlendMode.srcIn,
-                                ),
+                                color: AppColors.white,
                                 height: 24.h,
                               ),
                             ],

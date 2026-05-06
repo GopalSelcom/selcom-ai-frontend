@@ -20,8 +20,11 @@ class SettingsController extends GetxController {
   final effectiveRequiredRidePin = false.obs;
 
   bool get canToggleRidePin => !adminRequiredRidePin.value;
-  bool get hasRidePinFeature =>
-      appSettingsService.featureEnabled('ride_pin_admin_required');
+
+  /// From `/go/settings`: when `ride_pin_admin_required` is **true**, admin owns
+  /// ride PIN — hide the row. When **false**, the user may manage PIN preference here.
+  bool get shouldShowRidePinSetting =>
+      !appSettingsService.featureEnabled('ride_pin_admin_required');
   bool get ridePinSwitchValue =>
       adminRequiredRidePin.value
           ? effectiveRequiredRidePin.value
@@ -38,12 +41,10 @@ class SettingsController extends GetxController {
 
     await appSettingsService.preload();
     features.assignAll(appSettingsService.features);
-    adminRequiredRidePin.value = appSettingsService.featureEnabled(
-      'ride_pin_admin_required',
-    );
 
-    if (!hasRidePinFeature) {
+    if (!shouldShowRidePinSetting) {
       userEnabledRidePin.value = false;
+      adminRequiredRidePin.value = false;
       effectiveRequiredRidePin.value = false;
       isLoading.value = false;
       return;

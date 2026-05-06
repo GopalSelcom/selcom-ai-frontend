@@ -2,7 +2,7 @@ name: selcom_rides_frontend
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.0.0+5
+version: 1.0.0+6
 
 environment:
   sdk: ^3.10.7
@@ -62,6 +62,7 @@ dependencies:
   pdf: ^3.12.0
   open_filex: ^4.7.0
   gal: ^2.3.2
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:

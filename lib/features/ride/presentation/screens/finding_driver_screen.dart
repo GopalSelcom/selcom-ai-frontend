@@ -3,12 +3,14 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:selcom_rides_frontend/shared/widgets/map_widgets.dart';
+import 'package:iconsax/iconsax.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../controllers/finding_driver_controller.dart';
+import '../../../../shared/utils/phone_formatter.dart';
 
 class FindingDriverScreen extends StatefulWidget {
   const FindingDriverScreen({super.key});
@@ -86,13 +88,38 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
             right: 16,
             onProfileTap: c.openProfile,
             addressWidget: Expanded(
-              child: AppMapLocationSummaryCard(
-                label: 'Current location',
-                address: c.pickupAddress.isEmpty
-                    ? 'Selected location'
-                    : c.pickupAddress,
-                maxAddressLines: 1,
-              ),
+              child: Obx(() {
+                final isForOther = c.isBookedForOther.value;
+
+                return isForOther
+                    ? AppMapLocationSummaryCard(
+                        leading: Container(
+                          padding: EdgeInsets.all(6.w),
+                          decoration: const BoxDecoration(
+                            color: AppColors.surfaceSubtle,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Iconsax.user,
+                            color: AppColors.primary,
+                            size: 20.sp,
+                          ),
+                        ),
+                        label: "Booking for ${c.passengerName.value}",
+                        address:
+                            "Phone: ${TanzaniaPhoneFormatter.formatInternational(c.passengerPhone.value ?? '')}",
+                        maxAddressLines: 1,
+                      )
+                    : RideLocationSummaryCard(
+                        pickupAddress: c.pickupAddress.isEmpty
+                            ? 'Current location'
+                            : c.pickupAddress,
+                        destinationAddress: c.destinationAddress.isEmpty
+                            ? 'Destination'
+                            : c.destinationAddress,
+                        intermediateStops: c.intermediateStops.toList(),
+                      );
+              }),
             ),
           ),
           Obx(() {
@@ -215,7 +242,7 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
         }
       }
       return AppGoogleMap(
-        mapWidgetKey: const ValueKey('finding_driver_map'),
+        key: const ValueKey('finding_driver_map'),
         initialCameraPosition: CameraPosition(target: pickup, zoom: 15),
         padding: EdgeInsets.only(
           top: topPad + 80.h,
@@ -226,6 +253,7 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
         showGpsButton: true,
         onGpsPressed: c.recenterMap,
         trackRider: true,
+        onRiderPositionUpdate: (pos) => c.animatedRiderLocation.value = pos,
         onUserInteraction: () {
           if (sheetController.isAttached && sheetController.size > _sheetMin) {
             sheetController.animateTo(

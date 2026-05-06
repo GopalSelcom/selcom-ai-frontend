@@ -232,7 +232,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
         fit: StackFit.expand,
         children: [
           AppGoogleMap(
-            mapWidgetKey: const ValueKey('vehicle_selection_map'),
+            key: const ValueKey('vehicle_selection_map'),
             // Manual initial zoom level:
             // - Increase value => more zoom in
             // - Decrease value => more zoom out

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+
+import '../../../../core/constants/app_assets.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/constants/app_assets.dart';
+import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/widgets/app_primary_button.dart';
 import '../controllers/payment_methods_controller.dart';
 
 class SelcomPesaLinkedBottomSheet extends GetView<PaymentMethodsController> {
@@ -56,7 +58,7 @@ class SelcomPesaLinkedBottomSheet extends GetView<PaymentMethodsController> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SvgPicture.asset(
+              SvgPictureAsset(
                 AppAssets.icAccountVerified,
                 width: 24.w,
                 height: 24.w,
@@ -78,23 +80,17 @@ class SelcomPesaLinkedBottomSheet extends GetView<PaymentMethodsController> {
           // Remove Account Button
           SizedBox(
             width: double.infinity,
-            child: OutlinedButton(
+            child: AppPrimaryButton(
+              label: AppStrings.removeAccount.tr,
               onPressed: controller.unlinkAccount,
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppColors.primary),
-                padding: EdgeInsets.symmetric(vertical: 16.h),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16.r),
-                ),
-              ),
-              child: Text(
-                AppStrings.removeAccount.tr,
-                style: AppTextStyles.body.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16.sp,
-                ),
-              ),
+              height: 56.h,
+              borderRadius: 16.r,
+              outlined: true,
+              backgroundColor: AppColors.white,
+              textColor: AppColors.primary,
+              outlinedTextColor: AppColors.primary,
+              outlinedBorderColor: AppColors.primary,
+              outlinedBorderWidth: 1,
             ),
           ),
           SizedBox(height: 16.h),

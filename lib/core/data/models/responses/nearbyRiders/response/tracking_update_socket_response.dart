@@ -24,8 +24,10 @@ class TrackingUpdateSocketResponse {
   factory TrackingUpdateSocketResponse.fromJson(Map<String, dynamic> json) => TrackingUpdateSocketResponse(
     status: json["status"],
     eta: json["eta"],
-    routeGeometry: json["route_geometry"] == null ? null : RouteGeometry.fromJson(json["route_geometry"]),
-    routeTarget: json["route_target"],
+    routeGeometry: (json["route_geometry"] ?? json["routeGeometry"]) == null
+        ? null
+        : RouteGeometry.fromJson(json["route_geometry"] ?? json["routeGeometry"]),
+    routeTarget: json["route_target"] ?? json["routeTarget"],
   );
 
   Map<String, dynamic> toJson() => {

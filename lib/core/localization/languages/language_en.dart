@@ -62,7 +62,13 @@ class LanguageEn extends Languages {
         'Do not share your personal Details with rider Be safe and always check your luggage',
     'done': 'Done',
     'download_slip': 'Download Slip',
-    'driver_is_heading_to_your_location': 'Driver is heading to your location',
+    'driver_arrived_map_badge': 'Driver arrived',
+    'driver_arrived_pickup_primary': 'Driver arrived at pickup',
+    'driver_arrived_pickup_secondary': 'Meet your driver at pickup',
+    'driver_is_heading_to_your_location':
+        'Driver is heading to your location',
+    'driver_will_arriving_in_minutes':
+        'Driver will arrive in @minutes min...',
     'e_g123': 'e.g. 123',
     'e_g7_xx_xxx_xxx': 'e.g. 7XX XXX XXX',
     'e_gjohn_doe': 'e.g. John Doe',
@@ -87,6 +93,7 @@ class LanguageEn extends Languages {
     'failed_to_update_favorite_status': 'Failed to update favorite status',
     'fallback_ride_name': 'Ride',
     'favourite_locations': 'Favourite Locations',
+    'saved_locations': 'Saved Locations',
     'get_started': 'Get Started',
     'got_it': 'Got it',
     'help': 'Help',
@@ -312,7 +319,7 @@ class LanguageEn extends Languages {
     'switched_to_swahili': 'Switched to Swahili',
     'exit_app': 'Exit App',
     'exit_app_title': 'Exit App',
-    'exit_app_message': 'Are you sure , you want to exit the app?',
+    'exit_app_message': 'Are you sure, you want to exit the app?',
   };
 
   @override
@@ -488,8 +495,23 @@ class LanguageEn extends Languages {
   String get downloadSlip => values['download_slip'] ?? '';
 
   @override
+  String get driverArrivedMapBadge => values['driver_arrived_map_badge'] ?? '';
+
+  @override
+  String get driverArrivedPickupPrimary =>
+      values['driver_arrived_pickup_primary'] ?? '';
+
+  @override
+  String get driverArrivedPickupSecondary =>
+      values['driver_arrived_pickup_secondary'] ?? '';
+
+  @override
   String get driverIsHeadingToYourLocation =>
       values['driver_is_heading_to_your_location'] ?? '';
+
+  @override
+  String get driverWillArrivingInMinutes =>
+      values['driver_will_arriving_in_minutes'] ?? '';
 
   @override
   String get eG123 => values['e_g123'] ?? '';
@@ -1157,4 +1179,8 @@ class LanguageEn extends Languages {
 
   @override
   String get exitAppMessage => values['exit_app_message'] ?? '';
+
+  @override
+  // TODO: implement savedLocations
+  String get savedLocations => values['saved_locations'] ?? '';
 }

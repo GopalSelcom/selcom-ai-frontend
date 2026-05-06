@@ -24,12 +24,25 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
   final controller = Get.find<DriverAcceptedController>();
   late List<RideStopEntity> _stops;
   late List<RideStopEntity> _initialStops;
+  // Reuse this screen for two modes:
+  // - false: mid-ride stops editor
+  // - true : change drop location editor
+  bool _isDestinationEditor = false;
+  Map<String, dynamic>? _selectedDestination;
   bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
-    final ride = Get.arguments['ride'] as RideEntity?;
+    // Do not carry stale preview panel from previous editor session.
+    controller.stopUpdatePreview.value = null;
+    controller.destinationUpdatePreview.value = null;
+
+    final args = Get.arguments is Map<String, dynamic>
+        ? Map<String, dynamic>.from(Get.arguments as Map)
+        : <String, dynamic>{};
+    _isDestinationEditor = args['editorMode'] == 'destination';
+    final ride = args['ride'] as RideEntity?;
     final destAddr = controller.destinationAddress.trim().toLowerCase();
 
     if (controller.stopUpdateWorkingStops.isNotEmpty) {
@@ -106,6 +119,29 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
   }
 
   void _onSave() async {
+    // Destination mode mirrors the add-stops UX:
+    // first tap previews fare (confirm=false), second tap applies (confirm=true).
+    if (_isDestinationEditor) {
+      final selected = _selectedDestination;
+      if (selected == null) return;
+      setState(() => _isSaving = true);
+      if (controller.destinationUpdatePreview.value == null) {
+        await controller.previewDropLocationUpdate(selected);
+      } else {
+        final ok = await controller.applyDropLocationUpdate(selected);
+        if (ok) {
+          // Close any progress sheet first, then close editor screen.
+          if (Get.isBottomSheetOpen ?? false) {
+            Get.back();
+          }
+          Get.back();
+          return;
+        }
+      }
+      setState(() => _isSaving = false);
+      return;
+    }
+
     if (controller.stopUpdatePreview.value == null) {
       setState(() => _isSaving = true);
       await controller.previewStopsUpdate(_stops);
@@ -125,7 +161,11 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
     return Scaffold(
       backgroundColor: AppColors.pageBackground,
       appBar: AppBar(
-        title: Text(AppStrings.addStops.tr),
+        title: Text(
+          _isDestinationEditor
+              ? AppStrings.changeDropLocation.tr
+              : AppStrings.addStops.tr,
+        ),
         leading: const AppBackButton(
           color: AppColors.textHeading,
           alignment: Alignment.center,
@@ -137,105 +177,130 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
             child: ListView(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
               children: [
-                _buildStaticPoint(
-                  'Pickup Point',
-                  controller.pickupAddress,
-                  AppColors.mapPickupMarkerBlue,
-                  isPickup: true,
-                ),
-                ReorderableListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _stops.length,
-                  proxyDecorator: (widget, index, animation) {
-                    return Material(
-                      color: AppColors.transparent,
-                      child: widget,
-                    );
-                  },
-                  itemBuilder: (context, index) {
-                    final stop = _stops[index];
-                    return Padding(
-                      key: ValueKey('stop_${stop.index}_$index'),
-                      padding: EdgeInsets.only(bottom: 12.h),
-                      child: Container(
-                        padding: EdgeInsets.all(12.w),
-                        decoration: BoxDecoration(
-                          color: AppColors.cardBackground,
-                          borderRadius: BorderRadius.circular(AppRadius.card),
-                        ),
-                        child: Row(
-                          children: [
-                            ReorderableDragStartListener(
-                              index: index,
-                              child: Icon(
-                                Icons.drag_indicator,
-                                color: AppColors.shade5,
-                                size: 22.sp,
+                if (_isDestinationEditor) ...[
+                  _buildStaticPoint(
+                    'Current Destination',
+                    controller.destinationAddress,
+                    AppColors.mapDropMarkerGreen,
+                  ),
+                  if ((_selectedDestination?['address']?.toString() ?? '')
+                      .trim()
+                      .isNotEmpty)
+                    _buildStaticPoint(
+                      'New Destination',
+                      _selectedDestination?['address']?.toString() ?? '',
+                      AppColors.primary,
+                    ),
+                  _buildChangeDropLocationButton(),
+                ] else ...[
+                  _buildStaticPoint(
+                    'Pickup Point',
+                    controller.pickupAddress,
+                    AppColors.mapPickupMarkerBlue,
+                    isPickup: true,
+                  ),
+                  ReorderableListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _stops.length,
+                    proxyDecorator: (widget, index, animation) {
+                      return Material(
+                        color: AppColors.transparent,
+                        child: widget,
+                      );
+                    },
+                    itemBuilder: (context, index) {
+                      final stop = _stops[index];
+                      return Padding(
+                        key: ValueKey('stop_${stop.index}_$index'),
+                        padding: EdgeInsets.only(bottom: 12.h),
+                        child: Container(
+                          padding: EdgeInsets.all(12.w),
+                          decoration: BoxDecoration(
+                            color: AppColors.cardBackground,
+                            borderRadius: BorderRadius.circular(AppRadius.card),
+                          ),
+                          child: Row(
+                            children: [
+                              ReorderableDragStartListener(
+                                index: index,
+                                child: Icon(
+                                  Icons.drag_indicator,
+                                  color: AppColors.shade5,
+                                  size: 22.sp,
+                                ),
                               ),
-                            ),
-                            SizedBox(width: 12.w),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Stop ${index + 1}',
-                                    style: AppTextStyles.caption.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.primary,
+                              SizedBox(width: 12.w),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Stop ${index + 1}',
+                                      style: AppTextStyles.caption.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.primary,
+                                      ),
                                     ),
-                                  ),
-                                  SizedBox(height: 2.h),
-                                  Text(
-                                    stop.address,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: AppTextStyles.body.copyWith(
-                                      color: AppColors.textBody,
-                                      fontWeight: FontWeight.w400,
+                                    SizedBox(height: 2.h),
+                                    Text(
+                                      stop.address,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: AppTextStyles.body.copyWith(
+                                        color: AppColors.textBody,
+                                        fontWeight: FontWeight.w400,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                            IconButton(
-                              icon: Icon(
-                                Icons.remove_circle,
-                                color: AppColors.primary,
-                                size: 20.sp,
+                              IconButton(
+                                icon: Icon(
+                                  Icons.remove_circle,
+                                  color: AppColors.primary,
+                                  size: 20.sp,
+                                ),
+                                onPressed: () => _removeStop(index),
                               ),
-                              onPressed: () => _removeStop(index),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                  onReorder: _reorderStops,
-                ),
-                _buildAddStopButton(),
-                _buildStaticPoint(
-                  'Destination',
-                  controller.destinationAddress,
-                  AppColors.mapDropMarkerGreen,
-                ),
+                      );
+                    },
+                    onReorder: _reorderStops,
+                  ),
+                  _buildAddStopButton(),
+                  _buildStaticPoint(
+                    'Destination',
+                    controller.destinationAddress,
+                    AppColors.mapDropMarkerGreen,
+                  ),
+                ],
               ],
             ),
           ),
-          _buildPreviewPanel(),
+          _isDestinationEditor
+              ? _buildDestinationPreviewPanel()
+              : _buildPreviewPanel(),
           SafeArea(
             child: Padding(
               padding: EdgeInsets.all(16.w),
               child: Obx(() {
-                final showButton =
-                    _hasChanges() || controller.stopUpdatePreview.value != null;
+                final showButton = _isDestinationEditor
+                    ? (_selectedDestination != null ||
+                          controller.destinationUpdatePreview.value != null)
+                    : (_hasChanges() || controller.stopUpdatePreview.value != null);
                 if (!showButton) return const SizedBox.shrink();
 
                 return AppPrimaryButton(
-                  label: controller.stopUpdatePreview.value == null
-                      ? 'Update Ride'
-                      : 'Confirm & Update',
+                  label: _isDestinationEditor
+                      ? (controller.destinationUpdatePreview.value == null
+                            ? 'Update Destination'
+                            : 'Confirm & Update')
+                      : (controller.stopUpdatePreview.value == null
+                            ? 'Update Ride'
+                            : 'Confirm & Update'),
                   onPressed: _isSaving ? null : _onSave,
                   isLoading: _isSaving,
                 );
@@ -245,6 +310,130 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildChangeDropLocationButton() {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 12.h),
+      child: InkWell(
+        onTap: () async {
+          // Use the same stop-style location picker used by add-stop flow.
+          final selected = await controller.pickNewDropLocation();
+          if (selected == null) return;
+          if (!mounted) return;
+          setState(() {
+            _selectedDestination = selected;
+          });
+          controller.destinationUpdatePreview.value = null;
+        },
+        borderRadius: BorderRadius.circular(AppRadius.button),
+        child: Container(
+          padding: EdgeInsets.all(12.w),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadius.button),
+            border: Border.all(color: AppColors.primary),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SvgPictureAsset(
+                AppAssets.locationIcAdd,
+                width: 18.w,
+                height: 18.w,
+                color: AppColors.primary,
+                placeholderBuilder: (_) => Icon(
+                  Icons.add_circle,
+                  color: AppColors.primary,
+                  size: 20.sp,
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Text(
+                AppStrings.changeDropLocation.tr,
+                style: AppTextStyles.button.copyWith(
+                  color: AppColors.primary,
+                  fontSize: 14.sp,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDestinationPreviewPanel() {
+    return Obx(() {
+      final preview = controller.destinationUpdatePreview.value;
+      if (preview == null) return const SizedBox.shrink();
+
+      final isIncrease = preview.newFareEstimate > preview.oldFareEstimate;
+      final isDecrease = preview.newFareEstimate < preview.oldFareEstimate;
+      final color = isIncrease
+          ? AppColors.error
+          : (isDecrease ? AppColors.success : AppColors.textBody);
+      final sign = isIncrease ? '+' : (isDecrease ? '-' : '');
+      final delta = (preview.newFareEstimate - preview.oldFareEstimate).abs();
+
+      return Container(
+        padding: EdgeInsets.all(20.w),
+        decoration: BoxDecoration(
+          color: AppColors.cardBackground,
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppRadius.card),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.black.withValues(alpha: 0.08),
+              blurRadius: 15,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'New Estimated Fare:',
+                  style: AppTextStyles.homeSubtitle.copyWith(fontSize: 14.sp),
+                ),
+                Text(
+                  'TZS ${controller.priceFormatter(preview.newFareEstimate)}',
+                  style: AppTextStyles.price.copyWith(fontSize: 16.sp),
+                ),
+              ],
+            ),
+            SizedBox(height: 8.h),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Fare Difference:',
+                  style: AppTextStyles.homeCaption.copyWith(fontSize: 12.sp),
+                ),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(AppRadius.small),
+                  ),
+                  child: Text(
+                    '$sign TZS ${controller.priceFormatter(delta)}',
+                    style: AppTextStyles.price.copyWith(
+                      color: color,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12.sp,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   Widget _buildAddStopButton() {

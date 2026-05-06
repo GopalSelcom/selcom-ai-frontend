@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+
+import '../../core/constants/app_assets.dart';
+import '../../core/localization/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
-import '../../core/constants/app_assets.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/services/storage_service.dart';
+import '../../core/widgets/svg_picture_asset.dart';
 import '../widgets/app_primary_button.dart';
 
 class AppDialogs {
@@ -75,7 +76,7 @@ class AppDialogs {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      SvgPicture.asset(AppAssets.selcomGoLogo, height: 48.h),
+                      SvgPictureAsset(AppAssets.selcomGoLogo, height: 48.h),
                     ],
                   ),
                 ),
@@ -114,32 +115,11 @@ class AppDialogs {
                       SizedBox(height: 32.h),
 
                       // OK Button
-                      InkWell(
-                        onTap: () => handleAction(invokeConfirm: true),
-                        child: Container(
-                          height: 54.h,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(16.r),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.primary.withValues(alpha: 0.2),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Center(
-                            child: Text(
-                              AppStrings.ok.tr,
-                              style: AppTextStyles.onboardingButton.copyWith(
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
+                      AppPrimaryButton(
+                        label: AppStrings.ok.tr,
+                        onPressed: () => handleAction(invokeConfirm: true),
+                        height: 54.h,
+                        borderRadius: 16.r,
                       ),
                     ],
                   ),
@@ -190,25 +170,14 @@ class AppDialogs {
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 32.h),
-              InkWell(
-                onTap: () {
+              AppPrimaryButton(
+                label: AppStrings.gotIt.tr,
+                onPressed: () {
                   Get.back();
                   if (onConfirm != null) onConfirm();
                 },
-                child: Container(
-                  height: 50.h,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child: Center(
-                    child: Text(
-                      AppStrings.gotIt.tr,
-                      style: AppTextStyles.onboardingButton,
-                    ),
-                  ),
-                ),
+                height: 50.h,
+                borderRadius: 12.r,
               ),
             ],
           ),
@@ -281,22 +250,12 @@ class AppDialogs {
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 32.h),
-                InkWell(
-                  onTap: handleAction,
-                  child: Container(
-                    height: 50.h,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: AppColors.successBadge,
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                    child: Center(
-                      child: Text(
-                        AppStrings.continueLabel.tr,
-                        style: AppTextStyles.onboardingButton,
-                      ),
-                    ),
-                  ),
+                AppPrimaryButton(
+                  label: AppStrings.continueLabel.tr,
+                  onPressed: handleAction,
+                  height: 50.h,
+                  borderRadius: 12.r,
+                  backgroundColor: AppColors.successBadge,
                 ),
               ],
             ),
@@ -516,54 +475,32 @@ class AppDialogs {
               SizedBox(height: 32.h),
 
               // Open Settings Button (Primary)
-              ElevatedButton(
+              AppPrimaryButton(
+                label: AppStrings.openSettings.tr,
                 onPressed: () {
                   Get.back();
                   onOpenSettings();
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.white,
-                  minimumSize: Size(double.infinity, 56.h),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30.r),
-                  ),
-                  elevation: 0,
-                ),
-                child: Text(
-                  AppStrings.openSettings.tr,
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                height: 56.h,
+                borderRadius: 30.r,
               ),
               SizedBox(height: 12.h),
 
               // Cancel Button (Secondary)
-              OutlinedButton(
+              AppPrimaryButton(
+                label: AppStrings.maybeLater.tr,
                 onPressed: () {
                   Get.back();
                   if (onCancel != null) onCancel();
                 },
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(
-                    color: AppColors.borderSubtle,
-                    width: 1.2,
-                  ),
-                  minimumSize: Size(double.infinity, 56.h),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30.r),
-                  ),
-                ),
-                child: Text(
-                  AppStrings.maybeLater.tr,
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    color: AppColors.textMuted,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                height: 56.h,
+                borderRadius: 30.r,
+                outlined: true,
+                backgroundColor: AppColors.white,
+                textColor: AppColors.textMuted,
+                outlinedTextColor: AppColors.textMuted,
+                outlinedBorderColor: AppColors.borderSubtle,
+                outlinedBorderWidth: 1.2,
               ),
             ],
           ),
@@ -660,28 +597,14 @@ class AppDialogs {
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 32.h),
-                  InkWell(
-                    onTap: () {
+                  AppPrimaryButton(
+                    label: AppStrings.gotIt.tr,
+                    onPressed: () {
                       Get.back();
                       if (onConfirm != null) onConfirm();
                     },
-                    child: Container(
-                      padding: EdgeInsets.symmetric(vertical: 16.h),
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(16.r),
-                      ),
-                      child: Center(
-                        child: Text(
-                          AppStrings.gotIt.tr,
-                          style: AppTextStyles.body.copyWith(
-                            color: AppColors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
+                    height: 56.h,
+                    borderRadius: 16.r,
                   ),
                 ],
               ),
@@ -783,28 +706,14 @@ class AppDialogs {
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 32.h),
-                  InkWell(
-                    onTap: () {
+                  AppPrimaryButton(
+                    label: AppStrings.gotIt.tr,
+                    onPressed: () {
                       Get.back();
                       if (onConfirm != null) onConfirm();
                     },
-                    child: Container(
-                      padding: EdgeInsets.symmetric(vertical: 16.h),
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(16.r),
-                      ),
-                      child: Center(
-                        child: Text(
-                          AppStrings.gotIt.tr,
-                          style: AppTextStyles.body.copyWith(
-                            color: AppColors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
+                    height: 56.h,
+                    borderRadius: 16.r,
                   ),
                 ],
               ),

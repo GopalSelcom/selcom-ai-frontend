@@ -44,7 +44,7 @@ class ErrorReporter {
 
   // Rolling buffer for network history (max 20)
   final List<String> _logsBuffer = [];
-  final int _maxLogsSize = 20;
+  final int _maxLogsSize = 3;
 
   static const String _boxName = 'error_reports_box';
   static const String _reportsKey = 'pending_reports';
@@ -223,7 +223,7 @@ class ErrorReporter {
           : 'https://dukastaging.selcom.dev:7443';
 
       final request = ApiRequest(
-        endpoint: "report-error",
+        endpoint: "/api/v4/report-error",
         method: ApiMethod.multipart,
         customBaseUrl: errorBaseUrl,
         skipAuthInterceptor: true,

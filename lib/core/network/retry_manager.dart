@@ -26,6 +26,7 @@ class RetryManager {
 
   bool _isRetrying = false;
   bool _isPopupShowing = false;
+  DateTime? _lastPopupClosedAt;
   StreamSubscription<bool>? _connectivitySubscription;
 
   /// Whether a retry popup is currently showing
@@ -36,6 +37,8 @@ class RetryManager {
 
   /// Initialize the retry manager and setup auto-retry
   void initialize() {
+    // Begin passive connectivity tracking so retries can resume on reconnect.
+    _connectivity.startMonitoring();
     _setupAutoRetry();
     developer.log("🔄 RetryManager initialized", name: 'RetryManager');
   }
@@ -65,6 +68,16 @@ class RetryManager {
   Future<void> showRetryPopup() async {
     if (_isPopupShowing) {
       developer.log("⚠️ Popup already showing, skipping", name: 'RetryManager');
+      return;
+    }
+    // Cooldown guard: prevents rapid popup reopen loops after dismissal/retry.
+    final lastClosed = _lastPopupClosedAt;
+    if (lastClosed != null &&
+        DateTime.now().difference(lastClosed) < const Duration(seconds: 8)) {
+      developer.log(
+        "⏱️ Retry popup cooldown active, skipping reopen",
+        name: 'RetryManager',
+      );
       return;
     }
 
@@ -131,6 +144,8 @@ class RetryManager {
     );
 
     _isPopupShowing = false;
+    // Track close time for cooldown checks above.
+    _lastPopupClosedAt = DateTime.now();
   }
 
   /// Dismiss popup if showing
@@ -140,6 +155,7 @@ class RetryManager {
       if (Get.isDialogOpen ?? false) {
         Get.back();
       }
+      _lastPopupClosedAt = DateTime.now();
     }
   }
 
@@ -194,12 +210,12 @@ class RetryManager {
     if (failureCount == 0) {
       dismissPopup();
     } else {
-      // If some failed, show popup again
+      // Intentionally avoid immediate reopen here.
+      // A new popup is shown only on the next actual failure trigger.
       developer.log(
-        "⚠️ $failureCount requests still failed, showing popup again",
+        "⚠️ $failureCount requests still failed, waiting for next trigger",
         name: 'RetryManager',
       );
-      showRetryPopup();
     }
   }
 
