@@ -94,6 +94,10 @@ class ErrorReporter {
     List<Map<String, dynamic>>? extraData,
     bool fatal = false,
   }) async {
+    if (kDebugMode) {
+      return;
+    }
+
     try {
       final errorStr = error.toString();
       final signature = "$errorStr|$customMessage";
