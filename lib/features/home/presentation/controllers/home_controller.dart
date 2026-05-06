@@ -1099,7 +1099,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       debugPrint(
         '[LocationSelection] BookRide tapped: '
         'pickupTextLen=${pickup.trim().length}, '
-        'destinationTextLen=${destinations.isNotEmpty ? destinations.first.trim().length : 0}, '
+        'destinationTextLen=${destinations.isNotEmpty ? destinations.last.trim().length : 0}, '
         'routePickup=($routePickupLat,$routePickupLng), '
         'routeDestination=($routeDestinationLat,$routeDestinationLng), '
         'destinationPlaceIdPresent=${(destinationPlaceId ?? '').trim().isNotEmpty}',
@@ -1140,7 +1140,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         double? dLat;
         double? dLng;
 
-        if (i == 0) {
+        // Final destination is expected to be last in the list.
+        if (i == items.length - 1) {
           dLat = routeDestinationLat;
           dLng = routeDestinationLng;
         }

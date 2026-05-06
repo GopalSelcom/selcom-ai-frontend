@@ -287,47 +287,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       ),
     );
 
-    // 2. Destination
-    rows.add(
-      _pinFieldRow(
-        icon: SvgPictureAsset(
-          AppAssets.locationIcDestinationPin,
-          width: 12.6.w,
-          height: 16.4.h,
-          color: AppColors.mapDropMarkerGreen,
-          placeholderBuilder: (_) => Icon(
-            Icons.push_pin,
-            color: AppColors.mapDropMarkerGreen,
-            size: 16.w,
-          ),
-        ),
-        field: TextField(
-          controller: destinationController,
-          focusNode: destinationFocusNode,
-          onTap: () {
-            _setActiveSegment(1);
-            controller.searchQuery.value = destinationController.text.trim();
-          },
-          onChanged: (value) {
-            _destinationPlaceId.value = null;
-            controller.isDestinationSelected.value = false;
-            _setActiveSegment(1);
-            controller.searchQuery.value = value;
-          },
-          style: fieldStyle,
-          decoration: InputDecoration(
-            isDense: true,
-            border: InputBorder.none,
-            contentPadding: EdgeInsets.zero,
-            hintText: AppStrings.searchDestination.tr,
-            hintStyle: hintStyle,
-          ),
-        ),
-        showDivider: _extraDestinationControllers.isNotEmpty,
-      ),
-    );
-
-    // 3. Extra stops
+    // 2. Extra stops (shown between pickup and final destination)
     for (var i = 0; i < _extraDestinationControllers.length; i++) {
       final segment = 2 + i;
       rows.add(
@@ -370,10 +330,51 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
               hintStyle: hintStyle,
             ),
           ),
-          showDivider: i < _extraDestinationControllers.length - 1,
+          // Keep a connector line to the next row (another stop or final destination).
+          showDivider: true,
         ),
       );
     }
+
+    // 3. Final destination (always the last row)
+    rows.add(
+      _pinFieldRow(
+        icon: SvgPictureAsset(
+          AppAssets.locationIcDestinationPin,
+          width: 12.6.w,
+          height: 16.4.h,
+          color: AppColors.mapDropMarkerGreen,
+          placeholderBuilder: (_) => Icon(
+            Icons.push_pin,
+            color: AppColors.mapDropMarkerGreen,
+            size: 16.w,
+          ),
+        ),
+        field: TextField(
+          controller: destinationController,
+          focusNode: destinationFocusNode,
+          onTap: () {
+            _setActiveSegment(1);
+            controller.searchQuery.value = destinationController.text.trim();
+          },
+          onChanged: (value) {
+            _destinationPlaceId.value = null;
+            controller.isDestinationSelected.value = false;
+            _setActiveSegment(1);
+            controller.searchQuery.value = value;
+          },
+          style: fieldStyle,
+          decoration: InputDecoration(
+            isDense: true,
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.zero,
+            hintText: AppStrings.searchDestination.tr,
+            hintStyle: hintStyle,
+          ),
+        ),
+        showDivider: false,
+      ),
+    );
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -893,10 +894,13 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           onTap: (isReady && !controller.isProceedingToBooking.value)
               ? () async {
                   final destinations = <String>[];
-                  destinations.add(destinationController.text.trim());
                   for (final c in _extraDestinationControllers) {
                     final t = c.text.trim();
                     if (t.isNotEmpty) destinations.add(t);
+                  }
+                  final finalDestination = destinationController.text.trim();
+                  if (finalDestination.isNotEmpty) {
+                    destinations.add(finalDestination);
                   }
                   if (_isVehicleSelectionEditMode) {
                     final payload = await _buildVehicleSelectionEditResult(
@@ -990,7 +994,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       final text = cleanedDestinations[i];
       double? lat;
       double? lng;
-      if (i == 0) {
+      if (i == cleanedDestinations.length - 1) {
         lat = _routeDestinationLat.value;
         lng = _routeDestinationLng.value;
       }
