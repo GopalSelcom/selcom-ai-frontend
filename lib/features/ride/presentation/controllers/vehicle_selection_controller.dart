@@ -23,6 +23,7 @@ import '../../../../core/services/app_map_service.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../home/domain/repositories/home_repository.dart';
+import '../../../home/presentation/controllers/location_selection_controller.dart';
 import '../../../payment/presentation/controllers/payment_method_controller.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../../shared/utils/app_dialogs.dart';
@@ -1023,20 +1024,28 @@ class VehicleSelectionController extends GetxController {
   }
 
   Future<void> _openLocationEdit({required bool isEditingPickup}) async {
+    if (Get.isRegistered<LocationSelectionController>()) {
+      Get.delete<LocationSelectionController>();
+    }
+
     final result = await Get.toNamed(
       AppRoutes.locationSelection,
       arguments: {
         'fromVehicleSelectionEdit': true,
         'editTarget': isEditingPickup ? 'pickup' : 'drop',
         'activeSegmentIndex': isEditingPickup ? 0 : 1,
-        'clearPickupOnOpen': isEditingPickup,
-        'clearDestinationOnOpen': !isEditingPickup,
+        // In edit mode we keep existing values prefilled.
+        'clearPickupOnOpen': false,
+        'clearDestinationOnOpen': false,
         'pickup': pickupEntity.address,
         'pickupLat': pickupEntity.lat,
         'pickupLng': pickupEntity.lng,
         'destination': destinationEntity.address,
         'destinationLat': destinationEntity.lat,
         'destinationLng': destinationEntity.lng,
+        'destinations': destinations
+            .map((d) => {'lat': d.lat, 'lng': d.lng, 'address': d.address})
+            .toList(),
       },
     );
     if (result is! Map) return;
