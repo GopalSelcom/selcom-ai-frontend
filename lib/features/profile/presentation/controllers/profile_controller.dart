@@ -194,6 +194,7 @@ class ProfileController extends GetxController {
 
       if (image != null) {
         pickedImage.value = File(image.path);
+        await saveProfile();
       }
     } catch (e) {
       AppDialogs.showErrorDialog(message: 'Error picking image: $e');
