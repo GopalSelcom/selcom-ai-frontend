@@ -94,6 +94,10 @@ class ErrorReporter {
     List<Map<String, dynamic>>? extraData,
     bool fatal = false,
   }) async {
+    if (kDebugMode) {
+      return;
+    }
+
     try {
       final errorStr = error.toString();
       final signature = "$errorStr|$customMessage";
@@ -265,7 +269,9 @@ class ErrorReporter {
   Future<void> _saveReportLocally(ErrorReport report) async {
     final box = Hive.box(_boxName);
     final List<dynamic> rawReports = box.get(_reportsKey, defaultValue: []);
-    final reports = rawReports.map((e) => Map<String, dynamic>.from(e)).toList();
+    final reports = rawReports
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
 
     reports.add(report.toMap());
     await box.put(_reportsKey, reports);
@@ -283,7 +289,9 @@ class ErrorReporter {
   Future<void> _deleteReportLocally(ErrorReport report) async {
     final box = Hive.box(_boxName);
     final List<dynamic> rawReports = box.get(_reportsKey, defaultValue: []);
-    final reports = rawReports.map((e) => Map<String, dynamic>.from(e)).toList();
+    final reports = rawReports
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
 
     reports.removeWhere((e) => e['id'] == report.id);
     await box.put(_reportsKey, reports);
