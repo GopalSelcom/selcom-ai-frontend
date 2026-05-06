@@ -2136,13 +2136,7 @@ class DriverAcceptedController extends GetxController
     final destinationLng = destination?.lng ?? destinationLatLng.longitude;
     final destinationAddr = (destination?.address ?? destinationAddress).trim();
 
-    final payload = <Map<String, dynamic>>[
-      {
-        'lat': destinationLat,
-        'lng': destinationLng,
-        'address': destinationAddr,
-      },
-    ];
+    final payload = <Map<String, dynamic>>[];
 
     for (final stop in stops) {
       final sameAsDestinationByCoord =
@@ -2155,6 +2149,13 @@ class DriverAcceptedController extends GetxController
       }
       payload.add({'lat': stop.lat, 'lng': stop.lng, 'address': stop.address});
     }
+
+    // requires destination to always be the last element.
+    payload.add({
+      'lat': destinationLat,
+      'lng': destinationLng,
+      'address': destinationAddr,
+    });
 
     return payload;
   }

@@ -22,6 +22,7 @@ class StopEditorScreen extends StatefulWidget {
 
 class _StopEditorScreenState extends State<StopEditorScreen> {
   final controller = Get.find<DriverAcceptedController>();
+  static const int _maxDropStops = 3;
   late List<RideStopEntity> _stops;
   late List<RideStopEntity> _initialStops;
   // Reuse this screen for two modes:
@@ -81,6 +82,15 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
   }
 
   void _addStop() async {
+    if (_stops.length >= _maxDropStops) {
+      Get.snackbar(
+        AppStrings.error.tr,
+        'You can add up to $_maxDropStops stops only.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
     // Navigate to location selection and get result
     final result = await Get.toNamed(
       AppRoutes.selectSavedLocation,
