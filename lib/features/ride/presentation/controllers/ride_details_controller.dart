@@ -152,7 +152,7 @@ class RideDetailsController extends GetxController {
       if (Get.isDialogOpen ?? false) Get.back();
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       AppDialogs.showErrorDialog(
-        message: 'Could download slip. Please try again later.',
+        message: 'Could not download slip. Please try again later.',
       );
     }
   }
