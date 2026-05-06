@@ -10,7 +10,6 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
-import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../payment/presentation/widgets/payment_bar.dart';
@@ -48,13 +47,87 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
             Positioned(
               top: MediaQuery.paddingOf(context).top + 8.h,
               left: 16.w,
-              child: const AppBackButton(
-                color: AppColors.textHeading,
-                alignment: Alignment.center,
+              right: 16.w,
+              // Targeted rebuild for header labels/actions via update(['route_header']).
+              child: GetBuilder<VehicleSelectionController>(
+                id: 'route_header',
+                builder: (controller) => Container(
+                  height: 44.h,
+                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.circular(14.r),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: AppColors.shadowSoft,
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        onPressed: controller.closeVehicleSelection,
+                        icon: Icon(
+                          Icons.close,
+                          color: AppColors.textHeading,
+                          size: 20.sp,
+                        ),
+                      ),
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                controller.pickupMapLabel,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTextStyles.homeSubtitle.copyWith(
+                                  color: AppColors.textHeading,
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 4.w),
+                              child: Icon(
+                                Icons.arrow_right_alt,
+                                color: AppColors.textHeading,
+                                size: 18.sp,
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                controller.destinationMapLabel,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTextStyles.homeSubtitle.copyWith(
+                                  color: AppColors.primary,
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: controller.editRouteHeader,
+                        icon: Icon(
+                          Icons.edit_outlined,
+                          color: AppColors.textHeading,
+                          size: 20.sp,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           Positioned(
-            top: MediaQuery.paddingOf(context).top + 14.h,
+            top: MediaQuery.paddingOf(context).top + 60.h,
             right: 16.w,
             child: GestureDetector(
               onTap: controller.openPromotions,
@@ -112,7 +185,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
             ),
           ),
           Positioned(
-            top: MediaQuery.paddingOf(context).top + 58.h,
+            top: MediaQuery.paddingOf(context).top + 104.h,
             right: 16.w,
             child: Obx(
               () => Container(
@@ -236,8 +309,10 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
             // Manual initial zoom level:
             // - Increase value => more zoom in
             // - Decrease value => more zoom out
-            initialCameraPosition: CameraPosition(target: mid, zoom: 14.8),
+            initialCameraPosition: CameraPosition(target: mid, zoom: 14.5),
             padding: EdgeInsets.only(
+              // Reserve space for the custom top route header.
+              top: MediaQuery.paddingOf(context).top + 52.h,
               bottom: MediaQuery.of(context).size.height * _sheetHeightFactor,
             ),
             onMapCreated: (c) async {

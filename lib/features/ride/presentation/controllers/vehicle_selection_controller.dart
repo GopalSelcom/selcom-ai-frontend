@@ -7,7 +7,6 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:selcom_rides_frontend/core/utils/map_marker_utils.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/data/models/requests/book_ride_request.dart';
@@ -167,6 +166,7 @@ class VehicleSelectionController extends GetxController {
         .toLowerCase();
 
     isRouteReady.value = false;
+    update(['route_header']);
   }
 
   Future<void> _loadAll() async {
@@ -1004,6 +1004,34 @@ class VehicleSelectionController extends GetxController {
     Get.toNamed(AppRoutes.promotions);
   }
 
+  void closeVehicleSelection() {
+    // Cancel from vehicle selection should return to home and clear back stack.
+    Get.offAllNamed(AppRoutes.home);
+  }
+
+  Future<void> editRouteHeader() async {
+    // Header edit opens location selection as the active editing flow.
+    await Get.offNamed(
+      AppRoutes.locationSelection,
+      arguments: {
+        'fromVehicleSelectionEdit': true,
+        'editTarget': 'drop',
+        'activeSegmentIndex': 1,
+        'clearPickupOnOpen': false,
+        'clearDestinationOnOpen': false,
+        'pickup': pickupEntity.address,
+        'pickupLat': pickupEntity.lat,
+        'pickupLng': pickupEntity.lng,
+        'destination': destinationEntity.address,
+        'destinationLat': destinationEntity.lat,
+        'destinationLng': destinationEntity.lng,
+        'destinations': destinations
+            .map((d) => {'lat': d.lat, 'lng': d.lng, 'address': d.address})
+            .toList(),
+      },
+    );
+  }
+
   Future<void> editPickupFromMap() async {
     await _openLocationEdit(isEditingPickup: true);
   }
@@ -1065,6 +1093,8 @@ class VehicleSelectionController extends GetxController {
     );
     destinations.assignAll(nextDestinations);
     destinationEntity = nextDestinations.last;
+    // Refresh only the top route header (GetBuilder id: route_header).
+    update(['route_header']);
 
     isMapVisualReady.value = false;
     await loadLocationIcons();
