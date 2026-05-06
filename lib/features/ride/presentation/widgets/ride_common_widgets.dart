@@ -277,8 +277,7 @@ class RideLocationsTimeline extends StatelessWidget {
                       ),
                     ),
                   ],
-                  /// todo: skip change drop location
-                  // if (footer != null) footer,
+                  if (footer != null) footer,
                 ],
               ),
             ),

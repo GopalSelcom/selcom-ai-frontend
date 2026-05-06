@@ -24,7 +24,9 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
   final controller = Get.find<DriverAcceptedController>();
   static const int _maxDropStops = 3;
   late List<RideStopEntity> _stops;
+  late List<String> _stopLocalKeys;
   late List<RideStopEntity> _initialStops;
+  int _newStopCounter = 0;
   // Reuse this screen for two modes:
   // - false: mid-ride stops editor
   // - true : change drop location editor
@@ -45,16 +47,23 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
     _isDestinationEditor = args['editorMode'] == 'destination';
     final ride = args['ride'] as RideEntity?;
     final destAddr = controller.destinationAddress.trim().toLowerCase();
+    final confirmedStops = (ride?.stops ?? [])
+        .where((s) => s.address.trim().toLowerCase() != destAddr)
+        .toList();
 
     if (controller.stopUpdateWorkingStops.isNotEmpty) {
       // Use recovered stops if available
       _stops = List.from(controller.stopUpdateWorkingStops);
+      // Frontend-only draft tracking:
+      // items beyond confirmed baseline are treated as newly added stops.
+      final baselineCount = confirmedStops.length;
+      _stopLocalKeys = List.generate(_stops.length, (i) {
+        if (i >= baselineCount) return 'new_${_newStopCounter++}';
+        return 'confirmed_$i';
+      });
     } else {
       // Normal initialization from confirmed stops
-      _stops = (ride?.stops ?? [])
-          .where((s) {
-            return s.address.trim().toLowerCase() != destAddr;
-          })
+      _stops = confirmedStops
           .map(
             (s) => RideStopEntity(
               index: s.index,
@@ -65,6 +74,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
             ),
           )
           .toList();
+      _stopLocalKeys = List.generate(_stops.length, (i) => 'confirmed_$i');
     }
     _initialStops = List.from(_stops);
   }
@@ -107,6 +117,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
             status: 'pending',
           ),
         );
+        _stopLocalKeys.add('new_${_newStopCounter++}');
         controller.stopUpdatePreview.value = null; // Reset preview on change
       });
     }
@@ -115,6 +126,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
   void _removeStop(int index) {
     setState(() {
       _stops.removeAt(index);
+      _stopLocalKeys.removeAt(index);
       controller.stopUpdatePreview.value = null; // Reset preview on change
     });
   }
@@ -123,7 +135,9 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
     setState(() {
       if (newIndex > oldIndex) newIndex -= 1;
       final item = _stops.removeAt(oldIndex);
+      final key = _stopLocalKeys.removeAt(oldIndex);
       _stops.insert(newIndex, item);
+      _stopLocalKeys.insert(newIndex, key);
       controller.stopUpdatePreview.value = null; // Reset preview on change
     });
   }
@@ -221,6 +235,8 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                     },
                     itemBuilder: (context, index) {
                       final stop = _stops[index];
+                      final canRemoveDraftStop =
+                          _stopLocalKeys[index].startsWith('new_');
                       return Padding(
                         key: ValueKey('stop_${stop.index}_$index'),
                         padding: EdgeInsets.only(bottom: 12.h),
@@ -265,14 +281,15 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                                   ],
                                 ),
                               ),
-                              IconButton(
-                                icon: Icon(
-                                  Icons.remove_circle,
-                                  color: AppColors.primary,
-                                  size: 20.sp,
+                              if (canRemoveDraftStop)
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.remove_circle,
+                                    color: AppColors.primary,
+                                    size: 20.sp,
+                                  ),
+                                  onPressed: () => _removeStop(index),
                                 ),
-                                onPressed: () => _removeStop(index),
-                              ),
                             ],
                           ),
                         ),
