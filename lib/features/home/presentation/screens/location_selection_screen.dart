@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/constants/ride_stop_limits.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
@@ -69,7 +70,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
   bool get _isVehicleSelectionEditMode =>
       locationController.isVehicleSelectionEditMode.value;
 
-  int get _maxExtraStops => LocationSelectionController.maxExtraStops;
+  int get _maxExtraStops => RideStopLimits.maxIntermediateStops;
 
   void _onAddDestinationStop() => locationController.onAddDestinationStop();
 

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import '../../../../core/constants/ride_stop_limits.dart';
 import '../controllers/home_controller.dart';
 
 class LocationSelectionController extends GetxController {
   LocationSelectionController();
-
-  static const int maxExtraStops = 2;
 
   late final TextEditingController pickupController;
   late final TextEditingController destinationController;
@@ -125,7 +125,10 @@ class LocationSelectionController extends GetxController {
   }
 
   void onAddDestinationStop() {
-    if (extraDestinationControllers.length >= maxExtraStops) return;
+    if (extraDestinationControllers.length >=
+        RideStopLimits.maxIntermediateStops) {
+      return;
+    }
     extraDestinationControllers.add(TextEditingController());
     extraDestinationFocusNodes.add(FocusNode());
     activeSegmentIndex.value = 2 + extraDestinationControllers.length - 1;

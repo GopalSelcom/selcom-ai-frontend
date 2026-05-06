@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/constants/ride_stop_limits.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -22,7 +25,6 @@ class StopEditorScreen extends StatefulWidget {
 
 class _StopEditorScreenState extends State<StopEditorScreen> {
   final controller = Get.find<DriverAcceptedController>();
-  static const int _maxDropStops = 3;
   late List<RideStopEntity> _stops;
   late List<String> _stopLocalKeys;
   late List<RideStopEntity> _initialStops;
@@ -92,11 +94,11 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
   }
 
   void _addStop() async {
-    if (_stops.length >= _maxDropStops) {
-      Get.snackbar(
-        AppStrings.error.tr,
-        'You can add up to $_maxDropStops stops only.',
-        snackPosition: SnackPosition.BOTTOM,
+    if (_stops.length >= RideStopLimits.maxIntermediateStops) {
+      AppDialogs.showErrorDialog(
+        title: AppStrings.error.tr,
+        message:
+            'You can add up to ${RideStopLimits.maxIntermediateStops} stops only.',
       );
       return;
     }
