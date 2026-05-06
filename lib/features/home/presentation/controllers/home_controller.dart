@@ -1186,8 +1186,9 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         );
       }
 
-      // GetX lifecycle managed via AppRoutes and VehicleSelectionBinding.
-      Get.toNamed(
+      // Replace location-selection with vehicle-selection to avoid stack buildup
+      // when users repeatedly edit route and return.
+      Get.offNamed(
         AppRoutes.booking,
         arguments: {
           'pickup': pickup,

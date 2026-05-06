@@ -1010,26 +1010,8 @@ class VehicleSelectionController extends GetxController {
   }
 
   Future<void> editRouteHeader() async {
-    // Header edit opens location selection as the active editing flow.
-    await Get.offNamed(
-      AppRoutes.locationSelection,
-      arguments: {
-        'fromVehicleSelectionEdit': true,
-        'editTarget': 'drop',
-        'activeSegmentIndex': 1,
-        'clearPickupOnOpen': false,
-        'clearDestinationOnOpen': false,
-        'pickup': pickupEntity.address,
-        'pickupLat': pickupEntity.lat,
-        'pickupLng': pickupEntity.lng,
-        'destination': destinationEntity.address,
-        'destinationLat': destinationEntity.lat,
-        'destinationLng': destinationEntity.lng,
-        'destinations': destinations
-            .map((d) => {'lat': d.lat, 'lng': d.lng, 'address': d.address})
-            .toList(),
-      },
-    );
+    // Open edit flow and return edited result back to this same vehicle screen.
+    await _openLocationEdit(isEditingPickup: false);
   }
 
   Future<void> editPickupFromMap() async {
