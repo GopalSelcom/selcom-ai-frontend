@@ -37,6 +37,7 @@ abstract class Languages {
   String
   get byContinuingYouAgreeThatYouHaveReadAndAcceptOurTAndCsAndPrivacyPolicy;
   String get call;
+  String get comingSoon;
   String get callingDriver;
   String get cameraPermission;
   String get cancelUpdate;
@@ -293,6 +294,9 @@ abstract class Languages {
   String get minutesShortCount;
   String get someone;
   String get couldNotFetchReceiptDetails;
+  String get rideDetailsAreMissing;
+  String get couldNotOpenPdfWithMessage;
+  String get couldNotDownloadSlipPleaseTryAgainLater;
   String get checkOutMyRideReceiptShareUrl;
   String get selcomGoRideReceiptSubject;
   String get couldNotShareSlipPleaseTryAgainLater;
@@ -304,6 +308,16 @@ abstract class Languages {
   String get searchLocation;
   String get searchPickupLocation;
   String get searchStopLocation;
+  String get inAppCalling;
+  String get normalCall;
+  String get inAppCallingWillBeAvailableSoon;
+  String get updateFailed;
+  String get updateInProgress;
+  String get aPreviousUpdateIsStillBeingProcessed;
+  String get takingLongerThanExpected;
+  String get theUpdateIsTakingSomeTimePleaseCheckBackShortly;
+  String get paymentHoldUpdateFailedNoChargesApplied;
+  String get driversAppCouldntBeUpdatedBillingAdjustedBack;
   String get searchTimeout;
   String
   get securityAndPreferenceControlsMoreSettingsWillAppearHereAsTheyAreEnable;

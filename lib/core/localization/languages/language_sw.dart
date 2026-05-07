@@ -27,6 +27,7 @@ class LanguageSw extends Languages {
     'by_continuing_you_agree_that_you_have_read_and_accept_our_tand_cs_and_privacy_policy':
         '',
     'call': '',
+    'coming_soon': '',
     'calling_driver': '',
     'camera_permission': '',
     'cancel_update': '',
@@ -282,6 +283,9 @@ class LanguageSw extends Languages {
     'minutes_short_count': '',
     'someone': '',
     'could_not_fetch_receipt_details': '',
+    'ride_details_are_missing': '',
+    'could_not_open_pdf_with_message': '',
+    'could_not_download_slip_please_try_again_later': '',
     'check_out_my_ride_receipt_share_url': '',
     'selcom_go_ride_receipt_subject': '',
     'could_not_share_slip_please_try_again_later': '',
@@ -294,6 +298,16 @@ class LanguageSw extends Languages {
     'search_pickup_location': '',
     'search_stop': '',
     'search_stop_location': '',
+    'in_app_calling': '',
+    'normal_call': '',
+    'in_app_calling_will_be_available_soon': '',
+    'update_failed': '',
+    'update_in_progress': '',
+    'a_previous_update_is_still_being_processed': '',
+    'taking_longer_than_expected': '',
+    'the_update_is_taking_some_time_please_check_back_shortly': '',
+    'payment_hold_update_failed_no_charges_applied': '',
+    'drivers_app_couldnt_be_updated_billing_adjusted_back': '',
     'search_timeout': '',
     'security_and_preference_controls_more_settings_will_appear_here_as_they_are_enable':
         '',
@@ -581,6 +595,9 @@ class LanguageSw extends Languages {
 
   @override
   String get call => values['call'] ?? '';
+
+  @override
+  String get comingSoon => values['coming_soon'] ?? '';
 
   @override
   String get callingDriver => values['calling_driver'] ?? '';
@@ -1407,6 +1424,17 @@ class LanguageSw extends Languages {
       values['could_not_fetch_receipt_details'] ?? '';
 
   @override
+  String get rideDetailsAreMissing => values['ride_details_are_missing'] ?? '';
+
+  @override
+  String get couldNotOpenPdfWithMessage =>
+      values['could_not_open_pdf_with_message'] ?? '';
+
+  @override
+  String get couldNotDownloadSlipPleaseTryAgainLater =>
+      values['could_not_download_slip_please_try_again_later'] ?? '';
+
+  @override
   String get checkOutMyRideReceiptShareUrl =>
       values['check_out_my_ride_receipt_share_url'] ?? '';
 
@@ -1442,6 +1470,42 @@ class LanguageSw extends Languages {
 
   @override
   String get searchStopLocation => values['search_stop_location'] ?? '';
+
+  @override
+  String get inAppCalling => values['in_app_calling'] ?? '';
+
+  @override
+  String get normalCall => values['normal_call'] ?? '';
+
+  @override
+  String get inAppCallingWillBeAvailableSoon =>
+      values['in_app_calling_will_be_available_soon'] ?? '';
+
+  @override
+  String get updateFailed => values['update_failed'] ?? '';
+
+  @override
+  String get updateInProgress => values['update_in_progress'] ?? '';
+
+  @override
+  String get aPreviousUpdateIsStillBeingProcessed =>
+      values['a_previous_update_is_still_being_processed'] ?? '';
+
+  @override
+  String get takingLongerThanExpected =>
+      values['taking_longer_than_expected'] ?? '';
+
+  @override
+  String get theUpdateIsTakingSomeTimePleaseCheckBackShortly =>
+      values['the_update_is_taking_some_time_please_check_back_shortly'] ?? '';
+
+  @override
+  String get paymentHoldUpdateFailedNoChargesApplied =>
+      values['payment_hold_update_failed_no_charges_applied'] ?? '';
+
+  @override
+  String get driversAppCouldntBeUpdatedBillingAdjustedBack =>
+      values['drivers_app_couldnt_be_updated_billing_adjusted_back'] ?? '';
 
   @override
   String get searchTimeout => values['search_timeout'] ?? '';

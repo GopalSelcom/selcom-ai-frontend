@@ -29,6 +29,7 @@ class LanguageEn extends Languages {
     'by_continuing_you_agree_that_you_have_read_and_accept_our_tand_cs_and_privacy_policy':
         'By continuing, you agree that you have read and accept our T&Cs and Privacy Policy',
     'call': 'Call',
+    'coming_soon': 'Coming soon',
     'calling_driver': 'Calling Driver',
     'camera_permission': 'Camera Permission',
     'cancel_update': 'Cancel Update',
@@ -318,6 +319,10 @@ class LanguageEn extends Languages {
     'minutes_short_count': '@count mins',
     'someone': 'Someone',
     'could_not_fetch_receipt_details': 'Could not fetch receipt details.',
+    'ride_details_are_missing': 'Ride details are missing.',
+    'could_not_open_pdf_with_message': 'Could not open PDF: @message',
+    'could_not_download_slip_please_try_again_later':
+        'Could not download slip. Please try again later.',
     'check_out_my_ride_receipt_share_url': 'Check out my ride receipt: @url',
     'selcom_go_ride_receipt_subject': 'Selcom Go Ride Receipt',
     'could_not_share_slip_please_try_again_later':
@@ -332,6 +337,20 @@ class LanguageEn extends Languages {
     'search_pickup_location': 'Search pickup location',
     'search_stop': 'Search stop location',
     'search_stop_location': 'Search stop location',
+    'in_app_calling': 'In app calling',
+    'normal_call': 'Normal call',
+    'in_app_calling_will_be_available_soon': 'In app calling will available soon',
+    'update_failed': 'Update Failed',
+    'update_in_progress': 'Update in progress',
+    'a_previous_update_is_still_being_processed':
+        'A previous update is still being processed.',
+    'taking_longer_than_expected': 'Taking longer than expected',
+    'the_update_is_taking_some_time_please_check_back_shortly':
+        'The update is taking some time. Please check back shortly.',
+    'payment_hold_update_failed_no_charges_applied':
+        'Payment hold update failed. No charges applied.',
+    'drivers_app_couldnt_be_updated_billing_adjusted_back':
+        'Driver\'s app couldn\'t be updated. Your billing has been adjusted back.',
     'search_timeout': 'Search Timeout',
     'security_and_preference_controls_more_settings_will_appear_here_as_they_are_enable':
         'Security and preference controls. More settings will appear here as they are enabled.',
@@ -653,6 +672,9 @@ class LanguageEn extends Languages {
 
   @override
   String get call => values['call'] ?? '';
+
+  @override
+  String get comingSoon => values['coming_soon'] ?? '';
 
   @override
   String get callingDriver => values['calling_driver'] ?? '';
@@ -1479,6 +1501,17 @@ class LanguageEn extends Languages {
       values['could_not_fetch_receipt_details'] ?? '';
 
   @override
+  String get rideDetailsAreMissing => values['ride_details_are_missing'] ?? '';
+
+  @override
+  String get couldNotOpenPdfWithMessage =>
+      values['could_not_open_pdf_with_message'] ?? '';
+
+  @override
+  String get couldNotDownloadSlipPleaseTryAgainLater =>
+      values['could_not_download_slip_please_try_again_later'] ?? '';
+
+  @override
   String get checkOutMyRideReceiptShareUrl =>
       values['check_out_my_ride_receipt_share_url'] ?? '';
 
@@ -1514,6 +1547,42 @@ class LanguageEn extends Languages {
 
   @override
   String get searchStopLocation => values['search_stop_location'] ?? '';
+
+  @override
+  String get inAppCalling => values['in_app_calling'] ?? '';
+
+  @override
+  String get normalCall => values['normal_call'] ?? '';
+
+  @override
+  String get inAppCallingWillBeAvailableSoon =>
+      values['in_app_calling_will_be_available_soon'] ?? '';
+
+  @override
+  String get updateFailed => values['update_failed'] ?? '';
+
+  @override
+  String get updateInProgress => values['update_in_progress'] ?? '';
+
+  @override
+  String get aPreviousUpdateIsStillBeingProcessed =>
+      values['a_previous_update_is_still_being_processed'] ?? '';
+
+  @override
+  String get takingLongerThanExpected =>
+      values['taking_longer_than_expected'] ?? '';
+
+  @override
+  String get theUpdateIsTakingSomeTimePleaseCheckBackShortly =>
+      values['the_update_is_taking_some_time_please_check_back_shortly'] ?? '';
+
+  @override
+  String get paymentHoldUpdateFailedNoChargesApplied =>
+      values['payment_hold_update_failed_no_charges_applied'] ?? '';
+
+  @override
+  String get driversAppCouldntBeUpdatedBillingAdjustedBack =>
+      values['drivers_app_couldnt_be_updated_billing_adjusted_back'] ?? '';
 
   @override
   String get searchTimeout => values['search_timeout'] ?? '';

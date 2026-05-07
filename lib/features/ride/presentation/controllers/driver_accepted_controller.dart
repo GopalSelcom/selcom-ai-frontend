@@ -882,7 +882,7 @@ class DriverAcceptedController extends GetxController
       if (!isFromRider && !Get.currentRoute.contains(AppRoutes.rideMessage)) {
         unreadCount.value++;
 
-        final msg = data['message'] ?? data['text'] ?? 'New message';
+        final msg = data['message'] ?? data['text'] ?? AppStrings.newMessage.tr;
 
         NotificationService().showLocalNotification(
           title: AppStrings.newMessage.tr,
@@ -911,12 +911,15 @@ class DriverAcceptedController extends GetxController
       String userMessage = res.reason;
       if (res.reason == 'da_patch_rejected') {
         userMessage =
-            "Driver's app couldn't be updated. Your billing has been adjusted back.";
+            AppStrings.driversAppCouldntBeUpdatedBillingAdjustedBack.tr;
       } else if (res.reason == 'payment_failed') {
-        userMessage = "Payment hold update failed. No charges applied.";
+        userMessage = AppStrings.paymentHoldUpdateFailedNoChargesApplied.tr;
       }
 
-      AppDialogs.showErrorDialog(title: 'Update Failed', message: userMessage);
+      AppDialogs.showErrorDialog(
+        title: AppStrings.updateFailed.tr,
+        message: userMessage,
+      );
     });
   }
 
@@ -1702,21 +1705,21 @@ class DriverAcceptedController extends GetxController
                 ),
                 SizedBox(height: 12.h),
                 _callOptionTile(
-                  title: 'In app calling',
+                  title: AppStrings.inAppCalling.tr,
                   icon: Icons.phone_in_talk_outlined,
                   onTap: () {
                     if (Get.isBottomSheetOpen ?? false) {
                       Get.back();
                     }
                     AppDialogs.showInfoDialog(
-                      title: 'Coming soon',
-                      message: 'In app calling will available soon',
+                      title: AppStrings.comingSoon.tr,
+                      message: AppStrings.inAppCallingWillBeAvailableSoon.tr,
                     );
                   },
                 ),
                 SizedBox(height: 10.h),
                 _callOptionTile(
-                  title: 'Normal call',
+                  title: AppStrings.normalCall.tr,
                   icon: Icons.call_outlined,
                   onTap: () {
                     if (Get.isBottomSheetOpen ?? false) {
@@ -1852,14 +1855,16 @@ class DriverAcceptedController extends GetxController
 
       if (receiptModel == null) {
         if (Get.isDialogOpen ?? false) Get.back();
-        AppDialogs.showErrorDialog(message: 'Could not fetch receipt details.');
+        AppDialogs.showErrorDialog(
+          message: AppStrings.couldNotFetchReceiptDetails.tr,
+        );
         return;
       }
 
       final rideData = ride.value;
       if (rideData == null) {
         if (Get.isDialogOpen ?? false) Get.back();
-        AppDialogs.showErrorDialog(message: 'Ride details are missing.');
+        AppDialogs.showErrorDialog(message: AppStrings.rideDetailsAreMissing.tr);
         return;
       }
 
@@ -1871,14 +1876,16 @@ class DriverAcceptedController extends GetxController
       final result = await OpenFilex.open(file.path);
       if (result.type != ResultType.done) {
         AppDialogs.showErrorDialog(
-          message: 'Could not open PDF: ${result.message}',
+          message: AppStrings.couldNotOpenPdfWithMessage.trParams({
+            'message': result.message,
+          }),
         );
       }
     } catch (e, stackTrace) {
       if (Get.isDialogOpen ?? false) Get.back();
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       AppDialogs.showErrorDialog(
-        message: 'Could not download slip. Please try again later.',
+        message: AppStrings.couldNotDownloadSlipPleaseTryAgainLater.tr,
       );
     }
   }
@@ -2135,8 +2142,8 @@ class DriverAcceptedController extends GetxController
   void onEditStops() {
     if (isUpdatingStops.value) {
       AppDialogs.showInfoDialog(
-        title: 'Update in progress',
-        message: 'A previous update is still being processed.',
+        title: AppStrings.updateInProgress.tr,
+        message: AppStrings.aPreviousUpdateIsStillBeingProcessed.tr,
       );
       return;
     }
@@ -2158,7 +2165,7 @@ class DriverAcceptedController extends GetxController
     result.fold(
       (f) {
         isUpdatingStops.value = false;
-        AppDialogs.showErrorDialog(title: 'Error', message: f.message);
+        AppDialogs.showErrorDialog(title: AppStrings.error.tr, message: f.message);
       },
       (res) {
         if (res is StopUpdatePreviewModel) {
@@ -2201,7 +2208,7 @@ class DriverAcceptedController extends GetxController
         _clearIdempotencyKey(); // Clear on failure
         isUpdatingStops.value = false;
         stopUpdateProgressStep.value = 0;
-        AppDialogs.showErrorDialog(title: 'Error', message: f.message);
+        AppDialogs.showErrorDialog(title: AppStrings.error.tr, message: f.message);
       },
       (res) async {
         if (res is StopUpdateAppliedModel) {
@@ -2277,8 +2284,8 @@ class DriverAcceptedController extends GetxController
         isUpdatingStops.value = false;
         stopUpdateProgressStep.value = 0;
         AppDialogs.showInfoDialog(
-          title: 'Taking longer than expected',
-          message: 'The update is taking some time. Please check back shortly.',
+          title: AppStrings.takingLongerThanExpected.tr,
+          message: AppStrings.theUpdateIsTakingSomeTimePleaseCheckBackShortly.tr,
         );
         _fetchRideDetails();
       }
@@ -2362,8 +2369,8 @@ class DriverAcceptedController extends GetxController
     if (rideId.isEmpty) return;
     if (isUpdatingStops.value || isUpdatingDestination.value) {
       AppDialogs.showInfoDialog(
-        title: 'Update in progress',
-        message: 'A previous update is still being processed.',
+        title: AppStrings.updateInProgress.tr,
+        message: AppStrings.aPreviousUpdateIsStillBeingProcessed.tr,
       );
       return;
     }
@@ -2558,8 +2565,8 @@ class DriverAcceptedController extends GetxController
         _pendingDestinationTargetLat = null;
         _pendingDestinationTargetLng = null;
         AppDialogs.showInfoDialog(
-          title: 'Taking longer than expected',
-          message: 'The update is taking some time. Please check back shortly.',
+          title: AppStrings.takingLongerThanExpected.tr,
+          message: AppStrings.theUpdateIsTakingSomeTimePleaseCheckBackShortly.tr,
         );
         unawaited(_fetchRideDetails());
       }

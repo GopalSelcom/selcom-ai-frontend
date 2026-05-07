@@ -26,6 +26,7 @@ class AppStrings {
   static const String blinkYourEyes = 'blink_your_eyes';
   static const String bookRide = 'book_ride';
   static const String bookRideWithFare = 'book_ride_with_fare';
+  static const String comingSoon = 'coming_soon';
   static const String bookingFeesAndConvenienceCharges =
       'booking_fees_and_convenience_charges';
   static const String bookingForName = 'booking_for_name';
@@ -378,6 +379,10 @@ class AppStrings {
   static const String minutesShortCount = 'minutes_short_count';
   static const String someone = 'someone';
   static const String couldNotFetchReceiptDetails = 'could_not_fetch_receipt_details';
+  static const String rideDetailsAreMissing = 'ride_details_are_missing';
+  static const String couldNotOpenPdfWithMessage = 'could_not_open_pdf_with_message';
+  static const String couldNotDownloadSlipPleaseTryAgainLater =
+      'could_not_download_slip_please_try_again_later';
   static const String checkOutMyRideReceiptShareUrl =
       'check_out_my_ride_receipt_share_url';
   static const String selcomGoRideReceiptSubject = 'selcom_go_ride_receipt_subject';
@@ -395,6 +400,21 @@ class AppStrings {
   static const String searchPickupLocation = 'search_pickup_location';
   static const String searchStop = 'search_stop';
   static const String searchStopLocation = 'search_stop_location';
+  static const String inAppCalling = 'in_app_calling';
+  static const String normalCall = 'normal_call';
+  static const String inAppCallingWillBeAvailableSoon =
+      'in_app_calling_will_be_available_soon';
+  static const String updateFailed = 'update_failed';
+  static const String updateInProgress = 'update_in_progress';
+  static const String aPreviousUpdateIsStillBeingProcessed =
+      'a_previous_update_is_still_being_processed';
+  static const String takingLongerThanExpected = 'taking_longer_than_expected';
+  static const String theUpdateIsTakingSomeTimePleaseCheckBackShortly =
+      'the_update_is_taking_some_time_please_check_back_shortly';
+  static const String paymentHoldUpdateFailedNoChargesApplied =
+      'payment_hold_update_failed_no_charges_applied';
+  static const String driversAppCouldntBeUpdatedBillingAdjustedBack =
+      'drivers_app_couldnt_be_updated_billing_adjusted_back';
   static const String searchTimeout = 'search_timeout';
   static const String
   securityAndPreferenceControlsMoreSettingsWillAppearHereAsTheyAreEnable =
