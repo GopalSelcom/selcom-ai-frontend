@@ -26,12 +26,14 @@ class AppStrings {
   static const String bookRideWithFare = 'book_ride_with_fare';
   static const String bookingFeesAndConvenienceCharges =
       'booking_fees_and_convenience_charges';
+  static const String bookingForName = 'booking_for_name';
   static const String
   byContinuingYouAgreeThatYouHaveReadAndAcceptOurTAndCsAndPrivacyPolicy =
       'by_continuing_you_agree_that_you_have_read_and_accept_our_tand_cs_and_privacy_policy';
   static const String call = 'call';
   static const String callingDriver = 'calling_driver';
   static const String cameraPermission = 'camera_permission';
+  static const String cancelUpdate = 'cancel_update';
   static const String cancelAndPay = 'cancel_and_pay';
   static const String cancelDialogsGallery = 'cancel_dialogs_gallery';
   static const String cancelFailed = 'cancel_failed';
@@ -140,6 +142,7 @@ class AppStrings {
   static const String linkAccount = 'link_account';
   static const String location = 'location';
   static const String locating = 'locating';
+  static const String locatingDriver = 'locating_driver';
   static const String currentLocation = 'current_location';
   static const String saved = 'saved';
   static const String savedPlace = 'saved_place';
@@ -201,10 +204,25 @@ class AppStrings {
   static const String past = 'past';
   static const String payUsing = 'pay_using';
   static const String payment = 'payment';
+  static const String processing = 'processing';
+  static const String updatingPayment = 'updating_payment';
+  static const String recalculatingRoute = 'recalculating_route';
+  static const String dropOffUpdated = 'drop_off_updated';
+  static const String routeUpdated = 'route_updated';
+  static const String adjustingPaymentHoldForNewRoute =
+      'adjusting_payment_hold_for_new_route';
+  static const String syncingNewRouteWithDriver =
+      'syncing_new_route_with_driver';
+  static const String driverReceivedNewDropOffLocation =
+      'driver_received_new_drop_off_location';
+  static const String driverReceivedNewStops = 'driver_received_new_stops';
+  static const String pleaseWaitWhileWeProcessYourRequest =
+      'please_wait_while_we_process_your_request';
   static const String paymentMode = 'payment_mode';
   static const String paymentNotConfirmed = 'payment_not_confirmed';
   static const String paymentValidationFailed = 'payment_validation_failed';
   static const String phoneNumberUnavailable = 'phone_number_unavailable';
+  static const String phoneWithNumber = 'phone_with_number';
   static const String pickAnyTagsThatMatchThisTrip =
       'pick_any_tags_that_match_this_trip';
   static const String pickup = 'pickup';
@@ -234,6 +252,29 @@ class AppStrings {
       'please_tell_us_what_went_wrong_or_how_we_can_improve';
   static const String pleaseTryAgain = 'please_try_again';
   static const String privacyPolicy = 'privacy_policy';
+  static const String paymentMethodWithName = 'payment_method_with_name';
+  static const String calculatingBestRoute = 'calculating_best_route';
+  static const String rideReceipt = 'ride_receipt';
+  static const String refWithId = 'ref_with_id';
+  static const String route = 'route';
+  static const String dropoff = 'dropoff';
+  static const String emDash = 'em_dash';
+  static const String driverAndVehicle = 'driver_and_vehicle';
+  static const String driver = 'driver';
+  static const String model = 'model';
+  static const String colour = 'colour';
+  static const String plate = 'plate';
+  static const String fareBreakdown = 'fare_breakdown';
+  static const String baseFare = 'base_fare';
+  static const String distanceCharge = 'distance_charge';
+  static const String timeCharge = 'time_charge';
+  static const String discount = 'discount';
+  static const String tax = 'tax';
+  static const String total = 'total';
+  static const String thankYouForRidingWithSelcomGo =
+      'thank_you_for_riding_with_selcom_go';
+  static const String mobileMoney = 'mobile_money';
+  static const String card = 'card';
   static const String promoCodeCodeApplied = 'promo_code_code_applied';
   static const String promoCodeAppliedWithCode = 'promo_code_applied_with_code';
   static const String promoAppliedWithTitle = 'promo_applied_with_title';
@@ -256,6 +297,16 @@ class AppStrings {
   static const String rideCharge = 'ride_charge';
   static const String rideDataIsUnavailable = 'ride_data_is_unavailable';
   static const String rideIdIsMissing = 'ride_id_is_missing';
+  static const String destination = 'destination';
+  static const String arrivedIn = 'arrived_in';
+  static const String minutesShortCount = 'minutes_short_count';
+  static const String someone = 'someone';
+  static const String couldNotFetchReceiptDetails = 'could_not_fetch_receipt_details';
+  static const String checkOutMyRideReceiptShareUrl =
+      'check_out_my_ride_receipt_share_url';
+  static const String selcomGoRideReceiptSubject = 'selcom_go_ride_receipt_subject';
+  static const String couldNotShareSlipPleaseTryAgainLater =
+      'could_not_share_slip_please_try_again_later';
   static const String ridePinProtection = 'ride_pin_protection';
   static const String safetyAndPrivacy = 'safety_and_privacy';
   static const String saveThisAddressFirstThenYouCanBookFromHere =
@@ -305,11 +356,16 @@ class AppStrings {
   static const String distanceMinKm = 'distance_min_km';
   static const String distanceMaxKm = 'distance_max_km';
   static const String distanceKmFormat = 'distance_km_format';
+  static const String distance = 'distance';
+  static const String duration = 'duration';
   static const String couldNotRemoveAddress = 'could_not_remove_address';
   static const String viewMore = 'view_more';
   static const String rideInProgress = 'ride_in_progress';
   static const String nearDestination = 'near_destination';
   static const String activeRide = 'active_ride';
+  static const String ongoing = 'ongoing';
+  static const String completed = 'completed';
+  static const String noDriverFound = 'no_driver_found';
   static const String unableToGetLocationCoordinates =
       'unable_to_get_location_coordinates';
   static const String pleaseSelectValidPickupAndDestinationLocations =

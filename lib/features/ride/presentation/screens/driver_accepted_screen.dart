@@ -97,15 +97,21 @@ class DriverAcceptedScreen extends StatelessWidget {
                       size: 20.sp,
                     ),
                   ),
-                  label: "Booking for ${ride.passengerName}",
-                  address: "Phone: ${TanzaniaPhoneFormatter.formatInternational(ride.passengerPhone ?? '')}",
+                  label: AppStrings.bookingForName.trParams({
+                    'name': ride.passengerName ?? AppStrings.someone.tr,
+                  }),
+                  address: AppStrings.phoneWithNumber.trParams({
+                    'phone': TanzaniaPhoneFormatter.formatInternational(
+                      ride.passengerPhone ?? '',
+                    ),
+                  }),
                   maxAddressLines: 1,
                 ):RideLocationSummaryCard(
                   pickupAddress: c.pickupAddress.isEmpty
-                      ? 'Current location'
+                      ? AppStrings.currentLocation.tr
                       : c.pickupAddress,
                   destinationAddress: c.destinationAddress.isEmpty
-                      ? 'Destination'
+                      ? AppStrings.destination.tr
                       : c.destinationAddress,
                   // Controller already normalizes this as: all stops except final destination.
                   intermediateStops: c.summaryIntermediateStops.toList(),
@@ -547,8 +553,8 @@ class DriverAcceptedScreen extends StatelessWidget {
 
             final assigned = c.assignedDriverLocation.value;
             final loadingText = assigned == null
-                ? "Locating driver..."
-                : "Calculating best route...";
+                ? AppStrings.locatingDriver.tr
+                : AppStrings.calculatingBestRoute.tr;
 
             return Positioned(
               top: MediaQuery.paddingOf(context).top + 150.h,
@@ -1051,7 +1057,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                       ? Row(
                           children: [
                             Text(
-                              'Arrived in',
+                              AppStrings.arrivedIn.tr,
                               style: AppTextStyles.homeCaption.copyWith(
                                 fontSize: 15.sp,
                                 color: AppColors.textBody,
@@ -1069,7 +1075,9 @@ class DriverAcceptedScreen extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(8.r),
                               ),
                               child: Text(
-                                '${c.rideEtaMinutes} mins',
+                                AppStrings.minutesShortCount.trParams({
+                                  'count': c.rideEtaMinutes.toString(),
+                                }),
                                 style: AppTextStyles.homeCaption.copyWith(
                                   fontSize: 15.sp,
                                   color: AppColors.textEtaBlue,

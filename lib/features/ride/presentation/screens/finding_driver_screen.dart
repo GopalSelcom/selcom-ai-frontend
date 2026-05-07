@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:selcom_rides_frontend/shared/widgets/map_widgets.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -105,17 +106,25 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
                             size: 20.sp,
                           ),
                         ),
-                        label: "Booking for ${c.passengerName.value}",
+                        label: AppStrings.bookingForName.trParams({
+                          'name': (c.passengerName.value ?? '').trim().isEmpty
+                              ? AppStrings.someone.tr
+                              : c.passengerName.value!,
+                        }),
                         address:
-                            "Phone: ${TanzaniaPhoneFormatter.formatInternational(c.passengerPhone.value ?? '')}",
+                            AppStrings.phoneWithNumber.trParams({
+                          'phone': TanzaniaPhoneFormatter.formatInternational(
+                            c.passengerPhone.value ?? '',
+                          ),
+                        }),
                         maxAddressLines: 1,
                       )
                     : RideLocationSummaryCard(
                         pickupAddress: c.pickupAddress.isEmpty
-                            ? 'Current location'
+                            ? AppStrings.currentLocation.tr
                             : c.pickupAddress,
                         destinationAddress: c.destinationAddress.isEmpty
-                            ? 'Destination'
+                            ? AppStrings.destination.tr
                             : c.destinationAddress,
                         intermediateStops: c.intermediateStops.toList(),
                       );

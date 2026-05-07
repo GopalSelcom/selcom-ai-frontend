@@ -6,8 +6,10 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:get/get.dart';
 
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../data/models/ride_management_models.dart';
 
@@ -92,7 +94,7 @@ class ReceiptPdfGenerator {
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
               pw.Text(
-                'Ride Receipt',
+                AppStrings.rideReceipt.tr,
                 style: pw.TextStyle(
                   fontSize: 24,
                   fontWeight: pw.FontWeight.bold,
@@ -109,7 +111,7 @@ class ReceiptPdfGenerator {
               ),
               pw.SizedBox(height: 2),
               pw.Text(
-                'Ref: ${receipt.rideId}',
+                AppStrings.refWithId.trParams({'id': receipt.rideId}).tr,
                 style: const pw.TextStyle(
                   fontSize: 9,
                   color: _textLight,
@@ -140,10 +142,10 @@ class ReceiptPdfGenerator {
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          _sectionLabel('Route'),
+          _sectionLabel(AppStrings.route.tr),
           pw.SizedBox(height: 12),
           _routeStop(
-            label: 'Pickup',
+            label: AppStrings.pickup.tr,
             address: receipt.pickupAddress,
             dot: PdfColors.green700,
           ),
@@ -156,7 +158,7 @@ class ReceiptPdfGenerator {
           ),
           pw.SizedBox(height: 2),
           _routeStop(
-            label: 'Dropoff',
+            label: AppStrings.dropoff.tr,
             address: receipt.destinationAddress,
             dot: _primary,
           ),
@@ -189,7 +191,7 @@ class ReceiptPdfGenerator {
                 style: const pw.TextStyle(fontSize: 8, color: _textLight),
               ),
               pw.Text(
-                address.isEmpty ? '—' : address,
+                address.isEmpty ? AppStrings.emDash.tr : address,
                 style: const pw.TextStyle(fontSize: 12, color: _textDark),
               ),
             ],
@@ -204,19 +206,19 @@ class ReceiptPdfGenerator {
       children: [
         _infoChip(
           icon: '📍',
-          label: 'Distance',
+          label: AppStrings.distance.tr,
           value: '${receipt.distanceKm.toStringAsFixed(2)} km',
         ),
         pw.SizedBox(width: 12),
         _infoChip(
           icon: '⏱',
-          label: 'Duration',
+          label: AppStrings.duration.tr,
           value: '${receipt.durationMinutes} min',
         ),
         pw.SizedBox(width: 12),
         _infoChip(
           icon: '💳',
-          label: 'Payment',
+          label: AppStrings.payment.tr,
           value: _formatPayment(receipt.paymentMethod),
         ),
       ],
@@ -267,17 +269,17 @@ class ReceiptPdfGenerator {
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          _sectionLabel('Driver & Vehicle'),
+          _sectionLabel(AppStrings.driverAndVehicle.tr),
           pw.SizedBox(height: 12),
-          _detailRow('Driver', receipt.driverName ?? '—'),
+          _detailRow(AppStrings.driver.tr, receipt.driverName ?? AppStrings.emDash.tr),
           if (receipt.vehicleType != null)
-            _detailRow('Vehicle Type', receipt.vehicleType!),
+            _detailRow(AppStrings.vehicleType.tr, receipt.vehicleType!),
           if (receipt.vehicleModel != null)
-            _detailRow('Model', receipt.vehicleModel!),
+            _detailRow(AppStrings.model.tr, receipt.vehicleModel!),
           if (receipt.vehicleColor != null)
-            _detailRow('Colour', receipt.vehicleColor!),
+            _detailRow(AppStrings.colour.tr, receipt.vehicleColor!),
           if (receipt.vehicleRegistration != null)
-            _detailRow('Plate', receipt.vehicleRegistration!),
+            _detailRow(AppStrings.plate.tr, receipt.vehicleRegistration!),
         ],
       ),
     );
@@ -287,7 +289,7 @@ class ReceiptPdfGenerator {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        _sectionLabel('Fare Breakdown'),
+        _sectionLabel(AppStrings.fareBreakdown.tr),
         pw.SizedBox(height: 12),
         pw.Container(
           decoration: const pw.BoxDecoration(
@@ -297,22 +299,22 @@ class ReceiptPdfGenerator {
           padding: const pw.EdgeInsets.all(16),
           child: pw.Column(
             children: [
-              _fareRow('Base Fare', receipt.baseFare, receipt.currency),
+              _fareRow(AppStrings.baseFare.tr, receipt.baseFare, receipt.currency),
               _fareRow(
-                'Distance Charge',
+                AppStrings.distanceCharge.tr,
                 receipt.distanceCharge,
                 receipt.currency,
               ),
-              _fareRow('Time Charge', receipt.timeCharge, receipt.currency),
+              _fareRow(AppStrings.timeCharge.tr, receipt.timeCharge, receipt.currency),
               if (receipt.discount > 0)
                 _fareRow(
-                  'Discount',
+                  AppStrings.discount.tr,
                   -receipt.discount,
                   receipt.currency,
                   valueColor: PdfColors.green700,
                 ),
               if (receipt.tax > 0)
-                _fareRow('Tax', receipt.tax, receipt.currency),
+                _fareRow(AppStrings.tax.tr, receipt.tax, receipt.currency),
               pw.SizedBox(height: 8),
               pw.Divider(color: _divider),
               pw.SizedBox(height: 8),
@@ -320,7 +322,7 @@ class ReceiptPdfGenerator {
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
                   pw.Text(
-                    'Total',
+                    AppStrings.total.tr,
                     style: pw.TextStyle(
                       fontSize: 15,
                       fontWeight: pw.FontWeight.bold,
@@ -376,7 +378,7 @@ class ReceiptPdfGenerator {
       padding: const pw.EdgeInsets.only(top: 16),
       child: pw.Center(
         child: pw.Text(
-          'Thank you for riding with Selcom Go!',
+          AppStrings.thankYouForRidingWithSelcomGo.tr,
           style: const pw.TextStyle(fontSize: 11, color: _textLight),
         ),
       ),
@@ -423,17 +425,17 @@ class ReceiptPdfGenerator {
   static String _formatPayment(String raw) {
     switch (raw.toLowerCase()) {
       case 'wallet':
-        return 'Wallet';
+        return AppStrings.wallet.tr;
       case 'selcompesa':
       case 'selcom_pesa':
-        return 'Selcom Pesa';
+        return AppStrings.selcomPesa.tr;
       case 'mobile_money':
       case 'mobilemoney':
-        return 'Mobile Money';
+        return AppStrings.mobileMoney.tr;
       case 'card':
-        return 'Card';
+        return AppStrings.card.tr;
       default:
-        return raw.isEmpty ? '—' : raw;
+        return raw.isEmpty ? AppStrings.emDash.tr : raw;
     }
   }
 }

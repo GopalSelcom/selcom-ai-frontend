@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../../../../core/domain/entities/ride_entity.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
@@ -183,7 +184,9 @@ class RideDetailsController extends GetxController {
 
         if (receiptModel == null) {
           if (Get.isDialogOpen ?? false) Get.back();
-          AppDialogs.showErrorDialog(message: 'Could not fetch receipt details.');
+          AppDialogs.showErrorDialog(
+            message: AppStrings.couldNotFetchReceiptDetails.tr,
+          );
           return;
         }
 
@@ -216,15 +219,17 @@ class RideDetailsController extends GetxController {
 
       await SharePlus.instance.share(
         ShareParams(
-          text: 'Check out my ride receipt: $shareUrl',
-          subject: 'Selcom Go Ride Receipt',
+          text: AppStrings.checkOutMyRideReceiptShareUrl.trParams({
+            'url': shareUrl,
+          }),
+          subject: AppStrings.selcomGoRideReceiptSubject.tr,
         ),
       );
     } catch (e, stackTrace) {
       if (Get.isDialogOpen ?? false) Get.back();
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       AppDialogs.showErrorDialog(
-        message: 'Could not share slip. Please try again later.',
+        message: AppStrings.couldNotShareSlipPleaseTryAgainLater.tr,
       );
     }
   }
