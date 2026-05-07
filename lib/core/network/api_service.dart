@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer' as developer;
-import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -21,6 +20,7 @@ import '../widgets/svg_picture_asset.dart';
 import 'failed_request_queue.dart';
 import 'retry_manager.dart';
 import 'network_connectivity_service.dart';
+import 'connectivity_probe.dart';
 import '../../shared/utils/app_dialogs.dart';
 import '../services/error_reporting/error_reporter.dart';
 import '../services/error_reporting/models/error_constants.dart';
@@ -34,6 +34,29 @@ enum ApiEnvironment { local, staging, production }
 enum ApiMethod { get, post, put, delete, patch, multipart }
 
 enum ErrorPresentationType { none, dialog, snackbar }
+
+/// Request-level retry configuration.
+///
+/// Why introduced:
+/// - We observed intermittent 5xx responses (especially 502/503/504) on some
+///   polling endpoints like active ride.
+/// - Hardcoding endpoint retry logic inside ApiService mixed feature behavior
+///   into the transport layer.
+///
+/// Clean-architecture intent:
+/// - ApiService remains generic.
+/// - Feature/data source decides where retries are safe and expected.
+class ApiRetryPolicy {
+  final List<Duration> retryDelays;
+  final Set<int> retryStatusCodes;
+  final DioExceptionType retryOnDioType;
+
+  const ApiRetryPolicy({
+    required this.retryDelays,
+    required this.retryStatusCodes,
+    this.retryOnDioType = DioExceptionType.badResponse,
+  });
+}
 
 // ─────────────────────────────────────────────────────────
 // Multipart File Model
@@ -69,6 +92,11 @@ class ApiRequest {
   final bool skipAuthInterceptor;
   final List<LocalMultipartFile>? multipartFiles;
   final bool shouldQueue;
+  /// Optional per-request retry policy.
+  ///
+  /// Keep null by default so existing behavior is unchanged for all endpoints.
+  /// Only endpoints that explicitly opt-in will retry.
+  final ApiRetryPolicy? retryPolicy;
 
   ApiRequest({
     required this.endpoint,
@@ -84,6 +112,7 @@ class ApiRequest {
     this.skipAuthInterceptor = false,
     this.multipartFiles,
     this.shouldQueue = true,
+    this.retryPolicy,
   });
 }
 
@@ -163,12 +192,9 @@ class ApiService {
   // ── Internet Check ──
 
   Future<bool> _checkInternetConnection() async {
-    try {
-      final result = await InternetAddress.lookup('google.com');
-      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
-    } on SocketException {
-      return false;
-    }
+    // Shared probe avoids duplicate logic and prevents single-host DNS false
+    // negatives (the original issue seen with `google.com` lookups).
+    return ConnectivityProbe.instance.probeInternetConnection();
   }
 
   // ── Dio Client Selection ──
@@ -304,6 +330,23 @@ class ApiService {
           isError: true,
           errorMessage: e.message,
         );
+      }
+
+      // Retry is request-driven (configured by the caller) to keep transport
+      // generic and avoid endpoint-specific rules inside ApiService.
+      if (_shouldRetryRequestError(e, request)) {
+        try {
+          final retriedResponse = await _retryRequestWithBackoff(
+            client: client,
+            fullUrl: fullUrl,
+            request: request,
+            finalHeaders: finalHeaders,
+            finalBody: finalBody,
+          );
+          return retriedResponse;
+        } on DioException catch (retryError) {
+          return _handleDioError(retryError, request);
+        }
       }
 
       return _handleDioError(e, request);
@@ -492,6 +535,67 @@ class ApiService {
       case ApiMethod.multipart:
         return 'POST';
     }
+  }
+
+  bool _shouldRetryRequestError(DioException error, ApiRequest request) {
+    final retryPolicy = request.retryPolicy;
+    if (retryPolicy == null) return false;
+    return error.type == retryPolicy.retryOnDioType &&
+        retryPolicy.retryStatusCodes.contains(error.response?.statusCode);
+  }
+
+  Future<Response> _retryRequestWithBackoff({
+    required Dio client,
+    required String fullUrl,
+    required ApiRequest request,
+    required Map<String, dynamic> finalHeaders,
+    required Map<String, dynamic> finalBody,
+  }) async {
+    final retryPolicy = request.retryPolicy;
+    if (retryPolicy == null || retryPolicy.retryDelays.isEmpty) {
+      throw DioException(
+        requestOptions: RequestOptions(path: request.endpoint),
+        type: DioExceptionType.unknown,
+        message: 'Retry requested without retry policy configuration',
+      );
+    }
+
+    DioException? lastError;
+    for (var i = 0; i < retryPolicy.retryDelays.length; i++) {
+      await Future.delayed(retryPolicy.retryDelays[i]);
+      try {
+        final response = await client.request(
+          fullUrl,
+          data: finalBody.isNotEmpty ? finalBody : null,
+          queryParameters: request.queryParams,
+          options: Options(
+            method: _methodToString(request.method),
+            headers: finalHeaders,
+          ),
+        );
+
+        if (kDebugMode) {
+          developer.log(
+            "🔁 Request retry success on attempt ${i + 1}",
+            name: 'ApiService',
+          );
+        }
+        return response;
+      } on DioException catch (e) {
+        lastError = e;
+        if (e.type != retryPolicy.retryOnDioType ||
+            !retryPolicy.retryStatusCodes.contains(e.response?.statusCode)) {
+          rethrow;
+        }
+      }
+    }
+
+    throw lastError ??
+        DioException(
+          requestOptions: RequestOptions(path: request.endpoint),
+          type: DioExceptionType.unknown,
+          message: 'Active ride retry failed with unknown DioException',
+        );
   }
 
   // ── Error Handling ──

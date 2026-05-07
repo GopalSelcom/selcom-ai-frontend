@@ -140,6 +140,7 @@ class RideModel extends RideEntity {
     );
   }
 
+  @override
   RideModel copyWith({
     String? id,
     String? riderId,

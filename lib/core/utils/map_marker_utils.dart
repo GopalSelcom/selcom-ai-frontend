@@ -89,7 +89,7 @@ class MapMarkerUtils {
 
     // Outer circle with subtle "shadow" (Darker version of color)
     final shadowPaint = Paint()
-      ..color = AppColors.black.withOpacity(0.1)
+      ..color = AppColors.black.withValues(alpha: 0.1)
       ..style = PaintingStyle.fill
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
     canvas.drawCircle(center + const Offset(1, 1), size * 0.45, shadowPaint);
@@ -162,7 +162,7 @@ class MapMarkerUtils {
 
     // Main rounded marker body (not circle)
     final shadowPaint = Paint()
-      ..color = AppColors.black.withOpacity(0.14)
+      ..color = AppColors.black.withValues(alpha: 0.14)
       ..style = PaintingStyle.fill
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
     canvas.drawRRect(

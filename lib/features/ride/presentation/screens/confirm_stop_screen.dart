@@ -135,7 +135,7 @@ class _ConfirmStopScreenState extends State<ConfirmStopScreen> {
                         border: Border.all(color: AppColors.white, width: 2),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.black.withOpacity(0.2),
+                            color: AppColors.black.withValues(alpha: 0.2),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -165,7 +165,7 @@ class _ConfirmStopScreenState extends State<ConfirmStopScreen> {
                 borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.black.withOpacity(0.1),
+                    color: AppColors.black.withValues(alpha: 0.1),
                     blurRadius: 20,
                     offset: const Offset(0, -5),
                   ),

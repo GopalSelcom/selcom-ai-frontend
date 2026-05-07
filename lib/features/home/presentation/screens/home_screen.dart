@@ -122,7 +122,7 @@ class HomeScreen extends GetView<HomeController> {
             border: Border.all(color: AppColors.borderDefault),
             boxShadow: [
               BoxShadow(
-                color: AppColors.black.withOpacity(0.06),
+                color: AppColors.black.withValues(alpha: 0.06),
                 blurRadius: 2,
                 offset: const Offset(0, 1),
               ),
