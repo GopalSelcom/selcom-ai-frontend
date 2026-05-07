@@ -468,7 +468,7 @@ class DriverAcceptedController extends GetxController
         await controller.endCallFromRemote(
           reason: AgoraVoiceCallEndReason.remoteEnded,
         );
-        _closeInAppCallScreenIfOpen();
+        // [_inAppCallStateWorker] closes the call route when state becomes ended.
       },
     );
     AgoraCallJoinedNotificationBridge.instance.register(
@@ -1943,7 +1943,7 @@ class DriverAcceptedController extends GetxController
             );
           }
           await controller.endCall(notifyRemote: false);
-          _closeInAppCallScreenIfOpen();
+          // [_inAppCallStateWorker] closes the call route when state becomes ended.
         },
       ),
       fullscreenDialog: true,

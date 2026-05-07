@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import '../../shared/agora_voice/service/agora_call_kit_service.dart';
 import '../services/storage_service.dart';
 import 'package:logger/logger.dart';
 import 'package:get/get.dart';
@@ -33,6 +32,7 @@ class NotificationService {
   bool _isInitialized = false;
   String? _deviceToken;
   Map<String, dynamic>? _pendingNavigationRaw;
+  final Set<String> _systemIncomingActiveRideIds = <String>{};
   static const String _defaultChannelId = 'high_importance_channel';
   static const String _incomingCallChannelId = 'go_incoming_calls';
 
@@ -308,6 +308,11 @@ class NotificationService {
   /// otherwise show the incoming-call channel notification.
   Future<void> _handleForegroundIncomingCall(RemoteMessage message) async {
     final raw = Map<String, dynamic>.from(message.data);
+    final rideId = raw['ride_id']?.toString() ?? raw['rideId']?.toString();
+    if (_isSystemIncomingActive(rideId)) {
+      _logger.d('Skip in-app incoming UI: system call UI active for $rideId');
+      return;
+    }
     if (await AgoraIncomingCallNotificationBridge.instance.deliverIfMatching(
           raw,
         )) {
@@ -321,7 +326,6 @@ class NotificationService {
         ? 'Incoming call from driver'
         : 'Incoming call from rider';
     const body = 'Tap to open incoming call screen';
-    final rideId = raw['ride_id']?.toString();
     await showIncomingCallNotification(
       id: _incomingCallNotificationId(rideId),
       title: title,
@@ -358,6 +362,12 @@ class NotificationService {
     if (type == 'incoming_call' &&
         rideId != null &&
         rideId.isNotEmpty) {
+      if (_isSystemIncomingActive(rideId)) {
+        _logger.d(
+          'Skip incoming navigation: system call UI already active for $rideId',
+        );
+        return;
+      }
       if (await AgoraIncomingCallNotificationBridge.instance.deliverIfMatching(
             raw,
           )) {
@@ -521,5 +531,37 @@ class NotificationService {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       _logger.e('Error cancelling incoming call notification: $e');
     }
+  }
+
+  bool _isSystemIncomingActive(String? rideId) {
+    final normalized = rideId?.trim() ?? '';
+    if (normalized.isEmpty) return false;
+    return _systemIncomingActiveRideIds.contains(normalized);
+  }
+
+  void markSystemIncomingActive(Map<String, dynamic> raw) {
+    final rideId = (raw['ride_id'] ?? raw['rideId'])?.toString().trim() ?? '';
+    if (rideId.isEmpty) return;
+    _systemIncomingActiveRideIds.add(rideId);
+  }
+
+  void clearSystemIncomingActive({String? rideId}) {
+    final normalized = rideId?.trim() ?? '';
+    if (normalized.isEmpty) return;
+    _systemIncomingActiveRideIds.remove(normalized);
+  }
+
+  Future<void> handleSystemIncomingAccepted(Map<String, dynamic> raw) async {
+    final rideId = (raw['ride_id'] ?? raw['rideId'])?.toString();
+    clearSystemIncomingActive(rideId: rideId);
+    await cancelIncomingCallNotification(rideId: rideId);
+    _queueOrHandleNavigationRaw(raw);
+  }
+
+  Future<void> handleSystemIncomingCancelled(Map<String, dynamic> raw) async {
+    final rideId = (raw['ride_id'] ?? raw['rideId'])?.toString();
+    clearSystemIncomingActive(rideId: rideId);
+    await cancelIncomingCallNotification(rideId: rideId);
+    await AgoraCallCancelNotificationBridge.instance.deliverIfMatching(raw);
   }
 }

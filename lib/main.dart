@@ -18,6 +18,7 @@ import 'core/localization/getx_languages_translations.dart';
 import 'core/localization/localization.dart';
 import 'core/services/analytics_service.dart';
 import 'core/services/notification_service.dart';
+import 'core/services/voip_callkit_bridge_service.dart';
 import 'core/bindings/initial_binding.dart';
 import 'core/theme/app_theme.dart';
 import 'core/routes/app_routes.dart';
@@ -190,6 +191,7 @@ void main() async {
 
       // Initialize Notification Service
       await di.sl<NotificationService>().initialize();
+      await VoipCallkitBridgeService.instance.initialize();
 
       await di.sl<AnalyticsService>().logEvent('app_opened');
 

@@ -48,6 +48,11 @@ class AgoraVoiceIncomingCallHandler {
 
   Worker? _callStateWorker;
 
+  /// True while `_showIncomingCallScreen` owns the fullscreen route — prevents a
+  /// second `invite` (e.g. FCM after socket or duplicate pushes) from opening
+  /// another Accept/Reject layer on top of an active session.
+  bool _incomingCallUiActive = false;
+
   /// Entry point from host signaling listeners.
   Future<void> handleEvent(AgoraCallInviteEvent event) async {
     if (kDebugMode) {
@@ -74,10 +79,15 @@ class AgoraVoiceIncomingCallHandler {
             'callerId=${event.callerId}',
           );
         }
-        await getActiveController()?.endCallFromRemote(
-          reason: AgoraVoiceCallEndReason.remoteRejected,
-        );
-        closeCallRouteIfOpen();
+        final rejectController = getActiveController();
+        if (rejectController != null) {
+          await rejectController.endCallFromRemote(
+            reason: AgoraVoiceCallEndReason.remoteRejected,
+          );
+          // Route is closed by [_attachCallStateListener] / host ever(worker) on ended.
+        } else {
+          closeCallRouteIfOpen();
+        }
         break;
       case AgoraCallInviteEventType.end:
         if (kDebugMode) {
@@ -87,10 +97,14 @@ class AgoraVoiceIncomingCallHandler {
             'callerId=${event.callerId}',
           );
         }
-        await getActiveController()?.endCallFromRemote(
-          reason: AgoraVoiceCallEndReason.remoteEnded,
-        );
-        closeCallRouteIfOpen();
+        final endController = getActiveController();
+        if (endController != null) {
+          await endController.endCallFromRemote(
+            reason: AgoraVoiceCallEndReason.remoteEnded,
+          );
+        } else {
+          closeCallRouteIfOpen();
+        }
         break;
     }
   }
@@ -116,6 +130,22 @@ class AgoraVoiceIncomingCallHandler {
     await handleEvent(invite);
   }
 
+  /// Another invite must not stack a second [AgoraVoiceCallScreen] while the user
+  /// is already placing or in a call for this ride (outgoing or accepted incoming).
+  bool _shouldIgnoreInviteBecauseCallSessionBusy() {
+    final c = getActiveController();
+    if (c == null) return false;
+    switch (c.callState.value) {
+      case AgoraVoiceCallState.connecting:
+      case AgoraVoiceCallState.connected:
+        return true;
+      case AgoraVoiceCallState.idle:
+      case AgoraVoiceCallState.ended:
+      case AgoraVoiceCallState.error:
+        return false;
+    }
+  }
+
   Future<void> _showIncomingCallScreen(AgoraCallInviteEvent event) async {
     if (!canStartCall()) {
       if (kDebugMode) {
@@ -124,77 +154,103 @@ class AgoraVoiceIncomingCallHandler {
       return;
     }
 
-    final controller = buildController(event);
-    setActiveController(controller);
-    _attachCallStateListener(controller);
-    controller.startIncomingRingtone();
+    if (_incomingCallUiActive) {
+      if (kDebugMode) {
+        debugPrint(
+          '[AGORA_SIGNAL] skip duplicate invite (incoming UI already active) '
+          'ride=$rideId',
+        );
+      }
+      return;
+    }
 
-    await Get.to(
-      () => AgoraVoiceCallScreen(
-        controller: controller,
-        displayName: event.callerName,
-        isIncoming: true,
-        onAccept: () async {
-          if (kDebugMode) {
-            debugPrint('[AGORA_SIGNAL] incoming accept tapped ride=${event.rideId}');
-          }
-          controller.stopIncomingRingtone();
-          await signalingService.sendEvent(
-            AgoraCallInviteEvent(
-              type: AgoraCallInviteEventType.accept,
-              channelName: event.channelName,
-              rideId: event.rideId,
-              callerName: localDisplayName,
-              callerId: localClientId,
-              timestampMs: DateTime.now().millisecondsSinceEpoch,
-            ),
-          );
-          // Once incoming call is accepted, stop caller-style ringback/timeout behavior.
-          await controller.startCall();
-        },
-        onReject: () async {
-          if (kDebugMode) {
-            debugPrint('[AGORA_SIGNAL] incoming reject tapped ride=${event.rideId}');
-          }
-          controller.stopIncomingRingtone();
-          await signalingService.sendEvent(
-            AgoraCallInviteEvent(
-              type: AgoraCallInviteEventType.reject,
-              channelName: event.channelName,
-              rideId: event.rideId,
-              callerName: localDisplayName,
-              callerId: localClientId,
-              timestampMs: DateTime.now().millisecondsSinceEpoch,
-            ),
-          );
-          if (onRejectCallApi != null) {
-            try {
-              await onRejectCallApi?.call(event.rideId);
-            } catch (e) {
-              if (kDebugMode) {
-                debugPrint('[AGORA_SIGNAL] onRejectCallApi failed: $e');
+    if (_shouldIgnoreInviteBecauseCallSessionBusy()) {
+      if (kDebugMode) {
+        debugPrint(
+          '[AGORA_SIGNAL] skip invite (call already connecting or connected) '
+          'ride=$rideId',
+        );
+      }
+      return;
+    }
+
+    _incomingCallUiActive = true;
+    AgoraVoiceCallController? controller;
+    try {
+      controller = buildController(event);
+      setActiveController(controller);
+      _attachCallStateListener(controller);
+      controller.startIncomingRingtone();
+
+      await Get.to(
+        () => AgoraVoiceCallScreen(
+          controller: controller!,
+          displayName: event.callerName,
+          isIncoming: true,
+          onAccept: () async {
+            if (kDebugMode) {
+              debugPrint('[AGORA_SIGNAL] incoming accept tapped ride=${event.rideId}');
+            }
+            controller!.stopIncomingRingtone();
+            await signalingService.sendEvent(
+              AgoraCallInviteEvent(
+                type: AgoraCallInviteEventType.accept,
+                channelName: event.channelName,
+                rideId: event.rideId,
+                callerName: localDisplayName,
+                callerId: localClientId,
+                timestampMs: DateTime.now().millisecondsSinceEpoch,
+              ),
+            );
+            // Once incoming call is accepted, stop caller-style ringback/timeout behavior.
+            await controller.startCall();
+          },
+          onReject: () async {
+            if (kDebugMode) {
+              debugPrint('[AGORA_SIGNAL] incoming reject tapped ride=${event.rideId}');
+            }
+            controller!.stopIncomingRingtone();
+            await signalingService.sendEvent(
+              AgoraCallInviteEvent(
+                type: AgoraCallInviteEventType.reject,
+                channelName: event.channelName,
+                rideId: event.rideId,
+                callerName: localDisplayName,
+                callerId: localClientId,
+                timestampMs: DateTime.now().millisecondsSinceEpoch,
+              ),
+            );
+            if (onRejectCallApi != null) {
+              try {
+                await onRejectCallApi?.call(event.rideId);
+              } catch (e) {
+                if (kDebugMode) {
+                  debugPrint('[AGORA_SIGNAL] onRejectCallApi failed: $e');
+                }
               }
             }
-          }
-          // Reject already notified peer. Avoid sending end again.
-          await controller.endCall(notifyRemote: false);
-          closeCallRouteIfOpen();
-        },
-        onHangUp: () async {
-          if (kDebugMode) {
-            debugPrint('[AGORA_SIGNAL] incoming hang up ride=${event.rideId}');
-          }
-          controller.stopIncomingRingtone();
-          await controller.endCall();
-          closeCallRouteIfOpen();
-        },
-      ),
-      fullscreenDialog: true,
-    );
+            // Reject already notified peer. Avoid sending end again.
+            await controller.endCall(notifyRemote: false);
+            // [_callStateWorker] pops the call route when state becomes ended.
+          },
+          onHangUp: () async {
+            if (kDebugMode) {
+              debugPrint('[AGORA_SIGNAL] incoming hang up ride=${event.rideId}');
+            }
+            controller!.stopIncomingRingtone();
+            await controller.endCall();
+            // [_callStateWorker] pops the call route when state becomes ended.
+          },
+        ),
+        fullscreenDialog: true,
+      );
 
-    controller.stopIncomingRingtone();
-    _detachCallStateListener();
-    setActiveController(null);
+      controller.stopIncomingRingtone();
+      _detachCallStateListener();
+      setActiveController(null);
+    } finally {
+      _incomingCallUiActive = false;
+    }
   }
 
   void _attachCallStateListener(AgoraVoiceCallController controller) {
@@ -213,5 +269,6 @@ class AgoraVoiceIncomingCallHandler {
 
   void dispose() {
     _detachCallStateListener();
+    _incomingCallUiActive = false;
   }
 }

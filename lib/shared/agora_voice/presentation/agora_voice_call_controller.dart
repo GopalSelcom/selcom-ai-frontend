@@ -53,10 +53,21 @@ class AgoraVoiceCallController extends GetxController {
   final connectedDurationSeconds = 0.obs;
   final endReason = Rxn<AgoraVoiceCallEndReason>();
   Timer? _unansweredTimeoutTimer;
+  Timer? _awaitRemoteUserAfterCallJoinedTimer;
   Timer? _connectedDurationTimer;
   AudioPlayer? _ringbackPlayer;
   AudioPlayer? _incomingRingtonePlayer;
   bool _isEnding = false;
+  bool _sawRemoteUid = false;
+
+  /// After backend `call_joined`, wait this long for Agora `onUserJoined` before
+  /// treating the call as unanswered (peer never entered the channel).
+  Duration get _awaitRemoteAfterCallJoinedDuration {
+    const minGrace = Duration(seconds: 45);
+    final u = unansweredTimeout;
+    if (u <= Duration.zero) return minGrace;
+    return u > minGrace ? u : minGrace;
+  }
 
   Future<void> _markConnectedIfNeeded({required String source}) async {
     if (callState.value == AgoraVoiceCallState.connected ||
@@ -70,6 +81,11 @@ class AgoraVoiceCallController extends GetxController {
     }
     _stopRingbackTone();
     _stopUnansweredTimeout();
+    if (source == 'call_joined') {
+      _startAwaitRemoteUserAfterCallJoinedTimer();
+    } else {
+      _stopAwaitRemoteUserAfterCallJoinedTimer();
+    }
     callState.value = AgoraVoiceCallState.connected;
     _startConnectedDurationTimer();
     try {
@@ -102,6 +118,8 @@ class AgoraVoiceCallController extends GetxController {
       return;
     }
     callState.value = AgoraVoiceCallState.connecting;
+    _sawRemoteUid = false;
+    _stopAwaitRemoteUserAfterCallJoinedTimer();
     errorMessage.value = '';
     endReason.value = null;
     _isEnding = false;
@@ -257,8 +275,16 @@ class AgoraVoiceCallController extends GetxController {
       _stopRingbackTone();
       stopIncomingRingtone();
       _stopUnansweredTimeout();
+      _stopAwaitRemoteUserAfterCallJoinedTimer();
       _stopConnectedDurationTimer();
-      await engineService.leave();
+      try {
+        await engineService.leave();
+      } catch (e, st) {
+        if (kDebugMode) {
+          debugPrint('[AGORA_FLOW] engine leave failed ride=${session.rideId} error=$e');
+          debugPrint('$st');
+        }
+      }
       endReason.value = reason;
       callState.value = AgoraVoiceCallState.ended;
       try {
@@ -441,6 +467,31 @@ class AgoraVoiceCallController extends GetxController {
     _unansweredTimeoutTimer = null;
   }
 
+  void _startAwaitRemoteUserAfterCallJoinedTimer() {
+    _stopAwaitRemoteUserAfterCallJoinedTimer();
+    if (!enableUnansweredTimeout) return;
+    final ms = _awaitRemoteAfterCallJoinedDuration.inMilliseconds;
+    if (ms <= 0) return;
+
+    _awaitRemoteUserAfterCallJoinedTimer =
+        Timer(_awaitRemoteAfterCallJoinedDuration, () {
+      if (callState.value != AgoraVoiceCallState.connected) return;
+      if (_sawRemoteUid) return;
+      if (kDebugMode) {
+        debugPrint(
+          '[AGORA_FLOW] remote never joined after call_joined '
+          'ride=${session.rideId}',
+        );
+      }
+      unawaited(_handleUnansweredTimeout());
+    });
+  }
+
+  void _stopAwaitRemoteUserAfterCallJoinedTimer() {
+    _awaitRemoteUserAfterCallJoinedTimer?.cancel();
+    _awaitRemoteUserAfterCallJoinedTimer = null;
+  }
+
   void _startConnectedDurationTimer() {
     _stopConnectedDurationTimer(reset: true);
     _connectedDurationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -491,6 +542,8 @@ class AgoraVoiceCallController extends GetxController {
           if (kDebugMode) {
             debugPrint('[AGORA_FLOW] onUserJoined remoteUid=$remoteUid ride=${session.rideId}');
           }
+          _sawRemoteUid = true;
+          _stopAwaitRemoteUserAfterCallJoinedTimer();
           unawaited(_markConnectedIfNeeded(source: 'onUserJoined'));
         },
         /// Remote user left the channel (hang up, quit, or dropped) — see Agora
@@ -596,6 +649,7 @@ class AgoraVoiceCallController extends GetxController {
     _stopRingbackTone();
     stopIncomingRingtone();
     _stopUnansweredTimeout();
+    _stopAwaitRemoteUserAfterCallJoinedTimer();
     _stopConnectedDurationTimer();
     await engineService.dispose();
   }
@@ -605,6 +659,7 @@ class AgoraVoiceCallController extends GetxController {
     _stopRingbackTone();
     stopIncomingRingtone();
     _stopUnansweredTimeout();
+    _stopAwaitRemoteUserAfterCallJoinedTimer();
     _stopConnectedDurationTimer();
     engineService.dispose();
     super.onClose();

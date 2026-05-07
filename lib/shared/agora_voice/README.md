@@ -7,6 +7,9 @@ This file is self-contained so you can hand it to another project without needin
 - `brain/docs/AGORA-FRONTEND-GUIDE.md`
 - `brain/docs/backend-specs/AGORA-CALLING.md`
 
+**Cross-app / driver handoff (what we changed in rider + what to mirror):**  
+see [`CROSS_APP_CHANGELOG_HANDOFF.md`](./CROSS_APP_CHANGELOG_HANDOFF.md) — `call_joined` UI, single pop on end, duplicate-invite guard.
+
 ---
 
 ## 1) What This Module Covers
@@ -17,6 +20,7 @@ This file is self-contained so you can hand it to another project without needin
 - Shared socket-style invite handling (`invite/accept/reject/end`)
 - Shared backend push payload parsing for:
   - `type=incoming_call`
+  - `type=call_joined` (host registers `AgoraCallJoinedNotificationBridge` + calls `markConnectedFromSignal()`)
   - `ride_id`
   - `caller_role`
   - `channel`
@@ -133,7 +137,8 @@ Token is never sent in push payload; receiver mints its own token on answer.
 | Data | `data/ride_call_http_token_provider.dart` | Token providers: POST ride mint + optional legacy GET query mode. |
 | Data | `data/static_voice_token_provider.dart` | Static fallback for local testing/no backend. |
 | Service | `service/agora_voice_engine_service.dart` | Agora engine lifecycle + renew token. |
-| Service | `service/agora_voice_incoming_call_handler.dart` | Shared incoming-call flow for signaling events and push payloads. |
+| Service | `service/agora_voice_incoming_call_handler.dart` | Shared incoming-call flow for signaling events and push payloads (dedupes stacked `invite`). |
+| Service | `service/agora_call_joined_notification_bridge.dart` | Delivers FCM `call_joined` to the active ride/session (caller “connected” UI). |
 | Presentation | `presentation/agora_voice_call_controller.dart` | UI state + permission + call operations. |
 | Presentation | `presentation/agora_voice_call_screen.dart` | Full-screen call UI. |
 | Presentation | `presentation/agora_voice_call_bottom_sheet.dart` | Optional compact UI. |
