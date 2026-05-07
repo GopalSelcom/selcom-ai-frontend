@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:selcom_rides_frontend/core/theme/app_colors.dart';
-import 'package:selcom_rides_frontend/core/theme/app_text_styles.dart';
-import 'package:selcom_rides_frontend/core/widgets/svg_picture_asset.dart';
+import 'package:get/get_utils/src/extensions/internacionalization.dart';
 
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/localization/app_strings.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/svg_picture_asset.dart';
 
 class RecentLocationTile extends StatelessWidget {
   const RecentLocationTile({
@@ -57,7 +59,7 @@ class RecentLocationTile extends StatelessWidget {
                   FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Text(
-                      distance.isEmpty ? 'SAVED' : distance,
+                      distance.isEmpty ? AppStrings.savedTag.tr : distance,
                       style: AppTextStyles.homeCaption.copyWith(
                         fontSize: 12.sp,
                         fontWeight: FontWeight.w400,

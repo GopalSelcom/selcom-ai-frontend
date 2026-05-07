@@ -38,7 +38,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
       final Map<String, dynamic> data = Map<String, dynamic>.from(args);
       label = data['label'] ?? AppStrings.searchLocation.tr;
     } else {
-      label = args as String? ?? 'Home';
+      label = args as String? ?? AppStrings.homeLabel.tr;
     }
     searchController = TextEditingController();
 
@@ -342,12 +342,14 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
           }
         } else {
           AppDialogs.showErrorDialog(
-            message: 'Unable to get location coordinates',
+            message: AppStrings.unableToGetLocationCoordinates.tr,
           );
         }
       } catch (e) {
         setState(() => _isGeocoding = false);
-        AppDialogs.showErrorDialog(message: 'Something went wrong: $e');
+        AppDialogs.showErrorDialog(
+          message: '${AppStrings.anUnexpectedErrorOccurred.tr}: $e',
+        );
       }
       return;
     }

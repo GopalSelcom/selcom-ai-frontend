@@ -35,6 +35,7 @@ class AppStrings {
   static const String cancelDialogsGallery = 'cancel_dialogs_gallery';
   static const String cancelFailed = 'cancel_failed';
   static const String cancelRide = 'cancel_ride';
+  static const String cancel = 'cancel';
   static const String cancelled = 'cancelled';
   static const String cardDetail = 'card_detail';
   static const String cardEndingInPlaceholder = 'card_ending_in_placeholder';
@@ -74,6 +75,9 @@ class AppStrings {
       'driver_is_heading_to_your_location';
   static const String driverWillArrivingInMinutes =
       'driver_will_arriving_in_minutes';
+  static const String driverAssigned = 'driver_assigned';
+  static const String driverArriving = 'driver_arriving';
+  static const String driverArrived = 'driver_arrived';
   static const String eG123 = 'e_g123';
   static const String eG7XxXxxXxx = 'e_g7_xx_xxx_xxx';
   static const String eGJohnDoe = 'e_gjohn_doe';
@@ -104,6 +108,7 @@ class AppStrings {
   static const String favouriteLocations = 'favourite_locations';
   static const String savedLocations = 'saved_locations';
   static const String getStarted = 'get_started';
+  static const String homeLabel = 'home_label';
   static const String getVerificationCode = 'get_verification_code';
   static const String haventGotTheConfirmationCodeYet =
       'havent_got_the_confirmation_code_yet';
@@ -120,6 +125,16 @@ class AppStrings {
       'initiating_call_to_driverphone';
   static const String keepRide = 'keep_ride';
   static const String linkAccount = 'link_account';
+  static const String location = 'location';
+  static const String locating = 'locating';
+  static const String currentLocation = 'current_location';
+  static const String saved = 'saved';
+  static const String savedPlace = 'saved_place';
+  static const String savedPlaces = 'saved_places';
+  static const String recentLocations = 'recent_locations';
+  static const String searchTag = 'search_tag';
+  static const String recentTag = 'recent_tag';
+  static const String savedTag = 'saved_tag';
   static const String loadingYourProfile = 'loading_your_profile';
   static const String locationSelection = 'location_selection';
   static const String locationUnavailable = 'location_unavailable';
@@ -154,6 +169,7 @@ class AppStrings {
   static const String noLocationsFound = 'no_locations_found';
   static const String noNotificationsYet = 'no_notifications_yet';
   static const String noPastRidesFound = 'no_past_rides_found';
+  static const String noRecentLocationsFound = 'no_recent_locations_found';
   static const String noRecentLocations = 'no_recent_locations';
   static const String nameContainsInvalidCharacters =
       'name_contains_invalid_characters';
@@ -165,6 +181,7 @@ class AppStrings {
   static const String notifications = 'notifications';
   static const String ok = 'ok';
   static const String openSettings = 'open_settings';
+  static const String pleaseEnterLabel = 'please_enter_label';
   static const String otpResentSuccessfully = 'otp_resent_successfully';
   static const String past = 'past';
   static const String payUsing = 'pay_using';
@@ -211,6 +228,10 @@ class AppStrings {
   static const String reasonToContact = 'reason_to_contact';
   static const String recentLocation = 'recent_location';
   static const String removeAccount = 'remove_account';
+  static const String remove = 'remove';
+  static const String removeSavedAddress = 'remove_saved_address';
+  static const String areYouSureYouWantToRemoveThisSavedAddress =
+      'are_you_sure_you_want_to_remove_this_saved_address';
   static const String resendCode = 'resend_code';
   static const String resendOtp = 'resend_otp';
   static const String retry = 'retry';
@@ -252,10 +273,32 @@ class AppStrings {
   static const String socketOnDrivers = 'socket_on_drivers';
   static const String startTypingDestination = 'start_typing_destination';
   static const String stayNotified = 'stay_notified';
+  static const String enableNotificationsForRideUpdates =
+      'enable_notifications_for_ride_updates';
   static const String stepsToConnectSelcomPesa = 'steps_to_connect_selcom_pesa';
   static const String submitFailed = 'submit_failed';
   static const String submit = 'submit';
   static const String success = 'success';
+  static const String selectedAddress = 'selected_address';
+  static const String searchingForDriver = 'searching_for_driver';
+  static const String enableLocationService = 'enable_location_service';
+  static const String locationPermissionDenied = 'location_permission_denied';
+  static const String unableToEstimateFareForThisRoute =
+      'unable_to_estimate_fare_for_this_route';
+  static const String distanceMinKm = 'distance_min_km';
+  static const String distanceMaxKm = 'distance_max_km';
+  static const String distanceKmFormat = 'distance_km_format';
+  static const String couldNotRemoveAddress = 'could_not_remove_address';
+  static const String viewMore = 'view_more';
+  static const String rideInProgress = 'ride_in_progress';
+  static const String nearDestination = 'near_destination';
+  static const String activeRide = 'active_ride';
+  static const String unableToGetLocationCoordinates =
+      'unable_to_get_location_coordinates';
+  static const String pleaseSelectValidPickupAndDestinationLocations =
+      'please_select_valid_pickup_and_destination_locations';
+  static const String areYouSureYouWantToAddThisAddressAs =
+      'are_you_sure_you_want_to_add_this_address_as';
   static const String tagRequired = 'tag_required';
   static const String tapEachButtonToPreviewThePopupUi =
       'tap_each_button_to_preview_the_popup_ui';

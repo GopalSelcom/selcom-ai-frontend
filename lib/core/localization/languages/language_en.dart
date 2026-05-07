@@ -33,6 +33,7 @@ class LanguageEn extends Languages {
     'cancel_dialogs_gallery': 'Cancel Dialogs Gallery',
     'cancel_failed': 'Cancel failed',
     'cancel_ride': 'Cancel Ride',
+    'cancel': 'Cancel',
     'cancelled': 'Cancelled',
     'card_detail': 'Card Detail',
     'card_ending_in_placeholder': 'Card ending in XX1234',
@@ -70,6 +71,9 @@ class LanguageEn extends Languages {
         'Driver is heading to your location',
     'driver_will_arriving_in_minutes':
         'Driver will arrive in @minutes min...',
+    'driver_assigned': 'Driver Assigned',
+    'driver_arriving': 'Driver Arriving',
+    'driver_arrived': 'Driver Arrived',
     'e_g123': 'e.g. 123',
     'e_g7_xx_xxx_xxx': 'e.g. 7XX XXX XXX',
     'e_gjohn_doe': 'e.g. John Doe',
@@ -98,6 +102,7 @@ class LanguageEn extends Languages {
     'favourite_locations': 'Favourite Locations',
     'saved_locations': 'Saved Locations',
     'get_started': 'Get Started',
+    'home_label': 'Home',
     'get_verification_code': 'Get Verification Code',
     'havent_got_the_confirmation_code_yet':
         "Haven't got the confirmation code yet? ",
@@ -113,6 +118,16 @@ class LanguageEn extends Languages {
     'initiating_call_to_driverphone': 'Initiating call to \$driverPhone...',
     'keep_ride': 'Keep Ride',
     'link_account': 'Link Account',
+    'location': 'Location',
+    'locating': 'Locating...',
+    'current_location': 'Current location',
+    'saved': 'Saved',
+    'saved_place': 'Saved Place',
+    'saved_places': 'Saved Places',
+    'recent_locations': 'Recent Locations',
+    'search_tag': 'SEARCH',
+    'recent_tag': 'RECENT',
+    'saved_tag': 'SAVED',
     'loading_your_profile': 'Loading your profile...',
     'location_selection': 'Location Selection',
     'location_unavailable': 'Location unavailable',
@@ -149,6 +164,7 @@ class LanguageEn extends Languages {
     'no_locations_found': 'No locations found',
     'no_notifications_yet': 'No notifications yet',
     'no_past_rides_found': 'No past rides found',
+    'no_recent_locations_found': 'No recent locations found',
     'no_recent_locations': 'No recent locations',
     'note_by_proceeding_you_consent_to_get_calls_whatsapp_or_sms_messages_including_by_au':
         'Note: By proceeding, you consent to get calls, WhatsApp or SMS messages, including by automated means, from GoChauffeur and its affiliates to the number provided.',
@@ -156,6 +172,7 @@ class LanguageEn extends Languages {
     'notifications': 'Notifications',
     'ok': 'OK',
     'open_settings': 'Open Settings',
+    'please_enter_label': 'Please enter label',
     'otp_resent_successfully': 'OTP resent successfully',
     'past': 'Past',
     'pay_using': 'Pay Using',
@@ -200,6 +217,10 @@ class LanguageEn extends Languages {
     'reason_to_contact': 'Reason to Contact',
     'recent_location': 'Recent Location',
     'remove_account': 'Remove Account',
+    'remove': 'Remove',
+    'remove_saved_address': 'Remove saved address',
+    'are_you_sure_you_want_to_remove_this_saved_address':
+        'Are you sure you want to remove this saved address?',
     'resend_code': 'Resend Code',
     'resend_otp': 'Resend OTP',
     'retry': 'Retry',
@@ -240,10 +261,31 @@ class LanguageEn extends Languages {
     'socket_on_drivers': 'Socket ON • @count drivers',
     'start_typing_destination': 'Start typing destination',
     'stay_notified': 'Stay Notified!',
+    'enable_notifications_for_ride_updates':
+        'Enable notifications to get real-time updates on your ride arrival and driver status.',
     'steps_to_connect_selcom_pesa': 'Steps to Connect Selcom Pesa',
     'submit_failed': 'Submit failed',
     'submit': 'Submit',
     'success': 'Success',
+    'selected_address': 'Selected address',
+    'searching_for_driver': 'Searching for driver...',
+    'enable_location_service': 'Enable location service',
+    'location_permission_denied': 'Location permission denied',
+    'unable_to_estimate_fare_for_this_route':
+        'Unable to estimate fare for this route.',
+    'distance_min_km': '0.1 KM',
+    'distance_max_km': '>999 KM',
+    'distance_km_format': '@value KM',
+    'could_not_remove_address': 'Could not remove address',
+    'view_more': 'View more',
+    'ride_in_progress': 'Ride In Progress',
+    'near_destination': 'Near Destination',
+    'active_ride': 'Active Ride',
+    'unable_to_get_location_coordinates': 'Unable to get location coordinates',
+    'please_select_valid_pickup_and_destination_locations':
+        'Please select valid pickup and destination locations.',
+    'are_you_sure_you_want_to_add_this_address_as':
+        'Are you sure you want to add this address as a @label?',
     'tag_required': 'Tag required',
     'tap_each_button_to_preview_the_popup_ui':
         'Tap each button to preview the popup UI',
@@ -438,6 +480,9 @@ class LanguageEn extends Languages {
   String get cancelRide => values['cancel_ride'] ?? '';
 
   @override
+  String get cancel => values['cancel'] ?? '';
+
+  @override
   String get cancelled => values['cancelled'] ?? '';
 
   @override
@@ -543,6 +588,15 @@ class LanguageEn extends Languages {
       values['driver_will_arriving_in_minutes'] ?? '';
 
   @override
+  String get driverAssigned => values['driver_assigned'] ?? '';
+
+  @override
+  String get driverArriving => values['driver_arriving'] ?? '';
+
+  @override
+  String get driverArrived => values['driver_arrived'] ?? '';
+
+  @override
   String get eG123 => values['e_g123'] ?? '';
 
   @override
@@ -625,6 +679,9 @@ class LanguageEn extends Languages {
   String get getStarted => values['get_started'] ?? '';
 
   @override
+  String get homeLabel => values['home_label'] ?? '';
+
+  @override
   String get getVerificationCode => values['get_verification_code'] ?? '';
 
   @override
@@ -666,6 +723,36 @@ class LanguageEn extends Languages {
 
   @override
   String get linkAccount => values['link_account'] ?? '';
+
+  @override
+  String get location => values['location'] ?? '';
+
+  @override
+  String get locating => values['locating'] ?? '';
+
+  @override
+  String get currentLocation => values['current_location'] ?? '';
+
+  @override
+  String get saved => values['saved'] ?? '';
+
+  @override
+  String get savedPlace => values['saved_place'] ?? '';
+
+  @override
+  String get savedPlaces => values['saved_places'] ?? '';
+
+  @override
+  String get recentLocations => values['recent_locations'] ?? '';
+
+  @override
+  String get searchTag => values['search_tag'] ?? '';
+
+  @override
+  String get recentTag => values['recent_tag'] ?? '';
+
+  @override
+  String get savedTag => values['saved_tag'] ?? '';
 
   @override
   String get loadingYourProfile => values['loading_your_profile'] ?? '';
@@ -764,6 +851,9 @@ class LanguageEn extends Languages {
   String get noPastRidesFound => values['no_past_rides_found'] ?? '';
 
   @override
+  String get noRecentLocationsFound => values['no_recent_locations_found'] ?? '';
+
+  @override
   String get noRecentLocations => values['no_recent_locations'] ?? '';
 
   @override
@@ -783,6 +873,9 @@ class LanguageEn extends Languages {
 
   @override
   String get openSettings => values['open_settings'] ?? '';
+
+  @override
+  String get pleaseEnterLabel => values['please_enter_label'] ?? '';
 
   @override
   String get otpResentSuccessfully => values['otp_resent_successfully'] ?? '';
@@ -904,6 +997,16 @@ class LanguageEn extends Languages {
   String get removeAccount => values['remove_account'] ?? '';
 
   @override
+  String get remove => values['remove'] ?? '';
+
+  @override
+  String get removeSavedAddress => values['remove_saved_address'] ?? '';
+
+  @override
+  String get areYouSureYouWantToRemoveThisSavedAddress =>
+      values['are_you_sure_you_want_to_remove_this_saved_address'] ?? '';
+
+  @override
   String get resendCode => values['resend_code'] ?? '';
 
   @override
@@ -1015,6 +1118,10 @@ class LanguageEn extends Languages {
   String get stayNotified => values['stay_notified'] ?? '';
 
   @override
+  String get enableNotificationsForRideUpdates =>
+      values['enable_notifications_for_ride_updates'] ?? '';
+
+  @override
   String get stepsToConnectSelcomPesa =>
       values['steps_to_connect_selcom_pesa'] ?? '';
 
@@ -1026,6 +1133,59 @@ class LanguageEn extends Languages {
 
   @override
   String get success => values['success'] ?? '';
+
+  @override
+  String get selectedAddress => values['selected_address'] ?? '';
+
+  @override
+  String get searchingForDriver => values['searching_for_driver'] ?? '';
+
+  @override
+  String get enableLocationService => values['enable_location_service'] ?? '';
+
+  @override
+  String get locationPermissionDenied =>
+      values['location_permission_denied'] ?? '';
+
+  @override
+  String get unableToEstimateFareForThisRoute =>
+      values['unable_to_estimate_fare_for_this_route'] ?? '';
+
+  @override
+  String get distanceMinKm => values['distance_min_km'] ?? '';
+
+  @override
+  String get distanceMaxKm => values['distance_max_km'] ?? '';
+
+  @override
+  String get distanceKmFormat => values['distance_km_format'] ?? '';
+
+  @override
+  String get couldNotRemoveAddress => values['could_not_remove_address'] ?? '';
+
+  @override
+  String get viewMore => values['view_more'] ?? '';
+
+  @override
+  String get rideInProgress => values['ride_in_progress'] ?? '';
+
+  @override
+  String get nearDestination => values['near_destination'] ?? '';
+
+  @override
+  String get activeRide => values['active_ride'] ?? '';
+
+  @override
+  String get unableToGetLocationCoordinates =>
+      values['unable_to_get_location_coordinates'] ?? '';
+
+  @override
+  String get pleaseSelectValidPickupAndDestinationLocations =>
+      values['please_select_valid_pickup_and_destination_locations'] ?? '';
+
+  @override
+  String get areYouSureYouWantToAddThisAddressAs =>
+      values['are_you_sure_you_want_to_add_this_address_as'] ?? '';
 
   @override
   String get tagRequired => values['tag_required'] ?? '';

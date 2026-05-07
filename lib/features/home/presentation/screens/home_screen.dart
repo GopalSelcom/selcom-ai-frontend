@@ -158,7 +158,7 @@ class HomeScreen extends GetView<HomeController> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'Current location',
+                            AppStrings.currentLocation.tr,
                             style: AppTextStyles.homeSubtitle.copyWith(
                               fontWeight: FontWeight.w500,
                               color: AppColors.figmaTextPrimary,
@@ -312,7 +312,7 @@ class HomeScreen extends GetView<HomeController> {
                                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
                               child: Text(
-                                'View more',
+                                AppStrings.viewMore.tr,
                                 style: AppTextStyles.homeCaption.copyWith(
                                   color: AppColors.primary,
                                   fontWeight: FontWeight.w700,
@@ -421,7 +421,7 @@ class HomeScreen extends GetView<HomeController> {
   String _savedPlaceLabel(SavedPlace place) {
     final raw = (place.label ?? place.name ?? '').trim();
     if (raw.isNotEmpty) return raw.capitalizeFirst ?? raw;
-    return 'Saved';
+    return AppStrings.saved.tr;
   }
 
   String _chipIconForLabel(String label) {
@@ -656,7 +656,7 @@ class HomeScreen extends GetView<HomeController> {
                   Text(
                     (ride.vehicleDisplayName ?? '').trim().isNotEmpty
                         ? (ride.vehicleDisplayName ?? '').trim()
-                        : 'Ride',
+                        : AppStrings.fallbackRideName.tr,
                     style: AppTextStyles.homeCaption.copyWith(
                       color: AppColors.textHeading,
                       fontWeight: FontWeight.w600,
@@ -719,18 +719,18 @@ class HomeScreen extends GetView<HomeController> {
   String _activeRideStatusLabel(String status) {
     switch (status.toLowerCase()) {
       case 'driverassigned':
-        return 'Driver Assigned';
+        return AppStrings.driverAssigned.tr;
       case 'driverarriving':
-        return 'Driver Arriving';
+        return AppStrings.driverArriving.tr;
       case 'driverarrived':
-        return 'Driver Arrived';
+        return AppStrings.driverArrived.tr;
       case 'ridestarted':
       case 'rideinprogress':
-        return 'Ride In Progress';
+        return AppStrings.rideInProgress.tr;
       case 'neardestination':
-        return 'Near Destination';
+        return AppStrings.nearDestination.tr;
       default:
-        return 'Active Ride';
+        return AppStrings.activeRide.tr;
     }
   }
 

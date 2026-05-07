@@ -475,7 +475,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
   String _savedPlaceLabel(SavedPlace place) {
     final raw = (place.label ?? place.name ?? '').trim();
     if (raw.isNotEmpty) return raw.capitalizeFirst ?? raw;
-    return 'Saved';
+    return AppStrings.saved.tr;
   }
 
   String _chipIconForLabel(String label) {
@@ -546,7 +546,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         );
 
         return _locationTile(
-          kmText: dist.isEmpty ? 'SEARCH' : dist,
+          kmText: dist.isEmpty ? AppStrings.searchTag.tr : dist,
           title: title,
           subtitle: description,
           isFavorite: isFavorite,
@@ -576,13 +576,13 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         shrinkWrap: true,
         children: [
           if (controller.savedPlaces.isNotEmpty) ...[
-            _sectionHeader('Saved Places'),
+            _sectionHeader(AppStrings.savedPlaces.tr),
             SizedBox(height: 12.h),
             _savedPlacesList(controller),
             SizedBox(height: 24.h),
           ],
           if (controller.recentDestinations.isNotEmpty) ...[
-            _sectionHeader('Recent Locations'),
+            _sectionHeader(AppStrings.recentLocations.tr),
             SizedBox(height: 12.h),
             ListView.separated(
               shrinkWrap: true,
@@ -604,7 +604,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                 );
 
                 return _locationTile(
-                  kmText: dist.isEmpty ? 'RECENT' : dist,
+                  kmText: dist.isEmpty ? AppStrings.recentTag.tr : dist,
                   title: destination.address.split(',').first,
                   subtitle: destination.address,
                   isFavorite: isFavorite,
@@ -663,7 +663,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         );
 
         return _locationTile(
-          kmText: dist.isEmpty ? 'RECENT' : dist,
+          kmText: dist.isEmpty ? AppStrings.recentTag.tr : dist,
           title: recentText,
           subtitle: recentText,
           isFavorite: isFavorite,
@@ -690,7 +690,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                     );
                   } else {
                     AppDialogs.showErrorDialog(
-                      message: 'Unable to get location coordinates',
+                      message: AppStrings.unableToGetLocationCoordinates.tr,
                     );
                   }
                 },
@@ -731,7 +731,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         final label = (place.label ?? '').capitalizeFirst ?? '';
         final dist = controller.calculateDistanceKm(place.lat, place.lng);
         return _locationTile(
-          kmText: dist.isEmpty ? 'SAVED' : dist,
+          kmText: dist.isEmpty ? AppStrings.savedTag.tr : dist,
           title: label,
           subtitle: place.address ?? '',
           isFavorite: place.isFavourite ?? false,
@@ -911,7 +911,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                     if (payload == null) {
                       AppDialogs.showErrorDialog(
                         message:
-                            'Please select valid pickup and destination locations.',
+                            AppStrings
+                                .pleaseSelectValidPickupAndDestinationLocations
+                                .tr,
                       );
                       return;
                     }
@@ -1051,7 +1053,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             );
           } else {
             AppDialogs.showErrorDialog(
-              message: 'Unable to get location coordinates',
+              message: AppStrings.unableToGetLocationCoordinates.tr,
             );
           }
         },

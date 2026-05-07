@@ -80,7 +80,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   final isSavedPlacesExpanded = false.obs;
   final isLoadingHomeData = false.obs;
   final mapCenter = const LatLng(-6.7924, 39.2083).obs;
-  final currentMapAddress = 'Locating...'.obs;
+  final currentMapAddress = AppStrings.locating.tr.obs;
   final isMapReady = false.obs;
   final isResolvingAddress = false.obs;
   final hasLocationPermission = false.obs;
@@ -146,8 +146,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     if (status.authorizationStatus == AuthorizationStatus.denied) {
       AppDialogs.showPermissionDialog(
         title: AppStrings.stayNotified.tr,
-        message:
-            'Enable notifications to get real-time updates on your ride arrival and driver status.',
+        message: AppStrings.enableNotificationsForRideUpdates.tr,
         onOpenSettings: () {
           AppSettings.openAppSettings(type: AppSettingsType.notification);
         },
@@ -197,8 +196,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         position: pos,
         anchor: const Offset(0.5, 1),
         infoWindow: InfoWindow(
-          title: savedPlaces.isEmpty ? 'Location' : 'Pickup',
-          snippet: snippet.isEmpty ? 'Selected address' : snippet,
+          title: savedPlaces.isEmpty ? AppStrings.location.tr : AppStrings.pickup.tr,
+          snippet: snippet.isEmpty ? AppStrings.selectedAddress.tr : snippet,
         ),
         icon:
             pickupMarkerIcon.value ??
@@ -361,7 +360,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       await LiveActivityManager().startActivity(
         orderId: ride.id,
         status: status.toUpperCase(),
-        driverName: ride.driverSnapshot?.name ?? 'Searching for driver...',
+        driverName: ride.driverSnapshot?.name ?? AppStrings.searchingForDriver.tr,
         vehicleName:
             '${ride.vehicleSnapshot?.vehicleMake ?? ''} ${ride.vehicleSnapshot?.vehicleModel ?? ''}'
                 .trim(),
@@ -550,7 +549,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       if (!serviceEnabled) {
         hasLocationPermission.value = false;
         deviceGpsLocation.value = null;
-        currentMapAddress.value = 'Enable location service';
+        currentMapAddress.value = AppStrings.enableLocationService.tr;
         return;
       }
 
@@ -563,7 +562,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
           permission == LocationPermission.deniedForever) {
         hasLocationPermission.value = false;
         deviceGpsLocation.value = null;
-        currentMapAddress.value = 'Location permission denied';
+        currentMapAddress.value = AppStrings.locationPermissionDenied.tr;
         return;
       }
 
@@ -625,8 +624,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
             "📍 Reverse Geocode Failure: ${failure.message}",
             name: 'HomeController',
           );
-          if (currentMapAddress.value == 'Locating...') {
-            currentMapAddress.value = 'Current location';
+          if (currentMapAddress.value == AppStrings.locating.tr) {
+            currentMapAddress.value = AppStrings.currentLocation.tr;
           }
         },
         (data) {
@@ -647,8 +646,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
               "📍 Resolved Address is EMPTY",
               name: 'HomeController',
             );
-            if (currentMapAddress.value == 'Locating...') {
-              currentMapAddress.value = 'Current location';
+            if (currentMapAddress.value == AppStrings.locating.tr) {
+              currentMapAddress.value = AppStrings.currentLocation.tr;
             }
           }
         },
@@ -707,7 +706,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         .replaceFirst('Failure:', '')
         .trim();
     if (message.isEmpty) {
-      return 'Unable to estimate fare for this route.';
+      return AppStrings.unableToEstimateFareForThisRoute.tr;
     }
     return message;
   }
@@ -802,7 +801,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       return;
     }
 
-    final destAddr = (place.address ?? place.name ?? 'Saved Place').trim();
+    final destAddr =
+        (place.address ?? place.name ?? AppStrings.savedPlace.tr).trim();
     if (destAddr.isEmpty) {
       AppDialogs.showErrorDialog(
         title: AppStrings.addressMissing.tr,
@@ -917,8 +917,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
   SavedPlace get currentLocationHeaderPlace => SavedPlace(
     id: _currentLocationPlaceId,
-    label: 'Current location',
-    name: 'Current location',
+    label: AppStrings.currentLocation.tr,
+    name: AppStrings.currentLocation.tr,
     address: currentMapAddress.value,
     lat: mapCenter.value.latitude,
     lng: mapCenter.value.longitude,
@@ -1014,9 +1014,11 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     );
 
     final km = distanceMeters / 1000;
-    if (km < 0.1) return '0.1 KM';
-    if (km > 999) return '>999 KM';
-    return '${km.toStringAsFixed(1)} KM';
+    if (km < 0.1) return AppStrings.distanceMinKm.tr;
+    if (km > 999) return AppStrings.distanceMaxKm.tr;
+    return AppStrings.distanceKmFormat.trParams({
+      'value': km.toStringAsFixed(1),
+    });
   }
 
   // ── Home screen UI orchestration (keep branching / navigation out of widgets) ──
@@ -1565,10 +1567,10 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     if (savedPlaceId == null || savedPlaceId.isEmpty) return;
 
     AppDialogs.showConfirmationDialog(
-      title: 'Remove saved address',
-      message: 'Are you sure you want to remove this saved address?',
-      confirmText: 'Remove',
-      cancelText: 'Cancel',
+      title: AppStrings.removeSavedAddress.tr,
+      message: AppStrings.areYouSureYouWantToRemoveThisSavedAddress.tr,
+      confirmText: AppStrings.remove.tr,
+      cancelText: AppStrings.cancel.tr,
       onConfirm: () async {
         final result = await profileRepository.deleteSavedPlace(savedPlaceId);
         result.fold(
@@ -1577,7 +1579,9 @@ class HomeController extends GetxController with WidgetsBindingObserver {
             if (success) {
               await refreshSavedPlacesAfterMutation();
             } else {
-              AppDialogs.showErrorDialog(message: 'Could not remove address');
+              AppDialogs.showErrorDialog(
+                message: AppStrings.couldNotRemoveAddress.tr,
+              );
             }
           },
         );
@@ -1592,7 +1596,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     final normalizedLabel = label.trim();
     final address = (item.description ?? '').trim();
     if (normalizedLabel.isEmpty) {
-      AppDialogs.showErrorDialog(message: 'Please enter label');
+      AppDialogs.showErrorDialog(message: AppStrings.pleaseEnterLabel.tr);
       return;
     }
     if (address.isEmpty) {
@@ -1639,7 +1643,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     final normalizedLabel = label.trim();
     final address = loc.address.trim();
     if (normalizedLabel.isEmpty) {
-      AppDialogs.showErrorDialog(message: 'Please enter label');
+      AppDialogs.showErrorDialog(message: AppStrings.pleaseEnterLabel.tr);
       return;
     }
     if (address.isEmpty) {
@@ -1683,7 +1687,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     final normalizedLabel = label.trim();
     final detailedAddress = address.trim();
     if (normalizedLabel.isEmpty) {
-      AppDialogs.showErrorDialog(message: 'Please enter label');
+      AppDialogs.showErrorDialog(message: AppStrings.pleaseEnterLabel.tr);
       return;
     }
     if (detailedAddress.isEmpty) {

@@ -41,6 +41,7 @@ abstract class Languages {
   String get cancelDialogsGallery;
   String get cancelFailed;
   String get cancelRide;
+  String get cancel;
   String get cancelled;
   String get cardDetail;
   String get cardEndingInPlaceholder;
@@ -72,6 +73,9 @@ abstract class Languages {
   String get driverArrivedPickupSecondary;
   String get driverIsHeadingToYourLocation;
   String get driverWillArrivingInMinutes;
+  String get driverAssigned;
+  String get driverArriving;
+  String get driverArrived;
   String get eG123;
   String get eG7XxXxxXxx;
   String get eGJohnDoe;
@@ -98,6 +102,7 @@ abstract class Languages {
   String get fallbackRideName;
   String get favouriteLocations;
   String get getStarted;
+  String get homeLabel;
   String get getVerificationCode;
   String get haventGotTheConfirmationCodeYet;
   String get gotIt;
@@ -111,6 +116,16 @@ abstract class Languages {
   String get initiatingCallToDriverphone;
   String get keepRide;
   String get linkAccount;
+  String get location;
+  String get locating;
+  String get currentLocation;
+  String get saved;
+  String get savedPlace;
+  String get savedPlaces;
+  String get recentLocations;
+  String get searchTag;
+  String get recentTag;
+  String get savedTag;
   String get loadingYourProfile;
   String get locationSelection;
   String get locationUnavailable;
@@ -140,6 +155,7 @@ abstract class Languages {
   String get noLocationsFound;
   String get noNotificationsYet;
   String get noPastRidesFound;
+  String get noRecentLocationsFound;
   String get noRecentLocations;
   String
   get noteByProceedingYouConsentToGetCallsWhatsappOrSmsMessagesIncludingByAu;
@@ -147,6 +163,7 @@ abstract class Languages {
   String get notifications;
   String get ok;
   String get openSettings;
+  String get pleaseEnterLabel;
   String get otpResentSuccessfully;
   String get past;
   String get payUsing;
@@ -183,6 +200,9 @@ abstract class Languages {
   String get reasonToContact;
   String get recentLocation;
   String get removeAccount;
+  String get remove;
+  String get removeSavedAddress;
+  String get areYouSureYouWantToRemoveThisSavedAddress;
   String get resendCode;
   String get resendOtp;
   String get retry;
@@ -219,10 +239,27 @@ abstract class Languages {
   String get socketOnDrivers;
   String get startTypingDestination;
   String get stayNotified;
+  String get enableNotificationsForRideUpdates;
   String get stepsToConnectSelcomPesa;
   String get submitFailed;
   String get submit;
   String get success;
+  String get selectedAddress;
+  String get searchingForDriver;
+  String get enableLocationService;
+  String get locationPermissionDenied;
+  String get unableToEstimateFareForThisRoute;
+  String get distanceMinKm;
+  String get distanceMaxKm;
+  String get distanceKmFormat;
+  String get couldNotRemoveAddress;
+  String get viewMore;
+  String get rideInProgress;
+  String get nearDestination;
+  String get activeRide;
+  String get unableToGetLocationCoordinates;
+  String get pleaseSelectValidPickupAndDestinationLocations;
+  String get areYouSureYouWantToAddThisAddressAs;
   String get tagRequired;
   String get tapEachButtonToPreviewThePopupUi;
   String get tellUsMoreAboutYourExperience;
