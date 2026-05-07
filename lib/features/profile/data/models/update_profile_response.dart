@@ -141,7 +141,7 @@ class Response {
         ? []
         : List<dynamic>.from(json["bannerImage"]!.map((x) => x)),
     image: json["image"],
-    dob: json["dob"] == null ? null : json["dob"],
+    dob: json["dob"],
     pushNotification: json["push_notification"],
     emailNotification: json["email_notification"],
     smsNotification: json["sms_notification"],

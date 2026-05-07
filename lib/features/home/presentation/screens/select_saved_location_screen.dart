@@ -96,7 +96,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
                   }),
                   if (_isGeocoding)
                     Container(
-                      color: AppColors.white.withOpacity(0.5),
+                      color: AppColors.white.withValues(alpha: 0.5),
                       child: const Center(child: CircularProgressIndicator()),
                     ),
                 ],

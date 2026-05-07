@@ -97,7 +97,7 @@ class ReceiptImageGenerator {
             children: [
               Text(
                 AppStrings.rideReceipt.tr,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: _textDark,
@@ -320,7 +320,7 @@ class ReceiptImageGenerator {
                 children: [
                   Text(
                     AppStrings.total.tr,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
                       color: _textDark,

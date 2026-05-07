@@ -55,11 +55,11 @@ class _RideLocationSummaryCardState extends State<RideLocationSummaryCard> {
           color: AppColors.white,
           borderRadius: BorderRadius.circular(16.r),
           border: Border.all(color: AppColors.borderDefault),
-          boxShadow: [
+          boxShadow: const [
             BoxShadow(
               color: AppColors.shadowMapCard,
               blurRadius: 2,
-              offset: const Offset(0, 1),
+              offset: Offset(0, 1),
             ),
           ],
         ),
