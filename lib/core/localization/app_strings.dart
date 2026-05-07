@@ -116,6 +116,11 @@ class AppStrings {
       'face_scan_process_has_been_successful';
   static const String fare = 'fare';
   static const String failedToSendMessage = 'failed_to_send_message';
+  static const String failedToLoadSettings = 'failed_to_load_settings';
+  static const String failedToLoadRidePinPreference =
+      'failed_to_load_ride_pin_preference';
+  static const String failedToUpdateRidePinPreference =
+      'failed_to_update_ride_pin_preference';
   static const String failedToResendOtp = 'failed_to_resend_otp';
   static const String failedToSendOtp = 'failed_to_send_otp';
   static const String failedToUpdateFavoriteStatus =

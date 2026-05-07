@@ -1,5 +1,7 @@
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/urls.dart';
+import '../../../../core/localization/app_strings.dart';
+import 'package:get/get.dart';
 import '../models/settings_models.dart';
 
 abstract class SettingsRemoteDataSource {
@@ -30,7 +32,7 @@ class SettingsRemoteDataSourceImpl implements SettingsRemoteDataSource {
         }
       }
     }
-    throw Exception(response.data?['message'] ?? 'Failed to load settings');
+    throw Exception(response.data?['message'] ?? AppStrings.failedToLoadSettings.tr);
   }
 
   @override
@@ -50,7 +52,7 @@ class SettingsRemoteDataSourceImpl implements SettingsRemoteDataSource {
       return RidePinPreferenceModel.fromJson(payload);
     }
     throw Exception(
-      response.data?['message'] ?? 'Failed to load ride PIN preference',
+      response.data?['message'] ?? AppStrings.failedToLoadRidePinPreference.tr,
     );
   }
 
@@ -74,7 +76,7 @@ class SettingsRemoteDataSourceImpl implements SettingsRemoteDataSource {
       return RidePinPreferenceModel.fromJson(payload);
     }
     throw Exception(
-      response.data?['message'] ?? 'Failed to update ride PIN preference',
+      response.data?['message'] ?? AppStrings.failedToUpdateRidePinPreference.tr,
     );
   }
 }

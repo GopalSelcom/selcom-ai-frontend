@@ -109,6 +109,9 @@ abstract class Languages {
   String get faceScanProcessHasBeenSuccessful;
   String get fare;
   String get failedToSendMessage;
+  String get failedToLoadSettings;
+  String get failedToLoadRidePinPreference;
+  String get failedToUpdateRidePinPreference;
   String get failedToResendOtp;
   String get failedToSendOtp;
   String get failedToUpdateFavoriteStatus;

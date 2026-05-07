@@ -99,6 +99,9 @@ class LanguageSw extends Languages {
     'face_scan_process_has_been_successful': '',
     'fare': '',
     'failed_to_send_message': '',
+    'failed_to_load_settings': '',
+    'failed_to_load_ride_pin_preference': '',
+    'failed_to_update_ride_pin_preference': '',
     'failed_to_resend_otp': '',
     'failed_to_send_otp': '',
     'failed_to_update_favorite_status': '',
@@ -744,6 +747,17 @@ class LanguageSw extends Languages {
 
   @override
   String get failedToSendMessage => values['failed_to_send_message'] ?? '';
+
+  @override
+  String get failedToLoadSettings => values['failed_to_load_settings'] ?? '';
+
+  @override
+  String get failedToLoadRidePinPreference =>
+      values['failed_to_load_ride_pin_preference'] ?? '';
+
+  @override
+  String get failedToUpdateRidePinPreference =>
+      values['failed_to_update_ride_pin_preference'] ?? '';
 
   @override
   String get failedToResendOtp => values['failed_to_resend_otp'] ?? '';

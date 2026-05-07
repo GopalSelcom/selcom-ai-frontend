@@ -110,6 +110,10 @@ class LanguageEn extends Languages {
         'Face scan process has been successful',
     'fare': 'Fare',
     'failed_to_send_message': 'Failed to send message',
+    'failed_to_load_settings': 'Failed to load settings',
+    'failed_to_load_ride_pin_preference': 'Failed to load ride PIN preference',
+    'failed_to_update_ride_pin_preference':
+        'Failed to update ride PIN preference',
     'failed_to_resend_otp': 'Failed to resend OTP',
     'failed_to_send_otp': 'Failed to send OTP',
     'failed_to_update_favorite_status': 'Failed to update favorite status',
@@ -808,6 +812,17 @@ class LanguageEn extends Languages {
 
   @override
   String get failedToSendMessage => values['failed_to_send_message'] ?? '';
+
+  @override
+  String get failedToLoadSettings => values['failed_to_load_settings'] ?? '';
+
+  @override
+  String get failedToLoadRidePinPreference =>
+      values['failed_to_load_ride_pin_preference'] ?? '';
+
+  @override
+  String get failedToUpdateRidePinPreference =>
+      values['failed_to_update_ride_pin_preference'] ?? '';
 
   @override
   String get failedToResendOtp => values['failed_to_resend_otp'] ?? '';
