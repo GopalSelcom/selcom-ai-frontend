@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer' as developer;
-import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -21,6 +20,7 @@ import '../widgets/svg_picture_asset.dart';
 import 'failed_request_queue.dart';
 import 'retry_manager.dart';
 import 'network_connectivity_service.dart';
+import 'connectivity_probe.dart';
 import '../../shared/utils/app_dialogs.dart';
 import '../services/error_reporting/error_reporter.dart';
 import '../services/error_reporting/models/error_constants.dart';
@@ -163,12 +163,9 @@ class ApiService {
   // ── Internet Check ──
 
   Future<bool> _checkInternetConnection() async {
-    try {
-      final result = await InternetAddress.lookup('google.com');
-      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
-    } on SocketException {
-      return false;
-    }
+    // Shared probe avoids duplicate logic and prevents single-host DNS false
+    // negatives (the original issue seen with `google.com` lookups).
+    return ConnectivityProbe.instance.probeInternetConnection();
   }
 
   // ── Dio Client Selection ──
