@@ -58,6 +58,8 @@ class AppStrings {
   static const String confirm = 'confirm';
   static const String confirmation = 'confirmation';
   static const String connectionError = 'connection_error';
+  static const String connectionTimedOutPleaseCheckInternet =
+      'connection_timed_out_please_check_internet';
   static const String contactUs = 'contact_us';
   static const String continueLabel = 'continue';
   static const String didntReceiveTheCode = 'didnt_receive_the_code';
@@ -167,6 +169,9 @@ class AppStrings {
   static const String locationSelection = 'location_selection';
   static const String locationUnavailable = 'location_unavailable';
   static const String login = 'login';
+  static const String sessionExpiredPleaseLoginAgain =
+      'session_expired_please_login_again';
+  static const String sessionExpiredRefreshing = 'session_expired_refreshing';
   static const String logout = 'logout';
   static const String loremIpsumDolorSitAmetConsectetur =
       'lorem_ipsum_dolor_sit_amet_consectetur';
@@ -185,6 +190,7 @@ class AppStrings {
   static const String needHelp = 'need_help';
   static const String newMessage = 'new_message';
   static const String no = 'no';
+  static const String noInternetConnection = 'no_internet_connection';
   static const String noConfigurableSettingsAreAvailableRightNow =
       'no_configurable_settings_are_available_right_now';
   static const String noDriverFoundForYourRequestPleaseTryAgain =
@@ -211,6 +217,7 @@ class AppStrings {
   static const String notifications = 'notifications';
   static const String ok = 'ok';
   static const String orderLabelWithId = 'order_label_with_id';
+  static const String unauthorized = 'unauthorized';
   static const String openSettings = 'open_settings';
   static const String pleaseEnterLabel = 'please_enter_label';
   static const String otpResentSuccessfully = 'otp_resent_successfully';
@@ -266,6 +273,32 @@ class AppStrings {
   static const String pleaseTellUsWhatWentWrongOrHowWeCanImprove =
       'please_tell_us_what_went_wrong_or_how_we_can_improve';
   static const String pleaseTryAgain = 'please_try_again';
+  static const String requestQueueFullPleaseTryAgainLater =
+      'request_queue_full_please_try_again_later';
+  static const String duplicateRequestAlreadyQueued =
+      'duplicate_request_already_queued';
+  static const String requestQueueCleared = 'request_queue_cleared';
+  static const String sendTimeout = 'send_timeout';
+  static const String receiveTimeout = 'receive_timeout';
+  static const String badResponseFromServer = 'bad_response_from_server';
+  static const String badRequest = 'bad_request';
+  static const String connectionTimeout = 'connection_timeout';
+  static const String unexpectedErrorOccurredWithError =
+      'unexpected_error_occurred_with_error';
+  static const String serverErrorWithStatus = 'server_error_with_status';
+  static const String requestCancelled = 'request_cancelled';
+  static const String networkIsUnreachable = 'network_is_unreachable';
+  static const String noInternetOrUnexpectedError =
+      'no_internet_or_unexpected_error';
+  static const String unexpectedNetworkError = 'unexpected_network_error';
+  static const String serverTakingTooLongPleaseTryAgain =
+      'server_taking_too_long_please_try_again';
+  static const String serverTimeout = 'server_timeout';
+  static const String youAlreadyHaveAnActiveRide =
+      'you_already_have_an_active_ride';
+  static const String insufficientFundsInWallet = 'insufficient_funds_in_wallet';
+  static const String somethingWentWrongPleaseTryAgain =
+      'something_went_wrong_please_try_again';
   static const String privacyPolicy = 'privacy_policy';
   static const String paymentMethodWithName = 'payment_method_with_name';
   static const String calculatingBestRoute = 'calculating_best_route';
@@ -510,6 +543,8 @@ class AppStrings {
   static const String pleaseEnterAValidPhoneNumber =
       'please_enter_a_valid_phone_number';
   static const String invalidOtpPleaseTryAgain = 'invalid_otp_please_try_again';
+  static const String invalidOtp = 'invalid_otp';
+  static const String incorrectPin = 'incorrect_pin';
   static const String cameraAccessNeededForSelfieVerification =
       'camera_access_needed_for_selfie_verification';
   static const String cardReadyToUseYouCanManageOrRemoveAnytime =

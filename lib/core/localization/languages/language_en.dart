@@ -513,6 +513,35 @@ class LanguageEn extends Languages {
     'office': 'Office',
     'info': 'Info',
     'enter_custom_label': 'Enter custom label',
+    'connection_timed_out_please_check_internet':
+        'Connection timed out. Please check your internet.',
+    'no_internet_connection': 'No internet connection',
+    'session_expired_please_login_again': 'Session expired. Please login again.',
+    'session_expired_refreshing': 'Session expired. Refreshing...',
+    'request_queue_full_please_try_again_later':
+        'Request queue is full. Please try again later.',
+    'duplicate_request_already_queued': 'Duplicate request already queued',
+    'request_queue_cleared': 'Request queue cleared',
+    'send_timeout': 'Send timeout',
+    'receive_timeout': 'Receive timeout',
+    'bad_response_from_server': 'Bad response from server',
+    'bad_request': 'Bad request',
+    'unauthorized': 'Unauthorized',
+    'connection_timeout': 'Connection timeout',
+    'server_error_with_status': 'Server Error (@statusCode)',
+    'request_cancelled': 'Request cancelled',
+    'network_is_unreachable': 'Network is unreachable',
+    'no_internet_or_unexpected_error': 'No internet or unexpected error',
+    'unexpected_network_error': 'Unexpected network error',
+    'server_taking_too_long_please_try_again':
+        'Server is taking too long to respond. Please try again.',
+    'server_timeout': 'Server timeout',
+    'you_already_have_an_active_ride': 'You already have an active ride.',
+    'insufficient_funds_in_wallet': 'Insufficient funds in wallet.',
+    'something_went_wrong_please_try_again': 'Something went wrong. Please try again.',
+    'unexpected_error_occurred_with_error': 'Unexpected error occurred: @error',
+    'invalid_otp': 'Invalid OTP.',
+    'incorrect_pin': 'Incorrect PIN.',
   };
 
   @override
@@ -1914,6 +1943,95 @@ class LanguageEn extends Languages {
 
   @override
   String get enterCustomLabel => values['enter_custom_label'] ?? '';
+
+  @override
+  String get connectionTimedOutPleaseCheckInternet =>
+      values['connection_timed_out_please_check_internet'] ?? '';
+
+  @override
+  String get noInternetConnection => values['no_internet_connection'] ?? '';
+
+  @override
+  String get sessionExpiredPleaseLoginAgain =>
+      values['session_expired_please_login_again'] ?? '';
+
+  @override
+  String get sessionExpiredRefreshing =>
+      values['session_expired_refreshing'] ?? '';
+
+  @override
+  String get requestQueueFullPleaseTryAgainLater =>
+      values['request_queue_full_please_try_again_later'] ?? '';
+
+  @override
+  String get duplicateRequestAlreadyQueued =>
+      values['duplicate_request_already_queued'] ?? '';
+
+  @override
+  String get requestQueueCleared => values['request_queue_cleared'] ?? '';
+
+  @override
+  String get sendTimeout => values['send_timeout'] ?? '';
+
+  @override
+  String get receiveTimeout => values['receive_timeout'] ?? '';
+
+  @override
+  String get badResponseFromServer => values['bad_response_from_server'] ?? '';
+
+  @override
+  String get badRequest => values['bad_request'] ?? '';
+
+  @override
+  String get unauthorized => values['unauthorized'] ?? '';
+
+  @override
+  String get connectionTimeout => values['connection_timeout'] ?? '';
+
+  @override
+  String get serverErrorWithStatus => values['server_error_with_status'] ?? '';
+
+  @override
+  String get requestCancelled => values['request_cancelled'] ?? '';
+
+  @override
+  String get networkIsUnreachable => values['network_is_unreachable'] ?? '';
+
+  @override
+  String get noInternetOrUnexpectedError =>
+      values['no_internet_or_unexpected_error'] ?? '';
+
+  @override
+  String get unexpectedNetworkError => values['unexpected_network_error'] ?? '';
+
+  @override
+  String get serverTakingTooLongPleaseTryAgain =>
+      values['server_taking_too_long_please_try_again'] ?? '';
+
+  @override
+  String get serverTimeout => values['server_timeout'] ?? '';
+
+  @override
+  String get youAlreadyHaveAnActiveRide =>
+      values['you_already_have_an_active_ride'] ?? '';
+
+  @override
+  String get insufficientFundsInWallet =>
+      values['insufficient_funds_in_wallet'] ?? '';
+
+  @override
+  String get somethingWentWrongPleaseTryAgain =>
+      values['something_went_wrong_please_try_again'] ?? '';
+
+  @override
+  String get unexpectedErrorOccurredWithError =>
+      values['unexpected_error_occurred_with_error'] ?? '';
+
+  @override
+  String get invalidOtp => values['invalid_otp'] ?? '';
+
+  @override
+  String get incorrectPin => values['incorrect_pin'] ?? '';
 
   @override
   // TODO: implement savedLocations

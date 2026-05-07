@@ -4,7 +4,9 @@ import 'dart:developer' as developer;
 
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
+import 'package:get/get_utils/src/extensions/internacionalization.dart';
 
+import '../localization/app_strings.dart';
 import 'api_service.dart';
 
 /// Represents a failed API request waiting for retry
@@ -57,7 +59,7 @@ class FailedRequestQueue {
       completer.completeError(
         DioException(
           requestOptions: RequestOptions(path: request.endpoint),
-          message: 'Request queue is full. Please try again later.',
+          message: AppStrings.requestQueueFullPleaseTryAgainLater.tr,
         ),
       );
       return false;
@@ -75,7 +77,7 @@ class FailedRequestQueue {
       completer.completeError(
         DioException(
           requestOptions: RequestOptions(path: request.endpoint),
-          message: 'Duplicate request already queued',
+          message: AppStrings.duplicateRequestAlreadyQueued.tr,
         ),
       );
       return false;
@@ -132,7 +134,7 @@ class FailedRequestQueue {
         req.completer.completeError(
           DioException(
             requestOptions: RequestOptions(path: req.request.endpoint),
-            message: 'Request queue cleared',
+            message: AppStrings.requestQueueCleared.tr,
           ),
         );
       }

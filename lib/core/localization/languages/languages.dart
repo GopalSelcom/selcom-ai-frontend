@@ -164,6 +164,7 @@ abstract class Languages {
   String get needHelp;
   String get newMessage;
   String get no;
+  String get noInternetConnection;
   String get noConfigurableSettingsAreAvailableRightNow;
   String get noDriverFoundForYourRequestPleaseTryAgain;
   String get noDriversFoundWithin9MinutesCancellingRide;
@@ -181,6 +182,7 @@ abstract class Languages {
   String get notifications;
   String get ok;
   String get orderLabelWithId;
+  String get unauthorized;
   String get openSettings;
   String get pleaseEnterLabel;
   String get otpResentSuccessfully;
@@ -441,5 +443,29 @@ abstract class Languages {
   String get office;
   String get info;
   String get enterCustomLabel;
+  String get connectionTimedOutPleaseCheckInternet;
+  String get sessionExpiredPleaseLoginAgain;
+  String get sessionExpiredRefreshing;
+  String get requestQueueFullPleaseTryAgainLater;
+  String get duplicateRequestAlreadyQueued;
+  String get requestQueueCleared;
+  String get sendTimeout;
+  String get receiveTimeout;
+  String get badResponseFromServer;
+  String get badRequest;
+  String get connectionTimeout;
+  String get unexpectedErrorOccurredWithError;
+  String get serverErrorWithStatus;
+  String get requestCancelled;
+  String get networkIsUnreachable;
+  String get noInternetOrUnexpectedError;
+  String get unexpectedNetworkError;
+  String get serverTakingTooLongPleaseTryAgain;
+  String get serverTimeout;
+  String get youAlreadyHaveAnActiveRide;
+  String get insufficientFundsInWallet;
+  String get somethingWentWrongPleaseTryAgain;
+  String get invalidOtp;
+  String get incorrectPin;
   String get savedLocations;
 }

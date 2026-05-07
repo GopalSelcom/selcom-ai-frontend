@@ -1,4 +1,6 @@
 import 'package:dio/dio.dart';
+import 'package:get/get.dart';
+import '../localization/app_strings.dart';
 import 'failures.dart';
 
 class ErrorMapper {
@@ -6,7 +8,9 @@ class ErrorMapper {
     if (exception.type == DioExceptionType.connectionTimeout ||
         exception.type == DioExceptionType.receiveTimeout ||
         exception.type == DioExceptionType.sendTimeout) {
-      return const NetworkFailure('Connection timed out. Please check your internet.');
+      return NetworkFailure(
+        AppStrings.connectionTimedOutPleaseCheckInternet.tr,
+      );
     }
 
     if (exception.response != null) {
@@ -20,24 +24,34 @@ class ErrorMapper {
             case 'AUTH_NO_TOKEN':
             case 'AUTH_INVALID_TOKEN':
             case 'AUTH_SESSION_REVOKED':
-              return AuthFailure(message ?? 'Session expired. Please login again.');
+              return AuthFailure(
+                message ?? AppStrings.sessionExpiredPleaseLoginAgain.tr,
+              );
             case 'AUTH_TOKEN_EXPIRED':
-              return AuthFailure(message ?? 'Session expired. Refreshing...');
+              return AuthFailure(
+                message ?? AppStrings.sessionExpiredRefreshing.tr,
+              );
             case 'AUTH_OTP_INVALID':
-              return AuthFailure(message ?? 'Invalid OTP.');
+              return AuthFailure(message ?? AppStrings.invalidOtp.tr);
             case 'AUTH_PIN_WRONG':
-              return AuthFailure(message ?? 'Incorrect PIN.');
+              return AuthFailure(message ?? AppStrings.incorrectPin.tr);
             case 'RIDE_ALREADY_ACTIVE':
-              return ServerFailure(message ?? 'You already have an active ride.');
+              return ServerFailure(
+                message ?? AppStrings.youAlreadyHaveAnActiveRide.tr,
+              );
             case 'PAY_INSUFFICIENT_FUNDS':
-              return ServerFailure(message ?? 'Insufficient funds in wallet.');
+              return ServerFailure(
+                message ?? AppStrings.insufficientFundsInWallet.tr,
+              );
             default:
-              return ServerFailure(message ?? 'An unexpected error occurred.');
+              return ServerFailure(
+                message ?? AppStrings.anUnexpectedErrorOccurred.tr,
+              );
           }
         }
       }
     }
 
-    return const ServerFailure('Something went wrong. Please try again.');
+    return ServerFailure(AppStrings.somethingWentWrongPleaseTryAgain.tr);
   }
 }

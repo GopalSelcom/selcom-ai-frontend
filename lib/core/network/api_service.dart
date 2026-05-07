@@ -211,7 +211,7 @@ class ApiService {
       return Response(
         requestOptions: RequestOptions(path: request.endpoint),
         statusCode: 503,
-        data: {'message': 'No Internet Connection'},
+        data: {'message': AppStrings.noInternetConnection.tr},
       );
     }
 
@@ -313,7 +313,11 @@ class ApiService {
       return Response(
         requestOptions: RequestOptions(path: request.endpoint),
         statusCode: 500,
-        data: {'error': 'Unexpected error occurred: $e'},
+        data: {
+          'error': AppStrings.unexpectedErrorOccurredWithError.trParams({
+            'error': e.toString(),
+          }),
+        },
       );
     }
   }
@@ -493,7 +497,7 @@ class ApiService {
   // ── Error Handling ──
 
   Future<Response> _handleDioError(DioException e, ApiRequest request) async {
-    String message = 'Something went wrong';
+    String message = AppStrings.somethingWentWrongPleaseTryAgain.tr;
     int statusCode = e.response?.statusCode ?? 500;
 
     // Let the interceptor handle 401 errors
@@ -501,7 +505,7 @@ class ApiService {
       return Response(
         requestOptions: e.requestOptions,
         statusCode: statusCode,
-        data: e.response?.data ?? {'message': 'Unauthorized'},
+        data: e.response?.data ?? {'message': AppStrings.unauthorized.tr},
       );
     }
 
@@ -509,43 +513,45 @@ class ApiService {
       return Response(
         requestOptions: e.requestOptions,
         statusCode: statusCode,
-        data: e.response?.data ?? {'message': 'Bad request'},
+        data: e.response?.data ?? {'message': AppStrings.badRequest.tr},
       );
     }
 
     switch (e.type) {
       case DioExceptionType.connectionTimeout:
-        message = 'Connection timeout';
+        message = AppStrings.connectionTimeout.tr;
         break;
       case DioExceptionType.sendTimeout:
-        message = 'Send timeout';
+        message = AppStrings.sendTimeout.tr;
         break;
       case DioExceptionType.receiveTimeout:
-        message = 'Receive timeout';
+        message = AppStrings.receiveTimeout.tr;
         break;
       case DioExceptionType.badResponse:
         try {
           final data = e.response?.data;
           if (data is Map) {
-            message = data['message'] ?? 'Bad response from server';
+            message = data['message'] ?? AppStrings.badResponseFromServer.tr;
           } else {
-            message = 'Server Error (${statusCode})';
+            message = AppStrings.serverErrorWithStatus.trParams({
+              'statusCode': statusCode.toString(),
+            });
           }
         } catch (_) {
-          message = 'Bad response from server';
+          message = AppStrings.badResponseFromServer.tr;
         }
         break;
       case DioExceptionType.cancel:
-        message = 'Request cancelled';
+        message = AppStrings.requestCancelled.tr;
         break;
       case DioExceptionType.connectionError:
-        message = 'Network is unreachable';
+        message = AppStrings.networkIsUnreachable.tr;
         break;
       case DioExceptionType.unknown:
-        message = 'No internet or unexpected error';
+        message = AppStrings.noInternetOrUnexpectedError.tr;
         break;
       default:
-        message = 'Unexpected network error';
+        message = AppStrings.unexpectedNetworkError.tr;
     }
 
     if (e.type == DioExceptionType.receiveTimeout) {
@@ -557,14 +563,14 @@ class ApiService {
       if (request.errorPresentationType == ErrorPresentationType.dialog) {
         AppDialogs.showErrorDialog(
           title: AppStrings.timeout.tr,
-          message: 'Server is taking too long to respond. Please try again.',
+          message: AppStrings.serverTakingTooLongPleaseTryAgain.tr,
         );
       }
 
       return Response(
         requestOptions: e.requestOptions,
         statusCode: 408,
-        data: {'message': 'Server timeout'},
+        data: {'message': AppStrings.serverTimeout.tr},
       );
     }
 
@@ -813,7 +819,7 @@ class AuthInterceptor extends Interceptor {
         Response(
           requestOptions: err.requestOptions,
           statusCode: 401,
-          data: {'message': 'Session expired, please login again'},
+          data: {'message': AppStrings.sessionExpiredPleaseLoginAgain.tr},
         ),
       );
     }
@@ -931,7 +937,7 @@ class AuthInterceptor extends Interceptor {
               Response(
                 requestOptions: err.requestOptions,
                 statusCode: 401,
-                data: {'message': 'Session expired, please login again'},
+                data: {'message': AppStrings.sessionExpiredPleaseLoginAgain.tr},
               ),
             );
           }
@@ -953,7 +959,7 @@ class AuthInterceptor extends Interceptor {
           Response(
             requestOptions: err.requestOptions,
             statusCode: 401,
-            data: {'message': 'Session expired, please login again'},
+            data: {'message': AppStrings.sessionExpiredPleaseLoginAgain.tr},
           ),
         );
       }
@@ -969,7 +975,7 @@ class AuthInterceptor extends Interceptor {
         Response(
           requestOptions: err.requestOptions,
           statusCode: 401,
-          data: {'message': 'Session expired, please login again'},
+          data: {'message': AppStrings.sessionExpiredPleaseLoginAgain.tr},
         ),
       );
     }
