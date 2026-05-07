@@ -236,6 +236,7 @@ class ErrorReporter {
           "timestamp": report.timestamp.toIso8601String(),
           "device": jsonEncode(report.deviceInfo),
           "app": jsonEncode(report.appInfo),
+          "app_name": "selcom_go",
           "user": jsonEncode(report.userContext),
           "state": jsonEncode(report.appState),
           if (report.extraData != null)
