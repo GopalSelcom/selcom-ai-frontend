@@ -84,6 +84,9 @@ class LanguageSw extends Languages {
     'estimate_failed': '',
     'eta_minutes_away_drop_time': '',
     'explore_vehicle': '',
+    'minutes_ago': '',
+    'hours_ago': '',
+    'days_ago': '',
     'face_scan_process_has_been_successful': '',
     'failed_to_send_message': '',
     'failed_to_resend_otp': '',
@@ -126,6 +129,7 @@ class LanguageSw extends Languages {
     'making_your_drive_best_is_our_responsibility': '',
     'maximum_promo_tzs1500': '',
     'maybe_later': '',
+    'mark_all_read_count': '',
     'message': '',
     'missing_info': '',
     'missing_ride_information': '',
@@ -153,6 +157,7 @@ class LanguageSw extends Languages {
     'notification': '',
     'notifications': '',
     'ok': '',
+    'order_label_with_id': '',
     'open_settings': '',
     'please_enter_label': '',
     'otp_resent_successfully': '',
@@ -605,6 +610,15 @@ class LanguageSw extends Languages {
   String get exploreVehicle => values['explore_vehicle'] ?? '';
 
   @override
+  String get minutesAgo => values['minutes_ago'] ?? '';
+
+  @override
+  String get hoursAgo => values['hours_ago'] ?? '';
+
+  @override
+  String get daysAgo => values['days_ago'] ?? '';
+
+  @override
   String get faceScanProcessHasBeenSuccessful =>
       values['face_scan_process_has_been_successful'] ?? '';
 
@@ -736,6 +750,9 @@ class LanguageSw extends Languages {
   String get maybeLater => values['maybe_later'] ?? '';
 
   @override
+  String get markAllReadCount => values['mark_all_read_count'] ?? '';
+
+  @override
   String get message => values['message'] ?? '';
 
   @override
@@ -822,6 +839,9 @@ class LanguageSw extends Languages {
 
   @override
   String get ok => values['ok'] ?? '';
+
+  @override
+  String get orderLabelWithId => values['order_label_with_id'] ?? '';
 
   @override
   String get openSettings => values['open_settings'] ?? '';

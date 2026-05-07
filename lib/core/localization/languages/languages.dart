@@ -94,6 +94,9 @@ abstract class Languages {
   String get estimateFailed;
   String get etaMinutesAwayDropTime;
   String get exploreVehicle;
+  String get minutesAgo;
+  String get hoursAgo;
+  String get daysAgo;
   String get faceScanProcessHasBeenSuccessful;
   String get failedToSendMessage;
   String get failedToResendOtp;
@@ -135,6 +138,7 @@ abstract class Languages {
   String get makingYourDriveBestIsOurResponsibility;
   String get maximumPromoTzs1500;
   String get maybeLater;
+  String get markAllReadCount;
   String get message;
   String get missingInfo;
   String get missingRideInformation;
@@ -162,6 +166,7 @@ abstract class Languages {
   String get notification;
   String get notifications;
   String get ok;
+  String get orderLabelWithId;
   String get openSettings;
   String get pleaseEnterLabel;
   String get otpResentSuccessfully;

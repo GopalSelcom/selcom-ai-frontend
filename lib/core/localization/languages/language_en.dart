@@ -92,6 +92,9 @@ class LanguageEn extends Languages {
     'estimate_failed': 'Estimate failed',
     'eta_minutes_away_drop_time': '@minutes min away • Drop @time',
     'explore_vehicle': 'Explore Vehicle',
+    'minutes_ago': '@count m ago',
+    'hours_ago': '@count h ago',
+    'days_ago': '@count d ago',
     'face_scan_process_has_been_successful':
         'Face scan process has been successful',
     'failed_to_send_message': 'Failed to send message',
@@ -139,6 +142,7 @@ class LanguageEn extends Languages {
         'Making your drive best is our responsibility',
     'maximum_promo_tzs1500': 'Maximum Promo TZS 1500',
     'maybe_later': 'Maybe Later',
+    'mark_all_read_count': 'Mark all read (@count)',
     'message': 'Message',
     'missing_info': 'Missing info',
     'missing_ride_information': 'Missing ride information.',
@@ -171,6 +175,7 @@ class LanguageEn extends Languages {
     'notification': 'Notification',
     'notifications': 'Notifications',
     'ok': 'OK',
+    'order_label_with_id': 'Order: @orderId',
     'open_settings': 'Open Settings',
     'please_enter_label': 'Please enter label',
     'otp_resent_successfully': 'OTP resent successfully',
@@ -653,6 +658,15 @@ class LanguageEn extends Languages {
   String get exploreVehicle => values['explore_vehicle'] ?? '';
 
   @override
+  String get minutesAgo => values['minutes_ago'] ?? '';
+
+  @override
+  String get hoursAgo => values['hours_ago'] ?? '';
+
+  @override
+  String get daysAgo => values['days_ago'] ?? '';
+
+  @override
   String get faceScanProcessHasBeenSuccessful =>
       values['face_scan_process_has_been_successful'] ?? '';
 
@@ -784,6 +798,9 @@ class LanguageEn extends Languages {
   String get maybeLater => values['maybe_later'] ?? '';
 
   @override
+  String get markAllReadCount => values['mark_all_read_count'] ?? '';
+
+  @override
   String get message => values['message'] ?? '';
 
   @override
@@ -870,6 +887,9 @@ class LanguageEn extends Languages {
 
   @override
   String get ok => values['ok'] ?? '';
+
+  @override
+  String get orderLabelWithId => values['order_label_with_id'] ?? '';
 
   @override
   String get openSettings => values['open_settings'] ?? '';

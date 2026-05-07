@@ -97,6 +97,9 @@ class AppStrings {
   static const String estimateFailed = 'estimate_failed';
   static const String etaMinutesAwayDropTime = 'eta_minutes_away_drop_time';
   static const String exploreVehicle = 'explore_vehicle';
+  static const String minutesAgo = 'minutes_ago';
+  static const String hoursAgo = 'hours_ago';
+  static const String daysAgo = 'days_ago';
   static const String faceScanProcessHasBeenSuccessful =
       'face_scan_process_has_been_successful';
   static const String failedToSendMessage = 'failed_to_send_message';
@@ -146,6 +149,7 @@ class AppStrings {
       'making_your_drive_best_is_our_responsibility';
   static const String maximumPromoTzs1500 = 'maximum_promo_tzs1500';
   static const String maybeLater = 'maybe_later';
+  static const String markAllReadCount = 'mark_all_read_count';
   static const String message = 'message';
   static const String missingInfo = 'missing_info';
   static const String missingRideInformation = 'missing_ride_information';
@@ -180,6 +184,7 @@ class AppStrings {
   static const String notification = 'notification';
   static const String notifications = 'notifications';
   static const String ok = 'ok';
+  static const String orderLabelWithId = 'order_label_with_id';
   static const String openSettings = 'open_settings';
   static const String pleaseEnterLabel = 'please_enter_label';
   static const String otpResentSuccessfully = 'otp_resent_successfully';
