@@ -499,6 +499,20 @@ class LanguageEn extends Languages {
     'user': 'User',
     'user_name': 'User name',
     'phone_number': 'Phone number',
+    'add_new': 'Add New',
+    'add_to_favourites': 'Add to Favourites',
+    'confirm': 'Confirm',
+    'confirmation': 'Confirmation',
+    'home': 'Home',
+    'loading': 'Loading...',
+    'minutes_count': '@count minutes',
+    'pin_locked_message_retry_in_time': '@message. Please try again in @time.',
+    'save_address': 'Save Address',
+    'save_location_as': 'Save Location As',
+    'work': 'Work',
+    'office': 'Office',
+    'info': 'Info',
+    'enter_custom_label': 'Enter custom label',
   };
 
   @override
@@ -1857,6 +1871,49 @@ class LanguageEn extends Languages {
 
   @override
   String get phoneNumber => values['phone_number'] ?? '';
+
+  @override
+  String get addNew => values['add_new'] ?? '';
+
+  @override
+  String get addToFavourites => values['add_to_favourites'] ?? '';
+
+  @override
+  String get confirm => values['confirm'] ?? '';
+
+  @override
+  String get confirmation => values['confirmation'] ?? '';
+
+  @override
+  String get home => values['home'] ?? '';
+
+  @override
+  String get loading => values['loading'] ?? '';
+
+  @override
+  String get minutesCount => values['minutes_count'] ?? '';
+
+  @override
+  String get pinLockedMessageRetryInTime =>
+      values['pin_locked_message_retry_in_time'] ?? '';
+
+  @override
+  String get saveAddress => values['save_address'] ?? '';
+
+  @override
+  String get saveLocationAs => values['save_location_as'] ?? '';
+
+  @override
+  String get work => values['work'] ?? '';
+
+  @override
+  String get office => values['office'] ?? '';
+
+  @override
+  String get info => values['info'] ?? '';
+
+  @override
+  String get enterCustomLabel => values['enter_custom_label'] ?? '';
 
   @override
   // TODO: implement savedLocations

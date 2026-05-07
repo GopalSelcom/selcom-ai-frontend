@@ -16,7 +16,7 @@ class AppDialogs {
 
   /// Shows a common error dialog with an OK button.
   static void showErrorDialog({
-    String title = 'Error',
+    String title = AppStrings.error,
     required String message,
     VoidCallback? onConfirm,
   }) {
@@ -92,7 +92,7 @@ class AppDialogs {
 
                       // Title
                       Text(
-                        title,
+                        title.tr,
                         style: AppTextStyles.onboardingTitle.copyWith(
                           fontSize: 22.sp,
                           color: AppColors.textHeading,
@@ -138,7 +138,7 @@ class AppDialogs {
 
   /// Shows an info dialog.
   static void showInfoDialog({
-    String title = 'Info',
+    String title = AppStrings.info,
     required String message,
     VoidCallback? onConfirm,
   }) {
@@ -157,7 +157,7 @@ class AppDialogs {
               Icon(Icons.info_outline, color: AppColors.primary, size: 48.sp),
               SizedBox(height: 20.h),
               Text(
-                title,
+                title.tr,
                 style: AppTextStyles.onboardingTitle.copyWith(fontSize: 20.sp),
                 textAlign: TextAlign.center,
               ),
@@ -188,7 +188,7 @@ class AppDialogs {
 
   /// Shows a success dialog
   static void showSuccessDialog({
-    String title = 'Success',
+    String title = AppStrings.success,
     required String message,
     VoidCallback? onConfirm,
   }) {
@@ -234,7 +234,7 @@ class AppDialogs {
                 ),
                 SizedBox(height: 20.h),
                 Text(
-                  title,
+                  title.tr,
                   style: AppTextStyles.onboardingTitle.copyWith(
                     fontSize: 20.sp,
                     letterSpacing: -0.4,
@@ -269,10 +269,10 @@ class AppDialogs {
 
   /// Shows a confirmation dialog with Cancel and Confirm buttons.
   static void showConfirmationDialog({
-    String title = 'Confirmation',
+    String title = AppStrings.confirmation,
     required String message,
-    String confirmText = 'Confirm',
-    String cancelText = 'Cancel',
+    String confirmText = AppStrings.confirm,
+    String cancelText = AppStrings.cancel,
     Color? confirmColor,
     required VoidCallback onConfirm,
     VoidCallback? onCancel,
@@ -350,7 +350,7 @@ class AppDialogs {
                   children: [
                     Expanded(
                       child: AppPrimaryButton(
-                        label: cancelText,
+                        label: cancelText.tr,
                         onPressed: handleCancel,
                         height: 50.h,
                         outlined: true,
@@ -365,7 +365,7 @@ class AppDialogs {
                     SizedBox(width: 12.w),
                     Expanded(
                       child: AppPrimaryButton(
-                        label: confirmText,
+                        label: confirmText.tr,
                         onPressed: () {
                           Get.back();
                           onConfirm();
@@ -451,7 +451,7 @@ class AppDialogs {
 
               // Title
               Text(
-                title,
+                  title.tr,
                 style: AppTextStyles.onboardingTitle.copyWith(
                   fontSize: 24.sp,
                   color: AppColors.textPrimary,
@@ -623,7 +623,9 @@ class AppDialogs {
     VoidCallback? onConfirm,
   }) {
     final minutes = (retryAfterSeconds / 60).ceil();
-    final timeText = minutes > 1 ? "$minutes minutes" : "1 minute";
+    final timeText = AppStrings.minutesCount.trParams({
+      'count': minutes.toString(),
+    });
 
     Get.dialog(
       Dialog(
@@ -697,7 +699,10 @@ class AppDialogs {
                   ),
                   SizedBox(height: 12.h),
                   Text(
-                    "$message. Please try again in $timeText.",
+                    AppStrings.pinLockedMessageRetryInTime.trParams({
+                      'message': message,
+                      'time': timeText,
+                    }),
                     style: AppTextStyles.body.copyWith(
                       fontSize: 16.sp,
                       color: AppColors.textBody,
@@ -726,7 +731,7 @@ class AppDialogs {
   }
 
   /// Shows a simple loading dialog.
-  static void showLoadingDialog({String message = 'Loading...'}) {
+  static void showLoadingDialog({String message = AppStrings.loading}) {
     Get.dialog(
       PopScope(
         canPop: false,
@@ -744,7 +749,7 @@ class AppDialogs {
                 if (message.isNotEmpty) ...[
                   SizedBox(height: 16.h),
                   Text(
-                    message,
+                    message.tr,
                     style: AppTextStyles.body.copyWith(
                       color: AppColors.textHeading,
                       fontSize: 14.sp,

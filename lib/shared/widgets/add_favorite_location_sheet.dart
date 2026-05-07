@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 
 import '../../core/constants/app_assets.dart';
+import '../../core/localization/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/widgets/svg_picture_asset.dart';
@@ -27,13 +29,13 @@ class AddFavoriteLocationSheet extends StatefulWidget {
 
 class _AddFavoriteLocationSheetState extends State<AddFavoriteLocationSheet> {
   static const List<String> _labels = <String>[
-    'Home',
-    'Work',
-    'Office',
-    'Add New',
+    'home',
+    'work',
+    'office',
+    'add_new',
   ];
   final TextEditingController _customLabelController = TextEditingController();
-  String _selectedLabel = 'Home';
+  String _selectedLabel = 'home';
 
   @override
   void dispose() {
@@ -70,7 +72,7 @@ class _AddFavoriteLocationSheetState extends State<AddFavoriteLocationSheet> {
               ),
               SizedBox(height: 20.h),
               Text(
-                'Add to Favourites',
+                AppStrings.addToFavourites.tr,
                 style: AppTextStyles.homeTitle.copyWith(
                   height: 34 / 20,
                   letterSpacing: -0.4,
@@ -91,7 +93,7 @@ class _AddFavoriteLocationSheetState extends State<AddFavoriteLocationSheet> {
               ),
               SizedBox(height: 20.h),
               Text(
-                'Save Location As',
+                AppStrings.saveLocationAs.tr,
                 style: AppTextStyles.homeSubtitle.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -108,16 +110,16 @@ class _AddFavoriteLocationSheetState extends State<AddFavoriteLocationSheet> {
                     onTap: () {
                       setState(() {
                         _selectedLabel = label;
-                        if (label != 'Add New') _customLabelController.clear();
+                        if (label != 'add_new') _customLabelController.clear();
                       });
                     },
                   );
                 }).toList(),
               ),
-              if (_selectedLabel == 'Add New') ...[
+              if (_selectedLabel == 'add_new') ...[
                 SizedBox(height: 12.h),
                 AppTextField(
-                  hintText: 'Enter custom label',
+                  hintText: AppStrings.enterCustomLabel.tr,
                   controller: _customLabelController,
                   textInputAction: TextInputAction.done,
                   textFieldBackgroundColor: AppColors.white,
@@ -127,12 +129,12 @@ class _AddFavoriteLocationSheetState extends State<AddFavoriteLocationSheet> {
               ],
               SizedBox(height: 22.h),
               AppPrimaryButton(
-                label: 'Save Address',
+                label: AppStrings.saveAddress.tr,
                 isLoading: widget.isSaving,
                 onPressed: () async {
-                  final selected = _selectedLabel == 'Add New'
+                  final selected = _selectedLabel == 'add_new'
                       ? _customLabelController.text.trim()
-                      : _selectedLabel;
+                      : _canonicalLabel(_selectedLabel);
                   await widget.onSave(selected);
                 },
               ),
@@ -148,10 +150,10 @@ class _AddFavoriteLocationSheetState extends State<AddFavoriteLocationSheet> {
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    final isAddNew = label == 'Add New';
-    final iconPath = label.toLowerCase() == 'home'
+    final isAddNew = label == 'add_new';
+    final iconPath = label == 'home'
         ? AppAssets.icHomeChip
-        : label.toLowerCase() == 'work'
+        : label == 'work'
         ? AppAssets.icWorkChip
         : AppAssets.icOfficeChip;
     return GestureDetector(
@@ -184,7 +186,7 @@ class _AddFavoriteLocationSheetState extends State<AddFavoriteLocationSheet> {
                 : SvgPictureAsset(iconPath, width: 16.w, height: 16.w),
             SizedBox(width: 8.w),
             Text(
-              label,
+              _displayLabel(label),
               style: AppTextStyles.homeChip.copyWith(
                 color: AppColors.figmaTextPrimary,
               ),
@@ -193,5 +195,33 @@ class _AddFavoriteLocationSheetState extends State<AddFavoriteLocationSheet> {
         ),
       ),
     );
+  }
+
+  String _displayLabel(String key) {
+    switch (key) {
+      case 'home':
+        return AppStrings.home.tr;
+      case 'work':
+        return AppStrings.work.tr;
+      case 'office':
+        return AppStrings.office.tr;
+      case 'add_new':
+        return AppStrings.addNew.tr;
+      default:
+        return key;
+    }
+  }
+
+  String _canonicalLabel(String key) {
+    switch (key) {
+      case 'home':
+        return 'Home';
+      case 'work':
+        return 'Work';
+      case 'office':
+        return 'Office';
+      default:
+        return key;
+    }
   }
 }

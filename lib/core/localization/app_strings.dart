@@ -5,6 +5,8 @@ class AppStrings {
       'account_unlinked_successfully';
   static const String accountVerified = 'account_verified';
   static const String add = 'add';
+  static const String addNew = 'add_new';
+  static const String addToFavourites = 'add_to_favourites';
   static const String addStops = 'add_stops';
   static const String addASavedPlace = 'add_asaved_place';
   static const String addDebitCreditCard = 'add_debit_credit_card';
@@ -53,6 +55,8 @@ class AppStrings {
   static const String chooseRide = 'choose_ride';
   static const String commentRequired = 'comment_required';
   static const String confirmPickup = 'confirm_pickup';
+  static const String confirm = 'confirm';
+  static const String confirmation = 'confirmation';
   static const String connectionError = 'connection_error';
   static const String contactUs = 'contact_us';
   static const String continueLabel = 'continue';
@@ -138,6 +142,7 @@ class AppStrings {
   static const String helpSelcomGoDoBetterByRatingThisTrip =
       'help_selcom_go_do_better_by_rating_this_trip';
   static const String howCanWeHelpYou = 'how_can_we_help_you';
+  static const String home = 'home';
   static const String howDoYouRateTheDriver = 'how_do_you_rate_the_driver';
   static const String howWasYourRide = 'how_was_your_ride';
   static const String includesStops = 'includes_stops';
@@ -158,6 +163,7 @@ class AppStrings {
   static const String recentTag = 'recent_tag';
   static const String savedTag = 'saved_tag';
   static const String loadingYourProfile = 'loading_your_profile';
+  static const String loading = 'loading';
   static const String locationSelection = 'location_selection';
   static const String locationUnavailable = 'location_unavailable';
   static const String login = 'login';
@@ -170,6 +176,7 @@ class AppStrings {
   static const String maybeLater = 'maybe_later';
   static const String markAllReadCount = 'mark_all_read_count';
   static const String message = 'message';
+  static const String minutesCount = 'minutes_count';
   static const String missingInfo = 'missing_info';
   static const String missingRideInformation = 'missing_ride_information';
   static const String mmYy = 'mm_yy';
@@ -235,6 +242,8 @@ class AppStrings {
   static const String pickupPoint = 'pickup_point';
   static const String pin = 'pin';
   static const String pinLocked = 'pin_locked';
+  static const String pinLockedMessageRetryInTime =
+      'pin_locked_message_retry_in_time';
   static const String pleaseConfirmPickupPointToContinue =
       'please_confirm_pickup_point_to_continue';
   static const String pleaseEnterAPromoCode = 'please_enter_apromo_code';
@@ -317,6 +326,8 @@ class AppStrings {
   static const String safetyAndPrivacy = 'safety_and_privacy';
   static const String saveThisAddressFirstThenYouCanBookFromHere =
       'save_this_address_first_then_you_can_book_from_here';
+  static const String saveAddress = 'save_address';
+  static const String saveLocationAs = 'save_location_as';
   static const String savingChanges = 'saving_changes';
   static const String searchDestination = 'search_destination';
   static const String searchLocation = 'search_location';
@@ -523,4 +534,8 @@ class AppStrings {
   static const String user = 'user';
   static const String userName = 'user_name';
   static const String phoneNumber = 'phone_number';
+  static const String work = 'work';
+  static const String office = 'office';
+  static const String info = 'info';
+  static const String enterCustomLabel = 'enter_custom_label';
 }

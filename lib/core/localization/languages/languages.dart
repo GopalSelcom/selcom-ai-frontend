@@ -427,5 +427,19 @@ abstract class Languages {
   String get user;
   String get userName;
   String get phoneNumber;
+  String get addNew;
+  String get addToFavourites;
+  String get confirm;
+  String get confirmation;
+  String get home;
+  String get loading;
+  String get minutesCount;
+  String get pinLockedMessageRetryInTime;
+  String get saveAddress;
+  String get saveLocationAs;
+  String get work;
+  String get office;
+  String get info;
+  String get enterCustomLabel;
   String get savedLocations;
 }
