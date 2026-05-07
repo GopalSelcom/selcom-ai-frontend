@@ -108,6 +108,7 @@ class LanguageEn extends Languages {
         'Thank you for riding with us, see you on the next trip.',
     'face_scan_process_has_been_successful':
         'Face scan process has been successful',
+    'fare': 'Fare',
     'failed_to_send_message': 'Failed to send message',
     'failed_to_resend_otp': 'Failed to resend OTP',
     'failed_to_send_otp': 'Failed to send OTP',
@@ -801,6 +802,9 @@ class LanguageEn extends Languages {
   @override
   String get faceScanProcessHasBeenSuccessful =>
       values['face_scan_process_has_been_successful'] ?? '';
+
+  @override
+  String get fare => values['fare'] ?? '';
 
   @override
   String get failedToSendMessage => values['failed_to_send_message'] ?? '';

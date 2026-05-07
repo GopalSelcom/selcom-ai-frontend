@@ -114,6 +114,7 @@ class AppStrings {
       'thank_you_for_riding_with_us_see_you_on_the_next_trip';
   static const String faceScanProcessHasBeenSuccessful =
       'face_scan_process_has_been_successful';
+  static const String fare = 'fare';
   static const String failedToSendMessage = 'failed_to_send_message';
   static const String failedToResendOtp = 'failed_to_resend_otp';
   static const String failedToSendOtp = 'failed_to_send_otp';

@@ -97,6 +97,7 @@ class LanguageSw extends Languages {
     'payment_completed_successfully': '',
     'thank_you_for_riding_with_us_see_you_on_the_next_trip': '',
     'face_scan_process_has_been_successful': '',
+    'fare': '',
     'failed_to_send_message': '',
     'failed_to_resend_otp': '',
     'failed_to_send_otp': '',
@@ -737,6 +738,9 @@ class LanguageSw extends Languages {
   @override
   String get faceScanProcessHasBeenSuccessful =>
       values['face_scan_process_has_been_successful'] ?? '';
+
+  @override
+  String get fare => values['fare'] ?? '';
 
   @override
   String get failedToSendMessage => values['failed_to_send_message'] ?? '';

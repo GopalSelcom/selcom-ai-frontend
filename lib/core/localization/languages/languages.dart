@@ -107,6 +107,7 @@ abstract class Languages {
   String get paymentCompletedSuccessfully;
   String get thankYouForRidingWithUsSeeYouOnTheNextTrip;
   String get faceScanProcessHasBeenSuccessful;
+  String get fare;
   String get failedToSendMessage;
   String get failedToResendOtp;
   String get failedToSendOtp;

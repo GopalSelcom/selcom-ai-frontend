@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
@@ -180,7 +180,7 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
                           ),
                           Obx(
                             () => AppPrimaryButton(
-                              label: 'Done',
+                              label: AppStrings.done.tr,
                               isLoading: controller.isSubmitting.value,
                               onPressed: controller.canSubmit
                                   ? controller.onSubmitTap
@@ -215,15 +215,18 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (ride.pickupAddress.trim().isNotEmpty)
-            _routeLine(label: 'Pickup', value: ride.pickupAddress),
+            _routeLine(label: AppStrings.pickup.tr, value: ride.pickupAddress),
           if (ride.pickupAddress.trim().isNotEmpty &&
               ride.destinationAddress.trim().isNotEmpty)
             SizedBox(height: 10.h),
           if (ride.destinationAddress.trim().isNotEmpty)
-            _routeLine(label: 'Destination', value: ride.destinationAddress),
+            _routeLine(
+              label: AppStrings.destination.tr,
+              value: ride.destinationAddress,
+            ),
           if (controller.rideFareLabel.isNotEmpty) ...[
             SizedBox(height: 10.h),
-            _routeLine(label: 'Fare', value: controller.rideFareLabel),
+            _routeLine(label: AppStrings.fare.tr, value: controller.rideFareLabel),
           ],
         ],
       ),

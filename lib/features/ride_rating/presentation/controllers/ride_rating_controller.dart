@@ -351,7 +351,9 @@ class RideRatingController extends GetxController {
       return;
     }
 
-    AppDialogs.showErrorDialog(message: message.isEmpty ? 'Something went wrong.' : message);
+    AppDialogs.showErrorDialog(
+      message: message.isEmpty ? AppStrings.anUnexpectedErrorOccurred.tr : message,
+    );
   }
 
   @override
