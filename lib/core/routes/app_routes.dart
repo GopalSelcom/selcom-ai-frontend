@@ -42,15 +42,12 @@ class AppRoutes {
   static const String signUp = '/auth/sign-up';
   static const String home = '/home';
   static const String locationSelection = '/location-selection';
-  static const String search = '/search';
   static const String booking = '/booking';
   static const String confirmPickup = '/confirm-pickup';
   static const String findingDriver = '/finding-driver';
 
   /// SCR-11 — driver accepted (heading to pickup).
   static const String driverAccepted = '/driver-accepted';
-  static const String ride = '/ride';
-  static const String feedback = '/feedback';
   static const String contactUs = '/contact-us';
   static const String promotions = '/promotions';
   static const String favoriteLocations = '/favorite-locations';
