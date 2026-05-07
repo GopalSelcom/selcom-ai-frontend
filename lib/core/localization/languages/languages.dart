@@ -97,6 +97,10 @@ abstract class Languages {
   String get minutesAgo;
   String get hoursAgo;
   String get daysAgo;
+  String get expiresInTimer;
+  String get requestSentPleaseCompletePaymentOnSelcomPesaToBookYourRide;
+  String get paymentCompletedSuccessfully;
+  String get thankYouForRidingWithUsSeeYouOnTheNextTrip;
   String get faceScanProcessHasBeenSuccessful;
   String get failedToSendMessage;
   String get failedToResendOtp;

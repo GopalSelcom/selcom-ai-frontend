@@ -87,6 +87,10 @@ class LanguageSw extends Languages {
     'minutes_ago': '',
     'hours_ago': '',
     'days_ago': '',
+    'expires_in_timer': '',
+    'request_sent_please_complete_payment_on_selcom_pesa_to_book_your_ride': '',
+    'payment_completed_successfully': '',
+    'thank_you_for_riding_with_us_see_you_on_the_next_trip': '',
     'face_scan_process_has_been_successful': '',
     'failed_to_send_message': '',
     'failed_to_resend_otp': '',
@@ -617,6 +621,22 @@ class LanguageSw extends Languages {
 
   @override
   String get daysAgo => values['days_ago'] ?? '';
+
+  @override
+  String get expiresInTimer => values['expires_in_timer'] ?? '';
+
+  @override
+  String get requestSentPleaseCompletePaymentOnSelcomPesaToBookYourRide =>
+      values['request_sent_please_complete_payment_on_selcom_pesa_to_book_your_ride'] ??
+      '';
+
+  @override
+  String get paymentCompletedSuccessfully =>
+      values['payment_completed_successfully'] ?? '';
+
+  @override
+  String get thankYouForRidingWithUsSeeYouOnTheNextTrip =>
+      values['thank_you_for_riding_with_us_see_you_on_the_next_trip'] ?? '';
 
   @override
   String get faceScanProcessHasBeenSuccessful =>

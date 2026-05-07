@@ -100,6 +100,13 @@ class AppStrings {
   static const String minutesAgo = 'minutes_ago';
   static const String hoursAgo = 'hours_ago';
   static const String daysAgo = 'days_ago';
+  static const String expiresInTimer = 'expires_in_timer';
+  static const String requestSentPleaseCompletePaymentOnSelcomPesaToBookYourRide =
+      'request_sent_please_complete_payment_on_selcom_pesa_to_book_your_ride';
+  static const String paymentCompletedSuccessfully =
+      'payment_completed_successfully';
+  static const String thankYouForRidingWithUsSeeYouOnTheNextTrip =
+      'thank_you_for_riding_with_us_see_you_on_the_next_trip';
   static const String faceScanProcessHasBeenSuccessful =
       'face_scan_process_has_been_successful';
   static const String failedToSendMessage = 'failed_to_send_message';
