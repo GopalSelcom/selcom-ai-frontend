@@ -10,6 +10,7 @@ class LanguageSw extends Languages {
     'add_asaved_place': '',
     'add_debit_credit_card': '',
     'add_new_card': '',
+    'add_card': '',
     'address_missing': '',
     'an_unexpected_error_occurred': '',
     'app_settings': '',
@@ -34,6 +35,7 @@ class LanguageSw extends Languages {
     'cancel': '',
     'cancelled': '',
     'card_detail': '',
+    'card_number': '',
     'card_ending_in_placeholder': '',
     'change_drop_location': 'Badilisha eneo la kushukia',
     'add_stops': 'Ongeza vituo',
@@ -349,6 +351,33 @@ class LanguageSw extends Languages {
     'exit_app': 'Ondoka kwenye App',
     'exit_app_title': 'Ondoka kwenye App',
     'exit_app_message': 'Je, una uhakika unataka kuondoka kwenye app?',
+    'card_delete_warning_description': '',
+    'no_cancel': '',
+    'expiry': '',
+    'cvv': '',
+    'set_a_nick_name': '',
+    'please_enter_your_phone_number': '',
+    'please_enter_a_valid_phone_number': '',
+    'invalid_otp_please_try_again': '',
+    'camera_access_needed_for_selfie_verification': '',
+    'card_ready_to_use_you_can_manage_or_remove_anytime': '',
+    'selcom_pesa_connect_step_1': '',
+    'selcom_pesa_connect_step_2': '',
+    'selcom_pesa_connect_step_3': '',
+    'selcom_pesa_connect_step_4': '',
+    'otp_sent_to_your_phone_number': '',
+    'require_verification_pin_before_starting_ride': '',
+    'ride_pin_required_by_admin_cannot_be_turned_off': '',
+    'current_status_required': '',
+    'current_status_optional': '',
+    'take_selfie': '',
+    'error_picking_image': '',
+    'are_you_sure_you_want_to_logout_from_the_app': '',
+    'please_select_a_reason': '',
+    'please_enter_a_message': '',
+    'user': '',
+    'user_name': '',
+    'phone_number': '',
   };
 
   @override
@@ -372,6 +401,9 @@ class LanguageSw extends Languages {
 
   @override
   String get addNewCard => values['add_new_card'] ?? '';
+
+  @override
+  String get addCard => values['add_card'] ?? '';
 
   @override
   String get addressMissing => values['address_missing'] ?? '';
@@ -448,6 +480,9 @@ class LanguageSw extends Languages {
 
   @override
   String get cardDetail => values['card_detail'] ?? '';
+
+  @override
+  String get cardNumber => values['card_number'] ?? '';
 
   @override
   String get cardEndingInPlaceholder =>
@@ -1426,6 +1461,101 @@ class LanguageSw extends Languages {
 
   @override
   String get exitAppMessage => values['exit_app_message'] ?? '';
+
+  @override
+  String get cardDeleteWarningDescription =>
+      values['card_delete_warning_description'] ?? '';
+
+  @override
+  String get noCancel => values['no_cancel'] ?? '';
+
+  @override
+  String get expiry => values['expiry'] ?? '';
+
+  @override
+  String get cvv => values['cvv'] ?? '';
+
+  @override
+  String get setANickName => values['set_a_nick_name'] ?? '';
+
+  @override
+  String get pleaseEnterYourPhoneNumber =>
+      values['please_enter_your_phone_number'] ?? '';
+
+  @override
+  String get pleaseEnterAValidPhoneNumber =>
+      values['please_enter_a_valid_phone_number'] ?? '';
+
+  @override
+  String get invalidOtpPleaseTryAgain =>
+      values['invalid_otp_please_try_again'] ?? '';
+
+  @override
+  String get cameraAccessNeededForSelfieVerification =>
+      values['camera_access_needed_for_selfie_verification'] ?? '';
+
+  @override
+  String get cardReadyToUseYouCanManageOrRemoveAnytime =>
+      values['card_ready_to_use_you_can_manage_or_remove_anytime'] ?? '';
+
+  @override
+  String get selcomPesaConnectStep1 =>
+      values['selcom_pesa_connect_step_1'] ?? '';
+
+  @override
+  String get selcomPesaConnectStep2 =>
+      values['selcom_pesa_connect_step_2'] ?? '';
+
+  @override
+  String get selcomPesaConnectStep3 =>
+      values['selcom_pesa_connect_step_3'] ?? '';
+
+  @override
+  String get selcomPesaConnectStep4 =>
+      values['selcom_pesa_connect_step_4'] ?? '';
+
+  @override
+  String get otpSentToYourPhoneNumber =>
+      values['otp_sent_to_your_phone_number'] ?? '';
+
+  @override
+  String get requireVerificationPinBeforeStartingRide =>
+      values['require_verification_pin_before_starting_ride'] ?? '';
+
+  @override
+  String get ridePinRequiredByAdminCannotBeTurnedOff =>
+      values['ride_pin_required_by_admin_cannot_be_turned_off'] ?? '';
+
+  @override
+  String get currentStatusRequired => values['current_status_required'] ?? '';
+
+  @override
+  String get currentStatusOptional => values['current_status_optional'] ?? '';
+
+  @override
+  String get takeSelfie => values['take_selfie'] ?? '';
+
+  @override
+  String get errorPickingImage => values['error_picking_image'] ?? '';
+
+  @override
+  String get areYouSureYouWantToLogoutFromTheApp =>
+      values['are_you_sure_you_want_to_logout_from_the_app'] ?? '';
+
+  @override
+  String get pleaseSelectAReason => values['please_select_a_reason'] ?? '';
+
+  @override
+  String get pleaseEnterAMessage => values['please_enter_a_message'] ?? '';
+
+  @override
+  String get user => values['user'] ?? '';
+
+  @override
+  String get userName => values['user_name'] ?? '';
+
+  @override
+  String get phoneNumber => values['phone_number'] ?? '';
 
   @override
   // TODO: implement savedLocations

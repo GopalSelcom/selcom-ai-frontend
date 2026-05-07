@@ -72,7 +72,7 @@ class SelcomPesaConnectBottomSheet extends GetView<PaymentMethodsController> {
 
           // Continue Button
           AppPrimaryButton(
-            label: 'Continue',
+            label: AppStrings.continueLabel.tr,
             onPressed: controller.openPhoneInput,
           ),
           SizedBox(height: 16.h),
@@ -82,28 +82,26 @@ class SelcomPesaConnectBottomSheet extends GetView<PaymentMethodsController> {
   }
 
   Widget _buildStepper() {
-    return const Column(
+    return Column(
       children: [
         _StepperItem(
           step: '1',
-          description: 'Enter your Selcom Pesa registered phone number',
+          description: AppStrings.selcomPesaConnectStep1.tr,
           isLast: false,
         ),
         _StepperItem(
           step: '2',
-          description:
-              'Verify the selfie associated with your Selcom Pesa account.',
+          description: AppStrings.selcomPesaConnectStep2.tr,
           isLast: false,
         ),
         _StepperItem(
           step: '3',
-          description:
-              'Check your Selcom Pesa app and approve the verification request.',
+          description: AppStrings.selcomPesaConnectStep3.tr,
           isLast: false,
         ),
         _StepperItem(
           step: '4',
-          description: "You're all set! Your Selcom Pesa account is connected.",
+          description: AppStrings.selcomPesaConnectStep4.tr,
           isLast: true,
         ),
       ],

@@ -20,6 +20,7 @@ abstract class Languages {
   String get addASavedPlace;
   String get addDebitCreditCard;
   String get addNewCard;
+  String get addCard;
   String get addressMissing;
   String get anUnexpectedErrorOccurred;
   String get appSettings;
@@ -44,6 +45,7 @@ abstract class Languages {
   String get cancel;
   String get cancelled;
   String get cardDetail;
+  String get cardNumber;
   String get cardEndingInPlaceholder;
   String get changeDropLocation;
   String get changeLocation;
@@ -342,5 +344,32 @@ abstract class Languages {
   String get exitApp;
   String get exitAppTitle;
   String get exitAppMessage;
+  String get cardDeleteWarningDescription;
+  String get noCancel;
+  String get expiry;
+  String get cvv;
+  String get setANickName;
+  String get pleaseEnterYourPhoneNumber;
+  String get pleaseEnterAValidPhoneNumber;
+  String get invalidOtpPleaseTryAgain;
+  String get cameraAccessNeededForSelfieVerification;
+  String get cardReadyToUseYouCanManageOrRemoveAnytime;
+  String get selcomPesaConnectStep1;
+  String get selcomPesaConnectStep2;
+  String get selcomPesaConnectStep3;
+  String get selcomPesaConnectStep4;
+  String get otpSentToYourPhoneNumber;
+  String get requireVerificationPinBeforeStartingRide;
+  String get ridePinRequiredByAdminCannotBeTurnedOff;
+  String get currentStatusRequired;
+  String get currentStatusOptional;
+  String get takeSelfie;
+  String get errorPickingImage;
+  String get areYouSureYouWantToLogoutFromTheApp;
+  String get pleaseSelectAReason;
+  String get pleaseEnterAMessage;
+  String get user;
+  String get userName;
+  String get phoneNumber;
   String get savedLocations;
 }

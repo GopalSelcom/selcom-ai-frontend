@@ -83,12 +83,12 @@ class SettingsScreen extends GetView<SettingsController> {
                         icon: Iconsax.shield_security,
                         title: AppStrings.ridePinProtection.tr,
                         subtitle: controller.canToggleRidePin
-                            ? 'Require a verification PIN before starting a ride.'
-                            : 'Ride PIN is required by admin and cannot be turned off.',
+                            ? AppStrings.requireVerificationPinBeforeStartingRide.tr
+                            : AppStrings.ridePinRequiredByAdminCannotBeTurnedOff.tr,
                         statusText:
                             controller.effectiveRequiredRidePin.value
-                            ? 'Current status: required'
-                            : 'Current status: optional',
+                            ? AppStrings.currentStatusRequired.tr
+                            : AppStrings.currentStatusOptional.tr,
                         value: controller.ridePinSwitchValue,
                         enabled: controller.canToggleRidePin,
                         isSaving: controller.isSaving.value,

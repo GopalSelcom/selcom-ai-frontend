@@ -45,7 +45,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                         children: [
                           Obx(
                             () => AppTextField(
-                              label: 'Full Name',
+                              label: AppStrings.fullName.tr,
                               hintText: AppStrings.eGJohnDoe.tr,
                               controller: controller.cardHolderController,
                               focusNode: controller.fullNameFocus,
@@ -62,7 +62,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                           SizedBox(height: 16.h),
                           Obx(
                             () => AppTextField(
-                              label: 'Card Number',
+                              label: AppStrings.cardNumber.tr,
                               hintText: AppStrings.value0000000000000000.tr,
                               controller: controller.cardNumberController,
                               focusNode: controller.cardNumberFocus,
@@ -88,7 +88,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                               Expanded(
                                 child: Obx(
                                   () => AppTextField(
-                                    label: 'Expiry',
+                                    label: AppStrings.expiry.tr,
                                     hintText: AppStrings.mmYy.tr,
                                     controller: controller.expiryController,
                                     focusNode: controller.expiryFocus,
@@ -114,7 +114,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                               Expanded(
                                 child: Obx(
                                   () => AppTextField(
-                                    label: 'CVV',
+                                    label: AppStrings.cvv.tr,
                                     hintText: AppStrings.eG123.tr,
                                     controller: controller.cvvController,
                                     focusNode: controller.cvvFocus,
@@ -156,7 +156,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                   ),
                   Obx(
                     () => AppPrimaryButton(
-                      label: 'Add Card',
+                      label: AppStrings.addCard.tr,
                       iconAsset: AppAssets.locationIcArrowRight,
                       isLoading: controller.isSubmitting.value,
                       onPressed: controller.isSubmitting.value

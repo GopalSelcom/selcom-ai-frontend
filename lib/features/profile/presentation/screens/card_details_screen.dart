@@ -53,12 +53,12 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
         () => PaymentCardActionBottomSheet(
           title: AppStrings.areYouSureWantToAddNdeleteThisCard.tr,
           description:
-              'This action will remove the card from your account, and you will need to add it again if you want to use it in the future.',
+              AppStrings.cardDeleteWarningDescription.tr,
           cardNumber: widget.card.fullNumber,
           imageAssetPath: AppAssets.imgPaymentDeleteCardConfirm,
-          primaryButtonLabel: 'No, Cancel',
+          primaryButtonLabel: AppStrings.noCancel.tr,
           onPrimaryPressed: Get.back,
-          secondaryButtonLabel: 'Delete Card',
+          secondaryButtonLabel: AppStrings.deleteCard.tr,
           onSecondaryPressed: () async {
             final isDeleted = await controller.deleteCard();
             if (!isDeleted) return;
@@ -127,7 +127,7 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                     children: [
                       Expanded(
                         child: AppTextField(
-                          label: 'Expiry',
+                          label: AppStrings.expiry.tr,
                           controller: _expiryController,
                           readOnly: true,
                           textFieldBackgroundColor: AppColors.surfaceSubtle,
@@ -139,7 +139,7 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                       Expanded(
                         child: Obx(
                           () => AppTextField(
-                            label: 'CVV',
+                            label: AppStrings.cvv.tr,
                             controller: _cvvController,
                             readOnly: true,
                             isPassword: controller.isCvvHidden.value,
@@ -163,7 +163,7 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                   ),
                   SizedBox(height: 8.h),
                   AppTextField(
-                    label: 'Set a Nick name',
+                    label: AppStrings.setANickName.tr,
                     controller: _nickNameController,
                     readOnly: true,
                     textFieldBackgroundColor: AppColors.surfaceSubtle,

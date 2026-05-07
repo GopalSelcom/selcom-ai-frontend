@@ -100,7 +100,7 @@ class WalletSummaryCard extends StatelessWidget {
           Row(
             children: [
               Text(
-                'TZS $balance',
+                '${AppStrings.defaultCurrencyTzs.tr} $balance',
                 style: AppTextStyles.price.copyWith(
                   color: AppColors.primary,
                   fontWeight: FontWeight.w600,

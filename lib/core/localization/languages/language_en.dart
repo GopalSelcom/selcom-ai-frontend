@@ -10,6 +10,7 @@ class LanguageEn extends Languages {
     'add_asaved_place': 'Add a saved place',
     'add_debit_credit_card': 'Add debit/credit card',
     'add_new_card': 'Add New Card',
+    'add_card': 'Add Card',
     'address_missing': 'Address missing',
     'an_unexpected_error_occurred': 'An unexpected error occurred',
     'app_settings': 'App Settings',
@@ -36,6 +37,7 @@ class LanguageEn extends Languages {
     'cancel': 'Cancel',
     'cancelled': 'Cancelled',
     'card_detail': 'Card Detail',
+    'card_number': 'Card Number',
     'card_ending_in_placeholder': 'Card ending in XX1234',
     'change_drop_location': 'Change Drop Location',
     'add_stops': 'Add Stops',
@@ -399,6 +401,43 @@ class LanguageEn extends Languages {
     'exit_app': 'Exit App',
     'exit_app_title': 'Exit App',
     'exit_app_message': 'Are you sure, you want to exit the app?',
+    'card_delete_warning_description':
+        'This action will remove the card from your account, and you will need to add it again if you want to use it in the future.',
+    'no_cancel': 'No, Cancel',
+    'expiry': 'Expiry',
+    'cvv': 'CVV',
+    'set_a_nick_name': 'Set a Nick name',
+    'please_enter_your_phone_number': 'Please enter your phone number',
+    'please_enter_a_valid_phone_number': 'Please enter a valid phone number',
+    'invalid_otp_please_try_again': 'Invalid OTP. Please try again.',
+    'camera_access_needed_for_selfie_verification':
+        'We need camera access to capture your selfie for identity verification. Please enable it in your device settings.',
+    'card_ready_to_use_you_can_manage_or_remove_anytime':
+        'Now ready to use for payments. You can manage or remove this card anytime from your payment settings.',
+    'selcom_pesa_connect_step_1':
+        'Enter your Selcom Pesa registered phone number',
+    'selcom_pesa_connect_step_2':
+        'Verify the selfie associated with your Selcom Pesa account.',
+    'selcom_pesa_connect_step_3':
+        'Check your Selcom Pesa app and approve the verification request.',
+    'selcom_pesa_connect_step_4':
+        "You're all set! Your Selcom Pesa account is connected.",
+    'otp_sent_to_your_phone_number': 'OTP Sent to your @phoneNumber phone number',
+    'require_verification_pin_before_starting_ride':
+        'Require a verification PIN before starting a ride.',
+    'ride_pin_required_by_admin_cannot_be_turned_off':
+        'Ride PIN is required by admin and cannot be turned off.',
+    'current_status_required': 'Current status: required',
+    'current_status_optional': 'Current status: optional',
+    'take_selfie': 'Take Selfie',
+    'error_picking_image': 'Error picking image: @error',
+    'are_you_sure_you_want_to_logout_from_the_app':
+        'Are you sure, you want to logout from the app?',
+    'please_select_a_reason': 'Please select a reason',
+    'please_enter_a_message': 'Please enter a message',
+    'user': 'User',
+    'user_name': 'User name',
+    'phone_number': 'Phone number',
   };
 
   @override
@@ -422,6 +461,9 @@ class LanguageEn extends Languages {
 
   @override
   String get addNewCard => values['add_new_card'] ?? '';
+
+  @override
+  String get addCard => values['add_card'] ?? '';
 
   @override
   String get addressMissing => values['address_missing'] ?? '';
@@ -498,6 +540,9 @@ class LanguageEn extends Languages {
 
   @override
   String get cardDetail => values['card_detail'] ?? '';
+
+  @override
+  String get cardNumber => values['card_number'] ?? '';
 
   @override
   String get cardEndingInPlaceholder =>
@@ -1476,6 +1521,101 @@ class LanguageEn extends Languages {
 
   @override
   String get exitAppMessage => values['exit_app_message'] ?? '';
+
+  @override
+  String get cardDeleteWarningDescription =>
+      values['card_delete_warning_description'] ?? '';
+
+  @override
+  String get noCancel => values['no_cancel'] ?? '';
+
+  @override
+  String get expiry => values['expiry'] ?? '';
+
+  @override
+  String get cvv => values['cvv'] ?? '';
+
+  @override
+  String get setANickName => values['set_a_nick_name'] ?? '';
+
+  @override
+  String get pleaseEnterYourPhoneNumber =>
+      values['please_enter_your_phone_number'] ?? '';
+
+  @override
+  String get pleaseEnterAValidPhoneNumber =>
+      values['please_enter_a_valid_phone_number'] ?? '';
+
+  @override
+  String get invalidOtpPleaseTryAgain =>
+      values['invalid_otp_please_try_again'] ?? '';
+
+  @override
+  String get cameraAccessNeededForSelfieVerification =>
+      values['camera_access_needed_for_selfie_verification'] ?? '';
+
+  @override
+  String get cardReadyToUseYouCanManageOrRemoveAnytime =>
+      values['card_ready_to_use_you_can_manage_or_remove_anytime'] ?? '';
+
+  @override
+  String get selcomPesaConnectStep1 =>
+      values['selcom_pesa_connect_step_1'] ?? '';
+
+  @override
+  String get selcomPesaConnectStep2 =>
+      values['selcom_pesa_connect_step_2'] ?? '';
+
+  @override
+  String get selcomPesaConnectStep3 =>
+      values['selcom_pesa_connect_step_3'] ?? '';
+
+  @override
+  String get selcomPesaConnectStep4 =>
+      values['selcom_pesa_connect_step_4'] ?? '';
+
+  @override
+  String get otpSentToYourPhoneNumber =>
+      values['otp_sent_to_your_phone_number'] ?? '';
+
+  @override
+  String get requireVerificationPinBeforeStartingRide =>
+      values['require_verification_pin_before_starting_ride'] ?? '';
+
+  @override
+  String get ridePinRequiredByAdminCannotBeTurnedOff =>
+      values['ride_pin_required_by_admin_cannot_be_turned_off'] ?? '';
+
+  @override
+  String get currentStatusRequired => values['current_status_required'] ?? '';
+
+  @override
+  String get currentStatusOptional => values['current_status_optional'] ?? '';
+
+  @override
+  String get takeSelfie => values['take_selfie'] ?? '';
+
+  @override
+  String get errorPickingImage => values['error_picking_image'] ?? '';
+
+  @override
+  String get areYouSureYouWantToLogoutFromTheApp =>
+      values['are_you_sure_you_want_to_logout_from_the_app'] ?? '';
+
+  @override
+  String get pleaseSelectAReason => values['please_select_a_reason'] ?? '';
+
+  @override
+  String get pleaseEnterAMessage => values['please_enter_a_message'] ?? '';
+
+  @override
+  String get user => values['user'] ?? '';
+
+  @override
+  String get userName => values['user_name'] ?? '';
+
+  @override
+  String get phoneNumber => values['phone_number'] ?? '';
 
   @override
   // TODO: implement savedLocations

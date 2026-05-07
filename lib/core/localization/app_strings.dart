@@ -9,6 +9,7 @@ class AppStrings {
   static const String addASavedPlace = 'add_asaved_place';
   static const String addDebitCreditCard = 'add_debit_credit_card';
   static const String addNewCard = 'add_new_card';
+  static const String addCard = 'add_card';
   static const String addressMissing = 'address_missing';
   static const String anUnexpectedErrorOccurred =
       'an_unexpected_error_occurred';
@@ -38,6 +39,7 @@ class AppStrings {
   static const String cancel = 'cancel';
   static const String cancelled = 'cancelled';
   static const String cardDetail = 'card_detail';
+  static const String cardNumber = 'card_number';
   static const String cardEndingInPlaceholder = 'card_ending_in_placeholder';
   static const String changeDropLocation = 'change_drop_location';
   static const String changeLocation = 'change_location';
@@ -422,4 +424,38 @@ class AppStrings {
   static const String exitApp = 'exit_app';
   static const String exitAppTitle = 'exit_app_title';
   static const String exitAppMessage = 'exit_app_message';
+  static const String cardDeleteWarningDescription =
+      'card_delete_warning_description';
+  static const String noCancel = 'no_cancel';
+  static const String expiry = 'expiry';
+  static const String cvv = 'cvv';
+  static const String setANickName = 'set_a_nick_name';
+  static const String pleaseEnterYourPhoneNumber = 'please_enter_your_phone_number';
+  static const String pleaseEnterAValidPhoneNumber =
+      'please_enter_a_valid_phone_number';
+  static const String invalidOtpPleaseTryAgain = 'invalid_otp_please_try_again';
+  static const String cameraAccessNeededForSelfieVerification =
+      'camera_access_needed_for_selfie_verification';
+  static const String cardReadyToUseYouCanManageOrRemoveAnytime =
+      'card_ready_to_use_you_can_manage_or_remove_anytime';
+  static const String selcomPesaConnectStep1 = 'selcom_pesa_connect_step_1';
+  static const String selcomPesaConnectStep2 = 'selcom_pesa_connect_step_2';
+  static const String selcomPesaConnectStep3 = 'selcom_pesa_connect_step_3';
+  static const String selcomPesaConnectStep4 = 'selcom_pesa_connect_step_4';
+  static const String otpSentToYourPhoneNumber = 'otp_sent_to_your_phone_number';
+  static const String requireVerificationPinBeforeStartingRide =
+      'require_verification_pin_before_starting_ride';
+  static const String ridePinRequiredByAdminCannotBeTurnedOff =
+      'ride_pin_required_by_admin_cannot_be_turned_off';
+  static const String currentStatusRequired = 'current_status_required';
+  static const String currentStatusOptional = 'current_status_optional';
+  static const String takeSelfie = 'take_selfie';
+  static const String errorPickingImage = 'error_picking_image';
+  static const String areYouSureYouWantToLogoutFromTheApp =
+      'are_you_sure_you_want_to_logout_from_the_app';
+  static const String pleaseSelectAReason = 'please_select_a_reason';
+  static const String pleaseEnterAMessage = 'please_enter_a_message';
+  static const String user = 'user';
+  static const String userName = 'user_name';
+  static const String phoneNumber = 'phone_number';
 }

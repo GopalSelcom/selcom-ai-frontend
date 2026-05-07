@@ -197,7 +197,11 @@ class ProfileController extends GetxController {
         await saveProfile();
       }
     } catch (e) {
-      AppDialogs.showErrorDialog(message: 'Error picking image: $e');
+      AppDialogs.showErrorDialog(
+        message: AppStrings.errorPickingImage.trParams({
+          'error': e.toString(),
+        }),
+      );
     }
   }
 
@@ -259,8 +263,8 @@ class ProfileController extends GetxController {
   void logout() {
     AppDialogs.showConfirmationDialog(
       title: AppStrings.logout.tr,
-      message: 'Are you sure, you want to logout from the app?',
-      confirmText: 'Logout',
+      message: AppStrings.areYouSureYouWantToLogoutFromTheApp.tr,
+      confirmText: AppStrings.logout.tr,
       onConfirm: () async {
         await StorageService().deleteAll();
         Get.offAllNamed(AppRoutes.phone);
