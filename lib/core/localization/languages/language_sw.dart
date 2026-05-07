@@ -89,6 +89,7 @@ class LanguageSw extends Languages {
     'minutes_ago': '',
     'hours_ago': '',
     'days_ago': '',
+    'days_left_count': '',
     'expires_in_timer': '',
     'request_sent_please_complete_payment_on_selcom_pesa_to_book_your_ride': '',
     'payment_completed_successfully': '',
@@ -194,6 +195,8 @@ class LanguageSw extends Languages {
     'please_try_again': '',
     'privacy_policy': '',
     'promo_code_code_applied': '',
+    'promo_code_applied_with_code': '',
+    'promo_applied_with_title': '',
     'promocode_list': '',
     'promotions': '',
     'rating': '',
@@ -658,6 +661,9 @@ class LanguageSw extends Languages {
   String get daysAgo => values['days_ago'] ?? '';
 
   @override
+  String get daysLeftCount => values['days_left_count'] ?? '';
+
+  @override
   String get expiresInTimer => values['expires_in_timer'] ?? '';
 
   @override
@@ -998,6 +1004,13 @@ class LanguageSw extends Languages {
 
   @override
   String get promoCodeCodeApplied => values['promo_code_code_applied'] ?? '';
+
+  @override
+  String get promoCodeAppliedWithCode =>
+      values['promo_code_applied_with_code'] ?? '';
+
+  @override
+  String get promoAppliedWithTitle => values['promo_applied_with_title'] ?? '';
 
   @override
   String get promocodeList => values['promocode_list'] ?? '';

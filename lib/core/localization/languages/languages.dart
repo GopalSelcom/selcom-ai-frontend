@@ -99,6 +99,7 @@ abstract class Languages {
   String get minutesAgo;
   String get hoursAgo;
   String get daysAgo;
+  String get daysLeftCount;
   String get expiresInTimer;
   String get requestSentPleaseCompletePaymentOnSelcomPesaToBookYourRide;
   String get paymentCompletedSuccessfully;
@@ -203,6 +204,8 @@ abstract class Languages {
   String get pleaseTryAgain;
   String get privacyPolicy;
   String get promoCodeCodeApplied;
+  String get promoCodeAppliedWithCode;
+  String get promoAppliedWithTitle;
   String get promocodeList;
   String get promotions;
   String get rating;

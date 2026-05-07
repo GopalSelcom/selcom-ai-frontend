@@ -97,6 +97,7 @@ class LanguageEn extends Languages {
     'minutes_ago': '@count m ago',
     'hours_ago': '@count h ago',
     'days_ago': '@count d ago',
+    'days_left_count': '@count days left',
     'expires_in_timer': 'Expire in @timer',
     'request_sent_please_complete_payment_on_selcom_pesa_to_book_your_ride':
         'Request sent. Please complete payment on Selcom Pesa to book your ride.',
@@ -222,6 +223,8 @@ class LanguageEn extends Languages {
     'please_try_again': 'Please try again.',
     'privacy_policy': 'Privacy Policy',
     'promo_code_code_applied': 'Promo code \$code applied!',
+    'promo_code_applied_with_code': 'Promo code @code applied!',
+    'promo_applied_with_title': 'Promo "@title" applied!',
     'promocode_list': 'Promocode list',
     'promotions': 'Promotions',
     'rating': 'Rating',
@@ -718,6 +721,9 @@ class LanguageEn extends Languages {
   String get daysAgo => values['days_ago'] ?? '';
 
   @override
+  String get daysLeftCount => values['days_left_count'] ?? '';
+
+  @override
   String get expiresInTimer => values['expires_in_timer'] ?? '';
 
   @override
@@ -1058,6 +1064,13 @@ class LanguageEn extends Languages {
 
   @override
   String get promoCodeCodeApplied => values['promo_code_code_applied'] ?? '';
+
+  @override
+  String get promoCodeAppliedWithCode =>
+      values['promo_code_applied_with_code'] ?? '';
+
+  @override
+  String get promoAppliedWithTitle => values['promo_applied_with_title'] ?? '';
 
   @override
   String get promocodeList => values['promocode_list'] ?? '';

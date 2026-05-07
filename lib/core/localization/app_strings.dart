@@ -102,6 +102,7 @@ class AppStrings {
   static const String minutesAgo = 'minutes_ago';
   static const String hoursAgo = 'hours_ago';
   static const String daysAgo = 'days_ago';
+  static const String daysLeftCount = 'days_left_count';
   static const String expiresInTimer = 'expires_in_timer';
   static const String requestSentPleaseCompletePaymentOnSelcomPesaToBookYourRide =
       'request_sent_please_complete_payment_on_selcom_pesa_to_book_your_ride';
@@ -234,6 +235,8 @@ class AppStrings {
   static const String pleaseTryAgain = 'please_try_again';
   static const String privacyPolicy = 'privacy_policy';
   static const String promoCodeCodeApplied = 'promo_code_code_applied';
+  static const String promoCodeAppliedWithCode = 'promo_code_applied_with_code';
+  static const String promoAppliedWithTitle = 'promo_applied_with_title';
   static const String promocodeList = 'promocode_list';
   static const String promotions = 'promotions';
   static const String rating = 'rating';
