@@ -652,16 +652,9 @@ class DriverAcceptedController extends GetxController
     final d = r.driverSnapshot as DriverSnapshotModel?;
     final v = r.vehicleSnapshot;
     String plateForVehicleLine = '';
-    final vehicleTypeHint = _resolveVehicleTypeHint(
-      driverVehicleType: d?.vehicleType,
-      driverVehicleModel: d?.vehicleModel,
-      vehicleDisplayName: v?.vehicleType,
-      vehicleName: v?.vehicleModel,
-      vehicleType: v?.vehicleType,
-    );
-    _syncBottomSheetVehicleImage(vehicleTypeHint);
-    if (vehicleTypeHint.isNotEmpty) {
-      loadDriverIcon(vehicleType: vehicleTypeHint);
+    _syncBottomSheetVehicleImage(d?.vehicleType);
+    if ((d?.vehicleType ?? '').isNotEmpty) {
+      loadDriverIcon(vehicleType: d?.vehicleType);
     }
 
     if (d != null) {
@@ -938,13 +931,19 @@ class DriverAcceptedController extends GetxController
 
       if (type.contains('car') ||
           type.contains('cab') ||
-          type.contains('taxi')) {
+          type.contains('taxi') ||
+          type.contains('van') ||
+          type.contains('four wheeler')) {
         assetPath = AppAssets.mapVehicleCarSvg;
       } else if (type.contains('bajaj') ||
           type.contains('rickshaw') ||
           type.contains('tuk') ||
-          type.contains('auto')) {
+          type.contains('auto') ||
+          type.contains('threewheeler') ||
+          type.contains('three wheeler')) {
         assetPath = AppAssets.mapVehicleRickshawSvg;
+      } else if (type.contains('bike')) {
+        assetPath = AppAssets.mapVehicleRiderSvg;
       }
 
       assignedDriverMarkerIcon.value = await MapMarkerUtils.getSvgMarker(
@@ -974,32 +973,13 @@ class DriverAcceptedController extends GetxController
     );
   }
 
-  String _resolveVehicleTypeHint({
-    String? driverVehicleType,
-    String? vehicleDisplayName,
-    String? vehicleName,
-    String? vehicleType,
-    String? driverVehicleModel,
-  }) {
-    final parts = <String>[
-      driverVehicleType ?? '',
-      vehicleDisplayName ?? '',
-      vehicleName ?? '',
-      vehicleType ?? '',
-      driverVehicleModel ?? '',
-    ];
-    return parts
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .join(' ')
-        .toLowerCase();
-  }
 
-  void _syncBottomSheetVehicleImage(String? vehicleTypeHint) {
+
+  void _syncBottomSheetVehicleImage(String? vehicleType) {
     final previousAsset = bottomSheetVehicleImageAsset.value;
     bottomSheetVehicleImageAsset
         .value = VehicleImageUtils.imageAssetForVehicleType(
-      vehicleTypeHint,
+      vehicleType,
       // Keep previously resolved vehicle image when an event payload
       // doesn't include enough vehicle metadata (common during stop transitions).
       fallbackAsset: previousAsset.isNotEmpty
@@ -1156,16 +1136,9 @@ class DriverAcceptedController extends GetxController
     final d = payload.driverSnapshot;
     final v = payload.vehicleSnapshot;
     String plateForVehicleLine = '';
-    final vehicleTypeHint = _resolveVehicleTypeHint(
-      driverVehicleType: d?.vehicleType,
-      driverVehicleModel: d?.vehicleModel,
-      vehicleDisplayName: v?.displayName,
-      vehicleName: v?.vehicleName,
-      vehicleType: v?.vehicleType,
-    );
-    _syncBottomSheetVehicleImage(vehicleTypeHint);
-    if (vehicleTypeHint.isNotEmpty) {
-      loadDriverIcon(vehicleType: vehicleTypeHint);
+    _syncBottomSheetVehicleImage(d?.vehicleType);
+    if ((d?.vehicleType ?? '').isNotEmpty) {
+      loadDriverIcon(vehicleType: d?.vehicleType);
     }
 
     if (payload.pinRequired != null) {
