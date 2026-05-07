@@ -67,9 +67,16 @@ class LanguageSw extends Languages {
     'driver_arrived_pickup_primary': '',
     'driver_arrived_pickup_secondary': '',
     'driver_is_heading_to_your_location': '',
+    'driver_is_heading_to_pickup': '',
+    'driver_assigned_description': '',
+    'driver_arrived_description': '',
+    'ride_started_description': '',
+    'finding_your_driver': '',
+    'finding_driver_default_description': '',
     'driver_will_arriving_in_minutes': '',
     'driver_assigned': '',
     'driver_arriving': '',
+    'driver_en_route': '',
     'driver_arrived': '',
     'e_g123': '',
     'e_g7_xx_xxx_xxx': '',
@@ -252,6 +259,21 @@ class LanguageSw extends Languages {
     'resend_otp': '',
     'retry': '',
     'ride_cancelled': '',
+    'ride_started': '',
+    'ride_completed': '',
+    'the_ride_has_been_cancelled': '',
+    'you_have_reached_your_destination': '',
+    'you_have_arrived': '',
+    'almost_there': '',
+    'on_your_way': '',
+    'arrived_in_minutes': '',
+    'approaching_your_destination': '',
+    'heading_to_your_destination': '',
+    'trip_has_started': '',
+    'nearby': '',
+    'arriving': '',
+    'driver_is_arriving': '',
+    'we_couldnt_find_a_driver_nearby': '',
     'ride_charge': '',
     'ride_data_is_unavailable': '',
     'ride_id_is_missing': '',
@@ -314,6 +336,8 @@ class LanguageSw extends Languages {
     'ongoing': '',
     'completed': '',
     'no_driver_found': '',
+    'boda': '',
+    'unknown_location': '',
     'near_destination': '',
     'active_ride': '',
     'unable_to_get_location_coordinates': '',
@@ -687,6 +711,28 @@ class LanguageSw extends Languages {
       values['driver_is_heading_to_your_location'] ?? '';
 
   @override
+  String get driverIsHeadingToPickup =>
+      values['driver_is_heading_to_pickup'] ?? '';
+
+  @override
+  String get driverAssignedDescription =>
+      values['driver_assigned_description'] ?? '';
+
+  @override
+  String get driverArrivedDescription =>
+      values['driver_arrived_description'] ?? '';
+
+  @override
+  String get rideStartedDescription => values['ride_started_description'] ?? '';
+
+  @override
+  String get findingYourDriver => values['finding_your_driver'] ?? '';
+
+  @override
+  String get findingDriverDefaultDescription =>
+      values['finding_driver_default_description'] ?? '';
+
+  @override
   String get driverWillArrivingInMinutes =>
       values['driver_will_arriving_in_minutes'] ?? '';
 
@@ -695,6 +741,9 @@ class LanguageSw extends Languages {
 
   @override
   String get driverArriving => values['driver_arriving'] ?? '';
+
+  @override
+  String get driverEnRoute => values['driver_en_route'] ?? '';
 
   @override
   String get driverArrived => values['driver_arrived'] ?? '';
@@ -1284,6 +1333,55 @@ class LanguageSw extends Languages {
   String get rideCancelled => values['ride_cancelled'] ?? '';
 
   @override
+  String get rideStarted => values['ride_started'] ?? '';
+
+  @override
+  String get rideCompleted => values['ride_completed'] ?? '';
+
+  @override
+  String get theRideHasBeenCancelled => values['the_ride_has_been_cancelled'] ?? '';
+
+  @override
+  String get youHaveReachedYourDestination =>
+      values['you_have_reached_your_destination'] ?? '';
+
+  @override
+  String get youHaveArrived => values['you_have_arrived'] ?? '';
+
+  @override
+  String get almostThere => values['almost_there'] ?? '';
+
+  @override
+  String get onYourWay => values['on_your_way'] ?? '';
+
+  @override
+  String get arrivedInMinutes => values['arrived_in_minutes'] ?? '';
+
+  @override
+  String get approachingYourDestination =>
+      values['approaching_your_destination'] ?? '';
+
+  @override
+  String get headingToYourDestination =>
+      values['heading_to_your_destination'] ?? '';
+
+  @override
+  String get tripHasStarted => values['trip_has_started'] ?? '';
+
+  @override
+  String get nearby => values['nearby'] ?? '';
+
+  @override
+  String get arriving => values['arriving'] ?? '';
+
+  @override
+  String get driverIsArriving => values['driver_is_arriving'] ?? '';
+
+  @override
+  String get weCouldntFindADriverNearby =>
+      values['we_couldnt_find_a_driver_nearby'] ?? '';
+
+  @override
   String get rideCharge => values['ride_charge'] ?? '';
 
   @override
@@ -1476,6 +1574,12 @@ class LanguageSw extends Languages {
 
   @override
   String get noDriverFound => values['no_driver_found'] ?? '';
+
+  @override
+  String get boda => values['boda'] ?? '';
+
+  @override
+  String get unknownLocation => values['unknown_location'] ?? '';
 
   @override
   String get nearDestination => values['near_destination'] ?? '';

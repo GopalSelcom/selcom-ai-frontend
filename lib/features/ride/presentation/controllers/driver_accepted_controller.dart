@@ -94,9 +94,11 @@ class DriverAcceptedController extends GetxController
   final vehicleSubtitle = ''.obs;
   final otpDigits = <String>[].obs;
   final isPinRequired = true.obs;
-  final etaLabel = '10 Mins'.obs;
+  final etaLabel = AppStrings.minutesShortCount.trParams({'count': '10'}).obs;
   final currentEtaSeconds = 0.0.obs;
-  final arrivalLabel = 'Driver will arriving in 1 min...'.obs;
+  final arrivalLabel = AppStrings.driverWillArrivingInMinutes
+      .trParams({'minutes': '1'})
+      .obs;
   final unreadCount = 0.obs;
   final rideBottomSheetState = RideBottomSheetState.driverAssigned.obs;
   final currentRideStatus = 'driver_assigned'.obs;
@@ -709,7 +711,7 @@ class DriverAcceptedController extends GetxController
         otpDigits.clear();
       }
     } else {
-      driverName.value = 'Driver';
+      driverName.value = AppStrings.driver.tr;
       driverPhone.value = '';
       driverAvatarUrl.value = '';
       driverRating.value = '—';
@@ -1450,20 +1452,20 @@ class DriverAcceptedController extends GetxController
     switch (currentRideStatus.value) {
       case 'ride_completed':
       case 'completed':
-        return 'You have arrived!';
+        return AppStrings.youHaveArrived.tr;
       case 'near_destination':
-        return 'Almost There';
+        return AppStrings.almostThere.tr;
       case 'ride_in_progress':
-        return 'On Your Way';
+        return AppStrings.onYourWay.tr;
       case 'ride_started':
-        return 'Ride Started';
+        return AppStrings.rideStarted.tr;
       case 'driver_arrived':
-        return 'Driver Arrived';
+        return AppStrings.driverArrived.tr;
       case 'driver_arriving':
-        return 'Driver En Route';
+        return AppStrings.driverEnRoute.tr;
       case 'driver_assigned':
       default:
-        return 'Driver Assigned';
+        return AppStrings.driverAssigned.tr;
     }
   }
 
@@ -1474,28 +1476,36 @@ class DriverAcceptedController extends GetxController
     switch (currentRideStatus.value) {
       case 'near_destination':
         return hasEta
-            ? 'Arrived in ${etaMinutes.toString()} mins'
-            : 'Approaching your destination';
+            ? AppStrings.arrivedInMinutes.trParams({
+                'minutes': etaMinutes.toString(),
+              })
+            : AppStrings.approachingYourDestination.tr;
       case 'ride_in_progress':
         return hasEta
-            ? 'Arrived in ${etaMinutes.toString()} mins'
-            : 'Heading to your destination';
+            ? AppStrings.arrivedInMinutes.trParams({
+                'minutes': etaMinutes.toString(),
+              })
+            : AppStrings.headingToYourDestination.tr;
       case 'ride_started':
         return hasEta
-            ? 'Arrived in ${etaMinutes.toString()} mins'
-            : 'Trip has started';
+            ? AppStrings.arrivedInMinutes.trParams({
+                'minutes': etaMinutes.toString(),
+              })
+            : AppStrings.tripHasStarted.tr;
       case 'driver_arrived':
         return AppStrings.driverArrivedPickupPrimary.tr;
       case 'driver_arriving':
       case 'driver_assigned':
-        return 'Driver is heading to pickup';
+        return AppStrings.driverIsHeadingToPickup.tr;
       case 'ride_completed':
       case 'completed':
         return arrivalDateLabel;
       default:
         return hasEta
-            ? 'Arrived in ${etaMinutes.toString()} mins'
-            : 'Trip has started';
+            ? AppStrings.arrivedInMinutes.trParams({
+                'minutes': etaMinutes.toString(),
+              })
+            : AppStrings.tripHasStarted.tr;
     }
   }
 
@@ -1563,9 +1573,11 @@ class DriverAcceptedController extends GetxController
             .toLowerCase();
         final inRide = statusForEta.contains('progress') ||
             statusForEta.contains('started');
-        etaLabel.value = inRide ? 'Nearby' : 'Arriving';
+        etaLabel.value = inRide ? AppStrings.nearby.tr : AppStrings.arriving.tr;
         arrivalLabel.value =
-            inRide ? 'Almost there' : 'Driver is arriving...';
+            inRide
+                ? AppStrings.almostThere.tr
+                : AppStrings.driverIsArriving.tr;
       }
     }
 
@@ -1878,7 +1890,7 @@ class DriverAcceptedController extends GetxController
   String get rideVehicleLabel {
     final value = driverVehicleLine.value.trim();
     if (value.isNotEmpty) return value.split('-').first.trim();
-    return 'Boda';
+    return AppStrings.boda.tr;
   }
 
   String get arrivalDateLabel {
@@ -1928,7 +1940,7 @@ class DriverAcceptedController extends GetxController
 
   String _firstAddressLine(String address) {
     final trimmed = address.trim();
-    if (trimmed.isEmpty) return 'Unknown location';
+    if (trimmed.isEmpty) return AppStrings.unknownLocation.tr;
     return trimmed.split(',').first.trim();
   }
 

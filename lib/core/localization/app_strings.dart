@@ -83,10 +83,18 @@ class AppStrings {
       'driver_arrived_pickup_secondary';
   static const String driverIsHeadingToYourLocation =
       'driver_is_heading_to_your_location';
+  static const String driverIsHeadingToPickup = 'driver_is_heading_to_pickup';
+  static const String driverAssignedDescription = 'driver_assigned_description';
+  static const String driverArrivedDescription = 'driver_arrived_description';
+  static const String rideStartedDescription = 'ride_started_description';
+  static const String findingYourDriver = 'finding_your_driver';
+  static const String findingDriverDefaultDescription =
+      'finding_driver_default_description';
   static const String driverWillArrivingInMinutes =
       'driver_will_arriving_in_minutes';
   static const String driverAssigned = 'driver_assigned';
   static const String driverArriving = 'driver_arriving';
+  static const String driverEnRoute = 'driver_en_route';
   static const String driverArrived = 'driver_arrived';
   static const String eG123 = 'e_g123';
   static const String eG7XxXxxXxx = 'e_g7_xx_xxx_xxx';
@@ -345,6 +353,23 @@ class AppStrings {
   static const String resendOtp = 'resend_otp';
   static const String retry = 'retry';
   static const String rideCancelled = 'ride_cancelled';
+  static const String rideStarted = 'ride_started';
+  static const String rideCompleted = 'ride_completed';
+  static const String theRideHasBeenCancelled = 'the_ride_has_been_cancelled';
+  static const String youHaveReachedYourDestination =
+      'you_have_reached_your_destination';
+  static const String youHaveArrived = 'you_have_arrived';
+  static const String almostThere = 'almost_there';
+  static const String onYourWay = 'on_your_way';
+  static const String arrivedInMinutes = 'arrived_in_minutes';
+  static const String approachingYourDestination =
+      'approaching_your_destination';
+  static const String headingToYourDestination = 'heading_to_your_destination';
+  static const String tripHasStarted = 'trip_has_started';
+  static const String nearby = 'nearby';
+  static const String arriving = 'arriving';
+  static const String driverIsArriving = 'driver_is_arriving';
+  static const String weCouldntFindADriverNearby = 'we_couldnt_find_a_driver_nearby';
   static const String rideCharge = 'ride_charge';
   static const String rideDataIsUnavailable = 'ride_data_is_unavailable';
   static const String rideIdIsMissing = 'ride_id_is_missing';
@@ -419,6 +444,8 @@ class AppStrings {
   static const String ongoing = 'ongoing';
   static const String completed = 'completed';
   static const String noDriverFound = 'no_driver_found';
+  static const String boda = 'boda';
+  static const String unknownLocation = 'unknown_location';
   static const String unableToGetLocationCoordinates =
       'unable_to_get_location_coordinates';
   static const String pleaseSelectValidPickupAndDestinationLocations =
