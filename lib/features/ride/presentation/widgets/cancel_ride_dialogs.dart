@@ -97,8 +97,8 @@ class CancelAssignmentWarningDialog extends StatelessWidget {
                   height: 1.5,
                   fontWeight: FontWeight.w400,
                 ),
-                children: const [
-                  TextSpan(text: 'A cancellation fee of '),
+                children: [
+                  TextSpan(text: AppStrings.cancellationFeeOf.tr),
                   TextSpan(
                     text: 'TZS 150',
                     style: TextStyle(
@@ -107,7 +107,7 @@ class CancelAssignmentWarningDialog extends StatelessWidget {
                     ),
                   ),
                   TextSpan(
-                    text: ' will be charged since your driver is on the way.',
+                    text: AppStrings.willBeChargedSinceDriverOnWay.tr,
                   ),
                 ],
               ),
@@ -362,7 +362,7 @@ class CancellationChargesDialog extends StatelessWidget {
                   height: 1.4,
                 ),
                 children: [
-                  const TextSpan(text: 'A cancellation fee of '),
+                  TextSpan(text: AppStrings.cancellationFeeOf.tr),
                   TextSpan(
                     text: feeLabel,
                     style: AppTextStyles.price.copyWith(
@@ -372,12 +372,10 @@ class CancellationChargesDialog extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const TextSpan(
-                    text: ' will be charged since your driver is on the way.',
-                  ),
+                  TextSpan(text: AppStrings.willBeChargedSinceDriverOnWay.tr),
                   const TextSpan(text: '\n'),
                   TextSpan(
-                    text: 'Net amount refunded: ',
+                    text: AppStrings.netAmountRefunded.tr,
                     style: AppTextStyles.homeSubtitle.copyWith(
                       color: AppColors.textSlate,
                       fontWeight: FontWeight.w500,
@@ -418,7 +416,7 @@ class CancellationChargesDialog extends StatelessWidget {
               Obx(() {
                 final loading = isProcessing?.value ?? false;
                 return _ActionButton(
-                  title: 'Cancel & Pay',
+                  title: AppStrings.cancelAndPay.tr,
                   color: AppColors.white,
                   textColor: AppColors.textNeutralButton,
                   outlined: true,

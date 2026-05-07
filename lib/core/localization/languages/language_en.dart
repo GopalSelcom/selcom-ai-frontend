@@ -427,6 +427,10 @@ class LanguageEn extends Languages {
     'what_stood_out': 'What stood out?',
     'where_are_you_going': 'Where are you going?',
     'why_do_you_want_to_cancel': 'Why do you want to cancel?',
+    'cancellation_fee_of': 'A cancellation fee of ',
+    'will_be_charged_since_driver_on_way':
+        ' will be charged since your driver is on the way.',
+    'net_amount_refunded': 'Net amount refunded: ',
     'yes': 'Yes',
     'yes_cancel': 'YES, CANCEL',
     'you_can_still_able_to_request_money_on_selcom_pesa_using_another_number':
@@ -522,6 +526,8 @@ class LanguageEn extends Languages {
         'Request queue is full. Please try again later.',
     'duplicate_request_already_queued': 'Duplicate request already queued',
     'request_queue_cleared': 'Request queue cleared',
+    'search_ended': 'Search Ended',
+    'search_timeout_no_driver_found': 'Search timeout: no driver found',
     'send_timeout': 'Send timeout',
     'receive_timeout': 'Receive timeout',
     'bad_response_from_server': 'Bad response from server',
@@ -1710,6 +1716,16 @@ class LanguageEn extends Languages {
   String get whyDoYouWantToCancel => values['why_do_you_want_to_cancel'] ?? '';
 
   @override
+  String get cancellationFeeOf => values['cancellation_fee_of'] ?? '';
+
+  @override
+  String get willBeChargedSinceDriverOnWay =>
+      values['will_be_charged_since_driver_on_way'] ?? '';
+
+  @override
+  String get netAmountRefunded => values['net_amount_refunded'] ?? '';
+
+  @override
   String get yes => values['yes'] ?? '';
 
   @override
@@ -1969,6 +1985,13 @@ class LanguageEn extends Languages {
 
   @override
   String get requestQueueCleared => values['request_queue_cleared'] ?? '';
+
+  @override
+  String get searchEnded => values['search_ended'] ?? '';
+
+  @override
+  String get searchTimeoutNoDriverFound =>
+      values['search_timeout_no_driver_found'] ?? '';
 
   @override
   String get sendTimeout => values['send_timeout'] ?? '';

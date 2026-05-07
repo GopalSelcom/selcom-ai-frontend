@@ -963,7 +963,7 @@ class DriverAcceptedController extends GetxController
 
   void _showCancelDialogThenGoHome(String message) {
     AppDialogs.showErrorDialog(
-      title: 'Ride Cancelled',
+      title: AppStrings.rideCancelled.tr,
       message: message,
       onConfirm: () => Get.offAllNamed(AppRoutes.home),
     );

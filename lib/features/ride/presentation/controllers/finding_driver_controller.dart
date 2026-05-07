@@ -108,7 +108,7 @@ class FindingDriverController extends GetxController {
   void _showCancelDialogThenGoHome(String message) {
     Future.delayed(Duration.zero, () {
       AppDialogs.showErrorDialog(
-        title: 'Search Ended',
+        title: AppStrings.searchEnded.tr,
         message: message,
         onConfirm: () => Get.offAllNamed(AppRoutes.home),
       );
@@ -314,19 +314,19 @@ class FindingDriverController extends GetxController {
 
     final result = await rideRepository.cancelRide(
       rideId,
-      'Search timeout: no driver found',
+      AppStrings.searchTimeoutNoDriverFound.tr,
     );
     result.fold(
       (failure) async {
         await LiveActivityManager().endActivity(rideId);
         _showCancelDialogThenGoHome(
-          'No drivers found within 9 minutes. Please try again.',
+          AppStrings.noDriversFoundWithin9MinutesCancellingRide.tr,
         );
       },
       (success) async {
         await LiveActivityManager().endActivity(rideId);
         _showCancelDialogThenGoHome(
-          'No drivers found within 9 minutes. Please try again.',
+          AppStrings.noDriversFoundWithin9MinutesCancellingRide.tr,
         );
       },
     );

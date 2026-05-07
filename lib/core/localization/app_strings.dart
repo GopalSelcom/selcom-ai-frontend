@@ -278,6 +278,9 @@ class AppStrings {
   static const String duplicateRequestAlreadyQueued =
       'duplicate_request_already_queued';
   static const String requestQueueCleared = 'request_queue_cleared';
+  static const String searchEnded = 'search_ended';
+  static const String searchTimeoutNoDriverFound =
+      'search_timeout_no_driver_found';
   static const String sendTimeout = 'send_timeout';
   static const String receiveTimeout = 'receive_timeout';
   static const String badResponseFromServer = 'bad_response_from_server';
@@ -493,6 +496,10 @@ class AppStrings {
   static const String whatStoodOut = 'what_stood_out';
   static const String whereAreYouGoing = 'where_are_you_going';
   static const String whyDoYouWantToCancel = 'why_do_you_want_to_cancel';
+  static const String cancellationFeeOf = 'cancellation_fee_of';
+  static const String willBeChargedSinceDriverOnWay =
+      'will_be_charged_since_driver_on_way';
+  static const String netAmountRefunded = 'net_amount_refunded';
   static const String yes = 'yes';
   static const String yesCancel = 'yes_cancel';
   static const String

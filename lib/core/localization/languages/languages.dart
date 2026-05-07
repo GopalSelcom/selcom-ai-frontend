@@ -373,6 +373,9 @@ abstract class Languages {
   String get whatStoodOut;
   String get whereAreYouGoing;
   String get whyDoYouWantToCancel;
+  String get cancellationFeeOf;
+  String get willBeChargedSinceDriverOnWay;
+  String get netAmountRefunded;
   String get yes;
   String get yesCancel;
   String get youCanStillAbleToRequestMoneyOnSelcomPesaUsingAnotherNumber;
@@ -449,6 +452,8 @@ abstract class Languages {
   String get requestQueueFullPleaseTryAgainLater;
   String get duplicateRequestAlreadyQueued;
   String get requestQueueCleared;
+  String get searchEnded;
+  String get searchTimeoutNoDriverFound;
   String get sendTimeout;
   String get receiveTimeout;
   String get badResponseFromServer;
