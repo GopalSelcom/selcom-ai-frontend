@@ -50,6 +50,7 @@ class LanguageEn extends Languages {
     'connection_error': 'Connection Error',
     'contact_us': 'Contact Us',
     'continue': 'Continue',
+    'didnt_receive_the_code': "Didn't receive the code?",
     'could_not_cancel_try_again': 'Could not cancel. Try again.',
     'could_not_resolve_vehicle_type_id_please_try_again':
         'Could not resolve vehicle type id. Please try again.',
@@ -90,11 +91,16 @@ class LanguageEn extends Languages {
     'face_scan_process_has_been_successful':
         'Face scan process has been successful',
     'failed_to_send_message': 'Failed to send message',
+    'failed_to_resend_otp': 'Failed to resend OTP',
+    'failed_to_send_otp': 'Failed to send OTP',
     'failed_to_update_favorite_status': 'Failed to update favorite status',
     'fallback_ride_name': 'Ride',
     'favourite_locations': 'Favourite Locations',
     'saved_locations': 'Saved Locations',
     'get_started': 'Get Started',
+    'get_verification_code': 'Get Verification Code',
+    'havent_got_the_confirmation_code_yet':
+        "Haven't got the confirmation code yet? ",
     'got_it': 'Got it',
     'help': 'Help',
     'help_selcom_go_do_better_by_rating_this_trip':
@@ -124,6 +130,8 @@ class LanguageEn extends Languages {
     'mm_yy': 'MM/YY',
     'my_rides': 'My Rides',
     'name_cannot_be_empty': 'Name cannot be empty',
+    'name_contains_invalid_characters': 'Name contains invalid characters',
+    'name_is_required': 'Name is required',
     'need_help': 'Need Help?',
     'new_message': 'New Message',
     'no': 'NO',
@@ -164,6 +172,12 @@ class LanguageEn extends Languages {
     'please_confirm_pickup_point_to_continue':
         'Please confirm pickup point to continue.',
     'please_enter_apromo_code': 'Please enter a promo code',
+    'please_enter_a_valid_email': 'Please enter a valid email',
+    'please_enter_a_valid_name': 'Please enter a valid name',
+    'please_enter_the4_digit_code_sent_to_phone_through_sms':
+        'Please enter the 4-digit code sent to \n@countryCode @phoneNumber through SMS',
+    'please_enter_your_details_to_continue':
+        'Please enter your details to continue.',
     'please_enter_at_least_one_destination':
         'Please enter at least one destination.',
     'please_enter_your_comment_first': 'Please enter your comment first.',
@@ -228,6 +242,7 @@ class LanguageEn extends Languages {
     'stay_notified': 'Stay Notified!',
     'steps_to_connect_selcom_pesa': 'Steps to Connect Selcom Pesa',
     'submit_failed': 'Submit failed',
+    'submit': 'Submit',
     'success': 'Success',
     'tag_required': 'Tag required',
     'tap_each_button_to_preview_the_popup_ui':
@@ -279,6 +294,8 @@ class LanguageEn extends Languages {
     'vehicle_type': 'Vehicle type',
     'verification_successful': 'Verification Successful!',
     'verification_successfully': 'Verification Successfully',
+    'otp_label': 'OTP',
+    'otp_verification_failed': 'OTP verification failed',
     'verify_phone_number': 'Verify Phone Number',
     'verify_your_selfie': 'Verify your Selfie',
     'view_trip': 'View trip',
@@ -308,6 +325,15 @@ class LanguageEn extends Languages {
     'your_ride_was_cancelled': 'Your ride was cancelled.',
     'your_ride_is_completed': 'Your Ride is Completed',
     'your_rides': 'Your Rides',
+    'welcome_to_selcom_go': 'Welcome to Selcom Go',
+    'full_name': 'Full name',
+    'enter_your_full_name': 'Enter your full name',
+    'email': 'Email',
+    'enter_your_email_optional': 'Enter your email (optional)',
+    'i_agree_to_the_terms_and_conditions':
+        'I agree to the Terms and Conditions',
+    'please_accept_terms_and_conditions':
+        'Please accept Terms and Conditions',
     'your_selfie_will_be_captured_to_help_us_validate_you_against_your_id_please_hold_your':
         'Your selfie will be captured to help us validate you against your ID. Please hold your phone steady, ensure your face is within the circular frame, and follow the prompts.',
     'your_session_has_expired_please_login_again_to_continue':
@@ -462,6 +488,9 @@ class LanguageEn extends Languages {
   String get continueLabel => values['continue'] ?? '';
 
   @override
+  String get didntReceiveTheCode => values['didnt_receive_the_code'] ?? '';
+
+  @override
   String get couldNotCancelTryAgain =>
       values['could_not_cancel_try_again'] ?? '';
 
@@ -577,6 +606,12 @@ class LanguageEn extends Languages {
   String get failedToSendMessage => values['failed_to_send_message'] ?? '';
 
   @override
+  String get failedToResendOtp => values['failed_to_resend_otp'] ?? '';
+
+  @override
+  String get failedToSendOtp => values['failed_to_send_otp'] ?? '';
+
+  @override
   String get failedToUpdateFavoriteStatus =>
       values['failed_to_update_favorite_status'] ?? '';
 
@@ -588,6 +623,13 @@ class LanguageEn extends Languages {
 
   @override
   String get getStarted => values['get_started'] ?? '';
+
+  @override
+  String get getVerificationCode => values['get_verification_code'] ?? '';
+
+  @override
+  String get haventGotTheConfirmationCodeYet =>
+      values['havent_got_the_confirmation_code_yet'] ?? '';
 
   @override
   String get gotIt => values['got_it'] ?? '';
@@ -671,6 +713,13 @@ class LanguageEn extends Languages {
 
   @override
   String get nameCannotBeEmpty => values['name_cannot_be_empty'] ?? '';
+
+  @override
+  String get nameContainsInvalidCharacters =>
+      values['name_contains_invalid_characters'] ?? '';
+
+  @override
+  String get nameIsRequired => values['name_is_required'] ?? '';
 
   @override
   String get needHelp => values['need_help'] ?? '';
@@ -782,6 +831,20 @@ class LanguageEn extends Languages {
 
   @override
   String get pleaseEnterAPromoCode => values['please_enter_apromo_code'] ?? '';
+
+  @override
+  String get pleaseEnterAValidEmail => values['please_enter_a_valid_email'] ?? '';
+
+  @override
+  String get pleaseEnterAValidName => values['please_enter_a_valid_name'] ?? '';
+
+  @override
+  String get pleaseEnterThe4DigitCodeSentToPhoneThroughSms =>
+      values['please_enter_the4_digit_code_sent_to_phone_through_sms'] ?? '';
+
+  @override
+  String get pleaseEnterYourDetailsToContinue =>
+      values['please_enter_your_details_to_continue'] ?? '';
 
   @override
   String get pleaseEnterAtLeastOneDestination =>
@@ -959,6 +1022,9 @@ class LanguageEn extends Languages {
   String get submitFailed => values['submit_failed'] ?? '';
 
   @override
+  String get submit => values['submit'] ?? '';
+
+  @override
   String get success => values['success'] ?? '';
 
   @override
@@ -1068,6 +1134,12 @@ class LanguageEn extends Languages {
       values['verification_successfully'] ?? '';
 
   @override
+  String get otpLabel => values['otp_label'] ?? '';
+
+  @override
+  String get otpVerificationFailed => values['otp_verification_failed'] ?? '';
+
+  @override
   String get verifyPhoneNumber => values['verify_phone_number'] ?? '';
 
   @override
@@ -1145,6 +1217,29 @@ class LanguageEn extends Languages {
 
   @override
   String get yourRides => values['your_rides'] ?? '';
+
+  @override
+  String get welcomeToSelcomGo => values['welcome_to_selcom_go'] ?? '';
+
+  @override
+  String get fullName => values['full_name'] ?? '';
+
+  @override
+  String get enterYourFullName => values['enter_your_full_name'] ?? '';
+
+  @override
+  String get email => values['email'] ?? '';
+
+  @override
+  String get enterYourEmailOptional => values['enter_your_email_optional'] ?? '';
+
+  @override
+  String get iAgreeToTheTermsAndConditions =>
+      values['i_agree_to_the_terms_and_conditions'] ?? '';
+
+  @override
+  String get pleaseAcceptTermsAndConditions =>
+      values['please_accept_terms_and_conditions'] ?? '';
 
   @override
   String

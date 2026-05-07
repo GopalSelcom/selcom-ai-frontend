@@ -56,6 +56,7 @@ abstract class Languages {
   String get connectionError;
   String get contactUs;
   String get continueLabel;
+  String get didntReceiveTheCode;
   String get couldNotCancelTryAgain;
   String get couldNotResolveVehicleTypeIdPleaseTryAgain;
   String get couldNotValidatePaymentPleaseTryAgain;
@@ -91,10 +92,14 @@ abstract class Languages {
   String get exploreVehicle;
   String get faceScanProcessHasBeenSuccessful;
   String get failedToSendMessage;
+  String get failedToResendOtp;
+  String get failedToSendOtp;
   String get failedToUpdateFavoriteStatus;
   String get fallbackRideName;
   String get favouriteLocations;
   String get getStarted;
+  String get getVerificationCode;
+  String get haventGotTheConfirmationCodeYet;
   String get gotIt;
   String get help;
   String get helpSelcomGoDoBetterByRatingThisTrip;
@@ -121,6 +126,8 @@ abstract class Languages {
   String get mmYy;
   String get myRides;
   String get nameCannotBeEmpty;
+  String get nameContainsInvalidCharacters;
+  String get nameIsRequired;
   String get needHelp;
   String get newMessage;
   String get no;
@@ -155,6 +162,10 @@ abstract class Languages {
   String get pinLocked;
   String get pleaseConfirmPickupPointToContinue;
   String get pleaseEnterAPromoCode;
+  String get pleaseEnterAValidEmail;
+  String get pleaseEnterAValidName;
+  String get pleaseEnterThe4DigitCodeSentToPhoneThroughSms;
+  String get pleaseEnterYourDetailsToContinue;
   String get pleaseEnterAtLeastOneDestination;
   String get pleaseEnterYourCommentFirst;
   String get pleaseRateYourRideBeforeSubmitting;
@@ -210,6 +221,7 @@ abstract class Languages {
   String get stayNotified;
   String get stepsToConnectSelcomPesa;
   String get submitFailed;
+  String get submit;
   String get success;
   String get tagRequired;
   String get tapEachButtonToPreviewThePopupUi;
@@ -241,6 +253,8 @@ abstract class Languages {
   String get vehicleType;
   String get verificationSuccessful;
   String get verificationSuccessfully;
+  String get otpLabel;
+  String get otpVerificationFailed;
   String get verifyPhoneNumber;
   String get verifyYourSelfie;
   String get viewTrip;
@@ -264,6 +278,13 @@ abstract class Languages {
   String get yourRideWasCancelled;
   String get yourRideIsCompleted;
   String get yourRides;
+  String get welcomeToSelcomGo;
+  String get fullName;
+  String get enterYourFullName;
+  String get email;
+  String get enterYourEmailOptional;
+  String get iAgreeToTheTermsAndConditions;
+  String get pleaseAcceptTermsAndConditions;
   String
   get yourSelfieWillBeCapturedToHelpUsValidateYouAgainstYourIdPleaseHoldYour;
   String get yourSessionHasExpiredPleaseLoginAgainToContinue;

@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/data/models/requests/send_otp_request.dart';
 import '../../../../core/data/models/requests/verify_otp_request.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../domain/usecases/resend_otp_use_case.dart';
@@ -73,7 +74,7 @@ class AuthController extends GetxController {
           generatedOtp.value = response?.response?.otp ?? '';
           return true;
         } else {
-          errorMessage.value = response?.message ?? 'Failed to send OTP';
+          errorMessage.value = response?.message ?? AppStrings.failedToSendOtp.tr;
           generatedOtp.value = '';
           return false;
         }
@@ -124,7 +125,8 @@ class AuthController extends GetxController {
           generatedOtp.value = response?.response?.otp ?? '';
           return true;
         } else {
-          errorMessage.value = response?.message ?? 'Failed to resend OTP';
+          errorMessage.value =
+              response?.message ?? AppStrings.failedToResendOtp.tr;
           resendTimer.value = 0; // Show resend button again if API specifically failed
           generatedOtp.value = '';
           return false;
@@ -194,7 +196,8 @@ class AuthController extends GetxController {
           }
           return true;
         } else {
-          errorMessage.value = response?.message ?? 'OTP verification failed';
+          errorMessage.value =
+              response?.message ?? AppStrings.otpVerificationFailed.tr;
           return false;
         }
       },

@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
@@ -35,7 +36,7 @@ class SignUpScreen extends GetView<SignUpController> {
             children: [
               Obx(
                 () => AppPrimaryButton(
-                  label: 'Submit',
+                  label: AppStrings.submit.tr,
                   isLoading: controller.isLoading.value,
                   onPressed: controller.canSubmit
                       ? controller.submitAdditionalDetails
@@ -78,7 +79,7 @@ class SignUpScreen extends GetView<SignUpController> {
                 ),
                 SizedBox(height: 28.h),
                 Text(
-                  'Welcome to Selcom Go',
+                  AppStrings.welcomeToSelcomGo.tr,
                   style: AppTextStyles.onboardingTitle.copyWith(
                     fontSize: 28.sp,
                     height: 34 / 28,
@@ -87,7 +88,7 @@ class SignUpScreen extends GetView<SignUpController> {
                 ),
                 SizedBox(height: 4.h),
                 Text(
-                  'Please enter your details to continue.',
+                  AppStrings.pleaseEnterYourDetailsToContinue.tr,
                   style: AppTextStyles.homeSubtitle.copyWith(
                     fontSize: 15.sp,
                     fontWeight: FontWeight.w500,
@@ -101,8 +102,8 @@ class SignUpScreen extends GetView<SignUpController> {
                     children: [
                       AppTextField(
                         enableEnhancedStyle: true,
-                        label: 'Full name',
-                        hintText: 'Enter your full name',
+                        label: AppStrings.fullName.tr,
+                        hintText: AppStrings.enterYourFullName.tr,
                         controller: controller.nameController,
                         textColor: AppColors.figmaInputBlue,
                         errorText: controller.submitted.value
@@ -113,8 +114,8 @@ class SignUpScreen extends GetView<SignUpController> {
                       SizedBox(height: 14.h),
                       AppTextField(
                         enableEnhancedStyle: true,
-                        label: 'Email',
-                        hintText: 'Enter your email (optional)',
+                        label: AppStrings.email.tr,
+                        hintText: AppStrings.enterYourEmailOptional.tr,
                         controller: controller.emailController,
                         keyboardType: TextInputType.emailAddress,
                         textColor: AppColors.figmaInputBlue,
@@ -146,7 +147,7 @@ class SignUpScreen extends GetView<SignUpController> {
                           ),
                           Expanded(
                             child: Text(
-                              'I agree to the Terms and Conditions',
+                              AppStrings.iAgreeToTheTermsAndConditions.tr,
                               style: AppTextStyles.homeCaption.copyWith(
                                 color: AppColors.textBody,
                                 fontSize: 13.sp,
@@ -160,7 +161,7 @@ class SignUpScreen extends GetView<SignUpController> {
                         Padding(
                           padding: EdgeInsets.only(left: 12.w, top: 4.h),
                           child: Text(
-                            'Please accept Terms and Conditions',
+                            AppStrings.pleaseAcceptTermsAndConditions.tr,
                             style: AppTextStyles.homeCaption.copyWith(
                               color: AppColors.error,
                               fontSize: 12.sp,

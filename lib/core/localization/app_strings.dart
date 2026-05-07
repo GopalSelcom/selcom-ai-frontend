@@ -51,6 +51,7 @@ class AppStrings {
   static const String connectionError = 'connection_error';
   static const String contactUs = 'contact_us';
   static const String continueLabel = 'continue';
+  static const String didntReceiveTheCode = 'didnt_receive_the_code';
   static const String couldNotCancelTryAgain = 'could_not_cancel_try_again';
   static const String couldNotResolveVehicleTypeIdPleaseTryAgain =
       'could_not_resolve_vehicle_type_id_please_try_again';
@@ -95,12 +96,17 @@ class AppStrings {
   static const String faceScanProcessHasBeenSuccessful =
       'face_scan_process_has_been_successful';
   static const String failedToSendMessage = 'failed_to_send_message';
+  static const String failedToResendOtp = 'failed_to_resend_otp';
+  static const String failedToSendOtp = 'failed_to_send_otp';
   static const String failedToUpdateFavoriteStatus =
       'failed_to_update_favorite_status';
   static const String fallbackRideName = 'fallback_ride_name';
   static const String favouriteLocations = 'favourite_locations';
   static const String savedLocations = 'saved_locations';
   static const String getStarted = 'get_started';
+  static const String getVerificationCode = 'get_verification_code';
+  static const String haventGotTheConfirmationCodeYet =
+      'havent_got_the_confirmation_code_yet';
   static const String gotIt = 'got_it';
   static const String help = 'help';
   static const String helpSelcomGoDoBetterByRatingThisTrip =
@@ -149,6 +155,9 @@ class AppStrings {
   static const String noNotificationsYet = 'no_notifications_yet';
   static const String noPastRidesFound = 'no_past_rides_found';
   static const String noRecentLocations = 'no_recent_locations';
+  static const String nameContainsInvalidCharacters =
+      'name_contains_invalid_characters';
+  static const String nameIsRequired = 'name_is_required';
   static const String
   noteByProceedingYouConsentToGetCallsWhatsappOrSmsMessagesIncludingByAu =
       'note_by_proceeding_you_consent_to_get_calls_whatsapp_or_sms_messages_including_by_au';
@@ -173,6 +182,12 @@ class AppStrings {
   static const String pleaseConfirmPickupPointToContinue =
       'please_confirm_pickup_point_to_continue';
   static const String pleaseEnterAPromoCode = 'please_enter_apromo_code';
+  static const String pleaseEnterAValidEmail = 'please_enter_a_valid_email';
+  static const String pleaseEnterAValidName = 'please_enter_a_valid_name';
+  static const String pleaseEnterThe4DigitCodeSentToPhoneThroughSms =
+      'please_enter_the4_digit_code_sent_to_phone_through_sms';
+  static const String pleaseEnterYourDetailsToContinue =
+      'please_enter_your_details_to_continue';
   static const String pleaseEnterAtLeastOneDestination =
       'please_enter_at_least_one_destination';
   static const String pleaseEnterYourCommentFirst =
@@ -239,6 +254,7 @@ class AppStrings {
   static const String stayNotified = 'stay_notified';
   static const String stepsToConnectSelcomPesa = 'steps_to_connect_selcom_pesa';
   static const String submitFailed = 'submit_failed';
+  static const String submit = 'submit';
   static const String success = 'success';
   static const String tagRequired = 'tag_required';
   static const String tapEachButtonToPreviewThePopupUi =
@@ -294,6 +310,8 @@ class AppStrings {
   static const String vehicleType = 'vehicle_type';
   static const String verificationSuccessful = 'verification_successful';
   static const String verificationSuccessfully = 'verification_successfully';
+  static const String otpLabel = 'otp_label';
+  static const String otpVerificationFailed = 'otp_verification_failed';
   static const String verifyPhoneNumber = 'verify_phone_number';
   static const String verifyYourSelfie = 'verify_your_selfie';
   static const String viewTrip = 'view_trip';
@@ -327,6 +345,15 @@ class AppStrings {
   static const String yourRideWasCancelled = 'your_ride_was_cancelled';
   static const String yourRideIsCompleted = 'your_ride_is_completed';
   static const String yourRides = 'your_rides';
+  static const String welcomeToSelcomGo = 'welcome_to_selcom_go';
+  static const String fullName = 'full_name';
+  static const String enterYourFullName = 'enter_your_full_name';
+  static const String email = 'email';
+  static const String enterYourEmailOptional = 'enter_your_email_optional';
+  static const String iAgreeToTheTermsAndConditions =
+      'i_agree_to_the_terms_and_conditions';
+  static const String pleaseAcceptTermsAndConditions =
+      'please_accept_terms_and_conditions';
   static const String
   yourSelfieWillBeCapturedToHelpUsValidateYouAgainstYourIdPleaseHoldYour =
       'your_selfie_will_be_captured_to_help_us_validate_you_against_your_id_please_hold_your';

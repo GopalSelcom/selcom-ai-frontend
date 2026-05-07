@@ -47,6 +47,7 @@ class LanguageSw extends Languages {
     'connection_error': '',
     'contact_us': '',
     'continue': '',
+    'didnt_receive_the_code': '',
     'could_not_cancel_try_again': '',
     'could_not_resolve_vehicle_type_id_please_try_again': '',
     'could_not_validate_payment_please_try_again': '',
@@ -81,11 +82,15 @@ class LanguageSw extends Languages {
     'explore_vehicle': '',
     'face_scan_process_has_been_successful': '',
     'failed_to_send_message': '',
+    'failed_to_resend_otp': '',
+    'failed_to_send_otp': '',
     'failed_to_update_favorite_status': '',
     'fallback_ride_name': '',
     'favourite_locations': '',
     'saved_locations': '',
     'get_started': '',
+    'get_verification_code': '',
+    'havent_got_the_confirmation_code_yet': '',
     'got_it': '',
     'help': '',
     'help_selcom_go_do_better_by_rating_this_trip': '',
@@ -112,6 +117,8 @@ class LanguageSw extends Languages {
     'mm_yy': '',
     'my_rides': '',
     'name_cannot_be_empty': '',
+    'name_contains_invalid_characters': '',
+    'name_is_required': '',
     'need_help': '',
     'new_message': '',
     'no': '',
@@ -146,6 +153,10 @@ class LanguageSw extends Languages {
     'pin_locked': '',
     'please_confirm_pickup_point_to_continue': '',
     'please_enter_apromo_code': '',
+    'please_enter_a_valid_email': '',
+    'please_enter_a_valid_name': '',
+    'please_enter_the4_digit_code_sent_to_phone_through_sms': '',
+    'please_enter_your_details_to_continue': '',
     'please_enter_at_least_one_destination': '',
     'please_enter_your_comment_first': '',
     'please_rate_your_ride_before_submitting': '',
@@ -202,6 +213,7 @@ class LanguageSw extends Languages {
     'stay_notified': '',
     'steps_to_connect_selcom_pesa': '',
     'submit_failed': '',
+    'submit': '',
     'success': '',
     'tag_required': '',
     'tap_each_button_to_preview_the_popup_ui': '',
@@ -246,6 +258,8 @@ class LanguageSw extends Languages {
     'vehicle_type': '',
     'verification_successful': '',
     'verification_successfully': '',
+    'otp_label': '',
+    'otp_verification_failed': '',
     'verify_phone_number': '',
     'verify_your_selfie': '',
     'view_trip': '',
@@ -271,6 +285,13 @@ class LanguageSw extends Languages {
     'your_ride_was_cancelled': '',
     'your_ride_is_completed': '',
     'your_rides': '',
+    'welcome_to_selcom_go': '',
+    'full_name': '',
+    'enter_your_full_name': '',
+    'email': '',
+    'enter_your_email_optional': '',
+    'i_agree_to_the_terms_and_conditions': '',
+    'please_accept_terms_and_conditions': '',
     'your_selfie_will_be_captured_to_help_us_validate_you_against_your_id_please_hold_your':
         '',
     'your_session_has_expired_please_login_again_to_continue': '',
@@ -424,6 +445,9 @@ class LanguageSw extends Languages {
   String get continueLabel => values['continue'] ?? '';
 
   @override
+  String get didntReceiveTheCode => values['didnt_receive_the_code'] ?? '';
+
+  @override
   String get couldNotCancelTryAgain =>
       values['could_not_cancel_try_again'] ?? '';
 
@@ -539,6 +563,12 @@ class LanguageSw extends Languages {
   String get failedToSendMessage => values['failed_to_send_message'] ?? '';
 
   @override
+  String get failedToResendOtp => values['failed_to_resend_otp'] ?? '';
+
+  @override
+  String get failedToSendOtp => values['failed_to_send_otp'] ?? '';
+
+  @override
   String get failedToUpdateFavoriteStatus =>
       values['failed_to_update_favorite_status'] ?? '';
 
@@ -550,6 +580,13 @@ class LanguageSw extends Languages {
 
   @override
   String get getStarted => values['get_started'] ?? '';
+
+  @override
+  String get getVerificationCode => values['get_verification_code'] ?? '';
+
+  @override
+  String get haventGotTheConfirmationCodeYet =>
+      values['havent_got_the_confirmation_code_yet'] ?? '';
 
   @override
   String get gotIt => values['got_it'] ?? '';
@@ -633,6 +670,13 @@ class LanguageSw extends Languages {
 
   @override
   String get nameCannotBeEmpty => values['name_cannot_be_empty'] ?? '';
+
+  @override
+  String get nameContainsInvalidCharacters =>
+      values['name_contains_invalid_characters'] ?? '';
+
+  @override
+  String get nameIsRequired => values['name_is_required'] ?? '';
 
   @override
   String get needHelp => values['need_help'] ?? '';
@@ -744,6 +788,20 @@ class LanguageSw extends Languages {
 
   @override
   String get pleaseEnterAPromoCode => values['please_enter_apromo_code'] ?? '';
+
+  @override
+  String get pleaseEnterAValidEmail => values['please_enter_a_valid_email'] ?? '';
+
+  @override
+  String get pleaseEnterAValidName => values['please_enter_a_valid_name'] ?? '';
+
+  @override
+  String get pleaseEnterThe4DigitCodeSentToPhoneThroughSms =>
+      values['please_enter_the4_digit_code_sent_to_phone_through_sms'] ?? '';
+
+  @override
+  String get pleaseEnterYourDetailsToContinue =>
+      values['please_enter_your_details_to_continue'] ?? '';
 
   @override
   String get pleaseEnterAtLeastOneDestination =>
@@ -921,6 +979,9 @@ class LanguageSw extends Languages {
   String get submitFailed => values['submit_failed'] ?? '';
 
   @override
+  String get submit => values['submit'] ?? '';
+
+  @override
   String get success => values['success'] ?? '';
 
   @override
@@ -1030,6 +1091,12 @@ class LanguageSw extends Languages {
       values['verification_successfully'] ?? '';
 
   @override
+  String get otpLabel => values['otp_label'] ?? '';
+
+  @override
+  String get otpVerificationFailed => values['otp_verification_failed'] ?? '';
+
+  @override
   String get verifyPhoneNumber => values['verify_phone_number'] ?? '';
 
   @override
@@ -1107,6 +1174,29 @@ class LanguageSw extends Languages {
 
   @override
   String get yourRides => values['your_rides'] ?? '';
+
+  @override
+  String get welcomeToSelcomGo => values['welcome_to_selcom_go'] ?? '';
+
+  @override
+  String get fullName => values['full_name'] ?? '';
+
+  @override
+  String get enterYourFullName => values['enter_your_full_name'] ?? '';
+
+  @override
+  String get email => values['email'] ?? '';
+
+  @override
+  String get enterYourEmailOptional => values['enter_your_email_optional'] ?? '';
+
+  @override
+  String get iAgreeToTheTermsAndConditions =>
+      values['i_agree_to_the_terms_and_conditions'] ?? '';
+
+  @override
+  String get pleaseAcceptTermsAndConditions =>
+      values['please_accept_terms_and_conditions'] ?? '';
 
   @override
   String
