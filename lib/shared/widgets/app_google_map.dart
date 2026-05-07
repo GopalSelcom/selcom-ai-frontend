@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../core/services/app_map_service.dart';
-import '../../core/utils/map_math_utils.dart';
 import 'map_rider_tracking_mixin.dart';
 
 /// **Canonical embedded map for the app** (`lib/shared/widgets/`).

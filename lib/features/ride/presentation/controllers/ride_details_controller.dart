@@ -295,7 +295,7 @@ class _ReceiptOptionsBottomSheet extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),
@@ -379,7 +379,7 @@ class _OptionTile extends StatelessWidget {
             Container(
               padding: EdgeInsets.all(12.w),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: AppColors.primary, size: 24.sp),

@@ -240,7 +240,7 @@ class RideLocationsTimeline extends StatelessWidget {
                     margin: EdgeInsets.symmetric(vertical: 2.h),
                     child: CustomPaint(
                       painter: DashedLinePainter(
-                        color: AppColors.black.withOpacity(0.5),
+                        color: AppColors.black.withValues(alpha: 0.5),
                       ),
                     ),
                   ),
@@ -355,7 +355,7 @@ class RideLocationsTimeline extends StatelessWidget {
                 margin: EdgeInsets.zero,
                 child: CustomPaint(
                   painter: DashedLinePainter(
-                    color: AppColors.black.withOpacity(0.5),
+                    color: AppColors.black.withValues(alpha: 0.5),
                   ),
                 ),
               ),

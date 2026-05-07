@@ -680,7 +680,7 @@ class FindingDriverController extends GetxController {
 
     await Get.dialog<void>(
       CancelReasonSelectionDialog(
-        reasons: [
+        reasons: const [
           'Taking too long to confirm the ride',
           'Wait time too long',
           'Selected wrong pickup location',

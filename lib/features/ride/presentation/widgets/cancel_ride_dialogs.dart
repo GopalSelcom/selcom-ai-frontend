@@ -99,7 +99,7 @@ class CancelAssignmentWarningDialog extends StatelessWidget {
                 ),
                 children: [
                   TextSpan(text: AppStrings.cancellationFeeOf.tr),
-                  TextSpan(
+                  const TextSpan(
                     text: 'TZS 150',
                     style: TextStyle(
                       color: AppColors.primary,

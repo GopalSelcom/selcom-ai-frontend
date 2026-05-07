@@ -1968,7 +1968,7 @@ class DriverAcceptedController extends GetxController
 
     await Get.dialog<void>(
       CancelReasonSelectionDialog(
-        reasons: [
+        reasons: const [
           'Driver asked to cancel',
           'Driver asked to pay offline',
           'Taking too long to arrive',
@@ -2147,7 +2147,7 @@ class DriverAcceptedController extends GetxController
       );
       return;
     }
-    stopUpdateIdempotencyKey.value = Uuid().v4();
+    stopUpdateIdempotencyKey.value = const Uuid().v4();
     Get.toNamed(AppRoutes.stopEditor, arguments: {'ride': ride.value});
   }
 
