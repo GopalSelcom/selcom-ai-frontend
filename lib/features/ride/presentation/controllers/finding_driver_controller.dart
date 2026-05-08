@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:developer' as developer;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -539,12 +538,6 @@ class FindingDriverController extends GetxController {
     );
   }
 
-  /// Debug: jump to SCR-11 without waiting for socket (only in debug builds).
-  void debugSkipToDriverAccepted() {
-    assert(kDebugMode);
-    _navigateToDriverAccepted();
-  }
-
   void onMapCreated(GoogleMapController c) {
     mapController = c;
     _fitRouteBounds();
@@ -787,15 +780,4 @@ class FindingDriverController extends GetxController {
     );
   }
 
-  void openRideMessage() {
-    Get.toNamed(
-      AppRoutes.rideMessage,
-      arguments: <String, dynamic>{
-        'rideId': rideId,
-        'driverName': driverName.value,
-        'driverPhone': driverPhone.value, // Added driverPhone
-        'initialStatus': 'searching',
-      },
-    );
-  }
 }
