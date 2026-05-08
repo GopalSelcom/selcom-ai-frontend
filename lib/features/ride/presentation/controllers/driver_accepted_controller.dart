@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 import 'package:agora_calling_package/agora_calling_package.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:selcom_rides_frontend/shared/widgets/app_google_map.dart';
 import 'package:uuid/uuid.dart';
 
@@ -22,6 +23,7 @@ import 'package:selcom_rides_frontend/core/data/models/requests/validate_ride_pa
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../domain/utils/receipt_pdf_generator.dart';
 import 'package:open_filex/open_filex.dart';
 
@@ -1634,46 +1636,18 @@ class DriverAcceptedController extends GetxController
   /// flow isn't available (no Agora App ID, ride id missing, etc.).
   Future<void> callDriver() async {
     final ride = rideId;
-    if (ride.isEmpty) {
+    if (ride.isNotEmpty) {
       _fallbackToSystemDialer();
       return;
-    }
-    try {
-      await AgoraCalling.controller.placeCall(
-        rideId: ride,
-        peerDisplayName: driverName.value.isNotEmpty
-            ? driverName.value
-            : 'Your Driver',
-        peerAvatarUrl: driverAvatarUrl.value.isNotEmpty
-            ? driverAvatarUrl.value
-            : null,
-      );
-    } on CallPermissionDeniedException catch (e) {
-      AppDialogs.showErrorDialog(
-        title: AppStrings.call.tr,
-        message: e.outcome == PermissionOutcome.permanentlyDenied
-            ? 'Microphone permission is permanently denied. Open Settings to allow it.'
-            : 'Microphone permission is required to place a call.',
-      );
-    } catch (e, st) {
-      ErrorReporter.instance.report(error: e, stackTrace: st);
-      _fallbackToSystemDialer();
     }
   }
 
   void _fallbackToSystemDialer() {
-    final phone = driverPhone.value.trim();
-    if (phone.isEmpty) {
-      AppDialogs.showErrorDialog(
-        title: AppStrings.call.tr,
-        message: AppStrings.phoneNumberUnavailable.tr,
-      );
-      return;
-    }
-    _showCallOptionsBottomSheet(phone);
+
+    _showCallOptionsBottomSheet();
   }
 
-  void _showCallOptionsBottomSheet(String phone) {
+  void _showCallOptionsBottomSheet() {
     Get.bottomSheet(
       SafeArea(
         top: false,
@@ -1711,14 +1685,35 @@ class DriverAcceptedController extends GetxController
                 _callOptionTile(
                   title: AppStrings.inAppCalling.tr,
                   icon: Icons.phone_in_talk_outlined,
-                  onTap: () {
+                  onTap: () async {
                     if (Get.isBottomSheetOpen ?? false) {
                       Get.back();
                     }
-                    AppDialogs.showInfoDialog(
-                      title: AppStrings.comingSoon.tr,
-                      message: AppStrings.inAppCallingWillBeAvailableSoon.tr,
-                    );
+                    try {
+                      await AgoraCalling.controller.placeCall(
+                        rideId: ride.value?.id??"",
+                        peerDisplayName: driverName.value.isNotEmpty
+                            ? driverName.value
+                            : 'Your Driver',
+                        peerAvatarUrl: driverAvatarUrl.value.isNotEmpty
+                            ? driverAvatarUrl.value
+                            : null,
+                      );
+                    } on CallPermissionDeniedException catch (e) {
+                      AppDialogs.showErrorDialog(
+                        title: AppStrings.call.tr,
+                        message: e.outcome == PermissionOutcome.permanentlyDenied
+                            ? 'Microphone permission is permanently denied. Open Settings to allow it.'
+                            : 'Microphone permission is required to place a call.',
+                      );
+                    } catch (e, st) {
+                      ErrorReporter.instance.report(error: e, stackTrace: st);
+                      _fallbackToSystemDialer();
+                    }
+                    // AppDialogs.showInfoDialog(
+                    //   title: AppStrings.comingSoon.tr,
+                    //   message: AppStrings.inAppCallingWillBeAvailableSoon.tr,
+                    // );
                   },
                 ),
                 SizedBox(height: 10.h),
@@ -1728,6 +1723,14 @@ class DriverAcceptedController extends GetxController
                   onTap: () {
                     if (Get.isBottomSheetOpen ?? false) {
                       Get.back();
+                    }
+                    final phone = driverPhone.value.trim();
+                    if (phone.isEmpty) {
+                      AppDialogs.showErrorDialog(
+                        title: AppStrings.call.tr,
+                        message: AppStrings.phoneNumberUnavailable.tr,
+                      );
+                      return;
                     }
                     unawaited(_callDriverViaPhoneDialer(phone));
                   },
@@ -1785,7 +1788,7 @@ class DriverAcceptedController extends GetxController
     await _launchSystemPhoneDialer(
       phone: phone,
       errorDialogTitle: AppStrings.call.tr,
-    ));
+    );
   }
 
   /// Opens the OS phone app with [phone] (`tel:`). [errorDialogTitle] uses API `label` for emergency rows.
