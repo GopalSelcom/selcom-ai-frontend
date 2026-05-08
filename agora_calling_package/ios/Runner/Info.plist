@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  TEMPLATE — merge into the HOST app's ios/Runner/Info.plist.
+  Strings should be localized per host app brand.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>NSMicrophoneUsageDescription</key>
+  <string>To make and receive voice calls during a ride.</string>
+
+  <key>UIBackgroundModes</key>
+  <array>
+    <string>audio</string>
+    <string>voip</string>
+    <string>fetch</string>
+    <string>remote-notification</string>
+  </array>
+
+  <!-- Notifications -->
+  <key>NSUserNotificationsUsageDescription</key>
+  <string>We notify you about incoming voice calls.</string>
+</dict>
+</plist>

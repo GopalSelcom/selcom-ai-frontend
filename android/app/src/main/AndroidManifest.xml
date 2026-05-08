@@ -60,6 +60,20 @@
         <service
             android:name="com.example.live_activities.LiveActivityFirebaseMessagingService"
             tools:node="remove" />
+
+        <!-- We don't use flutter_background_service for active calls — Agora's
+             own audio session + flutter_callkit_incoming's CallStyle ongoing
+             notification cover background continuity. The plugin's
+             WatchdogReceiver and BootReceiver respawn the service via
+             AlarmManager every 5 s, which after any failure puts the app in a
+             crash loop on Android 14+ (FGS notification validation is much
+             stricter). Disable both so they can never be triggered. -->
+        <receiver
+            android:name="id.flutter.flutter_background_service.WatchdogReceiver"
+            tools:node="remove" />
+        <receiver
+            android:name="id.flutter.flutter_background_service.BootReceiver"
+            tools:node="remove" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

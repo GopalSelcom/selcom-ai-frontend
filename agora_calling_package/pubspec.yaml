@@ -1,0 +1,55 @@
+name: agora_calling_package
+description: >-
+  Audio-only Agora calling for Selcom Go (rider) and Delivery Agent apps.
+  Ride-scoped, GetX-based. Aligned with brain/docs/AGORA-FRONTEND-GUIDE.md.
+version: 0.2.4
+publish_to: 'none'
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=3.16.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Core RTC
+  agora_rtc_engine: ">=6.5.0 <7.0.0"
+
+  # State + DI
+  get: ">=4.6.6 <5.0.0"
+
+  # Networking
+  dio: ">=5.7.0 <6.0.0"
+
+  # Push + local notifications
+  firebase_messaging: ">=15.1.5 <17.0.0"
+  flutter_local_notifications: ">=17.0.0 <19.0.0"
+
+  # Cross-platform CallKit / ConnectionService wrapper.
+  # Per brain doc: used for rendering CallKit UI when an `incoming_call`
+  # arrives via FCM (foreground/background) on iOS, and for dismissing it on
+  # `call_cancelled`. PushKit-delivered VoIP pushes are handled natively in the
+  # host app's AppDelegate.swift. On Android it provides the CallStyle ongoing
+  # notification + Telecom-based phoneCall foreground service for incoming
+  # calls — that's our background-continuity story; we don't need a second
+  # generic FG service from flutter_background_service.
+  flutter_callkit_incoming: ">=2.10.0 <4.0.0"
+
+  # Permissions, audio, vibration
+  permission_handler: ">=11.3.0 <13.0.0"
+  audioplayers: ">=6.0.0 <7.0.0"
+  vibration: ">=2.0.0 <4.0.0"
+
+  # Utilities
+  uuid: ">=4.0.0 <5.0.0"
+  logger: ">=2.0.0 <3.0.0"
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ">=3.0.0 <7.0.0"
+
+flutter:
+  assets:
+    - assets/sounds/

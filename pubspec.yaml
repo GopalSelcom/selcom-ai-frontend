@@ -68,6 +68,8 @@ dependencies:
   flutter_ringtone_player: ^4.0.0+4
   vibration: ^3.1.8
   audioplayers: ^6.1.0
+  agora_calling_package:
+    path: ./agora_calling_package
 
 dev_dependencies:
   flutter_test:

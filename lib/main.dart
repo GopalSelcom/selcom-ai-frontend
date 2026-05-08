@@ -1,11 +1,10 @@
 import 'dart:async';
-import 'dart:convert';
 
+import 'package:agora_calling_package/agora_calling_package.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -16,6 +15,7 @@ import 'core/di/injection_container.dart' as di;
 import 'core/localization/delegate.dart';
 import 'core/localization/getx_languages_translations.dart';
 import 'core/localization/localization.dart';
+import 'core/services/agora_calling_bootstrap.dart';
 import 'core/services/analytics_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/voip_callkit_bridge_service.dart';
@@ -28,79 +28,21 @@ import 'core/data/models/notification_model.dart';
 import 'core/services/error_reporting/error_reporter.dart';
 import 'package:screenshot/screenshot.dart';
 
-Future<void> _showAndroidIncomingCallNotification(RemoteMessage message) async {
-  final type = (message.data['type'] ?? '').toString().toLowerCase();
-  final plugin = FlutterLocalNotificationsPlugin();
-  const initSettings = InitializationSettings(
-    android: AndroidInitializationSettings('@mipmap/ic_launcher'),
-  );
-  await plugin.initialize(initSettings);
-
-  final rideId =
-      message.data['ride_id']?.toString() ?? message.data['rideId']?.toString();
-  final notificationId = _incomingCallNotificationId(rideId);
-
-  if (type == 'call_cancelled') {
-    await plugin.cancel(notificationId);
-    return;
-  }
-  if (type != 'incoming_call') return;
-
-  const channel = AndroidNotificationChannel(
-    'go_incoming_calls',
-    'Incoming Calls',
-    description: 'Incoming in-app voice calls',
-    importance: Importance.max,
-    playSound: true,
-    enableVibration: true,
-  );
-  await plugin
-      .resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin
-      >()
-      ?.createNotificationChannel(channel);
-
-  final role = (message.data['caller_role'] ?? 'rider').toString();
-  final title = role == 'driver'
-      ? 'Incoming call from driver'
-      : 'Incoming call from rider';
-  await plugin.show(
-    notificationId,
-    title,
-    'Tap to open incoming call screen',
-    NotificationDetails(
-      android: AndroidNotificationDetails(
-        'go_incoming_calls',
-        'Incoming Calls',
-        channelDescription: 'Incoming in-app voice calls',
-        importance: Importance.max,
-        priority: Priority.max,
-        category: AndroidNotificationCategory.call,
-        fullScreenIntent: true,
-        audioAttributesUsage: AudioAttributesUsage.notificationRingtone,
-        visibility: NotificationVisibility.public,
-        ongoing: true,
-        autoCancel: true,
-        timeoutAfter: 30000,
-        icon: '@mipmap/ic_launcher',
-      ),
-    ),
-    payload: jsonEncode(message.data),
-  );
-}
-
-int _incomingCallNotificationId(String? rideId) {
-  final normalized = rideId?.trim() ?? '';
-  if (normalized.isEmpty) return 700001;
-  return 'incoming_call_$normalized'.hashCode;
-}
-
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   debugPrint('📩 Background FCM: ${message.data}');
   debugPrint("Handling a background message: ${message.messageId}");
-  await _showAndroidIncomingCallNotification(message);
+
+  // Hand off Agora calling pushes (incoming_call / call_joined / call_cancelled)
+  // to the package — it owns the full-screen-intent / CallKit-fallback rendering.
+  final type = (message.data['type'] ?? '').toString().toLowerCase();
+  if (type == 'incoming_call' ||
+      type == 'call_joined' ||
+      type == 'call_cancelled') {
+    await AgoraCallingNotificationService.firebaseBackgroundHandler(message);
+    return;
+  }
 
   final data = FCMNotificationData.fromJson(message.data);
 
@@ -191,7 +133,22 @@ void main() async {
 
       // Initialize Notification Service
       await di.sl<NotificationService>().initialize();
+
+      // Initialize Agora calling package (REST + FCM + Android FG service).
+      // Identity comes from the JWT on each request — `getAuthHeaders` is
+      // called per-call via Dio interceptor, so it picks up post-login state.
+      await AgoraCallingBootstrap.init();
+
+      // Bridge native iOS PushKit/CallKit events into the calling package.
+      // Token registration goes through `AgoraCalling.registerVoipToken`,
+      // which PATCHes `/v4/go/user/voip-token`.
       await VoipCallkitBridgeService.instance.initialize();
+      VoipCallkitBridgeService.instance.setOnVoipTokenChanged(
+        AgoraCalling.registerVoipToken,
+      );
+      VoipCallkitBridgeService.instance.setOnIncomingCall(
+        AgoraCalling.dispatchExternalIncomingCall,
+      );
 
       await di.sl<AnalyticsService>().logEvent('app_opened');
 

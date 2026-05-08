@@ -1,3 +1,4 @@
+import 'package:agora_calling_package/agora_calling_package.dart';
 import 'package:get/get.dart';
 import 'package:selcom_rides_frontend/features/ride/presentation/screens/stop_editor_screen.dart';
 import 'package:selcom_rides_frontend/features/ride/presentation/screens/confirm_stop_screen.dart';
@@ -65,6 +66,7 @@ class AppRoutes {
   static const String changeDropLocationEditor = '/change-drop-location-editor';
 
   static List<GetPage> get pages => [
+    ...AgoraCalling.routes(),
     GetPage(name: splash, page: () => const SplashScreen()),
     GetPage(
       name: onboarding,

@@ -6,14 +6,21 @@ import CallKit
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, PKPushRegistryDelegate, CXProviderDelegate {
+  // MARK: - Channels
   private var appGroupChannel: FlutterMethodChannel?
   private var voipChannel: FlutterMethodChannel?
+
+  // MARK: - VoIP / CallKit
   private var pushRegistry: PKPushRegistry?
   private var callProvider: CXProvider?
   private let callController = CXCallController()
-  private var callByRideId: [String: UUID] = [:]
-  private var payloadByCallId: [UUID: [String: Any]] = [:]
-  private let pendingVoipEventsKey = "pending_voip_events"
+  /// Pending VoIP events queued before the Flutter side has attached the
+  /// method-call handler (e.g. cold-start from a VoIP push). Drained when
+  /// `consumePendingVoipEvents` is invoked from Dart.
+  private var pendingVoipEvents: [[String: Any]] = []
+  /// rideId → CallKit UUID, to keep CXEnd actions aligned with reportNewIncomingCall.
+  private var callsByRideId: [String: UUID] = [:]
+  private var ridesByCallId: [UUID: String] = [:]
 
   override func application(
     _ application: UIApplication,
@@ -21,42 +28,48 @@ import CallKit
   ) -> Bool {
     GMSServices.provideAPIKey("AIzaSyDUQgp46JDap_b1isDkCV371GSmH355qPg")
     GeneratedPluginRegistrant.register(with: self)
-    
-    let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
-    appGroupChannel = FlutterMethodChannel(name: "com.selcom.go/app_group",
-                                      binaryMessenger: controller.binaryMessenger)
-    appGroupChannel?.setMethodCallHandler({
-      (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
-      if (call.method == "getAppGroupDirectory") {
-        if let url = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.selcom.go") {
-            result(url.path)
+
+    let controller: FlutterViewController = window?.rootViewController as! FlutterViewController
+
+    // Existing app-group bridge (unchanged).
+    appGroupChannel = FlutterMethodChannel(
+      name: "com.selcom.go/app_group",
+      binaryMessenger: controller.binaryMessenger
+    )
+    appGroupChannel?.setMethodCallHandler { (call, result) in
+      if call.method == "getAppGroupDirectory" {
+        if let url = FileManager.default.containerURL(
+          forSecurityApplicationGroupIdentifier: "group.com.selcom.go"
+        ) {
+          result(url.path)
         } else {
-            result(FlutterError(code: "UNAVAILABLE",
+          result(FlutterError(code: "UNAVAILABLE",
                               message: "App group container not found",
                               details: nil))
         }
       } else {
         result(FlutterMethodNotImplemented)
       }
-    })
+    }
 
+    // VoIP bridge — used by the Dart-side `VoipCallkitBridgeService` and the
+    // Agora calling package to receive PushKit incoming-call events and the
+    // VoIP push token. Per brain/docs/AGORA-FRONTEND-GUIDE.md § 6.5.
     voipChannel = FlutterMethodChannel(
       name: "com.selcom.go/voip",
       binaryMessenger: controller.binaryMessenger
     )
-    voipChannel?.setMethodCallHandler({ [weak self] call, result in
-      guard let self = self else {
-        result(nil)
-        return
-      }
+    voipChannel?.setMethodCallHandler { [weak self] (call, result) in
+      guard let self = self else { result(FlutterMethodNotImplemented); return }
       switch call.method {
       case "consumePendingVoipEvents":
-        let events = self.consumePendingVoipEvents()
-        result(events)
+        let drained = self.pendingVoipEvents
+        self.pendingVoipEvents.removeAll()
+        result(drained)
       default:
         result(FlutterMethodNotImplemented)
       }
-    })
+    }
 
     configureCallKit()
     configurePushKit()
@@ -64,175 +77,177 @@ import CallKit
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
+  // MARK: - PushKit setup
+
   private func configurePushKit() {
     let registry = PKPushRegistry(queue: .main)
     registry.delegate = self
     registry.desiredPushTypes = [.voIP]
-    pushRegistry = registry
+    self.pushRegistry = registry
+    NSLog("[VOIP_NATIVE] PKPushRegistry configured, requested types=[.voIP]")
   }
 
   private func configureCallKit() {
-    let config = CXProviderConfiguration(localizedName: "Selcom Go")
-    config.supportsVideo = false
-    config.maximumCallsPerCallGroup = 1
-    config.maximumCallGroups = 1
-    config.supportedHandleTypes = [.generic]
-    callProvider = CXProvider(configuration: config)
-    callProvider?.setDelegate(self, queue: nil)
+    let cfg = CXProviderConfiguration(localizedName: "Selcom Go")
+    cfg.supportsVideo = false
+    cfg.maximumCallsPerCallGroup = 1
+    cfg.maximumCallGroups = 1
+    cfg.supportedHandleTypes = [.generic]
+    cfg.includesCallsInRecents = true
+    let provider = CXProvider(configuration: cfg)
+    provider.setDelegate(self, queue: nil)
+    self.callProvider = provider
   }
 
-  private func emitVoipEvent(method: String, arguments: [String: Any]) {
-    guard let channel = voipChannel else {
-      queuePendingVoipEvent(method: method, arguments: arguments)
-      return
-    }
-    channel.invokeMethod(method, arguments: arguments)
-  }
+  // MARK: - PushKit delegate
 
-  private func queuePendingVoipEvent(method: String, arguments: [String: Any]) {
-    var events = UserDefaults.standard.array(forKey: pendingVoipEventsKey) as? [[String: Any]] ?? []
-    events.append([
-      "method": method,
-      "arguments": arguments,
-    ])
-    UserDefaults.standard.set(events, forKey: pendingVoipEventsKey)
-  }
-
-  private func consumePendingVoipEvents() -> [[String: Any]] {
-    let events = UserDefaults.standard.array(forKey: pendingVoipEventsKey) as? [[String: Any]] ?? []
-    UserDefaults.standard.removeObject(forKey: pendingVoipEventsKey)
-    return events
-  }
-
-  private func payload(from dictionary: [AnyHashable: Any]) -> [String: Any] {
-    var result: [String: Any] = [:]
-    for (key, value) in dictionary {
-      guard let k = key as? String else { continue }
-      result[k] = value
-    }
-    return result
-  }
-
-  /// Backend contract requires `ride_id` on every VoIP push; we never
-  /// fabricate one because doing so would break dedupe between clients.
-  private func extractRideId(from payload: [String: Any]) -> String? {
-    if let rid = payload["ride_id"] as? String,
-       !rid.trimmingCharacters(in: .whitespaces).isEmpty {
-      return rid
-    }
-    if let rid = payload["rideId"] as? String,
-       !rid.trimmingCharacters(in: .whitespaces).isEmpty {
-      return rid
-    }
-    return nil
-  }
-
-  /// Display name for the system CallKit UI. Backend contract carries
-  /// `caller_name` on `incoming_call` pushes; fall back to a role-based label
-  /// only when the field is absent.
-  private func callerDisplayName(from payload: [String: Any]) -> String {
-    if let name = payload["caller_name"] as? String,
-       !name.trimmingCharacters(in: .whitespaces).isEmpty {
-      return name
-    }
-    let role = (payload["caller_role"] as? String ?? "").lowercased()
-    return role == "driver" ? "Your Driver" : "Your Rider"
-  }
-
-  private func endCall(for rideId: String) {
-    guard let uuid = callByRideId[rideId] else { return }
-    let action = CXEndCallAction(call: uuid)
-    let transaction = CXTransaction(action: action)
-    callController.request(transaction) { [weak self] _ in
-      guard let self = self else { return }
-      self.callByRideId.removeValue(forKey: rideId)
-      self.payloadByCallId.removeValue(forKey: uuid)
-    }
-  }
-
-  // MARK: - PushKit
-  func pushRegistry(
-    _ registry: PKPushRegistry,
-    didUpdate pushCredentials: PKPushCredentials,
-    for type: PKPushType
-  ) {
+  func pushRegistry(_ registry: PKPushRegistry,
+                    didUpdate pushCredentials: PKPushCredentials,
+                    for type: PKPushType) {
     guard type == .voIP else { return }
     let token = pushCredentials.token.map { String(format: "%02x", $0) }.joined()
+    // Log a short prefix only — never the full token, but enough to verify a
+    // token actually came in and to compare against the value the backend
+    // stores. If you NEVER see this line in Xcode console, the device is not
+    // receiving a VoIP push token (no Push capability, no APNs auth, or no
+    // network). Without it the backend cannot deliver a VoIP push.
+    let prefix = String(token.prefix(8))
+    NSLog("[VOIP_NATIVE] PKPushRegistry didUpdate VoIP token len=\(token.count) prefix=\(prefix)…")
     emitVoipEvent(method: "onVoipToken", arguments: ["token": token])
   }
 
-  func pushRegistry(
-    _ registry: PKPushRegistry,
-    didReceiveIncomingPushWith pushPayload: PKPushPayload,
-    for type: PKPushType,
-    completion: @escaping () -> Void
-  ) {
-    guard type == .voIP else {
-      completion()
-      return
-    }
-    let map = payload(from: pushPayload.dictionaryPayload)
-    let pushType = (map["type"] as? String ?? "").lowercased()
-    guard let rideId = extractRideId(from: map) else {
-      completion()
+  func pushRegistry(_ registry: PKPushRegistry,
+                    didInvalidatePushTokenFor type: PKPushType) {
+    guard type == .voIP else { return }
+    NSLog("[VOIP_NATIVE] PKPushRegistry didInvalidatePushTokenFor VoIP")
+    emitVoipEvent(method: "onVoipToken", arguments: ["token": ""])
+  }
+
+  /// Called even when the app is killed. Apple requires that we ALWAYS report
+  /// a new incoming call to CallKit on this code path or iOS will terminate
+  /// the app on subsequent VoIP pushes.
+  func pushRegistry(_ registry: PKPushRegistry,
+                    didReceiveIncomingPushWith payload: PKPushPayload,
+                    for type: PKPushType,
+                    completion: @escaping () -> Void) {
+    NSLog("[VOIP_NATIVE] didReceiveIncomingPushWith type=\(type.rawValue) payload=\(payload.dictionaryPayload)")
+    guard type == .voIP else { completion(); return }
+    let raw = normalizePayload(payload.dictionaryPayload)
+
+    // Per brain doc: PushKit pushes are ONLY incoming_call.
+    // Drop pushes that are missing ride_id — contract violation.
+    guard let rideId = (raw["ride_id"] as? String).flatMap({ $0.isEmpty ? nil : $0 })
+    else {
+      NSLog("[VOIP_NATIVE] dropping VoIP push — no ride_id in payload")
+      // Apple still requires us to call completion() — but starting on iOS 13
+      // we MUST also report a CallKit incoming call here or the OS will kill
+      // our app. Synthesize a placeholder CallKit entry so we don't crash on
+      // contract-violating pushes during testing.
+      let placeholderUuid = UUID()
+      let placeholderUpdate = CXCallUpdate()
+      placeholderUpdate.remoteHandle = CXHandle(type: .generic, value: "Caller")
+      placeholderUpdate.hasVideo = false
+      callProvider?.reportNewIncomingCall(with: placeholderUuid, update: placeholderUpdate) { _ in
+        // Immediately end the placeholder call so it doesn't haunt the UI.
+        let endAction = CXEndCallAction(call: placeholderUuid)
+        let transaction = CXTransaction(action: endAction)
+        self.callController.request(transaction) { _ in completion() }
+      }
       return
     }
 
-    if pushType == "call_cancelled" {
-      endCall(for: rideId)
-      emitVoipEvent(method: "onVoipCallCancelled", arguments: map)
-      completion()
-      return
-    }
+    let callerName = callerDisplayLabel(from: raw)
+    NSLog("[VOIP_NATIVE] reporting incoming call rideId=\(rideId) caller=\(callerName)")
 
-    guard pushType == "incoming_call" else {
-      completion()
-      return
-    }
-
-    let callId = callByRideId[rideId] ?? UUID()
-    callByRideId[rideId] = callId
-    payloadByCallId[callId] = map
-
-    let callerName = callerDisplayName(from: map)
     let update = CXCallUpdate()
     update.remoteHandle = CXHandle(type: .generic, value: callerName)
     update.localizedCallerName = callerName
     update.hasVideo = false
+    update.supportsHolding = false
+    update.supportsGrouping = false
+    update.supportsUngrouping = false
+    update.supportsDTMF = false
 
-    callProvider?.reportNewIncomingCall(with: callId, update: update) { [weak self] error in
-      if error == nil {
-        var args = map
-        args["call_uuid"] = callId.uuidString
-        self?.emitVoipEvent(method: "onVoipIncomingCall", arguments: args)
+    let uuid = UUID()
+    callsByRideId[rideId] = uuid
+    ridesByCallId[uuid] = rideId
+
+    callProvider?.reportNewIncomingCall(with: uuid, update: update) { [weak self] error in
+      defer { completion() }
+      if let error = error {
+        NSLog("[VOIP_NATIVE] reportNewIncomingCall FAILED rideId=\(rideId) error=\(error.localizedDescription)")
+        self?.callsByRideId.removeValue(forKey: rideId)
+        self?.ridesByCallId.removeValue(forKey: uuid)
+        return
       }
-      completion()
+      NSLog("[VOIP_NATIVE] reportNewIncomingCall OK rideId=\(rideId) uuid=\(uuid.uuidString)")
+      var args: [String: Any] = raw
+      args["call_id"] = uuid.uuidString
+      self?.emitVoipEvent(method: "onVoipIncomingCall", arguments: args)
     }
   }
 
-  // MARK: - CallKit delegate
+  // MARK: - CXProvider delegate
+
+  func providerDidReset(_ provider: CXProvider) {
+    callsByRideId.removeAll()
+    ridesByCallId.removeAll()
+  }
+
   func provider(_ provider: CXProvider, perform action: CXAnswerCallAction) {
-    if var payload = payloadByCallId[action.callUUID] {
-      payload["call_uuid"] = action.callUUID.uuidString
-      emitVoipEvent(method: "onVoipCallAccepted", arguments: payload)
+    if let rideId = ridesByCallId[action.callUUID] {
+      emitVoipEvent(method: "onVoipCallAccepted", arguments: ["ride_id": rideId])
     }
     action.fulfill()
   }
 
   func provider(_ provider: CXProvider, perform action: CXEndCallAction) {
-    if var payload = payloadByCallId[action.callUUID] {
-      payload["call_uuid"] = action.callUUID.uuidString
-      emitVoipEvent(method: "onVoipCallCancelled", arguments: payload)
+    if let rideId = ridesByCallId[action.callUUID] {
+      emitVoipEvent(method: "onVoipCallCancelled", arguments: ["ride_id": rideId])
+      callsByRideId.removeValue(forKey: rideId)
     }
-    if let ridePair = callByRideId.first(where: { $0.value == action.callUUID }) {
-      callByRideId.removeValue(forKey: ridePair.key)
-    }
-    payloadByCallId.removeValue(forKey: action.callUUID)
+    ridesByCallId.removeValue(forKey: action.callUUID)
     action.fulfill()
   }
 
-  func providerDidReset(_ provider: CXProvider) {
-    callByRideId.removeAll()
-    payloadByCallId.removeAll()
+  // MARK: - Helpers
+
+  private func emitVoipEvent(method: String, arguments: Any) {
+    if let channel = voipChannel {
+      NSLog("[VOIP_NATIVE] emit method=\(method) (channel ready)")
+      channel.invokeMethod(method, arguments: arguments)
+    } else {
+      NSLog("[VOIP_NATIVE] queue method=\(method) (channel not ready — will drain on Dart consume)")
+      pendingVoipEvents.append(["method": method, "arguments": arguments])
+    }
+  }
+
+  /// Normalises a PushKit dictionary into `[String: Any]` with safe string
+  /// fields for the keys we care about.
+  private func normalizePayload(_ raw: [AnyHashable: Any]) -> [String: Any] {
+    var out: [String: Any] = [:]
+    for (k, v) in raw {
+      if let key = k as? String {
+        out[key] = v
+      }
+    }
+    if let aps = out["aps"] as? [String: Any] {
+      // Some payloads put the data block inside "aps".
+      for (k, v) in aps where out[k] == nil { out[k] = v }
+    }
+    return out
+  }
+
+  /// Prefers `caller_name` from the push; falls back to a role-based label.
+  private func callerDisplayLabel(from data: [String: Any]) -> String {
+    if let name = data["caller_name"] as? String, !name.isEmpty { return name }
+    if let role = (data["caller_role"] as? String)?.lowercased() {
+      switch role {
+      case "rider":  return "Your Rider"
+      case "driver": return "Your Driver"
+      default: break
+      }
+    }
+    return "Caller"
   }
 }

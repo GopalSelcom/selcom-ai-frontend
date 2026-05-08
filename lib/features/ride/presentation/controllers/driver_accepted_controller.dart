@@ -1,14 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:dio/dio.dart';
 import 'dart:io';
 import 'dart:math' as math;
+import 'package:agora_calling_package/agora_calling_package.dart';
 import 'package:selcom_rides_frontend/shared/widgets/app_google_map.dart';
 import 'package:uuid/uuid.dart';
 
 import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
@@ -18,7 +17,6 @@ import 'package:selcom_rides_frontend/core/data/models/responses/payment_status_
 import 'package:url_launcher/url_launcher.dart';
 import 'package:selcom_rides_frontend/features/ride/data/models/emergency_contacts_response.dart';
 import 'package:selcom_rides_frontend/features/ride/data/models/stop_update_models.dart';
-import 'package:selcom_rides_frontend/features/ride/data/services/ride_chat_call_signaling_service.dart';
 import 'package:selcom_rides_frontend/features/ride/data/models/destination_update_models.dart';
 import 'package:selcom_rides_frontend/core/data/models/requests/validate_ride_payment_request.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
@@ -38,24 +36,7 @@ import '../../../../core/services/app_map_service.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/map_marker_utils.dart';
-import '../../../../shared/agora_voice/domain/agora_call_invite_event.dart';
-import '../../../../shared/agora_voice/domain/agora_call_signaling_service.dart';
-import '../../../../core/config/app_config.dart';
-import '../../../../core/network/headers.dart';
-import '../../../../shared/agora_voice/data/ride_call_http_token_provider.dart';
-import '../../../../shared/agora_voice/domain/agora_voice_token_provider.dart';
-import '../../../../shared/agora_voice/domain/agora_voice_call_session.dart';
-import '../../../../shared/agora_voice/domain/agora_voice_call_end_reason.dart';
-import '../../../../shared/agora_voice/domain/agora_voice_call_state.dart';
-import '../../../../shared/agora_voice/presentation/agora_voice_call_controller.dart';
-import '../../../../shared/agora_voice/presentation/agora_voice_call_screen.dart';
-import '../../../../shared/agora_voice/service/agora_incoming_call_notification_bridge.dart';
-import '../../../../shared/agora_voice/service/agora_call_cancel_notification_bridge.dart';
-import '../../../../shared/agora_voice/service/agora_call_joined_notification_bridge.dart';
-import '../../../../shared/agora_voice/service/agora_voice_engine_service.dart';
-import '../../../../shared/agora_voice/service/agora_voice_incoming_call_handler.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../../../shared/utils/currency_formatter.dart';
@@ -91,7 +72,6 @@ class DriverAcceptedController extends GetxController
   int? _seedRideCharge;
   int? _seedBookingFee;
   int? _seedTotalAmount;
-  Map<String, dynamic>? _pendingIncomingCallPayload;
 
   final Rxn<LatLng> assignedDriverLocation = Rxn<LatLng>();
   final routePoints = <LatLng>[].obs;
@@ -156,12 +136,6 @@ class DriverAcceptedController extends GetxController
   final emergencyContacts = <EmergencyContactModel>[].obs;
 
   final RxDouble sheetSize = 0.3.obs;
-  AgoraVoiceCallController? _inAppCallController;
-  AgoraVoiceIncomingCallHandler? _incomingCallHandler;
-  Worker? _inAppCallStateWorker;
-  AgoraCallSignalingService? _callSignalingService;
-  StreamSubscription<AgoraCallInviteEvent>? _callSignalSub;
-  final String _localCallClientId = const Uuid().v4();
 
   // Mid-Ride Stops State
   final isUpdatingStops = false.obs;
@@ -251,7 +225,6 @@ class DriverAcceptedController extends GetxController
     await _fetchRideDetails();
     _handleStopUpdateRecovery();
     await _initRideRoomSocket();
-    await _initCallSignaling();
   }
 
   /// Called once from [DriverAcceptedScreen] after first frame.
@@ -382,9 +355,6 @@ class DriverAcceptedController extends GetxController
 
   @override
   void onClose() {
-    AgoraIncomingCallNotificationBridge.instance.unregister(rideId);
-    AgoraCallCancelNotificationBridge.instance.unregister(rideId);
-    AgoraCallJoinedNotificationBridge.instance.unregister(rideId);
     WidgetsBinding.instance.removeObserver(this);
     _connectionSub?.cancel();
     _rideStatusSub?.cancel();
@@ -392,113 +362,7 @@ class DriverAcceptedController extends GetxController
     _driverLocSub?.cancel();
     _trackingSub?.cancel();
     _chatSub?.cancel();
-    _callSignalSub?.cancel();
-    _callSignalingService?.dispose();
-    _incomingCallHandler?.dispose();
-    _incomingCallHandler = null;
-    _inAppCallStateWorker?.dispose();
-    _inAppCallStateWorker = null;
-    final inAppCallController = _inAppCallController;
-    if (inAppCallController != null) {
-      unawaited(inAppCallController.disposeCall());
-    }
     super.onClose();
-  }
-
-  Future<void> _initCallSignaling() async {
-    if (rideId.isEmpty) return;
-    debugPrint('[AGORA_RIDE] init signaling ride=$rideId');
-    final signaling = RideChatCallSignalingService(
-      rideId: rideId,
-      socketService: _socketService,
-    );
-    await signaling.start();
-    _callSignalingService = signaling;
-    _incomingCallHandler?.dispose();
-    _incomingCallHandler = AgoraVoiceIncomingCallHandler(
-      signalingService: signaling,
-      localClientId: _localCallClientId,
-      rideId: rideId,
-      localDisplayName: 'Rider',
-      canStartCall: _hasCallApiConfig,
-      buildController: (event) {
-        final tokenProvider = _buildRiderTokenProvider();
-        return AgoraVoiceCallController(
-          engineService: AgoraVoiceEngineService(tokenProvider: tokenProvider),
-          session: AgoraVoiceCallSession(rideId: event.rideId),
-          onLocalEndRequested: () => _sendCallEndSignal(
-            channelName: event.channelName,
-            rideIdForSignal: event.rideId,
-          ),
-          enableRingbackOnConnectFlow: false,
-          enableUnansweredTimeout: false,
-        );
-      },
-      getActiveController: () => _inAppCallController,
-      setActiveController: (controller) => _inAppCallController = controller,
-      closeCallRouteIfOpen: _closeInAppCallScreenIfOpen,
-      onRejectCallApi: (rideId) async {
-        await rideRepository.cancelVoiceCall(rideId);
-      },
-    );
-    _callSignalSub?.cancel();
-    _callSignalSub = signaling.events.listen(_handleCallInviteEvent);
-
-    AgoraIncomingCallNotificationBridge.instance.register(
-      rideId: rideId,
-      onIncoming: (raw) async {
-        final h = _incomingCallHandler;
-        if (h == null) return;
-        await h.handleIncomingCallPush(
-          raw,
-          callerId: 'fcm',
-          callerName: _remoteCallerLabelFromPush(raw),
-        );
-      },
-    );
-    AgoraCallCancelNotificationBridge.instance.register(
-      rideId: rideId,
-      onCancelled: (_) async {
-        final controller = _inAppCallController;
-        if (controller == null) {
-          _closeInAppCallScreenIfOpen();
-          return;
-        }
-        controller.stopIncomingRingtone();
-        await controller.endCallFromRemote(
-          reason: AgoraVoiceCallEndReason.remoteEnded,
-        );
-        // [_inAppCallStateWorker] closes the call route when state becomes ended.
-      },
-    );
-    AgoraCallJoinedNotificationBridge.instance.register(
-      rideId: rideId,
-      onJoined: (_) async {
-        final controller = _inAppCallController;
-        if (controller == null) return;
-        controller.stopIncomingRingtone();
-        await controller.markConnectedFromSignal();
-      },
-    );
-
-    if (_pendingIncomingCallPayload != null) {
-      final pending = _pendingIncomingCallPayload!;
-      _pendingIncomingCallPayload = null;
-      await _incomingCallHandler?.handleIncomingCallPush(
-        pending,
-        callerId: 'fcm',
-        callerName: _remoteCallerLabelFromPush(pending),
-      );
-    }
-  }
-
-  String _remoteCallerLabelFromPush(Map<String, dynamic> raw) {
-    final name = raw['caller_name']?.toString().trim();
-    if (name != null && name.isNotEmpty) return name;
-    final role = (raw['caller_role'] ?? '').toString().toLowerCase();
-    if (role == 'driver') return 'Your Driver';
-    if (role == 'rider') return 'Your Rider';
-    return 'Incoming call';
   }
 
   @override
@@ -527,13 +391,7 @@ class DriverAcceptedController extends GetxController
     final args = raw is Map
         ? Map<String, dynamic>.from(raw)
         : <String, dynamic>{};
-    debugPrint('[AGORA_RIDE] parse args=$args');
     rideId = (args['rideId'] as String?)?.trim() ?? '';
-    debugPrint('[AGORA_RIDE] resolved rideId=$rideId');
-    final pending = args['pendingIncomingCallPayload'];
-    if (pending is Map) {
-      _pendingIncomingCallPayload = Map<String, dynamic>.from(pending);
-    }
     final plat = (args['pickupLat'] as num?)?.toDouble() ?? -6.7924;
     final plng = (args['pickupLng'] as num?)?.toDouble() ?? 39.2083;
     final dlat = (args['destinationLat'] as num?)?.toDouble() ?? (plat - 0.018);
@@ -1708,7 +1566,39 @@ class DriverAcceptedController extends GetxController
     Get.to(() => ProfileScreen());
   }
 
+  /// Places an in-app voice call to the assigned driver using the Agora
+  /// calling package. Falls back to the system phone dialer when the package
+  /// flow isn't available (no Agora App ID, ride id missing, etc.).
   Future<void> callDriver() async {
+    final ride = rideId;
+    if (ride.isEmpty) {
+      _fallbackToSystemDialer();
+      return;
+    }
+    try {
+      await AgoraCalling.controller.placeCall(
+        rideId: ride,
+        peerDisplayName: driverName.value.isNotEmpty
+            ? driverName.value
+            : 'Your Driver',
+        peerAvatarUrl: driverAvatarUrl.value.isNotEmpty
+            ? driverAvatarUrl.value
+            : null,
+      );
+    } on CallPermissionDeniedException catch (e) {
+      AppDialogs.showErrorDialog(
+        title: AppStrings.call.tr,
+        message: e.outcome == PermissionOutcome.permanentlyDenied
+            ? 'Microphone permission is permanently denied. Open Settings to allow it.'
+            : 'Microphone permission is required to place a call.',
+      );
+    } catch (e, st) {
+      ErrorReporter.instance.report(error: e, stackTrace: st);
+      _fallbackToSystemDialer();
+    }
+  }
+
+  void _fallbackToSystemDialer() {
     final phone = driverPhone.value.trim();
     if (phone.isEmpty) {
       AppDialogs.showErrorDialog(
@@ -1717,119 +1607,10 @@ class DriverAcceptedController extends GetxController
       );
       return;
     }
-    _showCallOptionsBottomSheet(phone);
-  }
-
-  void _showCallOptionsBottomSheet(String phone) {
-    Get.bottomSheet(
-      SafeArea(
-        top: false,
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-          ),
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 20.h),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 48.w,
-                  height: 4.h,
-                  decoration: BoxDecoration(
-                    color: AppColors.skeletonBase,
-                    borderRadius: BorderRadius.circular(2.r),
-                  ),
-                ),
-                SizedBox(height: 16.h),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    AppStrings.call.tr,
-                    style: AppTextStyles.homeTitle.copyWith(
-                      fontSize: 18.sp,
-                      color: AppColors.textHeading,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 12.h),
-                _callOptionTile(
-                  title: 'In app calling',
-                  icon: Icons.phone_in_talk_outlined,
-                  onTap: () {
-                    if (Get.isBottomSheetOpen ?? false) {
-                      Get.back();
-                    }
-                    _startOutgoingFullScreenCall();
-                  },
-                ),
-                SizedBox(height: 10.h),
-                _callOptionTile(
-                  title: 'Normal call',
-                  icon: Icons.call_outlined,
-                  onTap: () {
-                    if (Get.isBottomSheetOpen ?? false) {
-                      Get.back();
-                    }
-                    unawaited(_callDriverViaPhoneDialer(phone));
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-      isScrollControlled: true,
-      backgroundColor: AppColors.transparent,
-    );
-  }
-
-  Widget _callOptionTile({
-    required String title,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: AppColors.surfaceSubtle,
-      borderRadius: BorderRadius.circular(14.r),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14.r),
-        onTap: onTap,
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
-          child: Row(
-            children: [
-              Icon(icon, color: AppColors.textHeading, size: 20.sp),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Text(
-                  title,
-                  style: AppTextStyles.homeSubtitle.copyWith(
-                    color: AppColors.textHeading,
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios,
-                size: 14.sp,
-                color: AppColors.textMapHint,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _callDriverViaPhoneDialer(String phone) async {
-    await _launchSystemPhoneDialer(
+    unawaited(_launchSystemPhoneDialer(
       phone: phone,
       errorDialogTitle: AppStrings.call.tr,
-    );
+    ));
   }
 
   /// Opens the OS phone app with [phone] (`tel:`). [errorDialogTitle] uses API `label` for emergency rows.
@@ -1861,177 +1642,6 @@ class DriverAcceptedController extends GetxController
         message: AppStrings.errorOpeningPhoneDialer.tr,
       );
     }
-  }
-
-  Future<void> _startOutgoingFullScreenCall() async {
-    debugPrint('[AGORA_RIDE] outgoing call tapped ride=$rideId');
-    if (!_hasCallApiConfig()) {
-      AppDialogs.showErrorDialog(
-        title: 'Voice Call',
-        message:
-            'Call API is not configured. Set AGORA_TOKEN_MODE=ride_api and valid API base URL.',
-      );
-      return;
-    }
-
-    final channelName = _voiceChannelName();
-    debugPrint('[AGORA_RIDE] invite send ride=$rideId channel=$channelName');
-    await _callSignalingService?.sendEvent(
-      AgoraCallInviteEvent(
-        type: AgoraCallInviteEventType.invite,
-        channelName: channelName,
-        rideId: rideId,
-        callerName: driverName.value.isEmpty ? 'Rider' : driverName.value,
-        callerId: _localCallClientId,
-        timestampMs: DateTime.now().millisecondsSinceEpoch,
-      ),
-    );
-
-    final tokenProvider = _buildRiderTokenProvider();
-    late final AgoraVoiceCallController controller;
-    controller = AgoraVoiceCallController(
-      engineService: AgoraVoiceEngineService(tokenProvider: tokenProvider),
-      session: AgoraVoiceCallSession(rideId: rideId),
-      onLocalEndRequested: () async {
-        await rideRepository.cancelVoiceCall(rideId);
-        await _sendCallEndSignal(
-          channelName: channelName,
-          rideIdForSignal: rideId,
-        );
-      },
-      onUnansweredTimeout: () async {
-        AppDialogs.showErrorDialog(
-          title: 'Voice Call',
-          message: 'No answer from the other side. Please try again.',
-        );
-      },
-      onCallRejected: () async {
-        AppDialogs.showErrorDialog(
-          title: 'Voice Call',
-          message: 'Call was declined by the other side.',
-        );
-      },
-    );
-    debugPrint('[AGORA_RIDE] trigger caller startCall ride=$rideId');
-    unawaited(controller.startCall());
-    _inAppCallController = controller;
-    _attachInAppCallStateListener(controller);
-
-    if (Get.isBottomSheetOpen ?? false) {
-      Get.back();
-    }
-    await Get.to(
-      () => AgoraVoiceCallScreen(
-        controller: controller,
-        displayName: 'Ride Call',
-        isIncoming: false,
-        onAccept: controller.startCall,
-        onReject: () async {
-          final isConnected =
-              controller.callState.value == AgoraVoiceCallState.connected;
-          await rideRepository.cancelVoiceCall(rideId);
-          if (isConnected) {
-            await _callSignalingService?.sendEvent(
-              AgoraCallInviteEvent(
-                type: AgoraCallInviteEventType.end,
-                channelName: channelName,
-                rideId: rideId,
-                callerName: 'Rider',
-                callerId: _localCallClientId,
-                timestampMs: DateTime.now().millisecondsSinceEpoch,
-              ),
-            );
-          }
-          await controller.endCall(notifyRemote: false);
-          // [_inAppCallStateWorker] closes the call route when state becomes ended.
-        },
-      ),
-      fullscreenDialog: true,
-    );
-    _clearInAppCallStateListener();
-    _inAppCallController = null;
-  }
-
-  Future<void> _handleCallInviteEvent(AgoraCallInviteEvent event) async {
-    debugPrint(
-      '[AGORA_RIDE] signaling event type=${event.type.name} '
-      'ride=${event.rideId} channel=${event.channelName}',
-    );
-    await _incomingCallHandler?.handleEvent(event);
-  }
-
-  void _attachInAppCallStateListener(AgoraVoiceCallController controller) {
-    _inAppCallStateWorker?.dispose();
-    _inAppCallStateWorker = ever(controller.callState, (state) {
-      if (state == AgoraVoiceCallState.ended) {
-        _closeInAppCallScreenIfOpen();
-      }
-    });
-  }
-
-  void _clearInAppCallStateListener() {
-    _inAppCallStateWorker?.dispose();
-    _inAppCallStateWorker = null;
-  }
-
-  void _closeInAppCallScreenIfOpen() {
-    final canPop = Get.key.currentState?.canPop() ?? false;
-    if (canPop) {
-      Get.back();
-    }
-  }
-
-  String _voiceChannelName() {
-    final sanitized = rideId.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
-    if (sanitized.isEmpty) return 'ride_unknown';
-    return 'ride_$sanitized';
-  }
-
-  bool _hasCallApiConfig() {
-    final baseUrl = AppConfig.baseUrl.trim();
-    final mode = AppConfig.agoraTokenMode.trim().toLowerCase();
-    return baseUrl.isNotEmpty && (mode == 'ride_api' || mode.isEmpty || mode == 'none');
-  }
-
-  AgoraVoiceTokenProvider _buildRiderTokenProvider() {
-    var base = AppConfig.baseUrl.trim();
-    if (base.endsWith('/')) {
-      base = base.substring(0, base.length - 1);
-    }
-    final dio = Dio(
-      BaseOptions(
-        baseUrl: base,
-        connectTimeout: const Duration(seconds: 20),
-        receiveTimeout: const Duration(seconds: 20),
-      ),
-    );
-    return RideCallHttpTokenProvider(
-      dio: dio,
-      tokenPathBuilder: (id) => '/v4/go/rides/${id.trim()}/call/token',
-      headersProvider: () async {
-        return await commonHeaders(accessTokenRequired: true);
-      },
-    );
-  }
-
-  Future<void> _sendCallEndSignal({
-    required String channelName,
-    required String rideIdForSignal,
-  }) async {
-    await _callSignalingService?.sendEvent(
-      AgoraCallInviteEvent(
-        type: AgoraCallInviteEventType.end,
-        channelName: channelName,
-        rideId: rideIdForSignal,
-        callerName: localDisplayNameForSignal(),
-        callerId: _localCallClientId,
-        timestampMs: DateTime.now().millisecondsSinceEpoch,
-      ),
-    );
-  }
-
-  String localDisplayNameForSignal() {
-    return driverName.value.isEmpty ? 'Rider' : driverName.value;
   }
 
   void onChatTap() {

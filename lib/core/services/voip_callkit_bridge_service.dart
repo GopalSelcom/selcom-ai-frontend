@@ -3,17 +3,14 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
-import 'notification_service.dart';
 import 'storage_service.dart';
 
 /// Bridge for native iOS PushKit/CallKit events delivered via AppDelegate.
 ///
-/// Aligned with the backend voice-calling handoff contract:
-/// - Incoming pushes always include `ride_id` and the channel is
-///   ride-scoped as `ride_<rideId>`.
-/// - The VoIP push token is owned by the platform (PushKit on iOS) and must
-///   be relayed to the backend so it can deliver `incoming_call` /
-///   `call_cancelled` pushes through the APNs VoIP path.
+/// Aligned with `brain/docs/AGORA-FRONTEND-GUIDE.md` § 6.5:
+/// - Incoming pushes always include `ride_id` (channel = `ride_<rideId>`).
+/// - The VoIP push token is owned by PushKit on iOS and must be relayed to
+///   the backend so it can deliver `incoming_call` via APNs VoIP.
 class VoipCallkitBridgeService {
   VoipCallkitBridgeService._();
   static final VoipCallkitBridgeService instance = VoipCallkitBridgeService._();
@@ -23,15 +20,13 @@ class VoipCallkitBridgeService {
 
   String? _voipToken;
   Future<void> Function(String token)? _onVoipTokenChanged;
+  void Function(Map<String, dynamic> data)? _onIncomingCall;
 
   /// Latest known VoIP push token (iOS / PushKit). Empty string when unknown.
   String get voipToken => _voipToken ?? '';
 
   /// Registers a host-app callback fired whenever the VoIP token changes.
-  ///
-  /// Host app should register the token with the backend (e.g.
-  /// `PATCH /v1/app/go/voip-token`). Called once with the cached token if one
-  /// is already known when [setOnVoipTokenChanged] is invoked.
+  /// Called once with the cached token if one is already known.
   void setOnVoipTokenChanged(
     Future<void> Function(String token)? handler,
   ) {
@@ -42,10 +37,23 @@ class VoipCallkitBridgeService {
     }
   }
 
+  /// Registers a host-app sink for native PushKit-delivered incoming calls.
+  /// Used to forward into `AgoraCalling.dispatchExternalIncomingCall`.
+  void setOnIncomingCall(
+    void Function(Map<String, dynamic> data)? sink,
+  ) {
+    _onIncomingCall = sink;
+  }
+
   Future<void> initialize() async {
     if (_initialized) return;
     _initialized = true;
     _voipToken = await StorageService().read(StorageKeys.voipToken);
+    if (kDebugMode) {
+      final cached = _voipToken;
+      debugPrint('[VOIP_BRIDGE] initialize — cached token '
+          '${cached == null || cached.isEmpty ? 'NONE' : 'len=${cached.length}'}');
+    }
     _channel.setMethodCallHandler(_onNativeCall);
     await _consumePendingNativeEvents();
   }
@@ -59,8 +67,12 @@ class VoipCallkitBridgeService {
         final map = Map<String, dynamic>.from(item);
         final method = map['method']?.toString();
         final args = map['arguments'];
-        if (method == null || args is! Map) continue;
-        await _dispatch(method, Map<String, dynamic>.from(args));
+        if (method == null) continue;
+        if (args is Map) {
+          await _dispatch(method, Map<String, dynamic>.from(args));
+        } else if (args is String && method == 'onVoipToken') {
+          await _dispatch(method, {'token': args});
+        }
       }
     } catch (e) {
       if (kDebugMode) {
@@ -73,6 +85,10 @@ class VoipCallkitBridgeService {
     final args = call.arguments;
     if (args is Map) {
       await _dispatch(call.method, Map<String, dynamic>.from(args));
+    } else if (args is String && call.method == 'onVoipToken') {
+      await _dispatch(call.method, {'token': args});
+    } else {
+      await _dispatch(call.method, const <String, dynamic>{});
     }
     return null;
   }
@@ -80,20 +96,33 @@ class VoipCallkitBridgeService {
   Future<void> _dispatch(String method, Map<String, dynamic> args) async {
     switch (method) {
       case 'onVoipIncomingCall':
-        final raw = _normalizeIncomingRaw(args);
-        if (raw == null) return;
-        NotificationService().markSystemIncomingActive(raw);
-        break;
-      case 'onVoipCallAccepted':
-        final raw = _normalizeIncomingRaw(args);
-        if (raw == null) return;
-        await NotificationService().handleSystemIncomingAccepted(raw);
-        break;
-      case 'onVoipCallCancelled':
-        final raw = _normalizeCancelRaw(args);
-        if (raw == null) return;
-        await NotificationService().handleSystemIncomingCancelled(raw);
-        break;
+      case 'onIncomingCall':
+        if (kDebugMode) {
+          debugPrint('[VOIP_BRIDGE] $method received args=$args');
+        }
+        final normalised = _normalizeIncoming(args);
+        if (normalised == null) {
+          if (kDebugMode) {
+            debugPrint('[VOIP_BRIDGE] $method dropped — no ride_id in payload');
+          }
+          return;
+        }
+        final sink = _onIncomingCall;
+        if (sink == null) {
+          if (kDebugMode) {
+            debugPrint('[VOIP_BRIDGE] $method dropped — no sink registered '
+                '(setOnIncomingCall not called yet)');
+          }
+          return;
+        }
+        try {
+          sink(normalised);
+        } catch (e) {
+          if (kDebugMode) {
+            debugPrint('[VOIP_BRIDGE] onIncomingCall sink failed: $e');
+          }
+        }
+        return;
       case 'onVoipToken':
         final token = args['token']?.toString() ?? '';
         if (token.isEmpty) return;
@@ -130,10 +159,11 @@ class VoipCallkitBridgeService {
     }
   }
 
-  /// Normalizes an incoming-call payload to the backend contract shape.
-  /// Returns `null` when `ride_id` is missing — the contract requires it on
-  /// every `incoming_call`.
-  Map<String, dynamic>? _normalizeIncomingRaw(Map<String, dynamic> raw) {
+  /// Normalizes a native incoming-call payload to the package's expected shape:
+  /// `{ type: 'incoming_call', ride_id, channel, caller_role }`. Drops the
+  /// payload (returns `null`) when `ride_id` is missing — the contract
+  /// requires it on every incoming call.
+  Map<String, dynamic>? _normalizeIncoming(Map<String, dynamic> raw) {
     final rideId = (raw['ride_id'] ?? raw['rideId'])?.toString().trim() ?? '';
     if (rideId.isEmpty) return null;
     final channel = _resolveChannelForRide(
@@ -148,18 +178,6 @@ class VoipCallkitBridgeService {
       'ride_id': rideId,
       'channel': channel,
       if (callerRole.isNotEmpty) 'caller_role': callerRole.toLowerCase(),
-    };
-  }
-
-  /// Normalizes a `call_cancelled` payload. Returns `null` when `ride_id` is
-  /// missing — required by the contract.
-  Map<String, dynamic>? _normalizeCancelRaw(Map<String, dynamic> raw) {
-    final rideId = (raw['ride_id'] ?? raw['rideId'])?.toString().trim() ?? '';
-    if (rideId.isEmpty) return null;
-    return <String, dynamic>{
-      ...raw,
-      'type': 'call_cancelled',
-      'ride_id': rideId,
     };
   }
 
