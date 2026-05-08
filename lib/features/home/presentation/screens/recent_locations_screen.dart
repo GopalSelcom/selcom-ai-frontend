@@ -49,18 +49,22 @@ class RecentLocationsScreen extends GetView<HomeController> {
             ),
             padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
             itemCount: items.length,
-            separatorBuilder: (context, index) =>
+            separatorBuilder: (context, index) => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
                 Divider(height: 1.h, color: AppColors.bgSoftCircle),
+                SizedBox(height: 20.h),
+              ],
+            ),
             itemBuilder: (context, index) =>
-                _buildRecentLocationItem(items[index], bottomSpacing: 8, topSpacing: 8),
+                _buildRecentLocationItem(items[index]),
           );
         }),
       ),
     );
   }
 
-  Widget _buildRecentLocationItem(RecentDestinationModel loc,
-      {double bottomSpacing = 24, double topSpacing = 24}) {
+  Widget _buildRecentLocationItem(RecentDestinationModel loc) {
     return Obx(() {
       final distance = controller.calculateDistanceKm(loc.lat, loc.lng);
       final savedPlace = controller.getSavedPlaceFor(loc.address, null);
@@ -70,8 +74,6 @@ class RecentLocationsScreen extends GetView<HomeController> {
         address: loc.address,
         distance: distance,
         isFavorite: isFavorite,
-        bottomSpacing: bottomSpacing,
-        topSpacing: topSpacing,
         onTap: () =>
             controller.navigateToVehicleSelectionForRecentDestination(loc),
         onFavoriteTap: () => controller.toggleFavoriteForRecent(loc),

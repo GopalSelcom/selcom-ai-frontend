@@ -105,7 +105,7 @@ class SignUpScreen extends GetView<SignUpController> {
                         label: AppStrings.fullName.tr,
                         hintText: AppStrings.enterYourFullName.tr,
                         controller: controller.nameController,
-                        textColor: AppColors.figmaInputBlue,
+                        textColor: AppColors.primary,
                         errorText: controller.submitted.value
                             ? controller.nameError
                             : null,
@@ -118,7 +118,7 @@ class SignUpScreen extends GetView<SignUpController> {
                         hintText: AppStrings.enterYourEmailOptional.tr,
                         controller: controller.emailController,
                         keyboardType: TextInputType.emailAddress,
-                        textColor: AppColors.figmaInputBlue,
+                        textColor: AppColors.primary,
                         errorText:
                             controller.emailController.text.trim().isNotEmpty
                             ? controller.emailError

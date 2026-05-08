@@ -3,14 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
+import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
-import '../../../../shared/widgets/app_back_button.dart';
-import '../../../../shared/widgets/app_focus_input_field.dart';
 import '../../../../shared/utils/phone_formatter.dart';
+import '../../../../shared/widgets/app_focus_input_field.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../controllers/auth_controller.dart';
 
@@ -35,17 +34,7 @@ class PhoneInputScreen extends GetView<AuthController> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(height: 10.h),
-                        AppBackButton(
-                          color: AppColors.textHeading,
-                          showOnlyWhenCanPop: false,
-                          onPressed: () {
-                            if (Navigator.of(context).canPop()) {
-                              Get.back();
-                            }
-                          },
-                        ),
-                        SizedBox(height: 17.h),
+                        SizedBox(height: 103.h - kToolbarHeight),
 
                         // Title
                         Text(
@@ -129,16 +118,16 @@ class PhoneInputScreen extends GetView<AuthController> {
                             Expanded(
                               child: AppFocusInputField(
                                 height: 54.h,
+                                focusedBorderColor: AppColors.primary,
                                 keyboardType: TextInputType.number,
                                 inputFormatters: [
                                   FilteringTextInputFormatter.digitsOnly,
                                   TanzaniaPhoneFormatter(),
                                 ],
                                 style: AppTextStyles.body.copyWith(
-                                  fontFamily: 'Plus Jakarta Sans',
                                   fontWeight: FontWeight.w600,
                                   fontSize: 16.sp,
-                                  color: AppColors.figmaInputBlue,
+                                  color: AppColors.primary,
                                   letterSpacing: -0.16,
                                 ),
                                 maxLength: 11,
@@ -150,9 +139,8 @@ class PhoneInputScreen extends GetView<AuthController> {
                                 },
                                 hintText: AppStrings.eG7XxXxxXxx.tr,
                                 hintStyle: AppTextStyles.hint.copyWith(
-                                  fontFamily: 'Plus Jakarta Sans',
                                   fontSize: 16.sp,
-                                  color: AppColors.figmaInputBlue,
+                                  color: AppColors.primary,
                                   letterSpacing: -0.16,
                                 ),
                                 contentPadding: EdgeInsets.symmetric(
@@ -200,12 +188,30 @@ class PhoneInputScreen extends GetView<AuthController> {
 
                         // Button
                         Obx(
-                          () => AppPrimaryButton(
-                            label: AppStrings.getVerificationCode.tr,
-                            isLoading: controller.isLoading.value,
-                            onPressed: controller.canRequestOtp
-                                ? controller.sendOtpAndNavigate
-                                : null,
+                          () => AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 420),
+                            switchInCurve: Curves.easeOutQuart,
+                            switchOutCurve: Curves.easeInOutCubic,
+                            transitionBuilder: (child, animation) {
+                              return FadeTransition(
+                                opacity: animation,
+                                child: SizeTransition(
+                                  sizeFactor: animation,
+                                  axis: Axis.vertical,
+                                  child: child,
+                                ),
+                              );
+                            },
+                            child: controller.canRequestOtp
+                                ? AppPrimaryButton(
+                                    key: const ValueKey('otp-button-visible'),
+                                    label: AppStrings.getVerificationCode.tr,
+                                    isLoading: controller.isLoading.value,
+                                    onPressed: controller.sendOtpAndNavigate,
+                                  )
+                                : const SizedBox.shrink(
+                                    key: ValueKey('otp-button-hidden'),
+                                  ),
                           ),
                         ),
 
