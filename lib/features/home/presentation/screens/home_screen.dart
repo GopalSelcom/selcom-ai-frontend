@@ -20,6 +20,7 @@ import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
 import '../../../../shared/widgets/app_map_gps_button.dart';
 import '../../../../shared/widgets/app_map_top_header.dart';
+import '../../../../shared/widgets/app_saved_place_chip.dart';
 import '../../../ride/data/models/ride_management_models.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/recent_location_tile.dart';
@@ -391,37 +392,14 @@ class HomeScreen extends GetView<HomeController> {
 
   Widget _buildSavedPlaceChip(SavedPlace place) {
     final label = _savedPlaceLabel(place);
-    return GestureDetector(
-      onTap: () => controller.navigateToVehicleSelectionForSavedLabel(label),
-      onLongPress: () =>
-          Get.toNamed(AppRoutes.selectSavedLocation, arguments: label),
-      child: Container(
-        margin: EdgeInsets.only(right: 8.w),
-        padding: EdgeInsets.symmetric(horizontal: 12.52.w, vertical: 11.h),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceSubtle,
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SvgPictureAsset(
-              _chipIconForLabel(label),
-              width: 15.w,
-              height: 15.w,
-            ),
-            SizedBox(width: 8.w),
-            Text(
-              label,
-              style: AppTextStyles.homeChip.copyWith(
-                fontWeight: FontWeight.w600,
-                fontSize: 14.sp,
-                color: AppColors.textHeading,
-              ),
-            ),
-          ],
-        ),
+    return Container(
+      margin: EdgeInsets.only(right: 8.w),
+      child: AppSavedPlaceChip(
+        label: label,
+        iconAsset: _chipIconForLabel(label),
+        onTap: () => controller.navigateToVehicleSelectionForSavedLabel(label),
+        onLongPress: () =>
+            Get.toNamed(AppRoutes.selectSavedLocation, arguments: label),
       ),
     );
   }
