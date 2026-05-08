@@ -6,8 +6,8 @@ import '../../core/constants/app_assets.dart';
 import '../../core/localization/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
-import '../../core/widgets/svg_picture_asset.dart';
 import 'app_primary_button.dart';
+import 'app_saved_place_chip.dart';
 import 'app_text_field.dart';
 
 class AddFavoriteLocationSheet extends StatefulWidget {
@@ -35,7 +35,37 @@ class _AddFavoriteLocationSheetState extends State<AddFavoriteLocationSheet> {
     'add_new',
   ];
   final TextEditingController _customLabelController = TextEditingController();
-  String _selectedLabel = 'home';
+  String _selectedLabel = '';
+  bool _hasUserSelectedLabel = false;
+
+  bool get _canSave {
+    if (!_hasUserSelectedLabel) return false;
+    if (_selectedLabel.isEmpty) return false;
+    if (_selectedLabel == 'add_new') {
+      return _customLabelController.text.trim().length >= 3;
+    }
+    return true;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _resetSelectionState();
+  }
+
+  @override
+  void didUpdateWidget(covariant AddFavoriteLocationSheet oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.address != widget.address) {
+      _resetSelectionState();
+    }
+  }
+
+  void _resetSelectionState() {
+    _selectedLabel = '';
+    _hasUserSelectedLabel = false;
+    _customLabelController.clear();
+  }
 
   @override
   void dispose() {
@@ -45,18 +75,27 @@ class _AddFavoriteLocationSheetState extends State<AddFavoriteLocationSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final availableHeight =
+        mediaQuery.size.height - mediaQuery.padding.top - bottomInset - 12.h;
+    final maxSheetHeight = availableHeight.clamp(280.h, 0.92.sh);
     return SafeArea(
       top: false,
       child: Container(
-        constraints: BoxConstraints(maxHeight: 0.92.sh),
+        constraints: BoxConstraints(maxHeight: maxSheetHeight),
         decoration: BoxDecoration(
           color: AppColors.cardBackground,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
         ),
         clipBehavior: Clip.antiAlias,
         child: SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 24.h + bottomInset),
+          padding: EdgeInsets.fromLTRB(
+            16.w,
+            10.h,
+            16.w,
+            24.h + mediaQuery.padding.bottom,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -109,6 +148,7 @@ class _AddFavoriteLocationSheetState extends State<AddFavoriteLocationSheet> {
                     isSelected: isSelected,
                     onTap: () {
                       setState(() {
+                        _hasUserSelectedLabel = true;
                         _selectedLabel = label;
                         if (label != 'add_new') _customLabelController.clear();
                       });
@@ -121,22 +161,43 @@ class _AddFavoriteLocationSheetState extends State<AddFavoriteLocationSheet> {
                 AppTextField(
                   hintText: AppStrings.enterCustomLabel.tr,
                   controller: _customLabelController,
+                  onChanged: (_) => setState(() {
+                    _hasUserSelectedLabel = true;
+                  }),
                   textInputAction: TextInputAction.done,
                   textFieldBackgroundColor: AppColors.white,
                   textColor: AppColors.textHeading,
                   enableEnhancedStyle: false,
                 ),
               ],
-              SizedBox(height: 22.h),
-              AppPrimaryButton(
-                label: AppStrings.saveAddress.tr,
-                isLoading: widget.isSaving,
-                onPressed: () async {
-                  final selected = _selectedLabel == 'add_new'
-                      ? _customLabelController.text.trim()
-                      : _canonicalLabel(_selectedLabel);
-                  await widget.onSave(selected);
-                },
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 260),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                transitionBuilder: (child, animation) => FadeTransition(
+                  opacity: animation,
+                  child: SizeTransition(
+                    sizeFactor: animation,
+                    axis: Axis.vertical,
+                    child: child,
+                  ),
+                ),
+                child: _canSave
+                    ? Padding(
+                        key: const ValueKey('save-button-visible'),
+                        padding: EdgeInsets.only(top: 22.h),
+                        child: AppPrimaryButton(
+                          label: AppStrings.saveAddress.tr,
+                          isLoading: widget.isSaving,
+                          onPressed: () async {
+                            final selected = _selectedLabel == 'add_new'
+                                ? _customLabelController.text.trim()
+                                : _canonicalLabel(_selectedLabel);
+                            await widget.onSave(selected);
+                          },
+                        ),
+                      )
+                    : const SizedBox.shrink(key: ValueKey('save-button-hidden')),
               ),
             ],
           ),
@@ -151,49 +212,21 @@ class _AddFavoriteLocationSheetState extends State<AddFavoriteLocationSheet> {
     required VoidCallback onTap,
   }) {
     final isAddNew = label == 'add_new';
-    final iconPath = label == 'home'
+    final iconPath = isAddNew
+        ? AppAssets.locationIcAdd
+        : label == 'home'
         ? AppAssets.icHomeChip
         : label == 'work'
         ? AppAssets.icWorkChip
         : AppAssets.icOfficeChip;
-    return GestureDetector(
+    return AppSavedPlaceChip(
+      label: _displayLabel(label),
+      iconAsset: iconPath,
+      iconColor: isAddNew ? AppColors.primary : null,
       onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryLight : AppColors.surfaceSubtle,
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.borderWalletCard,
-            width: isSelected ? 1.2 : 0.8,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            isAddNew
-                ? SvgPictureAsset(
-                    AppAssets.locationIcAdd,
-                    width: 16.w,
-                    height: 16.w,
-                    color: AppColors.primary,
-                    placeholderBuilder: (_) => Icon(
-                      Icons.add_circle,
-                      color: AppColors.primary,
-                      size: 18.sp,
-                    ),
-                  )
-                : SvgPictureAsset(iconPath, width: 16.w, height: 16.w),
-            SizedBox(width: 8.w),
-            Text(
-              _displayLabel(label),
-              style: AppTextStyles.homeChip.copyWith(
-                color: AppColors.figmaTextPrimary,
-              ),
-            ),
-          ],
-        ),
-      ),
+      // Keep selection behavior unchanged while using shared chip baseline.
+      backgroundColor: isSelected ? AppColors.primaryLight : null,
+      borderColor: isSelected ? AppColors.primary : null,
     );
   }
 
