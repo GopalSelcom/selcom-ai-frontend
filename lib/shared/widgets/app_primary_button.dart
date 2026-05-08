@@ -20,6 +20,7 @@ class AppPrimaryButton extends StatelessWidget {
   final Color? outlinedTextColor;
   final double? borderRadius;
   final double? outlinedBorderWidth;
+  final bool placeIconAfterLabel;
 
   const AppPrimaryButton({
     super.key,
@@ -37,6 +38,7 @@ class AppPrimaryButton extends StatelessWidget {
     this.outlinedTextColor,
     this.borderRadius,
     this.outlinedBorderWidth,
+    this.placeIconAfterLabel = false,
   });
 
   @override
@@ -51,6 +53,25 @@ class AppPrimaryButton extends StatelessWidget {
         outlinedTextColor ?? effectiveTextColor;
     final double effectiveBorderRadius = borderRadius ?? AppRadius.button;
     final double effectiveOutlinedBorderWidth = outlinedBorderWidth ?? 1.5;
+    final Widget? iconWidget = iconAsset == null
+        ? null
+        : iconAsset!.endsWith('.svg')
+            ? SvgPictureAsset(
+                iconAsset!,
+                width: 18.w,
+                height: 18.w,
+                color:
+                    iconColor ??
+                    (outlined
+                        ? effectiveOutlinedTextColor
+                        : effectiveTextColor),
+              )
+            : Image.asset(
+                iconAsset!,
+                width: 18.w,
+                height: 18.w,
+                color: iconColor,
+              );
 
     return SizedBox(
       width: width ?? double.infinity,
@@ -86,44 +107,45 @@ class AppPrimaryButton extends StatelessWidget {
                   strokeWidth: 2,
                 ),
               )
-            : SizedBox.expand(
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Text(
-                      label,
-                      style: AppTextStyles.button.copyWith(
-                        color: outlined
-                            ? effectiveOutlinedTextColor
-                            : effectiveTextColor,
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w700,
+            : placeIconAfterLabel
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        label,
+                        style: AppTextStyles.button.copyWith(
+                          color: outlined
+                              ? effectiveOutlinedTextColor
+                              : effectiveTextColor,
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
+                      if (iconWidget != null) ...[
+                        SizedBox(width: 4.w),
+                        iconWidget,
+                      ],
+                    ],
+                  )
+                : SizedBox.expand(
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Text(
+                          label,
+                          style: AppTextStyles.button.copyWith(
+                            color: outlined
+                                ? effectiveOutlinedTextColor
+                                : effectiveTextColor,
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        if (iconWidget != null)
+                          Positioned(right: 0, child: iconWidget),
+                      ],
                     ),
-                    if (iconAsset != null)
-                      Positioned(
-                        right: 0,
-                        child: iconAsset!.endsWith('.svg')
-                            ? SvgPictureAsset(
-                                iconAsset!,
-                                width: 18.w,
-                                height: 18.w,
-                                color:
-                                    iconColor ??
-                                    (outlined
-                                        ? effectiveOutlinedTextColor
-                                        : effectiveTextColor),
-                              )
-                            : Image.asset(
-                                iconAsset!,
-                                width: 18.w,
-                                height: 18.w,
-                                color: iconColor,
-                              ),
-                      ),
-                  ],
-                ),
-              ),
+                  ),
       ),
     );
   }

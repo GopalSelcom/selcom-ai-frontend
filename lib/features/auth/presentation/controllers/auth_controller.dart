@@ -204,6 +204,13 @@ class AuthController extends GetxController {
     );
   }
 
+  void onOtpChanged(String value) {
+    otp.value = value;
+    if (errorMessage.isNotEmpty) {
+      errorMessage.value = '';
+    }
+  }
+
   void completeProfileLoading() {
     Get.offAllNamed(AppRoutes.home);
   }

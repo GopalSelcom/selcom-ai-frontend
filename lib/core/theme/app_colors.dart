@@ -99,6 +99,7 @@ class AppColors {
   static const Color shadowCard = Color(0x0F000000);
   static const Color shadowMapCard = Color(0x1A000000);
   static const Color shadowProfileModal = Color(0x0D242E49);
+  static const Color inputFocusShadow = Color(0x335CB75E); // 20% primary
   static const Color overlayGray43 = Color(0x6D808080);
 
   // Skeleton
@@ -123,7 +124,7 @@ class AppColors {
   static const Color ratingStarActive = Color(0xFFFFCC41);
   static const Color ratingStarInactive = Color(0xFFE7E7E7);
   static const Color otpErrorBorder = Color(0xFFFA4D5E);
-  static const Color otpFocusShadow = Color(0x400F67FE); // 25%
+  static const Color otpErrorBackground = Color(0xFFFFF1F3);
   static const Color otpErrorShadow = Color(0x40FA4D5E); // 25%
   static const Color iconInfo = Color(0xFF0284C7);
   static const Color iconPurple = Color(0xFF6D28D9);
@@ -142,7 +143,6 @@ class AppColors {
   static const Color previousPickupHalo = Color(0xFFB9D0EE);
   static const Color routeBlue = Color(0xFF3073E8);
   static const Color pinRed = Color(0xFFF52D56);
-  static const Color figmaInputBlue = Color(0xFF2F6FED);
   static const Color dangerDeep = Color(0xFFE31E24);
   static const Color successMint = Color(0xFF10B981);
   static const Color ratingGoldDark = Color(0xFFD9A800);
