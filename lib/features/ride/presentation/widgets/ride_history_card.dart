@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -17,17 +19,17 @@ class RideHistoryCard extends StatelessWidget {
 
   String _getStatusText(RideStatus status) {
     if (rideStatusIsOngoingActive(status)) {
-      return 'Ongoing';
+      return AppStrings.ongoing.tr;
     }
     switch (status) {
       case RideStatus.rideCompleted:
-        return 'Completed';
+        return AppStrings.completed.tr;
       case RideStatus.cancelled:
-        return 'Cancelled';
+        return AppStrings.cancelled.tr;
       case RideStatus.noDriverFound:
-        return 'No Driver Found';
+        return AppStrings.noDriverFound.tr;
       default:
-        return 'Completed';
+        return AppStrings.completed.tr;
     }
   }
 
@@ -55,7 +57,7 @@ class RideHistoryCard extends StatelessWidget {
     final resolvedVehicleType = (ride.vehicleDisplayName ?? '').trim();
     final vehicleType = resolvedVehicleType.isNotEmpty
         ? resolvedVehicleType
-        : 'Ride';
+        : AppStrings.fallbackRideName.tr;
     final effectiveFare = ride.status == RideStatus.cancelled
         ? (ride.cancellationFee ?? 0)
         : (ride.fareBreakdown?.totalAmount ??
@@ -159,7 +161,11 @@ class RideHistoryCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Payment method ${ride.paymentMethod == PaymentMethod.selcomPesa ? 'Selcom pesa' : ride.paymentMethod.name}',
+                    AppStrings.paymentMethodWithName.trParams({
+                      'name': ride.paymentMethod == PaymentMethod.selcomPesa
+                          ? AppStrings.selcomPesa.tr
+                          : ride.paymentMethod.name,
+                    }),
                     style: TextStyle(
                       fontFamily: AppTextStyles.metropolisFont,
                       fontWeight: FontWeight.w500,

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/constants/ride_stop_limits.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -23,7 +26,9 @@ class StopEditorScreen extends StatefulWidget {
 class _StopEditorScreenState extends State<StopEditorScreen> {
   final controller = Get.find<DriverAcceptedController>();
   late List<RideStopEntity> _stops;
+  late List<String> _stopLocalKeys;
   late List<RideStopEntity> _initialStops;
+  int _newStopCounter = 0;
   // Reuse this screen for two modes:
   // - false: mid-ride stops editor
   // - true : change drop location editor
@@ -44,16 +49,23 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
     _isDestinationEditor = args['editorMode'] == 'destination';
     final ride = args['ride'] as RideEntity?;
     final destAddr = controller.destinationAddress.trim().toLowerCase();
+    final confirmedStops = (ride?.stops ?? [])
+        .where((s) => s.address.trim().toLowerCase() != destAddr)
+        .toList();
 
     if (controller.stopUpdateWorkingStops.isNotEmpty) {
       // Use recovered stops if available
       _stops = List.from(controller.stopUpdateWorkingStops);
+      // Frontend-only draft tracking:
+      // items beyond confirmed baseline are treated as newly added stops.
+      final baselineCount = confirmedStops.length;
+      _stopLocalKeys = List.generate(_stops.length, (i) {
+        if (i >= baselineCount) return 'new_${_newStopCounter++}';
+        return 'confirmed_$i';
+      });
     } else {
       // Normal initialization from confirmed stops
-      _stops = (ride?.stops ?? [])
-          .where((s) {
-            return s.address.trim().toLowerCase() != destAddr;
-          })
+      _stops = confirmedStops
           .map(
             (s) => RideStopEntity(
               index: s.index,
@@ -64,6 +76,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
             ),
           )
           .toList();
+      _stopLocalKeys = List.generate(_stops.length, (i) => 'confirmed_$i');
     }
     _initialStops = List.from(_stops);
   }
@@ -81,6 +94,15 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
   }
 
   void _addStop() async {
+    if (_stops.length >= RideStopLimits.maxIntermediateStops) {
+      AppDialogs.showErrorDialog(
+        title: AppStrings.error.tr,
+        message:
+            'You can add up to ${RideStopLimits.maxIntermediateStops} stops only.',
+      );
+      return;
+    }
+
     // Navigate to location selection and get result
     final result = await Get.toNamed(
       AppRoutes.selectSavedLocation,
@@ -97,6 +119,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
             status: 'pending',
           ),
         );
+        _stopLocalKeys.add('new_${_newStopCounter++}');
         controller.stopUpdatePreview.value = null; // Reset preview on change
       });
     }
@@ -105,6 +128,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
   void _removeStop(int index) {
     setState(() {
       _stops.removeAt(index);
+      _stopLocalKeys.removeAt(index);
       controller.stopUpdatePreview.value = null; // Reset preview on change
     });
   }
@@ -113,7 +137,9 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
     setState(() {
       if (newIndex > oldIndex) newIndex -= 1;
       final item = _stops.removeAt(oldIndex);
+      final key = _stopLocalKeys.removeAt(oldIndex);
       _stops.insert(newIndex, item);
+      _stopLocalKeys.insert(newIndex, key);
       controller.stopUpdatePreview.value = null; // Reset preview on change
     });
   }
@@ -211,6 +237,8 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                     },
                     itemBuilder: (context, index) {
                       final stop = _stops[index];
+                      final canRemoveDraftStop =
+                          _stopLocalKeys[index].startsWith('new_');
                       return Padding(
                         key: ValueKey('stop_${stop.index}_$index'),
                         padding: EdgeInsets.only(bottom: 12.h),
@@ -255,14 +283,15 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                                   ],
                                 ),
                               ),
-                              IconButton(
-                                icon: Icon(
-                                  Icons.remove_circle,
-                                  color: AppColors.primary,
-                                  size: 20.sp,
+                              if (canRemoveDraftStop)
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.remove_circle,
+                                    color: AppColors.primary,
+                                    size: 20.sp,
+                                  ),
+                                  onPressed: () => _removeStop(index),
                                 ),
-                                onPressed: () => _removeStop(index),
-                              ),
                             ],
                           ),
                         ),

@@ -75,7 +75,7 @@ class SelcomPesaSelfieBottomSheet extends GetView<PaymentMethodsController> {
 
           // Take Selfie Button
           AppPrimaryButton(
-            label: 'Take Selfie',
+            label: AppStrings.takeSelfie.tr,
             onPressed: controller.takeSelfie,
           ),
           SizedBox(height: 16.h),

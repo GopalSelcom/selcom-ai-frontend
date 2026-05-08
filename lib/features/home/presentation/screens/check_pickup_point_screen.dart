@@ -38,7 +38,7 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
     super.initState();
     controller = Get.find<HomeController>();
     args = Get.arguments as Map<String, dynamic>? ?? {};
-    label = args['label'] ?? 'Home';
+    label = args['label'] ?? AppStrings.homeLabel.tr;
     _title.value = args['title'] ?? '';
     _subtitle.value = args['subtitle'] ?? '';
     _lat.value = args['lat'] ?? controller.mapCenter.value.latitude;
@@ -416,7 +416,9 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                 child: Column(
                   children: [
                     Text(
-                      'Are you sure you want to add this address as a $label?',
+                      AppStrings.areYouSureYouWantToAddThisAddressAs.trParams({
+                        'label': label,
+                      }),
                       textAlign: TextAlign.center,
                       style: AppTextStyles.homeTitle.copyWith(
                         fontSize: 18.sp,

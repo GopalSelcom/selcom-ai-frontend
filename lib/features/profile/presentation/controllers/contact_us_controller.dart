@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import '../../../../core/localization/app_strings.dart';
 import '../../../../shared/utils/app_dialogs.dart';
-import '../../domain/repositories/profile_repository.dart';
-import '../../data/models/contact_us_models.dart';
 import '../../../ride/domain/repositories/ride_repository.dart';
+import '../../data/models/contact_us_models.dart';
+import '../../domain/repositories/profile_repository.dart';
 
 class ContactUsController extends GetxController {
   final ProfileRepository profileRepository;
@@ -20,7 +22,7 @@ class ContactUsController extends GetxController {
   final supportEmail = ''.obs;
   final emailText = ''.obs;
 
-  final selectedReason = 'Select a Reason'.obs;
+  final selectedReason = AppStrings.selectAReason.tr.obs;
   final messageController = TextEditingController();
 
   @override
@@ -49,12 +51,12 @@ class ContactUsController extends GetxController {
   }
 
   Future<void> sendMessage() async {
-    if (selectedReason.value == 'Select a Reason') {
-      AppDialogs.showErrorDialog(message: 'Please select a reason');
+    if (selectedReason.value == AppStrings.selectAReason.tr) {
+      AppDialogs.showErrorDialog(message: AppStrings.pleaseSelectAReason.tr);
       return;
     }
     if (messageController.text.isEmpty) {
-      AppDialogs.showErrorDialog(message: 'Please enter a message');
+      AppDialogs.showErrorDialog(message: AppStrings.pleaseEnterAMessage.tr);
       return;
     }
 

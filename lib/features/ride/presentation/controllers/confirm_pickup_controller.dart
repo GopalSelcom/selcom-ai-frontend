@@ -10,7 +10,6 @@ import '../../../home/domain/repositories/home_repository.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_primary_button.dart';

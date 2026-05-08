@@ -63,9 +63,9 @@ class FindingDriverController extends GetxController {
   final routeTarget = ''.obs;
   final activeRoutePoints = <LatLng>[].obs;
 
-  final currentStatusLabel = 'Finding Your Driver'.obs;
+  final currentStatusLabel = AppStrings.findingYourDriver.tr.obs;
   final currentDescriptionLabel =
-      'The driver will pick you up as soon as possible after they confirm your order'
+      AppStrings.findingDriverDefaultDescription.tr
           .obs;
   final isRideCancelled = false.obs;
   final isReasonProcessing = false.obs;
@@ -108,7 +108,7 @@ class FindingDriverController extends GetxController {
   void _showCancelDialogThenGoHome(String message) {
     Future.delayed(Duration.zero, () {
       AppDialogs.showErrorDialog(
-        title: 'Search Ended',
+        title: AppStrings.searchEnded.tr,
         message: message,
         onConfirm: () => Get.offAllNamed(AppRoutes.home),
       );
@@ -293,7 +293,7 @@ class FindingDriverController extends GetxController {
       await LiveActivityManager().startActivity(
         orderId: rideId,
         status: 'SEARCHING',
-        driverName: 'Finding Your Driver',
+        driverName: AppStrings.findingYourDriver.tr,
         vehicleName: requestedVehicleType ?? '',
         plateNumber: '',
         isCompleted: false,
@@ -314,19 +314,19 @@ class FindingDriverController extends GetxController {
 
     final result = await rideRepository.cancelRide(
       rideId,
-      'Search timeout: no driver found',
+      AppStrings.searchTimeoutNoDriverFound.tr,
     );
     result.fold(
       (failure) async {
         await LiveActivityManager().endActivity(rideId);
         _showCancelDialogThenGoHome(
-          'No drivers found within 9 minutes. Please try again.',
+          AppStrings.noDriversFoundWithin9MinutesCancellingRide.tr,
         );
       },
       (success) async {
         await LiveActivityManager().endActivity(rideId);
         _showCancelDialogThenGoHome(
-          'No drivers found within 9 minutes. Please try again.',
+          AppStrings.noDriversFoundWithin9MinutesCancellingRide.tr,
         );
       },
     );
@@ -404,38 +404,39 @@ class FindingDriverController extends GetxController {
       switch (status) {
         case 'driver_assigned':
         case 'accepted':
-          currentStatusLabel.value = 'Driver Assigned';
+          currentStatusLabel.value = AppStrings.driverAssigned.tr;
           currentDescriptionLabel.value =
-              'A driver has accepted your ride and is on the way.';
+              AppStrings.driverAssignedDescription.tr;
           _loadDriverMarkerIcon(
             vehicleType: payload.driverSnapshot?.vehicleType,
           );
           _navigateToDriverAccepted();
           break;
         case 'driver_arrived':
-          currentStatusLabel.value = 'Driver Arrived';
+          currentStatusLabel.value = AppStrings.driverArrived.tr;
           currentDescriptionLabel.value =
-              'Your driver has arrived at the pickup location.';
+              AppStrings.driverArrivedDescription.tr;
           _setDropRouteFallback();
           _fitRouteBounds();
           break;
         case 'ride_started':
         case 'ride_in_progress':
-          currentStatusLabel.value = 'Ride Started';
+          currentStatusLabel.value = AppStrings.rideStarted.tr;
           currentDescriptionLabel.value =
-              'You are on your way to the destination.';
+              AppStrings.rideStartedDescription.tr;
           _setDropRouteFallback();
           _fitRouteBounds();
           break;
         case 'ride_completed':
-          currentStatusLabel.value = 'Ride Completed';
-          currentDescriptionLabel.value = 'You have reached your destination.';
+          currentStatusLabel.value = AppStrings.rideCompleted.tr;
+          currentDescriptionLabel.value =
+              AppStrings.youHaveReachedYourDestination.tr;
           break;
         case 'cancelled':
           if (_isUserInitiatedCancellation) return;
           isRideCancelled.value = true;
-          currentStatusLabel.value = 'Ride Cancelled';
-          currentDescriptionLabel.value = 'The ride has been cancelled.';
+          currentStatusLabel.value = AppStrings.rideCancelled.tr;
+          currentDescriptionLabel.value = AppStrings.theRideHasBeenCancelled.tr;
           LiveActivityManager().endActivity(rideId);
           _showCancelDialogThenGoHome(AppStrings.yourRideWasCancelled.tr);
           break;
@@ -443,8 +444,8 @@ class FindingDriverController extends GetxController {
         case 'no_drivers_found':
           if (_isUserInitiatedCancellation) return;
           isRideCancelled.value = true;
-          currentStatusLabel.value = 'No Driver Found';
-          currentDescriptionLabel.value = 'We couldn\'t find a driver nearby.';
+          currentStatusLabel.value = AppStrings.noDriverFound.tr;
+          currentDescriptionLabel.value = AppStrings.weCouldntFindADriverNearby.tr;
           LiveActivityManager().endActivity(rideId);
           _showCancelDialogThenGoHome(
             AppStrings.noDriversNearbyPleaseTryAgainLater.tr,
@@ -679,7 +680,7 @@ class FindingDriverController extends GetxController {
 
     await Get.dialog<void>(
       CancelReasonSelectionDialog(
-        reasons: [
+        reasons: const [
           'Taking too long to confirm the ride',
           'Wait time too long',
           'Selected wrong pickup location',

@@ -251,7 +251,11 @@ class RideDetailsScreen extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    "Booking for ${ride.passengerName ?? 'Someone'}",
+                                    AppStrings.bookingForName.trParams({
+                                      'name': (ride.passengerName ?? '').trim().isEmpty
+                                          ? AppStrings.someone.tr
+                                          : ride.passengerName!,
+                                    }),
                                     style: TextStyle(
                                       fontFamily: AppTextStyles.metropolisFont,
                                       fontWeight: FontWeight.w700,
@@ -261,7 +265,12 @@ class RideDetailsScreen extends StatelessWidget {
                                   ),
                                   if (ride.passengerPhone != null)
                                     Text(
-                                      "Phone: ${TanzaniaPhoneFormatter.formatInternational(ride.passengerPhone ?? '')}",
+                                      AppStrings.phoneWithNumber.trParams({
+                                        'phone': TanzaniaPhoneFormatter
+                                            .formatInternational(
+                                          ride.passengerPhone ?? '',
+                                        ),
+                                      }),
                                       style: TextStyle(
                                         fontFamily: AppTextStyles.metropolisFont,
                                         fontWeight: FontWeight.w500,

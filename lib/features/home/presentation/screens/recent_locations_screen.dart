@@ -34,7 +34,7 @@ class RecentLocationsScreen extends GetView<HomeController> {
               padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 28.h),
               children: [
                 Text(
-                  'No recent locations found',
+                  AppStrings.noRecentLocationsFound.tr,
                   style: AppTextStyles.homeCaption.copyWith(
                     color: AppColors.textBody,
                   ),

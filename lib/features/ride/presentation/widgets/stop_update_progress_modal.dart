@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../controllers/driver_accepted_controller.dart';
@@ -48,7 +49,7 @@ class StopUpdateProgressModal extends GetView<DriverAcceptedController> {
               TextButton(
                 onPressed: () => controller.cancelRouteOrStopsUpdate(),
                 child: Text(
-                  'Cancel Update',
+                  AppStrings.cancelUpdate.tr,
                   style: AppTextStyles.onboardingSubtitle.copyWith(
                     color: AppColors.primary,
                     fontWeight: FontWeight.bold,
@@ -66,28 +67,30 @@ class StopUpdateProgressModal extends GetView<DriverAcceptedController> {
   String _getTitle(int step, bool destinationFlow) {
     switch (step) {
       case 1:
-        return 'Updating Payment';
+        return AppStrings.updatingPayment.tr;
       case 2:
-        return 'Recalculating Route';
+        return AppStrings.recalculatingRoute.tr;
       case 3:
-        return destinationFlow ? 'Drop-off updated!' : 'Route Updated!';
+        return destinationFlow
+            ? AppStrings.dropOffUpdated.tr
+            : AppStrings.routeUpdated.tr;
       default:
-        return 'Processing...';
+        return AppStrings.processing.tr;
     }
   }
 
   String _getMessage(int step, bool destinationFlow) {
     switch (step) {
       case 1:
-        return 'We\'re adjusting your payment hold for the new route.';
+        return AppStrings.adjustingPaymentHoldForNewRoute.tr;
       case 2:
-        return 'Syncing the new route with your driver.';
+        return AppStrings.syncingNewRouteWithDriver.tr;
       case 3:
         return destinationFlow
-            ? 'Your driver has received the new drop-off location.'
-            : 'Your driver has received the new stops.';
+            ? AppStrings.driverReceivedNewDropOffLocation.tr
+            : AppStrings.driverReceivedNewStops.tr;
       default:
-        return 'Please wait while we process your request.';
+        return AppStrings.pleaseWaitWhileWeProcessYourRequest.tr;
     }
   }
 }

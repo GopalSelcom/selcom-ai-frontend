@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'dart:convert';
 
 import '../../../../core/data/models/requests/save_user_additional_details_request.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../domain/usecases/save_user_additional_details_use_case.dart';
@@ -36,10 +37,10 @@ class SignUpController extends GetxController {
 
   String? get nameError {
     final value = nameController.text.trim();
-    if (value.isEmpty) return 'Name is required';
-    if (value.length < 2) return 'Please enter a valid name';
+    if (value.isEmpty) return AppStrings.nameIsRequired.tr;
+    if (value.length < 2) return AppStrings.pleaseEnterAValidName.tr;
     if (!RegExp(r"^[a-zA-Z\s.'-]+$").hasMatch(value)) {
-      return 'Name contains invalid characters';
+      return AppStrings.nameContainsInvalidCharacters.tr;
     }
     return null;
   }
@@ -48,7 +49,7 @@ class SignUpController extends GetxController {
     final value = emailController.text.trim();
     if (value.isEmpty) return null;
     final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
-    if (!emailRegex.hasMatch(value)) return 'Please enter a valid email';
+    if (!emailRegex.hasMatch(value)) return AppStrings.pleaseEnterAValidEmail.tr;
     return null;
   }
 

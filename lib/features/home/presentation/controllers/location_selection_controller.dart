@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import '../../../../core/constants/ride_stop_limits.dart';
 import '../controllers/home_controller.dart';
 
 class LocationSelectionController extends GetxController {
   LocationSelectionController();
-
-  static const int maxExtraStops = 2;
 
   late final TextEditingController pickupController;
   late final TextEditingController destinationController;
@@ -41,6 +41,7 @@ class LocationSelectionController extends GetxController {
     var initialActiveSegment = 1;
     var clearPickupOnOpen = false;
     var clearDestinationOnOpen = false;
+    final initialExtraStops = <String>[];
     isVehicleSelectionEditMode.value = false;
 
     if (raw is Map) {
@@ -55,6 +56,37 @@ class LocationSelectionController extends GetxController {
       final d = (m['destination'] as String?)?.trim();
       if (d != null && d.isNotEmpty) {
         initialDestination = d;
+      }
+      final rawDestinations = m['destinations'];
+      if (rawDestinations is List && rawDestinations.isNotEmpty) {
+        final cleaned = <Map<String, dynamic>>[];
+        for (final item in rawDestinations) {
+          if (item is Map<String, dynamic>) {
+            cleaned.add(item);
+          } else if (item is Map) {
+            cleaned.add(Map<String, dynamic>.from(item));
+          }
+        }
+        if (cleaned.isNotEmpty) {
+          final finalDestination = cleaned.last;
+          final finalAddress =
+              (finalDestination['address'] as String?)?.trim() ?? '';
+          if (finalAddress.isNotEmpty) {
+            initialDestination = finalAddress;
+          }
+          final finalLat = (finalDestination['lat'] as num?)?.toDouble();
+          final finalLng = (finalDestination['lng'] as num?)?.toDouble();
+          if (finalLat != null && finalLng != null) {
+            routeDestinationLat.value = finalLat;
+            routeDestinationLng.value = finalLng;
+          }
+          for (final stop in cleaned.take(cleaned.length - 1)) {
+            final stopAddress = (stop['address'] as String?)?.trim() ?? '';
+            if (stopAddress.isNotEmpty) {
+              initialExtraStops.add(stopAddress);
+            }
+          }
+        }
       }
       final plat = (m['pickupLat'] as num?)?.toDouble();
       final plng = (m['pickupLng'] as num?)?.toDouble();
@@ -96,6 +128,12 @@ class LocationSelectionController extends GetxController {
     destinationController = TextEditingController(text: initialDestination);
     pickupFocusNode = FocusNode();
     destinationFocusNode = FocusNode();
+    for (final stopAddress in initialExtraStops.take(
+      RideStopLimits.maxIntermediateStops,
+    )) {
+      extraDestinationControllers.add(TextEditingController(text: stopAddress));
+      extraDestinationFocusNodes.add(FocusNode());
+    }
     activeSegmentIndex.value = initialActiveSegment;
 
     if (routePickupLat.value != null && initialPickup.isNotEmpty) {
@@ -125,7 +163,10 @@ class LocationSelectionController extends GetxController {
   }
 
   void onAddDestinationStop() {
-    if (extraDestinationControllers.length >= maxExtraStops) return;
+    if (extraDestinationControllers.length >=
+        RideStopLimits.maxIntermediateStops) {
+      return;
+    }
     extraDestinationControllers.add(TextEditingController());
     extraDestinationFocusNodes.add(FocusNode());
     activeSegmentIndex.value = 2 + extraDestinationControllers.length - 1;

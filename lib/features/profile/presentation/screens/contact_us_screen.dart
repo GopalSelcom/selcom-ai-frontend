@@ -67,7 +67,7 @@ class ContactUsScreen extends GetView<ContactUsController> {
             () => Padding(
               padding: EdgeInsets.only(bottom: 16.h, left: 24.w, right: 24.w),
               child: AppPrimaryButton(
-                label: 'Submit',
+                label: AppStrings.submit.tr,
                 onPressed: controller.sendMessage,
                 isLoading: controller.isLoading.value,
               ),
@@ -96,7 +96,8 @@ class ContactUsScreen extends GetView<ContactUsController> {
                 () => Text(
                   controller.selectedReason.value,
                   style: AppTextStyles.body.copyWith(
-                    color: controller.selectedReason.value == 'Select a Reason'
+                    color: controller.selectedReason.value ==
+                            AppStrings.selectAReason.tr
                         ? AppColors.textBody
                         : AppColors.textHeading,
                   ),

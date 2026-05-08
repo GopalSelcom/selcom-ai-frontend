@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
@@ -30,10 +32,10 @@ class PaymentStatusDialog extends StatelessWidget {
         : AppColors.iconPaymentSuccess;
     final String asset = isPending ? AppAssets.icRequest : AppAssets.icSuccess;
     final String title = isPending
-        ? 'Request sent. Please complete payment on Selcom Pesa to book your ride.'
-        : 'Payment completed successfully';
-    const String successMessage =
-        'Thank you for riding with us, see you on the next trip.';
+        ? AppStrings
+            .requestSentPleaseCompletePaymentOnSelcomPesaToBookYourRide
+            .tr
+        : AppStrings.paymentCompletedSuccessfully.tr;
 
     return Dialog(
       insetPadding: EdgeInsets.symmetric(horizontal: 24.w),
@@ -98,7 +100,9 @@ class PaymentStatusDialog extends StatelessWidget {
               Padding(
                 padding: EdgeInsets.only(bottom: 24.h),
                 child: Text(
-                  'Expire in ${_formatTimer(secondsRemaining!)}',
+                  AppStrings.expiresInTimer.trParams({
+                    'timer': _formatTimer(secondsRemaining!),
+                  }),
                   textAlign: TextAlign.center,
                   style: AppTextStyles.homeSubtitle.copyWith(height: 20 / 15),
                 ),
@@ -107,7 +111,7 @@ class PaymentStatusDialog extends StatelessWidget {
               Padding(
                 padding: EdgeInsets.fromLTRB(28.w, 0, 28.w, 20.h),
                 child: Text(
-                  successMessage,
+                  AppStrings.thankYouForRidingWithUsSeeYouOnTheNextTrip.tr,
                   textAlign: TextAlign.center,
                   style: AppTextStyles.homeSubtitle.copyWith(
                     color: AppColors.textBody,

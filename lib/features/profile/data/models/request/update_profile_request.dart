@@ -1,7 +1,5 @@
 import 'dart:io';
 
-import 'package:http/http.dart' as http;
-
 class UserProfileUpdateRequest {
   final String? name;
   final String? emailId;

@@ -1,9 +1,8 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
-import '../services/error_reporting/error_reporter.dart';
+import 'connectivity_probe.dart';
 
 /// Monitors internet connectivity and notifies listeners when connection is restored
 class NetworkConnectivityService {
@@ -66,13 +65,9 @@ class NetworkConnectivityService {
 
   /// Check internet connection via DNS lookup
   Future<bool> _checkConnection() async {
-    try {
-      final result = await InternetAddress.lookup('google.com');
-      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
-    } catch (e, stackTrace) {
-      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      return false;
-    }
+    // Shared probe reports unexpected errors centrally. Socket/timeout failures
+    // remain expected offline conditions and are not treated as app crashes.
+    return ConnectivityProbe.instance.probeInternetConnection();
   }
 
   /// Manually trigger offline state and start checking

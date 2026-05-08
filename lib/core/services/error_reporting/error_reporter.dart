@@ -94,6 +94,10 @@ class ErrorReporter {
     List<Map<String, dynamic>>? extraData,
     bool fatal = false,
   }) async {
+    if (kDebugMode) {
+      return;
+    }
+
     try {
       final errorStr = error.toString();
       final signature = "$errorStr|$customMessage";
@@ -232,6 +236,7 @@ class ErrorReporter {
           "timestamp": report.timestamp.toIso8601String(),
           "device": jsonEncode(report.deviceInfo),
           "app": jsonEncode(report.appInfo),
+          "app_name": "selcom_go",
           "user": jsonEncode(report.userContext),
           "state": jsonEncode(report.appState),
           if (report.extraData != null)

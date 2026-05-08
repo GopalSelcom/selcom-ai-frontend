@@ -160,7 +160,8 @@ class _AppTextFieldState extends State<AppTextField> {
                 style: AppTextStyles.body.copyWith(
                   fontSize: widget.fontSize ?? 14.h,
                   fontWeight: widget.fontWeight ?? FontWeight.w400,
-                  color: widget.textColor ?? AppColors.progressTrack,
+                  // Keep typed text readable on light input backgrounds.
+                  color: widget.textColor ?? AppColors.textHeading,
                 ),
                 decoration: InputDecoration(
                   hintText: widget.hintText,

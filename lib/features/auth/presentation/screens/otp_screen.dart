@@ -60,7 +60,15 @@ class OtpScreen extends GetView<AuthController> {
 
                         // Subtitle
                         Text(
-                          'Please enter the 4-digit code sent to \n${controller.countryCode} ${TanzaniaPhoneFormatter.formatString(controller.mobileNumber.value)} through SMS',
+                          AppStrings
+                              .pleaseEnterThe4DigitCodeSentToPhoneThroughSms
+                              .trParams({
+                                'countryCode': controller.countryCode.value,
+                                'phoneNumber': TanzaniaPhoneFormatter
+                                    .formatString(
+                                      controller.mobileNumber.value,
+                                    ),
+                              }),
                           style: AppTextStyles.homeSubtitle.copyWith(
                             fontSize: 15.sp,
                             fontWeight: FontWeight.w500,
@@ -119,7 +127,7 @@ class OtpScreen extends GetView<AuthController> {
                                   padding: EdgeInsets.only(top: 8.h),
                                   child: Center(
                                     child: Text(
-                                      'OTP: ${controller.generatedOtp.value}',
+                                      '${AppStrings.otpLabel.tr}: ${controller.generatedOtp.value}',
                                       style: AppTextStyles.body.copyWith(
                                         color: AppColors.primary,
                                         fontWeight: FontWeight.w600,
@@ -139,7 +147,9 @@ class OtpScreen extends GetView<AuthController> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
-                                    "Haven't got the confirmation code yet? ",
+                                    AppStrings
+                                        .haventGotTheConfirmationCodeYet
+                                        .tr,
                                     style: AppTextStyles.body.copyWith(
                                       color: AppColors.textBody,
                                       fontSize: 30.sp / 2,
@@ -163,7 +173,7 @@ class OtpScreen extends GetView<AuthController> {
                               return Column(
                                 children: [
                                   Text(
-                                    "Didn't receive the code?",
+                                    AppStrings.didntReceiveTheCode.tr,
                                     style: AppTextStyles.onboardingSubtitle
                                         .copyWith(fontSize: 14.sp),
                                   ),

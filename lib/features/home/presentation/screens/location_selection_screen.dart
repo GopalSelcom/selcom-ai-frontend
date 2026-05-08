@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/constants/ride_stop_limits.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
@@ -69,7 +70,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
   bool get _isVehicleSelectionEditMode =>
       locationController.isVehicleSelectionEditMode.value;
 
-  int get _maxExtraStops => LocationSelectionController.maxExtraStops;
+  int get _maxExtraStops => RideStopLimits.maxIntermediateStops;
 
   void _onAddDestinationStop() => locationController.onAddDestinationStop();
 
@@ -287,47 +288,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       ),
     );
 
-    // 2. Destination
-    rows.add(
-      _pinFieldRow(
-        icon: SvgPictureAsset(
-          AppAssets.locationIcDestinationPin,
-          width: 12.6.w,
-          height: 16.4.h,
-          color: AppColors.mapDropMarkerGreen,
-          placeholderBuilder: (_) => Icon(
-            Icons.push_pin,
-            color: AppColors.mapDropMarkerGreen,
-            size: 16.w,
-          ),
-        ),
-        field: TextField(
-          controller: destinationController,
-          focusNode: destinationFocusNode,
-          onTap: () {
-            _setActiveSegment(1);
-            controller.searchQuery.value = destinationController.text.trim();
-          },
-          onChanged: (value) {
-            _destinationPlaceId.value = null;
-            controller.isDestinationSelected.value = false;
-            _setActiveSegment(1);
-            controller.searchQuery.value = value;
-          },
-          style: fieldStyle,
-          decoration: InputDecoration(
-            isDense: true,
-            border: InputBorder.none,
-            contentPadding: EdgeInsets.zero,
-            hintText: AppStrings.searchDestination.tr,
-            hintStyle: hintStyle,
-          ),
-        ),
-        showDivider: _extraDestinationControllers.isNotEmpty,
-      ),
-    );
-
-    // 3. Extra stops
+    // 2. Extra stops (shown between pickup and final destination)
     for (var i = 0; i < _extraDestinationControllers.length; i++) {
       final segment = 2 + i;
       rows.add(
@@ -370,10 +331,51 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
               hintStyle: hintStyle,
             ),
           ),
-          showDivider: i < _extraDestinationControllers.length - 1,
+          // Keep a connector line to the next row (another stop or final destination).
+          showDivider: true,
         ),
       );
     }
+
+    // 3. Final destination (always the last row)
+    rows.add(
+      _pinFieldRow(
+        icon: SvgPictureAsset(
+          AppAssets.locationIcDestinationPin,
+          width: 12.6.w,
+          height: 16.4.h,
+          color: AppColors.mapDropMarkerGreen,
+          placeholderBuilder: (_) => Icon(
+            Icons.push_pin,
+            color: AppColors.mapDropMarkerGreen,
+            size: 16.w,
+          ),
+        ),
+        field: TextField(
+          controller: destinationController,
+          focusNode: destinationFocusNode,
+          onTap: () {
+            _setActiveSegment(1);
+            controller.searchQuery.value = destinationController.text.trim();
+          },
+          onChanged: (value) {
+            _destinationPlaceId.value = null;
+            controller.isDestinationSelected.value = false;
+            _setActiveSegment(1);
+            controller.searchQuery.value = value;
+          },
+          style: fieldStyle,
+          decoration: InputDecoration(
+            isDense: true,
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.zero,
+            hintText: AppStrings.searchDestination.tr,
+            hintStyle: hintStyle,
+          ),
+        ),
+        showDivider: false,
+      ),
+    );
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -473,7 +475,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
   String _savedPlaceLabel(SavedPlace place) {
     final raw = (place.label ?? place.name ?? '').trim();
     if (raw.isNotEmpty) return raw.capitalizeFirst ?? raw;
-    return 'Saved';
+    return AppStrings.saved.tr;
   }
 
   String _chipIconForLabel(String label) {
@@ -544,7 +546,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         );
 
         return _locationTile(
-          kmText: dist.isEmpty ? 'SEARCH' : dist,
+          kmText: dist.isEmpty ? AppStrings.searchTag.tr : dist,
           title: title,
           subtitle: description,
           isFavorite: isFavorite,
@@ -574,13 +576,13 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         shrinkWrap: true,
         children: [
           if (controller.savedPlaces.isNotEmpty) ...[
-            _sectionHeader('Saved Places'),
+            _sectionHeader(AppStrings.savedPlaces.tr),
             SizedBox(height: 12.h),
             _savedPlacesList(controller),
             SizedBox(height: 24.h),
           ],
           if (controller.recentDestinations.isNotEmpty) ...[
-            _sectionHeader('Recent Locations'),
+            _sectionHeader(AppStrings.recentLocations.tr),
             SizedBox(height: 12.h),
             ListView.separated(
               shrinkWrap: true,
@@ -602,7 +604,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                 );
 
                 return _locationTile(
-                  kmText: dist.isEmpty ? 'RECENT' : dist,
+                  kmText: dist.isEmpty ? AppStrings.recentTag.tr : dist,
                   title: destination.address.split(',').first,
                   subtitle: destination.address,
                   isFavorite: isFavorite,
@@ -661,7 +663,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         );
 
         return _locationTile(
-          kmText: dist.isEmpty ? 'RECENT' : dist,
+          kmText: dist.isEmpty ? AppStrings.recentTag.tr : dist,
           title: recentText,
           subtitle: recentText,
           isFavorite: isFavorite,
@@ -688,7 +690,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                     );
                   } else {
                     AppDialogs.showErrorDialog(
-                      message: 'Unable to get location coordinates',
+                      message: AppStrings.unableToGetLocationCoordinates.tr,
                     );
                   }
                 },
@@ -729,7 +731,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         final label = (place.label ?? '').capitalizeFirst ?? '';
         final dist = controller.calculateDistanceKm(place.lat, place.lng);
         return _locationTile(
-          kmText: dist.isEmpty ? 'SAVED' : dist,
+          kmText: dist.isEmpty ? AppStrings.savedTag.tr : dist,
           title: label,
           subtitle: place.address ?? '',
           isFavorite: place.isFavourite ?? false,
@@ -893,10 +895,13 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           onTap: (isReady && !controller.isProceedingToBooking.value)
               ? () async {
                   final destinations = <String>[];
-                  destinations.add(destinationController.text.trim());
                   for (final c in _extraDestinationControllers) {
                     final t = c.text.trim();
                     if (t.isNotEmpty) destinations.add(t);
+                  }
+                  final finalDestination = destinationController.text.trim();
+                  if (finalDestination.isNotEmpty) {
+                    destinations.add(finalDestination);
                   }
                   if (_isVehicleSelectionEditMode) {
                     final payload = await _buildVehicleSelectionEditResult(
@@ -906,7 +911,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                     if (payload == null) {
                       AppDialogs.showErrorDialog(
                         message:
-                            'Please select valid pickup and destination locations.',
+                            AppStrings
+                                .pleaseSelectValidPickupAndDestinationLocations
+                                .tr,
                       );
                       return;
                     }
@@ -990,7 +997,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       final text = cleanedDestinations[i];
       double? lat;
       double? lng;
-      if (i == 0) {
+      if (i == cleanedDestinations.length - 1) {
         lat = _routeDestinationLat.value;
         lng = _routeDestinationLng.value;
       }
@@ -1046,7 +1053,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             );
           } else {
             AppDialogs.showErrorDialog(
-              message: 'Unable to get location coordinates',
+              message: AppStrings.unableToGetLocationCoordinates.tr,
             );
           }
         },

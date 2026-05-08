@@ -74,7 +74,11 @@ class SelcomPesaOtpBottomSheet extends GetView<PaymentMethodsController> {
           SizedBox(height: 8.h),
 
           Text(
-            'OTP Sent to your ${TanzaniaPhoneFormatter.formatInternational(controller.selcomPhoneController.text)} phone number',
+            AppStrings.otpSentToYourPhoneNumber.trParams({
+              'phoneNumber': TanzaniaPhoneFormatter.formatInternational(
+                controller.selcomPhoneController.text,
+              ),
+            }),
             textAlign: TextAlign.center,
             style: AppTextStyles.body.copyWith(
               color: AppColors.textBody,

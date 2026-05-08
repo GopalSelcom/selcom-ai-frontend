@@ -112,12 +112,12 @@ class PaymentMethodsController extends GetxController {
   void onPhoneContinue() {
     final phone = selcomPhoneController.text.replaceAll(' ', '');
     if (phone.isEmpty) {
-      phoneError.value = 'Please enter your phone number';
+      phoneError.value = AppStrings.pleaseEnterYourPhoneNumber.tr;
       return;
     }
 
     if (phone.length < 9) {
-      phoneError.value = 'Please enter a valid phone number';
+      phoneError.value = AppStrings.pleaseEnterAValidPhoneNumber.tr;
       return;
     }
 
@@ -141,7 +141,7 @@ class PaymentMethodsController extends GetxController {
 
   void onOtpComplete(String pin) {
     if (pin == '111111') {
-      otpError.value = 'Invalid OTP. Please try again.';
+      otpError.value = AppStrings.invalidOtpPleaseTryAgain.tr;
       return;
     }
     otpError.value = '';
@@ -188,7 +188,7 @@ class PaymentMethodsController extends GetxController {
       AppDialogs.showPermissionDialog(
         title: AppStrings.cameraPermission.tr,
         message:
-            'We need camera access to capture your selfie for identity verification. Please enable it in your device settings.',
+            AppStrings.cameraAccessNeededForSelfieVerification.tr,
         onOpenSettings: () => openAppSettings(),
         icon: Icons.camera_alt_outlined,
         secondaryIcon: Icons.camera_alt,
@@ -269,10 +269,10 @@ class PaymentMethodsController extends GetxController {
         PaymentCardActionBottomSheet(
           title: AppStrings.yourCardHasBeenNaddedSuccessfully.tr,
           description:
-              'Now ready to use for payments. You can manage or remove this card anytime from your payment settings.',
+              AppStrings.cardReadyToUseYouCanManageOrRemoveAnytime.tr,
           cardNumber: result.fullNumber,
           imageAssetPath: AppAssets.imgPaymentAddCardSuccess,
-          primaryButtonLabel: 'Okay',
+          primaryButtonLabel: AppStrings.ok.tr,
           onPrimaryPressed: Get.back,
           iconAsset: AppAssets.locationIcArrowRight,
         ),

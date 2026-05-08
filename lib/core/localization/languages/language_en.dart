@@ -10,6 +10,7 @@ class LanguageEn extends Languages {
     'add_asaved_place': 'Add a saved place',
     'add_debit_credit_card': 'Add debit/credit card',
     'add_new_card': 'Add New Card',
+    'add_card': 'Add Card',
     'address_missing': 'Address missing',
     'an_unexpected_error_occurred': 'An unexpected error occurred',
     'app_settings': 'App Settings',
@@ -24,17 +25,22 @@ class LanguageEn extends Languages {
     'book_ride_with_fare': 'Book Ride @currency @amount',
     'booking_fees_and_convenience_charges':
         'Booking Fees & Convenience Charges',
+    'booking_for_name': 'Booking for @name',
     'by_continuing_you_agree_that_you_have_read_and_accept_our_tand_cs_and_privacy_policy':
         'By continuing, you agree that you have read and accept our T&Cs and Privacy Policy',
     'call': 'Call',
+    'coming_soon': 'Coming soon',
     'calling_driver': 'Calling Driver',
     'camera_permission': 'Camera Permission',
+    'cancel_update': 'Cancel Update',
     'cancel_and_pay': 'Cancel & Pay',
     'cancel_dialogs_gallery': 'Cancel Dialogs Gallery',
     'cancel_failed': 'Cancel failed',
     'cancel_ride': 'Cancel Ride',
+    'cancel': 'Cancel',
     'cancelled': 'Cancelled',
     'card_detail': 'Card Detail',
+    'card_number': 'Card Number',
     'card_ending_in_placeholder': 'Card ending in XX1234',
     'change_drop_location': 'Change Drop Location',
     'add_stops': 'Add Stops',
@@ -50,6 +56,7 @@ class LanguageEn extends Languages {
     'connection_error': 'Connection Error',
     'contact_us': 'Contact Us',
     'continue': 'Continue',
+    'didnt_receive_the_code': "Didn't receive the code?",
     'could_not_cancel_try_again': 'Could not cancel. Try again.',
     'could_not_resolve_vehicle_type_id_please_try_again':
         'Could not resolve vehicle type id. Please try again.',
@@ -67,8 +74,21 @@ class LanguageEn extends Languages {
     'driver_arrived_pickup_secondary': 'Meet your driver at pickup',
     'driver_is_heading_to_your_location':
         'Driver is heading to your location',
+    'driver_is_heading_to_pickup': 'Driver is heading to pickup',
+    'driver_assigned_description':
+        'A driver has accepted your ride and is on the way.',
+    'driver_arrived_description':
+        'Your driver has arrived at the pickup location.',
+    'ride_started_description': 'You are on your way to the destination.',
+    'finding_your_driver': 'Finding Your Driver',
+    'finding_driver_default_description':
+        'The driver will pick you up as soon as possible after they confirm your order',
     'driver_will_arriving_in_minutes':
         'Driver will arrive in @minutes min...',
+    'driver_assigned': 'Driver Assigned',
+    'driver_arriving': 'Driver Arriving',
+    'driver_en_route': 'Driver En Route',
+    'driver_arrived': 'Driver Arrived',
     'e_g123': 'e.g. 123',
     'e_g7_xx_xxx_xxx': 'e.g. 7XX XXX XXX',
     'e_gjohn_doe': 'e.g. John Doe',
@@ -87,14 +107,35 @@ class LanguageEn extends Languages {
     'estimate_failed': 'Estimate failed',
     'eta_minutes_away_drop_time': '@minutes min away • Drop @time',
     'explore_vehicle': 'Explore Vehicle',
+    'minutes_ago': '@count m ago',
+    'hours_ago': '@count h ago',
+    'days_ago': '@count d ago',
+    'days_left_count': '@count days left',
+    'expires_in_timer': 'Expire in @timer',
+    'request_sent_please_complete_payment_on_selcom_pesa_to_book_your_ride':
+        'Request sent. Please complete payment on Selcom Pesa to book your ride.',
+    'payment_completed_successfully': 'Payment completed successfully',
+    'thank_you_for_riding_with_us_see_you_on_the_next_trip':
+        'Thank you for riding with us, see you on the next trip.',
     'face_scan_process_has_been_successful':
         'Face scan process has been successful',
+    'fare': 'Fare',
     'failed_to_send_message': 'Failed to send message',
+    'failed_to_load_settings': 'Failed to load settings',
+    'failed_to_load_ride_pin_preference': 'Failed to load ride PIN preference',
+    'failed_to_update_ride_pin_preference':
+        'Failed to update ride PIN preference',
+    'failed_to_resend_otp': 'Failed to resend OTP',
+    'failed_to_send_otp': 'Failed to send OTP',
     'failed_to_update_favorite_status': 'Failed to update favorite status',
     'fallback_ride_name': 'Ride',
     'favourite_locations': 'Favourite Locations',
     'saved_locations': 'Saved Locations',
     'get_started': 'Get Started',
+    'home_label': 'Home',
+    'get_verification_code': 'Get Verification Code',
+    'havent_got_the_confirmation_code_yet':
+        "Haven't got the confirmation code yet? ",
     'got_it': 'Got it',
     'help': 'Help',
     'help_selcom_go_do_better_by_rating_this_trip':
@@ -107,6 +148,17 @@ class LanguageEn extends Languages {
     'initiating_call_to_driverphone': 'Initiating call to \$driverPhone...',
     'keep_ride': 'Keep Ride',
     'link_account': 'Link Account',
+    'location': 'Location',
+    'locating': 'Locating...',
+    'locating_driver': 'Locating driver...',
+    'current_location': 'Current location',
+    'saved': 'Saved',
+    'saved_place': 'Saved Place',
+    'saved_places': 'Saved Places',
+    'recent_locations': 'Recent Locations',
+    'search_tag': 'SEARCH',
+    'recent_tag': 'RECENT',
+    'saved_tag': 'SAVED',
     'loading_your_profile': 'Loading your profile...',
     'location_selection': 'Location Selection',
     'location_unavailable': 'Location unavailable',
@@ -118,12 +170,15 @@ class LanguageEn extends Languages {
         'Making your drive best is our responsibility',
     'maximum_promo_tzs1500': 'Maximum Promo TZS 1500',
     'maybe_later': 'Maybe Later',
+    'mark_all_read_count': 'Mark all read (@count)',
     'message': 'Message',
     'missing_info': 'Missing info',
     'missing_ride_information': 'Missing ride information.',
     'mm_yy': 'MM/YY',
     'my_rides': 'My Rides',
     'name_cannot_be_empty': 'Name cannot be empty',
+    'name_contains_invalid_characters': 'Name contains invalid characters',
+    'name_is_required': 'Name is required',
     'need_help': 'Need Help?',
     'new_message': 'New Message',
     'no': 'NO',
@@ -141,21 +196,38 @@ class LanguageEn extends Languages {
     'no_locations_found': 'No locations found',
     'no_notifications_yet': 'No notifications yet',
     'no_past_rides_found': 'No past rides found',
+    'no_recent_locations_found': 'No recent locations found',
     'no_recent_locations': 'No recent locations',
     'note_by_proceeding_you_consent_to_get_calls_whatsapp_or_sms_messages_including_by_au':
         'Note: By proceeding, you consent to get calls, WhatsApp or SMS messages, including by automated means, from GoChauffeur and its affiliates to the number provided.',
     'notification': 'Notification',
     'notifications': 'Notifications',
     'ok': 'OK',
+    'order_label_with_id': 'Order: @orderId',
     'open_settings': 'Open Settings',
+    'please_enter_label': 'Please enter label',
     'otp_resent_successfully': 'OTP resent successfully',
     'past': 'Past',
     'pay_using': 'Pay Using',
     'payment': 'Payment',
+    'processing': 'Processing...',
+    'updating_payment': 'Updating Payment',
+    'recalculating_route': 'Recalculating Route',
+    'drop_off_updated': 'Drop-off updated!',
+    'route_updated': 'Route Updated!',
+    'adjusting_payment_hold_for_new_route':
+        "We're adjusting your payment hold for the new route.",
+    'syncing_new_route_with_driver': 'Syncing the new route with your driver.',
+    'driver_received_new_drop_off_location':
+        'Your driver has received the new drop-off location.',
+    'driver_received_new_stops': 'Your driver has received the new stops.',
+    'please_wait_while_we_process_your_request':
+        'Please wait while we process your request.',
     'payment_mode': 'Payment mode',
     'payment_not_confirmed': 'Payment not confirmed',
     'payment_validation_failed': 'Payment validation failed',
     'phone_number_unavailable': 'Phone number unavailable',
+    'phone_with_number': 'Phone: @phone',
     'pick_any_tags_that_match_this_trip': 'Pick any tags that match this trip.',
     'pickup': 'Pickup',
     'pickup_point': 'Pickup point',
@@ -164,6 +236,12 @@ class LanguageEn extends Languages {
     'please_confirm_pickup_point_to_continue':
         'Please confirm pickup point to continue.',
     'please_enter_apromo_code': 'Please enter a promo code',
+    'please_enter_a_valid_email': 'Please enter a valid email',
+    'please_enter_a_valid_name': 'Please enter a valid name',
+    'please_enter_the4_digit_code_sent_to_phone_through_sms':
+        'Please enter the 4-digit code sent to \n@countryCode @phoneNumber through SMS',
+    'please_enter_your_details_to_continue':
+        'Please enter your details to continue.',
     'please_enter_at_least_one_destination':
         'Please enter at least one destination.',
     'please_enter_your_comment_first': 'Please enter your comment first.',
@@ -177,7 +255,31 @@ class LanguageEn extends Languages {
         'Please tell us what went wrong or how we can improve.',
     'please_try_again': 'Please try again.',
     'privacy_policy': 'Privacy Policy',
+    'payment_method_with_name': 'Payment method @name',
+    'calculating_best_route': 'Calculating best route...',
+    'ride_receipt': 'Ride Receipt',
+    'ref_with_id': 'Ref: @id',
+    'route': 'Route',
+    'dropoff': 'Dropoff',
+    'em_dash': '—',
+    'driver_and_vehicle': 'Driver & Vehicle',
+    'driver': 'Driver',
+    'model': 'Model',
+    'colour': 'Colour',
+    'plate': 'Plate',
+    'fare_breakdown': 'Fare Breakdown',
+    'base_fare': 'Base Fare',
+    'distance_charge': 'Distance Charge',
+    'time_charge': 'Time Charge',
+    'discount': 'Discount',
+    'tax': 'Tax',
+    'total': 'Total',
+    'thank_you_for_riding_with_selcom_go': 'Thank you for riding with Selcom Go!',
+    'mobile_money': 'Mobile Money',
+    'card': 'Card',
     'promo_code_code_applied': 'Promo code \$code applied!',
+    'promo_code_applied_with_code': 'Promo code @code applied!',
+    'promo_applied_with_title': 'Promo "@title" applied!',
     'promocode_list': 'Promocode list',
     'promotions': 'Promotions',
     'rating': 'Rating',
@@ -186,13 +288,45 @@ class LanguageEn extends Languages {
     'reason_to_contact': 'Reason to Contact',
     'recent_location': 'Recent Location',
     'remove_account': 'Remove Account',
+    'remove': 'Remove',
+    'remove_saved_address': 'Remove saved address',
+    'are_you_sure_you_want_to_remove_this_saved_address':
+        'Are you sure you want to remove this saved address?',
     'resend_code': 'Resend Code',
     'resend_otp': 'Resend OTP',
     'retry': 'Retry',
     'ride_cancelled': 'Ride Cancelled',
+    'ride_started': 'Ride Started',
+    'ride_completed': 'Ride Completed',
+    'the_ride_has_been_cancelled': 'The ride has been cancelled.',
+    'you_have_reached_your_destination': 'You have reached your destination.',
+    'you_have_arrived': 'You have arrived!',
+    'almost_there': 'Almost There',
+    'on_your_way': 'On Your Way',
+    'arrived_in_minutes': 'Arrived in @minutes mins',
+    'approaching_your_destination': 'Approaching your destination',
+    'heading_to_your_destination': 'Heading to your destination',
+    'trip_has_started': 'Trip has started',
+    'nearby': 'Nearby',
+    'arriving': 'Arriving',
+    'driver_is_arriving': 'Driver is arriving...',
+    'we_couldnt_find_a_driver_nearby': 'We couldn\'t find a driver nearby.',
     'ride_charge': 'Ride Charge',
     'ride_data_is_unavailable': 'Ride data is unavailable.',
     'ride_id_is_missing': 'Ride id is missing.',
+    'destination': 'Destination',
+    'arrived_in': 'Arrived in',
+    'minutes_short_count': '@count mins',
+    'someone': 'Someone',
+    'could_not_fetch_receipt_details': 'Could not fetch receipt details.',
+    'ride_details_are_missing': 'Ride details are missing.',
+    'could_not_open_pdf_with_message': 'Could not open PDF: @message',
+    'could_not_download_slip_please_try_again_later':
+        'Could not download slip. Please try again later.',
+    'check_out_my_ride_receipt_share_url': 'Check out my ride receipt: @url',
+    'selcom_go_ride_receipt_subject': 'Selcom Go Ride Receipt',
+    'could_not_share_slip_please_try_again_later':
+        'Could not share slip. Please try again later.',
     'ride_pin_protection': 'Ride PIN Protection',
     'safety_and_privacy': 'Safety & Privacy',
     'save_this_address_first_then_you_can_book_from_here':
@@ -203,6 +337,20 @@ class LanguageEn extends Languages {
     'search_pickup_location': 'Search pickup location',
     'search_stop': 'Search stop location',
     'search_stop_location': 'Search stop location',
+    'in_app_calling': 'In app calling',
+    'normal_call': 'Normal call',
+    'in_app_calling_will_be_available_soon': 'In app calling will available soon',
+    'update_failed': 'Update Failed',
+    'update_in_progress': 'Update in progress',
+    'a_previous_update_is_still_being_processed':
+        'A previous update is still being processed.',
+    'taking_longer_than_expected': 'Taking longer than expected',
+    'the_update_is_taking_some_time_please_check_back_shortly':
+        'The update is taking some time. Please check back shortly.',
+    'payment_hold_update_failed_no_charges_applied':
+        'Payment hold update failed. No charges applied.',
+    'drivers_app_couldnt_be_updated_billing_adjusted_back':
+        'Driver\'s app couldn\'t be updated. Your billing has been adjusted back.',
     'search_timeout': 'Search Timeout',
     'security_and_preference_controls_more_settings_will_appear_here_as_they_are_enable':
         'Security and preference controls. More settings will appear here as they are enabled.',
@@ -226,9 +374,38 @@ class LanguageEn extends Languages {
     'socket_on_drivers': 'Socket ON • @count drivers',
     'start_typing_destination': 'Start typing destination',
     'stay_notified': 'Stay Notified!',
+    'enable_notifications_for_ride_updates':
+        'Enable notifications to get real-time updates on your ride arrival and driver status.',
     'steps_to_connect_selcom_pesa': 'Steps to Connect Selcom Pesa',
     'submit_failed': 'Submit failed',
+    'submit': 'Submit',
     'success': 'Success',
+    'selected_address': 'Selected address',
+    'searching_for_driver': 'Searching for driver...',
+    'enable_location_service': 'Enable location service',
+    'location_permission_denied': 'Location permission denied',
+    'unable_to_estimate_fare_for_this_route':
+        'Unable to estimate fare for this route.',
+    'distance_min_km': '0.1 KM',
+    'distance_max_km': '>999 KM',
+    'distance_km_format': '@value KM',
+    'distance': 'Distance',
+    'duration': 'Duration',
+    'could_not_remove_address': 'Could not remove address',
+    'view_more': 'View more',
+    'ride_in_progress': 'Ride In Progress',
+    'ongoing': 'Ongoing',
+    'completed': 'Completed',
+    'no_driver_found': 'No Driver Found',
+    'boda': 'Boda',
+    'unknown_location': 'Unknown location',
+    'near_destination': 'Near Destination',
+    'active_ride': 'Active Ride',
+    'unable_to_get_location_coordinates': 'Unable to get location coordinates',
+    'please_select_valid_pickup_and_destination_locations':
+        'Please select valid pickup and destination locations.',
+    'are_you_sure_you_want_to_add_this_address_as':
+        'Are you sure you want to add this address as a @label?',
     'tag_required': 'Tag required',
     'tap_each_button_to_preview_the_popup_ui':
         'Tap each button to preview the popup UI',
@@ -279,6 +456,8 @@ class LanguageEn extends Languages {
     'vehicle_type': 'Vehicle type',
     'verification_successful': 'Verification Successful!',
     'verification_successfully': 'Verification Successfully',
+    'otp_label': 'OTP',
+    'otp_verification_failed': 'OTP verification failed',
     'verify_phone_number': 'Verify Phone Number',
     'verify_your_selfie': 'Verify your Selfie',
     'view_trip': 'View trip',
@@ -294,6 +473,10 @@ class LanguageEn extends Languages {
     'what_stood_out': 'What stood out?',
     'where_are_you_going': 'Where are you going?',
     'why_do_you_want_to_cancel': 'Why do you want to cancel?',
+    'cancellation_fee_of': 'A cancellation fee of ',
+    'will_be_charged_since_driver_on_way':
+        ' will be charged since your driver is on the way.',
+    'net_amount_refunded': 'Net amount refunded: ',
     'yes': 'Yes',
     'yes_cancel': 'YES, CANCEL',
     'you_can_still_able_to_request_money_on_selcom_pesa_using_another_number':
@@ -308,6 +491,15 @@ class LanguageEn extends Languages {
     'your_ride_was_cancelled': 'Your ride was cancelled.',
     'your_ride_is_completed': 'Your Ride is Completed',
     'your_rides': 'Your Rides',
+    'welcome_to_selcom_go': 'Welcome to Selcom Go',
+    'full_name': 'Full name',
+    'enter_your_full_name': 'Enter your full name',
+    'email': 'Email',
+    'enter_your_email_optional': 'Enter your email (optional)',
+    'i_agree_to_the_terms_and_conditions':
+        'I agree to the Terms and Conditions',
+    'please_accept_terms_and_conditions':
+        'Please accept Terms and Conditions',
     'your_selfie_will_be_captured_to_help_us_validate_you_against_your_id_please_hold_your':
         'Your selfie will be captured to help us validate you against your ID. Please hold your phone steady, ensure your face is within the circular frame, and follow the prompts.',
     'your_session_has_expired_please_login_again_to_continue':
@@ -320,6 +512,88 @@ class LanguageEn extends Languages {
     'exit_app': 'Exit App',
     'exit_app_title': 'Exit App',
     'exit_app_message': 'Are you sure, you want to exit the app?',
+    'card_delete_warning_description':
+        'This action will remove the card from your account, and you will need to add it again if you want to use it in the future.',
+    'no_cancel': 'No, Cancel',
+    'expiry': 'Expiry',
+    'cvv': 'CVV',
+    'set_a_nick_name': 'Set a Nick name',
+    'please_enter_your_phone_number': 'Please enter your phone number',
+    'please_enter_a_valid_phone_number': 'Please enter a valid phone number',
+    'invalid_otp_please_try_again': 'Invalid OTP. Please try again.',
+    'camera_access_needed_for_selfie_verification':
+        'We need camera access to capture your selfie for identity verification. Please enable it in your device settings.',
+    'card_ready_to_use_you_can_manage_or_remove_anytime':
+        'Now ready to use for payments. You can manage or remove this card anytime from your payment settings.',
+    'selcom_pesa_connect_step_1':
+        'Enter your Selcom Pesa registered phone number',
+    'selcom_pesa_connect_step_2':
+        'Verify the selfie associated with your Selcom Pesa account.',
+    'selcom_pesa_connect_step_3':
+        'Check your Selcom Pesa app and approve the verification request.',
+    'selcom_pesa_connect_step_4':
+        "You're all set! Your Selcom Pesa account is connected.",
+    'otp_sent_to_your_phone_number': 'OTP Sent to your @phoneNumber phone number',
+    'require_verification_pin_before_starting_ride':
+        'Require a verification PIN before starting a ride.',
+    'ride_pin_required_by_admin_cannot_be_turned_off':
+        'Ride PIN is required by admin and cannot be turned off.',
+    'current_status_required': 'Current status: required',
+    'current_status_optional': 'Current status: optional',
+    'take_selfie': 'Take Selfie',
+    'error_picking_image': 'Error picking image: @error',
+    'are_you_sure_you_want_to_logout_from_the_app':
+        'Are you sure, you want to logout from the app?',
+    'please_select_a_reason': 'Please select a reason',
+    'please_enter_a_message': 'Please enter a message',
+    'user': 'User',
+    'user_name': 'User name',
+    'phone_number': 'Phone number',
+    'add_new': 'Add New',
+    'add_to_favourites': 'Add to Favourites',
+    'confirm': 'Confirm',
+    'confirmation': 'Confirmation',
+    'home': 'Home',
+    'loading': 'Loading...',
+    'minutes_count': '@count minutes',
+    'pin_locked_message_retry_in_time': '@message. Please try again in @time.',
+    'save_address': 'Save Address',
+    'save_location_as': 'Save Location As',
+    'work': 'Work',
+    'office': 'Office',
+    'info': 'Info',
+    'enter_custom_label': 'Enter custom label',
+    'connection_timed_out_please_check_internet':
+        'Connection timed out. Please check your internet.',
+    'no_internet_connection': 'No internet connection',
+    'session_expired_please_login_again': 'Session expired. Please login again.',
+    'session_expired_refreshing': 'Session expired. Refreshing...',
+    'request_queue_full_please_try_again_later':
+        'Request queue is full. Please try again later.',
+    'duplicate_request_already_queued': 'Duplicate request already queued',
+    'request_queue_cleared': 'Request queue cleared',
+    'search_ended': 'Search Ended',
+    'search_timeout_no_driver_found': 'Search timeout: no driver found',
+    'send_timeout': 'Send timeout',
+    'receive_timeout': 'Receive timeout',
+    'bad_response_from_server': 'Bad response from server',
+    'bad_request': 'Bad request',
+    'unauthorized': 'Unauthorized',
+    'connection_timeout': 'Connection timeout',
+    'server_error_with_status': 'Server Error (@statusCode)',
+    'request_cancelled': 'Request cancelled',
+    'network_is_unreachable': 'Network is unreachable',
+    'no_internet_or_unexpected_error': 'No internet or unexpected error',
+    'unexpected_network_error': 'Unexpected network error',
+    'server_taking_too_long_please_try_again':
+        'Server is taking too long to respond. Please try again.',
+    'server_timeout': 'Server timeout',
+    'you_already_have_an_active_ride': 'You already have an active ride.',
+    'insufficient_funds_in_wallet': 'Insufficient funds in wallet.',
+    'something_went_wrong_please_try_again': 'Something went wrong. Please try again.',
+    'unexpected_error_occurred_with_error': 'Unexpected error occurred: @error',
+    'invalid_otp': 'Invalid OTP.',
+    'incorrect_pin': 'Incorrect PIN.',
   };
 
   @override
@@ -343,6 +617,9 @@ class LanguageEn extends Languages {
 
   @override
   String get addNewCard => values['add_new_card'] ?? '';
+
+  @override
+  String get addCard => values['add_card'] ?? '';
 
   @override
   String get addressMissing => values['address_missing'] ?? '';
@@ -385,6 +662,9 @@ class LanguageEn extends Languages {
       values['booking_fees_and_convenience_charges'] ?? '';
 
   @override
+  String get bookingForName => values['booking_for_name'] ?? '';
+
+  @override
   String
   get byContinuingYouAgreeThatYouHaveReadAndAcceptOurTAndCsAndPrivacyPolicy =>
       values['by_continuing_you_agree_that_you_have_read_and_accept_our_tand_cs_and_privacy_policy'] ??
@@ -394,10 +674,16 @@ class LanguageEn extends Languages {
   String get call => values['call'] ?? '';
 
   @override
+  String get comingSoon => values['coming_soon'] ?? '';
+
+  @override
   String get callingDriver => values['calling_driver'] ?? '';
 
   @override
   String get cameraPermission => values['camera_permission'] ?? '';
+
+  @override
+  String get cancelUpdate => values['cancel_update'] ?? '';
 
   @override
   String get cancelAndPay => values['cancel_and_pay'] ?? '';
@@ -412,10 +698,16 @@ class LanguageEn extends Languages {
   String get cancelRide => values['cancel_ride'] ?? '';
 
   @override
+  String get cancel => values['cancel'] ?? '';
+
+  @override
   String get cancelled => values['cancelled'] ?? '';
 
   @override
   String get cardDetail => values['card_detail'] ?? '';
+
+  @override
+  String get cardNumber => values['card_number'] ?? '';
 
   @override
   String get cardEndingInPlaceholder =>
@@ -460,6 +752,9 @@ class LanguageEn extends Languages {
 
   @override
   String get continueLabel => values['continue'] ?? '';
+
+  @override
+  String get didntReceiveTheCode => values['didnt_receive_the_code'] ?? '';
 
   @override
   String get couldNotCancelTryAgain =>
@@ -510,8 +805,42 @@ class LanguageEn extends Languages {
       values['driver_is_heading_to_your_location'] ?? '';
 
   @override
+  String get driverIsHeadingToPickup =>
+      values['driver_is_heading_to_pickup'] ?? '';
+
+  @override
+  String get driverAssignedDescription =>
+      values['driver_assigned_description'] ?? '';
+
+  @override
+  String get driverArrivedDescription =>
+      values['driver_arrived_description'] ?? '';
+
+  @override
+  String get rideStartedDescription => values['ride_started_description'] ?? '';
+
+  @override
+  String get findingYourDriver => values['finding_your_driver'] ?? '';
+
+  @override
+  String get findingDriverDefaultDescription =>
+      values['finding_driver_default_description'] ?? '';
+
+  @override
   String get driverWillArrivingInMinutes =>
       values['driver_will_arriving_in_minutes'] ?? '';
+
+  @override
+  String get driverAssigned => values['driver_assigned'] ?? '';
+
+  @override
+  String get driverArriving => values['driver_arriving'] ?? '';
+
+  @override
+  String get driverEnRoute => values['driver_en_route'] ?? '';
+
+  @override
+  String get driverArrived => values['driver_arrived'] ?? '';
 
   @override
   String get eG123 => values['e_g123'] ?? '';
@@ -570,11 +899,59 @@ class LanguageEn extends Languages {
   String get exploreVehicle => values['explore_vehicle'] ?? '';
 
   @override
+  String get minutesAgo => values['minutes_ago'] ?? '';
+
+  @override
+  String get hoursAgo => values['hours_ago'] ?? '';
+
+  @override
+  String get daysAgo => values['days_ago'] ?? '';
+
+  @override
+  String get daysLeftCount => values['days_left_count'] ?? '';
+
+  @override
+  String get expiresInTimer => values['expires_in_timer'] ?? '';
+
+  @override
+  String get requestSentPleaseCompletePaymentOnSelcomPesaToBookYourRide =>
+      values['request_sent_please_complete_payment_on_selcom_pesa_to_book_your_ride'] ??
+      '';
+
+  @override
+  String get paymentCompletedSuccessfully =>
+      values['payment_completed_successfully'] ?? '';
+
+  @override
+  String get thankYouForRidingWithUsSeeYouOnTheNextTrip =>
+      values['thank_you_for_riding_with_us_see_you_on_the_next_trip'] ?? '';
+
+  @override
   String get faceScanProcessHasBeenSuccessful =>
       values['face_scan_process_has_been_successful'] ?? '';
 
   @override
+  String get fare => values['fare'] ?? '';
+
+  @override
   String get failedToSendMessage => values['failed_to_send_message'] ?? '';
+
+  @override
+  String get failedToLoadSettings => values['failed_to_load_settings'] ?? '';
+
+  @override
+  String get failedToLoadRidePinPreference =>
+      values['failed_to_load_ride_pin_preference'] ?? '';
+
+  @override
+  String get failedToUpdateRidePinPreference =>
+      values['failed_to_update_ride_pin_preference'] ?? '';
+
+  @override
+  String get failedToResendOtp => values['failed_to_resend_otp'] ?? '';
+
+  @override
+  String get failedToSendOtp => values['failed_to_send_otp'] ?? '';
 
   @override
   String get failedToUpdateFavoriteStatus =>
@@ -588,6 +965,16 @@ class LanguageEn extends Languages {
 
   @override
   String get getStarted => values['get_started'] ?? '';
+
+  @override
+  String get homeLabel => values['home_label'] ?? '';
+
+  @override
+  String get getVerificationCode => values['get_verification_code'] ?? '';
+
+  @override
+  String get haventGotTheConfirmationCodeYet =>
+      values['havent_got_the_confirmation_code_yet'] ?? '';
 
   @override
   String get gotIt => values['got_it'] ?? '';
@@ -626,6 +1013,39 @@ class LanguageEn extends Languages {
   String get linkAccount => values['link_account'] ?? '';
 
   @override
+  String get location => values['location'] ?? '';
+
+  @override
+  String get locating => values['locating'] ?? '';
+
+  @override
+  String get locatingDriver => values['locating_driver'] ?? '';
+
+  @override
+  String get currentLocation => values['current_location'] ?? '';
+
+  @override
+  String get saved => values['saved'] ?? '';
+
+  @override
+  String get savedPlace => values['saved_place'] ?? '';
+
+  @override
+  String get savedPlaces => values['saved_places'] ?? '';
+
+  @override
+  String get recentLocations => values['recent_locations'] ?? '';
+
+  @override
+  String get searchTag => values['search_tag'] ?? '';
+
+  @override
+  String get recentTag => values['recent_tag'] ?? '';
+
+  @override
+  String get savedTag => values['saved_tag'] ?? '';
+
+  @override
   String get loadingYourProfile => values['loading_your_profile'] ?? '';
 
   @override
@@ -655,6 +1075,9 @@ class LanguageEn extends Languages {
   String get maybeLater => values['maybe_later'] ?? '';
 
   @override
+  String get markAllReadCount => values['mark_all_read_count'] ?? '';
+
+  @override
   String get message => values['message'] ?? '';
 
   @override
@@ -671,6 +1094,13 @@ class LanguageEn extends Languages {
 
   @override
   String get nameCannotBeEmpty => values['name_cannot_be_empty'] ?? '';
+
+  @override
+  String get nameContainsInvalidCharacters =>
+      values['name_contains_invalid_characters'] ?? '';
+
+  @override
+  String get nameIsRequired => values['name_is_required'] ?? '';
 
   @override
   String get needHelp => values['need_help'] ?? '';
@@ -715,6 +1145,9 @@ class LanguageEn extends Languages {
   String get noPastRidesFound => values['no_past_rides_found'] ?? '';
 
   @override
+  String get noRecentLocationsFound => values['no_recent_locations_found'] ?? '';
+
+  @override
   String get noRecentLocations => values['no_recent_locations'] ?? '';
 
   @override
@@ -733,7 +1166,13 @@ class LanguageEn extends Languages {
   String get ok => values['ok'] ?? '';
 
   @override
+  String get orderLabelWithId => values['order_label_with_id'] ?? '';
+
+  @override
   String get openSettings => values['open_settings'] ?? '';
+
+  @override
+  String get pleaseEnterLabel => values['please_enter_label'] ?? '';
 
   @override
   String get otpResentSuccessfully => values['otp_resent_successfully'] ?? '';
@@ -748,6 +1187,40 @@ class LanguageEn extends Languages {
   String get payment => values['payment'] ?? '';
 
   @override
+  String get processing => values['processing'] ?? '';
+
+  @override
+  String get updatingPayment => values['updating_payment'] ?? '';
+
+  @override
+  String get recalculatingRoute => values['recalculating_route'] ?? '';
+
+  @override
+  String get dropOffUpdated => values['drop_off_updated'] ?? '';
+
+  @override
+  String get routeUpdated => values['route_updated'] ?? '';
+
+  @override
+  String get adjustingPaymentHoldForNewRoute =>
+      values['adjusting_payment_hold_for_new_route'] ?? '';
+
+  @override
+  String get syncingNewRouteWithDriver =>
+      values['syncing_new_route_with_driver'] ?? '';
+
+  @override
+  String get driverReceivedNewDropOffLocation =>
+      values['driver_received_new_drop_off_location'] ?? '';
+
+  @override
+  String get driverReceivedNewStops => values['driver_received_new_stops'] ?? '';
+
+  @override
+  String get pleaseWaitWhileWeProcessYourRequest =>
+      values['please_wait_while_we_process_your_request'] ?? '';
+
+  @override
   String get paymentMode => values['payment_mode'] ?? '';
 
   @override
@@ -759,6 +1232,9 @@ class LanguageEn extends Languages {
 
   @override
   String get phoneNumberUnavailable => values['phone_number_unavailable'] ?? '';
+
+  @override
+  String get phoneWithNumber => values['phone_with_number'] ?? '';
 
   @override
   String get pickAnyTagsThatMatchThisTrip =>
@@ -782,6 +1258,20 @@ class LanguageEn extends Languages {
 
   @override
   String get pleaseEnterAPromoCode => values['please_enter_apromo_code'] ?? '';
+
+  @override
+  String get pleaseEnterAValidEmail => values['please_enter_a_valid_email'] ?? '';
+
+  @override
+  String get pleaseEnterAValidName => values['please_enter_a_valid_name'] ?? '';
+
+  @override
+  String get pleaseEnterThe4DigitCodeSentToPhoneThroughSms =>
+      values['please_enter_the4_digit_code_sent_to_phone_through_sms'] ?? '';
+
+  @override
+  String get pleaseEnterYourDetailsToContinue =>
+      values['please_enter_your_details_to_continue'] ?? '';
 
   @override
   String get pleaseEnterAtLeastOneDestination =>
@@ -814,7 +1304,81 @@ class LanguageEn extends Languages {
   String get privacyPolicy => values['privacy_policy'] ?? '';
 
   @override
+  String get paymentMethodWithName => values['payment_method_with_name'] ?? '';
+
+  @override
+  String get calculatingBestRoute => values['calculating_best_route'] ?? '';
+
+  @override
+  String get rideReceipt => values['ride_receipt'] ?? '';
+
+  @override
+  String get refWithId => values['ref_with_id'] ?? '';
+
+  @override
+  String get route => values['route'] ?? '';
+
+  @override
+  String get dropoff => values['dropoff'] ?? '';
+
+  @override
+  String get emDash => values['em_dash'] ?? '';
+
+  @override
+  String get driverAndVehicle => values['driver_and_vehicle'] ?? '';
+
+  @override
+  String get driver => values['driver'] ?? '';
+
+  @override
+  String get model => values['model'] ?? '';
+
+  @override
+  String get colour => values['colour'] ?? '';
+
+  @override
+  String get plate => values['plate'] ?? '';
+
+  @override
+  String get fareBreakdown => values['fare_breakdown'] ?? '';
+
+  @override
+  String get baseFare => values['base_fare'] ?? '';
+
+  @override
+  String get distanceCharge => values['distance_charge'] ?? '';
+
+  @override
+  String get timeCharge => values['time_charge'] ?? '';
+
+  @override
+  String get discount => values['discount'] ?? '';
+
+  @override
+  String get tax => values['tax'] ?? '';
+
+  @override
+  String get total => values['total'] ?? '';
+
+  @override
+  String get thankYouForRidingWithSelcomGo =>
+      values['thank_you_for_riding_with_selcom_go'] ?? '';
+
+  @override
+  String get mobileMoney => values['mobile_money'] ?? '';
+
+  @override
+  String get card => values['card'] ?? '';
+
+  @override
   String get promoCodeCodeApplied => values['promo_code_code_applied'] ?? '';
+
+  @override
+  String get promoCodeAppliedWithCode =>
+      values['promo_code_applied_with_code'] ?? '';
+
+  @override
+  String get promoAppliedWithTitle => values['promo_applied_with_title'] ?? '';
 
   @override
   String get promocodeList => values['promocode_list'] ?? '';
@@ -841,6 +1405,16 @@ class LanguageEn extends Languages {
   String get removeAccount => values['remove_account'] ?? '';
 
   @override
+  String get remove => values['remove'] ?? '';
+
+  @override
+  String get removeSavedAddress => values['remove_saved_address'] ?? '';
+
+  @override
+  String get areYouSureYouWantToRemoveThisSavedAddress =>
+      values['are_you_sure_you_want_to_remove_this_saved_address'] ?? '';
+
+  @override
   String get resendCode => values['resend_code'] ?? '';
 
   @override
@@ -853,6 +1427,55 @@ class LanguageEn extends Languages {
   String get rideCancelled => values['ride_cancelled'] ?? '';
 
   @override
+  String get rideStarted => values['ride_started'] ?? '';
+
+  @override
+  String get rideCompleted => values['ride_completed'] ?? '';
+
+  @override
+  String get theRideHasBeenCancelled => values['the_ride_has_been_cancelled'] ?? '';
+
+  @override
+  String get youHaveReachedYourDestination =>
+      values['you_have_reached_your_destination'] ?? '';
+
+  @override
+  String get youHaveArrived => values['you_have_arrived'] ?? '';
+
+  @override
+  String get almostThere => values['almost_there'] ?? '';
+
+  @override
+  String get onYourWay => values['on_your_way'] ?? '';
+
+  @override
+  String get arrivedInMinutes => values['arrived_in_minutes'] ?? '';
+
+  @override
+  String get approachingYourDestination =>
+      values['approaching_your_destination'] ?? '';
+
+  @override
+  String get headingToYourDestination =>
+      values['heading_to_your_destination'] ?? '';
+
+  @override
+  String get tripHasStarted => values['trip_has_started'] ?? '';
+
+  @override
+  String get nearby => values['nearby'] ?? '';
+
+  @override
+  String get arriving => values['arriving'] ?? '';
+
+  @override
+  String get driverIsArriving => values['driver_is_arriving'] ?? '';
+
+  @override
+  String get weCouldntFindADriverNearby =>
+      values['we_couldnt_find_a_driver_nearby'] ?? '';
+
+  @override
   String get rideCharge => values['ride_charge'] ?? '';
 
   @override
@@ -860,6 +1483,45 @@ class LanguageEn extends Languages {
 
   @override
   String get rideIdIsMissing => values['ride_id_is_missing'] ?? '';
+
+  @override
+  String get destination => values['destination'] ?? '';
+
+  @override
+  String get arrivedIn => values['arrived_in'] ?? '';
+
+  @override
+  String get minutesShortCount => values['minutes_short_count'] ?? '';
+
+  @override
+  String get someone => values['someone'] ?? '';
+
+  @override
+  String get couldNotFetchReceiptDetails =>
+      values['could_not_fetch_receipt_details'] ?? '';
+
+  @override
+  String get rideDetailsAreMissing => values['ride_details_are_missing'] ?? '';
+
+  @override
+  String get couldNotOpenPdfWithMessage =>
+      values['could_not_open_pdf_with_message'] ?? '';
+
+  @override
+  String get couldNotDownloadSlipPleaseTryAgainLater =>
+      values['could_not_download_slip_please_try_again_later'] ?? '';
+
+  @override
+  String get checkOutMyRideReceiptShareUrl =>
+      values['check_out_my_ride_receipt_share_url'] ?? '';
+
+  @override
+  String get selcomGoRideReceiptSubject =>
+      values['selcom_go_ride_receipt_subject'] ?? '';
+
+  @override
+  String get couldNotShareSlipPleaseTryAgainLater =>
+      values['could_not_share_slip_please_try_again_later'] ?? '';
 
   @override
   String get ridePinProtection => values['ride_pin_protection'] ?? '';
@@ -885,6 +1547,42 @@ class LanguageEn extends Languages {
 
   @override
   String get searchStopLocation => values['search_stop_location'] ?? '';
+
+  @override
+  String get inAppCalling => values['in_app_calling'] ?? '';
+
+  @override
+  String get normalCall => values['normal_call'] ?? '';
+
+  @override
+  String get inAppCallingWillBeAvailableSoon =>
+      values['in_app_calling_will_be_available_soon'] ?? '';
+
+  @override
+  String get updateFailed => values['update_failed'] ?? '';
+
+  @override
+  String get updateInProgress => values['update_in_progress'] ?? '';
+
+  @override
+  String get aPreviousUpdateIsStillBeingProcessed =>
+      values['a_previous_update_is_still_being_processed'] ?? '';
+
+  @override
+  String get takingLongerThanExpected =>
+      values['taking_longer_than_expected'] ?? '';
+
+  @override
+  String get theUpdateIsTakingSomeTimePleaseCheckBackShortly =>
+      values['the_update_is_taking_some_time_please_check_back_shortly'] ?? '';
+
+  @override
+  String get paymentHoldUpdateFailedNoChargesApplied =>
+      values['payment_hold_update_failed_no_charges_applied'] ?? '';
+
+  @override
+  String get driversAppCouldntBeUpdatedBillingAdjustedBack =>
+      values['drivers_app_couldnt_be_updated_billing_adjusted_back'] ?? '';
 
   @override
   String get searchTimeout => values['search_timeout'] ?? '';
@@ -952,6 +1650,10 @@ class LanguageEn extends Languages {
   String get stayNotified => values['stay_notified'] ?? '';
 
   @override
+  String get enableNotificationsForRideUpdates =>
+      values['enable_notifications_for_ride_updates'] ?? '';
+
+  @override
   String get stepsToConnectSelcomPesa =>
       values['steps_to_connect_selcom_pesa'] ?? '';
 
@@ -959,7 +1661,84 @@ class LanguageEn extends Languages {
   String get submitFailed => values['submit_failed'] ?? '';
 
   @override
+  String get submit => values['submit'] ?? '';
+
+  @override
   String get success => values['success'] ?? '';
+
+  @override
+  String get selectedAddress => values['selected_address'] ?? '';
+
+  @override
+  String get searchingForDriver => values['searching_for_driver'] ?? '';
+
+  @override
+  String get enableLocationService => values['enable_location_service'] ?? '';
+
+  @override
+  String get locationPermissionDenied =>
+      values['location_permission_denied'] ?? '';
+
+  @override
+  String get unableToEstimateFareForThisRoute =>
+      values['unable_to_estimate_fare_for_this_route'] ?? '';
+
+  @override
+  String get distanceMinKm => values['distance_min_km'] ?? '';
+
+  @override
+  String get distanceMaxKm => values['distance_max_km'] ?? '';
+
+  @override
+  String get distanceKmFormat => values['distance_km_format'] ?? '';
+
+  @override
+  String get distance => values['distance'] ?? '';
+
+  @override
+  String get duration => values['duration'] ?? '';
+
+  @override
+  String get couldNotRemoveAddress => values['could_not_remove_address'] ?? '';
+
+  @override
+  String get viewMore => values['view_more'] ?? '';
+
+  @override
+  String get rideInProgress => values['ride_in_progress'] ?? '';
+
+  @override
+  String get ongoing => values['ongoing'] ?? '';
+
+  @override
+  String get completed => values['completed'] ?? '';
+
+  @override
+  String get noDriverFound => values['no_driver_found'] ?? '';
+
+  @override
+  String get boda => values['boda'] ?? '';
+
+  @override
+  String get unknownLocation => values['unknown_location'] ?? '';
+
+  @override
+  String get nearDestination => values['near_destination'] ?? '';
+
+  @override
+  String get activeRide => values['active_ride'] ?? '';
+
+  @override
+  String get unableToGetLocationCoordinates =>
+      values['unable_to_get_location_coordinates'] ?? '';
+
+  @override
+  String get pleaseSelectValidPickupAndDestinationLocations =>
+      values['please_select_valid_pickup_and_destination_locations'] ?? '';
+
+  @override
+  String get areYouSureYouWantToAddThisAddressAs =>
+      values['are_you_sure_you_want_to_add_this_address_as'] ?? '';
 
   @override
   String get tagRequired => values['tag_required'] ?? '';
@@ -1068,6 +1847,12 @@ class LanguageEn extends Languages {
       values['verification_successfully'] ?? '';
 
   @override
+  String get otpLabel => values['otp_label'] ?? '';
+
+  @override
+  String get otpVerificationFailed => values['otp_verification_failed'] ?? '';
+
+  @override
   String get verifyPhoneNumber => values['verify_phone_number'] ?? '';
 
   @override
@@ -1105,6 +1890,16 @@ class LanguageEn extends Languages {
 
   @override
   String get whyDoYouWantToCancel => values['why_do_you_want_to_cancel'] ?? '';
+
+  @override
+  String get cancellationFeeOf => values['cancellation_fee_of'] ?? '';
+
+  @override
+  String get willBeChargedSinceDriverOnWay =>
+      values['will_be_charged_since_driver_on_way'] ?? '';
+
+  @override
+  String get netAmountRefunded => values['net_amount_refunded'] ?? '';
 
   @override
   String get yes => values['yes'] ?? '';
@@ -1147,6 +1942,29 @@ class LanguageEn extends Languages {
   String get yourRides => values['your_rides'] ?? '';
 
   @override
+  String get welcomeToSelcomGo => values['welcome_to_selcom_go'] ?? '';
+
+  @override
+  String get fullName => values['full_name'] ?? '';
+
+  @override
+  String get enterYourFullName => values['enter_your_full_name'] ?? '';
+
+  @override
+  String get email => values['email'] ?? '';
+
+  @override
+  String get enterYourEmailOptional => values['enter_your_email_optional'] ?? '';
+
+  @override
+  String get iAgreeToTheTermsAndConditions =>
+      values['i_agree_to_the_terms_and_conditions'] ?? '';
+
+  @override
+  String get pleaseAcceptTermsAndConditions =>
+      values['please_accept_terms_and_conditions'] ?? '';
+
+  @override
   String
   get yourSelfieWillBeCapturedToHelpUsValidateYouAgainstYourIdPleaseHoldYour =>
       values['your_selfie_will_be_captured_to_help_us_validate_you_against_your_id_please_hold_your'] ??
@@ -1179,6 +1997,240 @@ class LanguageEn extends Languages {
 
   @override
   String get exitAppMessage => values['exit_app_message'] ?? '';
+
+  @override
+  String get cardDeleteWarningDescription =>
+      values['card_delete_warning_description'] ?? '';
+
+  @override
+  String get noCancel => values['no_cancel'] ?? '';
+
+  @override
+  String get expiry => values['expiry'] ?? '';
+
+  @override
+  String get cvv => values['cvv'] ?? '';
+
+  @override
+  String get setANickName => values['set_a_nick_name'] ?? '';
+
+  @override
+  String get pleaseEnterYourPhoneNumber =>
+      values['please_enter_your_phone_number'] ?? '';
+
+  @override
+  String get pleaseEnterAValidPhoneNumber =>
+      values['please_enter_a_valid_phone_number'] ?? '';
+
+  @override
+  String get invalidOtpPleaseTryAgain =>
+      values['invalid_otp_please_try_again'] ?? '';
+
+  @override
+  String get cameraAccessNeededForSelfieVerification =>
+      values['camera_access_needed_for_selfie_verification'] ?? '';
+
+  @override
+  String get cardReadyToUseYouCanManageOrRemoveAnytime =>
+      values['card_ready_to_use_you_can_manage_or_remove_anytime'] ?? '';
+
+  @override
+  String get selcomPesaConnectStep1 =>
+      values['selcom_pesa_connect_step_1'] ?? '';
+
+  @override
+  String get selcomPesaConnectStep2 =>
+      values['selcom_pesa_connect_step_2'] ?? '';
+
+  @override
+  String get selcomPesaConnectStep3 =>
+      values['selcom_pesa_connect_step_3'] ?? '';
+
+  @override
+  String get selcomPesaConnectStep4 =>
+      values['selcom_pesa_connect_step_4'] ?? '';
+
+  @override
+  String get otpSentToYourPhoneNumber =>
+      values['otp_sent_to_your_phone_number'] ?? '';
+
+  @override
+  String get requireVerificationPinBeforeStartingRide =>
+      values['require_verification_pin_before_starting_ride'] ?? '';
+
+  @override
+  String get ridePinRequiredByAdminCannotBeTurnedOff =>
+      values['ride_pin_required_by_admin_cannot_be_turned_off'] ?? '';
+
+  @override
+  String get currentStatusRequired => values['current_status_required'] ?? '';
+
+  @override
+  String get currentStatusOptional => values['current_status_optional'] ?? '';
+
+  @override
+  String get takeSelfie => values['take_selfie'] ?? '';
+
+  @override
+  String get errorPickingImage => values['error_picking_image'] ?? '';
+
+  @override
+  String get areYouSureYouWantToLogoutFromTheApp =>
+      values['are_you_sure_you_want_to_logout_from_the_app'] ?? '';
+
+  @override
+  String get pleaseSelectAReason => values['please_select_a_reason'] ?? '';
+
+  @override
+  String get pleaseEnterAMessage => values['please_enter_a_message'] ?? '';
+
+  @override
+  String get user => values['user'] ?? '';
+
+  @override
+  String get userName => values['user_name'] ?? '';
+
+  @override
+  String get phoneNumber => values['phone_number'] ?? '';
+
+  @override
+  String get addNew => values['add_new'] ?? '';
+
+  @override
+  String get addToFavourites => values['add_to_favourites'] ?? '';
+
+  @override
+  String get confirm => values['confirm'] ?? '';
+
+  @override
+  String get confirmation => values['confirmation'] ?? '';
+
+  @override
+  String get home => values['home'] ?? '';
+
+  @override
+  String get loading => values['loading'] ?? '';
+
+  @override
+  String get minutesCount => values['minutes_count'] ?? '';
+
+  @override
+  String get pinLockedMessageRetryInTime =>
+      values['pin_locked_message_retry_in_time'] ?? '';
+
+  @override
+  String get saveAddress => values['save_address'] ?? '';
+
+  @override
+  String get saveLocationAs => values['save_location_as'] ?? '';
+
+  @override
+  String get work => values['work'] ?? '';
+
+  @override
+  String get office => values['office'] ?? '';
+
+  @override
+  String get info => values['info'] ?? '';
+
+  @override
+  String get enterCustomLabel => values['enter_custom_label'] ?? '';
+
+  @override
+  String get connectionTimedOutPleaseCheckInternet =>
+      values['connection_timed_out_please_check_internet'] ?? '';
+
+  @override
+  String get noInternetConnection => values['no_internet_connection'] ?? '';
+
+  @override
+  String get sessionExpiredPleaseLoginAgain =>
+      values['session_expired_please_login_again'] ?? '';
+
+  @override
+  String get sessionExpiredRefreshing =>
+      values['session_expired_refreshing'] ?? '';
+
+  @override
+  String get requestQueueFullPleaseTryAgainLater =>
+      values['request_queue_full_please_try_again_later'] ?? '';
+
+  @override
+  String get duplicateRequestAlreadyQueued =>
+      values['duplicate_request_already_queued'] ?? '';
+
+  @override
+  String get requestQueueCleared => values['request_queue_cleared'] ?? '';
+
+  @override
+  String get searchEnded => values['search_ended'] ?? '';
+
+  @override
+  String get searchTimeoutNoDriverFound =>
+      values['search_timeout_no_driver_found'] ?? '';
+
+  @override
+  String get sendTimeout => values['send_timeout'] ?? '';
+
+  @override
+  String get receiveTimeout => values['receive_timeout'] ?? '';
+
+  @override
+  String get badResponseFromServer => values['bad_response_from_server'] ?? '';
+
+  @override
+  String get badRequest => values['bad_request'] ?? '';
+
+  @override
+  String get unauthorized => values['unauthorized'] ?? '';
+
+  @override
+  String get connectionTimeout => values['connection_timeout'] ?? '';
+
+  @override
+  String get serverErrorWithStatus => values['server_error_with_status'] ?? '';
+
+  @override
+  String get requestCancelled => values['request_cancelled'] ?? '';
+
+  @override
+  String get networkIsUnreachable => values['network_is_unreachable'] ?? '';
+
+  @override
+  String get noInternetOrUnexpectedError =>
+      values['no_internet_or_unexpected_error'] ?? '';
+
+  @override
+  String get unexpectedNetworkError => values['unexpected_network_error'] ?? '';
+
+  @override
+  String get serverTakingTooLongPleaseTryAgain =>
+      values['server_taking_too_long_please_try_again'] ?? '';
+
+  @override
+  String get serverTimeout => values['server_timeout'] ?? '';
+
+  @override
+  String get youAlreadyHaveAnActiveRide =>
+      values['you_already_have_an_active_ride'] ?? '';
+
+  @override
+  String get insufficientFundsInWallet =>
+      values['insufficient_funds_in_wallet'] ?? '';
+
+  @override
+  String get somethingWentWrongPleaseTryAgain =>
+      values['something_went_wrong_please_try_again'] ?? '';
+
+  @override
+  String get unexpectedErrorOccurredWithError =>
+      values['unexpected_error_occurred_with_error'] ?? '';
+
+  @override
+  String get invalidOtp => values['invalid_otp'] ?? '';
+
+  @override
+  String get incorrectPin => values['incorrect_pin'] ?? '';
 
   @override
   // TODO: implement savedLocations

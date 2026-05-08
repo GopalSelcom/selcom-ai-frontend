@@ -201,7 +201,7 @@ class PhoneInputScreen extends GetView<AuthController> {
                         // Button
                         Obx(
                           () => AppPrimaryButton(
-                            label: 'Get Verification Code',
+                            label: AppStrings.getVerificationCode.tr,
                             isLoading: controller.isLoading.value,
                             onPressed: controller.canRequestOtp
                                 ? controller.sendOtpAndNavigate

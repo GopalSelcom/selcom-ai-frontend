@@ -211,7 +211,7 @@ class ProfileScreen extends StatelessWidget {
       final user = controller.userModel.value;
       final name = (user?.name ?? '').trim().isNotEmpty
           ? (user?.name ?? '')
-          : 'User';
+          : AppStrings.user.tr;
       final mobile = user?.mobileNumber != null
           ? TanzaniaPhoneFormatter.formatInternational(
               user!.mobileNumber.toString(),
@@ -408,7 +408,7 @@ class ProfileScreen extends StatelessWidget {
 
           // User Name Field
           _buildEditTextField(
-            label: 'User name',
+            label: AppStrings.userName.tr,
             textController: controller.nameTextController,
             focusNode: controller.nameFocusNode,
             isPhone: false,
@@ -419,7 +419,7 @@ class ProfileScreen extends StatelessWidget {
 
           // Phone Number Field
           _buildEditTextField(
-            label: 'Phone number',
+            label: AppStrings.phoneNumber.tr,
             textController: controller.phoneTextController,
             focusNode: controller.phoneFocusNode,
             isPhone: true,

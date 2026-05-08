@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer' as developer;
-import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -21,6 +20,7 @@ import '../widgets/svg_picture_asset.dart';
 import 'failed_request_queue.dart';
 import 'retry_manager.dart';
 import 'network_connectivity_service.dart';
+import 'connectivity_probe.dart';
 import '../../shared/utils/app_dialogs.dart';
 import '../services/error_reporting/error_reporter.dart';
 import '../services/error_reporting/models/error_constants.dart';
@@ -34,6 +34,29 @@ enum ApiEnvironment { local, staging, production }
 enum ApiMethod { get, post, put, delete, patch, multipart }
 
 enum ErrorPresentationType { none, dialog, snackbar }
+
+/// Request-level retry configuration.
+///
+/// Why introduced:
+/// - We observed intermittent 5xx responses (especially 502/503/504) on some
+///   polling endpoints like active ride.
+/// - Hardcoding endpoint retry logic inside ApiService mixed feature behavior
+///   into the transport layer.
+///
+/// Clean-architecture intent:
+/// - ApiService remains generic.
+/// - Feature/data source decides where retries are safe and expected.
+class ApiRetryPolicy {
+  final List<Duration> retryDelays;
+  final Set<int> retryStatusCodes;
+  final DioExceptionType retryOnDioType;
+
+  const ApiRetryPolicy({
+    required this.retryDelays,
+    required this.retryStatusCodes,
+    this.retryOnDioType = DioExceptionType.badResponse,
+  });
+}
 
 // ─────────────────────────────────────────────────────────
 // Multipart File Model
@@ -69,6 +92,11 @@ class ApiRequest {
   final bool skipAuthInterceptor;
   final List<LocalMultipartFile>? multipartFiles;
   final bool shouldQueue;
+  /// Optional per-request retry policy.
+  ///
+  /// Keep null by default so existing behavior is unchanged for all endpoints.
+  /// Only endpoints that explicitly opt-in will retry.
+  final ApiRetryPolicy? retryPolicy;
 
   ApiRequest({
     required this.endpoint,
@@ -84,6 +112,7 @@ class ApiRequest {
     this.skipAuthInterceptor = false,
     this.multipartFiles,
     this.shouldQueue = true,
+    this.retryPolicy,
   });
 }
 
@@ -163,12 +192,9 @@ class ApiService {
   // ── Internet Check ──
 
   Future<bool> _checkInternetConnection() async {
-    try {
-      final result = await InternetAddress.lookup('google.com');
-      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
-    } on SocketException {
-      return false;
-    }
+    // Shared probe avoids duplicate logic and prevents single-host DNS false
+    // negatives (the original issue seen with `google.com` lookups).
+    return ConnectivityProbe.instance.probeInternetConnection();
   }
 
   // ── Dio Client Selection ──
@@ -211,7 +237,7 @@ class ApiService {
       return Response(
         requestOptions: RequestOptions(path: request.endpoint),
         statusCode: 503,
-        data: {'message': 'No Internet Connection'},
+        data: {'message': AppStrings.noInternetConnection.tr},
       );
     }
 
@@ -306,6 +332,23 @@ class ApiService {
         );
       }
 
+      // Retry is request-driven (configured by the caller) to keep transport
+      // generic and avoid endpoint-specific rules inside ApiService.
+      if (_shouldRetryRequestError(e, request)) {
+        try {
+          final retriedResponse = await _retryRequestWithBackoff(
+            client: client,
+            fullUrl: fullUrl,
+            request: request,
+            finalHeaders: finalHeaders,
+            finalBody: finalBody,
+          );
+          return retriedResponse;
+        } on DioException catch (retryError) {
+          return _handleDioError(retryError, request);
+        }
+      }
+
       return _handleDioError(e, request);
     } catch (e) {
       stopwatch.stop();
@@ -313,7 +356,11 @@ class ApiService {
       return Response(
         requestOptions: RequestOptions(path: request.endpoint),
         statusCode: 500,
-        data: {'error': 'Unexpected error occurred: $e'},
+        data: {
+          'error': AppStrings.unexpectedErrorOccurredWithError.trParams({
+            'error': e.toString(),
+          }),
+        },
       );
     }
   }
@@ -490,10 +537,71 @@ class ApiService {
     }
   }
 
+  bool _shouldRetryRequestError(DioException error, ApiRequest request) {
+    final retryPolicy = request.retryPolicy;
+    if (retryPolicy == null) return false;
+    return error.type == retryPolicy.retryOnDioType &&
+        retryPolicy.retryStatusCodes.contains(error.response?.statusCode);
+  }
+
+  Future<Response> _retryRequestWithBackoff({
+    required Dio client,
+    required String fullUrl,
+    required ApiRequest request,
+    required Map<String, dynamic> finalHeaders,
+    required Map<String, dynamic> finalBody,
+  }) async {
+    final retryPolicy = request.retryPolicy;
+    if (retryPolicy == null || retryPolicy.retryDelays.isEmpty) {
+      throw DioException(
+        requestOptions: RequestOptions(path: request.endpoint),
+        type: DioExceptionType.unknown,
+        message: 'Retry requested without retry policy configuration',
+      );
+    }
+
+    DioException? lastError;
+    for (var i = 0; i < retryPolicy.retryDelays.length; i++) {
+      await Future.delayed(retryPolicy.retryDelays[i]);
+      try {
+        final response = await client.request(
+          fullUrl,
+          data: finalBody.isNotEmpty ? finalBody : null,
+          queryParameters: request.queryParams,
+          options: Options(
+            method: _methodToString(request.method),
+            headers: finalHeaders,
+          ),
+        );
+
+        if (kDebugMode) {
+          developer.log(
+            "🔁 Request retry success on attempt ${i + 1}",
+            name: 'ApiService',
+          );
+        }
+        return response;
+      } on DioException catch (e) {
+        lastError = e;
+        if (e.type != retryPolicy.retryOnDioType ||
+            !retryPolicy.retryStatusCodes.contains(e.response?.statusCode)) {
+          rethrow;
+        }
+      }
+    }
+
+    throw lastError ??
+        DioException(
+          requestOptions: RequestOptions(path: request.endpoint),
+          type: DioExceptionType.unknown,
+          message: 'Active ride retry failed with unknown DioException',
+        );
+  }
+
   // ── Error Handling ──
 
   Future<Response> _handleDioError(DioException e, ApiRequest request) async {
-    String message = 'Something went wrong';
+    String message = AppStrings.somethingWentWrongPleaseTryAgain.tr;
     int statusCode = e.response?.statusCode ?? 500;
 
     // Let the interceptor handle 401 errors
@@ -501,7 +609,7 @@ class ApiService {
       return Response(
         requestOptions: e.requestOptions,
         statusCode: statusCode,
-        data: e.response?.data ?? {'message': 'Unauthorized'},
+        data: e.response?.data ?? {'message': AppStrings.unauthorized.tr},
       );
     }
 
@@ -509,43 +617,45 @@ class ApiService {
       return Response(
         requestOptions: e.requestOptions,
         statusCode: statusCode,
-        data: e.response?.data ?? {'message': 'Bad request'},
+        data: e.response?.data ?? {'message': AppStrings.badRequest.tr},
       );
     }
 
     switch (e.type) {
       case DioExceptionType.connectionTimeout:
-        message = 'Connection timeout';
+        message = AppStrings.connectionTimeout.tr;
         break;
       case DioExceptionType.sendTimeout:
-        message = 'Send timeout';
+        message = AppStrings.sendTimeout.tr;
         break;
       case DioExceptionType.receiveTimeout:
-        message = 'Receive timeout';
+        message = AppStrings.receiveTimeout.tr;
         break;
       case DioExceptionType.badResponse:
         try {
           final data = e.response?.data;
           if (data is Map) {
-            message = data['message'] ?? 'Bad response from server';
+            message = data['message'] ?? AppStrings.badResponseFromServer.tr;
           } else {
-            message = 'Server Error ($statusCode)';
+            message = AppStrings.serverErrorWithStatus.trParams({
+              'statusCode': statusCode.toString(),
+            });
           }
         } catch (_) {
-          message = 'Bad response from server';
+          message = AppStrings.badResponseFromServer.tr;
         }
         break;
       case DioExceptionType.cancel:
-        message = 'Request cancelled';
+        message = AppStrings.requestCancelled.tr;
         break;
       case DioExceptionType.connectionError:
-        message = 'Network is unreachable';
+        message = AppStrings.networkIsUnreachable.tr;
         break;
       case DioExceptionType.unknown:
-        message = 'No internet or unexpected error';
+        message = AppStrings.noInternetOrUnexpectedError.tr;
         break;
       default:
-        message = 'Unexpected network error';
+        message = AppStrings.unexpectedNetworkError.tr;
     }
 
     if (e.type == DioExceptionType.receiveTimeout) {
@@ -557,14 +667,14 @@ class ApiService {
       if (request.errorPresentationType == ErrorPresentationType.dialog) {
         AppDialogs.showErrorDialog(
           title: AppStrings.timeout.tr,
-          message: 'Server is taking too long to respond. Please try again.',
+          message: AppStrings.serverTakingTooLongPleaseTryAgain.tr,
         );
       }
 
       return Response(
         requestOptions: e.requestOptions,
         statusCode: 408,
-        data: {'message': 'Server timeout'},
+        data: {'message': AppStrings.serverTimeout.tr},
       );
     }
 
@@ -813,7 +923,7 @@ class AuthInterceptor extends Interceptor {
         Response(
           requestOptions: err.requestOptions,
           statusCode: 401,
-          data: {'message': 'Session expired, please login again'},
+          data: {'message': AppStrings.sessionExpiredPleaseLoginAgain.tr},
         ),
       );
     }
@@ -931,7 +1041,7 @@ class AuthInterceptor extends Interceptor {
               Response(
                 requestOptions: err.requestOptions,
                 statusCode: 401,
-                data: {'message': 'Session expired, please login again'},
+                data: {'message': AppStrings.sessionExpiredPleaseLoginAgain.tr},
               ),
             );
           }
@@ -953,7 +1063,7 @@ class AuthInterceptor extends Interceptor {
           Response(
             requestOptions: err.requestOptions,
             statusCode: 401,
-            data: {'message': 'Session expired, please login again'},
+            data: {'message': AppStrings.sessionExpiredPleaseLoginAgain.tr},
           ),
         );
       }
@@ -969,7 +1079,7 @@ class AuthInterceptor extends Interceptor {
         Response(
           requestOptions: err.requestOptions,
           statusCode: 401,
-          data: {'message': 'Session expired, please login again'},
+          data: {'message': AppStrings.sessionExpiredPleaseLoginAgain.tr},
         ),
       );
     }

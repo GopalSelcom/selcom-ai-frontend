@@ -24,12 +24,12 @@ class PromocodeController extends GetxController {
       PromocodeModel(
         title: AppStrings.value20PercentOffOnYourFirstRideBooking.tr,
         subtitle: AppStrings.maximumPromoTzs1500.tr,
-        footer: '21 days left',
+        footer: AppStrings.daysLeftCount.trParams({'count': '21'}),
       ),
       PromocodeModel(
         title: AppStrings.value20PercentOffOnYourFirstRideBooking.tr,
         subtitle: AppStrings.maximumPromoTzs1500.tr,
-        footer: '21 days left',
+        footer: AppStrings.daysLeftCount.trParams({'count': '21'}),
       ),
     ]);
   }
@@ -38,7 +38,7 @@ class PromocodeController extends GetxController {
     final code = promoCodeTextController.text;
     if (code.isNotEmpty) {
       AppDialogs.showSuccessDialog(
-        message: 'Promo code $code applied!',
+        message: AppStrings.promoCodeAppliedWithCode.trParams({'code': code}),
       );
     } else {
       AppDialogs.showErrorDialog(
@@ -49,7 +49,8 @@ class PromocodeController extends GetxController {
 
   void applyPromo(PromocodeModel promo) {
     AppDialogs.showSuccessDialog(
-      message: 'Promo "${promo.title}" applied!',
+      message:
+          AppStrings.promoAppliedWithTitle.trParams({'title': promo.title}),
     );
   }
 }

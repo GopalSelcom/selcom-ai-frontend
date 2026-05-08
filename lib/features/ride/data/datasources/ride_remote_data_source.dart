@@ -72,6 +72,23 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       request: ApiRequest(
         endpoint: URLS.ride.activeRide,
         method: ApiMethod.get,
+        // Context:
+        // - This endpoint is polled continuously during active-trip screens.
+        // - We observed intermittent 502/503/504 responses from backend/gateway.
+        // Why retry here:
+        // - These statuses are usually transient and often recover quickly.
+        // - A short retry prevents temporary backend spikes from immediately
+        //   interrupting ride-state UX.
+        // Scope/safety:
+        // - Applied only to active-ride polling (not global).
+        // - Keeps other endpoints and feature flows unchanged.
+        retryPolicy: const ApiRetryPolicy(
+          retryDelays: <Duration>[
+            Duration(milliseconds: 500),
+            Duration(seconds: 1),
+          ],
+          retryStatusCodes: <int>{502, 503, 504},
+        ),
       ),
     );
 

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 
@@ -83,7 +85,7 @@ class PaymentCardActionBottomSheet extends StatelessWidget {
             text: TextSpan(
               children: [
                 TextSpan(
-                  text: 'VISA',
+                  text: AppStrings.visa.tr,
                   style: AppTextStyles.sectionTitle.copyWith(
                     color: AppColors.textBrandVisaPrimary,
                     fontWeight: FontWeight.w500,

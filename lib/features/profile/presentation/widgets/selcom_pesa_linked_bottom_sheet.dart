@@ -49,10 +49,13 @@ class SelcomPesaLinkedBottomSheet extends GetView<PaymentMethodsController> {
           const Divider(color: AppColors.divider, thickness: 1),
           SizedBox(height: 24.h),
 
-          _buildReadOnlyField(label: 'Name', value: 'Chirag panchal'),
+          _buildReadOnlyField(label: AppStrings.fullName.tr, value: 'Chirag panchal'),
           SizedBox(height: 20.h),
 
-          _buildReadOnlyField(label: 'Phone number', value: '+255 711 410 410'),
+          _buildReadOnlyField(
+            label: AppStrings.phoneNumber.tr,
+            value: '+255 711 410 410',
+          ),
           SizedBox(height: 24.h),
 
           Row(

@@ -53,7 +53,9 @@ class NotificationScreen extends StatelessWidget {
                               ),
                             )
                           : Text(
-                              "Mark all read (${controller.unreadCount.value})",
+                              AppStrings.markAllReadCount.trParams({
+                                'count': controller.unreadCount.value.toString(),
+                              }),
                               style: AppTextStyles.homeCaption.copyWith(
                                 color: AppColors.white,
                                 fontWeight: FontWeight.w600,
@@ -226,7 +228,9 @@ class NotificationScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(4.r),
                       ),
                       child: Text(
-                        'Order: ${notification.orderId}',
+                        AppStrings.orderLabelWithId.trParams({
+                          'orderId': notification.orderId ?? '',
+                        }),
                         style: AppTextStyles.homeCaption.copyWith(
                           fontSize: 10.sp,
                           fontWeight: FontWeight.w600,
@@ -327,9 +331,21 @@ class NotificationScreen extends StatelessWidget {
       final now = DateTime.now();
       final diff = now.difference(date);
 
-      if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-      if (diff.inHours < 24) return '${diff.inHours}h ago';
-      if (diff.inDays < 7) return '${diff.inDays}d ago';
+      if (diff.inMinutes < 60) {
+        return AppStrings.minutesAgo.trParams({
+          'count': diff.inMinutes.toString(),
+        });
+      }
+      if (diff.inHours < 24) {
+        return AppStrings.hoursAgo.trParams({
+          'count': diff.inHours.toString(),
+        });
+      }
+      if (diff.inDays < 7) {
+        return AppStrings.daysAgo.trParams({
+          'count': diff.inDays.toString(),
+        });
+      }
 
       return '${date.day}/${date.month}/${date.year}';
     } catch (_) {

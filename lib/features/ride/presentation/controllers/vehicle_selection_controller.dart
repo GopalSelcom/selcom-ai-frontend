@@ -1,13 +1,11 @@
 import 'dart:async';
 import 'dart:math';
-import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:selcom_rides_frontend/core/utils/map_marker_utils.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/data/models/requests/book_ride_request.dart';
@@ -24,6 +22,7 @@ import '../../../../core/services/app_map_service.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../home/domain/repositories/home_repository.dart';
+import '../../../home/presentation/controllers/location_selection_controller.dart';
 import '../../../payment/presentation/controllers/payment_method_controller.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../../shared/utils/app_dialogs.dart';
@@ -167,6 +166,7 @@ class VehicleSelectionController extends GetxController {
         .toLowerCase();
 
     isRouteReady.value = false;
+    update(['route_header']);
   }
 
   Future<void> _loadAll() async {
@@ -1006,6 +1006,16 @@ class VehicleSelectionController extends GetxController {
     Get.toNamed(AppRoutes.promotions);
   }
 
+  void closeVehicleSelection() {
+    // Cancel from vehicle selection should return to home and clear back stack.
+    Get.offAllNamed(AppRoutes.home);
+  }
+
+  Future<void> editRouteHeader() async {
+    // Open edit flow and return edited result back to this same vehicle screen.
+    await _openLocationEdit(isEditingPickup: false);
+  }
+
   Future<void> editPickupFromMap() async {
     await _openLocationEdit(isEditingPickup: true);
   }
@@ -1015,20 +1025,28 @@ class VehicleSelectionController extends GetxController {
   }
 
   Future<void> _openLocationEdit({required bool isEditingPickup}) async {
+    if (Get.isRegistered<LocationSelectionController>()) {
+      Get.delete<LocationSelectionController>();
+    }
+
     final result = await Get.toNamed(
       AppRoutes.locationSelection,
       arguments: {
         'fromVehicleSelectionEdit': true,
         'editTarget': isEditingPickup ? 'pickup' : 'drop',
         'activeSegmentIndex': isEditingPickup ? 0 : 1,
-        'clearPickupOnOpen': isEditingPickup,
-        'clearDestinationOnOpen': !isEditingPickup,
+        // In edit mode we keep existing values prefilled.
+        'clearPickupOnOpen': false,
+        'clearDestinationOnOpen': false,
         'pickup': pickupEntity.address,
         'pickupLat': pickupEntity.lat,
         'pickupLng': pickupEntity.lng,
         'destination': destinationEntity.address,
         'destinationLat': destinationEntity.lat,
         'destinationLng': destinationEntity.lng,
+        'destinations': destinations
+            .map((d) => {'lat': d.lat, 'lng': d.lng, 'address': d.address})
+            .toList(),
       },
     );
     if (result is! Map) return;
@@ -1067,6 +1085,8 @@ class VehicleSelectionController extends GetxController {
     );
     destinations.assignAll(nextDestinations);
     destinationEntity = nextDestinations.last;
+    // Refresh only the top route header (GetBuilder id: route_header).
+    update(['route_header']);
 
     isMapVisualReady.value = false;
     await loadLocationIcons();

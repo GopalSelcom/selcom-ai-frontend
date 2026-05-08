@@ -98,7 +98,7 @@ class SelcomPesaPhoneInputBottomSheet
 
           // Continue Button
           AppPrimaryButton(
-            label: 'Continue',
+            label: AppStrings.continueLabel.tr,
             onPressed: controller.onPhoneContinue,
           ),
           SizedBox(height: 16.h),
