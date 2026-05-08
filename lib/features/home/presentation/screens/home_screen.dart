@@ -1,26 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:selcom_rides_frontend/shared/widgets/map_widgets.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
-import '../../../../core/constants/app_assets.dart';
-import '../../../../core/data/models/ride_model.dart';
-import '../../../../core/data/models/vehicle_type_model.dart';
-import '../../../../core/data/models/responses/get_saved_places_response.dart';
-import '../../../ride/data/models/ride_management_models.dart';
-import '../controllers/home_controller.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/routes/app_routes.dart';
 import 'package:shimmer/shimmer.dart';
 
+import '../../../../core/constants/app_assets.dart';
+import '../../../../core/data/models/responses/get_saved_places_response.dart';
+import '../../../../core/data/models/ride_model.dart';
+import '../../../../core/data/models/vehicle_type_model.dart';
+import '../../../../core/localization/app_strings.dart';
+import '../../../../core/routes/app_routes.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
+import '../../../../shared/widgets/app_google_map.dart';
+import '../../../../shared/widgets/app_map_gps_button.dart';
+import '../../../../shared/widgets/app_map_top_header.dart';
+import '../../../ride/data/models/ride_management_models.dart';
+import '../controllers/home_controller.dart';
 import '../widgets/recent_location_tile.dart';
-import '../../../../shared/utils/app_dialogs.dart';
 
 class HomeScreen extends GetView<HomeController> {
   const HomeScreen({super.key});
@@ -37,72 +39,73 @@ class HomeScreen extends GetView<HomeController> {
         _showExitDialog(context);
       },
       child: Scaffold(
-      backgroundColor: AppColors.pageBackground,
-      body: Stack(
-        children: [
-          // 1. Map Layer (Static Image from Figma)
-          Positioned.fill(
-            child: Obx(
-              () => AppGoogleMap(
-                initialCameraPosition: CameraPosition(
-                  target: controller.mapCenter.value,
-                  zoom: 16,
+        backgroundColor: AppColors.pageBackground,
+        body: Stack(
+          children: [
+            // 1. Map Layer (Static Image from Figma)
+            Positioned.fill(
+              child: Obx(
+                () => AppGoogleMap(
+                  initialCameraPosition: CameraPosition(
+                    target: controller.mapCenter.value,
+                    zoom: 16,
+                  ),
+                  // Keep map focal content above the draggable sheet peek area.
+                  padding: EdgeInsets.only(
+                    bottom:
+                        MediaQuery.of(context).size.height *
+                        _homeSheetInitialSize,
+                  ),
+                  myLocationEnabled: controller.hasLocationPermission.value,
+                  circles: controller.nearbyPickupRadiusCircles,
+                  // markers: controller.selectedPickupMarkers,
+                  onMapCreated: controller.onMapCreated,
+                  // onCameraMove: controller.onCameraMove,
+                  // onCameraIdle: controller.onCameraIdle,
                 ),
-                // Keep map focal content above the draggable sheet peek area.
-                padding: EdgeInsets.only(
-                  bottom:
-                      MediaQuery.of(context).size.height *
-                      _homeSheetInitialSize,
-                ),
-                myLocationEnabled: controller.hasLocationPermission.value,
-                circles: controller.nearbyPickupRadiusCircles,
-                // markers: controller.selectedPickupMarkers,
-                onMapCreated: controller.onMapCreated,
-                // onCameraMove: controller.onCameraMove,
-                // onCameraIdle: controller.onCameraIdle,
               ),
             ),
-          ),
 
-          // 2. Top Header (Address + Profile)
-          Obx(
-            () => AppMapTopHeader(
-              top: MediaQuery.of(context).padding.top + 10.h,
-              addressWidget: _buildModernAddressBox(),
-              onProfileTap: controller.openProfile,
-              profileIcon: Icons.person,
-              profileIconColor: AppColors.black,
-              isLoading: controller.isLoadingHomeData.value,
-              isExpanded: controller.isSavedPlacesExpanded.value,
+            // 2. Top Header (Address + Profile)
+            Obx(
+              () => AppMapTopHeader(
+                top: MediaQuery.of(context).padding.top + 10.h,
+                addressWidget: _buildModernAddressBox(),
+                onProfileTap: controller.openProfile,
+                profileIcon: Icons.person,
+                profileIconColor: AppColors.black,
+                isLoading: controller.isLoadingHomeData.value,
+                isExpanded: controller.isSavedPlacesExpanded.value,
+              ),
             ),
-          ),
 
-          // 3. Floating Action Buttons (GPS)
-          Positioned(
-            bottom:
-                (MediaQuery.of(context).size.height * _homeSheetInitialSize) +
-                20.h,
-            right: 20.w,
-            child: AppMapGpsButton(onPressed: () => controller.recenterMap()),
-          ),
-          Obx(() {
-            if (controller.isLoadingHomeData.value) {
-              return const SizedBox.shrink();
-            }
-            final activeRide = controller.activeRide.value;
-            if (activeRide != null) {
-              return Positioned(
-                left: 16.w,
-                right: 16.w,
-                bottom: MediaQuery.of(context).padding.bottom + 12.h,
-                child: _activeRideCard(activeRide),
-              );
-            }
-            return _buildFigmaDraggableSheet();
-          }),
-        ],
+            // 3. Floating Action Buttons (GPS)
+            Positioned(
+              bottom:
+                  (MediaQuery.of(context).size.height * _homeSheetInitialSize) +
+                  20.h,
+              right: 20.w,
+              child: AppMapGpsButton(onPressed: () => controller.recenterMap()),
+            ),
+            Obx(() {
+              if (controller.isLoadingHomeData.value) {
+                return const SizedBox.shrink();
+              }
+              final activeRide = controller.activeRide.value;
+              if (activeRide != null) {
+                return Positioned(
+                  left: 16.w,
+                  right: 16.w,
+                  bottom: MediaQuery.of(context).padding.bottom + 12.h,
+                  child: _activeRideCard(activeRide),
+                );
+              }
+              return _buildFigmaDraggableSheet();
+            }),
+          ],
+        ),
       ),
-    ));
+    );
   }
 
   Widget _buildModernAddressBox() {
@@ -211,17 +214,17 @@ class HomeScreen extends GetView<HomeController> {
       return AppDraggableBottomSheet(
         initialChildSize: _homeSheetInitialSize,
         minChildSize: _homeSheetInitialSize,
-        maxChildSize: maxContentSize > _homeSheetInitialSize ? maxContentSize : _homeSheetInitialSize + 0.01,
+        maxChildSize: maxContentSize > _homeSheetInitialSize
+            ? maxContentSize
+            : _homeSheetInitialSize + 0.01,
         snap: snaps.length > 1,
         snapSizes: snaps,
         childBuilder: (scrollController) {
-        return ListView(
-          controller: scrollController,
-          physics: const BouncingScrollPhysics(
-            parent: AlwaysScrollableScrollPhysics(),
-          ),
-          padding: EdgeInsets.symmetric(horizontal: 24.w),
-          children: [
+          return ListView(
+            controller: scrollController,
+            physics: const ClampingScrollPhysics(),
+            padding: EdgeInsets.symmetric(horizontal: 24.w),
+            children: [
               SizedBox(height: 12.h),
               Center(
                 child: Container(
@@ -238,8 +241,8 @@ class HomeScreen extends GetView<HomeController> {
                 onTap: () => controller.openLocationSelection(),
                 child: Container(
                   padding: EdgeInsets.symmetric(
-                    horizontal: 16.w,
-                    vertical: 14.h,
+                    horizontal: 18.w,
+                    vertical: 16.h,
                   ),
                   decoration: BoxDecoration(
                     color: AppColors.surfaceSubtle,
@@ -263,14 +266,14 @@ class HomeScreen extends GetView<HomeController> {
                         style: AppTextStyles.homeSubtitle.copyWith(
                           color: AppColors.black,
                           fontWeight: FontWeight.w500,
-                          fontSize: 15.sp
+                          fontSize: 15.sp,
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-              SizedBox(height: 12.h),
+              SizedBox(height: 8.h),
               Obx(
                 () => controller.savedPlaces.isEmpty
                     ? const SizedBox.shrink()
@@ -288,15 +291,16 @@ class HomeScreen extends GetView<HomeController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (controller.shouldShowRecentSection) ...[
-                      SizedBox(height: 16.h),
+                      SizedBox(height: 15.h),
                       Row(
                         children: [
                           Expanded(
                             child: Text(
                               AppStrings.recentLocation.tr,
                               style: AppTextStyles.homeSubtitle.copyWith(
-                                fontSize: 15.sp,
+                                fontSize: 16.sp,
                                 fontWeight: FontWeight.w600,
+                                letterSpacing: -0.4,
                               ),
                             ),
                           ),
@@ -321,87 +325,91 @@ class HomeScreen extends GetView<HomeController> {
                             ),
                         ],
                       ),
-                      SizedBox(height: 8.h),
+                      SizedBox(height: 20.h),
                       if (controller.isLoadingHomeData.value)
                         ...List.generate(3, (index) {
                           final bool isLast = index == 2;
                           return Column(
                             children: [
-                              _buildRecentLocationSkeleton(bottomSpacing: 0),
+                              _buildRecentLocationSkeleton(),
                               if (!isLast)
-                                Divider(height: 1.h, color: AppColors.bgSoftCircle),
+                                Divider(
+                                  height: 1.h,
+                                  color: AppColors.bgSoftCircle,
+                                ),
+                              SizedBox(height: 20.h),
                             ],
                           );
                         })
                       else
-                        ...controller.recentDestinationsPreview.asMap().entries.map(
-                          (entry) {
-                            final bool isLast = entry.key ==
-                                controller.recentDestinationsPreview.length - 1;
-                            return Column(
-                              children: [
-                                _buildRecentLocationItem(entry.value,
-                                    bottomSpacing: 8, topSpacing: 8),
-                                if (!isLast)
-                                  Divider(height: 1.h, color: AppColors.bgSoftCircle),
-                              ],
-                            );
-                          },
-                        ),
+                        ...controller.recentDestinationsPreview
+                            .asMap()
+                            .entries
+                            .map((entry) {
+                              final bool isLast =
+                                  entry.key ==
+                                  controller.recentDestinationsPreview.length -
+                                      1;
+                              return Column(
+                                children: [
+                                  _buildRecentLocationItem(entry.value),
+                                  if (!isLast)
+                                    Divider(
+                                      height: 1.h,
+                                      color: AppColors.bgSoftCircle,
+                                    ),
+                                  SizedBox(height: 20.h),
+                                ],
+                              );
+                            }),
                     ],
                     if (controller.shouldShowVehicleSection) ...[
                       if (controller.shouldShowRecentSection)
-                        SizedBox(height: 12.h),
+                        SizedBox(height: 15.h),
                       if (!controller.shouldShowRecentSection)
                         SizedBox(height: 28.h),
                       Text(
                         AppStrings.exploreVehicle.tr,
                         style: AppTextStyles.homeSubtitle.copyWith(
-                          fontSize: 15.sp,
-                          fontWeight: FontWeight.w500,
+                          height: 20 / 15,
+                          letterSpacing: 0,
                         ),
                       ),
-                      SizedBox(height: 16.h),
+                      SizedBox(height: 17.h),
                       _buildVehicleHorizontalList(),
                     ],
                   ],
                 ),
               ),
               SizedBox(height: 20.h),
-          ],
-        );
-      },
-    );
-   });
+            ],
+          );
+        },
+      );
+    });
   }
 
   Widget _buildSavedPlaceChip(SavedPlace place) {
     final label = _savedPlaceLabel(place);
     return GestureDetector(
       onTap: () => controller.navigateToVehicleSelectionForSavedLabel(label),
-      onLongPress: () => Get.toNamed(AppRoutes.selectSavedLocation, arguments: label),
+      onLongPress: () =>
+          Get.toNamed(AppRoutes.selectSavedLocation, arguments: label),
       child: Container(
         margin: EdgeInsets.only(right: 8.w),
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+        padding: EdgeInsets.symmetric(horizontal: 12.52.w, vertical: 11.h),
         decoration: BoxDecoration(
           color: AppColors.surfaceSubtle,
           borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: const Color(0xFFE2E8F0), width: 0.8),
+          border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              padding: EdgeInsets.all(2.w),
-              decoration: const BoxDecoration(
-                color: Color(0xFFFEF3C7),
-                shape: BoxShape.circle,
-              ),
-              child: SvgPictureAsset(
-                _chipIconForLabel(label),
-                width: 16.w,
-                height: 16.w,
-              ),
+            SvgPictureAsset(
+              _chipIconForLabel(label),
+              width: 15.w,
+              height: 15.w,
             ),
             SizedBox(width: 8.w),
             Text(
@@ -463,8 +471,7 @@ class HomeScreen extends GetView<HomeController> {
     return sorted;
   }
 
-  Widget _buildRecentLocationItem(RecentDestinationModel loc,
-      {double bottomSpacing = 24,double topSpacing = 24}) {
+  Widget _buildRecentLocationItem(RecentDestinationModel loc) {
     return Obx(() {
       final distance = controller.calculateDistanceKm(loc.lat, loc.lng);
       final savedPlace = controller.getSavedPlaceFor(loc.address, null);
@@ -474,8 +481,6 @@ class HomeScreen extends GetView<HomeController> {
         address: loc.address,
         distance: distance,
         isFavorite: isFavorite,
-        bottomSpacing: bottomSpacing,
-        topSpacing: topSpacing,
         onTap: () =>
             controller.navigateToVehicleSelectionForRecentDestination(loc),
         onFavoriteTap: () => controller.toggleFavoriteForRecent(loc),
@@ -483,46 +488,43 @@ class HomeScreen extends GetView<HomeController> {
     });
   }
 
-  Widget _buildRecentLocationSkeleton({double bottomSpacing = 24}) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: bottomSpacing.h),
-      child: Row(
-        children: [
-          Container(
-            width: 52.w,
-            height: 52.w,
-            decoration: BoxDecoration(
-              color: AppColors.skeletonBase,
-              borderRadius: BorderRadius.circular(12.r),
-            ),
+  Widget _buildRecentLocationSkeleton() {
+    return Row(
+      children: [
+        Container(
+          width: 52.w,
+          height: 52.w,
+          decoration: BoxDecoration(
+            color: AppColors.skeletonBase,
+            borderRadius: BorderRadius.circular(12.r),
           ),
-          SizedBox(width: 16.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  height: 14.h,
-                  width: 130.w,
-                  decoration: BoxDecoration(
-                    color: AppColors.skeletonBase,
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
+        ),
+        SizedBox(width: 16.w),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                height: 14.h,
+                width: 130.w,
+                decoration: BoxDecoration(
+                  color: AppColors.skeletonBase,
+                  borderRadius: BorderRadius.circular(8.r),
                 ),
-                SizedBox(height: 8.h),
-                Container(
-                  height: 12.h,
-                  width: 200.w,
-                  decoration: BoxDecoration(
-                    color: AppColors.skeletonBase,
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
+              ),
+              SizedBox(height: 8.h),
+              Container(
+                height: 12.h,
+                width: 200.w,
+                decoration: BoxDecoration(
+                  color: AppColors.skeletonBase,
+                  borderRadius: BorderRadius.circular(8.r),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -548,17 +550,12 @@ class HomeScreen extends GetView<HomeController> {
       onTap: () =>
           controller.openLocationSelectionWithPreferredVehicle(vehicle),
       child: Container(
-        margin: EdgeInsets.only(right: 16.w),
+        margin: EdgeInsets.only(right: 29.w),
         child: Column(
           children: [
-            Container(
-              width: 80.w,
-              height: 60.h,
-              padding: EdgeInsets.all(8.w),
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(16.r),
-              ),
+            SizedBox(
+              width: 62.w,
+              height: 42.h,
               child: Image.asset(
                 imagePath,
                 fit: BoxFit.contain,
@@ -569,12 +566,14 @@ class HomeScreen extends GetView<HomeController> {
                 ),
               ),
             ),
-            SizedBox(height: 8.h),
+            SizedBox(height: 4.h),
             Text(
               vehicle.displayName,
               style: AppTextStyles.homeCaption.copyWith(
+                fontSize: 12,
                 color: AppColors.textHeading,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w400,
+                height: 20 / 12,
               ),
             ),
           ],
@@ -589,16 +588,23 @@ class HomeScreen extends GetView<HomeController> {
       child: Column(
         children: [
           Container(
-            width: 86.w,
-            height: 72.h,
+            width: 72.w,
+            height: 49.h,
+            padding: EdgeInsets.all(6.w),
             decoration: BoxDecoration(
-              color: AppColors.skeletonBase,
+              color: AppColors.white,
               borderRadius: BorderRadius.circular(16.r),
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.skeletonBase,
+                borderRadius: BorderRadius.circular(10.r),
+              ),
             ),
           ),
           SizedBox(height: 8.h),
           Container(
-            width: 56.w,
+            width: 52.w,
             height: 10.h,
             decoration: BoxDecoration(
               color: AppColors.skeletonBase,
@@ -772,10 +778,12 @@ class HomeScreen extends GetView<HomeController> {
     contentHeight += 24.h;
 
     // Convert to fraction of screen height
-    final double screenHeight = 1.sh > 0 ? 1.sh : 812; // Fallback to standard iPhone height
+    final double screenHeight = 1.sh > 0
+        ? 1.sh
+        : 812; // Fallback to standard iPhone height
     double size = contentHeight / screenHeight;
 
-    // Clamp values to ensure usability. Minimum is the peek height, 
+    // Clamp values to ensure usability. Minimum is the peek height,
     // maximum is 0.9 to avoid overlapping with top status bar too much.
     return size.clamp(_homeSheetInitialSize, 0.9);
   }
