@@ -7,6 +7,7 @@ import '../../../../core/data/models/requests/verify_otp_request.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/storage_service.dart';
+import '../../../../core/services/voip_callkit_bridge_service.dart';
 import '../../domain/usecases/resend_otp_use_case.dart';
 import '../../domain/usecases/send_otp_use_case.dart';
 import '../../domain/usecases/verify_otp_use_case.dart';
@@ -186,6 +187,8 @@ class AuthController extends GetxController {
             StorageKeys.signupCompleted,
             isUserAlreadyRegistered ? 'true' : 'false',
           );
+
+          await VoipCallkitBridgeService.instance.syncCachedTokenToBackend();
 
           if (isUserAlreadyRegistered) {
             // Existing flow for already-registered users.

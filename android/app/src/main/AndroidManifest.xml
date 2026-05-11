@@ -7,6 +7,11 @@
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-feature android:name="android.hardware.camera" />
     <uses-feature android:name="android.hardware.camera.autofocus" />
 
@@ -27,6 +32,8 @@
             android:launchMode="singleTop"
             android:taskAffinity=""
             android:theme="@style/LaunchTheme"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize">
@@ -52,6 +59,20 @@
         <!-- 🛡️ Exclude crashing live_activities plugin service (redundant on Android) -->
         <service
             android:name="com.example.live_activities.LiveActivityFirebaseMessagingService"
+            tools:node="remove" />
+
+        <!-- We don't use flutter_background_service for active calls — Agora's
+             own audio session + flutter_callkit_incoming's CallStyle ongoing
+             notification cover background continuity. The plugin's
+             WatchdogReceiver and BootReceiver respawn the service via
+             AlarmManager every 5 s, which after any failure puts the app in a
+             crash loop on Android 14+ (FGS notification validation is much
+             stricter). Disable both so they can never be triggered. -->
+        <receiver
+            android:name="id.flutter.flutter_background_service.WatchdogReceiver"
+            tools:node="remove" />
+        <receiver
+            android:name="id.flutter.flutter_background_service.BootReceiver"
             tools:node="remove" />
     </application>
     <!-- Required to query activities that can process text, see:

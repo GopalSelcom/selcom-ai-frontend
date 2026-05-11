@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  TEMPLATE — copy these permissions into the HOST app's
+  android/app/src/main/AndroidManifest.xml. The package itself is pure-Dart;
+  these manifest entries are required by the host so the OS grants RTC + ring
+  capabilities at install time.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.selcom.go.agora_calling_template">
+
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+
+    <!-- Android 13+ runtime notifications -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
+    <!-- Foreground service permissions for the active call.
+         flutter_callkit_incoming uses FOREGROUND_SERVICE_PHONE_CALL via
+         Android Telecom; we rely on it for background continuity instead of
+         a separate generic FG service. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL"/>
+
+    <!-- Required so full-screen-intent actually wakes the screen on Android 14+ -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
+
+    <application/>
+</manifest>

@@ -2,7 +2,7 @@ name: selcom_rides_frontend
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.0.0+6
+version: 1.0.0+7
 
 environment:
   sdk: ^3.10.7
@@ -63,6 +63,13 @@ dependencies:
   open_filex: ^4.7.0
   gal: ^2.3.2
   image_picker: ^1.1.2
+  flutter_dotenv: ^6.0.1
+  agora_rtc_engine: ^6.5.3
+  flutter_ringtone_player: ^4.0.0+4
+  vibration: ^3.1.8
+  audioplayers: ^6.1.0
+  agora_calling_package:
+    path: ./agora_calling_package
 
 dev_dependencies:
   flutter_test:
@@ -74,10 +81,14 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    # Required for flutter_dotenv: `dotenv.load(fileName: '.env')` reads from the asset bundle.
+    - .env
     - assets/images/
     - assets/images/payment/
     - assets/images/location/
     - assets/json/
+    - assets/sound/
+
 
   fonts:
     - family: Metropolis

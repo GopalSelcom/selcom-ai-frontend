@@ -1,86 +1,90 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-	<dict>
-		<key>CADisableMinimumFrameDurationOnPhone</key>
-		<true/>
-		<key>CFBundleDevelopmentRegion</key>
-		<string>$(DEVELOPMENT_LANGUAGE)</string>
-		<key>CFBundleDisplayName</key>
-		<string>Selcom Go</string>
-		<key>CFBundleExecutable</key>
-		<string>$(EXECUTABLE_NAME)</string>
-		<key>CFBundleIdentifier</key>
+<dict>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
 		<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-		<key>CFBundleInfoDictionaryVersion</key>
-		<string>6.0</string>
-		<key>CFBundleName</key>
-		<string>Selcom Go</string>
-		<key>CFBundlePackageType</key>
-		<string>APPL</string>
-		<key>CFBundleShortVersionString</key>
-		<string>$(FLUTTER_BUILD_NAME)</string>
-		<key>CFBundleSignature</key>
-		<string>????</string>
-		<key>CFBundleVersion</key>
-		<string>$(FLUTTER_BUILD_NUMBER)</string>
-		<key>LSApplicationQueriesSchemes</key>
-		<array>
-			<string>tel</string>
-			<string>sms</string>
-		</array>
-		<key>LSRequiresIPhoneOS</key>
+	</array>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Selcom Go</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>Selcom Go</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(FLUTTER_BUILD_NAME)</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>tel</string>
+		<string>sms</string>
+	</array>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
 		<true/>
-		<key>NSAppTransportSecurity</key>
-		<dict>
-			<key>NSAllowsArbitraryLoads</key>
-			<true/>
-		</dict>
-		<key>NSCameraUsageDescription</key>
-		<string>Selcom Go needs access to your camera to capture a selfie for identity verification.</string>
-		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-		<string>Selcom Go needs access to your location to provide a seamless ride tracking experience.</string>
-		<key>NSLocationWhenInUseUsageDescription</key>
-		<string>Selcom Go needs access to your location to show you on the map and find nearby drivers.</string>
-		<key>NSMicrophoneUsageDescription</key>
-		<string>Selcom Go needs access to your microphone to allow voice communication with drivers and support.</string>
-		<key>NSPhotoLibraryUsageDescription</key>
-		<string>Selcom Go needs access to your photo library to allow you to upload a profile picture.</string>
-		<key>NSPhotoLibraryAddUsageDescription</key>
-		<string>Selcom Go needs access to your photo library to save your ride receipt.</string>
-		<key>UIApplicationSupportsIndirectInputEvents</key>
-		<true/>
-		<key>NSSupportsLiveActivities</key>
-		<true/>
-		<key>UIBackgroundModes</key>
-		<array>
-			<string>remote-notification</string>
-			<string>fetch</string>
-			<string>processing</string>
-			<string>location</string>
-		</array>
-		<key>BGTaskSchedulerPermittedIdentifiers</key>
-		<array>
-			<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-		</array>
-		<key>UILaunchStoryboardName</key>
-		<string>LaunchScreen</string>
-		<key>UIMainStoryboardFile</key>
-		<string>Main</string>
-		<key>UISupportedInterfaceOrientations</key>
-		<array>
-			<string>UIInterfaceOrientationPortrait</string>
-			<string>UIInterfaceOrientationLandscapeLeft</string>
-			<string>UIInterfaceOrientationLandscapeRight</string>
-		</array>
-		<key>UISupportedInterfaceOrientations~ipad</key>
-		<array>
-			<string>UIInterfaceOrientationPortrait</string>
-			<string>UIInterfaceOrientationPortraitUpsideDown</string>
-			<string>UIInterfaceOrientationLandscapeLeft</string>
-			<string>UIInterfaceOrientationLandscapeRight</string>
-		</array>
-		<key>UIStatusBarHidden</key>
-		<false/>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Selcom Go needs access to your camera to capture a selfie for identity verification.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Selcom Go needs access to your location to provide a seamless ride tracking experience.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Selcom Go needs access to your location to show you on the map and find nearby drivers.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Selcom Go needs access to your microphone to allow voice communication with drivers and support.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Selcom Go needs access to your photo library to save your ride receipt.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Selcom Go needs access to your photo library to allow you to upload a profile picture.</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
+	<key>NSVoIPUsageDescription</key>
+	<string>Selcom Go uses VoIP notifications to show incoming ride calls when the app is in background.</string>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+		<string>fetch</string>
+		<string>processing</string>
+		<string>location</string>
+		<string>audio</string>
+		<string>voip</string>
+	</array>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UIStatusBarHidden</key>
+	<false/>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+</dict>
 </plist>

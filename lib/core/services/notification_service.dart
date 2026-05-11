@@ -28,6 +28,8 @@ class NotificationService {
 
   bool _isInitialized = false;
   String? _deviceToken;
+  Map<String, dynamic>? _pendingNavigationRaw;
+  static const String _defaultChannelId = 'high_importance_channel';
 
   /// Returns the cached device token or an empty string.
   String get deviceToken => _deviceToken ?? "";
@@ -79,6 +81,22 @@ class NotificationService {
       initializationSettings,
       onDidReceiveNotificationResponse: _onDidReceiveNotificationResponse,
     );
+
+    // Handle app launch from a local notification tap (background/terminated).
+    final launchDetails = await _localNotifications
+        .getNotificationAppLaunchDetails();
+    if (launchDetails?.didNotificationLaunchApp ?? false) {
+      final payload = launchDetails?.notificationResponse?.payload;
+      if (payload != null && payload.isNotEmpty) {
+        try {
+          final rawData = Map<String, dynamic>.from(jsonDecode(payload));
+          _queueOrHandleNavigationRaw(rawData);
+        } catch (e, stackTrace) {
+          ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+          _logger.e("Error decoding launched notification payload: $e");
+        }
+      }
+    }
 
     // Request permissions for iOS immediately
     if (Platform.isIOS) {
@@ -170,7 +188,7 @@ class NotificationService {
 
   Future<void> _createAndroidNotificationChannel() async {
     const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      'high_importance_channel', // id
+      _defaultChannelId, // id
       'High Importance Notifications', // title
       description:
           'This channel is used for important notifications.', // description
@@ -218,8 +236,7 @@ class NotificationService {
 
   void _onMessageOpenedApp(RemoteMessage message) {
     _logger.d("Message opened app: ${message.messageId}");
-    final data = FCMNotificationData.fromJson(message.data);
-    _handleNotificationNavigation(data);
+    _queueOrHandleNavigationRaw(Map<String, dynamic>.from(message.data));
   }
 
   void _onDidReceiveNotificationResponse(NotificationResponse response) {
@@ -227,8 +244,7 @@ class NotificationService {
     if (response.payload != null) {
       try {
         final Map<String, dynamic> rawData = jsonDecode(response.payload!);
-        final data = FCMNotificationData.fromJson(rawData);
-        _handleNotificationNavigation(data);
+        _queueOrHandleNavigationRaw(rawData);
       } catch (e, stackTrace) {
         ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
         _logger.e("Error decoding notification payload: $e");
@@ -236,8 +252,30 @@ class NotificationService {
     }
   }
 
-  Future<void> _handleNotificationNavigation(FCMNotificationData data) async {
-    final rideId = data.rideId;
+  void _queueOrHandleNavigationRaw(Map<String, dynamic> raw) {
+    if (_isNavigationReady()) {
+      unawaited(_handleNotificationNavigationRaw(raw));
+      return;
+    }
+    _pendingNavigationRaw = raw;
+  }
+
+  bool _isNavigationReady() {
+    return Get.key.currentState != null;
+  }
+
+  Future<void> flushPendingNavigationIfAny() async {
+    final raw = _pendingNavigationRaw;
+    if (raw == null || !_isNavigationReady()) return;
+    _pendingNavigationRaw = null;
+    await _handleNotificationNavigationRaw(raw);
+  }
+
+  Future<void> _handleNotificationNavigationRaw(
+    Map<String, dynamic> raw,
+  ) async {
+    final rideId = raw['ride_id']?.toString() ?? raw['rideId']?.toString();
+
     if (rideId == null || rideId.isEmpty) {
       _logger.w("No ride_id found in notification data");
       return;
@@ -263,14 +301,12 @@ class NotificationService {
             message: AppStrings.unableToOpenRideDetails.tr,
           );
         },
-        (ride) {
-          navigateToDriverAcceptedForRide(ride);
-        },
+        (ride) => navigateToDriverAcceptedForRide(ride),
       );
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       if (Get.isDialogOpen ?? false) Get.back();
-      _logger.e("Exception in _handleNotificationNavigation: $e");
+      _logger.e("Exception in _handleNotificationNavigationRaw: $e");
     }
   }
 
@@ -292,7 +328,7 @@ class NotificationService {
         body,
         const NotificationDetails(
           android: AndroidNotificationDetails(
-            'high_importance_channel',
+            _defaultChannelId,
             'High Importance Notifications',
             channelDescription:
                 'This channel is used for important notifications.',
@@ -315,4 +351,5 @@ class NotificationService {
       debugPrint("Error in _localNotifications.show: $e");
     }
   }
+
 }

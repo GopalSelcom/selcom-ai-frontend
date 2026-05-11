@@ -488,7 +488,7 @@ class LiveActivityManager {
       );
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      developer.log("❌ Error in updateActivity: $e", name: 'LIVE_ACTIVITY');
+      developer.log("❌ Error in updateActivity: $e", name: 'LIVE_ACTIVITY',stackTrace: stackTrace);
     }
   }
 

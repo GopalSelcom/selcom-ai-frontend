@@ -39,6 +39,7 @@ class NearbyDriverPoint {
 /// - Payment status (`join_payment_room`, `payment:status_update`)
 class AppSocketService {
   static final AppSocketService _instance = AppSocketService._internal();
+
   factory AppSocketService() => _instance;
 
   AppSocketService._internal();
@@ -100,6 +101,7 @@ class AppSocketService {
   String get baseUrl => defaultBaseUrl;
 
   Stream<List<Driver>> get nearbyDriversStream => _driversController.stream;
+
   Stream<String> get errorStream => _errorController.stream;
 
   Stream<bool> get connectionStream => _connectionController.stream;
@@ -112,12 +114,16 @@ class AppSocketService {
 
   Stream<DriverLocationSocketResponse> get rideDriverLocationStream =>
       _rideDriverLocationController.stream;
+
   Stream<EventRiderStatusUpdateResponse> get rideStopUpdateStream =>
       _rideStopUpdateController.stream;
+
   Stream<RideStopsUpdatedResponse> get rideStopsUpdatedStream =>
       _rideStopsUpdatedController.stream;
+
   Stream<RideStopsUpdateFailedResponse> get rideStopsUpdateFailedStream =>
       _rideStopsUpdateFailedController.stream;
+
   Stream<PaymentStatusUpdateResponse> get paymentStatusStream =>
       _paymentStatusController.stream;
 

@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:agora_calling_package/agora_calling_package.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -13,8 +15,10 @@ import 'core/di/injection_container.dart' as di;
 import 'core/localization/delegate.dart';
 import 'core/localization/getx_languages_translations.dart';
 import 'core/localization/localization.dart';
+import 'core/services/agora_calling_bootstrap.dart';
 import 'core/services/analytics_service.dart';
 import 'core/services/notification_service.dart';
+import 'core/services/voip_callkit_bridge_service.dart';
 import 'core/bindings/initial_binding.dart';
 import 'core/theme/app_theme.dart';
 import 'core/routes/app_routes.dart';
@@ -29,6 +33,22 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   debugPrint('📩 Background FCM: ${message.data}');
   debugPrint("Handling a background message: ${message.messageId}");
+
+  // Hand off Agora calling pushes (incoming_call / call_joined / call_cancelled)
+  // to the package — it owns the full-screen-intent / CallKit-fallback rendering.
+  final type = (message.data['type'] ?? '').toString().toLowerCase().trim();
+  if (type == 'incoming_call' ||
+      type == 'call_joined' ||
+      type == 'call_cancelled') {
+    await AgoraCallingNotificationService.firebaseBackgroundHandler(
+      message,
+      iosCallKitIconName: AgoraCallingBootstrap.iosCallKitIconName,
+      callKitCallIdNamespace: AgoraCallingBootstrap.callKitCallIdNamespace,
+      backgroundCallKitAppName:
+          AgoraCallingBootstrap.fcmBackgroundCallKitAppName,
+    );
+    return;
+  }
 
   final data = FCMNotificationData.fromJson(message.data);
 
@@ -49,6 +69,19 @@ void main() async {
   await runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
+      try {
+        await dotenv.load(fileName: '.env');
+      } catch (e, st) {
+        // Usually means `.env` was not listed under `flutter: assets:` in pubspec.yaml,
+        // or the file is missing at build time. App continues with dart-define / defaults.
+        if (kDebugMode) {
+          debugPrint(
+            'flutter_dotenv: could not load .env ($e). '
+            'Ensure pubspec lists `- .env` under flutter assets and the file exists.',
+          );
+          debugPrint('$st');
+        }
+      }
 
       // Initialize Google Maps Renderer for Android
       // final GoogleMapsFlutterPlatform mapsImplementation = GoogleMapsFlutterPlatform.instance;
@@ -107,6 +140,22 @@ void main() async {
       // Initialize Notification Service
       await di.sl<NotificationService>().initialize();
 
+      // Initialize Agora calling package (REST + FCM + Android FG service).
+      // Identity comes from the JWT on each request — `getAuthHeaders` is
+      // called per-call via Dio interceptor, so it picks up post-login state.
+      await AgoraCallingBootstrap.init();
+
+      // Bridge native iOS PushKit/CallKit events into the calling package.
+      // Token registration goes through `AgoraCalling.registerVoipToken`,
+      // which PATCHes `/v4/go/user/voip-token`.
+      await VoipCallkitBridgeService.instance.initialize();
+      VoipCallkitBridgeService.instance.setOnVoipTokenChanged(
+        AgoraCalling.registerVoipToken,
+      );
+      VoipCallkitBridgeService.instance.setOnIncomingCall(
+        AgoraCalling.dispatchExternalIncomingCall,
+      );
+
       await di.sl<AnalyticsService>().logEvent('app_opened');
 
       // Initialize Live Activity Service
@@ -145,6 +194,9 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     unawaited(_loadSavedLocale());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(NotificationService().flushPendingNavigationIfAny());
+    });
   }
 
   Future<void> _loadSavedLocale() async {

@@ -42,12 +42,16 @@ class DriverAcceptedBinding extends Bindings {
         fenix: true,
       );
     }
-    Get.lazyPut<DriverAcceptedController>(
-      () => DriverAcceptedController(
+    // Always recreate for each navigation so stale rideId/session data
+    // from previous rides is never reused.
+    if (Get.isRegistered<DriverAcceptedController>()) {
+      Get.delete<DriverAcceptedController>(force: true);
+    }
+    Get.put<DriverAcceptedController>(
+      DriverAcceptedController(
         rideRepository: Get.find(),
         analyticsService: sl<AnalyticsService>(),
       ),
-      fenix: true,
     );
   }
 }

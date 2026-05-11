@@ -27,6 +27,10 @@ class RideUseCase {
     return repository.cancelRide(rideId, reason);
   }
 
+  Future<Either<Failure, bool>> cancelVoiceCall(String rideId) {
+    return repository.cancelVoiceCall(rideId);
+  }
+
   Future<Either<Failure, DestinationUpdatePreviewModel>> previewUpdateDestination(
     String rideId,
     Map<String, dynamic> destination,
