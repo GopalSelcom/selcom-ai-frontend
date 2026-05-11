@@ -118,8 +118,7 @@ class HomeScreen extends GetView<HomeController> {
         return AnimatedContainer(
           duration: const Duration(milliseconds: 320),
           curve: Curves.easeInOutCubic,
-          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
-          height: 61.h,
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 9.h),
           decoration: BoxDecoration(
             color: AppColors.white,
             borderRadius: BorderRadius.circular(16.r),
@@ -149,13 +148,17 @@ class HomeScreen extends GetView<HomeController> {
                 )
               : Row(
                   children: [
-                    SvgPictureAsset(
-                      AppAssets.locationIcPickupPin,
-                      width: 21.sp,
-                      height: 24.sp,
-                      color: AppColors.figmaIconGreen,
+                    SizedBox(
+                      width: 28.w,
+                      height: 28.w,
+                      child: SvgPictureAsset(
+                        AppAssets.locationIcPickupPin,
+                        width: 21.sp,
+                        height: 24.5.sp,
+                        color: AppColors.figmaIconGreen,
+                      ),
                     ),
-                    SizedBox(width: 8.w),
+                    SizedBox(width: 4.w),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -164,17 +167,15 @@ class HomeScreen extends GetView<HomeController> {
                           Text(
                             AppStrings.currentLocation.tr,
                             style: AppTextStyles.homeSubtitle.copyWith(
-                              fontWeight: FontWeight.w500,
                               color: AppColors.figmaTextPrimary,
-                              fontSize: 15.sp,
+                              height: 20 / 15,
                             ),
                           ),
                           Text(
                             address,
                             style: AppTextStyles.homeSubtitle.copyWith(
-                              fontSize: 15.sp,
-                              fontWeight: FontWeight.w500,
                               color: AppColors.figmaTextSecondary,
+                              height: 20 / 15,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
