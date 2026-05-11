@@ -116,7 +116,8 @@ class AppColors {
   static const Color figmaTextPrimary = Color(0xFF2A3143);
   static const Color figmaTextSecondary = Color(0xFF586377);
   static const Color figmaIconGreen = Color(0xFF269441);
-  static const Color splashVectorTint = Color(0xFF4AA448);
+  static const Color splashVectorTint = Color(0xFF9CF17B);
+  static const Color splashBackground = Color(0xFF51D71C);
   static const Color mapPickupMarkerBlue = Color(0xFF4FA3FF);
   static const Color mapDropMarkerGreen = Color(0xFF34C759);
   static const Color mapStopMarkerRed = Color(0xFFE11D48);

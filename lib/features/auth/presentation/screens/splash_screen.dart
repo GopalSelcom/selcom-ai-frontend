@@ -50,7 +50,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primary,
+      backgroundColor: AppColors.splashBackground,
       body: Stack(
         children: [
           // Background Vector Decoration
@@ -61,7 +61,6 @@ class _SplashScreenState extends State<SplashScreen> {
               AppAssets.splashBgVector,
               width: 574.w,
               height: 576.h,
-              color: AppColors.splashVectorTint,
             ),
           ),
           // Centered Logo

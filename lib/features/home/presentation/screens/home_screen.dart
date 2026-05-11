@@ -373,8 +373,9 @@ class HomeScreen extends GetView<HomeController> {
                       Text(
                         AppStrings.exploreVehicle.tr,
                         style: AppTextStyles.homeSubtitle.copyWith(
-                          height: 20 / 15,
-                          letterSpacing: 0,
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -0.4,
                         ),
                       ),
                       SizedBox(height: 17.h),
