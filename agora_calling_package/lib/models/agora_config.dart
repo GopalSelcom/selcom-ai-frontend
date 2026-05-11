@@ -73,6 +73,13 @@ class AgoraCallingConfig {
     this.onVoipTokenChanged,
     this.connectTimeout = const Duration(seconds: 20),
     this.receiveTimeout = const Duration(seconds: 20),
+    /// iOS `flutter_callkit_incoming`: asset name in `Runner/Assets.xcassets`
+    /// (e.g. `CallKitLogo`). Empty string omits a custom icon (no missing-asset crash).
+    this.iosCallKitIconName = '',
+    /// Prefix fed into UUID v5 with `ride_id` so CallKit `id` is a stable UUID.
+    /// Must match the value passed to [AgoraCallingNotificationService.firebaseBackgroundHandler]
+    /// from the FCM background isolate (that isolate cannot read this config).
+    this.callKitCallIdNamespace = 'agora-call:',
   });
 
   /// Public Agora App ID. The mint endpoint also returns `app_id` in its
@@ -122,6 +129,12 @@ class AgoraCallingConfig {
   /// Dio connect/receive timeouts for the backend client.
   final Duration connectTimeout;
   final Duration receiveTimeout;
+
+  /// See constructor — optional CallKit template image on iOS.
+  final String iosCallKitIconName;
+
+  /// See constructor — UUID v5 namespace prefix for CallKit call `id`.
+  final String callKitCallIdNamespace;
 }
 
 /// Whether the local app is the rider or the driver. The package never

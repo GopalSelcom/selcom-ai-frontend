@@ -36,11 +36,17 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
   // Hand off Agora calling pushes (incoming_call / call_joined / call_cancelled)
   // to the package — it owns the full-screen-intent / CallKit-fallback rendering.
-  final type = (message.data['type'] ?? '').toString().toLowerCase();
+  final type = (message.data['type'] ?? '').toString().toLowerCase().trim();
   if (type == 'incoming_call' ||
       type == 'call_joined' ||
       type == 'call_cancelled') {
-    await AgoraCallingNotificationService.firebaseBackgroundHandler(message);
+    await AgoraCallingNotificationService.firebaseBackgroundHandler(
+      message,
+      iosCallKitIconName: AgoraCallingBootstrap.iosCallKitIconName,
+      callKitCallIdNamespace: AgoraCallingBootstrap.callKitCallIdNamespace,
+      backgroundCallKitAppName:
+          AgoraCallingBootstrap.fcmBackgroundCallKitAppName,
+    );
     return;
   }
 

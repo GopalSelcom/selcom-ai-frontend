@@ -142,6 +142,8 @@ PODS:
   - Flutter (1.0.0)
   - flutter_app_group_directory (0.0.1):
     - Flutter
+  - flutter_background_service_ios (0.0.3):
+    - Flutter
   - flutter_callkit_incoming (0.0.1):
     - CryptoSwift
     - Flutter
@@ -311,6 +313,7 @@ DEPENDENCIES:
   - firebase_messaging (from `.symlinks/plugins/firebase_messaging/ios`)
   - Flutter (from `Flutter`)
   - flutter_app_group_directory (from `.symlinks/plugins/flutter_app_group_directory/ios`)
+  - flutter_background_service_ios (from `.symlinks/plugins/flutter_background_service_ios/ios`)
   - flutter_callkit_incoming (from `.symlinks/plugins/flutter_callkit_incoming/ios`)
   - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
   - flutter_native_splash (from `.symlinks/plugins/flutter_native_splash/ios`)
@@ -393,6 +396,8 @@ EXTERNAL SOURCES:
     :path: Flutter
   flutter_app_group_directory:
     :path: ".symlinks/plugins/flutter_app_group_directory/ios"
+  flutter_background_service_ios:
+    :path: ".symlinks/plugins/flutter_background_service_ios/ios"
   flutter_callkit_incoming:
     :path: ".symlinks/plugins/flutter_callkit_incoming/ios"
   flutter_local_notifications:
@@ -467,6 +472,7 @@ SPEC CHECKSUMS:
   FirebaseSessions: 804bd321f2d2f2ddafe74ef7856062aa19f179c2
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   flutter_app_group_directory: 55b5362007d1c0cb45dc1dd1e94f67d615f45a6b
+  flutter_background_service_ios: 00d31bdff7b4bfe06d32375df358abe0329cf87e
   flutter_callkit_incoming: cb8138af67cda6dd981f7101a5d709003af21502
   flutter_local_notifications: ad39620c743ea4c15127860f4b5641649a988100
   flutter_native_splash: c32d145d68aeda5502d5f543ee38c192065986cf
@@ -507,6 +513,6 @@ SPEC CHECKSUMS:
   vibration: ca8104a8875b9c493e15b21b04e456befd0ff6eb
   webview_flutter_wkwebview: 8ebf4fded22593026f7dbff1fbff31ea98573c8d
 
-PODFILE CHECKSUM: ee88a1992d19d39a5ab6ba2d8b2aff38ec3265cd
+PODFILE CHECKSUM: a691801695b50ee79b20bf59df9cff34bc2710bb
 
 COCOAPODS: 1.16.2

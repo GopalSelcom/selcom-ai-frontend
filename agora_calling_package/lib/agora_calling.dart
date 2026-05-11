@@ -103,7 +103,7 @@ class AgoraCalling {
     final api = Get.find<CallApiService>();
     final cfg = Get.find<AgoraCallingConfig>();
     if (kDebugMode) {
-      debugPrint('[AGORA_API] registerVoipToken len=${token.length} '
+      debugPrint('[AGORA_API] registerVoipToken len=${token} '
           'prefix=${token.substring(0, token.length < 8 ? token.length : 8)}…');
     }
     try {

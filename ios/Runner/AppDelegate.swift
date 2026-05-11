@@ -28,13 +28,16 @@ import CallKit
   ) -> Bool {
     GMSServices.provideAPIKey("AIzaSyDUQgp46JDap_b1isDkCV371GSmH355qPg")
     GeneratedPluginRegistrant.register(with: self)
-
-    let controller: FlutterViewController = window?.rootViewController as! FlutterViewController
+    guard let registrar = self.registrar(forPlugin: "SelcomGoVoipBridge") else {
+      NSLog("[VOIP_NATIVE] registrar unavailable; skipping channel bootstrap")
+      return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    }
+    let messenger = registrar.messenger()
 
     // Existing app-group bridge (unchanged).
     appGroupChannel = FlutterMethodChannel(
       name: "com.selcom.go/app_group",
-      binaryMessenger: controller.binaryMessenger
+      binaryMessenger: messenger
     )
     appGroupChannel?.setMethodCallHandler { (call, result) in
       if call.method == "getAppGroupDirectory" {
@@ -57,7 +60,7 @@ import CallKit
     // VoIP push token. Per brain/docs/AGORA-FRONTEND-GUIDE.md § 6.5.
     voipChannel = FlutterMethodChannel(
       name: "com.selcom.go/voip",
-      binaryMessenger: controller.binaryMessenger
+      binaryMessenger: messenger
     )
     voipChannel?.setMethodCallHandler { [weak self] (call, result) in
       guard let self = self else { result(FlutterMethodNotImplemented); return }
@@ -133,26 +136,21 @@ import CallKit
     NSLog("[VOIP_NATIVE] didReceiveIncomingPushWith type=\(type.rawValue) payload=\(payload.dictionaryPayload)")
     guard type == .voIP else { completion(); return }
     let raw = normalizePayload(payload.dictionaryPayload)
+    let pushType = (raw["type"] as? String)?
+      .lowercased()
+      .trimmingCharacters(in: .whitespacesAndNewlines)
+    if let pushType, !pushType.isEmpty, pushType != "incoming_call" {
+      NSLog("[VOIP_NATIVE] dropping VoIP push — unsupported type=\(pushType)")
+      completion()
+      return
+    }
 
     // Per brain doc: PushKit pushes are ONLY incoming_call.
     // Drop pushes that are missing ride_id — contract violation.
     guard let rideId = (raw["ride_id"] as? String).flatMap({ $0.isEmpty ? nil : $0 })
     else {
       NSLog("[VOIP_NATIVE] dropping VoIP push — no ride_id in payload")
-      // Apple still requires us to call completion() — but starting on iOS 13
-      // we MUST also report a CallKit incoming call here or the OS will kill
-      // our app. Synthesize a placeholder CallKit entry so we don't crash on
-      // contract-violating pushes during testing.
-      let placeholderUuid = UUID()
-      let placeholderUpdate = CXCallUpdate()
-      placeholderUpdate.remoteHandle = CXHandle(type: .generic, value: "Caller")
-      placeholderUpdate.hasVideo = false
-      callProvider?.reportNewIncomingCall(with: placeholderUuid, update: placeholderUpdate) { _ in
-        // Immediately end the placeholder call so it doesn't haunt the UI.
-        let endAction = CXEndCallAction(call: placeholderUuid)
-        let transaction = CXTransaction(action: endAction)
-        self.callController.request(transaction) { _ in completion() }
-      }
+      completion()
       return
     }
 

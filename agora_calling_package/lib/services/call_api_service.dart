@@ -88,11 +88,26 @@ class CallApiService {
           'tokenLen=${token.length})');
     }
     try {
+      final authHeaders = await config.getAuthHeaders();
+      final accessToken = authHeaders['access_token']?.trim() ?? '';
+      if (accessToken.isEmpty) {
+        if (kDebugMode) {
+          debugPrint('[AGORA_API] PATCH $path skipped — missing access_token '
+              '(likely pre-login/fresh-user flow)');
+        }
+        return;
+      }
+      final payload = <String, dynamic>{'voip_push_token': token};
+      // Some backend paths still expect access_token in request payload.
+      payload['access_token'] = accessToken;
       final res = await _dio.patch(
         path,
-        data: {'voip_push_token': token},
+        data: payload,
         options: Options(
-          headers: {'Content-Type': 'application/json'},
+          headers: {
+            'Content-Type': 'application/json',
+            ...authHeaders,
+          },
         ),
       );
       if (kDebugMode) {

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_callkit_incoming/entities/entities.dart';
 import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'package:get/get.dart';
@@ -69,6 +70,9 @@ class CallController extends GetxController {
   final RxnString errorMessage = RxnString();
   final RxInt connectedSeconds = 0.obs;
 
+  /// Elapsed whole seconds while [CallState.ringing] (incoming UI).
+  final RxInt incomingRingSeconds = 0.obs;
+
   // ---------------------------------------------------------------------------
   // Internals
   // ---------------------------------------------------------------------------
@@ -76,6 +80,7 @@ class CallController extends GetxController {
   StreamSubscription<CallEvent?>? _callkitSub;
   Timer? _unansweredTimer;
   Timer? _connectedTimer;
+  Timer? _incomingRingTimer;
   bool _agoraEventsBound = false;
   bool _connectedSignalled = false; // dedupes call_joined push vs onUserJoined
 
@@ -111,6 +116,9 @@ class CallController extends GetxController {
   /// confuse signaling).
   bool _acceptMutex = false;
 
+  _CallkitResumeObserver? _resumeObserver;
+  Timer? _resumeSyncDebounce;
+
   /// Wires push subscription + flutter_callkit_incoming events. Idempotent.
   ///
   /// When the app was killed and woken by a CallKit `Accept`, the native
@@ -122,17 +130,110 @@ class CallController extends GetxController {
     if (kDebugMode) debugPrint('[AGORA_CTRL] bootstrap()');
     _pushSub ??= notifications.pushStream.listen(_onPush);
     _callkitSub ??= FlutterCallkitIncoming.onEvent.listen(_onCallkitEvent);
+    if (_resumeObserver == null) {
+      _resumeObserver = _CallkitResumeObserver(_scheduleResumeCallkitSync);
+      WidgetsBinding.instance.addObserver(_resumeObserver!);
+    }
   }
 
   @override
   void onClose() {
+    if (_resumeObserver != null) {
+      WidgetsBinding.instance.removeObserver(_resumeObserver!);
+      _resumeObserver = null;
+    }
+    _resumeSyncDebounce?.cancel();
     _pushSub?.cancel();
     _callkitSub?.cancel();
     _unansweredTimer?.cancel();
     _connectedTimer?.cancel();
     _pendingNavTimer?.cancel();
+    _stopIncomingRingTimer();
     _audio.disposeAll();
     super.onClose();
+  }
+
+  /// FCM background isolate shows CallKit / CallStyle but never reaches this
+  /// controller. When the user returns to the app while the call is still
+  /// ringing, mirror native state and surface [IncomingCallScreen].
+  void _scheduleResumeCallkitSync() {
+    _resumeSyncDebounce?.cancel();
+    _resumeSyncDebounce = Timer(const Duration(milliseconds: 400), () {
+      unawaited(_syncRingingUiFromNativeCallkit());
+    });
+  }
+
+  Future<void> _syncRingingUiFromNativeCallkit() async {
+    try {
+      final dynamic raw = await FlutterCallkitIncoming.activeCalls();
+      if (raw is! List || raw.isEmpty) return;
+
+      Map<String, dynamic>? incoming;
+      for (final dynamic item in raw) {
+        if (item is! Map) continue;
+        final m = Map<String, dynamic>.from(item);
+        if (_nativeCallItemIsAccepted(m)) continue;
+        final merged = _mergeActiveCallExtra(m);
+        final rideId =
+            (merged['ride_id'] ?? merged['rideId'])?.toString().trim() ?? '';
+        if (rideId.isEmpty || rideId == 'unknown') continue;
+        incoming = merged;
+        break;
+      }
+      if (incoming == null) return;
+
+      final rideId =
+          (incoming['ride_id'] ?? incoming['rideId'])?.toString().trim() ?? '';
+
+      if (state.value == CallState.idle ||
+          state.value == CallState.ended ||
+          state.value == CallState.error) {
+        final call = CallModel.fromIncomingPush(
+          data: incoming,
+          defaultPeerLabel: _peerLabelFor(incoming),
+        );
+        if (call == null) return;
+        _resetTransientState();
+        currentCall.value = call;
+        state.value = CallState.ringing;
+        if (kDebugMode) {
+          debugPrint('[AGORA_CTRL] resume sync — seeded ringing rideId=$rideId');
+        }
+        _startIncomingRingTimer();
+        _openIncomingCallScreen();
+        return;
+      }
+
+      if (state.value == CallState.ringing &&
+          currentCall.value?.rideId == rideId &&
+          Get.currentRoute != IncomingCallScreen.routeName) {
+        if (kDebugMode) {
+          debugPrint('[AGORA_CTRL] resume sync — pushing incoming UI '
+              'rideId=$rideId');
+        }
+        _openIncomingCallScreen();
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[AGORA_CTRL] activeCalls resume sync failed: $e');
+      }
+    }
+  }
+
+  static bool _nativeCallItemIsAccepted(Map<String, dynamic> m) {
+    if (m['accepted'] == true) return true;
+    if (m['isAccepted'] == true) return true;
+    return false;
+  }
+
+  static Map<String, dynamic> _mergeActiveCallExtra(Map<String, dynamic> m) {
+    final merged = <String, dynamic>{...m};
+    final extra = m['extra'];
+    if (extra is Map) {
+      merged.addAll(Map<String, dynamic>.from(extra));
+    }
+    merged['type'] ??= PushTypes.incomingCall;
+    return merged;
   }
 
   // ---------------------------------------------------------------------------
@@ -291,13 +392,15 @@ class CallController extends GetxController {
     _resetTransientState();
     currentCall.value = call;
     state.value = CallState.ringing;
-    // iOS: CallKit (FCM foreground + PushKit) is the only incoming surface —
-    // skip the duplicate full-screen Flutter sheet and in-app ringtone
-    // (native ring already plays).
+    _startIncomingRingTimer();
+    // iOS: CallKit / system still plays the ring; skip duplicate in-app tone.
     if (!Platform.isIOS) {
       await _audio.startRingtone();
-      _openIncomingCallScreen();
     }
+    // Show in-app incoming UI on all platforms (including iOS) so users who
+    // stay inside the app still see the calling screen; CallKit remains the
+    // lock-screen / background surface. Accept is deduped via `_acceptMutex`.
+    _openIncomingCallScreen();
   }
 
   void _handleCallJoinedPush(Map<String, dynamic> data) {
@@ -354,6 +457,7 @@ class CallController extends GetxController {
     _resetTransientState();
     currentCall.value = reconstructed;
     state.value = CallState.ringing;
+    _startIncomingRingTimer();
     if (kDebugMode) {
       debugPrint('[AGORA_CTRL] seeded ringing call '
           'rideId=${reconstructed.rideId} peer=${reconstructed.peerDisplayName}');
@@ -404,6 +508,7 @@ class CallController extends GetxController {
       // accepted. We do *not* call `endAllCalls()` here for the same reason —
       // see Bug 1 in the troubleshooting README.
       _acceptInProgress = true;
+      _stopIncomingRingTimer();
       state.value = CallState.connecting;
       await _audio.stopRingtone();
 
@@ -463,8 +568,12 @@ class CallController extends GetxController {
   /// `actionCallEnded` into our listener and kill a fresh accept).
   Future<void> _silenceNativeIncomingUi(String rideId) async {
     if (rideId.isEmpty) return;
+    final callkitId = AgoraCallingNotificationService.callkitUuidForRide(
+      rideId,
+      config.callKitCallIdNamespace,
+    );
     try {
-      await FlutterCallkitIncoming.setCallConnected(rideId);
+      await FlutterCallkitIncoming.setCallConnected(callkitId);
     } catch (e) {
       if (kDebugMode) {
         debugPrint('[AGORA_CTRL] setCallConnected failed (non-fatal): $e');
@@ -473,7 +582,7 @@ class CallController extends GetxController {
     if (Platform.isAndroid) {
       try {
         await FlutterCallkitIncoming.hideCallkitIncoming(
-          CallKitParams(id: rideId),
+          CallKitParams(id: callkitId),
         );
       } catch (e) {
         if (kDebugMode) {
@@ -716,6 +825,7 @@ class CallController extends GetxController {
     _unansweredTimer?.cancel();
     _connectedTimer?.cancel();
     _pendingNavTimer?.cancel();
+    _stopIncomingRingTimer();
     _acceptInProgress = false;
     _joinedChannelName = null;
     unawaited(_audio.disposeAll());
@@ -740,6 +850,7 @@ class CallController extends GetxController {
     _unansweredTimer?.cancel();
     _connectedTimer?.cancel();
     _pendingNavTimer?.cancel();
+    _stopIncomingRingTimer();
     _joinedChannelName = null;
     unawaited(_audio.disposeAll());
     unawaited(agora.leaveChannel());
@@ -756,6 +867,26 @@ class CallController extends GetxController {
     endReason.value = null;
     errorMessage.value = null;
     _connectedSignalled = false;
+    _stopIncomingRingTimer();
+  }
+
+  void _startIncomingRingTimer() {
+    _incomingRingTimer?.cancel();
+    incomingRingSeconds.value = 0;
+    _incomingRingTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (state.value == CallState.ringing) {
+        incomingRingSeconds.value++;
+      } else {
+        _incomingRingTimer?.cancel();
+        _incomingRingTimer = null;
+      }
+    });
+  }
+
+  void _stopIncomingRingTimer() {
+    _incomingRingTimer?.cancel();
+    _incomingRingTimer = null;
+    incomingRingSeconds.value = 0;
   }
 
   void _startUnansweredTimer() {
@@ -800,7 +931,6 @@ class CallController extends GetxController {
   }
 
   void _openIncomingCallScreen() {
-    if (Platform.isIOS) return;
     _navigateWhenReady(IncomingCallScreen.routeName, fullscreenDialog: true);
   }
 
@@ -891,6 +1021,20 @@ class CallController extends GetxController {
           Get.back();
         }
       });
+    }
+  }
+}
+
+/// When app returns to foreground, sync in-app incoming UI with native
+/// CallKit / ConnectionService calls shown from the FCM background isolate.
+class _CallkitResumeObserver with WidgetsBindingObserver {
+  _CallkitResumeObserver(this._onResumed);
+  final void Function() _onResumed;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _onResumed();
     }
   }
 }

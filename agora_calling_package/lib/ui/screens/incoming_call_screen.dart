@@ -31,6 +31,7 @@ class IncomingCallScreen extends StatelessWidget {
               return const SizedBox.shrink();
             }
             return _IncomingCallBody(
+              controller: controller,
               call: call,
               onAccept: () => _accept(controller, context),
               onReject: () => controller.reject(),
@@ -79,11 +80,13 @@ class IncomingCallScreen extends StatelessWidget {
 
 class _IncomingCallBody extends StatelessWidget {
   const _IncomingCallBody({
+    required this.controller,
     required this.call,
     required this.onAccept,
     required this.onReject,
   });
 
+  final CallController controller;
   final CallModel call;
   final VoidCallback onAccept;
   final VoidCallback onReject;
@@ -112,10 +115,15 @@ class _IncomingCallBody extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
-          Text(
-            'Ride • ${call.rideId}',
-            style: const TextStyle(color: Colors.white54, fontSize: 13),
-          ),
+          Obx(() {
+            final s = controller.incomingRingSeconds.value;
+            final m = (s ~/ 60).toString().padLeft(2, '0');
+            final sec = (s % 60).toString().padLeft(2, '0');
+            return Text(
+              'Ringing • $m:$sec',
+              style: const TextStyle(color: Colors.white54, fontSize: 13),
+            );
+          }),
           const Spacer(),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,

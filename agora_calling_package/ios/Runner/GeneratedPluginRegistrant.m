@@ -36,6 +36,12 @@
 @import firebase_messaging;
 #endif
 
+#if __has_include(<flutter_background_service_ios/FlutterBackgroundServicePlugin.h>)
+#import <flutter_background_service_ios/FlutterBackgroundServicePlugin.h>
+#else
+@import flutter_background_service_ios;
+#endif
+
 #if __has_include(<flutter_callkit_incoming/FlutterCallkitIncomingPlugin.h>)
 #import <flutter_callkit_incoming/FlutterCallkitIncomingPlugin.h>
 #else
@@ -80,6 +86,7 @@
   [FPPDeviceInfoPlusPlugin registerWithRegistrar:[registry registrarForPlugin:@"FPPDeviceInfoPlusPlugin"]];
   [FLTFirebaseCorePlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTFirebaseCorePlugin"]];
   [FLTFirebaseMessagingPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTFirebaseMessagingPlugin"]];
+  [FlutterBackgroundServicePlugin registerWithRegistrar:[registry registrarForPlugin:@"FlutterBackgroundServicePlugin"]];
   [FlutterCallkitIncomingPlugin registerWithRegistrar:[registry registrarForPlugin:@"FlutterCallkitIncomingPlugin"]];
   [FlutterLocalNotificationsPlugin registerWithRegistrar:[registry registrarForPlugin:@"FlutterLocalNotificationsPlugin"]];
   [IrisMethodChannelPlugin registerWithRegistrar:[registry registrarForPlugin:@"IrisMethodChannelPlugin"]];

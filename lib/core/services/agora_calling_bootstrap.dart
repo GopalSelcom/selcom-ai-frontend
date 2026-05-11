@@ -11,6 +11,11 @@ import '../network/headers.dart';
 class AgoraCallingBootstrap {
   AgoraCallingBootstrap._();
 
+  /// Keep these aligned with the values passed from the FCM background isolate.
+  static const String fcmBackgroundCallKitAppName = 'Selcom Go';
+  static const String iosCallKitIconName = '';
+  static const String callKitCallIdNamespace = 'agora-call:';
+
   /// Idempotent. Safe to call multiple times.
   static Future<void> init() async {
     await AgoraCalling.init(
@@ -19,7 +24,10 @@ class AgoraCallingBootstrap {
         baseUrl: AppConfig.baseUrl,
         getAuthHeaders: () async => commonHeaders(accessTokenRequired: true),
         localRole: CallParticipantRole.rider,
-        appName: 'Selcom Go',
+        appName: fcmBackgroundCallKitAppName,
+        iosCallKitIconName: iosCallKitIconName,
+        callKitCallIdNamespace: callKitCallIdNamespace,
+        callerRingbackAsset: 'assets/sound/ringback.mp3',
         endpoints: CallEndpoints(
           tokenPath: (rideId) => '/v4/go/rides/$rideId/call/token',
           cancelPath: (rideId) => '/v4/go/rides/$rideId/call/cancel',

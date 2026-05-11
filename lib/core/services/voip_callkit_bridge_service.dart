@@ -25,6 +25,14 @@ class VoipCallkitBridgeService {
   /// Latest known VoIP push token (iOS / PushKit). Empty string when unknown.
   String get voipToken => _voipToken ?? '';
 
+  /// Replays the cached token through the registered handler.
+  /// Call after login/session restore so backend PATCH includes auth headers.
+  Future<void> syncCachedTokenToBackend() async {
+    final cached = _voipToken;
+    if (cached == null || cached.isEmpty) return;
+    await _safeInvokeTokenHandler(cached);
+  }
+
   /// Registers a host-app callback fired whenever the VoIP token changes.
   /// Called once with the cached token if one is already known.
   void setOnVoipTokenChanged(
@@ -60,6 +68,7 @@ class VoipCallkitBridgeService {
 
   Future<void> _consumePendingNativeEvents() async {
     try {
+      if (defaultTargetPlatform != TargetPlatform.iOS) return;
       final dynamic raw = await _channel.invokeMethod('consumePendingVoipEvents');
       if (raw is! List) return;
       for (final dynamic item in raw) {

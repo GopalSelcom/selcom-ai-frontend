@@ -64,19 +64,21 @@ class _StatusLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final s = controller.state.value;
-    final label = switch (s) {
-      CallState.dialing => 'Calling…',
-      CallState.connecting => 'Connecting…',
-      CallState.connected => 'In call',
-      CallState.error =>
-        controller.errorMessage.value ?? 'Call error',
-      _ => '',
-    };
-    return Text(
-      label,
-      style: const TextStyle(color: Colors.white70, fontSize: 14),
-    );
+    return Obx(() {
+      final s = controller.state.value;
+      final label = switch (s) {
+        CallState.dialing => 'Calling…',
+        CallState.connecting => 'Connecting…',
+        CallState.connected => 'In call',
+        CallState.error =>
+          controller.errorMessage.value ?? 'Call error',
+        _ => '',
+      };
+      return Text(
+        label,
+        style: const TextStyle(color: Colors.white70, fontSize: 14),
+      );
+    });
   }
 }
 
@@ -86,21 +88,19 @@ class _Subtitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (controller.state.value == CallState.connected) {
-      final secs = controller.connectedSeconds.value;
-      final m = (secs ~/ 60).toString().padLeft(2, '0');
-      final s = (secs % 60).toString().padLeft(2, '0');
-      return Text(
-        '$m:$s',
-        style: const TextStyle(color: Colors.white70, fontSize: 16),
-      );
-    }
-    final ride = controller.currentCall.value?.rideId ?? '';
-    if (ride.isEmpty) return const SizedBox.shrink();
-    return Text(
-      'Ride • $ride',
-      style: const TextStyle(color: Colors.white54, fontSize: 13),
-    );
+    return Obx(() {
+      if (controller.state.value == CallState.connected) {
+        // Must read connectedSeconds inside Obx so GetX rebuilds every tick.
+        final secs = controller.connectedSeconds.value;
+        final m = (secs ~/ 60).toString().padLeft(2, '0');
+        final s = (secs % 60).toString().padLeft(2, '0');
+        return Text(
+          '$m:$s',
+          style: const TextStyle(color: Colors.white70, fontSize: 16),
+        );
+      }
+      return const SizedBox.shrink();
+    });
   }
 }
 

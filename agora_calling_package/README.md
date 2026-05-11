@@ -113,7 +113,7 @@ this `AgoraCallingConfig`:
 | `voipTokenPath` | `'/v4/go/user/voip-token'` | `'/v1/app/agent/go/voip-token'` |
 | Auth header | `Authorization: Bearer <jwt>` | `access_token: <driverToken>` |
 | Default peer label | `'Your Driver'` | `'Your Rider'` |
-| iOS method channel | `com.selcom.go/voip` | `com.selcom.driver/voip` |
+| iOS method channel | `com.selcom.go/voip` | `/voip` |
 | `appName` | `'Selcom Go'` | `'Delivery Agent'` |
 
 ### Rider bootstrap
@@ -384,7 +384,7 @@ import CallKit
 
     voipChannel = FlutterMethodChannel(
       // 🔵 RIDER:  "com.selcom.go/voip"
-      // 🟠 DRIVER: "com.selcom.driver/voip"
+      // 🟠 DRIVER: "/voip"
       name: "com.selcom.go/voip",
       binaryMessenger: controller.binaryMessenger
     )
@@ -554,7 +554,7 @@ class VoipCallkitBridgeService {
   static final VoipCallkitBridgeService instance = VoipCallkitBridgeService._();
 
   // 🔵 RIDER:  'com.selcom.go/voip'
-  // 🟠 DRIVER: 'com.selcom.driver/voip'
+  // 🟠 DRIVER: '/voip'
   static const MethodChannel _channel = MethodChannel('com.selcom.go/voip');
   bool _initialized = false;
 
@@ -1082,7 +1082,7 @@ Everything you need to flip a fresh app from rider to driver — top-down:
 2. New `lib/core/services/agora_calling_bootstrap.dart` with
    `localRole: CallParticipantRole.driver` and the `/v1/app/agent/go/...` paths.
 3. New `lib/core/services/voip_callkit_bridge_service.dart`, change channel name
-   to `com.selcom.driver/voip`.
+   to `/voip`.
 4. New `ios/Runner/AppDelegate.swift` from the template, change channel name +
    CallKit `localizedName`.
 5. Wire `main.dart` (background handler forwarder + `init` block) — same as rider.

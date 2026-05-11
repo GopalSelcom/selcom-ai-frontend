@@ -8,15 +8,26 @@
 ///
 /// Quick start (rider app):
 /// ```dart
-/// FirebaseMessaging.onBackgroundMessage(
-///   AgoraCallingNotificationService.firebaseBackgroundHandler,
-/// );
+/// @pragma('vm:entry-point')
+/// Future<void> firebaseBg(RemoteMessage m) async {
+///   await Firebase.initializeApp();
+///   await AgoraCallingNotificationService.firebaseBackgroundHandler(
+///     m,
+///     iosCallKitIconName: 'CallKitLogo', // asset in ios/Runner/Assets.xcassets
+///     callKitCallIdNamespace: 'agora-call:',
+///     backgroundCallKitAppName: 'My App', // same as AgoraCallingConfig.appName
+///   );
+/// }
+/// FirebaseMessaging.onBackgroundMessage(firebaseBg);
 ///
 /// await AgoraCalling.init(AgoraCallingConfig(
 ///   appId: AppConfig.agoraAppId,
 ///   baseUrl: AppConfig.baseUrl,
 ///   getAuthHeaders: () async => commonHeaders(accessTokenRequired: true),
 ///   localRole: CallParticipantRole.rider,
+///   appName: 'My App',
+///   iosCallKitIconName: 'CallKitLogo',
+///   callKitCallIdNamespace: 'agora-call:',
 ///   endpoints: const CallEndpoints(
 ///     tokenPath:     riderTokenPath,    // (id) => '/v4/go/rides/$id/call/token'
 ///     cancelPath:    riderCancelPath,   // (id) => '/v4/go/rides/$id/call/cancel'

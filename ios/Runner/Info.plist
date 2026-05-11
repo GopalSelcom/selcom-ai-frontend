@@ -55,7 +55,7 @@
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>NSVoIPUsageDescription</key>
-	<string></string>
+	<string>Selcom Go uses VoIP notifications to show incoming ride calls when the app is in background.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UIBackgroundModes</key>

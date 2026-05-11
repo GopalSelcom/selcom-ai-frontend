@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_callkit_incoming/entities/entities.dart';
 import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:uuid/uuid.dart';
 
 import '../models/agora_config.dart';
 import '../models/call_model.dart';
@@ -28,13 +29,35 @@ const Duration _pushDedupWindow = Duration(seconds: 10);
 /// Top-level FCM background-handler the host must register BEFORE `runApp`:
 ///
 /// ```dart
-/// FirebaseMessaging.onBackgroundMessage(
-///   AgoraCallingNotificationService.firebaseBackgroundHandler,
-/// );
+/// @pragma('vm:entry-point')
+/// Future<void> myFirebaseBg(RemoteMessage m) async {
+///   await Firebase.initializeApp();
+///   await AgoraCallingNotificationService.firebaseBackgroundHandler(
+///     m,
+///     iosCallKitIconName: 'CallKitLogo',
+///     callKitCallIdNamespace: 'agora-call:',
+///     backgroundCallKitAppName: 'My App',
+///   );
+/// }
+/// FirebaseMessaging.onBackgroundMessage(myFirebaseBg);
 /// ```
+///
+/// Pass the same [iosCallKitIconName], [callKitCallIdNamespace], and
+/// [backgroundCallKitAppName] you use in [AgoraCallingConfig] — the background
+/// isolate cannot read GetX / [AgoraCalling.init] config.
 @pragma('vm:entry-point')
-Future<void> _agoraCallingBackgroundHandler(RemoteMessage message) async {
-  await AgoraCallingNotificationService._showFromBackground(message);
+Future<void> _agoraCallingBackgroundHandler(
+  RemoteMessage message, {
+  String iosCallKitIconName = '',
+  String callKitCallIdNamespace = 'agora-call:',
+  String backgroundCallKitAppName = 'Selcom Go',
+}) async {
+  await AgoraCallingNotificationService._showFromBackground(
+    message,
+    iosCallKitIconName: iosCallKitIconName,
+    callKitCallIdNamespace: callKitCallIdNamespace,
+    backgroundCallKitAppName: backgroundCallKitAppName,
+  );
 }
 
 /// Push payload shape emitted to the controller.
@@ -53,6 +76,7 @@ class AgoraCallingNotificationService {
   final FlutterLocalNotificationsPlugin _local =
       FlutterLocalNotificationsPlugin();
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
+  static const Uuid _uuid = Uuid();
 
   final StreamController<IncomingPushPayload> _pushes =
       StreamController<IncomingPushPayload>.broadcast();
@@ -68,9 +92,28 @@ class AgoraCallingNotificationService {
   /// `incoming_call`, `call_joined`, `call_cancelled`.
   Stream<IncomingPushPayload> get pushStream => _pushes.stream;
 
-  /// Top-level entry that host apps must set as the FCM background handler.
-  static Future<void> firebaseBackgroundHandler(RemoteMessage message) =>
-      _agoraCallingBackgroundHandler(message);
+  /// FCM background handler entry. Pass the same CallKit-related values as
+  /// in [AgoraCallingConfig] (see library doc above).
+  static Future<void> firebaseBackgroundHandler(
+    RemoteMessage message, {
+    String iosCallKitIconName = '',
+    String callKitCallIdNamespace = 'agora-call:',
+    String backgroundCallKitAppName = 'Selcom Go',
+  }) =>
+      _agoraCallingBackgroundHandler(
+        message,
+        iosCallKitIconName: iosCallKitIconName,
+        callKitCallIdNamespace: callKitCallIdNamespace,
+        backgroundCallKitAppName: backgroundCallKitAppName,
+      );
+
+  /// Stable UUID for `flutter_callkit_incoming` CallKit `id` (iOS requires UUID).
+  /// [namespace] must match [AgoraCallingConfig.callKitCallIdNamespace].
+  static String callkitUuidForRide(String rideId, String namespace) {
+    final trimmed = rideId.trim();
+    if (trimmed.isEmpty) return _uuid.v4();
+    return _uuid.v5(Uuid.NAMESPACE_URL, '${namespace.trim()}$trimmed');
+  }
 
   Future<void> initialize() async {
     final initSettings = InitializationSettings(
@@ -81,7 +124,7 @@ class AgoraCallingNotificationService {
         requestSoundPermission: true,
       ),
     );
-    await _local.initialize(initSettings);
+    await _initializeLocalNotifications(initSettings);
 
     if (Platform.isAndroid) {
       await _createAndroidChannels();
@@ -113,6 +156,29 @@ class AgoraCallingNotificationService {
     final androidImpl = _local.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
     await androidImpl?.createNotificationChannel(statusChannel);
+  }
+
+  /// Supports both major signatures of `flutter_local_notifications`:
+  /// - v18: initialize(InitializationSettings, {callbacks...})
+  /// - v21+: initialize({required InitializationSettings settings, ...})
+  Future<void> _initializeLocalNotifications(
+    InitializationSettings initSettings,
+  ) async {
+    final dynamic plugin = _local;
+    try {
+      await Function.apply(plugin.initialize as Function, <Object?>[
+        initSettings,
+      ]);
+      return;
+    } on NoSuchMethodError {
+      await Function.apply(
+        plugin.initialize as Function,
+        const <Object?>[],
+        <Symbol, Object?>{
+          #settings: initSettings,
+        },
+      );
+    }
   }
 
   void _onForegroundMessage(RemoteMessage message) {
@@ -190,8 +256,7 @@ class AgoraCallingNotificationService {
       _showCallkitIncoming(data);
 
   Future<void> _showCallkitIncoming(Map<String, dynamic> data) async {
-    final rideId =
-        (data['ride_id'] ?? data['rideId'])?.toString() ?? 'unknown';
+    final rideId = (data['ride_id'] ?? data['rideId'])?.toString() ?? 'unknown';
     final peerLabel = _resolvePeerLabel(data);
     if (kDebugMode) {
       debugPrint('[AGORA_NOTIF] showCallkitIncoming '
@@ -200,7 +265,7 @@ class AgoraCallingNotificationService {
     try {
       await FlutterCallkitIncoming.showCallkitIncoming(
         CallKitParams(
-          id: rideId,
+          id: callkitUuidForRide(rideId, _config.callKitCallIdNamespace),
           nameCaller: peerLabel,
           appName: _config.appName,
           type: 0, // audio
@@ -221,11 +286,7 @@ class AgoraCallingNotificationService {
             isShowFullLockedScreen: true,
             isImportant: true,
           ),
-          ios: const IOSParams(
-            handleType: 'generic',
-            supportsHolding: false,
-            supportsVideo: false,
-          ),
+          ios: _iosCallKitParams(),
         ),
       );
     } catch (e, st) {
@@ -295,9 +356,34 @@ class AgoraCallingNotificationService {
   /// + data" backend split).
   static final Map<String, DateTime> _bgPushDedup = <String, DateTime>{};
 
+  IOSParams _iosCallKitParams() {
+    final icon = _config.iosCallKitIconName.trim();
+    return IOSParams(
+      iconName: icon.isEmpty ? null : icon,
+      handleType: 'generic',
+      supportsHolding: false,
+      supportsVideo: false,
+    );
+  }
+
+  static IOSParams _iosCallKitParamsForBackground(String iconName) {
+    final icon = iconName.trim();
+    return IOSParams(
+      iconName: icon.isEmpty ? null : icon,
+      handleType: 'generic',
+      supportsHolding: false,
+      supportsVideo: false,
+    );
+  }
+
   /// Background-only entry. Builds its own CallKit invocation because there's
   /// no guarantee the singleton was initialized in this isolate.
-  static Future<void> _showFromBackground(RemoteMessage message) async {
+  static Future<void> _showFromBackground(
+    RemoteMessage message, {
+    required String iosCallKitIconName,
+    required String callKitCallIdNamespace,
+    required String backgroundCallKitAppName,
+  }) async {
     final type = (message.data['type'] ?? '').toString().toLowerCase();
     if (kDebugMode) {
       debugPrint('[AGORA_NOTIF] bg push type="$type" '
@@ -339,9 +425,9 @@ class AgoraCallingNotificationService {
     );
     try {
       await FlutterCallkitIncoming.showCallkitIncoming(CallKitParams(
-        id: rideId,
+        id: callkitUuidForRide(rideId, callKitCallIdNamespace),
         nameCaller: peerLabel,
-        appName: 'Selcom Go',
+        appName: backgroundCallKitAppName,
         type: 0,
         duration: 30000,
         textAccept: 'Accept',
@@ -360,11 +446,7 @@ class AgoraCallingNotificationService {
           isShowFullLockedScreen: true,
           isImportant: true,
         ),
-        ios: const IOSParams(
-          handleType: 'generic',
-          supportsHolding: false,
-          supportsVideo: false,
-        ),
+        ios: _iosCallKitParamsForBackground(iosCallKitIconName),
       ));
     } catch (e) {
       if (kDebugMode) {
@@ -418,6 +500,7 @@ class AgoraCallingNotificationService {
     if (raw == 'driver') return CallParticipantRole.rider;
     return CallParticipantRole.rider;
   }
+
 }
 
 /// Helper typedef so the controller can reuse [CallModel.fromIncomingPush]
