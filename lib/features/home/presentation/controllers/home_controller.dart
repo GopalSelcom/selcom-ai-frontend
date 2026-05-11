@@ -206,10 +206,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     };
   }
 
-  Future<void> onSearchTapped() async {
-    await analyticsService.logEvent('search_opened');
-  }
-
   void onMapCreated(GoogleMapController controller) {
     _mapController = controller;
     isMapReady.value = true;
@@ -533,10 +529,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       return;
     }
     await toggleAddAddressBottomSheetForRecent(loc);
-  }
-
-  Future<void> refreshCurrentLocationAddress() async {
-    await _getCurrentLocation();
   }
 
   void _addMockDrivers() {
@@ -1053,7 +1045,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   Future<void> openLocationSelection({
     VehicleTypeModel? preferredVehicle,
   }) async {
-    await onSearchTapped();
+    await analyticsService.logEvent('search_opened');
     final args = <String, dynamic>{
       'pickup': activePickupAddress,
       'pickupLat': activePickupLatLng.latitude,

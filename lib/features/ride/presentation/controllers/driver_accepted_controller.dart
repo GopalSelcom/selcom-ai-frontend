@@ -103,7 +103,6 @@ class DriverAcceptedController extends GetxController
   final unreadCount = 0.obs;
   final rideBottomSheetState = RideBottomSheetState.driverAssigned.obs;
   final currentRideStatus = 'driver_assigned'.obs;
-  final selectedRideRating = 4.obs;
   final isReasonProcessing = false.obs;
   final isCancelPayProcessing = false.obs;
 
@@ -967,11 +966,13 @@ class DriverAcceptedController extends GetxController
   }
 
   void _showCancelDialogThenGoHome(String message) {
-    AppDialogs.showErrorDialog(
-      title: AppStrings.rideCancelled.tr,
-      message: message,
-      onConfirm: () => Get.offAllNamed(AppRoutes.home),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AppDialogs.showErrorDialog(
+        title: AppStrings.rideCancelled.tr,
+        message: message,
+        onConfirm: () => Get.offAllNamed(AppRoutes.home),
+      );
+    });
   }
 
 
@@ -1372,20 +1373,22 @@ class DriverAcceptedController extends GetxController
     if (Get.isRegistered<RideDetailsController>()) {
       Get.delete<RideDetailsController>();
     }
-    Get.off(
-      () => RideDetailsScreen(
-        ride: completedRide,
-        openedFromCompletionFlow: true,
-      ),
-      binding: BindingsBuilder(() {
-        Get.put(
-          RideDetailsController(
-            ride: completedRide,
-            openedFromCompletionFlow: true,
-          ),
-        );
-      }),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Get.off(
+        () => RideDetailsScreen(
+          ride: completedRide,
+          openedFromCompletionFlow: true,
+        ),
+        binding: BindingsBuilder(() {
+          Get.put(
+            RideDetailsController(
+              ride: completedRide,
+              openedFromCompletionFlow: true,
+            ),
+          );
+        }),
+      );
+    });
   }
 
   void _applyRouteFallbackForStatus(String rawStatus) {
@@ -1848,55 +1851,6 @@ class DriverAcceptedController extends GetxController
     }
   }
 
-  void setRideRating(int rating) {
-    if (rating < 1 || rating > 5) return;
-    selectedRideRating.value = rating;
-  }
-
-  Future<void> downloadSlip() async {
-    if (rideId.isEmpty) return;
-    try {
-      AppDialogs.showLoadingDialog();
-      final response = await rideRepository.getReceipt(rideId);
-      final receiptModel = response.fold((l) => null, (r) => r);
-
-      if (receiptModel == null) {
-        if (Get.isDialogOpen ?? false) Get.back();
-        AppDialogs.showErrorDialog(
-          message: AppStrings.couldNotFetchReceiptDetails.tr,
-        );
-        return;
-      }
-
-      final rideData = ride.value;
-      if (rideData == null) {
-        if (Get.isDialogOpen ?? false) Get.back();
-        AppDialogs.showErrorDialog(message: AppStrings.rideDetailsAreMissing.tr);
-        return;
-      }
-
-      final file = await ReceiptPdfGenerator.generateReceiptPdf(
-        receipt: receiptModel,
-      );
-
-      if (Get.isDialogOpen ?? false) Get.back();
-      final result = await OpenFilex.open(file.path);
-      if (result.type != ResultType.done) {
-        AppDialogs.showErrorDialog(
-          message: AppStrings.couldNotOpenPdfWithMessage.trParams({
-            'message': result.message,
-          }),
-        );
-      }
-    } catch (e, stackTrace) {
-      if (Get.isDialogOpen ?? false) Get.back();
-      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      AppDialogs.showErrorDialog(
-        message: AppStrings.couldNotDownloadSlipPleaseTryAgainLater.tr,
-      );
-    }
-  }
-
   String get pickupTitle => _firstAddressLine(pickupAddress);
 
   String get destinationTitle => _firstAddressLine(destinationAddress);
@@ -2347,28 +2301,32 @@ class DriverAcceptedController extends GetxController
   void _handleRouteUpdateProgress() {
     final active = isUpdatingStops.value || isUpdatingDestination.value;
     if (active) {
-      if (!(Get.isBottomSheetOpen ?? false)) {
-        Get.bottomSheet(
-          const StopUpdateProgressModal(),
-          isDismissible: false,
-          enableDrag: false,
-          backgroundColor: AppColors.transparent,
-        );
-      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!(Get.isBottomSheetOpen ?? false)) {
+          Get.bottomSheet(
+            const StopUpdateProgressModal(),
+            isDismissible: false,
+            enableDrag: false,
+            backgroundColor: AppColors.transparent,
+          );
+        }
+      });
     } else {
-      if (Get.isBottomSheetOpen ?? false) {
-        if (stopUpdateProgressStep.value == 3) {
-          Future.delayed(const Duration(seconds: 3), () {
-            if (Get.isBottomSheetOpen ?? false) Get.back();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (Get.isBottomSheetOpen ?? false) {
+          if (stopUpdateProgressStep.value == 3) {
+            Future.delayed(const Duration(seconds: 3), () {
+              if (Get.isBottomSheetOpen ?? false) Get.back();
+              stopUpdateProgressStep.value = 0;
+              isDestinationUpdateFlow.value = false;
+            });
+          } else {
+            Get.back();
             stopUpdateProgressStep.value = 0;
             isDestinationUpdateFlow.value = false;
-          });
-        } else {
-          Get.back();
-          stopUpdateProgressStep.value = 0;
-          isDestinationUpdateFlow.value = false;
+          }
         }
-      }
+      });
     }
   }
 

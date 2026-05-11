@@ -10,6 +10,7 @@ import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/widgets/app_primary_button.dart';
 import '../controllers/auth_controller.dart';
 
 class ProfileLoadingScreen extends StatefulWidget {
@@ -124,10 +125,11 @@ class _ProfileLoadingScreenState extends State<ProfileLoadingScreen>
                       ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           // Success Illustration
                           Container(
-                            height: 200.h,
+                            height: 277.h,
                             width: double.infinity,
                             decoration: BoxDecoration(
                               color: AppColors.bgVerificationSurface,
@@ -144,25 +146,32 @@ class _ProfileLoadingScreenState extends State<ProfileLoadingScreen>
                           Text(
                             AppStrings.verificationSuccessfully.tr,
                             style: AppTextStyles.onboardingTitle.copyWith(
-                              fontSize: 24.sp,
+                              fontSize: 28.sp,
                               color: AppColors.textHeading,
+                              height: 34 / 28,
+                              letterSpacing: -0.4,
                             ),
-                            textAlign: TextAlign.center,
                           ),
                           SizedBox(height: 8.h),
                           Text(
                             AppStrings.faceScanProcessHasBeenSuccessful.tr,
                             style: AppTextStyles.onboardingSubtitle.copyWith(
-                              fontSize: 15.sp,
                               color: AppColors.textBody,
+                              height: 20 / 15,
+                              fontWeight: FontWeight.w500,
                             ),
-                            textAlign: TextAlign.center,
                           ),
-                          SizedBox(height: 32.h),
+                          SizedBox(height: 28.h),
 
                           // Done Button
-                          InkWell(
-                            onTap: () {
+                          AppPrimaryButton(
+                            label: AppStrings.done.tr,
+                            height: 54.h,
+                            borderRadius: 12.r,
+                            iconAsset: AppAssets.icTickCircle,
+                            iconColor: AppColors.white,
+                            placeIconAfterLabel: true,
+                            onPressed: () {
                               if (Get.isRegistered<AuthController>()) {
                                 Get.find<AuthController>()
                                     .completeProfileLoading();
@@ -170,35 +179,6 @@ class _ProfileLoadingScreenState extends State<ProfileLoadingScreen>
                               }
                               Get.offAllNamed(AppRoutes.home);
                             },
-                            child: Container(
-                              height: 54.h,
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                                color: AppColors.primary,
-                                borderRadius: BorderRadius.circular(12.r),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    AppStrings.done.tr,
-                                    style: AppTextStyles.onboardingButton.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16.sp,
-                                      fontFamily:
-                                          'Plus Jakarta Sans', // Based on Figma
-                                    ),
-                                  ),
-                                  SizedBox(width: 4.w),
-                                  SvgPictureAsset(
-                                    AppAssets.icTickCircle,
-                                    height: 24.h,
-                                    width: 24.w,
-                                    color: AppColors.white,
-                                  ),
-                                ],
-                              ),
-                            ),
                           ),
                         ],
                       ),

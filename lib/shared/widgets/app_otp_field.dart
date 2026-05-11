@@ -60,10 +60,10 @@ class _AppOtpFieldState extends State<AppOtpField> {
     final w = widget.fieldWidth ?? 64.w;
     final borderColor = widget.hasError
         ? AppColors.otpErrorBorder
-        : AppColors.inputBorderActive;
+        : AppColors.primary;
     final glowColor = widget.hasError
         ? AppColors.otpErrorShadow
-        : AppColors.otpFocusShadow;
+        : AppColors.inputFocusShadow;
 
     return ValueListenableBuilder<bool>(
       valueListenable: _isFocused,
@@ -120,7 +120,7 @@ class _AppOtpFieldState extends State<AppOtpField> {
                   inactiveColor: borderColor,
                   borderWidth: 1.2.w,
                 ),
-                cursorColor: AppColors.inputBorderActive,
+                cursorColor: AppColors.primary,
                 animationDuration: const Duration(milliseconds: 300),
                 enableActiveFill: true,
                 textStyle: widget.textStyle ?? AppTextStyles.screenTitle,

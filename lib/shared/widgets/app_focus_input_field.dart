@@ -17,6 +17,8 @@ class AppFocusInputField extends StatefulWidget {
     this.style,
     this.hintStyle,
     this.contentPadding,
+    this.borderColor,
+    this.focusedBorderColor,
   });
 
   final double? height;
@@ -30,6 +32,8 @@ class AppFocusInputField extends StatefulWidget {
   final TextStyle? style;
   final TextStyle? hintStyle;
   final EdgeInsetsGeometry? contentPadding;
+  final Color? borderColor;
+  final Color? focusedBorderColor;
 
   @override
   State<AppFocusInputField> createState() => _AppFocusInputFieldState();
@@ -90,18 +94,21 @@ class _AppFocusInputFieldState extends State<AppFocusInputField> {
     return ValueListenableBuilder<bool>(
       valueListenable: _isFocused,
       builder: (_, focused, __) {
+        final Color borderColor = widget.borderColor ?? AppColors.borderDefault;
+        final Color focusedBorderColor =
+            widget.focusedBorderColor ?? AppColors.primary;
         return Container(
           height: widget.height,
           decoration: BoxDecoration(
             color: AppColors.white,
             border: Border.all(
-              color: focused ? AppColors.inputBorderActive : AppColors.borderDefault,
+              color: focused ? focusedBorderColor : borderColor,
             ),
             borderRadius: BorderRadius.circular(16.r),
             boxShadow: focused
                 ? const [
                     BoxShadow(
-                      color: Color(0x400F67FE),
+                      color: AppColors.inputFocusShadow,
                       blurRadius: 0,
                       spreadRadius: 4,
                     ),
@@ -121,7 +128,8 @@ class _AppFocusInputFieldState extends State<AppFocusInputField> {
               counterText: '',
               hintStyle: widget.hintStyle,
               border: InputBorder.none,
-              contentPadding: widget.contentPadding ??
+              contentPadding:
+                  widget.contentPadding ??
                   EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
             ),
           ),

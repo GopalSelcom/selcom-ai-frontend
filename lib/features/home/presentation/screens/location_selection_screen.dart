@@ -11,6 +11,8 @@ import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_back_button.dart';
+import '../../../../shared/widgets/app_primary_button.dart';
+import '../../../../shared/widgets/app_saved_place_chip.dart';
 import '../controllers/home_controller.dart';
 import '../controllers/location_selection_controller.dart';
 import '../widgets/favorite_icon_button.dart';
@@ -83,19 +85,31 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       backgroundColor: AppColors.pageBackground,
       body: Obx(() {
         locationController.syncPickupFromLiveAddress();
+        final bool isReady =
+            controller.isPickupSelected.value &&
+            controller.isDestinationSelected.value;
+        final bool shouldShowBookRideButton =
+            isReady || controller.isProceedingToBooking.value;
 
         return SafeArea(
           child: Stack(
             children: [
-              Padding(
-                padding: EdgeInsets.fromLTRB(16.w, 60.h, 16.w, 92.h),
+              AnimatedPadding(
+                duration: const Duration(milliseconds: 240),
+                curve: Curves.easeOutCubic,
+                padding: EdgeInsets.fromLTRB(
+                  16.w,
+                  60.h,
+                  16.w,
+                  shouldShowBookRideButton ? 92.h : 16.h,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _pickupDestinationCard(),
-                    SizedBox(height: 12.h),
+                    SizedBox(height: 8.79.h),
                     _chipsRow(),
-                    SizedBox(height: 16.h),
+                    SizedBox(height: 9.h),
                     Expanded(child: _buildSearchContent()),
                   ],
                 ),
@@ -130,7 +144,28 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                 left: 16.w,
                 right: 16.w,
                 bottom: 26.h,
-                child: _bookRideButton(),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 360),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SizeTransition(
+                        sizeFactor: animation,
+                        axis: Axis.vertical,
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: shouldShowBookRideButton
+                      ? _bookRideButton(
+                          key: const ValueKey('book-ride-visible'),
+                        )
+                      : const SizedBox.shrink(
+                          key: ValueKey('book-ride-hidden'),
+                        ),
+                ),
               ),
             ],
           ),
@@ -149,7 +184,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           borderRadius: BorderRadius.all(Radius.circular(16.r)),
         ),
         child: Padding(
-          padding: EdgeInsets.fromLTRB(20.w, 16.h, 10.w, 16.h),
+          padding: EdgeInsets.fromLTRB(22.32.w, 15.54.h, 20.32.w, 17.22.h),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -228,13 +263,17 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
               width: 18.w,
               child: Center(child: icon),
             ),
-            SizedBox(width: 12.w),
+            SizedBox(width: 13.06.w),
             Expanded(child: field),
             if (trailing != null) ...[SizedBox(width: 8.w), trailing],
           ],
         ),
         if (showDivider)
-          const Divider(color: AppColors.borderNeutral, endIndent: 0),
+          const Divider(
+            color: AppColors.borderNeutral,
+            height: 26,
+            endIndent: 0,
+          ),
       ],
     );
   }
@@ -419,7 +458,11 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
 
     return Padding(
       padding: EdgeInsets.only(right: 8.w),
-      child: InkWell(
+      child: AppSavedPlaceChip(
+        label: label,
+        iconAsset: _chipIconForLabel(label),
+        backgroundColor: AppColors.white,
+        borderColor: AppColors.borderWalletCard,
         onTap: () {
           controller.applySavedLabelToLocationSelection(
             label: label,
@@ -438,36 +481,6 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         },
         onLongPress: () =>
             Get.toNamed(AppRoutes.selectSavedLocation, arguments: label),
-        borderRadius: BorderRadius.circular(12.r),
-        child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: AppColors.skeletonBase, width: 0.8),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                decoration: const BoxDecoration(shape: BoxShape.circle),
-                child: SvgPictureAsset(
-                  _chipIconForLabel(label),
-                  width: 16.w,
-                  height: 16.w,
-                ),
-              ),
-              SizedBox(width: 8.w),
-              Text(
-                label,
-                style: AppTextStyles.homeChip.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textHeading,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -795,181 +808,132 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       child: InkWell(
         borderRadius: BorderRadius.circular(20.r),
         onTap: onTap,
-        child: SizedBox(
-          height: 72.h,
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(14.w, 15.h, 0, 15.h),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 60.w,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SvgPictureAsset(
-                        AppAssets.locationIcTime,
-                        width: 20.w,
-                        height: 20.h,
-                        placeholderBuilder: (_) => Icon(
-                          Icons.access_time_outlined,
-                          color: AppColors.iconMutedLight,
-                          size: 20.sp,
-                        ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        kmText,
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.homeCaption.copyWith(
-                          color: AppColors.textSlateSoft,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 12.sp,
-                          height: 1.0,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(width: 16.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.homeSubtitle.copyWith(
-                          color: AppColors.textHeading,
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: -0.4,
-                          height: 1.0,
-                        ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        subtitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.homeCaption.copyWith(
-                          color: AppColors.textBody,
-                          fontWeight: FontWeight.w400,
-                          height: 20 / 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (showFavorite)
-                  FavoriteIconButton(
-                    isFavorite: isFavorite,
-                    onPressed: onFavoriteTap,
-                    size: 24,
-                    padding: EdgeInsets.zero,
-                    constraints: BoxConstraints(
-                      minWidth: 48.w,
-                      minHeight: 48.h,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(14.w, 15.h, 13.w, 14.56.h),
+          child: Row(
+            children: [
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SvgPictureAsset(
+                    AppAssets.locationIcTime,
+                    width: 21.44.w,
+                    height: 21.44.h,
+                    placeholderBuilder: (_) => Icon(
+                      Icons.access_time_outlined,
+                      color: AppColors.iconMutedLight,
+                      size: 20.sp,
                     ),
                   ),
-              ],
-            ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    kmText,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.homeCaption.copyWith(
+                      color: AppColors.textSlateSoft,
+                      fontWeight: FontWeight.w400,
+                      fontSize: 12.sp,
+                      height: 20 / 12,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(width: 16.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.homeSubtitle.copyWith(
+                        color: AppColors.textHeading,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: -0.4,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.homeCaption.copyWith(
+                        color: AppColors.textBody,
+                        fontWeight: FontWeight.w500,
+                        height: 20 / 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (showFavorite)
+                FavoriteIconButton(
+                  isFavorite: isFavorite,
+                  onPressed: onFavoriteTap,
+                  size: 24,
+                  padding: EdgeInsets.zero,
+                  constraints: BoxConstraints(minWidth: 48.w, minHeight: 48.h),
+                ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _bookRideButton() {
+  Widget _bookRideButton({Key? key}) {
     return Obx(() {
-      final isReady =
-          controller.isPickupSelected.value &&
-          controller.isDestinationSelected.value;
-      return Material(
-        color: isReady ? AppColors.primary : AppColors.borderNeutralStrong,
-        borderRadius: BorderRadius.circular(16.r),
-        child: InkWell(
-          onTap: (isReady && !controller.isProceedingToBooking.value)
-              ? () async {
-                  final destinations = <String>[];
-                  for (final c in _extraDestinationControllers) {
-                    final t = c.text.trim();
-                    if (t.isNotEmpty) destinations.add(t);
-                  }
-                  final finalDestination = destinationController.text.trim();
-                  if (finalDestination.isNotEmpty) {
-                    destinations.add(finalDestination);
-                  }
-                  if (_isVehicleSelectionEditMode) {
-                    final payload = await _buildVehicleSelectionEditResult(
-                      pickupText: pickupController.text.trim(),
-                      destinationTexts: destinations,
-                    );
-                    if (payload == null) {
-                      AppDialogs.showErrorDialog(
-                        message:
-                            AppStrings
-                                .pleaseSelectValidPickupAndDestinationLocations
-                                .tr,
-                      );
-                      return;
-                    }
-                    Get.back(result: payload);
-                    return;
-                  }
-                  controller.proceedToBookingFromLocationSelection(
-                    pickup: pickupController.text.trim(),
-                    destinations: destinations,
-                    destinationPlaceId: _destinationPlaceId.value,
-                    routePickupLat: _routePickupLat.value,
-                    routePickupLng: _routePickupLng.value,
-                    routeDestinationLat: _routeDestinationLat.value,
-                    routeDestinationLng: _routeDestinationLng.value,
-                    preferredVehicleTypeId: _preferredVehicleTypeId.value,
-                    preferredVehicleName: _preferredVehicleName.value,
-                  );
-                }
-              : null,
-          borderRadius: BorderRadius.circular(16.r),
-          child: SizedBox(
-            height: 56.h,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                if (controller.isProceedingToBooking.value)
-                  SizedBox(
-                    width: 24.w,
-                    height: 24.w,
-                    child: const CircularProgressIndicator(
-                      color: AppColors.white,
-                      strokeWidth: 2,
-                    ),
-                  )
-                else
-                  Text(
-                    AppStrings.bookRide.tr,
-                    style: AppTextStyles.homeTitle.copyWith(
-                      color: isReady ? AppColors.white : AppColors.textHint,
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                if (!controller.isProceedingToBooking.value)
-                  Positioned(
-                    right: 20.w,
-                    child: Icon(
-                      Icons.arrow_forward,
-                      color: isReady ? AppColors.white : AppColors.textHint,
-                      size: 20.sp,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
+      return AppPrimaryButton(
+        key: key,
+        label: AppStrings.bookRide.tr,
+        height: 56.h,
+        borderRadius: 16.r,
+        iconAsset: AppAssets.icArrowRight,
+        iconColor: AppColors.white,
+        isLoading: controller.isProceedingToBooking.value,
+        onPressed: () async {
+          final destinations = <String>[];
+          for (final c in _extraDestinationControllers) {
+            final t = c.text.trim();
+            if (t.isNotEmpty) destinations.add(t);
+          }
+          final finalDestination = destinationController.text.trim();
+          if (finalDestination.isNotEmpty) {
+            destinations.add(finalDestination);
+          }
+          if (_isVehicleSelectionEditMode) {
+            final payload = await _buildVehicleSelectionEditResult(
+              pickupText: pickupController.text.trim(),
+              destinationTexts: destinations,
+            );
+            if (payload == null) {
+              AppDialogs.showErrorDialog(
+                message: AppStrings
+                    .pleaseSelectValidPickupAndDestinationLocations
+                    .tr,
+              );
+              return;
+            }
+            Get.back(result: payload);
+            return;
+          }
+          controller.proceedToBookingFromLocationSelection(
+            pickup: pickupController.text.trim(),
+            destinations: destinations,
+            destinationPlaceId: _destinationPlaceId.value,
+            routePickupLat: _routePickupLat.value,
+            routePickupLng: _routePickupLng.value,
+            routeDestinationLat: _routeDestinationLat.value,
+            routeDestinationLng: _routeDestinationLng.value,
+            preferredVehicleTypeId: _preferredVehicleTypeId.value,
+            preferredVehicleName: _preferredVehicleName.value,
+          );
+        },
       );
     });
   }

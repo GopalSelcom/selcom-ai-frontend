@@ -33,6 +33,7 @@ class AppAssets {
   static const String icVerificationSuccess =
       '$_imagePath/ic_verification_success.svg';
   static const String icTickCircle = '$_imagePath/ic_tick_circle.svg';
+  static const String icError = '$_imagePath/ic_error.svg';
 
   // Branding
   static const String splashBgVector = '$_imagePath/splash_bg_vector.svg';
