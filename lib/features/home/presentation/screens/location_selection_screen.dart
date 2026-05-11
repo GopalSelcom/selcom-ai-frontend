@@ -85,9 +85,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       backgroundColor: AppColors.pageBackground,
       body: Obx(() {
         locationController.syncPickupFromLiveAddress();
-        final bool isReady =
-            controller.isPickupSelected.value &&
-            controller.isDestinationSelected.value;
+        final bool isReady = locationController.areAllSegmentsReadyForBooking;
         final bool shouldShowBookRideButton =
             isReady || controller.isProceedingToBooking.value;
 
@@ -358,7 +356,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             },
             onChanged: (value) {
               _setActiveSegment(segment);
-              controller.isDestinationSelected.value = false;
+              locationController.markExtraStopUnconfirmed(i);
               controller.searchQuery.value = value;
             },
             style: fieldStyle,
@@ -428,6 +426,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       _extraDestinationControllers.removeAt(index);
       _extraDestinationFocusNodes[index].dispose();
       _extraDestinationFocusNodes.removeAt(index);
+      if (index < locationController.extraStopSelected.length) {
+        locationController.extraStopSelected.removeAt(index);
+      }
       // Reset search if we removed the active segment
       if (_activeSegmentIndex.value == 2 + index) {
         _setActiveSegment(1); // Set to main destination
@@ -464,7 +465,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         backgroundColor: AppColors.white,
         borderColor: AppColors.borderWalletCard,
         onTap: () {
-          controller.applySavedLabelToLocationSelection(
+          final applied = controller.applySavedLabelToLocationSelection(
             label: label,
             activeSegmentIndex: _activeSegmentIndex.value,
             pickupController: pickupController,
@@ -477,7 +478,11 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             routeDestinationLng: _routeDestinationLng,
             destinationPlaceId: _destinationPlaceId,
           );
-          controller.isDestinationSelected.value = true;
+          if (applied) {
+            locationController.confirmSelectionForSegment(
+              _activeSegmentIndex.value,
+            );
+          }
         },
         onLongPress: () =>
             Get.toNamed(AppRoutes.selectSavedLocation, arguments: label),
@@ -645,7 +650,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                       routeDestinationLng: _routeDestinationLng,
                       destinationPlaceId: _destinationPlaceId,
                     );
-                    controller.isDestinationSelected.value = true;
+                    locationController.confirmSelectionForSegment(
+                      _activeSegmentIndex.value,
+                    );
                   },
                   onFavoriteTap: () =>
                       controller.toggleAddAddressBottomSheetForAddress(
@@ -723,7 +730,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
               routeDestinationLng: _routeDestinationLng,
               destinationPlaceId: _destinationPlaceId,
             );
-            controller.isDestinationSelected.value = true;
+            locationController.confirmSelectionForSegment(
+              _activeSegmentIndex.value,
+            );
           },
           onFavoriteTap: () => controller.toggleAddAddressBottomSheetForAddress(
             address: recentText,
@@ -759,7 +768,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
               );
               return;
             }
-            controller.applySavedLabelToLocationSelection(
+            final applied = controller.applySavedLabelToLocationSelection(
               label: label,
               activeSegmentIndex: _activeSegmentIndex.value,
               pickupController: pickupController,
@@ -772,7 +781,11 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
               routeDestinationLng: _routeDestinationLng,
               destinationPlaceId: _destinationPlaceId,
             );
-            controller.isDestinationSelected.value = true;
+            if (applied) {
+              locationController.confirmSelectionForSegment(
+                _activeSegmentIndex.value,
+              );
+            }
           },
           onFavoriteTap: () => controller.toggleAddAddressBottomSheetForAddress(
             address: place.address ?? '',
@@ -1037,11 +1050,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       routeDestinationLng: _routeDestinationLng,
       destinationPlaceId: _destinationPlaceId,
     );
-    if (_activeSegmentIndex.value == 0) {
-      controller.isPickupSelected.value = true;
-    } else {
-      controller.isDestinationSelected.value = true;
-    }
+    locationController.confirmSelectionForSegment(_activeSegmentIndex.value);
     controller.suggestions.clear();
   }
 

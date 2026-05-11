@@ -16,6 +16,10 @@ class LocationSelectionController extends GetxController {
   final RxInt activeSegmentIndex = 1.obs;
   final extraDestinationControllers = <TextEditingController>[].obs;
   final extraDestinationFocusNodes = <FocusNode>[].obs;
+
+  /// Parallel to [extraDestinationControllers]: user picked a place (suggestion /
+  /// recent / saved) for that row. Typing clears the matching index.
+  final extraStopSelected = <bool>[].obs;
   final RxBool pickupEditedByUser = false.obs;
   final RxnString destinationPlaceId = RxnString();
   final RxnDouble routePickupLat = RxnDouble();
@@ -27,6 +31,37 @@ class LocationSelectionController extends GetxController {
   final RxBool isVehicleSelectionEditMode = false.obs;
 
   HomeController get homeController => Get.find<HomeController>();
+
+  /// Pickup + final destination + every intermediate row (if any) confirmed from search/recent/saved.
+  bool get areAllSegmentsReadyForBooking {
+    if (!homeController.isPickupSelected.value) return false;
+    if (!homeController.isDestinationSelected.value) return false;
+    final n = extraDestinationControllers.length;
+    if (extraStopSelected.length != n) return false;
+    for (var i = 0; i < n; i++) {
+      if (!extraStopSelected[i]) return false;
+    }
+    return true;
+  }
+
+  void confirmSelectionForSegment(int segmentIndex) {
+    if (segmentIndex == 0) {
+      homeController.isPickupSelected.value = true;
+    } else if (segmentIndex == 1) {
+      homeController.isDestinationSelected.value = true;
+    } else {
+      final i = segmentIndex - 2;
+      if (i >= 0 && i < extraStopSelected.length) {
+        extraStopSelected[i] = true;
+      }
+    }
+  }
+
+  void markExtraStopUnconfirmed(int index) {
+    if (index >= 0 && index < extraStopSelected.length) {
+      extraStopSelected[index] = false;
+    }
+  }
 
   @override
   void onInit() {
@@ -133,6 +168,7 @@ class LocationSelectionController extends GetxController {
     )) {
       extraDestinationControllers.add(TextEditingController(text: stopAddress));
       extraDestinationFocusNodes.add(FocusNode());
+      extraStopSelected.add(true);
     }
     activeSegmentIndex.value = initialActiveSegment;
 
@@ -169,6 +205,7 @@ class LocationSelectionController extends GetxController {
     }
     extraDestinationControllers.add(TextEditingController());
     extraDestinationFocusNodes.add(FocusNode());
+    extraStopSelected.add(false);
     activeSegmentIndex.value = 2 + extraDestinationControllers.length - 1;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (extraDestinationFocusNodes.isEmpty) return;
@@ -208,6 +245,7 @@ class LocationSelectionController extends GetxController {
     for (final f in extraDestinationFocusNodes) {
       f.dispose();
     }
+    extraStopSelected.clear();
     pickupFocusNode.dispose();
     destinationFocusNode.dispose();
     super.onClose();

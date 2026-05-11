@@ -1328,7 +1328,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     }
   }
 
-  void applySavedLabelToLocationSelection({
+  bool applySavedLabelToLocationSelection({
     required String label,
     required int activeSegmentIndex,
     required TextEditingController pickupController,
@@ -1343,7 +1343,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }) {
     final savedPlace = getSavedPlaceByLabel(label);
     final saved = savedPlace?.address?.trim();
-    if (saved == null || saved.isEmpty) return;
+    if (saved == null || saved.isEmpty) return false;
 
     final coords = savedPlace?.location?.coordinates;
     final lat =
@@ -1382,6 +1382,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     }
 
     searchQuery.value = '';
+    return true;
   }
 
   void applyRecentDestinationToLocationSelection({
