@@ -104,7 +104,6 @@ class LanguageSw extends Languages {
     'request_sent_please_complete_payment_on_selcom_pesa_to_book_your_ride': '',
     'payment_completed_successfully': '',
     'thank_you_for_riding_with_us_see_you_on_the_next_trip': '',
-    'face_scan_process_has_been_successful': '',
     'fare': '',
     'failed_to_send_message': '',
     'failed_to_load_settings': '',
@@ -399,7 +398,6 @@ class LanguageSw extends Languages {
     'share_feature_coming_soon': 'Huduma ya kushiriki itaunganishwa hivi karibuni.',
     'vehicle_type': '',
     'verification_successful': '',
-    'verification_successfully': '',
     'otp_label': '',
     'otp_verification_failed': '',
     'verify_phone_number': '',
@@ -848,10 +846,6 @@ class LanguageSw extends Languages {
   @override
   String get thankYouForRidingWithUsSeeYouOnTheNextTrip =>
       values['thank_you_for_riding_with_us_see_you_on_the_next_trip'] ?? '';
-
-  @override
-  String get faceScanProcessHasBeenSuccessful =>
-      values['face_scan_process_has_been_successful'] ?? '';
 
   @override
   String get fare => values['fare'] ?? '';
@@ -1764,10 +1758,6 @@ class LanguageSw extends Languages {
 
   @override
   String get verificationSuccessful => values['verification_successful'] ?? '';
-
-  @override
-  String get verificationSuccessfully =>
-      values['verification_successfully'] ?? '';
 
   @override
   String get otpLabel => values['otp_label'] ?? '';

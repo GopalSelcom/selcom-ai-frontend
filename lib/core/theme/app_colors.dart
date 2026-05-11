@@ -99,7 +99,6 @@ class AppColors {
   static const Color shadowStrong = Color(0x66000000);
   static const Color shadowCard = Color(0x0F000000);
   static const Color shadowMapCard = Color(0x1A000000);
-  static const Color shadowProfileModal = Color(0x0D242E49);
   static const Color inputFocusShadow = Color(0x335CB75E); // 20% primary
   static const Color overlayGray43 = Color(0x6D808080);
 

@@ -127,8 +127,6 @@ class AppStrings {
       'payment_completed_successfully';
   static const String thankYouForRidingWithUsSeeYouOnTheNextTrip =
       'thank_you_for_riding_with_us_see_you_on_the_next_trip';
-  static const String faceScanProcessHasBeenSuccessful =
-      'face_scan_process_has_been_successful';
   static const String fare = 'fare';
   static const String failedToSendMessage = 'failed_to_send_message';
   static const String failedToLoadSettings = 'failed_to_load_settings';
@@ -525,7 +523,6 @@ class AppStrings {
   static const String shareFeatureComingSoon = 'share_feature_coming_soon';
   static const String vehicleType = 'vehicle_type';
   static const String verificationSuccessful = 'verification_successful';
-  static const String verificationSuccessfully = 'verification_successfully';
   static const String otpLabel = 'otp_label';
   static const String otpVerificationFailed = 'otp_verification_failed';
   static const String verifyPhoneNumber = 'verify_phone_number';

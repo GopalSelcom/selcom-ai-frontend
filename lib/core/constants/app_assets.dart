@@ -30,9 +30,6 @@ class AppAssets {
   static const String onboarding3 = '$_imagePath/onboarding_3.svg';
   static const String icArrowRight = '$_imagePath/ic_arrow_right.svg';
   static const String icTanzaniaFlag = '$_imagePath/ic_tanzania_flag.svg';
-  static const String icVerificationSuccess =
-      '$_imagePath/ic_verification_success.svg';
-  static const String icTickCircle = '$_imagePath/ic_tick_circle.svg';
   static const String icError = '$_imagePath/ic_error.svg';
 
   // Branding

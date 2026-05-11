@@ -114,7 +114,6 @@ abstract class Languages {
   String get requestSentPleaseCompletePaymentOnSelcomPesaToBookYourRide;
   String get paymentCompletedSuccessfully;
   String get thankYouForRidingWithUsSeeYouOnTheNextTrip;
-  String get faceScanProcessHasBeenSuccessful;
   String get fare;
   String get failedToSendMessage;
   String get failedToLoadSettings;
@@ -396,7 +395,6 @@ abstract class Languages {
   String get value3ReasonSelection;
   String get vehicleType;
   String get verificationSuccessful;
-  String get verificationSuccessfully;
   String get otpLabel;
   String get otpVerificationFailed;
   String get verifyPhoneNumber;

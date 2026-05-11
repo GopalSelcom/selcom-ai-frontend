@@ -117,8 +117,6 @@ class LanguageEn extends Languages {
     'payment_completed_successfully': 'Payment completed successfully',
     'thank_you_for_riding_with_us_see_you_on_the_next_trip':
         'Thank you for riding with us, see you on the next trip.',
-    'face_scan_process_has_been_successful':
-        'Face scan process has been successful',
     'fare': 'Fare',
     'failed_to_send_message': 'Failed to send message',
     'failed_to_load_settings': 'Failed to load settings',
@@ -455,7 +453,6 @@ class LanguageEn extends Languages {
     'share_feature_coming_soon': 'Share feature will be connected soon.',
     'vehicle_type': 'Vehicle type',
     'verification_successful': 'Verification Successful!',
-    'verification_successfully': 'Verification Successfully',
     'otp_label': 'OTP',
     'otp_verification_failed': 'OTP verification failed',
     'verify_phone_number': 'Verify Phone Number',
@@ -925,10 +922,6 @@ class LanguageEn extends Languages {
   @override
   String get thankYouForRidingWithUsSeeYouOnTheNextTrip =>
       values['thank_you_for_riding_with_us_see_you_on_the_next_trip'] ?? '';
-
-  @override
-  String get faceScanProcessHasBeenSuccessful =>
-      values['face_scan_process_has_been_successful'] ?? '';
 
   @override
   String get fare => values['fare'] ?? '';
@@ -1841,10 +1834,6 @@ class LanguageEn extends Languages {
 
   @override
   String get verificationSuccessful => values['verification_successful'] ?? '';
-
-  @override
-  String get verificationSuccessfully =>
-      values['verification_successfully'] ?? '';
 
   @override
   String get otpLabel => values['otp_label'] ?? '';
