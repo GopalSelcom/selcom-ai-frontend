@@ -63,7 +63,7 @@ class RideDetailsScreen extends StatelessWidget {
 
     final reviewSection = controller.hasExistingRating
         ? Container(
-            padding: EdgeInsets.all(16.w),
+            padding: EdgeInsets.all(14.w),
             decoration: BoxDecoration(
               color: AppColors.surfaceSubtle,
               border: Border.all(
@@ -94,7 +94,7 @@ class RideDetailsScreen extends StatelessWidget {
               SizedBox(height: 12.h),
               RideRatingInputSection(
                 controller: controller.ratingController,
-                starSize: 40,
+                starSize: 37.w,
               ),
             ],
           )
@@ -118,12 +118,6 @@ class RideDetailsScreen extends StatelessWidget {
                   : AppStrings.yourRides.tr,
               onBack: controller.openedFromCompletionFlow
                   ? handleCompletionExit
-                  : null,
-              bottomPadding:
-                  controller.openedFromCompletionFlow &&
-                      controller.canShowReviewInput &&
-                      !controller.hasExistingRating
-                  ? 10.h
                   : null,
               child:
                   controller.openedFromCompletionFlow &&
@@ -155,7 +149,7 @@ class RideDetailsScreen extends StatelessWidget {
             ),
             Expanded(
               child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -185,7 +179,8 @@ class RideDetailsScreen extends StatelessWidget {
                         ),
                         Image.asset(
                           controller.vehicleImageAsset,
-                          height: 50.h,
+                          width: 76.w,
+                          height: 50.67.h,
                           fit: BoxFit.contain,
                           errorBuilder: (_, __, ___) => Icon(
                             Icons.two_wheeler,
@@ -195,7 +190,7 @@ class RideDetailsScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    SizedBox(height: 16.h),
+                    SizedBox(height: 14.h),
                     if (controller.shouldPrioritizeReviewSection) ...[
                       // Completion entry: keep rating above route/fare cards.
                       reviewSection,
@@ -252,7 +247,10 @@ class RideDetailsScreen extends StatelessWidget {
                                 children: [
                                   Text(
                                     AppStrings.bookingForName.trParams({
-                                      'name': (ride.passengerName ?? '').trim().isEmpty
+                                      'name':
+                                          (ride.passengerName ?? '')
+                                              .trim()
+                                              .isEmpty
                                           ? AppStrings.someone.tr
                                           : ride.passengerName!,
                                     }),
@@ -266,13 +264,14 @@ class RideDetailsScreen extends StatelessWidget {
                                   if (ride.passengerPhone != null)
                                     Text(
                                       AppStrings.phoneWithNumber.trParams({
-                                        'phone': TanzaniaPhoneFormatter
-                                            .formatInternational(
-                                          ride.passengerPhone ?? '',
-                                        ),
+                                        'phone':
+                                            TanzaniaPhoneFormatter.formatInternational(
+                                              ride.passengerPhone ?? '',
+                                            ),
                                       }),
                                       style: TextStyle(
-                                        fontFamily: AppTextStyles.metropolisFont,
+                                        fontFamily:
+                                            AppTextStyles.metropolisFont,
                                         fontWeight: FontWeight.w500,
                                         color: AppColors.textBody,
                                         fontSize: 13.sp,
@@ -287,7 +286,7 @@ class RideDetailsScreen extends StatelessWidget {
                     ],
                     SizedBox(height: 8.h),
                     Container(
-                      padding: EdgeInsets.all(16.w),
+                      padding: EdgeInsets.fromLTRB(14.w, 14.h, 11.w, 14.h),
                       decoration: BoxDecoration(
                         color: AppColors.surfaceSubtle,
                         border: Border.all(
@@ -311,25 +310,23 @@ class RideDetailsScreen extends StatelessWidget {
                             title: AppStrings.rideCharge.tr,
                             amount: controller.rideChargeLabel,
                           ),
-                          SizedBox(height: 6.h),
+                          SizedBox(height: 4.h),
                           FareBreakdownRow(
                             title:
                                 AppStrings.bookingFeesAndConvenienceCharges.tr,
                             amount: controller.bookingFeeLabel,
                           ),
-                          SizedBox(height: 6.h),
+                          SizedBox(height: 4.h),
                           FareBreakdownRow(
                             title: AppStrings.totalAmount.tr,
                             amount: controller.totalAmountLabel,
-                            isTotal: true,
                           ),
                         ],
                       ),
                     ),
-                    SizedBox(height: 8.h),
                     if (!controller.shouldPrioritizeReviewSection)
                       reviewSection,
-                    SizedBox(height: 16.h),
+                    SizedBox(height: 13.h),
                     NeedHelpRow(
                       showDownloadSlip: controller.isCompleted,
                       onDownloadTap: controller.downloadSlip,
@@ -341,35 +338,58 @@ class RideDetailsScreen extends StatelessWidget {
             ),
             SafeArea(
               top: false,
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
-                child:
-                    (controller.hasExistingRating ||
-                        !controller.canShowReviewInput)
-                    ? AppPrimaryButton(
-                        label: AppStrings.done.tr,
-                        onPressed: controller.openedFromCompletionFlow
-                            ? handleCompletionExit
-                            : () => Navigator.pop(context),
-                      )
-                    : Obx(
-                        () => AppPrimaryButton(
-                          label: AppStrings.done.tr,
-                          isLoading:
-                              controller.ratingController.isSubmitting.value,
-                          onPressed: controller.ratingController.canSubmit
-                              ? () => controller.ratingController.onSubmitTap(
-                                  // Route success-dialog "Continue" by source:
-                                  // completion flow -> Home, My Rides -> pop.
-                                  onSuccessConfirmed:
-                                      controller.openedFromCompletionFlow
-                                      ? handleCompletionExit
-                                      : () => Navigator.pop(context),
-                                )
-                              : null,
-                        ),
+              child: Obx(() {
+                final bool isSimpleDoneFlow =
+                    controller.hasExistingRating || !controller.canShowReviewInput;
+                final bool isSubmitting =
+                    controller.ratingController.isSubmitting.value;
+                final bool canSubmit = controller.ratingController.canSubmit;
+                final bool shouldShowButton =
+                    isSimpleDoneFlow || isSubmitting || canSubmit;
+
+                return Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    16.w,
+                    0,
+                    16.w,
+                    shouldShowButton ? 16.h : 0,
+                  ),
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 260),
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeInCubic,
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: SizeTransition(
+                        sizeFactor: animation,
+                        axis: Axis.vertical,
+                        child: child,
                       ),
-              ),
+                    ),
+                    child: shouldShowButton
+                        ? AppPrimaryButton(
+                            key: const ValueKey('ride-details-done-visible'),
+                            label: AppStrings.done.tr,
+                            isLoading: !isSimpleDoneFlow && isSubmitting,
+                            onPressed: isSimpleDoneFlow
+                                ? (controller.openedFromCompletionFlow
+                                      ? handleCompletionExit
+                                      : () => Navigator.pop(context))
+                                : () => controller.ratingController.onSubmitTap(
+                                    // Route success-dialog "Continue" by source:
+                                    // completion flow -> Home, My Rides -> pop.
+                                    onSuccessConfirmed:
+                                        controller.openedFromCompletionFlow
+                                        ? handleCompletionExit
+                                        : () => Navigator.pop(context),
+                                  ),
+                          )
+                        : const SizedBox.shrink(
+                            key: ValueKey('ride-details-done-hidden'),
+                          ),
+                  ),
+                );
+              }),
             ),
           ],
         ),

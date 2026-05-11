@@ -67,10 +67,10 @@ class RideHistoryCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: EdgeInsets.only(bottom: 16.h),
+        margin: EdgeInsets.only(bottom: 12.h),
         decoration: BoxDecoration(
           color: AppColors.surfaceSubtle,
-          border: Border.all(color: AppColors.borderWalletCard, width: 0.78),
+          border: Border.all(color: AppColors.borderWalletCard, width: 0.79),
           borderRadius: BorderRadius.circular(16.r),
         ),
         child: Column(
@@ -78,12 +78,7 @@ class RideHistoryCard extends StatelessWidget {
           children: [
             // Top Row: Vehicle & Date & Status
             Padding(
-              padding: EdgeInsets.only(
-                left: 8.w,
-                right: 8.w,
-                top: 16.h,
-                bottom: 16.h,
-              ),
+              padding: EdgeInsets.fromLTRB(15.w, 17.h, 12.w, 13.h),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,6 +91,7 @@ class RideHistoryCard extends StatelessWidget {
                         fontWeight: FontWeight.w500,
                         color: AppColors.black,
                         fontSize: 15.sp,
+                        height: 20 / 15,
                       ),
                     ),
                   ),
@@ -111,7 +107,7 @@ class RideHistoryCard extends StatelessWidget {
                           shape: BoxShape.circle,
                         ),
                       ),
-                      SizedBox(width: 4.w),
+                      SizedBox(width: 3.w),
                       Text(
                         _getStatusText(ride.status),
                         style: TextStyle(
@@ -119,6 +115,7 @@ class RideHistoryCard extends StatelessWidget {
                           color: _getStatusColor(ride.status),
                           fontWeight: FontWeight.w500,
                           fontSize: 15.sp,
+                          height: 20 / 15,
                         ),
                       ),
                     ],
@@ -136,7 +133,7 @@ class RideHistoryCard extends StatelessWidget {
 
             // Middle Locations
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 16.h),
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
               child: RideLocationsTimeline(
                 startLocation: ride.pickup.address.split(',').first,
                 startAddress: ride.pickup.address,
@@ -156,7 +153,7 @@ class RideHistoryCard extends StatelessWidget {
 
             // Bottom Row
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 16.h),
+              padding: EdgeInsets.fromLTRB(16.w, 13.h, 12.w, 17.h),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -171,6 +168,7 @@ class RideHistoryCard extends StatelessWidget {
                       fontWeight: FontWeight.w500,
                       color: AppColors.black,
                       fontSize: 15.sp,
+                      height: 20 / 15,
                     ),
                   ),
                   Text(
@@ -180,6 +178,7 @@ class RideHistoryCard extends StatelessWidget {
                       fontWeight: FontWeight.w500,
                       color: AppColors.iconSuccess,
                       fontSize: 15.sp,
+                      height: 20 / 15,
                     ),
                   ),
                 ],
