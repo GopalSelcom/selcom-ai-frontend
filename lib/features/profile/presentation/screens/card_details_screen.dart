@@ -161,7 +161,7 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 8.h),
+                  SizedBox(height: 15.h),
                   AppTextField(
                     label: AppStrings.setANickName.tr,
                     controller: _nickNameController,

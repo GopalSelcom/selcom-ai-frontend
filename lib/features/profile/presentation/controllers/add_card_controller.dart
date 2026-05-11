@@ -15,6 +15,7 @@ class AddCardController extends GetxController {
 
   final isCvvHidden = true.obs;
   final isSubmitting = false.obs;
+  final canSubmitForm = false.obs;
 
   final fullNameError = RxnString();
   final cardNumberError = RxnString();
@@ -44,6 +45,7 @@ class AddCardController extends GetxController {
     cardNumberError.value = null;
     expiryError.value = null;
     cvvError.value = null;
+    canSubmitForm.value = _isFormInputValidForVisibility();
   }
 
   void focusCardNumber() => cardNumberFocus.requestFocus();
@@ -58,6 +60,7 @@ class AddCardController extends GetxController {
     }
 
     if (!_validateForm()) {
+      canSubmitForm.value = _isFormInputValidForVisibility();
       return;
     }
 
@@ -77,6 +80,7 @@ class AddCardController extends GetxController {
       );
     } finally {
       isSubmitting.value = false;
+      canSubmitForm.value = _isFormInputValidForVisibility();
     }
   }
 
@@ -118,9 +122,29 @@ class AddCardController extends GetxController {
       cvvError.value = 'CVV must be 3 digits';
     }
 
-    return fullNameError.value == null &&
+    final isValid = fullNameError.value == null &&
         cardNumberError.value == null &&
         expiryError.value == null &&
         cvvError.value == null;
+    canSubmitForm.value = isValid;
+    return isValid;
+  }
+
+  bool _isFormInputValidForVisibility() {
+    final fullName = cardHolderController.text.trim();
+    final cardNumber = cardNumberController.text.replaceAll(' ', '');
+    final expiry = expiryController.text.trim();
+    final cvv = cvvController.text.trim();
+
+    if (fullName.isEmpty) return false;
+    if (cardNumber.length != 16 || !RegExp(r'^\d{16}$').hasMatch(cardNumber)) {
+      return false;
+    }
+    if (!RegExp(r'^\d{2}/\d{2}$').hasMatch(expiry)) return false;
+    final month = int.tryParse(expiry.substring(0, 2)) ?? 0;
+    if (month < 1 || month > 12) return false;
+    if (!RegExp(r'^\d{3}$').hasMatch(cvv)) return false;
+
+    return true;
   }
 }
