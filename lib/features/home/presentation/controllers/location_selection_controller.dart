@@ -183,10 +183,28 @@ class LocationSelectionController extends GetxController {
       });
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (activeSegmentIndex.value == 0) {
+      focusActiveSegment();
+    });
+  }
+
+  /// One segment field should own focus. Clears others first to avoid multiple cursors.
+  void focusActiveSegment() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      pickupFocusNode.unfocus();
+      destinationFocusNode.unfocus();
+      for (final n in extraDestinationFocusNodes.toList()) {
+        n.unfocus();
+      }
+      final seg = activeSegmentIndex.value;
+      if (seg == 0) {
         pickupFocusNode.requestFocus();
-      } else {
+      } else if (seg == 1) {
         destinationFocusNode.requestFocus();
+      } else {
+        final i = seg - 2;
+        if (i >= 0 && i < extraDestinationFocusNodes.length) {
+          extraDestinationFocusNodes[i].requestFocus();
+        }
       }
     });
   }
@@ -207,13 +225,9 @@ class LocationSelectionController extends GetxController {
     extraDestinationFocusNodes.add(FocusNode());
     extraStopSelected.add(false);
     activeSegmentIndex.value = 2 + extraDestinationControllers.length - 1;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (extraDestinationFocusNodes.isEmpty) return;
-      final node = extraDestinationFocusNodes.last;
-      node.requestFocus();
-      homeController.searchQuery.value =
-          extraDestinationControllers.last.text.trim();
-    });
+    homeController.searchQuery.value =
+        extraDestinationControllers.last.text.trim();
+    focusActiveSegment();
   }
 
   void setActiveSegment(int index) {

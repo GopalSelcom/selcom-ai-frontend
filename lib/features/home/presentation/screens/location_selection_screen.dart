@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/constants/ride_stop_limits.dart';
+import '../../../../core/data/models/responses/get_saved_places_response.dart';
+import '../../../../core/localization/app_strings.dart';
+import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
-import '../../../../core/data/models/responses/get_saved_places_response.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_saved_place_chip.dart';
+import '../../data/models/places_models.dart';
 import '../controllers/home_controller.dart';
 import '../controllers/location_selection_controller.dart';
 import '../widgets/favorite_icon_button.dart';
-import '../../data/models/places_models.dart';
-import '../../../../core/routes/app_routes.dart';
 
 class LocationSelectionScreen extends StatefulWidget {
   const LocationSelectionScreen({super.key});
@@ -83,16 +83,14 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.pageBackground,
-      body: Obx(() {
-        locationController.syncPickupFromLiveAddress();
-        final bool isReady = locationController.areAllSegmentsReadyForBooking;
-        final bool shouldShowBookRideButton =
-            isReady || controller.isProceedingToBooking.value;
-
-        return SafeArea(
-          child: Stack(
-            children: [
-              AnimatedPadding(
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Obx(() {
+              final bool shouldShowBookRideButton =
+                  locationController.areAllSegmentsReadyForBooking ||
+                  controller.isProceedingToBooking.value;
+              return AnimatedPadding(
                 duration: const Duration(milliseconds: 240),
                 curve: Curves.easeOutCubic,
                 padding: EdgeInsets.fromLTRB(
@@ -104,41 +102,49 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _pickupDestinationCard(),
+                    Obx(() {
+                      locationController.syncPickupFromLiveAddress();
+                      return _pickupDestinationCard();
+                    }),
                     SizedBox(height: 8.79.h),
                     _chipsRow(),
                     SizedBox(height: 9.h),
                     Expanded(child: _buildSearchContent()),
                   ],
                 ),
-              ),
-              Positioned(
-                top: 12.h,
-                left: 16.w,
-                child: Navigator.of(context).canPop()
-                    ? AppBackButton(
-                        color: AppColors.textHeading,
-                        onPressed: controller.closeLocationSelection,
-                      )
-                    : const SizedBox.shrink(),
-              ),
-              Positioned(
-                top: 12.h,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: Text(
-                    AppStrings.locationSelection.tr,
-                    textAlign: TextAlign.center,
-                    style: AppTextStyles.homeTitle.copyWith(
-                      fontWeight: FontWeight.w600,
-                      height: 34 / 20,
-                      letterSpacing: -0.4,
-                    ),
+              );
+            }),
+            Positioned(
+              top: 12.h,
+              left: 16.w,
+              child: Navigator.of(context).canPop()
+                  ? AppBackButton(
+                      color: AppColors.textHeading,
+                      onPressed: controller.closeLocationSelection,
+                    )
+                  : const SizedBox.shrink(),
+            ),
+            Positioned(
+              top: 12.h,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Text(
+                  AppStrings.locationSelection.tr,
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.homeTitle.copyWith(
+                    fontWeight: FontWeight.w600,
+                    height: 34 / 20,
+                    letterSpacing: -0.4,
                   ),
                 ),
               ),
-              Positioned(
+            ),
+            Obx(() {
+              final bool shouldShowBookRideButton =
+                  locationController.areAllSegmentsReadyForBooking ||
+                  controller.isProceedingToBooking.value;
+              return Positioned(
                 left: 16.w,
                 right: 16.w,
                 bottom: 26.h,
@@ -164,11 +170,11 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                           key: ValueKey('book-ride-hidden'),
                         ),
                 ),
-              ),
-            ],
-          ),
-        );
-      }),
+              );
+            }),
+          ],
+        ),
+      ),
     );
   }
 
