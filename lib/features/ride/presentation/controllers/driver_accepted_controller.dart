@@ -963,11 +963,13 @@ class DriverAcceptedController extends GetxController
   }
 
   void _showCancelDialogThenGoHome(String message) {
-    AppDialogs.showErrorDialog(
-      title: AppStrings.rideCancelled.tr,
-      message: message,
-      onConfirm: () => Get.offAllNamed(AppRoutes.home),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AppDialogs.showErrorDialog(
+        title: AppStrings.rideCancelled.tr,
+        message: message,
+        onConfirm: () => Get.offAllNamed(AppRoutes.home),
+      );
+    });
   }
 
 
@@ -1368,20 +1370,22 @@ class DriverAcceptedController extends GetxController
     if (Get.isRegistered<RideDetailsController>()) {
       Get.delete<RideDetailsController>();
     }
-    Get.off(
-      () => RideDetailsScreen(
-        ride: completedRide,
-        openedFromCompletionFlow: true,
-      ),
-      binding: BindingsBuilder(() {
-        Get.put(
-          RideDetailsController(
-            ride: completedRide,
-            openedFromCompletionFlow: true,
-          ),
-        );
-      }),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Get.off(
+        () => RideDetailsScreen(
+          ride: completedRide,
+          openedFromCompletionFlow: true,
+        ),
+        binding: BindingsBuilder(() {
+          Get.put(
+            RideDetailsController(
+              ride: completedRide,
+              openedFromCompletionFlow: true,
+            ),
+          );
+        }),
+      );
+    });
   }
 
   void _applyRouteFallbackForStatus(String rawStatus) {
@@ -2261,28 +2265,32 @@ class DriverAcceptedController extends GetxController
   void _handleRouteUpdateProgress() {
     final active = isUpdatingStops.value || isUpdatingDestination.value;
     if (active) {
-      if (!(Get.isBottomSheetOpen ?? false)) {
-        Get.bottomSheet(
-          const StopUpdateProgressModal(),
-          isDismissible: false,
-          enableDrag: false,
-          backgroundColor: AppColors.transparent,
-        );
-      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!(Get.isBottomSheetOpen ?? false)) {
+          Get.bottomSheet(
+            const StopUpdateProgressModal(),
+            isDismissible: false,
+            enableDrag: false,
+            backgroundColor: AppColors.transparent,
+          );
+        }
+      });
     } else {
-      if (Get.isBottomSheetOpen ?? false) {
-        if (stopUpdateProgressStep.value == 3) {
-          Future.delayed(const Duration(seconds: 3), () {
-            if (Get.isBottomSheetOpen ?? false) Get.back();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (Get.isBottomSheetOpen ?? false) {
+          if (stopUpdateProgressStep.value == 3) {
+            Future.delayed(const Duration(seconds: 3), () {
+              if (Get.isBottomSheetOpen ?? false) Get.back();
+              stopUpdateProgressStep.value = 0;
+              isDestinationUpdateFlow.value = false;
+            });
+          } else {
+            Get.back();
             stopUpdateProgressStep.value = 0;
             isDestinationUpdateFlow.value = false;
-          });
-        } else {
-          Get.back();
-          stopUpdateProgressStep.value = 0;
-          isDestinationUpdateFlow.value = false;
+          }
         }
-      }
+      });
     }
   }
 
