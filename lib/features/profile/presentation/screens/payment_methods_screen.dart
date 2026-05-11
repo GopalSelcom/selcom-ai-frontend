@@ -117,7 +117,7 @@ class PaymentMethodsScreen extends StatelessWidget {
                   ),
                 ),
                 if (isLinked) ...[
-                  SizedBox(width: 8.w),
+                  SizedBox(width: 7.w),
                   Container(
                     padding: EdgeInsets.symmetric(
                       horizontal: 6.w,
@@ -132,7 +132,7 @@ class PaymentMethodsScreen extends StatelessWidget {
                       style: TextStyle(
                         color: AppColors.white,
                         fontSize: 10.sp,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
@@ -152,12 +152,18 @@ class PaymentMethodsScreen extends StatelessWidget {
               isLinked
                   ? 'Linked number +255 711 410 410'
                   : 'Connect your Selcom Pesa account to enable automatic, seamless ride charge deductions.',
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.textBody,
-                fontSize: 12.sp,
-                fontWeight: FontWeight.w400,
-                height: 20 / 12,
-              ),
+              style: isLinked
+                  ? AppTextStyles.bodySecondary.copyWith(
+                      color: AppColors.textBody,
+                      fontWeight: FontWeight.w500,
+                      height: 20 / 14,
+                    )
+                  : AppTextStyles.caption.copyWith(
+                      color: AppColors.textBody,
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w400,
+                      height: 20 / 12,
+                    ),
             ),
             if (!isLinked) ...[
               SizedBox(height: 5.h),

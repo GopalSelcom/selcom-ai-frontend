@@ -27,6 +27,7 @@ class AppColors {
   static const Color bgNeutralSoft = Color(0xFFFAFAFA);
   static const Color bgMintLight = Color(0xFFECFDF5);
   static const Color bgGreenLight = Color(0xFFDCFCE7);
+  static const Color bgRequestMoney = Color(0xFFE7F4E8);
   static const Color bgOrangeLight = Color(0xFFFFEDD5);
   static const Color bgEtaBlueSoft = Color(0x2E0088FF); // 18% of #0088FF
 

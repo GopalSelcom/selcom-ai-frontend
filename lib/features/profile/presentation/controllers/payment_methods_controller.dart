@@ -26,6 +26,7 @@ class PaymentMethodsController extends GetxController {
   // Phone input controller
   final TextEditingController selcomPhoneController = TextEditingController();
   final RxString phoneError = ''.obs;
+  final RxBool canContinueSelcomPhone = false.obs;
 
   // OTP controller
   final TextEditingController otpController = TextEditingController();
@@ -84,6 +85,7 @@ class PaymentMethodsController extends GetxController {
       Get.back();
     }
     phoneError.value = '';
+    _updateCanContinueSelcomPhone();
     Get.bottomSheet(
       const SelcomPesaPhoneInputBottomSheet(),
       isScrollControlled: true,
@@ -109,6 +111,19 @@ class PaymentMethodsController extends GetxController {
     );
   }
 
+  void onSelcomPhoneChanged(String _) {
+    if (phoneError.value.isNotEmpty) {
+      phoneError.value = '';
+    }
+    _updateCanContinueSelcomPhone();
+  }
+
+  void _updateCanContinueSelcomPhone() {
+    final phone = selcomPhoneController.text.replaceAll(' ', '');
+    // Same rules as [onPhoneContinue]: TZ local number after +255 (digits only, min 9).
+    canContinueSelcomPhone.value = phone.isNotEmpty && phone.length >= 9;
+  }
+
   void onPhoneContinue() {
     final phone = selcomPhoneController.text.replaceAll(' ', '');
     if (phone.isEmpty) {
@@ -122,6 +137,7 @@ class PaymentMethodsController extends GetxController {
     }
 
     phoneError.value = '';
+    _updateCanContinueSelcomPhone();
     openOtpInput();
   }
 
