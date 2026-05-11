@@ -26,21 +26,20 @@ class MenuItemWidget extends StatelessWidget {
       child: Column(
         children: [
           Padding(
-            padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 16.w),
+            padding: EdgeInsets.only(left: 8.w, bottom: 11.h),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Icon(
-                  icon,
-                  size: 24.w,
-                  color: AppColors.textHeading,
-                ),
-                SizedBox(width: 16.w),
+                Icon(icon, size: 24.w, color: AppColors.textHeading),
+                SizedBox(width: 9.w),
                 Expanded(
                   child: Text(
                     title,
                     style: AppTextStyles.body.copyWith(
                       fontWeight: FontWeight.w500,
                       color: AppColors.textHeading,
+                      fontSize: 15.sp,
+                      height: 20 / 15,
                     ),
                   ),
                 ),
@@ -52,15 +51,10 @@ class MenuItemWidget extends StatelessWidget {
               ],
             ),
           ),
-          if (showDivider)
-            Padding(
-              padding: EdgeInsets.only(left: 56.w, right: 16.w),
-              child: const Divider(
-                height: 1,
-                thickness: 1,
-                color: AppColors.divider,
-              ),
-            ),
+          if (showDivider) ...[
+            const Divider(height: 1, thickness: 1, color: AppColors.divider),
+            SizedBox(height: 17.h),
+          ],
         ],
       ),
     );

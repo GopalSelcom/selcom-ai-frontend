@@ -78,9 +78,8 @@ class ProfileScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(height: 16.h),
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16.w),
+                        padding: EdgeInsets.fromLTRB(16.w, 18.h, 16.w, 8.h),
                         child: Text(
                           AppStrings.appSettings.tr,
                           style: AppTextStyles.sectionTitle.copyWith(
@@ -90,12 +89,11 @@ class ProfileScreen extends StatelessWidget {
                           ),
                         ),
                       ),
-                      SizedBox(height: 16.h),
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.w),
                         child: _buildSettingsList(context),
                       ),
-                      SizedBox(height: 24.h),
+                      SizedBox(height: 18.h),
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.w),
                         child: InkWell(
@@ -118,7 +116,7 @@ class ProfileScreen extends StatelessWidget {
                                   size: 24.w,
                                   color: AppColors.error,
                                 ),
-                                SizedBox(width: 16.w),
+                                SizedBox(width: 7.w),
                                 Text(
                                   AppStrings.logout.tr,
                                   style: AppTextStyles.body.copyWith(
@@ -275,7 +273,8 @@ class ProfileScreen extends StatelessWidget {
                               style: AppTextStyles.screenTitle.copyWith(
                                 color: AppColors.white,
                                 fontWeight: FontWeight.w800,
-                                fontSize: 22.sp,
+                                fontSize: 30.sp,
+                                height: 1.6,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -286,17 +285,19 @@ class ProfileScreen extends StatelessWidget {
                             child: Icon(
                               Iconsax.user_edit,
                               color: AppColors.white,
-                              size: 20.w,
+                              size: 24.w,
                             ),
                           ),
                         ],
                       ),
-                      SizedBox(height: 2.h),
+                      SizedBox(height: 4.h),
                       Text(
                         mobile,
                         style: AppTextStyles.body.copyWith(
                           color: AppColors.white.withValues(alpha: 0.8),
-                          fontSize: 14.sp,
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 16 * (-1 / 100),
                         ),
                       ),
                       SizedBox(height: 4.h),
@@ -330,11 +331,10 @@ class ProfileScreen extends StatelessWidget {
               ],
             ),
           ),
-          SizedBox(height: 16.h),
 
           // Wallet Card
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            padding: EdgeInsets.fromLTRB(17.w, 16.h, 14.w, 12.h),
             child: WalletSummaryCard(balance: balance, walletNumber: walletNum),
           ),
         ],
@@ -484,6 +484,7 @@ class ProfileScreen extends StatelessWidget {
 
   Widget _buildSettingsList(BuildContext context) {
     return Container(
+      padding: EdgeInsets.fromLTRB(10.w, 19.h, 10.w, 10.h),
       decoration: BoxDecoration(
         color: AppColors.pageBackground,
         border: Border.all(color: AppColors.divider),
