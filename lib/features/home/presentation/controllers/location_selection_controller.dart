@@ -222,7 +222,8 @@ class LocationSelectionController extends GetxController {
   }
 
   void onPickupFieldTapped() {
-    if (!pickupEditedByUser.value && pickupController.text.trim().isNotEmpty) {
+    final pickupText = pickupController.text.trim();
+    if (!pickupEditedByUser.value && pickupText.isNotEmpty) {
       pickupEditedByUser.value = true;
       pickupController.clear();
       routePickupLat.value = null;
@@ -232,7 +233,49 @@ class LocationSelectionController extends GetxController {
       return;
     }
 
-    homeController.searchQuery.value = pickupController.text.trim();
+    // Tap a pickup that was already chosen from search / saved — clear to pick again.
+    if (homeController.isPickupSelected.value && pickupText.isNotEmpty) {
+      pickupEditedByUser.value = true;
+      pickupController.clear();
+      routePickupLat.value = null;
+      routePickupLng.value = null;
+      homeController.isPickupSelected.value = false;
+      homeController.searchQuery.value = '';
+      return;
+    }
+
+    homeController.searchQuery.value = pickupText;
+  }
+
+  /// Tap final destination when it already has a confirmed place — clear to search again.
+  void onDestinationFieldTapped() {
+    final text = destinationController.text.trim();
+    if (homeController.isDestinationSelected.value && text.isNotEmpty) {
+      destinationController.clear();
+      routeDestinationLat.value = null;
+      routeDestinationLng.value = null;
+      destinationPlaceId.value = null;
+      homeController.isDestinationSelected.value = false;
+      homeController.searchQuery.value = '';
+      return;
+    }
+    homeController.searchQuery.value = text;
+  }
+
+  /// Tap an intermediate stop that already has a confirmed place — clear to search again.
+  void onExtraStopFieldTapped(int index) {
+    if (index < 0 || index >= extraDestinationControllers.length) return;
+    final c = extraDestinationControllers[index];
+    final text = c.text.trim();
+    final confirmed =
+        index < extraStopSelected.length && extraStopSelected[index];
+    if (confirmed && text.isNotEmpty) {
+      c.clear();
+      extraStopSelected[index] = false;
+      homeController.searchQuery.value = '';
+      return;
+    }
+    homeController.searchQuery.value = text;
   }
 
   @override

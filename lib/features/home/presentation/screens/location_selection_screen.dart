@@ -350,9 +350,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             focusNode: _extraDestinationFocusNodes[i],
             onTap: () {
               _setActiveSegment(segment);
-              controller.searchQuery.value = _extraDestinationControllers[i]
-                  .text
-                  .trim();
+              locationController.onExtraStopFieldTapped(i);
             },
             onChanged: (value) {
               _setActiveSegment(segment);
@@ -393,7 +391,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           focusNode: destinationFocusNode,
           onTap: () {
             _setActiveSegment(1);
-            controller.searchQuery.value = destinationController.text.trim();
+            locationController.onDestinationFieldTapped();
           },
           onChanged: (value) {
             _destinationPlaceId.value = null;
