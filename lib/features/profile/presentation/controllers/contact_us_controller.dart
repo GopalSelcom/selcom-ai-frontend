@@ -24,6 +24,7 @@ class ContactUsController extends GetxController {
 
   final selectedReason = AppStrings.selectAReason.tr.obs;
   final messageController = TextEditingController();
+  final canSubmit = false.obs;
 
   @override
   void onInit() {
@@ -77,6 +78,21 @@ class ContactUsController extends GetxController {
         AppDialogs.showSuccessDialog(message: success.message);
       },
     );
+  }
+
+  void onMessageChanged(String value) {
+    _updateCanSubmit();
+  }
+
+  void setSelectedReason(String reason) {
+    selectedReason.value = reason;
+    _updateCanSubmit();
+  }
+
+  void _updateCanSubmit() {
+    final hasReason = selectedReason.value != AppStrings.selectAReason.tr;
+    final hasMessage = messageController.text.trim().isNotEmpty;
+    canSubmit.value = hasReason && hasMessage;
   }
 
   @override

@@ -52,6 +52,7 @@ class ContactUsScreen extends GetView<ContactUsController> {
                         controller: controller.messageController,
                         hintText: AppStrings.howCanWeHelpYou.tr,
                         maxLines: 5,
+                        onChanged: controller.onMessageChanged,
                         textColor: AppColors.textHeading,
                         textFieldBackgroundColor: AppColors.surfaceSubtle,
                       ),
@@ -65,11 +66,33 @@ class ContactUsScreen extends GetView<ContactUsController> {
           // Submit Button (Footer)
           Obx(
             () => Padding(
-              padding: EdgeInsets.only(bottom: 16.h, left: 24.w, right: 24.w),
-              child: AppPrimaryButton(
-                label: AppStrings.submit.tr,
-                onPressed: controller.sendMessage,
-                isLoading: controller.isLoading.value,
+              padding: EdgeInsets.only(
+                bottom: controller.canSubmit.value ? 16.h : 0,
+                left: 24.w,
+                right: 24.w,
+              ),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 260),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                transitionBuilder: (child, animation) => FadeTransition(
+                  opacity: animation,
+                  child: SizeTransition(
+                    sizeFactor: animation,
+                    axis: Axis.vertical,
+                    child: child,
+                  ),
+                ),
+                child: controller.canSubmit.value
+                    ? AppPrimaryButton(
+                        key: const ValueKey('contact-submit-visible'),
+                        label: AppStrings.submit.tr,
+                        onPressed: controller.sendMessage,
+                        isLoading: controller.isLoading.value,
+                      )
+                    : const SizedBox.shrink(
+                        key: ValueKey('contact-submit-hidden'),
+                      ),
               ),
             ),
           ),
@@ -138,7 +161,7 @@ class ContactUsScreen extends GetView<ContactUsController> {
                       color: AppColors.textHeading))
                     ,
                     onTap: () {
-                      controller.selectedReason.value = reason;
+                      controller.setSelectedReason(reason);
                       Get.back();
                     },
                     trailing: Obx(
