@@ -347,9 +347,23 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
               size: 16.w,
             ),
           ),
-          trailing: InkWell(
-            onTap: () => _onRemoveDestinationStop(i),
-            child: Icon(Icons.close, color: AppColors.textHint, size: 16.sp),
+          trailing: Material(
+            color: AppColors.transparent,
+            child: Padding(
+              padding: EdgeInsets.only(right: 8.w),
+              child: InkWell(
+                onTap: () => _onRemoveDestinationStop(i),
+                borderRadius: BorderRadius.circular(22.r),
+                child: Padding(
+                  padding: EdgeInsets.all(2.w),
+                  child: Icon(
+                    Icons.close,
+                    color: AppColors.textHint,
+                    size: 20.sp,
+                  ),
+                ),
+              ),
+            ),
           ),
           field: TextField(
             controller: _extraDestinationControllers[i],
