@@ -46,7 +46,7 @@ class SelcomPesaOtpBottomSheet extends GetView<PaymentMethodsController> {
         color: AppColors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(36.r)),
       ),
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -67,8 +67,10 @@ class SelcomPesaOtpBottomSheet extends GetView<PaymentMethodsController> {
             AppStrings.enterOtp.tr,
             style: AppTextStyles.sectionTitle.copyWith(
               fontSize: 20.sp,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               color: AppColors.textHeading,
+              height: 34 / 20,
+              letterSpacing: -0.4,
             ),
           ),
           SizedBox(height: 8.h),
@@ -85,9 +87,7 @@ class SelcomPesaOtpBottomSheet extends GetView<PaymentMethodsController> {
               fontSize: 14.sp,
             ),
           ),
-          SizedBox(height: 12.h),
-          const Divider(color: AppColors.divider, thickness: 1),
-          SizedBox(height: 32.h),
+          Divider(color: AppColors.divider, thickness: 1, height: 35.h),
 
           // OTP Input (Pinput)
           Obx(
@@ -117,7 +117,7 @@ class SelcomPesaOtpBottomSheet extends GetView<PaymentMethodsController> {
             ),
           ),
 
-          SizedBox(height: 24.h),
+          SizedBox(height: 10.52.h),
 
           // Timer and Change Phone Number
           Padding(
@@ -131,7 +131,9 @@ class SelcomPesaOtpBottomSheet extends GetView<PaymentMethodsController> {
                       '0:${controller.resendTimer.value.toString().padLeft(2, '0')}',
                       style: AppTextStyles.body.copyWith(
                         color: AppColors.primary,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 15.sp,
+                        height: 20 / 15,
                       ),
                     );
                   } else {
@@ -141,7 +143,9 @@ class SelcomPesaOtpBottomSheet extends GetView<PaymentMethodsController> {
                         AppStrings.resendOtp.tr,
                         style: AppTextStyles.body.copyWith(
                           color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 15.sp,
+                          height: 20 / 15,
                         ),
                       ),
                     );
@@ -152,8 +156,10 @@ class SelcomPesaOtpBottomSheet extends GetView<PaymentMethodsController> {
                   child: Text(
                     AppStrings.changePhoneNumber.tr,
                     style: AppTextStyles.body.copyWith(
-                      color: AppColors.textHeading,
+                      color: AppColors.textBody,
                       fontWeight: FontWeight.w500,
+                      fontSize: 15.sp,
+                      height: 20 / 15,
                     ),
                   ),
                 ),

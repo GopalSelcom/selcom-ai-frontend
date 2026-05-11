@@ -59,7 +59,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                               textColor: AppColors.textHeading,
                             ),
                           ),
-                          SizedBox(height: 16.h),
+                          SizedBox(height: 12.h),
                           Obx(
                             () => AppTextField(
                               label: AppStrings.cardNumber.tr,
@@ -82,7 +82,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                               textColor: AppColors.textHeading,
                             ),
                           ),
-                          SizedBox(height: 16.h),
+                          SizedBox(height: 12.h),
                           Row(
                             children: [
                               Expanded(
@@ -155,14 +155,37 @@ class _AddCardScreenState extends State<AddCardScreen> {
                     ),
                   ),
                   Obx(
-                    () => AppPrimaryButton(
-                      label: AppStrings.addCard.tr,
-                      iconAsset: AppAssets.locationIcArrowRight,
-                      isLoading: controller.isSubmitting.value,
-                      onPressed: controller.isSubmitting.value
-                          ? null
-                          : controller.submitCard,
-                    ),
+                    () {
+                      final shouldShow =
+                          controller.isSubmitting.value ||
+                          controller.canSubmitForm.value;
+                      return AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 260),
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeInCubic,
+                        transitionBuilder: (child, animation) => FadeTransition(
+                          opacity: animation,
+                          child: SizeTransition(
+                            sizeFactor: animation,
+                            axis: Axis.vertical,
+                            child: child,
+                          ),
+                        ),
+                        child: shouldShow
+                            ? AppPrimaryButton(
+                                key: const ValueKey('add-card-button-visible'),
+                                label: AppStrings.addCard.tr,
+                                iconAsset: AppAssets.locationIcArrowRight,
+                                isLoading: controller.isSubmitting.value,
+                                onPressed: controller.isSubmitting.value
+                                    ? null
+                                    : controller.submitCard,
+                              )
+                            : const SizedBox.shrink(
+                                key: ValueKey('add-card-button-hidden'),
+                              ),
+                      );
+                    },
                   ),
                 ],
               ),

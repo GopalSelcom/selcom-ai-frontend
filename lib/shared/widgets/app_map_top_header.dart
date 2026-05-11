@@ -12,7 +12,7 @@ class AppMapTopHeader extends StatelessWidget {
     required this.addressWidget,
     this.left = 20,
     this.right = 20,
-    this.spacing = 12,
+    this.spacing = 9,
     this.onProfileTap,
     this.profileIcon = Icons.person,
     this.profileIconColor = AppColors.black,

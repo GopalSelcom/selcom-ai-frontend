@@ -60,69 +60,40 @@ class AppDialogs {
               color: AppColors.white,
               borderRadius: BorderRadius.circular(24.r),
             ),
+            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // App Logo
-                Container(
-                  padding: EdgeInsets.all(24.h),
-                  decoration: const BoxDecoration(
-                    color: AppColors.textLight,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      topRight: Radius.circular(20),
-                    ),
+                // Title
+                Text(
+                  title.tr,
+                  style: AppTextStyles.onboardingTitle.copyWith(
+                    fontSize: 22.sp,
+                    color: AppColors.textHeading,
+                    fontWeight: FontWeight.w700,
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SvgPictureAsset(AppAssets.selcomGoLogo, height: 48.h),
-                    ],
-                  ),
+                  textAlign: TextAlign.center,
                 ),
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 24.w,
-                    vertical: 32.h,
+                SizedBox(height: 12.h),
+
+                // Message
+                Text(
+                  message,
+                  style: AppTextStyles.onboardingSubtitle.copyWith(
+                    fontSize: 15.sp,
+                    color: AppColors.textBody,
+                    height: 1.5,
                   ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(height: 24.h),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 32.h),
 
-                      // Title
-                      Text(
-                        title.tr,
-                        style: AppTextStyles.onboardingTitle.copyWith(
-                          fontSize: 22.sp,
-                          color: AppColors.textHeading,
-                          fontWeight: FontWeight.w700,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: 12.h),
-
-                      // Message
-                      Text(
-                        message,
-                        style: AppTextStyles.onboardingSubtitle.copyWith(
-                          fontSize: 15.sp,
-                          color: AppColors.textBody,
-                          height: 1.5,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: 32.h),
-
-                      // OK Button
-                      AppPrimaryButton(
-                        label: AppStrings.ok.tr,
-                        onPressed: () => handleAction(invokeConfirm: true),
-                        height: 54.h,
-                        borderRadius: 16.r,
-                      ),
-                    ],
-                  ),
+                // OK Button
+                AppPrimaryButton(
+                  label: AppStrings.ok.tr,
+                  onPressed: () => handleAction(invokeConfirm: true),
+                  height: 54.h,
+                  borderRadius: 16.r,
                 ),
               ],
             ),
@@ -451,7 +422,7 @@ class AppDialogs {
 
               // Title
               Text(
-                  title.tr,
+                title.tr,
                 style: AppTextStyles.onboardingTitle.copyWith(
                   fontSize: 24.sp,
                   color: AppColors.textPrimary,

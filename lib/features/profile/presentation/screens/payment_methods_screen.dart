@@ -46,24 +46,30 @@ class PaymentMethodsScreen extends StatelessWidget {
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16.w),
                 child: Obx(
-                      () => WalletSummaryCard(
+                  () => WalletSummaryCard(
                     balance: controller.walletBalance.value,
                     walletNumber: controller.walletNumber.value,
                   ),
                 ),
               ),
             ),
-            SizedBox(height: 12.h),
-
-            // Payment methods section
-            _buildSectionTitle('Payment methods'),
-            SizedBox(height: 12.h),
-            Obx(() => _buildSelcomPesaCard(controller)),
-            SizedBox(height: 12.h),
-            // Cards section
-            _buildSectionTitle('Cards'),
-            SizedBox(height: 12.h),
-            _buildCardsSection(controller),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Payment methods section
+                  _buildSectionTitle('Payment methods'),
+                  SizedBox(height: 8.h),
+                  Obx(() => _buildSelcomPesaCard(controller)),
+                  SizedBox(height: 14.h),
+                  // Cards section
+                  _buildSectionTitle('Cards'),
+                  SizedBox(height: 8.h),
+                  _buildCardsSection(controller),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -71,15 +77,13 @@ class PaymentMethodsScreen extends StatelessWidget {
   }
 
   Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w),
-      child: Text(
-        title,
-        style: AppTextStyles.sectionTitle.copyWith(
-          color: AppColors.textBody,
-          fontWeight: FontWeight.w500,
-          fontSize: 15.sp,
-        ),
+    return Text(
+      title,
+      style: AppTextStyles.sectionTitle.copyWith(
+        color: AppColors.textBody,
+        fontWeight: FontWeight.w500,
+        fontSize: 15.sp,
+        height: 20 / 15,
       ),
     );
   }
@@ -87,129 +91,132 @@ class PaymentMethodsScreen extends StatelessWidget {
   Widget _buildSelcomPesaCard(PaymentMethodsController controller) {
     bool isLinked = controller.isSelcomPesaLinked.value;
 
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w),
-      child: Container(
-        padding: EdgeInsets.all(16.w),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceSubtle,
-          border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
-          borderRadius: BorderRadius.circular(20.r),
-        ),
-        child: InkWell(
-          onTap: isLinked
-              ? controller.openLinkedAccountSheet
-              : controller.linkSelcomPesa,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    AppStrings.selcomPesa.tr,
-                    style: AppTextStyles.body.copyWith(
-                      fontSize: 15.sp,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textHeading,
-                    ),
-                  ),
-                  if (isLinked) ...[
-                    SizedBox(width: 8.w),
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 6.w,
-                        vertical: 2.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.textVerified,
-                        borderRadius: BorderRadius.circular(4.r),
-                      ),
-                      child: Text(
-                        AppStrings.defaultLabel.tr,
-                        style: TextStyle(
-                          color: AppColors.white,
-                          fontSize: 10.sp,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ],
-                  if (isLinked) ...[
-                    const Spacer(),
-                    Icon(
-                      Iconsax.arrow_right_3,
-                      size: 20.w,
-                      color: AppColors.textBody.withValues(alpha: 0.5),
-                    ),
-                  ],
-                ],
-              ),
-              SizedBox(height: 4.h),
-              Text(
-                isLinked
-                    ? 'Linked number +255 711 410 410'
-                    : 'Connect your Selcom Pesa account to enable automatic, seamless ride charge deductions.',
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.textBody,
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w400,
-                  height: 1.5,
-                ),
-              ),
-              if (!isLinked) ...[
-                SizedBox(height: 12.h),
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 17.w, vertical: 18.h),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceSubtle,
+        border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+      child: InkWell(
+        onTap: isLinked
+            ? controller.openLinkedAccountSheet
+            : controller.linkSelcomPesa,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
                 Text(
-                  AppStrings.linkAccount.tr,
+                  AppStrings.selcomPesa.tr,
                   style: AppTextStyles.body.copyWith(
-                    color: AppColors.primary,
+                    fontSize: 15.sp,
                     fontWeight: FontWeight.w500,
-                    fontSize: 15.h
+                    color: AppColors.black,
+                    height: 20 / 15,
                   ),
                 ),
+                if (isLinked) ...[
+                  SizedBox(width: 7.w),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 6.w,
+                      vertical: 2.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.textVerified,
+                      borderRadius: BorderRadius.circular(4.r),
+                    ),
+                    child: Text(
+                      AppStrings.defaultLabel.tr,
+                      style: TextStyle(
+                        color: AppColors.white,
+                        fontSize: 10.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+                if (isLinked) ...[
+                  const Spacer(),
+                  Icon(
+                    Iconsax.arrow_right_3,
+                    size: 20.w,
+                    color: AppColors.textBody.withValues(alpha: 0.5),
+                  ),
+                ],
               ],
+            ),
+            SizedBox(height: 5.h),
+            Text(
+              isLinked
+                  ? 'Linked number +255 711 410 410'
+                  : 'Connect your Selcom Pesa account to enable automatic, seamless ride charge deductions.',
+              style: isLinked
+                  ? AppTextStyles.bodySecondary.copyWith(
+                      color: AppColors.textBody,
+                      fontWeight: FontWeight.w500,
+                      height: 20 / 14,
+                    )
+                  : AppTextStyles.caption.copyWith(
+                      color: AppColors.textBody,
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w400,
+                      height: 20 / 12,
+                    ),
+            ),
+            if (!isLinked) ...[
+              SizedBox(height: 5.h),
+              Text(
+                AppStrings.linkAccount.tr,
+                style: AppTextStyles.body.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 15.sp,
+                  height: 20 / 15,
+                ),
+              ),
             ],
-          ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildCardsSection(PaymentMethodsController controller) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.surfaceSubtle,
-          border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
-          borderRadius: BorderRadius.circular(20.r),
-        ),
-        child: Column(
-          children: [
-            _buildCardTile(
-              icon: Icons.credit_card, // Replace with Visa icon if available
-              brand: _activeCard.brand,
-              number: _activeCard.maskedNumber,
-              onTap: () => controller.openCardDetails(_activeCard),
-            ),
-            _buildCardTile(
-              icon: Icons.credit_card,
-              brand: _activeCard.brand,
-              name: _activeCard.nickName,
-              number: _activeCard.maskedNumber,
-              onTap: () => controller.openCardDetails(_activeCard),
-            ),
-            _buildCardTile(
-              icon: Icons.credit_card,
-              brand: _expiredCard.brand,
-              number: _expiredCard.maskedNumber,
-              status: 'Expired',
-              onTap: () => controller.openCardDetails(_expiredCard),
-              showDivider: false,
-            ),
-            const Divider(color: AppColors.borderWalletCard, height: 1),
-            _buildAddCardTile(controller),
-          ],
-        ),
+    return Container(
+      padding: EdgeInsets.fromLTRB(10.w, 19.h, 10.w, 0.h),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceSubtle,
+        border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
+        borderRadius: BorderRadius.circular(20.r),
+      ),
+      child: Column(
+        children: [
+          _buildCardTile(
+            icon: Icons.credit_card, // Replace with Visa icon if available
+            brand: _activeCard.brand,
+            number: _activeCard.maskedNumber,
+            onTap: () => controller.openCardDetails(_activeCard),
+          ),
+          _buildCardTile(
+            icon: Icons.credit_card,
+            brand: _activeCard.brand,
+            name: _activeCard.nickName,
+            number: _activeCard.maskedNumber,
+            onTap: () => controller.openCardDetails(_activeCard),
+          ),
+          _buildCardTile(
+            icon: Icons.credit_card,
+            brand: _expiredCard.brand,
+            number: _expiredCard.maskedNumber,
+            status: 'Expired',
+            onTap: () => controller.openCardDetails(_expiredCard),
+            showDivider: false,
+          ),
+          const Divider(color: AppColors.borderWalletCard, height: 1),
+          _buildAddCardTile(controller),
+        ],
       ),
     );
   }
@@ -228,24 +235,20 @@ class PaymentMethodsScreen extends StatelessWidget {
       child: Column(
         children: [
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+            padding: EdgeInsets.only(top: 2.h, left: 8.w, right: 2.w),
             child: Row(
               children: [
                 // Visa Logo placeholder
-                Row(
-                  children: [
-                    Text(
-                      brand,
-                      style: TextStyle(
-                        color: AppColors.textBrandVisaSecondary,
-                        fontWeight: FontWeight.w900,
-                        fontStyle: FontStyle.italic,
-                        fontSize: 16.sp,
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
-                  ],
+                Text(
+                  brand,
+                  style: TextStyle(
+                    color: AppColors.textBrandVisaSecondary,
+                    fontWeight: FontWeight.w900,
+                    fontStyle: FontStyle.italic,
+                    fontSize: 16.sp,
+                  ),
                 ),
+                SizedBox(width: 12.w),
                 if (name != null) ...[
                   Text(
                     name,
@@ -289,11 +292,11 @@ class PaymentMethodsScreen extends StatelessWidget {
               ],
             ),
           ),
-          if (showDivider)
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: const Divider(color: AppColors.borderWalletCard, height: 1),
-            ),
+          SizedBox(height: 15.h),
+          if (showDivider) ...[
+            const Divider(color: AppColors.borderWalletCard, height: 1),
+            SizedBox(height: 18.h),
+          ],
         ],
       ),
     );
@@ -303,17 +306,19 @@ class PaymentMethodsScreen extends StatelessWidget {
     return InkWell(
       onTap: controller.addCard,
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+        padding: EdgeInsets.only(bottom: 16.h, top: 14.h, left: 4.w),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Icon(Icons.add, color: AppColors.primary, size: 24.w),
-            SizedBox(width: 12.w),
+            SizedBox(width: 4.w),
             Text(
               AppStrings.addDebitCreditCard.tr,
               style: AppTextStyles.body.copyWith(
                 color: AppColors.primary,
                 fontSize: 15.h,
                 fontWeight: FontWeight.w500,
+                height: 20 / 15,
               ),
             ),
           ],

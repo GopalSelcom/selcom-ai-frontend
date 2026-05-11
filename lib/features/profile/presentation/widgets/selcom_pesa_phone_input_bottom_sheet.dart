@@ -21,7 +21,7 @@ class SelcomPesaPhoneInputBottomSheet
         color: AppColors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(36.r)),
       ),
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -42,14 +42,13 @@ class SelcomPesaPhoneInputBottomSheet
             AppStrings.enterYourSelcomPesaNumber.tr,
             style: AppTextStyles.sectionTitle.copyWith(
               fontSize: 20.sp,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               color: AppColors.textHeading,
+              height: 34 / 20,
+              letterSpacing: -0.4,
             ),
           ),
-          SizedBox(height: 12.h),
-          const Divider(color: AppColors.divider, thickness: 1),
-          SizedBox(height: 24.h),
-
+          Divider(color: AppColors.divider, thickness: 1, height: 35.h),
           Align(
             alignment: Alignment.centerLeft,
             child: Text(
@@ -70,10 +69,9 @@ class SelcomPesaPhoneInputBottomSheet
               errorText: controller.phoneError.value.isEmpty
                   ? null
                   : controller.phoneError.value,
-              maxLength: 12,
+              maxLength: 11,
               inputFormatters: [
                 FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(10),
                 TanzaniaPhoneFormatter(),
               ],
               prefixIcon: Container(
@@ -86,22 +84,42 @@ class SelcomPesaPhoneInputBottomSheet
                   ),
                 ),
               ),
-              onChanged: (v) {
-                if (controller.phoneError.isNotEmpty) {
-                  controller.phoneError.value = '';
-                }
-              },
+              onChanged: controller.onSelcomPhoneChanged,
             ),
           ),
 
           SizedBox(height: 48.h),
 
-          // Continue Button
-          AppPrimaryButton(
-            label: AppStrings.continueLabel.tr,
-            onPressed: controller.onPhoneContinue,
+          // Continue Button (visible only when TZ number is complete enough to submit)
+          Obx(
+            () => Padding(
+              padding: EdgeInsets.only(
+                bottom: controller.canContinueSelcomPhone.value ? 16.h : 0,
+              ),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 260),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                transitionBuilder: (child, animation) => FadeTransition(
+                  opacity: animation,
+                  child: SizeTransition(
+                    sizeFactor: animation,
+                    axis: Axis.vertical,
+                    child: child,
+                  ),
+                ),
+                child: controller.canContinueSelcomPhone.value
+                    ? AppPrimaryButton(
+                        key: const ValueKey('selcom-pesa-continue-visible'),
+                        label: AppStrings.continueLabel.tr,
+                        onPressed: controller.onPhoneContinue,
+                      )
+                    : const SizedBox.shrink(
+                        key: ValueKey('selcom-pesa-continue-hidden'),
+                      ),
+              ),
+            ),
           ),
-          SizedBox(height: 16.h),
         ],
       ),
     );

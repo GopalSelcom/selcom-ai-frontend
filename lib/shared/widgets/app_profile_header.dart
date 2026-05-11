@@ -46,7 +46,7 @@ class AppProfileHeader extends StatelessWidget {
             ),
 
           if (title != null) ...[
-            // SizedBox(height: 12.h),
+            SizedBox(height: 7.h),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.w),
               child: Text(
@@ -59,7 +59,7 @@ class AppProfileHeader extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(height: 16.h),
+            SizedBox(height: 31.h),
           ],
 
           if (child != null) ...[

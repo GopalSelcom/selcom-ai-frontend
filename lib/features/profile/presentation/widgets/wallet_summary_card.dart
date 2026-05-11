@@ -24,7 +24,7 @@ class WalletSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
+      padding: EdgeInsets.symmetric(horizontal: 9.w, vertical: 6.h),
       decoration: BoxDecoration(
         color: AppColors.surfaceSubtle,
         border: Border.all(
@@ -41,7 +41,7 @@ class WalletSummaryCard extends StatelessWidget {
             children: [
               Container(
                 width: 51.w,
-                height: 51.h,
+                height: 51.w,
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
@@ -52,7 +52,7 @@ class WalletSummaryCard extends StatelessWidget {
                   color: AppColors.primary,
                 ),
               ),
-              SizedBox(width: 12.w),
+              SizedBox(width: 13.w),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -63,9 +63,9 @@ class WalletSummaryCard extends StatelessWidget {
                       color: AppColors.textHeading, // fill_IETHWP
                       fontSize: 15.sp,
                       fontWeight: FontWeight.w500,
+                      height: 20 / 15,
                     ),
                   ),
-                  SizedBox(height: 2.h),
                   Row(
                     children: [
                       Text(
@@ -73,6 +73,7 @@ class WalletSummaryCard extends StatelessWidget {
                         style: AppTextStyles.caption.copyWith(
                           color: AppColors.textBody,
                           fontSize: 12.sp,
+                          height: 20 / 12,
                         ),
                       ),
                       SizedBox(width: 4.w),
@@ -80,14 +81,16 @@ class WalletSummaryCard extends StatelessWidget {
                         onTap: () {
                           Clipboard.setData(ClipboardData(text: walletNumber));
                         },
-
-                        child: const SvgPictureAsset(AppAssets.icCopy),
-
-                        /*child: Icon(
-                          Iconsax.copy,
-                          size: 14.w,
-                          color: AppColors.textHeading.withValues(alpha: 0.5),
-                        ),*/
+                        child: SvgPictureAsset(
+                          AppAssets.icCopy,
+                          width: 14.w,
+                          height: 14.w,
+                          placeholderBuilder: (_) => Icon(
+                            Iconsax.copy,
+                            size: 14.w,
+                            color: AppColors.textHeading.withValues(alpha: 0.5),
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -104,10 +107,11 @@ class WalletSummaryCard extends StatelessWidget {
                 style: AppTextStyles.price.copyWith(
                   color: AppColors.primary,
                   fontWeight: FontWeight.w600,
-                  fontSize: 18.sp,
+                  fontSize: 19.03.sp,
+                  height: 23.11 / 19.03,
+                  letterSpacing: -0.27,
                 ),
               ),
-              SizedBox(width: 4.w),
               Icon(
                 Iconsax.arrow_right_3,
                 size: 24.w,

@@ -17,7 +17,7 @@ class SelcomPesaConnectBottomSheet extends GetView<PaymentMethodsController> {
         color: AppColors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(36.r)),
       ),
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -32,29 +32,32 @@ class SelcomPesaConnectBottomSheet extends GetView<PaymentMethodsController> {
               ),
             ),
           ),
-          SizedBox(height: 24.h),
+          SizedBox(height: 13.h),
 
           Text(
             AppStrings.stepsToConnectSelcomPesa.tr,
             style: AppTextStyles.sectionTitle.copyWith(
               fontSize: 20.sp,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               color: AppColors.textHeading,
+              height: 34 / 20,
+              letterSpacing: -0.4,
             ),
           ),
-          SizedBox(height: 32.h),
+
+          Divider(height: 34.h, color: AppColors.divider, thickness: 1),
 
           // Stepper
           _buildStepper(),
 
-          SizedBox(height: 32.h),
+          SizedBox(height: 17.h),
 
           // Info Banner
           Container(
             width: double.infinity,
             padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
-              color: AppColors.bgSuccessBanner,
+              color: AppColors.bgRequestMoney,
               borderRadius: BorderRadius.circular(12.r),
             ),
             child: Text(
@@ -64,7 +67,8 @@ class SelcomPesaConnectBottomSheet extends GetView<PaymentMethodsController> {
               style: AppTextStyles.caption.copyWith(
                 color: AppColors.success,
                 fontWeight: FontWeight.w500,
-                fontSize: 14.sp,
+                fontSize: 15.sp,
+                height: 20 / 15,
               ),
             ),
           ),
@@ -134,21 +138,37 @@ class _StepperItem extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: AppColors.surfaceSubtle,
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.borderWalletCard, width: 1),
+                  border: Border.all(
+                    color: AppColors.borderWalletCard,
+                    width: 1,
+                  ),
                 ),
                 child: Center(
                   child: Text(
                     step,
                     style: AppTextStyles.body.copyWith(
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w500,
                       color: AppColors.textHeading,
+                      fontSize: 15.sp,
+                      height: 20 / 15,
                     ),
                   ),
                 ),
               ),
               if (!isLast)
                 Expanded(
-                  child: Container(width: 2.w, color: AppColors.borderWalletCard),
+                  child: Container(
+                    width: 10.w,
+                    decoration: const BoxDecoration(
+                      color: AppColors.surfaceSubtle,
+                      border: Border.symmetric(
+                        vertical: BorderSide(
+                          color: AppColors.borderWalletCard,
+                          width: 1,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
             ],
           ),
@@ -157,7 +177,7 @@ class _StepperItem extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: 10.h),
+                SizedBox(height: 2.h),
                 Text(
                   description,
                   style: AppTextStyles.body.copyWith(
@@ -166,7 +186,7 @@ class _StepperItem extends StatelessWidget {
                     height: 1.4,
                   ),
                 ),
-                if (!isLast) SizedBox(height: 24.h),
+                if (!isLast) SizedBox(height: 32.h),
               ],
             ),
           ),
