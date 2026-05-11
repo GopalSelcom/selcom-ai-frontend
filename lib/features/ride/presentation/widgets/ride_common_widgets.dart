@@ -75,6 +75,7 @@ class RideLocationsTimeline extends StatelessWidget {
   final bool showStopsAsSummary;
   final bool showAddStopBeforeDestination;
   final VoidCallback? onAddStopTap;
+
   /// When true, shows a red text action under the destination (ride-started sheet only).
   final bool showChangeDropLocationLink;
   final VoidCallback? onChangeDropLocationTap;
@@ -158,19 +159,16 @@ class RideLocationsTimeline extends StatelessWidget {
           ),
           showBottomLine: false,
           footer: showChangeDropLocationLink && onChangeDropLocationTap != null
-              ? Padding(
-                  padding: EdgeInsets.only(top: 8.h),
-                  child: GestureDetector(
-                    onTap: onChangeDropLocationTap,
-                    child: Text(
-                      AppStrings.changeDropLocation.tr,
-                      style: TextStyle(
-                        fontFamily: AppTextStyles.metropolisFont,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
-                        fontSize: 14.sp,
-                        height: 20 / 14,
-                      ),
+              ? GestureDetector(
+                  onTap: onChangeDropLocationTap,
+                  child: Text(
+                    AppStrings.changeDropLocation.tr,
+                    style: TextStyle(
+                      fontFamily: AppTextStyles.metropolisFont,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary,
+                      fontSize: 12.sp,
+                      height: 20 / 12,
                     ),
                   ),
                 )
@@ -182,8 +180,8 @@ class RideLocationsTimeline extends StatelessWidget {
 
   Widget _buildLetterIcon(String label, {required Color color}) {
     return Container(
-      width: 22.w,
-      height: 22.w,
+      width: 24.w,
+      height: 24.w,
       decoration: BoxDecoration(color: color, shape: BoxShape.circle),
       alignment: Alignment.center,
       child: Text(
@@ -263,10 +261,11 @@ class RideLocationsTimeline extends StatelessWidget {
                       fontWeight: FontWeight.w500,
                       color: AppColors.black,
                       fontSize: 15.sp,
+                      height: 20 / 15,
                     ),
                   ),
                   if (address != null && address.trim().isNotEmpty) ...[
-                    SizedBox(height: 4.h),
+                    SizedBox(height: 1.h),
                     Text(
                       address,
                       style: TextStyle(
@@ -274,6 +273,7 @@ class RideLocationsTimeline extends StatelessWidget {
                         color: AppColors.textBody,
                         fontSize: 12.sp,
                         fontWeight: FontWeight.w400,
+                        height: 20 / 12,
                       ),
                     ),
                   ],
@@ -300,10 +300,10 @@ class RideLocationsTimeline extends StatelessWidget {
     return GestureDetector(
       onTap: onAddStopTap,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+        padding: EdgeInsets.fromLTRB(10.w, 6.h, 10.w, 6.h),
         decoration: BoxDecoration(
           color: AppColors.white,
-          borderRadius: BorderRadius.circular(999.r),
+          borderRadius: BorderRadius.circular(100.r),
           border: Border.all(color: AppColors.borderWalletCard),
         ),
         child: Row(
@@ -311,26 +311,26 @@ class RideLocationsTimeline extends StatelessWidget {
           children: [
             SvgPictureAsset(
               AppAssets.locationIcAdd,
-              width: 18.w,
-              height: 18.w,
+              width: 16.w,
+              height: 16.w,
               color: AppColors.primary,
               placeholderBuilder: (_) => Container(
-                width: 18.w,
-                height: 18.w,
+                width: 16.w,
+                height: 16.w,
                 decoration: const BoxDecoration(
                   color: AppColors.primary,
                   shape: BoxShape.circle,
                 ),
                 alignment: Alignment.center,
-                child: Icon(Icons.add, color: AppColors.white, size: 14.sp),
+                child: Icon(Icons.add, color: AppColors.white, size: 12.sp),
               ),
             ),
-            SizedBox(width: 6.w),
+            SizedBox(width: 4.80.w),
             Text(
               AppStrings.add.tr,
               style: AppTextStyles.homeSubtitle.copyWith(
                 color: AppColors.textMutedStrong,
-                fontSize: 15.sp,
+                fontSize: 14.sp,
                 height: 20 / 15,
               ),
             ),
@@ -341,18 +341,17 @@ class RideLocationsTimeline extends StatelessWidget {
   }
 
   Widget _buildAddStopDividerRow() {
-    return IntrinsicHeight(
+    return SizedBox(
+      height: 34.h,
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           SizedBox(
             width: 22.w,
-            child: Align(
-              alignment: Alignment.center,
-              child: Container(
+            child: Center(
+              child: SizedBox(
                 width: 1.w,
                 height: double.infinity,
-                margin: EdgeInsets.zero,
                 child: CustomPaint(
                   painter: DashedLinePainter(
                     color: AppColors.black.withValues(alpha: 0.5),
@@ -362,9 +361,11 @@ class RideLocationsTimeline extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: Row(
+            child: Stack(
+              alignment: Alignment.centerRight,
               children: [
-                Expanded(
+                Align(
+                  alignment: Alignment.center,
                   child: Container(
                     height: 1.h,
                     color: AppColors.borderWalletCard,
