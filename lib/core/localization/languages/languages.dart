@@ -222,6 +222,8 @@ abstract class Languages {
   String get pleaseWaitWhileWeProcessYourRequest;
   String get paymentMode;
   String get paymentNotConfirmed;
+  String get bookRidePaymentNotAppliedTitle;
+  String get bookRidePaymentNotAppliedMessage;
   String get paymentValidationFailed;
   String get phoneNumberUnavailable;
   String get phoneWithNumber;

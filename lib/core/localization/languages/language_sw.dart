@@ -211,6 +211,8 @@ class LanguageSw extends Languages {
     'please_wait_while_we_process_your_request': '',
     'payment_mode': '',
     'payment_not_confirmed': '',
+    'book_ride_payment_not_applied_title': '',
+    'book_ride_payment_not_applied_message': '',
     'payment_validation_failed': '',
     'phone_number_unavailable': '',
     'phone_with_number': '',
@@ -1213,6 +1215,14 @@ class LanguageSw extends Languages {
 
   @override
   String get paymentNotConfirmed => values['payment_not_confirmed'] ?? '';
+
+  @override
+  String get bookRidePaymentNotAppliedTitle =>
+      values['book_ride_payment_not_applied_title'] ?? '';
+
+  @override
+  String get bookRidePaymentNotAppliedMessage =>
+      values['book_ride_payment_not_applied_message'] ?? '';
 
   @override
   String get paymentValidationFailed =>

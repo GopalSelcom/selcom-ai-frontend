@@ -241,6 +241,9 @@ class LanguageEn extends Languages {
         'Please wait while we process your request.',
     'payment_mode': 'Payment mode',
     'payment_not_confirmed': 'Payment not confirmed',
+    'book_ride_payment_not_applied_title': 'Payment not deducted',
+    'book_ride_payment_not_applied_message':
+        'We could not confirm that your payment was taken for this ride. Tap Retry to submit the booking again, or Cancel to stay here.',
     'payment_validation_failed': 'Payment validation failed',
     'phone_number_unavailable': 'Phone number unavailable',
     'phone_with_number': 'Phone: @phone',
@@ -1292,6 +1295,14 @@ class LanguageEn extends Languages {
 
   @override
   String get paymentNotConfirmed => values['payment_not_confirmed'] ?? '';
+
+  @override
+  String get bookRidePaymentNotAppliedTitle =>
+      values['book_ride_payment_not_applied_title'] ?? '';
+
+  @override
+  String get bookRidePaymentNotAppliedMessage =>
+      values['book_ride_payment_not_applied_message'] ?? '';
 
   @override
   String get paymentValidationFailed =>

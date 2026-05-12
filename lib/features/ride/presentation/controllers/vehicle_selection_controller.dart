@@ -9,6 +9,7 @@ import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/data/models/requests/book_ride_request.dart';
+import '../../../../core/data/models/responses/rides/book_rides_response.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/near_by_rider_response.dart';
@@ -703,60 +704,86 @@ class VehicleSelectionController extends GetxController {
             return;
           }
 
-          // 2) Only after validation, submit ride booking.
-          final request = BookRideRequest(
-            validationId: validationId,
-            idempotencyKey: 'idem_${DateTime.now().millisecondsSinceEpoch}',
-            pickup: pickupEntity,
-            destinations: destinations.toList(),
-            vehicleTypeId: resolvedVehicleTypeId,
-            paymentMethod: pay.type,
-            isBookedForOther: isBookedForOther,
-            passengerName: isBookedForOther ? passengerName : null,
-            passengerPhone: isBookedForOther ? passengerPhone : null,
-          );
-          final result = await homeRepository.bookRide(request);
-          await result.fold<Future<void>>(
-            (f) async {
-              // Clean the message if it contains "Exception: "
-              String msg = f.message;
-              if (msg.startsWith('Exception: ')) {
-                msg = msg.replaceFirst('Exception: ', '');
-              }
-              AppDialogs.showErrorDialog(title: 'Booking failed', message: msg);
-            },
-            (data) async {
-              final rideId = data.data?.ride?.id;
-              if (rideId == null || rideId.isEmpty) {
-                AppDialogs.showErrorDialog(
-                  title: 'Booking',
-                  message:
-                      data.message ??
-                      'Ride was created but ride id is missing from the response.',
-                );
-                return;
-              }
+          // 2) Only after validation, submit ride booking (may retry if API OK but payment not applied).
+          var bookingSubmitInFlight = false;
+          Future<void> submitRideBooking() async {
+            if (bookingSubmitInFlight) return;
+            bookingSubmitInFlight = true;
+            try {
+              final request = BookRideRequest(
+                validationId: validationId,
+                idempotencyKey:
+                    'idem_${DateTime.now().millisecondsSinceEpoch}',
+                pickup: pickupEntity,
+                destinations: destinations.toList(),
+                vehicleTypeId: resolvedVehicleTypeId,
+                paymentMethod: pay.type,
+                isBookedForOther: isBookedForOther,
+                passengerName: isBookedForOther ? passengerName : null,
+                passengerPhone: isBookedForOther ? passengerPhone : null,
+              );
+              final result = await homeRepository.bookRide(request);
+              await result.fold<Future<void>>(
+                (f) async {
+                  String msg = f.message;
+                  if (msg.startsWith('Exception: ')) {
+                    msg = msg.replaceFirst('Exception: ', '');
+                  }
+                  AppDialogs.showErrorDialog(
+                    title: 'Booking failed',
+                    message: msg,
+                  );
+                },
+                (data) async {
+                  final ride = data.data?.ride;
+                  final rideId = ride?.id;
+                  if (rideId == null || rideId.isEmpty || ride == null) {
+                    AppDialogs.showErrorDialog(
+                      title: 'Booking',
+                      message: data.message ??
+                          'Ride was created but ride id is missing from the response.',
+                    );
+                    return;
+                  }
 
-              Get.offNamed(
-                AppRoutes.findingDriver,
-                arguments: {
-                  'rideId': rideId,
-                  'vehicleType': _socketVehicleTypeForEstimate(est),
-                  'pickupLat': pickupEntity.lat,
-                  'pickupLng': pickupEntity.lng,
-                  'pickupAddress': pickupEntity.address,
-                  'destinationLat': destinationEntity.lat,
-                  'destinationLng': destinationEntity.lng,
-                  'destinationAddress': destinationEntity.address,
-                  'destinations': destinations.toList(),
-                  'fareBreakdown': data.data?.ride?.fareBreakdown?.toJson(),
-                  'isBookedForOther': isBookedForOther,
-                  'passengerName': passengerName,
-                  'passengerPhone': passengerPhone,
+                  if (!rideBookResponseIndicatesPaymentApplied(ride, pay.type)) {
+                    AppDialogs.showConfirmationDialog(
+                      title: AppStrings.bookRidePaymentNotAppliedTitle.tr,
+                      message:
+                          AppStrings.bookRidePaymentNotAppliedMessage.tr,
+                      confirmText: AppStrings.retry,
+                      cancelText: AppStrings.cancel,
+                      onConfirm: submitRideBooking,
+                    );
+                    return;
+                  }
+
+                  Get.offNamed(
+                    AppRoutes.findingDriver,
+                    arguments: {
+                      'rideId': rideId,
+                      'vehicleType': _socketVehicleTypeForEstimate(est),
+                      'pickupLat': pickupEntity.lat,
+                      'pickupLng': pickupEntity.lng,
+                      'pickupAddress': pickupEntity.address,
+                      'destinationLat': destinationEntity.lat,
+                      'destinationLng': destinationEntity.lng,
+                      'destinationAddress': destinationEntity.address,
+                      'destinations': destinations.toList(),
+                      'fareBreakdown': ride.fareBreakdown?.toJson(),
+                      'isBookedForOther': isBookedForOther,
+                      'passengerName': passengerName,
+                      'passengerPhone': passengerPhone,
+                    },
+                  );
                 },
               );
-            },
-          );
+            } finally {
+              bookingSubmitInFlight = false;
+            }
+          }
+
+          await submitRideBooking();
         },
       );
     } finally {
@@ -1138,4 +1165,38 @@ class VehicleSelectionController extends GetxController {
       ),
     );
   }
+}
+
+/// True when [ride] looks like a successful hold/charge for prepaid [paymentMethodType].
+bool rideBookResponseIndicatesPaymentApplied(
+  Ride ride,
+  String paymentMethodType,
+) {
+  final type = paymentMethodType.toLowerCase().trim().replaceAll('-', '_');
+  const nonPrepaid = {'cash', 'cod', 'pay_on_delivery', 'pod'};
+  if (nonPrepaid.contains(type)) return true;
+
+  final rawStatus = ride.paymentStatus?.toString().trim().toLowerCase() ?? '';
+  const okStatuses = {
+    'blocked',
+    'block',
+    'completed',
+    'captured',
+    'authorized',
+    'authorised',
+    'paid',
+    'success',
+  };
+  if (rawStatus.isNotEmpty && okStatuses.contains(rawStatus)) return true;
+
+  final blocked = ride.blockedAmount;
+  if (blocked != null && blocked > 0) return true;
+
+  final blockVid = (ride.blockValidationId ?? '').toString().trim();
+  if (blockVid.isNotEmpty) return true;
+
+  final trans = ride.blockTransid?.toString().trim() ?? '';
+  if (trans.isNotEmpty && trans != 'null') return true;
+
+  return false;
 }

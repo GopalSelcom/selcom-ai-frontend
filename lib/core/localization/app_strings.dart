@@ -267,6 +267,10 @@ class AppStrings {
       'please_wait_while_we_process_your_request';
   static const String paymentMode = 'payment_mode';
   static const String paymentNotConfirmed = 'payment_not_confirmed';
+  static const String bookRidePaymentNotAppliedTitle =
+      'book_ride_payment_not_applied_title';
+  static const String bookRidePaymentNotAppliedMessage =
+      'book_ride_payment_not_applied_message';
   static const String paymentValidationFailed = 'payment_validation_failed';
   static const String phoneNumberUnavailable = 'phone_number_unavailable';
   static const String phoneWithNumber = 'phone_with_number';
