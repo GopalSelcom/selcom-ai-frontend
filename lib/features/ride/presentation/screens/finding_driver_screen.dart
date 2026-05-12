@@ -3,7 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:selcom_rides_frontend/shared/widgets/map_widgets.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -11,7 +10,6 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../controllers/finding_driver_controller.dart';
-import '../../../../shared/utils/phone_formatter.dart';
 
 class FindingDriverScreen extends StatefulWidget {
   const FindingDriverScreen({super.key});
@@ -89,46 +87,17 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
             right: 16,
             onProfileTap: c.openProfile,
             addressWidget: Expanded(
-              child: Obx(() {
-                final isForOther = c.isBookedForOther.value;
-
-                return isForOther
-                    ? AppMapLocationSummaryCard(
-                        leading: Container(
-                          padding: EdgeInsets.all(6.w),
-                          decoration: const BoxDecoration(
-                            color: AppColors.surfaceSubtle,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Iconsax.user,
-                            color: AppColors.primary,
-                            size: 20.sp,
-                          ),
-                        ),
-                        label: AppStrings.bookingForName.trParams({
-                          'name': (c.passengerName.value ?? '').trim().isEmpty
-                              ? AppStrings.someone.tr
-                              : c.passengerName.value!,
-                        }),
-                        address:
-                            AppStrings.phoneWithNumber.trParams({
-                          'phone': TanzaniaPhoneFormatter.formatInternational(
-                            c.passengerPhone.value ?? '',
-                          ),
-                        }),
-                        maxAddressLines: 1,
-                      )
-                    : RideLocationSummaryCard(
-                        pickupAddress: c.pickupAddress.isEmpty
-                            ? AppStrings.currentLocation.tr
-                            : c.pickupAddress,
-                        destinationAddress: c.destinationAddress.isEmpty
-                            ? AppStrings.destination.tr
-                            : c.destinationAddress,
-                        intermediateStops: c.intermediateStops.toList(),
-                      );
-              }),
+              child: Obx(
+                () => RideLocationSummaryCard(
+                  pickupAddress: c.pickupAddress.isEmpty
+                      ? AppStrings.currentLocation.tr
+                      : c.pickupAddress,
+                  destinationAddress: c.destinationAddress.isEmpty
+                      ? AppStrings.destination.tr
+                      : c.destinationAddress,
+                  intermediateStops: c.intermediateStops.toList(),
+                ),
+              ),
             ),
           ),
           Obx(() {
