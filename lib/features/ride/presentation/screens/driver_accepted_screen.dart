@@ -701,44 +701,57 @@ class DriverAcceptedScreen extends StatelessWidget {
     DriverAcceptedController c,
     ScrollController scrollController,
   ) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Center(
-            child: Container(
-              width: 64.w,
-              height: 5.h,
-              decoration: BoxDecoration(
-                color: AppColors.skeletonBase,
-                borderRadius: BorderRadius.circular(37.r),
-              ),
+    return Builder(
+      builder: (context) {
+        return ScrollConfiguration(
+          behavior: ScrollConfiguration.of(context).copyWith(
+            overscroll: false,
+            physics: const ClampingScrollPhysics(),
+          ),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 64.w,
+                    height: 5.h,
+                    decoration: BoxDecoration(
+                      color: AppColors.skeletonBase,
+                      borderRadius: BorderRadius.circular(37.r),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 13.h),
+                Text(
+                  c.rideProgressTitle,
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.homeTitle.copyWith(
+                    color: AppColors.textHeading,
+                    fontWeight: FontWeight.w700,
+                    height: 34 / 20,
+                    letterSpacing: -0.4,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                const Divider(color: AppColors.borderWalletCard, height: 1),
+                SizedBox(height: 14.h),
+                Expanded(
+                  child: ListView(
+                    controller: scrollController,
+                    physics: const ClampingScrollPhysics(),
+                    padding: EdgeInsets.zero,
+                    children: [
+                      _rideProgressBody(c, showChangeDropLink: true),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-          SizedBox(height: 13.h),
-          Text(
-            c.rideProgressTitle,
-            textAlign: TextAlign.center,
-            style: AppTextStyles.homeTitle.copyWith(
-              color: AppColors.textHeading,
-              fontWeight: FontWeight.w700,
-              height: 34 / 20,
-              letterSpacing: -0.4,
-            ),
-          ),
-          SizedBox(height: 8.h),
-          const Divider(color: AppColors.borderWalletCard, height: 1),
-          SizedBox(height: 14.h),
-          Expanded(
-            child: ListView(
-              controller: scrollController,
-              padding: EdgeInsets.zero,
-              children: [_rideProgressBody(c, showChangeDropLink: true)],
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
