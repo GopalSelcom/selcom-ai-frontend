@@ -1,30 +1,39 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:get/get.dart';
+
 import '../../../../core/config/app_config.dart';
 import '../../../../core/data/models/requests/send_otp_request.dart';
 import '../../../../core/data/models/requests/verify_otp_request.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/services/app_region_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/services/voip_callkit_bridge_service.dart';
+import '../../../../shared/data/countries_phone_data.dart';
+import '../../../../shared/utils/phone_national_rules.dart';
 import '../../domain/usecases/resend_otp_use_case.dart';
 import '../../domain/usecases/send_otp_use_case.dart';
 import '../../domain/usecases/verify_otp_use_case.dart';
 
 class AuthController extends GetxController {
-  final SendOtpUseCase sendOtpUseCase;
-  final ResendOtpUseCase resendOtpUseCase;
-  final VerifyOtpUseCase verifyOtpUseCase;
-
   AuthController({
     required this.sendOtpUseCase,
     required this.resendOtpUseCase,
     required this.verifyOtpUseCase,
+    required this.appRegionService,
   });
+
+  final SendOtpUseCase sendOtpUseCase;
+  final ResendOtpUseCase resendOtpUseCase;
+  final VerifyOtpUseCase verifyOtpUseCase;
+  final AppRegionService appRegionService;
 
   final mobileNumber = ''.obs;
   final countryCode = '+255'.obs;
+  final selectedCountryIso = 'TZ'.obs;
+  final phoneFieldResetVersion = 0.obs;
   final otp = ''.obs;
   final generatedOtp = ''.obs;
   final isLoading = false.obs;
@@ -32,6 +41,14 @@ class AuthController extends GetxController {
 
   final resendTimer = 59.obs;
   Timer? _timer;
+
+  @override
+  void onInit() {
+    super.onInit();
+    final c = appRegionService.selected;
+    selectedCountryIso.value = c.code.toUpperCase();
+    countryCode.value = c.dialCode;
+  }
 
   @override
   void onClose() {
@@ -57,7 +74,7 @@ class AuthController extends GetxController {
 
     final result = await sendOtpUseCase(
       SendOtpRequest(
-        mobileNumber: mobileNumber.value.replaceAll(' ', ''),
+        mobileNumber: mobileNumber.value.replaceAll(RegExp(r'\D'), ''),
         countryCode: countryCode.value.replaceAll('+', ''),
       ),
     );
@@ -75,7 +92,8 @@ class AuthController extends GetxController {
           generatedOtp.value = response?.response?.otp ?? '';
           return true;
         } else {
-          errorMessage.value = response?.message ?? AppStrings.failedToSendOtp.tr;
+          errorMessage.value =
+              response?.message ?? AppStrings.failedToSendOtp.tr;
           generatedOtp.value = '';
           return false;
         }
@@ -91,7 +109,25 @@ class AuthController extends GetxController {
   }
 
   bool get canRequestOtp =>
-      mobileNumber.value.length >= 9 && !isLoading.value;
+      PhoneNationalRules.isCompleteValidNational(
+        selectedCountryIso.value,
+        mobileNumber.value.replaceAll(RegExp(r'\D'), ''),
+      ) &&
+      !isLoading.value;
+
+  void onPhoneCountrySelected(CountryData country) {
+    if (country.code == selectedCountryIso.value) return;
+    applyPhoneCountry(country);
+  }
+
+  Future<void> applyPhoneCountry(CountryData country) async {
+    await appRegionService.setSelectedCountry(country);
+    selectedCountryIso.value = country.code.toUpperCase();
+    countryCode.value = country.dialCode;
+    mobileNumber.value = '';
+    phoneFieldResetVersion.value++;
+  }
+
   bool get shouldShowGeneratedOtp =>
       AppConfig.environment == Environment.dev ||
       AppConfig.environment == Environment.staging;
@@ -105,7 +141,7 @@ class AuthController extends GetxController {
 
     final result = await resendOtpUseCase(
       SendOtpRequest(
-        mobileNumber: mobileNumber.value.replaceAll(' ', ''),
+        mobileNumber: mobileNumber.value.replaceAll(RegExp(r'\D'), ''),
         countryCode: countryCode.value.replaceAll('+', ''),
       ),
     );
@@ -142,7 +178,7 @@ class AuthController extends GetxController {
 
     final result = await verifyOtpUseCase(
       VerifyOtpRequest(
-        mobileNumber: mobileNumber.value.replaceAll(' ', ''),
+        mobileNumber: mobileNumber.value.replaceAll(RegExp(r'\D'), ''),
         countryCode: countryCode.value.replaceAll('+', ''),
         otp: otp.value,
       ),

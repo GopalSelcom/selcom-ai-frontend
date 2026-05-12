@@ -313,6 +313,7 @@ class LanguageSw extends Languages {
     'selcom_pesa': '',
     'select_anearby_point_for_easier_pickup': '',
     'select_apayment_method': '',
+    'select_country': '',
     'select_areason': '',
     'select_avehicle_and_payment_method': '',
     'select_payment': '',
@@ -1519,6 +1520,9 @@ class LanguageSw extends Languages {
 
   @override
   String get selectAPaymentMethod => values['select_apayment_method'] ?? '';
+
+  @override
+  String get selectCountry => values['select_country'] ?? '';
 
   @override
   String get selectAReason => values['select_areason'] ?? '';

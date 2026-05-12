@@ -84,7 +84,12 @@ class ReceiptPdfGenerator {
         : DateFormat('MMMM dd, yyyy  •  hh:mm a').format(DateTime.now());
 
     return pw.Container(
-      padding: const pw.EdgeInsets.only(left: 36, right: 36, top: 48, bottom: 12),
+      padding: const pw.EdgeInsets.only(
+        left: 36,
+        right: 36,
+        top: 48,
+        bottom: 12,
+      ),
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         crossAxisAlignment: pw.CrossAxisAlignment.center,
@@ -103,18 +108,12 @@ class ReceiptPdfGenerator {
               pw.SizedBox(height: 6),
               pw.Text(
                 dateStr,
-                style: const pw.TextStyle(
-                  fontSize: 10,
-                  color: _textMid,
-                ),
+                style: const pw.TextStyle(fontSize: 10, color: _textMid),
               ),
               pw.SizedBox(height: 2),
               pw.Text(
                 AppStrings.refWithId.trParams({'id': receipt.rideId}).tr,
-                style: const pw.TextStyle(
-                  fontSize: 9,
-                  color: _textLight,
-                ),
+                style: const pw.TextStyle(fontSize: 9, color: _textLight),
               ),
             ],
           ),
@@ -270,7 +269,10 @@ class ReceiptPdfGenerator {
         children: [
           _sectionLabel(AppStrings.driverAndVehicle.tr),
           pw.SizedBox(height: 12),
-          _detailRow(AppStrings.driver.tr, receipt.driverName ?? AppStrings.emDash.tr),
+          _detailRow(
+            AppStrings.driver.tr,
+            receipt.driverName ?? AppStrings.emDash.tr,
+          ),
           if (receipt.vehicleType != null)
             _detailRow(AppStrings.vehicleType.tr, receipt.vehicleType!),
           if (receipt.vehicleModel != null)
@@ -298,13 +300,21 @@ class ReceiptPdfGenerator {
           padding: const pw.EdgeInsets.all(16),
           child: pw.Column(
             children: [
-              _fareRow(AppStrings.baseFare.tr, receipt.baseFare, receipt.currency),
+              _fareRow(
+                AppStrings.baseFare.tr,
+                receipt.baseFare,
+                receipt.currency,
+              ),
               _fareRow(
                 AppStrings.distanceCharge.tr,
                 receipt.distanceCharge,
                 receipt.currency,
               ),
-              _fareRow(AppStrings.timeCharge.tr, receipt.timeCharge, receipt.currency),
+              _fareRow(
+                AppStrings.timeCharge.tr,
+                receipt.timeCharge,
+                receipt.currency,
+              ),
               if (receipt.discount > 0)
                 _fareRow(
                   AppStrings.discount.tr,
@@ -329,7 +339,10 @@ class ReceiptPdfGenerator {
                     ),
                   ),
                   pw.Text(
-                    CurrencyFormatter.format(receipt.total),
+                    CurrencyFormatter.formatWithApiCurrency(
+                      receipt.total,
+                      receipt.currency,
+                    ),
                     style: pw.TextStyle(
                       fontSize: 15,
                       fontWeight: pw.FontWeight.bold,
@@ -361,7 +374,7 @@ class ReceiptPdfGenerator {
             style: const pw.TextStyle(fontSize: 12, color: _textMid),
           ),
           pw.Text(
-            CurrencyFormatter.format(amount),
+            CurrencyFormatter.formatWithApiCurrency(amount, currency),
             style: pw.TextStyle(fontSize: 12, color: valueColor),
           ),
         ],

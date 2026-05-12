@@ -356,6 +356,7 @@ class LanguageEn extends Languages {
     'select_anearby_point_for_easier_pickup':
         'Select a nearby point for easier pickup',
     'select_apayment_method': 'Select a payment method',
+    'select_country': 'Select country',
     'select_areason': 'Select a Reason',
     'select_avehicle_and_payment_method':
         'Select a vehicle and payment method.',
@@ -1595,6 +1596,9 @@ class LanguageEn extends Languages {
 
   @override
   String get selectAPaymentMethod => values['select_apayment_method'] ?? '';
+
+  @override
+  String get selectCountry => values['select_country'] ?? '';
 
   @override
   String get selectAReason => values['select_areason'] ?? '';

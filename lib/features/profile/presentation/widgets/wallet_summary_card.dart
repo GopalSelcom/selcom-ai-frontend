@@ -9,6 +9,7 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/utils/currency_formatter.dart';
 
 class WalletSummaryCard extends StatelessWidget {
   final String balance;
@@ -103,7 +104,7 @@ class WalletSummaryCard extends StatelessWidget {
           Row(
             children: [
               Text(
-                '${AppStrings.defaultCurrencyTzs.tr} $balance',
+                '${CurrencyFormatter.displaySymbol} $balance',
                 style: AppTextStyles.price.copyWith(
                   color: AppColors.primary,
                   fontWeight: FontWeight.w600,

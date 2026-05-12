@@ -569,7 +569,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
             Obx(() {
               return PaymentBar(
                 buttonLabel:
-                    '${AppStrings.bookRide.tr} ${CurrencyFormatter.format(controller.selectedFareAmount)}',
+                    '${AppStrings.bookRide.tr} ${CurrencyFormatter.formatWithApiCurrency(controller.selectedFareAmount, controller.currency)}',
                 isLoading: controller.isBooking,
                 onActionButtonPressed: controller.bookRide,
               );
@@ -680,7 +680,10 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                 ),
               ),
               Text(
-                CurrencyFormatter.format(item.fareEstimate ?? 0),
+                CurrencyFormatter.formatWithApiCurrency(
+                  item.fareEstimate ?? 0,
+                  item.currency,
+                ),
                 style: TextStyle(
                   fontFamily: AppTextStyles.metropolisFont,
                   fontSize: 16.sp,

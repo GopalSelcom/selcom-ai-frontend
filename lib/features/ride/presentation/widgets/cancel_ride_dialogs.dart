@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 
@@ -99,16 +100,14 @@ class CancelAssignmentWarningDialog extends StatelessWidget {
                 ),
                 children: [
                   TextSpan(text: AppStrings.cancellationFeeOf.tr),
-                  const TextSpan(
-                    text: 'TZS 150',
-                    style: TextStyle(
+                  TextSpan(
+                    text: '${CurrencyFormatter.displaySymbol} 150',
+                    style: const TextStyle(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  TextSpan(
-                    text: AppStrings.willBeChargedSinceDriverOnWay.tr,
-                  ),
+                  TextSpan(text: AppStrings.willBeChargedSinceDriverOnWay.tr),
                 ],
               ),
             ),
@@ -178,7 +177,9 @@ class _CancelReasonSelectionDialogState
     return PopScope(
       canPop: false,
       child: Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(28.r),
+        ),
         backgroundColor: AppColors.cardBackground,
         insetPadding: EdgeInsets.symmetric(horizontal: 13.w),
         child: Padding(
@@ -319,13 +320,15 @@ class CancellationChargesDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final feeLabel = 'TZS $cancellationFee';
-    final refundLabel = 'TZS $netRefund';
+    final feeLabel = '${CurrencyFormatter.displaySymbol} $cancellationFee';
+    final refundLabel = '${CurrencyFormatter.displaySymbol} $netRefund';
 
     return PopScope(
       canPop: false,
       child: Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(28.r),
+        ),
         backgroundColor: AppColors.cardBackground,
         insetPadding: EdgeInsets.symmetric(horizontal: 13.w),
         child: Padding(
@@ -334,85 +337,85 @@ class CancellationChargesDialog extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-            Text(
-              AppStrings.areYouSureYouWantToCancel.tr,
-              textAlign: TextAlign.center,
-              style: AppTextStyles.homeTitle.copyWith(
-                fontWeight: FontWeight.w600,
-                height: 26 / 20,
-                letterSpacing: -0.4,
-              ),
-            ),
-            Text(
-              AppStrings.yourDriverIsAlreadyOnTheWay.tr,
-              textAlign: TextAlign.center,
-              style: AppTextStyles.homeTitle.copyWith(
-                fontWeight: FontWeight.w600,
-                height: 26 / 20,
-                letterSpacing: -0.4,
-              ),
-            ),
-            SizedBox(height: 14.h),
-            RichText(
-              textAlign: TextAlign.center,
-              text: TextSpan(
-                style: AppTextStyles.homeSubtitle.copyWith(
-                  color: AppColors.textSlate,
-                  fontWeight: FontWeight.w500,
-                  height: 1.4,
+              Text(
+                AppStrings.areYouSureYouWantToCancel.tr,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.homeTitle.copyWith(
+                  fontWeight: FontWeight.w600,
+                  height: 26 / 20,
+                  letterSpacing: -0.4,
                 ),
-                children: [
-                  TextSpan(text: AppStrings.cancellationFeeOf.tr),
-                  TextSpan(
-                    text: feeLabel,
-                    style: AppTextStyles.price.copyWith(
-                      fontSize: 15.sp,
-                      height: 1.4,
-                      color: AppColors.error,
-                      fontWeight: FontWeight.w700,
-                    ),
+              ),
+              Text(
+                AppStrings.yourDriverIsAlreadyOnTheWay.tr,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.homeTitle.copyWith(
+                  fontWeight: FontWeight.w600,
+                  height: 26 / 20,
+                  letterSpacing: -0.4,
+                ),
+              ),
+              SizedBox(height: 14.h),
+              RichText(
+                textAlign: TextAlign.center,
+                text: TextSpan(
+                  style: AppTextStyles.homeSubtitle.copyWith(
+                    color: AppColors.textSlate,
+                    fontWeight: FontWeight.w500,
+                    height: 1.4,
                   ),
-                  TextSpan(text: AppStrings.willBeChargedSinceDriverOnWay.tr),
-                  const TextSpan(text: '\n'),
-                  TextSpan(
-                    text: AppStrings.netAmountRefunded.tr,
-                    style: AppTextStyles.homeSubtitle.copyWith(
-                      color: AppColors.textSlate,
-                      fontWeight: FontWeight.w500,
-                      height: 1.4,
-                    ),
-                  ),
-                  TextSpan(
-                    text: refundLabel,
-                    style: AppTextStyles.price.copyWith(
-                      fontSize: 15.sp,
-                      height: 1.4,
-                      color: AppColors.success,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  if (policyLabel.trim().isNotEmpty)
+                  children: [
+                    TextSpan(text: AppStrings.cancellationFeeOf.tr),
                     TextSpan(
-                      text: '\n$policyLabel',
-                      style: AppTextStyles.homeCaption.copyWith(
+                      text: feeLabel,
+                      style: AppTextStyles.price.copyWith(
+                        fontSize: 15.sp,
+                        height: 1.4,
+                        color: AppColors.error,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    TextSpan(text: AppStrings.willBeChargedSinceDriverOnWay.tr),
+                    const TextSpan(text: '\n'),
+                    TextSpan(
+                      text: AppStrings.netAmountRefunded.tr,
+                      style: AppTextStyles.homeSubtitle.copyWith(
                         color: AppColors.textSlate,
-                        fontWeight: FontWeight.w400,
+                        fontWeight: FontWeight.w500,
                         height: 1.4,
                       ),
                     ),
-                ],
+                    TextSpan(
+                      text: refundLabel,
+                      style: AppTextStyles.price.copyWith(
+                        fontSize: 15.sp,
+                        height: 1.4,
+                        color: AppColors.success,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    if (policyLabel.trim().isNotEmpty)
+                      TextSpan(
+                        text: '\n$policyLabel',
+                        style: AppTextStyles.homeCaption.copyWith(
+                          color: AppColors.textSlate,
+                          fontWeight: FontWeight.w400,
+                          height: 1.4,
+                        ),
+                      ),
+                  ],
+                ),
               ),
-            ),
-            SizedBox(height: 20.h),
-            Divider(height: 1.h, color: AppColors.bgSoftCircle),
-            SizedBox(height: 20.h),
-            _ActionButton(
-              title: AppStrings.keepRide.tr,
-              color: AppColors.primary,
-              textColor: AppColors.white,
-              onTap: () => Get.back(result: false),
-            ),
-            SizedBox(height: 10.h),
+              SizedBox(height: 20.h),
+              Divider(height: 1.h, color: AppColors.bgSoftCircle),
+              SizedBox(height: 20.h),
+              _ActionButton(
+                title: AppStrings.keepRide.tr,
+                color: AppColors.primary,
+                textColor: AppColors.white,
+                onTap: () => Get.back(result: false),
+              ),
+              SizedBox(height: 10.h),
               Obx(() {
                 final loading = isProcessing?.value ?? false;
                 return _ActionButton(

@@ -420,6 +420,7 @@ class AppStrings {
   static const String selcomPesa = 'selcom_pesa';
   static const String selectANearbyPointForEasierPickup =
       'select_anearby_point_for_easier_pickup';
+  static const String selectCountry = 'select_country';
   static const String selectAPaymentMethod = 'select_apayment_method';
   static const String selectAReason = 'select_areason';
   static const String selectAVehicleAndPaymentMethod =

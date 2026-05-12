@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
-import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/widgets/svg_picture_asset.dart';
-import '../../../../shared/utils/phone_formatter.dart';
+import '../../../../shared/data/countries_phone_data.dart';
+import '../../../../shared/utils/phone_national_rules.dart';
 import '../../../../shared/widgets/app_focus_input_field.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
+import '../../../../shared/widgets/phone_country_picker_chip.dart';
 import '../controllers/auth_controller.dart';
 
 class PhoneInputScreen extends GetView<AuthController> {
@@ -61,96 +60,63 @@ class PhoneInputScreen extends GetView<AuthController> {
 
                         SizedBox(height: 22.h),
 
-                        // Phone Input Field
-                        Row(
-                          children: [
-                            // Country Selector
-                            Container(
-                              height: 54.h,
-                              padding: EdgeInsets.symmetric(horizontal: 12.w),
-                              decoration: BoxDecoration(
-                                color: AppColors.white,
-                                border: Border.all(
-                                  color: AppColors.borderDefault,
-                                ),
-                                borderRadius: BorderRadius.circular(16.r),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: AppColors.shadowSoft,
-                                    blurRadius: 2,
-                                    offset: Offset(0, 1),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                children: [
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(3.r),
-                                    child: SvgPictureAsset(
-                                      AppAssets.icTanzaniaFlag,
-                                      height: 15.h,
-                                      width: 23.w,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                  SizedBox(width: 8.w),
-                                  Text(
-                                    AppStrings.value255.tr,
-                                    style: AppTextStyles.body.copyWith(
-                                      fontFamily: AppTextStyles.metropolisFont,
-                                      fontWeight: FontWeight.w400,
-                                      color: AppColors.textHeading,
-                                      fontSize: 17.sp,
-                                    ),
-                                  ),
-                                  Icon(
-                                    Icons.keyboard_arrow_down,
-                                    size: 20.sp,
-                                    color: AppColors.textBody,
-                                  ),
-                                ],
-                              ),
-                            ),
+                        Obx(() {
+                          final iso = controller.selectedCountryIso.value;
+                          final resetV =
+                              controller.phoneFieldResetVersion.value;
+                          final hint = PhoneNationalRules.hintForIso(iso);
+                          final country = Countries.findByIsoCode(iso);
 
-                            SizedBox(width: 8.w),
-
-                            // Number Input
-                            Expanded(
-                              child: AppFocusInputField(
-                                height: 54.h,
-                                focusedBorderColor: AppColors.primary,
-                                keyboardType: TextInputType.number,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                  TanzaniaPhoneFormatter(),
-                                ],
-                                style: AppTextStyles.body.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 16.sp,
-                                  color: AppColors.primary,
-                                  letterSpacing: -0.16,
-                                ),
-                                maxLength: 11,
-                                onChanged: (v) {
-                                  controller.mobileNumber.value = v.replaceAll(
-                                    ' ',
-                                    '',
-                                  );
-                                },
-                                hintText: AppStrings.eG7XxXxxXxx.tr,
-                                hintStyle: AppTextStyles.hint.copyWith(
-                                  fontSize: 16.sp,
-                                  color: AppColors.primary,
-                                  letterSpacing: -0.16,
-                                ),
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 16.w,
-                                  vertical: 16.h,
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              PhoneCountryPickerChip(
+                                key: ValueKey('cc-$iso'),
+                                selected: country,
+                                onChanged: controller.onPhoneCountrySelected,
+                              ),
+                              SizedBox(width: 8.w),
+                              Expanded(
+                                child: AppFocusInputField(
+                                  key: ValueKey('$iso-$resetV'),
+                                  height: 54.h,
+                                  focusedBorderColor: AppColors.primary,
+                                  keyboardType: TextInputType.number,
+                                  inputFormatters:
+                                      PhoneNationalRules.inputFormattersForIso(
+                                        iso,
+                                      ),
+                                  style: AppTextStyles.body.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 16.sp,
+                                    color: AppColors.primary,
+                                    letterSpacing: -0.16,
+                                  ),
+                                  maxLength:
+                                      PhoneNationalRules.maxDisplayCharactersForIso(
+                                        iso,
+                                      ),
+                                  onChanged: (v) {
+                                    controller.mobileNumber.value = v
+                                        .replaceAll(RegExp(r'\D'), '');
+                                  },
+                                  hintText: hint.isEmpty
+                                      ? AppStrings.eG7XxXxxXxx.tr
+                                      : hint,
+                                  hintStyle: AppTextStyles.hint.copyWith(
+                                    fontSize: 16.sp,
+                                    color: AppColors.primary,
+                                    letterSpacing: -0.16,
+                                  ),
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 16.w,
+                                    vertical: 16.h,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
+                            ],
+                          );
+                        }),
 
                         // Error Message
                         Obx(
@@ -170,7 +136,6 @@ class PhoneInputScreen extends GetView<AuthController> {
 
                         const Spacer(),
 
-                        // Legal Note
                         Padding(
                           padding: EdgeInsets.only(bottom: 14.h),
                           child: Text(

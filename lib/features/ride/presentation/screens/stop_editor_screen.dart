@@ -9,6 +9,7 @@ import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_back_button.dart';
@@ -29,6 +30,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
   late List<String> _stopLocalKeys;
   late List<RideStopEntity> _initialStops;
   int _newStopCounter = 0;
+
   // Reuse this screen for two modes:
   // - false: mid-ride stops editor
   // - true : change drop location editor
@@ -237,8 +239,8 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                     },
                     itemBuilder: (context, index) {
                       final stop = _stops[index];
-                      final canRemoveDraftStop =
-                          _stopLocalKeys[index].startsWith('new_');
+                      final canRemoveDraftStop = _stopLocalKeys[index]
+                          .startsWith('new_');
                       return Padding(
                         key: ValueKey('stop_${stop.index}_$index'),
                         padding: EdgeInsets.only(bottom: 12.h),
@@ -319,7 +321,8 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                 final showButton = _isDestinationEditor
                     ? (_selectedDestination != null ||
                           controller.destinationUpdatePreview.value != null)
-                    : (_hasChanges() || controller.stopUpdatePreview.value != null);
+                    : (_hasChanges() ||
+                          controller.stopUpdatePreview.value != null);
                 if (!showButton) return const SizedBox.shrink();
 
                 return AppPrimaryButton(
@@ -429,7 +432,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                   style: AppTextStyles.homeSubtitle.copyWith(fontSize: 14.sp),
                 ),
                 Text(
-                  'TZS ${controller.priceFormatter(preview.newFareEstimate)}',
+                  '${CurrencyFormatter.displaySymbol} ${controller.priceFormatter(preview.newFareEstimate)}',
                   style: AppTextStyles.price.copyWith(fontSize: 16.sp),
                 ),
               ],
@@ -449,7 +452,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                     borderRadius: BorderRadius.circular(AppRadius.small),
                   ),
                   child: Text(
-                    '$sign TZS ${controller.priceFormatter(delta)}',
+                    '$sign ${CurrencyFormatter.displaySymbol} ${controller.priceFormatter(delta)}',
                     style: AppTextStyles.price.copyWith(
                       color: color,
                       fontWeight: FontWeight.w700,
@@ -543,7 +546,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                   style: AppTextStyles.homeSubtitle.copyWith(fontSize: 14.sp),
                 ),
                 Text(
-                  'TZS ${controller.priceFormatter(preview.newFareEstimate)}',
+                  '${CurrencyFormatter.displaySymbol} ${controller.priceFormatter(preview.newFareEstimate)}',
                   style: AppTextStyles.price.copyWith(fontSize: 16.sp),
                 ),
               ],
@@ -563,7 +566,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                     borderRadius: BorderRadius.circular(AppRadius.small),
                   ),
                   child: Text(
-                    '$sign TZS ${controller.priceFormatter(preview.deltaAmount)}',
+                    '$sign ${CurrencyFormatter.displaySymbol} ${controller.priceFormatter(preview.deltaAmount)}',
                     style: AppTextStyles.price.copyWith(
                       color: color,
                       fontWeight: FontWeight.w700,

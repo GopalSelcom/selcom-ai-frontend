@@ -1,3 +1,5 @@
+import '../../../../core/constants/currency_code.dart';
+
 class BookingResponseModel {
   final String id;
   final String status;
@@ -23,7 +25,7 @@ class BookingResponseModel {
       fare: (json['fare'] is int)
           ? json['fare']
           : int.parse(json['fare'].toString()),
-      currency: json['currency'] ?? 'TZS',
+      currency: json['currency'] ?? CurrencyCode.tzs,
     );
   }
 }
@@ -114,7 +116,7 @@ class ReceiptModel {
       total: (fareBreakdown['total_fare'] ?? 0) as int,
       discount: 0,
       tax: 0,
-      currency: (fareBreakdown['currency'] ?? 'TZS') as String,
+      currency: (fareBreakdown['currency'] ?? CurrencyCode.tzs) as String,
       paymentMethod: (json['payment_method'] ?? '') as String,
       completedAt: json['completed_at'] as String?,
       driverName: driverSnap['name'] as String?,

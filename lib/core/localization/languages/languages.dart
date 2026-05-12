@@ -322,6 +322,7 @@ abstract class Languages {
   get securityAndPreferenceControlsMoreSettingsWillAppearHereAsTheyAreEnable;
   String get selcomPesa;
   String get selectANearbyPointForEasierPickup;
+  String get selectCountry;
   String get selectAPaymentMethod;
   String get selectAReason;
   String get selectAVehicleAndPaymentMethod;

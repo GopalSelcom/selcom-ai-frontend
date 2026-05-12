@@ -1,4 +1,6 @@
 import 'package:get/get.dart';
+import '../../../../core/di/injection_container.dart' as di;
+import '../../../../core/services/app_region_service.dart';
 import '../../data/datasources/auth_remote_data_source.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -35,6 +37,7 @@ class AuthBinding extends Bindings {
         sendOtpUseCase: Get.find(),
         resendOtpUseCase: Get.find(),
         verifyOtpUseCase: Get.find(),
+        appRegionService: di.sl<AppRegionService>(),
       ),
     );
     Get.lazyPut(() => OnboardingController());

@@ -28,6 +28,9 @@ import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../domain/repositories/ride_repository.dart';
+import '../../../../core/di/injection_container.dart' as di;
+import '../../../../core/services/app_region_service.dart';
+import '../../../../shared/utils/country_region_defaults.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 
 enum BookingMode { self, other }
@@ -447,7 +450,9 @@ class VehicleSelectionController extends GetxController {
           distanceKm: 4.2,
           durationMinutes: 10,
           maxPassengers: 4,
-          currency: 'TZS',
+          currency: CountryRegionDefaults.currencyCodeForIso2(
+            di.sl<AppRegionService>().selected.code,
+          ),
         ),
       ];
     }
@@ -461,7 +466,9 @@ class VehicleSelectionController extends GetxController {
         distanceKm: 4.2,
         durationMinutes: 10,
         maxPassengers: vt.maxPassengers,
-        currency: 'TZS',
+        currency: CountryRegionDefaults.currencyCodeForIso2(
+          di.sl<AppRegionService>().selected.code,
+        ),
       );
     }).toList();
   }
@@ -474,7 +481,11 @@ class VehicleSelectionController extends GetxController {
 
   int get selectedFareAmount => selectedEstimate?.fareEstimate ?? 0;
 
-  String get currency => selectedEstimate?.currency ?? 'TZS';
+  String get currency =>
+      selectedEstimate?.currency ??
+      CountryRegionDefaults.currencyCodeForIso2(
+        di.sl<AppRegionService>().selected.code,
+      );
 
   Future<void> selectVehicle(int index) async {
     if (index < 0 || index >= estimates.length) return;

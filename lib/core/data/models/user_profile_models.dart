@@ -1,3 +1,5 @@
+import '../../constants/currency_code.dart';
+
 class SavedPlaceModel {
   final String? id;
   final String? userId;
@@ -78,7 +80,7 @@ class WalletBalanceModel {
   factory WalletBalanceModel.fromJson(Map<String, dynamic> json) {
     return WalletBalanceModel(
       balance: (json['balance'] ?? 0.0).toDouble(),
-      currency: json['currency'] ?? 'TZS',
+      currency: json['currency'] ?? CurrencyCode.tzs,
     );
   }
 }

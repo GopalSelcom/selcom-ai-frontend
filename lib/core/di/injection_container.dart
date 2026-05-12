@@ -39,6 +39,7 @@ import '../../features/promotions/presentation/controllers/promocode_controller.
 import '../../features/payment/presentation/controllers/payment_method_controller.dart';
 import '../config/app_config.dart';
 import '../services/analytics_service.dart';
+import '../services/app_region_service.dart';
 import '../services/app_settings_service.dart';
 import '../services/notification_service.dart';
 import '../network/api_service.dart';
@@ -51,6 +52,7 @@ final sl = GetIt.instance; // sl: Service Locator
 Future<void> init() async {
   // ── Services ──
   sl.registerLazySingleton(() => AnalyticsService());
+  sl.registerLazySingleton(() => AppRegionService());
   sl.registerLazySingleton(() => NotificationService());
   sl.registerLazySingleton(() => AppSocketService());
   sl.registerLazySingleton(() => LiveActivityManager());
@@ -146,6 +148,8 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetReviewTagsUseCase(sl()));
   sl.registerLazySingleton(() => SubmitRideRatingUseCase(sl()));
   sl.registerLazySingleton(() => SkipRideRatingUseCase(sl()));
+
+  await sl<AppRegionService>().restore();
 }
 
 /// Maps the app's Environment enum to ApiService's ApiEnvironment enum

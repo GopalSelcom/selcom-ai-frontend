@@ -327,7 +327,10 @@ class ReceiptImageGenerator {
                     ),
                   ),
                   Text(
-                    CurrencyFormatter.format(receipt.total),
+                    CurrencyFormatter.formatWithApiCurrency(
+                      receipt.total,
+                      receipt.currency,
+                    ),
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
@@ -359,7 +362,7 @@ class ReceiptImageGenerator {
             style: const TextStyle(fontSize: 12, color: _textMid),
           ),
           Text(
-            CurrencyFormatter.format(amount),
+            CurrencyFormatter.formatWithApiCurrency(amount, currency),
             style: TextStyle(fontSize: 12, color: valueColor),
           ),
         ],
