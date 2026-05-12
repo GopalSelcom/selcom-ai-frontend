@@ -3,18 +3,20 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../home/domain/repositories/home_repository.dart';
-import '../../domain/repositories/ride_repository.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_text_field.dart';
-import '../../../../shared/utils/phone_formatter.dart';
+import '../../../../shared/utils/phone_national_rules.dart';
+import '../../../../shared/utils/tanzania_phone_validation.dart';
+import '../../domain/repositories/ride_repository.dart';
 
 enum BookingMode { self, other }
 
@@ -34,15 +36,11 @@ class ConfirmPickupController extends GetxController {
   final bookingMode = BookingMode.self.obs;
   final passengerName = ''.obs;
   final passengerPhone = ''.obs;
-  final passengerNameError = RxnString();
-  final passengerPhoneError = RxnString();
   late LatLng _initialLatLng;
   late String initialAddress;
 
-  final nameController = TextEditingController();
-  final phoneController = TextEditingController();
-
   GoogleMapController? mapController;
+
   LatLng get initialLatLng => _initialLatLng;
   static const double _pickupMoveThreshold = 0.00005;
 
@@ -67,13 +65,6 @@ class ConfirmPickupController extends GetxController {
     initialAddress =
         (args['pickupAddress'] as String?)?.trim() ?? 'Selected pickup point';
     address.value = initialAddress;
-  }
-
-  @override
-  void onClose() {
-    nameController.dispose();
-    phoneController.dispose();
-    super.onClose();
   }
 
   Future<void> onMapCreated(GoogleMapController controller) async {
@@ -112,59 +103,54 @@ class ConfirmPickupController extends GetxController {
     isSubmitting.value = true;
 
     try {
-      // ── Book for Other Person Check ──
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-        ),
-      ).timeout(const Duration(seconds: 5), onTimeout: () => Position(
-        latitude: selectedLatLng.value.latitude,
-        longitude: selectedLatLng.value.longitude,
-        timestamp: DateTime.now(),
-        accuracy: 0,
-        altitude: 0,
-        heading: 0,
-        speed: 0,
-        speedAccuracy: 0,
-        altitudeAccuracy: 0,
-        headingAccuracy: 0,
-      ));
+      final position =
+          await Geolocator.getCurrentPosition(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.high,
+            ),
+          ).timeout(
+            const Duration(seconds: 5),
+            onTimeout: () => Position(
+              latitude: selectedLatLng.value.latitude,
+              longitude: selectedLatLng.value.longitude,
+              timestamp: DateTime.now(),
+              accuracy: 0,
+              altitude: 0,
+              heading: 0,
+              speed: 0,
+              speedAccuracy: 0,
+              altitudeAccuracy: 0,
+              headingAccuracy: 0,
+            ),
+          );
 
-      final checkResult = await rideRepository.checkBookMode(
+      // Server may use this for analytics / policy; UI always asks locally.
+      await rideRepository.checkBookMode(
         riderLat: position.latitude,
         riderLng: position.longitude,
         pickupLat: selectedLatLng.value.latitude,
         pickupLng: selectedLatLng.value.longitude,
       );
 
-      bool cancelled = false;
-      await checkResult.fold(
-        (f) => null, // Ignore failure, proceed as self
-        (res) async {
-          if (res.showBookForOtherOption) {
-            final mode = await _showBookingModeBottomSheet();
-            if (mode == null) {
-              cancelled = true;
-              return;
-            }
-            bookingMode.value = mode;
-
-            if (mode == BookingMode.other) {
-              final details = await _showPassengerDetailsSheet();
-              if (details == null) {
-                cancelled = true;
-                return;
-              }
-              passengerName.value = details['name'] ?? '';
-              passengerPhone.value = _stripLeadingZero(details['phone'] ?? '');
-            }
-          }
-        },
-      );
-
-      if (cancelled) {
-        isSubmitting.value = false;
+      final mode = await _showBookingForSomeoneElseSheet();
+      if (mode == null) {
         return;
+      }
+      bookingMode.value = mode;
+
+      if (mode == BookingMode.other) {
+        final details = await _showPassengerDetailsSheet();
+        if (details == null) {
+          return;
+        }
+        passengerName.value = details['name']!.trim();
+        passengerPhone.value = details['phone']!;
+        // Let the passenger bottom-sheet overlay finish disposing before popping
+        // the route; otherwise duplicate _OverlayEntryWidgetState keys can occur.
+        await SchedulerBinding.instance.endOfFrame;
+      } else {
+        passengerName.value = '';
+        passengerPhone.value = '';
       }
 
       Get.back(
@@ -175,12 +161,15 @@ class ConfirmPickupController extends GetxController {
               ? 'Selected pickup point'
               : address.value.trim(),
           'isBookedForOther': bookingMode.value == BookingMode.other,
-          'passengerName': bookingMode.value == BookingMode.other ? passengerName.value : null,
-          'passengerPhone': bookingMode.value == BookingMode.other ? passengerPhone.value : null,
+          'passengerName': bookingMode.value == BookingMode.other
+              ? passengerName.value.trim()
+              : null,
+          'passengerPhone': bookingMode.value == BookingMode.other
+              ? passengerPhone.value
+              : null,
         },
       );
     } catch (e) {
-      // Fallback to self
       Get.back(
         result: {
           'pickupLat': selectedLatLng.value.latitude,
@@ -196,204 +185,313 @@ class ConfirmPickupController extends GetxController {
     }
   }
 
-  String _stripLeadingZero(String phone) {
-    final trimmed = phone.trim();
-    return trimmed.startsWith('0') ? trimmed.substring(1) : trimmed;
-  }
-
-  Future<BookingMode?> _showBookingModeBottomSheet() async {
-    return await Get.bottomSheet<BookingMode>(
-      Container(
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 30.h),
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(40.r)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              "Who is this ride for?",
-              style: TextStyle(
-                fontFamily: AppTextStyles.metropolisFont,
-                fontWeight: FontWeight.w700,
-                fontSize: 20.sp,
-                color: AppColors.black,
+  Future<BookingMode?> _showBookingForSomeoneElseSheet() async {
+    return Get.bottomSheet<BookingMode>(
+      SafeArea(
+        top: false,
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(40.r)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                AppStrings.bookingForSomeoneElsePrompt.tr,
+                textAlign: TextAlign.start,
+                style: AppTextStyles.homeTitle.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 18.sp,
+                  color: AppColors.textHeading,
+                  height: 20 / 18,
+                  letterSpacing: -0.4,
+                ),
               ),
-            ),
-            SizedBox(height: 30.h),
-            _buildModeOption(
-              icon: Iconsax.user,
-              title: "Book for Myself",
-              onTap: () => Get.back(result: BookingMode.self),
-            ),
-            SizedBox(height: 16.h),
-            _buildModeOption(
-              icon: Iconsax.user_add,
-              title: "Book for Someone Else",
-              onTap: () => Get.back(result: BookingMode.other),
-            ),
-            SizedBox(height: 20.h),
-          ],
+              SizedBox(height: 10.h),
+              Text(
+                AppStrings.bookingForSomeoneElseSubtitle.tr,
+                textAlign: TextAlign.start,
+                style: AppTextStyles.homeCaption.copyWith(
+                  color: AppColors.textBody,
+                  fontSize: 12.sp,
+                  height: 20 / 12,
+                ),
+              ),
+              SizedBox(height: 20.h),
+              _bookingChoiceRow(
+                icon: Iconsax.user,
+                title: AppStrings.bookingRideOptionForMe.tr,
+                onTap: () => Get.back(result: BookingMode.self),
+              ),
+              SizedBox(height: 12.h),
+              _bookingChoiceRow(
+                icon: Iconsax.user_add,
+                title: AppStrings.bookingRideOptionForSomeoneElse.tr,
+                onTap: () => Get.back(result: BookingMode.other),
+              ),
+              SizedBox(height: 12.h),
+            ],
+          ),
         ),
       ),
       isScrollControlled: true,
     );
   }
 
-  Widget _buildModeOption({
+  Widget _bookingChoiceRow({
     required IconData icon,
     required String title,
     required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: onTap,
+    return Material(
+      color: AppColors.surfaceSubtle,
       borderRadius: BorderRadius.circular(16.r),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-        decoration: BoxDecoration(
-          border: Border.all(color: AppColors.inputBorderDefault),
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: AppColors.primary, size: 24.w),
-            SizedBox(width: 16.w),
-            Text(
-              title,
-              style: TextStyle(
-                fontFamily: AppTextStyles.metropolisFont,
-                fontWeight: FontWeight.w600,
-                fontSize: 16.sp,
-                color: AppColors.black,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16.r),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+          child: Row(
+            children: [
+              Icon(icon, color: AppColors.primary, size: 24.sp),
+              SizedBox(width: 16.w),
+              Expanded(
+                child: Text(
+                  title,
+                  style: AppTextStyles.homeSubtitle.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16.sp,
+                    color: AppColors.textHeading,
+                  ),
+                ),
               ),
-            ),
-            const Spacer(),
-            Icon(Icons.arrow_forward_ios, color: AppColors.textBody, size: 16.w),
-          ],
+              Icon(
+                Icons.arrow_forward_ios,
+                color: AppColors.textBody,
+                size: 14.sp,
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Future<Map<String, String>?> _showPassengerDetailsSheet() async {
-    final nameController = TextEditingController();
-    final phoneController = TextEditingController();
-    final formKey = GlobalKey<FormState>();
+    return Get.bottomSheet<Map<String, String>?>(
+      const _PassengerDetailsBottomSheet(),
+      isScrollControlled: true,
+    );
+  }
+}
 
-    return await Get.bottomSheet<Map<String, String>>(
-      StatefulBuilder(
-        builder: (context, setState) {
-          return Container(
-            padding: EdgeInsets.only(
-              left: 20.w,
-              right: 20.w,
-              top: 30.h,
-              bottom: MediaQuery.of(Get.context!).viewInsets.bottom + 30.h,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(40.r)),
-            ),
+class _PassengerDetailsBottomSheet extends StatefulWidget {
+  const _PassengerDetailsBottomSheet();
+
+  @override
+  State<_PassengerDetailsBottomSheet> createState() =>
+      _PassengerDetailsBottomSheetState();
+}
+
+class _PassengerDetailsBottomSheetState extends State<_PassengerDetailsBottomSheet> {
+  final TextEditingController _name = TextEditingController();
+  final TextEditingController _phone = TextEditingController();
+  String? _nameError;
+  String? _phoneError;
+
+  @override
+  void initState() {
+    super.initState();
+    _name.addListener(_onFieldsChanged);
+    _phone.addListener(_onFieldsChanged);
+  }
+
+  void _onFieldsChanged() {
+    setState(() {
+      _nameError = null;
+      _phoneError = null;
+    });
+  }
+
+  bool get _canConfirm =>
+      _name.text.trim().isNotEmpty &&
+      TanzaniaPhoneValidation.isCompleteValid(_phone.text);
+
+  @override
+  void dispose() {
+    _name.removeListener(_onFieldsChanged);
+    _phone.removeListener(_onFieldsChanged);
+    _name.dispose();
+    _phone.dispose();
+    super.dispose();
+  }
+
+  void _onConfirmPressed() {
+    final trimmedName = _name.text.trim();
+    if (trimmedName.isEmpty) {
+      setState(() {
+        _nameError = AppStrings.nameIsRequired.tr;
+      });
+      return;
+    }
+
+    final e164 = TanzaniaPhoneValidation.e164DigitsOrNull(_phone.text);
+    if (e164 == null) {
+      setState(() {
+        _phoneError = _phone.text.trim().isEmpty
+            ? AppStrings.notificationPhoneRequired.tr
+            : AppStrings.pleaseEnterAValidPhoneNumber.tr;
+      });
+      return;
+    }
+
+    Get.back(
+      result: {'name': trimmedName, 'phone': e164},
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final mq = MediaQuery.of(context);
+    final bottomReserve = mq.viewInsets.bottom > 0
+        ? mq.viewInsets.bottom
+        : mq.padding.bottom;
+    final maxSheetHeight = (mq.size.height -
+            mq.viewPadding.top -
+            bottomReserve -
+            16)
+        .clamp(160.0, mq.size.height);
+
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: mq.size.width,
+          maxHeight: maxSheetHeight,
+        ),
+        child: Material(
+          color: AppColors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(40.r)),
+          clipBehavior: Clip.antiAlias,
+          child: SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, 24.h),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  "Passenger Details",
-                  style: TextStyle(
-                    fontFamily: AppTextStyles.metropolisFont,
+                  AppStrings.passengerDetailsTitle.tr,
+                  textAlign: TextAlign.start,
+                  style: AppTextStyles.homeTitle.copyWith(
                     fontWeight: FontWeight.w700,
-                    fontSize: 20.sp,
-                    color: AppColors.black,
+                    fontSize: 18.sp,
+                    color: AppColors.textHeading,
                   ),
                 ),
-                SizedBox(height: 24.h),
-                Obx(() => AppTextField(
-                      controller: nameController,
-                      label: "Passenger Name",
-                      hintText: "Enter full name",
-                      errorText: passengerNameError.value,
-                      onChanged: (_) => passengerNameError.value = null,
-                    )),
+                SizedBox(height: 8.h),
+                Text(
+                  AppStrings.notificationPhoneSubtitle.tr,
+                  textAlign: TextAlign.start,
+                  style: AppTextStyles.homeCaption.copyWith(
+                    color: AppColors.textBody,
+                    fontSize: 14.sp,
+                    height: 1.35,
+                  ),
+                ),
+                SizedBox(height: 20.h),
+                AppTextField(
+                  controller: _name,
+                  label: AppStrings.passengerNameLabel.tr,
+                  hintText: AppStrings.enterPassengerFullName.tr,
+                  keyboardType: TextInputType.name,
+                  errorText: _nameError,
+                  onChanged: (_) {},
+                ),
                 SizedBox(height: 16.h),
-                Obx(() => AppTextField(
-                      controller: phoneController,
-                      label: "Passenger Phone",
-                      hintText: "712 345 678",
-                      keyboardType: TextInputType.phone,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        TanzaniaPhoneFormatter(),
-                      ],
-                      prefixIcon: Container(
-                        width: 82.w,
-                        padding: EdgeInsets.only(left: 14.w),
-                        child: Row(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(3.r),
-                              child: SvgPictureAsset(
-                                AppAssets.icTanzaniaFlag,
-                                height: 14.h,
-                                width: 22.w,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            SizedBox(width: 8.w),
-                            Text(
-                              "+255",
-                              style: TextStyle(
-                                fontFamily: AppTextStyles.metropolisFont,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 16.sp,
-                                color: AppColors.textHeading,
-                              ),
-                            ),
-                          ],
+                AppTextField(
+                  controller: _phone,
+                  label: AppStrings.passengerPhoneLabel.tr,
+                  hintText: PhoneNationalRules.hintForIso(
+                    TanzaniaPhoneValidation.iso2,
+                  ),
+                  keyboardType: TextInputType.phone,
+                  inputFormatters: PhoneNationalRules.inputFormattersForIso(
+                    TanzaniaPhoneValidation.iso2,
+                  ),
+                  prefixIcon: Container(
+                    width: 82.w,
+                    padding: EdgeInsets.only(left: 14.w),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(3.r),
+                          child: SvgPictureAsset(
+                            AppAssets.icTanzaniaFlag,
+                            height: 14.h,
+                            width: 22.w,
+                            fit: BoxFit.cover,
+                          ),
                         ),
+                        SizedBox(width: 8.w),
+                        Text(
+                          '+255',
+                          style: AppTextStyles.homeSubtitle.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16.sp,
+                            color: AppColors.textHeading,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  errorText: _phoneError,
+                  onChanged: (_) {},
+                ),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 320),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, 0.15),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
+                        child: child,
                       ),
-                      errorText: passengerPhoneError.value,
-                      onChanged: (_) => passengerPhoneError.value = null,
-                    )),
-                SizedBox(height: 30.h),
-                AppPrimaryButton(
-                  label: "Confirm",
-                  onPressed: () {
-                    final name = nameController.text.trim();
-                    final rawPhone = phoneController.text.replaceAll(' ', '');
-
-                    bool valid = true;
-                    if (name.isEmpty) {
-                      passengerNameError.value = "Name is required";
-                      valid = false;
-                    }
-                    if (rawPhone.isEmpty) {
-                      passengerPhoneError.value = "Phone is required";
-                      valid = false;
-                    } else {
-                      final stripped = _stripLeadingZero(rawPhone);
-                      if (stripped.length < 9 || stripped.length > 10) {
-                        passengerPhoneError.value =
-                            "Enter a valid Tanzanian phone number";
-                        valid = false;
-                      }
-                    }
-
-                    if (valid) {
-                      Get.back(result: {
-                        'name': name,
-                        'phone': '255${_stripLeadingZero(rawPhone)}',
-                      });
-                    }
+                    );
                   },
+                  child: _canConfirm
+                      ? Padding(
+                          key: const ValueKey('passenger_details_confirm_on'),
+                          padding: EdgeInsets.only(top: 24.h),
+                          child: AppPrimaryButton(
+                            label: AppStrings.confirm.tr,
+                            onPressed: _onConfirmPressed,
+                          ),
+                        )
+                      : SizedBox(
+                          key: const ValueKey('passenger_details_confirm_off'),
+                          height: 8.h,
+                        ),
                 ),
               ],
             ),
-          );
-        },
+          ),
+        ),
       ),
-      isScrollControlled: true,
     );
   }
 }

@@ -24,6 +24,17 @@ class LanguageSw extends Languages {
     'book_ride_with_fare': '',
     'booking_fees_and_convenience_charges': '',
     'booking_for_name': '',
+    'booking_for_someone_else_prompt': '',
+    'booking_for_someone_else_subtitle': '',
+    'booking_ride_option_for_me': '',
+    'booking_ride_option_for_someone_else': '',
+    'notification_phone_required': '',
+    'notification_phone_subtitle': '',
+    'notification_phone_title': '',
+    'enter_passenger_full_name': '',
+    'passenger_details_title': '',
+    'passenger_name_label': '',
+    'passenger_phone_label': '',
     'by_continuing_you_agree_that_you_have_read_and_accept_our_tand_cs_and_privacy_policy':
         '',
     'call': '',
@@ -592,6 +603,22 @@ class LanguageSw extends Languages {
   String get bookingForName => values['booking_for_name'] ?? '';
 
   @override
+  String get bookingForSomeoneElsePrompt =>
+      values['booking_for_someone_else_prompt'] ?? '';
+
+  @override
+  String get bookingForSomeoneElseSubtitle =>
+      values['booking_for_someone_else_subtitle'] ?? '';
+
+  @override
+  String get bookingRideOptionForMe =>
+      values['booking_ride_option_for_me'] ?? '';
+
+  @override
+  String get bookingRideOptionForSomeoneElse =>
+      values['booking_ride_option_for_someone_else'] ?? '';
+
+  @override
   String
   get byContinuingYouAgreeThatYouHaveReadAndAcceptOurTAndCsAndPrivacyPolicy =>
       values['by_continuing_you_agree_that_you_have_read_and_accept_our_tand_cs_and_privacy_policy'] ??
@@ -1090,6 +1117,32 @@ class LanguageSw extends Languages {
   get noteByProceedingYouConsentToGetCallsWhatsappOrSmsMessagesIncludingByAu =>
       values['note_by_proceeding_you_consent_to_get_calls_whatsapp_or_sms_messages_including_by_au'] ??
       '';
+
+  @override
+  String get notificationPhoneRequired =>
+      values['notification_phone_required'] ?? '';
+
+  @override
+  String get notificationPhoneSubtitle =>
+      values['notification_phone_subtitle'] ?? '';
+
+  @override
+  String get notificationPhoneTitle =>
+      values['notification_phone_title'] ?? '';
+
+  @override
+  String get enterPassengerFullName =>
+      values['enter_passenger_full_name'] ?? '';
+
+  @override
+  String get passengerDetailsTitle =>
+      values['passenger_details_title'] ?? '';
+
+  @override
+  String get passengerNameLabel => values['passenger_name_label'] ?? '';
+
+  @override
+  String get passengerPhoneLabel => values['passenger_phone_label'] ?? '';
 
   @override
   String get notification => values['notification'] ?? '';

@@ -30,6 +30,20 @@ class AppStrings {
   static const String bookingFeesAndConvenienceCharges =
       'booking_fees_and_convenience_charges';
   static const String bookingForName = 'booking_for_name';
+  static const String bookingForSomeoneElsePrompt =
+      'booking_for_someone_else_prompt';
+  static const String bookingForSomeoneElseSubtitle =
+      'booking_for_someone_else_subtitle';
+  static const String bookingRideOptionForMe = 'booking_ride_option_for_me';
+  static const String bookingRideOptionForSomeoneElse =
+      'booking_ride_option_for_someone_else';
+  static const String notificationPhoneRequired = 'notification_phone_required';
+  static const String notificationPhoneSubtitle = 'notification_phone_subtitle';
+  static const String notificationPhoneTitle = 'notification_phone_title';
+  static const String enterPassengerFullName = 'enter_passenger_full_name';
+  static const String passengerDetailsTitle = 'passenger_details_title';
+  static const String passengerNameLabel = 'passenger_name_label';
+  static const String passengerPhoneLabel = 'passenger_phone_label';
   static const String
   byContinuingYouAgreeThatYouHaveReadAndAcceptOurTAndCsAndPrivacyPolicy =
       'by_continuing_you_agree_that_you_have_read_and_accept_our_tand_cs_and_privacy_policy';

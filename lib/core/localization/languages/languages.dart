@@ -34,6 +34,10 @@ abstract class Languages {
   String get bookRideWithFare;
   String get bookingFeesAndConvenienceCharges;
   String get bookingForName;
+  String get bookingForSomeoneElsePrompt;
+  String get bookingForSomeoneElseSubtitle;
+  String get bookingRideOptionForMe;
+  String get bookingRideOptionForSomeoneElse;
   String
   get byContinuingYouAgreeThatYouHaveReadAndAcceptOurTAndCsAndPrivacyPolicy;
   String get call;
@@ -188,6 +192,9 @@ abstract class Languages {
   String get noRecentLocations;
   String
   get noteByProceedingYouConsentToGetCallsWhatsappOrSmsMessagesIncludingByAu;
+  String get notificationPhoneRequired;
+  String get notificationPhoneSubtitle;
+  String get notificationPhoneTitle;
   String get notification;
   String get notifications;
   String get ok;
@@ -197,6 +204,10 @@ abstract class Languages {
   String get pleaseEnterLabel;
   String get otpResentSuccessfully;
   String get past;
+  String get enterPassengerFullName;
+  String get passengerDetailsTitle;
+  String get passengerNameLabel;
+  String get passengerPhoneLabel;
   String get payUsing;
   String get payment;
   String get processing;

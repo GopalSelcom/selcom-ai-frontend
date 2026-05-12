@@ -26,6 +26,21 @@ class LanguageEn extends Languages {
     'booking_fees_and_convenience_charges':
         'Booking Fees & Convenience Charges',
     'booking_for_name': 'Booking for @name',
+    'booking_for_someone_else_prompt':
+        'Are you booking this for someone else?',
+    'booking_for_someone_else_subtitle':
+        'You can enter their details so that we can directly send them ride information.',
+    'booking_ride_option_for_me': 'No, booking for me',
+    'booking_ride_option_for_someone_else': 'Yes, for someone else',
+    'notification_phone_required':
+        'Please enter a phone number for notifications.',
+    'notification_phone_subtitle':
+        'We will send ride updates and notifications to this number.',
+    'notification_phone_title': 'Notification phone number',
+    'enter_passenger_full_name': 'Enter full name',
+    'passenger_details_title': 'Passenger Details',
+    'passenger_name_label': 'Passenger Name',
+    'passenger_phone_label': 'Passenger Phone',
     'by_continuing_you_agree_that_you_have_read_and_accept_our_tand_cs_and_privacy_policy':
         'By continuing, you agree that you have read and accept our T&Cs and Privacy Policy',
     'call': 'Call',
@@ -667,6 +682,22 @@ class LanguageEn extends Languages {
   String get bookingForName => values['booking_for_name'] ?? '';
 
   @override
+  String get bookingForSomeoneElsePrompt =>
+      values['booking_for_someone_else_prompt'] ?? '';
+
+  @override
+  String get bookingForSomeoneElseSubtitle =>
+      values['booking_for_someone_else_subtitle'] ?? '';
+
+  @override
+  String get bookingRideOptionForMe =>
+      values['booking_ride_option_for_me'] ?? '';
+
+  @override
+  String get bookingRideOptionForSomeoneElse =>
+      values['booking_ride_option_for_someone_else'] ?? '';
+
+  @override
   String
   get byContinuingYouAgreeThatYouHaveReadAndAcceptOurTAndCsAndPrivacyPolicy =>
       values['by_continuing_you_agree_that_you_have_read_and_accept_our_tand_cs_and_privacy_policy'] ??
@@ -1165,6 +1196,32 @@ class LanguageEn extends Languages {
   get noteByProceedingYouConsentToGetCallsWhatsappOrSmsMessagesIncludingByAu =>
       values['note_by_proceeding_you_consent_to_get_calls_whatsapp_or_sms_messages_including_by_au'] ??
       '';
+
+  @override
+  String get notificationPhoneRequired =>
+      values['notification_phone_required'] ?? '';
+
+  @override
+  String get notificationPhoneSubtitle =>
+      values['notification_phone_subtitle'] ?? '';
+
+  @override
+  String get notificationPhoneTitle =>
+      values['notification_phone_title'] ?? '';
+
+  @override
+  String get enterPassengerFullName =>
+      values['enter_passenger_full_name'] ?? '';
+
+  @override
+  String get passengerDetailsTitle =>
+      values['passenger_details_title'] ?? '';
+
+  @override
+  String get passengerNameLabel => values['passenger_name_label'] ?? '';
+
+  @override
+  String get passengerPhoneLabel => values['passenger_phone_label'] ?? '';
 
   @override
   String get notification => values['notification'] ?? '';
