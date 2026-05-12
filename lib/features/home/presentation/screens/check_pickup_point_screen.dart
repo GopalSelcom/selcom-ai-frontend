@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -7,12 +9,18 @@ import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/payment_dialog_header_section.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_back_button.dart';
+import '../../../../shared/utils/favorite_location_chip_catalog.dart';
+import '../../../../shared/utils/saved_place_confirmation_copy.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/map_widgets.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../controllers/home_controller.dart';
+
+/// Counter-clockwise tilt for the label pill (matches reference artwork).
+const double _savedPlaceChipTiltRadians = -7 * math.pi / 180;
 
 class CheckPickupPointScreen extends StatefulWidget {
   const CheckPickupPointScreen({super.key});
@@ -189,7 +197,7 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
             width: 50.w,
             height: 4.h,
             decoration: BoxDecoration(
-              color: AppColors.skeletonBase,
+              color: AppColors.primary.withValues(alpha: 0.35),
               borderRadius: BorderRadius.circular(2.r),
             ),
           ),
@@ -201,15 +209,16 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                 Row(
                   children: [
                     Container(
-                      padding: EdgeInsets.all(8.w),
+                      padding: EdgeInsets.all(10.w),
                       decoration: const BoxDecoration(
-                        color: AppColors.bgMintLight,
+                        color: AppColors.primaryLight,
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(
-                        Icons.place,
-                        color: AppColors.successMint,
-                        size: 24.sp,
+                      child: SvgPictureAsset(
+                        AppAssets.locationIcPickupPin,
+                        width: 22.w,
+                        height: 22.w,
+                        color: AppColors.primary,
                       ),
                     ),
                     SizedBox(width: 16.w),
@@ -242,16 +251,19 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                 Container(
                   padding: EdgeInsets.all(16.w),
                   decoration: BoxDecoration(
-                    color: AppColors.pageBackground,
+                    color: AppColors.primaryLight.withValues(alpha: 0.35),
                     borderRadius: BorderRadius.circular(16.r),
-                    border: Border.all(color: AppColors.bgSoftCircle),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.25),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      Icon(
-                        Icons.location_on,
+                      SvgPictureAsset(
+                        AppAssets.locationIcPickupPin,
+                        width: 22.w,
+                        height: 22.w,
                         color: AppColors.primary,
-                        size: 20.sp,
                       ),
                       SizedBox(width: 12.w),
                       Expanded(
@@ -331,187 +343,211 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
     required String subtitle,
     required VoidCallback onConfirm,
   }) {
+    /// Same outer radius as [PaymentStatusDialog].
+    final dialogRadius = 28.r;
     Get.dialog(
       Dialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24.r),
+          borderRadius: BorderRadius.circular(dialogRadius),
         ),
         insetPadding: EdgeInsets.symmetric(horizontal: 24.w),
-        child: Container(
-          decoration: BoxDecoration(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(dialogRadius),
+          child: Container(
             color: AppColors.white,
-            borderRadius: BorderRadius.circular(24.r),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header with Green Circle and Label Badge
-              Stack(
-                alignment: Alignment.center,
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    height: 120.h,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: AppColors.bgMintLight,
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(24.r),
-                      ),
-                    ),
-                  ),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(12.w),
-                        decoration: const BoxDecoration(
-                          color: AppColors.successMint,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.check,
-                          color: AppColors.white,
-                          size: 40.sp,
-                        ),
-                      ),
-                      SizedBox(height: 8.h),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 12.w,
-                          vertical: 6.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.white,
-                          borderRadius: BorderRadius.circular(20.r),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.black.withValues(alpha: 0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _getLabelIcon(),
-                            SizedBox(width: 8.w),
-                            Text(
-                              label,
-                              style: AppTextStyles.homeSubtitle.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textHeading,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              Padding(
-                padding: EdgeInsets.all(24.w),
-                child: Column(
-                  children: [
-                    Text(
-                      AppStrings.areYouSureYouWantToAddThisAddressAs.trParams({
-                        'label': label,
-                      }),
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.homeTitle.copyWith(
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 24.h),
-                    // Address Card
-                    Container(
-                      padding: EdgeInsets.all(16.w),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Same header widget tree as payment success; label pill is [overlay] only.
+                PaymentSuccessDialogHeader(
+                  headerHeight: 172.h,
+                  centerChild: Align(
+                    alignment: const Alignment(0, -0.07),
+                    child: Container(
+                      width: 76.w,
+                      height: 76.w,
                       decoration: BoxDecoration(
-                        color: AppColors.white,
-                        borderRadius: BorderRadius.circular(16.r),
-                        border: Border.all(color: AppColors.bgSoftCircle),
-                      ),
-                      child: Row(
-                        children: [
-                          SvgPictureAsset(
-                            AppAssets.locationIcPickupPin,
-                            width: 16.w,
-                            color: AppColors.primary,
+                        color: AppColors.success,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.success.withValues(alpha: 0.38),
+                            blurRadius: 16,
+                            offset: const Offset(0, 8),
                           ),
-                          SizedBox(width: 12.w),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.check_rounded,
+                        color: AppColors.white,
+                        size: 42.sp,
+                      ),
+                    ),
+                  ),
+                  overlay: Positioned(
+                    left: 0,
+                    right: 0,
+                    top: 100.h,
+                    child: Center(
+                      child: Transform.rotate(
+                        angle: _savedPlaceChipTiltRadians,
+                        alignment: Alignment.center,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(14.r),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.black.withValues(alpha: 0.12),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8.w,
+                              vertical: 6.h,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.white,
+                              borderRadius: BorderRadius.circular(13.76.r),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
+                                _confirmDialogLabelChipIcon(),
+                                SizedBox(width: 5.w),
+                                Text(
+                                  label,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTextStyles.homeCaption.copyWith(
+                                    fontSize: 16.06.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textHeading,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(24.w, 22.h, 24.w, 24.h),
+                  child: Column(
+                    children: [
+                      Text(
+                        AppStrings.areYouSureYouWantToAddThisAddressAs.trParams({
+                          'phrase':
+                              SavedPlaceConfirmationCopy.phraseAsIndefiniteNoun(
+                                label,
+                              ),
+                        }),
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.homeTitle.copyWith(
+                          fontSize: 20.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textHeading,
+                          height: 34 / 20,
+                          letterSpacing: -0.4,
+                        ),
+                      ),
+                      SizedBox(height: 18.34.h),
+                      Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.all(16.w),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceSubtle,
+                          borderRadius: BorderRadius.circular(16.r),
+                          border: Border.all(
+                            color: AppColors.bgSoftCircle,
+                            width: 1,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                SvgPictureAsset(
+                                  AppAssets.locationIcPickupPin,
+                                  width: 16.w,
+                                  height: 16.w,
+                                  color: AppColors.textError,
+                                ),
+                                SizedBox(width: 4.w),
                                 Text(
                                   title,
                                   style: AppTextStyles.homeSubtitle.copyWith(
-                                    fontWeight: FontWeight.bold,
                                     color: AppColors.textHeading,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                SizedBox(height: 4.h),
-                                Text(
-                                  subtitle,
-                                  style: AppTextStyles.homeCaption.copyWith(
-                                    color: AppColors.textBody,
+                                    height: 20 / 15,
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ],
                             ),
+                            SizedBox(height: 4.w),
+                            Text(
+                              subtitle,
+                              style: AppTextStyles.homeCaption.copyWith(
+                                color: AppColors.textBody,
+                                fontSize: 12.sp,
+                                height: 20 / 12,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 20.h),
+                      const Divider(color: AppColors.divider, thickness: 1),
+                      SizedBox(height: 15.5.h),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52.h,
+                        child: Obx(
+                          () => AppPrimaryButton(
+                            label: AppStrings.yes.tr,
+                            height: 52.h,
+                            borderRadius: 26.r,
+                            isLoading: controller.isSavingPlace.value,
+                            onPressed: controller.isSavingPlace.value
+                                ? null
+                                : onConfirm,
                           ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 24.h),
-                    // Action Buttons
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50.h,
-                      child: Obx(
-                        () => AppPrimaryButton(
-                          label: AppStrings.yes.tr,
-                          height: 50.h,
-                          borderRadius: 25.r,
-                          isLoading: controller.isSavingPlace.value,
-                          onPressed: controller.isSavingPlace.value
-                              ? null
-                              : onConfirm,
                         ),
                       ),
-                    ),
-                    SizedBox(height: 12.h),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50.h,
-                      child: Obx(
-                        () => AppPrimaryButton(
-                          label: AppStrings.changeLocation.tr,
-                          height: 50.h,
-                          borderRadius: 25.r,
-                          outlined: true,
-                          backgroundColor: AppColors.white,
-                          textColor: AppColors.textBody,
-                          outlinedTextColor: AppColors.textBody,
-                          outlinedBorderColor: AppColors.skeletonBase,
-                          outlinedBorderWidth: 1,
-                          onPressed: controller.isSavingPlace.value
-                              ? null
-                              : () => Get.back(),
+                      SizedBox(height: 12.h),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52.h,
+                        child: Obx(
+                          () => AppPrimaryButton(
+                            label: AppStrings.changeLocation.tr,
+                            height: 52.h,
+                            borderRadius: 26.r,
+                            outlined: true,
+                            backgroundColor: AppColors.white,
+                            textColor: AppColors.textBody,
+                            outlinedTextColor: AppColors.textBody,
+                            outlinedBorderColor: AppColors.bgSoftCircle,
+                            outlinedBorderWidth: 1,
+                            onPressed: controller.isSavingPlace.value
+                                ? null
+                                : () => Get.back(),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -519,16 +555,23 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
     );
   }
 
-  Widget _getLabelIcon() {
-    String asset = AppAssets.icHomeChip;
-    if (label.toLowerCase() == 'work') asset = AppAssets.icWorkChip;
-    if (label.toLowerCase() == 'office') asset = AppAssets.icOfficeChip;
-    if (label.toLowerCase() == 'other') asset = AppAssets.icOtherChip;
+  Widget _confirmDialogLabelChipIcon() {
+    final asset = FavoriteLocationChipCatalog.chipIconAssetForDisplayLabel(
+      label,
+    );
 
-    return SvgPictureAsset(
-      asset,
-      width: 16.w,
-      color: AppColors.iconAmber,
+    return Container(
+      width: 20.w,
+      height: 20.w,
+      padding: EdgeInsets.all(2.w),
+      alignment: Alignment.center,
+      child: SvgPictureAsset(
+        asset,
+        width: 20.w,
+        height: 20.w,
+        fit: BoxFit.contain,
+        alignment: Alignment.center,
+      ),
     );
   }
 }

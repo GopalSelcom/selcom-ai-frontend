@@ -356,7 +356,8 @@ class LanguageSw extends Languages {
     'active_ride': '',
     'unable_to_get_location_coordinates': '',
     'please_select_valid_pickup_and_destination_locations': '',
-    'are_you_sure_you_want_to_add_this_address_as': '',
+    'are_you_sure_you_want_to_add_this_address_as':
+        'Are you sure you want to add this address as @phrase?',
     'tag_required': '',
     'tap_each_button_to_preview_the_popup_ui': '',
     'tell_us_more_about_your_experience': '',

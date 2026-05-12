@@ -6,7 +6,7 @@ import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../core/widgets/payment_dialog_header_section.dart';
 
 enum PaymentStatus { pending, success }
 
@@ -48,40 +48,13 @@ class PaymentStatusDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(
-              height: 132.h,
-              width: double.infinity,
-              child: Stack(
-                children: [
-                  ClipPath(
-                    clipper: _PaymentHeaderShapeClipper(),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: bgColor,
-                        borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(28.r),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Align(
-                    alignment: const Alignment(0, -0.05),
-                    child: SvgPictureAsset(
-                      asset,
-                      width: 75.w,
-                      height: 75.w,
-                      color: iconColor,
-                      placeholderBuilder: (_) => Icon(
-                        isPending
-                            ? Icons.access_time_filled
-                            : Icons.check_circle,
-                        color: iconColor,
-                        size: 75.sp,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            PaymentDialogHeaderSection(
+              backgroundColor: bgColor,
+              iconAsset: asset,
+              iconColor: iconColor,
+              placeholderIcon: isPending
+                  ? Icons.access_time_filled
+                  : Icons.check_circle,
             ),
             Padding(
               padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 8.h),
@@ -130,24 +103,4 @@ class PaymentStatusDialog extends StatelessWidget {
     final s = (totalSeconds % 60).toString().padLeft(2, '0');
     return '$m:$s';
   }
-}
-
-class _PaymentHeaderShapeClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    final dipTopY = size.height - 22;
-    final dipBottomY = size.height - 6;
-    final half = size.width / 2;
-
-    return Path()
-      ..moveTo(0, 0)
-      ..lineTo(size.width, 0)
-      ..lineTo(size.width, dipTopY)
-      ..quadraticBezierTo(size.width * 0.75, dipTopY, half, dipBottomY)
-      ..quadraticBezierTo(size.width * 0.25, dipTopY, 0, dipTopY)
-      ..close();
-  }
-
-  @override
-  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }

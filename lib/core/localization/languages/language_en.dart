@@ -404,7 +404,7 @@ class LanguageEn extends Languages {
     'please_select_valid_pickup_and_destination_locations':
         'Please select valid pickup and destination locations.',
     'are_you_sure_you_want_to_add_this_address_as':
-        'Are you sure you want to add this address as a @label?',
+        'Are you sure you want to add this address as @phrase?',
     'tag_required': 'Tag required',
     'tap_each_button_to_preview_the_popup_ui':
         'Tap each button to preview the popup UI',
