@@ -52,6 +52,12 @@ class AppStrings {
   static const String chat = 'chat';
   static const String chatIsOnlyAvailableDuringAnActiveRide =
       'chat_is_only_available_during_an_active_ride';
+  static const String rideChatQuickPassengerComingToRoad =
+      'ride_chat_quick_passenger_coming_to_road';
+  static const String rideChatQuickPassengerThereIn5Mins =
+      'ride_chat_quick_passenger_there_in_5_mins';
+  static const String rideChatQuickPassengerBigBag =
+      'ride_chat_quick_passenger_big_bag';
   static const String checkYourPickupPoint = 'check_your_pickup_point';
   static const String chooseRide = 'choose_ride';
   static const String commentRequired = 'comment_required';

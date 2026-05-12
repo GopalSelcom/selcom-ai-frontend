@@ -55,6 +55,9 @@ abstract class Languages {
   String get changePhoneNumber;
   String get chat;
   String get chatIsOnlyAvailableDuringAnActiveRide;
+  String get rideChatQuickPassengerComingToRoad;
+  String get rideChatQuickPassengerThereIn5Mins;
+  String get rideChatQuickPassengerBigBag;
   String get checkYourPickupPoint;
   String get chooseRide;
   String get commentRequired;

@@ -1246,7 +1246,10 @@ class DriverAcceptedController extends GetxController
     final model = modelName.trim().isNotEmpty
         ? modelName.trim()
         : fallbackModel.trim();
-    final registration = plate.trim();
+    final rawRegistration = plate.trim();
+    final registration = rawRegistration.isEmpty
+        ? ''
+        : TanzaniaLicensePlateFormatter.formatDisplay(rawRegistration);
     final line = [model, registration].where((e) => e.isNotEmpty).join(' - ');
     if (line.isNotEmpty) {
       driverVehicleLine.value = line;
@@ -2055,6 +2058,20 @@ class DriverAcceptedController extends GetxController
 
   // _syncLiveActivityFromTrackingPayload removed to respect 'APNs-only' update model
 
+  /// Prefer vehicle snapshot plate; else driver snapshot registration (same sources as UI).
+  String _rawPlateStringFromRide(RideModel r) {
+    final snap = r.vehicleSnapshot;
+    if (snap != null) {
+      final p = snap.plateNumber.trim();
+      if (p.isNotEmpty) return snap.plateNumber;
+    }
+    final d = r.driverSnapshot;
+    if (d is DriverSnapshotModel) {
+      return (d.vehicleRegistrationNumber ?? '').trim();
+    }
+    return '';
+  }
+
   Future<void> _syncLiveActivityFromDetails(RideModel r) async {
     try {
       if (rideId.isEmpty) return;
@@ -2067,6 +2084,8 @@ class DriverAcceptedController extends GetxController
           )
           .toUpperCase();
 
+      final rawPlate = _rawPlateStringFromRide(r);
+
       await LiveActivityManager().startActivity(
         orderId: rideId,
         status: statusStr,
@@ -2075,7 +2094,7 @@ class DriverAcceptedController extends GetxController
             '${r.vehicleSnapshot?.vehicleType ?? ''} ${r.vehicleSnapshot?.vehicleModel ?? ''}'
                 .trim(),
         driverAvatarUrl: r.driverSnapshot?.avatarUrl ?? '',
-        plateNumber: r.vehicleSnapshot?.plateNumber ?? '',
+        plateNumber: TanzaniaLicensePlateFormatter.formatDisplay(rawPlate),
         isCompleted: r.status == RideStatus.rideCompleted,
         etaSeconds: currentEtaSeconds.value,
         driverLatitude: assignedDriverLocation.value?.latitude,

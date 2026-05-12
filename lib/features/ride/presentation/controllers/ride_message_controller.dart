@@ -206,8 +206,21 @@ class RideMessageController extends GetxController {
         words.skip(1).map((w) => w[0].toUpperCase() + w.substring(1)).join('');
   }
 
-  void sendCurrentMessage() async {
-    final text = messageController.text.trim();
+  /// One-tap phrases (localized); tap sends immediately.
+  List<String> get quickReplyLabels => [
+        AppStrings.rideChatQuickPassengerComingToRoad.tr,
+        AppStrings.rideChatQuickPassengerThereIn5Mins.tr,
+        AppStrings.rideChatQuickPassengerBigBag.tr,
+      ];
+
+  Future<void> sendQuickReply(String text) =>
+      sendMessageWithText(text.trim());
+
+  void sendCurrentMessage() {
+    unawaited(sendMessageWithText(messageController.text.trim()));
+  }
+
+  Future<void> sendMessageWithText(String text) async {
     if (text.isEmpty || rideId.isEmpty) return;
 
     if (!canChat) {
@@ -217,6 +230,8 @@ class RideMessageController extends GetxController {
       );
       return;
     }
+
+    if (isSending.value) return;
 
     final now = DateTime.now();
     final localId = 'local_${now.microsecondsSinceEpoch}';

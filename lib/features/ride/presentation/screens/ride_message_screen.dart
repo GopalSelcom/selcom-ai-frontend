@@ -324,6 +324,7 @@ class RideMessageScreen extends GetView<RideMessageController> {
   Widget _composer() {
     return Obx(() {
       final bool allowed = controller.canChat;
+      final bool sending = controller.isSending.value;
       return Container(
         padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 16.h),
         decoration: BoxDecoration(
@@ -337,53 +338,62 @@ class RideMessageScreen extends GetView<RideMessageController> {
           opacity: allowed ? 1.0 : 0.5,
           child: AbsorbPointer(
             absorbing: !allowed,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: TextField(
-                    controller: controller.messageController,
-                    enabled: allowed,
-                    keyboardType: TextInputType.multiline,
-                    textInputAction: TextInputAction.newline,
-                    minLines: 1,
-                    maxLines: 5,
-                    style: AppTextStyles.body.copyWith(
-                      color: AppColors.textHeading,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: allowed
-                          ? 'Write a message...'
-                          : 'Chat unavailable',
-                      hintStyle: AppTextStyles.hint.copyWith(
-                        color: AppColors.textMessageHint,
-                      ),
-                      border: InputBorder.none,
-                    ),
-                  ),
-                ),
-                SizedBox(width: 12.w),
-                Container(
-                  width: 42.w,
-                  height: 42.w,
-                  decoration: BoxDecoration(
-                    color: allowed ? AppColors.primary : AppColors.skeletonBase,
-                    shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    onPressed: controller.sendCurrentMessage,
-                    icon: SvgPictureAsset(
-                      AppAssets.icSend,
-                      width: 18.w,
-                      height: 18.w,
-                      color: AppColors.white,
-                      placeholderBuilder: (_) => const Icon(
-                        Icons.send_rounded,
-                        color: AppColors.white,
-                        size: 24,
+                _quickReplyChips(allowed: allowed, sending: sending),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: controller.messageController,
+                        enabled: allowed,
+                        keyboardType: TextInputType.multiline,
+                        textInputAction: TextInputAction.newline,
+                        minLines: 1,
+                        maxLines: 5,
+                        style: AppTextStyles.body.copyWith(
+                          color: AppColors.textHeading,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: allowed
+                              ? 'Write a message...'
+                              : 'Chat unavailable',
+                          hintStyle: AppTextStyles.hint.copyWith(
+                            color: AppColors.textMessageHint,
+                          ),
+                          border: InputBorder.none,
+                        ),
                       ),
                     ),
-                  ),
+                    SizedBox(width: 12.w),
+                    Container(
+                      width: 42.w,
+                      height: 42.w,
+                      decoration: BoxDecoration(
+                        color: allowed && !sending
+                            ? AppColors.primary
+                            : AppColors.skeletonBase,
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        onPressed: sending ? null : controller.sendCurrentMessage,
+                        icon: SvgPictureAsset(
+                          AppAssets.icSend,
+                          width: 18.w,
+                          height: 18.w,
+                          color: AppColors.white,
+                          placeholderBuilder: (_) => const Icon(
+                            Icons.send_rounded,
+                            color: AppColors.white,
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -391,5 +401,63 @@ class RideMessageScreen extends GetView<RideMessageController> {
         ),
       );
     });
+  }
+
+  Widget _quickReplyChips({required bool allowed, required bool sending}) {
+    final labels = controller.quickReplyLabels;
+    if (labels.isEmpty || !allowed) return const SizedBox.shrink();
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: 10.h),
+      child: Opacity(
+        opacity: sending ? 0.45 : 1,
+        child: IgnorePointer(
+          ignoring: sending,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (var i = 0; i < labels.length; i++) ...[
+                  if (i > 0) SizedBox(width: 8.w),
+                  Material(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.circular(20.r),
+                    child: InkWell(
+                      onTap: () => controller.sendQuickReply(labels[i]),
+                      borderRadius: BorderRadius.circular(20.r),
+                      child: Container(
+                        constraints: BoxConstraints(maxWidth: 220.w),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 12.w,
+                          vertical: 8.h,
+                        ),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20.r),
+                          border: Border.all(
+                            color: AppColors.borderWalletCard,
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Text(
+                          labels[i],
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.homeCaption.copyWith(
+                            color: AppColors.textHeading,
+                            fontSize: 13.sp,
+                            fontWeight: FontWeight.w600,
+                            height: 1.2,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

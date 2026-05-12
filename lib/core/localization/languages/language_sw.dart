@@ -46,6 +46,9 @@ class LanguageSw extends Languages {
     'change_phone_number': '',
     'chat': '',
     'chat_is_only_available_during_an_active_ride': '',
+    'ride_chat_quick_passenger_coming_to_road': 'Coming to the road',
+    'ride_chat_quick_passenger_there_in_5_mins': "I'll be there in 5 mins",
+    'ride_chat_quick_passenger_big_bag': 'I have a big bag with me',
     'check_your_pickup_point': '',
     'choose_ride': '',
     'comment_required': '',
@@ -655,6 +658,18 @@ class LanguageSw extends Languages {
   @override
   String get chatIsOnlyAvailableDuringAnActiveRide =>
       values['chat_is_only_available_during_an_active_ride'] ?? '';
+
+  @override
+  String get rideChatQuickPassengerComingToRoad =>
+      values['ride_chat_quick_passenger_coming_to_road'] ?? '';
+
+  @override
+  String get rideChatQuickPassengerThereIn5Mins =>
+      values['ride_chat_quick_passenger_there_in_5_mins'] ?? '';
+
+  @override
+  String get rideChatQuickPassengerBigBag =>
+      values['ride_chat_quick_passenger_big_bag'] ?? '';
 
   @override
   String get checkYourPickupPoint => values['check_your_pickup_point'] ?? '';
