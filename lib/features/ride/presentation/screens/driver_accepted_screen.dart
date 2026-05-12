@@ -641,23 +641,34 @@ class DriverAcceptedScreen extends StatelessWidget {
 
       final state = c.rideBottomSheetState.value;
       if (state == RideBottomSheetState.driverAssigned) {
-        return ListView(
-          controller: scrollController,
-          padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 0),
-          children: [
-            Center(
-              child: Container(
-                width: 64.w,
-                height: 5.h,
-                decoration: BoxDecoration(
-                  color: AppColors.skeletonBase,
-                  borderRadius: BorderRadius.circular(37.r),
-                ),
+        return Builder(
+          builder: (context) {
+            return ScrollConfiguration(
+              behavior: ScrollConfiguration.of(context).copyWith(
+                overscroll: false,
+                physics: const ClampingScrollPhysics(),
               ),
-            ),
-            SizedBox(height: 20.h),
-            _driverAssignedSheet(c),
-          ],
+              child: ListView(
+                controller: scrollController,
+                physics: const ClampingScrollPhysics(),
+                padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 0),
+                children: [
+                  Center(
+                    child: Container(
+                      width: 64.w,
+                      height: 5.h,
+                      decoration: BoxDecoration(
+                        color: AppColors.skeletonBase,
+                        borderRadius: BorderRadius.circular(37.r),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20.h),
+                  _driverAssignedSheet(c),
+                ],
+              ),
+            );
+          },
         );
       }
 
