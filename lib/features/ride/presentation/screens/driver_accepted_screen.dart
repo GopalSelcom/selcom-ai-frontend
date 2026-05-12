@@ -823,52 +823,56 @@ class DriverAcceptedScreen extends StatelessWidget {
           SizedBox(height: 17.h),
         ],
         Obx(() {
-          final plateText =
-              '${c.plateLinePrimary.value}${c.plateLineSecondary.value.isNotEmpty ? ' ${c.plateLineSecondary.value}' : ''}'
-                  .trim();
+          final plateText = c.plateDisplayFormatted.value.trim();
 
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              IntrinsicWidth(
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    vertical: 8.h,
-                    horizontal: 12.w,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.ratingGoldDark,
-                    borderRadius: BorderRadius.circular(16.r),
-                    border: Border.all(
-                      color: AppColors.borderWalletCard,
-                      width: 0.787,
+              Center(
+                child: IntrinsicWidth(
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 8.h,
+                      horizontal: 12.w,
                     ),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Padding(
-                          padding: EdgeInsets.only(top: 4.h),
-                          child: SvgPictureAsset(
-                            AppAssets.icTanzaniaFlag,
-                            width: 26.w,
-                            height: 17.h,
-                          ),
-                        ),
+                    decoration: BoxDecoration(
+                      color: AppColors.ratingGoldDark,
+                      borderRadius: BorderRadius.circular(16.r),
+                      border: Border.all(
+                        color: AppColors.borderWalletCard,
+                        width: 0.787,
                       ),
-                      Text(
-                        plateText,
-                        maxLines: 1,
-                        style: AppTextStyles.homeTitle.copyWith(
-                          fontSize: 36.sp,
-                          height: 1,
-                          letterSpacing: 7.2,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textDarkOlive,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            SvgPictureAsset(
+                              AppAssets.icTanzaniaFlag,
+                              width: 22.w,
+                              height: 14.h,
+                            ),
+                            SizedBox(width: 6.w),
+                            Text(
+                              plateText,
+                              maxLines: 1,
+                              softWrap: false,
+                              style: AppTextStyles.homeTitle.copyWith(
+                                fontSize: 26.sp,
+                                height: 1.1,
+                                letterSpacing: 1.6,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textDarkOlive,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
+                      SizedBox(height: 6.h),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -906,8 +910,9 @@ class DriverAcceptedScreen extends StatelessWidget {
                   ),
                 ),
               ),
-            ],
-          );
+            ),
+          ],
+        );
         }),
         SizedBox(height: 17.h),
         const Divider(color: AppColors.borderWalletCard, height: 1),

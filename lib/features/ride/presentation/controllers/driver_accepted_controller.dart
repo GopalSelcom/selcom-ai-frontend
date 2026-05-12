@@ -24,8 +24,6 @@ import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../domain/utils/receipt_pdf_generator.dart';
-import 'package:open_filex/open_filex.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
@@ -43,6 +41,7 @@ import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../../../shared/utils/currency_formatter.dart';
+import '../../../../shared/utils/tanzania_license_plate_formatter.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../domain/repositories/ride_repository.dart';
@@ -90,8 +89,8 @@ class DriverAcceptedController extends GetxController
   final driverRating = ''.obs;
   final driverVehicleLine = ''.obs;
   final bottomSheetVehicleImageAsset = AppAssets.imgCab.obs;
-  final plateLinePrimary = ''.obs;
-  final plateLineSecondary = ''.obs;
+  /// Formatted for UI, e.g. `T 123 ABC` (see [TanzaniaLicensePlateFormatter]).
+  final plateDisplayFormatted = ''.obs;
   final vehicleSubtitle = ''.obs;
   final otpDigits = <String>[].obs;
   final isPinRequired = true.obs;
@@ -637,8 +636,9 @@ class DriverAcceptedController extends GetxController
     bottomSheetVehicleImageAsset.value = AppAssets.imgBoda;
     driverRating.value = '4';
     driverVehicleLine.value = 'Volkswagen';
-    plateLinePrimary.value = 'T 772';
-    plateLineSecondary.value = 'BBE';
+    plateDisplayFormatted.value = TanzaniaLicensePlateFormatter.formatDisplay(
+      'T772BBE',
+    );
     vehicleSubtitle.value = 'Toyota corolla, White';
     otpDigits.assignAll(['2', '7', '5', '6']);
     arrivalLabel.value = AppStrings.driverWillArrivingInMinutes.trParams({
@@ -670,15 +670,10 @@ class DriverAcceptedController extends GetxController
       plateForVehicleLine = plate;
 
       if (plate.isNotEmpty) {
-        final compact = plate.replaceAll(' ', '');
-        if (compact.length > 3) {
-          final mid = compact.length ~/ 2;
-          plateLinePrimary.value = compact.substring(0, mid);
-          plateLineSecondary.value = compact.substring(mid);
-        } else {
-          plateLinePrimary.value = plate;
-          plateLineSecondary.value = '';
-        }
+        plateDisplayFormatted.value =
+            TanzaniaLicensePlateFormatter.formatDisplay(plate);
+      } else {
+        plateDisplayFormatted.value = '';
       }
       if (model.isNotEmpty || color.isNotEmpty) {
         vehicleSubtitle.value = [
@@ -708,6 +703,7 @@ class DriverAcceptedController extends GetxController
       driverPhone.value = '';
       driverAvatarUrl.value = '';
       driverRating.value = '—';
+      plateDisplayFormatted.value = '';
       if (isPinRequired.value) {
         otpDigits.assignAll(['—', '—', '—', '—']);
       } else {
@@ -1187,15 +1183,10 @@ class DriverAcceptedController extends GetxController
         if (subtitle.isNotEmpty) vehicleSubtitle.value = subtitle;
       }
       if (plate.isNotEmpty) {
-        final compact = plate.replaceAll(' ', '');
-        if (compact.length > 3) {
-          final mid = compact.length ~/ 2;
-          plateLinePrimary.value = compact.substring(0, mid);
-          plateLineSecondary.value = compact.substring(mid);
-        } else {
-          plateLinePrimary.value = plate;
-          plateLineSecondary.value = '';
-        }
+        plateDisplayFormatted.value =
+            TanzaniaLicensePlateFormatter.formatDisplay(plate);
+      } else {
+        plateDisplayFormatted.value = '';
       }
     }
 
@@ -1833,7 +1824,7 @@ class DriverAcceptedController extends GetxController
         'rideId': rideId,
         'driverName': driverName.value,
         'driverPhone': driverPhone.value,
-        'driverSubtitle': plateLinePrimary.value + plateLineSecondary.value,
+        'driverSubtitle': plateDisplayFormatted.value,
         'riderName': 'Rider', // Default placeholder
         'initialStatus': _mapBottomSheetToRideStatus(
           rideBottomSheetState.value,
