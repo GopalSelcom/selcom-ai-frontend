@@ -2,8 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
-import 'package:agora_calling_package/agora_calling_package.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:selcom_rides_frontend/shared/widgets/app_google_map.dart';
 import 'package:uuid/uuid.dart';
 
@@ -23,8 +21,6 @@ import 'package:selcom_rides_frontend/core/data/models/requests/validate_ride_pa
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
-import '../../../../core/theme/app_text_styles.dart';
-
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
@@ -46,6 +42,7 @@ import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../widgets/cancel_ride_dialogs.dart';
+import '../widgets/ride_driver_call_options_sheet.dart';
 import '../widgets/stop_update_progress_modal.dart';
 import '../../../../core/services/storage_service.dart';
 import '../screens/ride_details_screen.dart';
@@ -1632,159 +1629,17 @@ class DriverAcceptedController extends GetxController
   /// calling package. Falls back to the system phone dialer when the package
   /// flow isn't available (no Agora App ID, ride id missing, etc.).
   Future<void> callDriver() async {
-    final ride = rideId;
-    if (ride.isNotEmpty) {
-      _fallbackToSystemDialer();
+    final id = rideId;
+    if (id.isEmpty) {
       return;
     }
-  }
-
-  void _fallbackToSystemDialer() {
-
-    _showCallOptionsBottomSheet();
-  }
-
-  void _showCallOptionsBottomSheet() {
-    Get.bottomSheet(
-      SafeArea(
-        top: false,
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-          ),
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 20.h),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 48.w,
-                  height: 4.h,
-                  decoration: BoxDecoration(
-                    color: AppColors.skeletonBase,
-                    borderRadius: BorderRadius.circular(2.r),
-                  ),
-                ),
-                SizedBox(height: 16.h),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    AppStrings.call.tr,
-                    style: AppTextStyles.homeTitle.copyWith(
-                      fontSize: 18.sp,
-                      color: AppColors.textHeading,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 12.h),
-                _callOptionTile(
-                  title: AppStrings.inAppCalling.tr,
-                  icon: Icons.phone_in_talk_outlined,
-                  onTap: () async {
-                    if (Get.isBottomSheetOpen ?? false) {
-                      Get.back();
-                    }
-                    try {
-                      await AgoraCalling.controller.placeCall(
-                        rideId: ride.value?.id??"",
-                        peerDisplayName: driverName.value.isNotEmpty
-                            ? driverName.value
-                            : 'Your Driver',
-                        peerAvatarUrl: driverAvatarUrl.value.isNotEmpty
-                            ? driverAvatarUrl.value
-                            : null,
-                      );
-                    } on CallPermissionDeniedException catch (e) {
-                      AppDialogs.showErrorDialog(
-                        title: AppStrings.call.tr,
-                        message: e.outcome == PermissionOutcome.permanentlyDenied
-                            ? 'Microphone permission is permanently denied. Open Settings to allow it.'
-                            : 'Microphone permission is required to place a call.',
-                      );
-                    } catch (e, st) {
-                      ErrorReporter.instance.report(error: e, stackTrace: st);
-                      _fallbackToSystemDialer();
-                    }
-                    // AppDialogs.showInfoDialog(
-                    //   title: AppStrings.comingSoon.tr,
-                    //   message: AppStrings.inAppCallingWillBeAvailableSoon.tr,
-                    // );
-                  },
-                ),
-                SizedBox(height: 10.h),
-                _callOptionTile(
-                  title: AppStrings.normalCall.tr,
-                  icon: Icons.call_outlined,
-                  onTap: () {
-                    if (Get.isBottomSheetOpen ?? false) {
-                      Get.back();
-                    }
-                    final phone = driverPhone.value.trim();
-                    if (phone.isEmpty) {
-                      AppDialogs.showErrorDialog(
-                        title: AppStrings.call.tr,
-                        message: AppStrings.phoneNumberUnavailable.tr,
-                      );
-                      return;
-                    }
-                    unawaited(_callDriverViaPhoneDialer(phone));
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-      isScrollControlled: true,
-      backgroundColor: AppColors.transparent,
-    );
-  }
-
-  Widget _callOptionTile({
-    required String title,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: AppColors.surfaceSubtle,
-      borderRadius: BorderRadius.circular(14.r),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14.r),
-        onTap: onTap,
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
-          child: Row(
-            children: [
-              Icon(icon, color: AppColors.textHeading, size: 20.sp),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Text(
-                  title,
-                  style: AppTextStyles.homeSubtitle.copyWith(
-                    color: AppColors.textHeading,
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios,
-                size: 14.sp,
-                color: AppColors.textMapHint,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _callDriverViaPhoneDialer(String phone) async {
-    await _launchSystemPhoneDialer(
-      phone: phone,
-      errorDialogTitle: AppStrings.call.tr,
+    RideDriverCallOptionsSheet.show(
+      rideId: id,
+      peerDisplayName: driverName.value,
+      driverPhone: driverPhone.value,
+      peerAvatarUrl: driverAvatarUrl.value.trim().isEmpty
+          ? null
+          : driverAvatarUrl.value,
     );
   }
 

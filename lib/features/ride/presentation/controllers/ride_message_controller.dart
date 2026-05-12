@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+
+import '../../../../core/localization/app_strings.dart';
 
 import '../../../../core/data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
@@ -13,6 +13,7 @@ import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../domain/entities/ride_chat_message.dart';
 import '../../domain/repositories/ride_chat_repository.dart';
+import '../widgets/ride_driver_call_options_sheet.dart';
 
 /// Ride-scoped chat (Figma `207:26441`). Uses [RideChatRepository] → socket `chat:*` when live.
 class RideMessageController extends GetxController {
@@ -271,35 +272,20 @@ class RideMessageController extends GetxController {
     }
   }
 
-  /// **TODO(static → API):** Wire to `tel:` / in-app call flow when driver phone is available from API.
-  Future<void> onTapCallDriver() async {
-    final phone = driverPhone.trim();
-    if (phone.isEmpty) {
+  void onTapCallDriver() {
+    if (rideId.isEmpty) {
       AppDialogs.showErrorDialog(
         title: AppStrings.call.tr,
-        message: AppStrings.phoneNumberUnavailable.tr,
+        message: AppStrings.missingRideInformation.tr,
       );
       return;
     }
-
-    final uri = Uri.parse('tel:${phone.replaceAll(' ', '')}');
-    try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri);
-      } else {
-        AppDialogs.showErrorDialog(
-          title: AppStrings.call.tr,
-          message: AppStrings.unableToOpenPhoneDialer.tr,
-        );
-      }
-    } catch (e, stackTrace) {
-      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      debugPrint("Error launching dialer: $e");
-      AppDialogs.showErrorDialog(
-        title: AppStrings.call.tr,
-        message: AppStrings.errorOpeningPhoneDialer.tr,
-      );
-    }
+    RideDriverCallOptionsSheet.show(
+      rideId: rideId,
+      peerDisplayName: driverName,
+      driverPhone: driverPhone,
+      peerAvatarUrl: null,
+    );
   }
 
   /// **TODO(static → API):** Emoji picker / sticker sheet when product supports it.
