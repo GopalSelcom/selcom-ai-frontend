@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/constants/ride_stop_limits.dart';
-import '../../../../core/data/models/responses/get_saved_places_response.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -13,7 +12,7 @@ import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
-import '../../../../shared/widgets/app_saved_place_chip.dart';
+import '../../../../shared/widgets/favorite_location_chips_row.dart';
 import '../../data/models/places_models.dart';
 import '../controllers/home_controller.dart';
 import '../controllers/location_selection_controller.dart';
@@ -458,33 +457,19 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
   }
 
   Widget _chipsRow() {
-    return Obx(
-      () => controller.savedPlaces.isEmpty
-          ? const SizedBox.shrink()
-          : SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: _sortedSavedPlaces(
-                  controller.savedPlaces,
-                ).map((place) => _chip(place)).toList(),
-              ),
-            ),
-    );
-  }
-
-  Widget _chip(SavedPlace savedPlace) {
-    final label = _savedPlaceLabel(savedPlace);
-
-    return Padding(
-      padding: EdgeInsets.only(right: 8.w),
-      child: AppSavedPlaceChip(
-        label: label,
-        iconAsset: _chipIconForLabel(label),
-        backgroundColor: AppColors.white,
-        borderColor: AppColors.borderWalletCard,
-        onTap: () {
+    return Obx(() {
+      controller.savedPlaces.length;
+      return FavoriteLocationChipsRow(
+        chipBackgroundColor: AppColors.white,
+        chipBorderColor: AppColors.borderWalletCard,
+        resolvePlace: controller.getSavedPlaceByLabel,
+        onChipTap: (canonical, place) {
+          if (place == null) {
+            Get.toNamed(AppRoutes.selectSavedLocation, arguments: canonical);
+            return;
+          }
           final applied = controller.applySavedLabelToLocationSelection(
-            label: label,
+            label: canonical,
             activeSegmentIndex: _activeSegmentIndex.value,
             pickupController: pickupController,
             destinationController: destinationController,
@@ -502,55 +487,10 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             );
           }
         },
-        onLongPress: () =>
-            Get.toNamed(AppRoutes.selectSavedLocation, arguments: label),
-      ),
-    );
-  }
-
-  String _savedPlaceLabel(SavedPlace place) {
-    final raw = (place.label ?? place.name ?? '').trim();
-    if (raw.isNotEmpty) return raw.capitalizeFirst ?? raw;
-    return AppStrings.saved.tr;
-  }
-
-  String _chipIconForLabel(String label) {
-    switch (label.toLowerCase()) {
-      case 'home':
-        return AppAssets.icHomeChip;
-      case 'work':
-        return AppAssets.icWorkChip;
-      case 'office':
-        return AppAssets.icOfficeChip;
-      default:
-        return AppAssets.icOtherChip;
-    }
-  }
-
-  List<SavedPlace> _sortedSavedPlaces(List<SavedPlace> places) {
-    int priority(String label) {
-      switch (label.toLowerCase()) {
-        case 'home':
-          return 0;
-        case 'work':
-          return 1;
-        case 'office':
-          return 2;
-        default:
-          return 3;
-      }
-    }
-
-    final sorted = List<SavedPlace>.from(places);
-    sorted.sort((a, b) {
-      final la = _savedPlaceLabel(a);
-      final lb = _savedPlaceLabel(b);
-      final pa = priority(la);
-      final pb = priority(lb);
-      if (pa != pb) return pa.compareTo(pb);
-      return la.toLowerCase().compareTo(lb.toLowerCase());
+        onSavedChipLongPress: (canonical) =>
+            Get.toNamed(AppRoutes.selectSavedLocation, arguments: canonical),
+      );
     });
-    return sorted;
   }
 
   Widget _suggestionsList(HomeController controller) {

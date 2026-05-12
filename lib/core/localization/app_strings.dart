@@ -623,6 +623,7 @@ class AppStrings {
   static const String phoneNumber = 'phone_number';
   static const String work = 'work';
   static const String office = 'office';
+  static const String other = 'other';
   static const String info = 'info';
   static const String enterCustomLabel = 'enter_custom_label';
 }

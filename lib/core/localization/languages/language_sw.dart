@@ -486,6 +486,7 @@ class LanguageSw extends Languages {
     'save_location_as': '',
     'work': '',
     'office': '',
+    'other': '',
     'info': '',
     'enter_custom_label': '',
     'connection_timed_out_please_check_internet': '',
@@ -2046,6 +2047,9 @@ class LanguageSw extends Languages {
 
   @override
   String get office => values['office'] ?? '';
+
+  @override
+  String get other => values['other'] ?? '';
 
   @override
   String get info => values['info'] ?? '';

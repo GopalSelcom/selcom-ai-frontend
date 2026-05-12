@@ -3,9 +3,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../../core/constants/app_assets.dart';
+import '../../core/data/models/responses/get_saved_places_response.dart';
 import '../../core/localization/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../utils/favorite_location_chip_catalog.dart';
 import 'app_primary_button.dart';
 import 'app_saved_place_chip.dart';
 import 'app_text_field.dart';
@@ -16,11 +18,15 @@ class AddFavoriteLocationSheet extends StatefulWidget {
     required this.address,
     required this.isSaving,
     required this.onSave,
+    required this.resolveSavedPlace,
   });
 
   final String address;
   final bool isSaving;
   final Future<void> Function(String label) onSave;
+
+  /// Same lookup as Home chips ([FavoriteLocationChipsRow]): canonical labels `Home`, `Office`, …
+  final SavedPlace? Function(String canonicalLabel) resolveSavedPlace;
 
   @override
   State<AddFavoriteLocationSheet> createState() =>
@@ -28,12 +34,12 @@ class AddFavoriteLocationSheet extends StatefulWidget {
 }
 
 class _AddFavoriteLocationSheetState extends State<AddFavoriteLocationSheet> {
-  static const List<String> _labels = <String>[
-    'home',
-    'work',
-    'office',
+  /// Home row order: Home, Office, Work, Other — then Add New (unchanged behavior).
+  static final List<String> _chipKeys = <String>[
+    ...FavoriteLocationSlotId.values.map(FavoriteLocationChipCatalog.presetKey),
     'add_new',
   ];
+
   final TextEditingController _customLabelController = TextEditingController();
   String _selectedLabel = '';
   bool _hasUserSelectedLabel = false;
@@ -141,7 +147,7 @@ class _AddFavoriteLocationSheetState extends State<AddFavoriteLocationSheet> {
               Wrap(
                 spacing: 10.w,
                 runSpacing: 10.h,
-                children: _labels.map((label) {
+                children: _chipKeys.map((label) {
                   final isSelected = _selectedLabel == label;
                   return _labelChip(
                     label: label,
@@ -192,7 +198,7 @@ class _AddFavoriteLocationSheetState extends State<AddFavoriteLocationSheet> {
                           onPressed: () async {
                             final selected = _selectedLabel == 'add_new'
                                 ? _customLabelController.text.trim()
-                                : _canonicalLabel(_selectedLabel);
+                                : _canonicalLabelForPresetKey(_selectedLabel);
                             await widget.onSave(selected);
                           },
                         ),
@@ -211,20 +217,31 @@ class _AddFavoriteLocationSheetState extends State<AddFavoriteLocationSheet> {
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    final isAddNew = label == 'add_new';
-    final iconPath = isAddNew
-        ? AppAssets.locationIcAdd
-        : label == 'home'
-        ? AppAssets.icHomeChip
-        : label == 'work'
-        ? AppAssets.icWorkChip
-        : AppAssets.icOfficeChip;
+    if (label == 'add_new') {
+      return AppSavedPlaceChip(
+        label: _displayLabel(label),
+        iconAsset: AppAssets.locationIcAdd,
+        iconColor: AppColors.primary,
+        onTap: onTap,
+        backgroundColor: isSelected ? AppColors.primaryLight : null,
+        borderColor: isSelected ? AppColors.primary : null,
+      );
+    }
+
+    final id = FavoriteLocationSlotId.values.firstWhere(
+      (e) => FavoriteLocationChipCatalog.presetKey(e) == label,
+    );
+    final canonical = FavoriteLocationChipCatalog.canonicalLabel(id);
+    final hasSaved = widget.resolveSavedPlace(canonical) != null;
+    final iconPath = hasSaved
+        ? FavoriteLocationChipCatalog.categoryIconAsset(id)
+        : FavoriteLocationChipCatalog.emptySlotIconAsset;
+
     return AppSavedPlaceChip(
       label: _displayLabel(label),
       iconAsset: iconPath,
-      iconColor: isAddNew ? AppColors.primary : null,
+      iconColor: hasSaved ? null : AppColors.primary,
       onTap: onTap,
-      // Keep selection behavior unchanged while using shared chip baseline.
       backgroundColor: isSelected ? AppColors.primaryLight : null,
       borderColor: isSelected ? AppColors.primary : null,
     );
@@ -234,10 +251,12 @@ class _AddFavoriteLocationSheetState extends State<AddFavoriteLocationSheet> {
     switch (key) {
       case 'home':
         return AppStrings.home.tr;
-      case 'work':
-        return AppStrings.work.tr;
       case 'office':
         return AppStrings.office.tr;
+      case 'work':
+        return AppStrings.work.tr;
+      case 'other':
+        return AppStrings.other.tr;
       case 'add_new':
         return AppStrings.addNew.tr;
       default:
@@ -245,16 +264,11 @@ class _AddFavoriteLocationSheetState extends State<AddFavoriteLocationSheet> {
     }
   }
 
-  String _canonicalLabel(String key) {
-    switch (key) {
-      case 'home':
-        return 'Home';
-      case 'work':
-        return 'Work';
-      case 'office':
-        return 'Office';
-      default:
-        return key;
-    }
+  String _canonicalLabelForPresetKey(String key) {
+    final id = FavoriteLocationSlotId.values.firstWhere(
+      (e) => FavoriteLocationChipCatalog.presetKey(e) == key,
+      orElse: () => FavoriteLocationSlotId.other,
+    );
+    return FavoriteLocationChipCatalog.canonicalLabel(id);
   }
 }

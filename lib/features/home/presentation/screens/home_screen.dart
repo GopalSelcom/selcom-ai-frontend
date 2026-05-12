@@ -6,7 +6,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/constants/app_assets.dart';
-import '../../../../core/data/models/responses/get_saved_places_response.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/localization/app_strings.dart';
@@ -20,7 +19,7 @@ import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
 import '../../../../shared/widgets/app_map_gps_button.dart';
 import '../../../../shared/widgets/app_map_top_header.dart';
-import '../../../../shared/widgets/app_saved_place_chip.dart';
+import '../../../../shared/widgets/favorite_location_chips_row.dart';
 import '../../../ride/data/models/ride_management_models.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/recent_location_tile.dart';
@@ -276,18 +275,42 @@ class HomeScreen extends GetView<HomeController> {
                 ),
               ),
               SizedBox(height: 8.h),
-              Obx(
-                () => controller.savedPlaces.isEmpty
-                    ? const SizedBox.shrink()
-                    : SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: _sortedSavedPlaces(controller.savedPlaces)
-                              .map((place) => _buildSavedPlaceChip(place))
-                              .toList(),
-                        ),
-                      ),
-              ),
+              Obx(() {
+                controller.savedPlaces.length;
+                final extras = controller.savedPlacesBeyondPresetSlots;
+                return FavoriteLocationChipsRow(
+                  chipBackgroundColor: AppColors.surfaceSubtle,
+                  chipBorderColor: AppColors.borderWalletCard,
+                  resolvePlace: controller.getSavedPlaceByLabel,
+                  extraSavedPlaces: extras,
+                  onChipTap: (canonical, place) {
+                    if (place == null) {
+                      Get.toNamed(
+                        AppRoutes.selectSavedLocation,
+                        arguments: canonical,
+                      );
+                    } else {
+                      controller.navigateToVehicleSelectionForSavedLabel(
+                        canonical,
+                      );
+                    }
+                  },
+                  onSavedChipLongPress: (canonical) => Get.toNamed(
+                    AppRoutes.selectSavedLocation,
+                    arguments: canonical,
+                  ),
+                  onExtraChipTap: (place) =>
+                      controller.navigateToVehicleSelectionForSavedPlace(place),
+                  onExtraChipLongPress: (place) {
+                    final raw = (place.label ?? place.name ?? '').trim();
+                    Get.toNamed(
+                      AppRoutes.selectSavedLocation,
+                      arguments:
+                          raw.isEmpty ? AppStrings.saved.tr : raw,
+                    );
+                  },
+                );
+              }),
               Obx(
                 () => Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -390,65 +413,6 @@ class HomeScreen extends GetView<HomeController> {
         },
       );
     });
-  }
-
-  Widget _buildSavedPlaceChip(SavedPlace place) {
-    final label = _savedPlaceLabel(place);
-    return Container(
-      margin: EdgeInsets.only(right: 8.w),
-      child: AppSavedPlaceChip(
-        label: label,
-        iconAsset: _chipIconForLabel(label),
-        onTap: () => controller.navigateToVehicleSelectionForSavedLabel(label),
-        onLongPress: () =>
-            Get.toNamed(AppRoutes.selectSavedLocation, arguments: label),
-      ),
-    );
-  }
-
-  String _savedPlaceLabel(SavedPlace place) {
-    final raw = (place.label ?? place.name ?? '').trim();
-    if (raw.isNotEmpty) return raw.capitalizeFirst ?? raw;
-    return AppStrings.saved.tr;
-  }
-
-  String _chipIconForLabel(String label) {
-    switch (label.toLowerCase()) {
-      case 'home':
-        return AppAssets.icHomeChip;
-      case 'work':
-        return AppAssets.icWorkChip;
-      case 'office':
-        return AppAssets.icOfficeChip;
-      default:
-        return AppAssets.icOtherChip;
-    }
-  }
-
-  List<SavedPlace> _sortedSavedPlaces(List<SavedPlace> places) {
-    int priority(String label) {
-      switch (label.toLowerCase()) {
-        case 'home':
-          return 0;
-        case 'work':
-          return 1;
-        case 'office':
-          return 2;
-        default:
-          return 3;
-      }
-    }
-
-    final sorted = List<SavedPlace>.from(places);
-    sorted.sort((a, b) {
-      final la = _savedPlaceLabel(a);
-      final lb = _savedPlaceLabel(b);
-      final pa = priority(la);
-      final pb = priority(lb);
-      if (pa != pb) return pa.compareTo(pb);
-      return la.toLowerCase().compareTo(lb.toLowerCase());
-    });
-    return sorted;
   }
 
   Widget _buildRecentLocationItem(RecentDestinationModel loc) {
@@ -736,10 +700,8 @@ class HomeScreen extends GetView<HomeController> {
     // 1. Base content height (handle + search bar + padding)
     double contentHeight = 50.h;
 
-    // 2. Saved Places Chip height
-    if (controller.savedPlaces.isNotEmpty) {
-      contentHeight += 60.h;
-    }
+    // 2. Favorite preset chips row (always shown)
+    contentHeight += 60.h;
 
     // 3. Recent Locations Section
     if (controller.shouldShowRecentSection) {

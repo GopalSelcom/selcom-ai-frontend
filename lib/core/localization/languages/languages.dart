@@ -481,6 +481,7 @@ abstract class Languages {
   String get saveLocationAs;
   String get work;
   String get office;
+  String get other;
   String get info;
   String get enterCustomLabel;
   String get connectionTimedOutPleaseCheckInternet;

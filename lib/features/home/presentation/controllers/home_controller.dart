@@ -660,6 +660,37 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     return null;
   }
 
+  static bool _isPresetSlotLabel(String normalizedLowercase) {
+    return normalizedLowercase == 'home' ||
+        normalizedLowercase == 'office' ||
+        normalizedLowercase == 'work' ||
+        normalizedLowercase == 'other';
+  }
+
+  /// Saved places whose primary label is **not** Home / Office / Work / Other (custom API labels).
+  /// Used only on Home to show additional chips after the four presets.
+  List<SavedPlace> get savedPlacesBeyondPresetSlots {
+    final result = <SavedPlace>[];
+    for (final p in savedPlaces) {
+      final labelTrim = (p.label ?? '').trim();
+      final nameTrim = (p.name ?? '').trim();
+      final effective = labelTrim.isNotEmpty ? labelTrim : nameTrim;
+      if (effective.isEmpty) continue;
+      if (_isPresetSlotLabel(effective.toLowerCase())) continue;
+      result.add(p);
+    }
+    result.sort((a, b) {
+      final la = ((a.label ?? '').trim().isNotEmpty ? a.label! : (a.name ?? ''))
+          .trim()
+          .toLowerCase();
+      final lb = ((b.label ?? '').trim().isNotEmpty ? b.label! : (b.name ?? ''))
+          .trim()
+          .toLowerCase();
+      return la.compareTo(lb);
+    });
+    return result;
+  }
+
   String? getSavedPlaceSubtitle(String label) {
     final place = getSavedPlaceByLabel(label);
     final value = place?.address?.trim();
@@ -1539,16 +1570,20 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
     await Get.bottomSheet<void>(
       Obx(
-        () => AddFavoriteLocationSheet(
-          address: detailedAddress,
-          isSaving: isSavingPlace.value,
-          onSave: (label) async {
-            await onSave(label);
-            if ((Get.isBottomSheetOpen ?? false) && !isSavingPlace.value) {
-              Get.back<void>();
-            }
-          },
-        ),
+        () {
+          savedPlaces.length;
+          return AddFavoriteLocationSheet(
+            address: detailedAddress,
+            isSaving: isSavingPlace.value,
+            resolveSavedPlace: getSavedPlaceByLabel,
+            onSave: (label) async {
+              await onSave(label);
+              if ((Get.isBottomSheetOpen ?? false) && !isSavingPlace.value) {
+                Get.back<void>();
+              }
+            },
+          );
+        },
       ),
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

@@ -559,6 +559,7 @@ class LanguageEn extends Languages {
     'save_location_as': 'Save Location As',
     'work': 'Work',
     'office': 'Office',
+    'other': 'Other',
     'info': 'Info',
     'enter_custom_label': 'Enter custom label',
     'connection_timed_out_please_check_internet':
@@ -2122,6 +2123,9 @@ class LanguageEn extends Languages {
 
   @override
   String get office => values['office'] ?? '';
+
+  @override
+  String get other => values['other'] ?? '';
 
   @override
   String get info => values['info'] ?? '';
