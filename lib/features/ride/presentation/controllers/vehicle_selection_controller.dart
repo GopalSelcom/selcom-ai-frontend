@@ -678,37 +678,71 @@ class VehicleSelectionController extends GetxController {
           if (!_socketService.isConnected) {
             await _socketService.connect();
           }
-          _socketService.joinPaymentRoom(validationId: validationId);
-          String txnId = generateTransactionId();
 
-         Future.delayed(const Duration(seconds: 5), () {
-           rideRepository.walletDummyPaymentRequest(
-             DummyPaymentRequest(
-               result: "SUCCESS",
-               transId: txnId,
-               validationId: validationId,
-             ),
-           );
-         });
-          _showPaymentStatusDialog();
+          var blockValidationId = validationId;
+          while (true) {
+            final roomValidationId = blockValidationId;
+            _socketService.joinPaymentRoom(validationId: roomValidationId);
+            final txnId = generateTransactionId();
 
-          final blockOk = await _waitForPaymentBlockStatus(
-            timeout: const Duration(minutes: 2),
-          );
+            Future.delayed(const Duration(seconds: 5), () {
+              rideRepository.walletDummyPaymentRequest(
+                DummyPaymentRequest(
+                  result: "SUCCESS",
+                  transId: txnId,
+                  validationId: roomValidationId,
+                ),
+              );
+            });
+            _showPaymentStatusDialog();
 
-          if (blockOk) {
-            paymentStatus.value = PaymentStatus.success;
-            await Future.delayed(const Duration(seconds: 2));
-          }
-
-          _closePaymentStatusDialogIfOpen();
-          if (!blockOk) {
-            AppDialogs.showErrorDialog(
-              title: AppStrings.paymentNotConfirmed.tr,
-              message:
-                  AppStrings.weCouldNotConfirmYourPaymentBlockPleaseTryAgain.tr,
+            final blockOk = await _waitForPaymentBlockStatus(
+              timeout: const Duration(minutes: 2),
             );
-            return;
+
+            if (blockOk) {
+              paymentStatus.value = PaymentStatus.success;
+              await Future.delayed(const Duration(seconds: 2));
+            }
+
+            _closePaymentStatusDialogIfOpen();
+
+            if (blockOk) {
+              break;
+            }
+
+            final shouldRetry = await _offerPaymentBlockRetry();
+            if (!shouldRetry) {
+              return;
+            }
+
+            final reValidation = await rideRepository.validateRidePayment(
+              validateRequest,
+            );
+            final nextId = reValidation.fold<String?>(
+              (f) {
+                AppDialogs.showErrorDialog(
+                  title: AppStrings.paymentValidationFailed.tr,
+                  message: AppStrings.couldNotValidatePaymentPleaseTryAgain.tr,
+                );
+                return null;
+              },
+              (id) {
+                final t = id.trim();
+                if (t.isEmpty) {
+                  AppDialogs.showErrorDialog(
+                    title: AppStrings.paymentValidationFailed.tr,
+                    message: AppStrings.validationIdMissingFromServerResponse.tr,
+                  );
+                  return null;
+                }
+                return t;
+              },
+            );
+            if (nextId == null) {
+              return;
+            }
+            blockValidationId = nextId;
           }
 
           // 2) Only after validation, submit ride booking (may retry if API OK but payment not applied).
@@ -718,7 +752,7 @@ class VehicleSelectionController extends GetxController {
             bookingSubmitInFlight = true;
             try {
               final request = BookRideRequest(
-                validationId: validationId,
+                validationId: blockValidationId,
                 idempotencyKey:
                     'idem_${DateTime.now().millisecondsSinceEpoch}',
                 pickup: pickupEntity,
@@ -810,6 +844,28 @@ class VehicleSelectionController extends GetxController {
     String formattedNumber = randomNumber.toString().padLeft(5, '0');
 
     return 'DEV-BLOCK-$formattedNumber';
+  }
+
+  Future<bool> _offerPaymentBlockRetry() {
+    final completer = Completer<bool>();
+    AppDialogs.showConfirmationDialog(
+      title: AppStrings.paymentNotConfirmed.tr,
+      message:
+          AppStrings.weCouldNotConfirmYourPaymentBlockPleaseTryAgain.tr,
+      confirmText: AppStrings.retry,
+      cancelText: AppStrings.cancel,
+      onConfirm: () {
+        if (!completer.isCompleted) {
+          completer.complete(true);
+        }
+      },
+      onCancel: () {
+        if (!completer.isCompleted) {
+          completer.complete(false);
+        }
+      },
+    );
+    return completer.future;
   }
 
   Future<bool> _waitForPaymentBlockStatus({

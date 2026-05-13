@@ -118,6 +118,7 @@ class _CommonEndpoints {
   const _CommonEndpoints();
 
   final onboardingBanner = "go/banner";
+  final chatQuickReplies = "go/chat/quick-replies";
   final getSettings = "get_setting";
   final aboutUs = "get_setting?type=1";
   final terms = "get_setting?type=2";

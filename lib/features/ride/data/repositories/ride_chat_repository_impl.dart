@@ -43,6 +43,10 @@ class RideChatRepositoryImpl implements RideChatRepository {
   }
 
   @override
+  Future<List<String>> fetchQuickReplies({String role = 'passenger'}) =>
+      _remoteDs.getChatQuickReplies(role: role);
+
+  @override
   void startListening() => _socketDs.startListening();
 
   @override

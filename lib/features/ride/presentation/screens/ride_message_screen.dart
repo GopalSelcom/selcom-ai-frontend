@@ -404,60 +404,67 @@ class RideMessageScreen extends GetView<RideMessageController> {
   }
 
   Widget _quickReplyChips({required bool allowed, required bool sending}) {
-    final labels = controller.quickReplyLabels;
-    if (labels.isEmpty || !allowed) return const SizedBox.shrink();
+    return Obx(() {
+      if (controller.hideQuickRepliesBecauseTyping.value) {
+        return const SizedBox.shrink();
+      }
+      if (!allowed || controller.quickReplies.isEmpty) {
+        return const SizedBox.shrink();
+      }
+      final labels = controller.quickReplies;
 
-    return Padding(
-      padding: EdgeInsets.only(bottom: 10.h),
-      child: Opacity(
-        opacity: sending ? 0.45 : 1,
-        child: IgnorePointer(
-          ignoring: sending,
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                for (var i = 0; i < labels.length; i++) ...[
-                  if (i > 0) SizedBox(width: 8.w),
-                  Material(
-                    color: AppColors.white,
-                    borderRadius: BorderRadius.circular(20.r),
-                    child: InkWell(
-                      onTap: () => controller.sendQuickReply(labels[i]),
+      return Padding(
+        padding: EdgeInsets.only(bottom: 10.h),
+        child: Opacity(
+          opacity: sending ? 0.45 : 1,
+          child: IgnorePointer(
+            ignoring: sending,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (var i = 0; i < labels.length; i++) ...[
+                    if (i > 0) SizedBox(width: 8.w),
+                    Material(
+                      color: AppColors.white,
                       borderRadius: BorderRadius.circular(20.r),
-                      child: Container(
-                        constraints: BoxConstraints(maxWidth: 220.w),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 12.w,
-                          vertical: 8.h,
-                        ),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20.r),
-                          border: Border.all(
-                            color: AppColors.borderWalletCard,
-                            width: 0.8,
+                      child: InkWell(
+                        onTap: () => controller.sendQuickReply(labels[i]),
+                        borderRadius: BorderRadius.circular(20.r),
+                        child: Container(
+                          constraints: BoxConstraints(maxWidth: 220.w),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12.w,
+                            vertical: 8.h,
                           ),
-                        ),
-                        child: Text(
-                          labels[i],
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.homeCaption.copyWith(
-                            color: AppColors.textHeading,
-                            fontSize: 13.sp,
-                            fontWeight: FontWeight.w600,
-                            height: 1.2,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20.r),
+                            border: Border.all(
+                              color: AppColors.borderWalletCard,
+                              width: 0.8,
+                            ),
+                          ),
+                          child: Text(
+                            labels[i],
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.homeCaption.copyWith(
+                              color: AppColors.textHeading,
+                              fontSize: 13.sp,
+                              fontWeight: FontWeight.w600,
+                              height: 1.2,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),
-      ),
-    );
+      );
+    });
   }
 }
