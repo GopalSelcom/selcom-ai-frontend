@@ -219,6 +219,8 @@ class LanguageSw extends Languages {
     'pick_any_tags_that_match_this_trip': '',
     'pickup': '',
     'pickup_point': '',
+    'pickup_confirmation_note_label': '',
+    'pickup_confirmation_note_hint': '',
     'pin': '',
     'pin_locked': '',
     'please_confirm_pickup_point_to_continue': '',
@@ -1243,6 +1245,14 @@ class LanguageSw extends Languages {
 
   @override
   String get pickupPoint => values['pickup_point'] ?? '';
+
+  @override
+  String get pickupConfirmationNoteLabel =>
+      values['pickup_confirmation_note_label'] ?? '';
+
+  @override
+  String get pickupConfirmationNoteHint =>
+      values['pickup_confirmation_note_hint'] ?? '';
 
   @override
   String get pin => values['pin'] ?? '';

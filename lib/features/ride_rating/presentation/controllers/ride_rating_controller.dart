@@ -67,6 +67,15 @@ class RideRatingController extends GetxController {
     return true;
   }
 
+  /// Stars, tags, and comment rules satisfied (ignores [isSubmitting]). Used for when to show the ride-details Done action.
+  bool get isRatingFormComplete {
+    final r = selectedRating.value;
+    if (r < 1) return false;
+    if (selectedTags.isEmpty) return false;
+    if (r <= 2 && commentText.value.trim().isEmpty) return false;
+    return true;
+  }
+
   String vehicleImageAssetForType(String vehicleType) {
     return VehicleImageUtils.imageAssetForVehicleType(vehicleType);
   }
@@ -246,8 +255,8 @@ class RideRatingController extends GetxController {
     result.fold((failure) => _handleFailure(failure), (ok) async {
       if (!ok) {
         AppDialogs.showErrorDialog(
-          title:   AppStrings.skipFailed.tr,
-          message:     AppStrings.unableToSkipRatingNow.tr,
+          title: AppStrings.skipFailed.tr,
+          message: AppStrings.unableToSkipRatingNow.tr,
         );
         return;
       }

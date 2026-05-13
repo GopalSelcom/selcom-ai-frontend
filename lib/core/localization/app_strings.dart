@@ -278,6 +278,10 @@ class AppStrings {
       'pick_any_tags_that_match_this_trip';
   static const String pickup = 'pickup';
   static const String pickupPoint = 'pickup_point';
+  static const String pickupConfirmationNoteLabel =
+      'pickup_confirmation_note_label';
+  static const String pickupConfirmationNoteHint =
+      'pickup_confirmation_note_hint';
   static const String pin = 'pin';
   static const String pinLocked = 'pin_locked';
   static const String pinLockedMessageRetryInTime =

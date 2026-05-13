@@ -11,6 +11,7 @@ class BookRideRequest {
   final bool isBookedForOther;
   final String? passengerName;
   final String? passengerPhone;
+  final String note;
 
   const BookRideRequest({
     required this.validationId,
@@ -23,6 +24,7 @@ class BookRideRequest {
     this.isBookedForOther = false,
     this.passengerName,
     this.passengerPhone,
+    this.note = '',
   });
 
   Map<String, dynamic> toJson() {
@@ -37,6 +39,7 @@ class BookRideRequest {
       'vehicle_type_id': vehicleTypeId,
       'payment_method': paymentMethod,
       'is_booked_for_other': isBookedForOther,
+      'note': note,
     };
 
     if (isBookedForOther) {

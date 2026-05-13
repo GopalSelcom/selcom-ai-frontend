@@ -10,6 +10,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
+import '../../../../shared/widgets/app_text_field.dart';
 import '../../../../shared/widgets/map_widgets.dart';
 import '../controllers/confirm_pickup_controller.dart';
 
@@ -20,8 +21,14 @@ class ConfirmPickupScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = Get.find<ConfirmPickupController>();
     final canGoBack = Navigator.of(context).canPop();
+    final mq = MediaQuery.of(context);
+    final keyboardInset = mq.viewInsets.bottom;
+    final bottomSheetMaxHeight =
+        mq.size.height - mq.padding.top - mq.padding.bottom - 12;
+    const bottomPanelReserve = 400.0;
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
           Positioned.fill(
@@ -39,7 +46,7 @@ class ConfirmPickupScreen extends StatelessWidget {
                 onMapCreated: c.onMapCreated,
                 onCameraMove: c.onCameraMove,
                 onCameraIdle: c.onCameraIdle,
-                padding: EdgeInsets.only(bottom: 330.h),
+                padding: EdgeInsets.only(bottom: bottomPanelReserve.h),
               ),
             ),
           ),
@@ -68,7 +75,7 @@ class ConfirmPickupScreen extends StatelessWidget {
             );
           }),
           Positioned.fill(
-            bottom: 330.h,
+            bottom: bottomPanelReserve.h,
             child: IgnorePointer(
               child: Center(
                 child: Stack(
@@ -129,158 +136,200 @@ class ConfirmPickupScreen extends StatelessWidget {
             ),
           Align(
             alignment: Alignment.bottomCenter,
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.black.withValues(alpha: 0.08),
-                    blurRadius: 16,
-                    offset: const Offset(0, -4),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: bottomSheetMaxHeight),
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(24.r),
                   ),
-                ],
-              ),
-              child: SafeArea(
-                top: false,
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 12.h),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Center(
-                        child: Container(
-                          width: 48.w,
-                          height: 4.h,
-                          decoration: BoxDecoration(
-                            color: AppColors.skeletonBase,
-                            borderRadius: BorderRadius.circular(2.r),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 14.h),
-                      Row(
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.black.withValues(alpha: 0.08),
+                      blurRadius: 16,
+                      offset: const Offset(0, -4),
+                    ),
+                  ],
+                ),
+                child: SafeArea(
+                  top: false,
+                  bottom: false,
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      16.w,
+                      10.h,
+                      16.w,
+                      12.h + mq.padding.bottom + keyboardInset,
+                    ),
+                    child: SingleChildScrollView(
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SvgPictureAsset(
-                            AppAssets.locationIcDestinationPin,
-                            width: 36.w,
-                            height: 36.w,
-                            color: AppColors.mapDropMarkerGreen,
-                            placeholderBuilder: (_) => Icon(
-                              Icons.push_pin,
-                              color: AppColors.mapDropMarkerGreen,
-                              size: 18.sp,
+                          Center(
+                            child: Container(
+                              width: 48.w,
+                              height: 4.h,
+                              decoration: BoxDecoration(
+                                color: AppColors.skeletonBase,
+                                borderRadius: BorderRadius.circular(2.r),
+                              ),
                             ),
                           ),
-                          SizedBox(width: 8.w),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          SizedBox(height: 14.h),
+                          Row(
                             children: [
-                              Text(
-                                AppStrings.checkYourPickupPoint.tr,
-                                style: AppTextStyles.homeTitle.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.black,
+                              SvgPictureAsset(
+                                AppAssets.locationIcDestinationPin,
+                                width: 36.w,
+                                height: 36.w,
+                                color: AppColors.mapDropMarkerGreen,
+                                placeholderBuilder: (_) => Icon(
+                                  Icons.push_pin,
+                                  color: AppColors.mapDropMarkerGreen,
+                                  size: 18.sp,
                                 ),
                               ),
-                              SizedBox(height: 4.h),
-                              Text(
-                                AppStrings.selectANearbyPointForEasierPickup.tr,
-                                style: AppTextStyles.homeCaption.copyWith(
-                                  color: AppColors.textBody,
-                                  fontSize: 15.sp,
-                                  height: 20 / 15,
-                                ),
+                              SizedBox(width: 8.w),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    AppStrings.checkYourPickupPoint.tr,
+                                    style: AppTextStyles.homeTitle.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.black,
+                                    ),
+                                  ),
+                                  SizedBox(height: 4.h),
+                                  Text(
+                                    AppStrings
+                                        .selectANearbyPointForEasierPickup
+                                        .tr,
+                                    style: AppTextStyles.homeCaption.copyWith(
+                                      color: AppColors.textBody,
+                                      fontSize: 15.sp,
+                                      height: 20 / 15,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
+                          ),
+                          SizedBox(height: 12.h),
+                          Obx(() {
+                            final fullAddress = c.address.value.trim().isEmpty
+                                ? 'Selected pickup point'
+                                : c.address.value.trim();
+                            final title = fullAddress.split(',').first.trim();
+                            return Container(
+                              width: double.infinity,
+                              padding: EdgeInsets.fromLTRB(
+                                18.w,
+                                14.h,
+                                18.w,
+                                14.h,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceSubtle,
+                                borderRadius: BorderRadius.circular(12.r),
+                                border: Border.all(
+                                  color: AppColors.borderWalletCard,
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    title.isEmpty ? 'Pickup point' : title,
+                                    style: AppTextStyles.homeSubtitle.copyWith(
+                                      color: AppColors.black,
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 15.sp,
+                                      height: 20 / 15,
+                                    ),
+                                  ),
+                                  SizedBox(height: 4.h),
+                                  Text(
+                                    fullAddress,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTextStyles.homeCaption.copyWith(
+                                      color: AppColors.textBody,
+                                      fontSize: 12.sp,
+                                      fontWeight: FontWeight.w400,
+                                      height: 20 / 12,
+                                    ),
+                                  ),
+                                  if (c.isResolvingAddress.value) ...[
+                                    SizedBox(height: 8.h),
+                                    Row(
+                                      children: [
+                                        SizedBox(
+                                          width: 12.w,
+                                          height: 12.w,
+                                          child:
+                                              const CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
+                                        ),
+                                        SizedBox(width: 8.w),
+                                        Text(
+                                          AppStrings.updatingAddress.tr,
+                                          style: AppTextStyles.homeCaption
+                                              .copyWith(
+                                                color: AppColors.textBody,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            );
+                          }),
+                          SizedBox(height: 16.h),
+                          AppTextField(
+                            controller: c.noteForDriverController,
+                            label: AppStrings.pickupConfirmationNoteLabel.tr,
+                            hintText: AppStrings.pickupConfirmationNoteHint.tr,
+                            keyboardType: TextInputType.multiline,
+                            maxLines: 4,
+                            maxLength: 500,
+                            showCounter: true,
+                            textInputAction: TextInputAction.newline,
+                            scrollPadding: EdgeInsets.fromLTRB(
+                              20,
+                              mq.padding.top + 56,
+                              20,
+                              mq.viewInsets.bottom + 120,
+                            ),
+                            onChanged: (_) {},
+                          ),
+                          SizedBox(height: 20.h),
+                          Obx(
+                            () => SizedBox(
+                              width: double.infinity,
+                              height: 54.h,
+                              child: AppPrimaryButton(
+                                label: AppStrings.confirmPickup.tr,
+                                onPressed: c.isSubmitting.value
+                                    ? null
+                                    : c.confirmPickup,
+                                isLoading: c.isSubmitting.value,
+                                iconAsset: AppAssets.locationIcArrowRight,
+                                iconColor: AppColors.white,
+                                height: 54.h,
+                              ),
+                            ),
                           ),
                         ],
                       ),
-                      SizedBox(height: 12.h),
-                      Obx(() {
-                        final fullAddress = c.address.value.trim().isEmpty
-                            ? 'Selected pickup point'
-                            : c.address.value.trim();
-                        final title = fullAddress.split(',').first.trim();
-                        return Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.fromLTRB(18.w, 14.h, 18.w, 14.h),
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceSubtle,
-                            borderRadius: BorderRadius.circular(12.r),
-                            border: Border.all(
-                              color: AppColors.borderWalletCard,
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                title.isEmpty ? 'Pickup point' : title,
-                                style: AppTextStyles.homeSubtitle.copyWith(
-                                  color: AppColors.black,
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 15.sp,
-                                  height: 20 / 15,
-                                ),
-                              ),
-                              SizedBox(height: 4.h),
-                              Text(
-                                fullAddress,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: AppTextStyles.homeCaption.copyWith(
-                                  color: AppColors.textBody,
-                                  fontSize: 12.sp,
-                                  fontWeight: FontWeight.w400,
-                                  height: 20 / 12,
-                                ),
-                              ),
-                              if (c.isResolvingAddress.value) ...[
-                                SizedBox(height: 8.h),
-                                Row(
-                                  children: [
-                                    SizedBox(
-                                      width: 12.w,
-                                      height: 12.w,
-                                      child: const CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    ),
-                                    SizedBox(width: 8.w),
-                                    Text(
-                                      AppStrings.updatingAddress.tr,
-                                      style: AppTextStyles.homeCaption.copyWith(
-                                        color: AppColors.textBody,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ],
-                          ),
-                        );
-                      }),
-                      SizedBox(height: 26.h),
-                      Obx(
-                        () => SizedBox(
-                          width: double.infinity,
-                          height: 54.h,
-                          child: AppPrimaryButton(
-                            label: AppStrings.confirmPickup.tr,
-                            onPressed: c.isSubmitting.value
-                                ? null
-                                : c.confirmPickup,
-                            isLoading: c.isSubmitting.value,
-                            iconAsset: AppAssets.locationIcArrowRight,
-                            iconColor: AppColors.white,
-                            height: 54.h,
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -327,8 +376,8 @@ class ConfirmPickupScreen extends StatelessWidget {
             from.longitude + (to.longitude - from.longitude) * t,
           ),
           radius: 5,
-          fillColor: AppColors.previousPickupBlue.withValues(alpha: 0.95),
-          strokeColor: AppColors.previousPickupBlue.withValues(alpha: 0.95),
+          fillColor: AppColors.primary.withValues(alpha: 0.95),
+          strokeColor: AppColors.primary.withValues(alpha: 0.95),
           strokeWidth: 1,
         ),
       );
@@ -357,7 +406,7 @@ class _PreviousPickupBlueSymbol extends StatelessWidget {
                 color: AppColors.transparent,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.previousPickupHalo.withValues(alpha: 0.68),
+                    color: AppColors.primary.withValues(alpha: 0.35),
                     blurRadius: size * 0.16,
                     spreadRadius: size * 0.02,
                   ),
@@ -373,7 +422,7 @@ class _PreviousPickupBlueSymbol extends StatelessWidget {
               height: size * 0.46,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.previousPickupBlue,
+                color: AppColors.primary,
                 border: Border.all(color: AppColors.white, width: 1.3),
               ),
             ),
@@ -385,9 +434,7 @@ class _PreviousPickupBlueSymbol extends StatelessWidget {
               angle: -0.65,
               child: CustomPaint(
                 size: Size(size * 0.18, size * 0.18),
-                painter: const _BlueTrianglePainter(
-                  AppColors.previousPickupBlue,
-                ),
+                painter: const _BlueTrianglePainter(AppColors.primary),
               ),
             ),
           ),
