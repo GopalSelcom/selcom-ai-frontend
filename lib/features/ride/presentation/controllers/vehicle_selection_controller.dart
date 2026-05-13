@@ -65,6 +65,7 @@ class VehicleSelectionController extends GetxController {
   final isMapVisualReady = false.obs;
   final pickupOverlayOffset = Rxn<Offset>();
   final dropOverlayOffset = Rxn<Offset>();
+  final dropOverlayOffsets = <Offset?>[].obs;
 
   /// Full route for polyline (API).
   final routePoints = <LatLng>[].obs;
@@ -87,7 +88,7 @@ class VehicleSelectionController extends GetxController {
 
   GoogleMapController? mapController;
   LatLng? _lastProjectedPickup;
-  LatLng? _lastProjectedDrop;
+  List<LatLng> _lastProjectedDrops = const <LatLng>[];
   int _overlayProjectionSeq = 0;
 
   BitmapDescriptor? driverIcon;
@@ -976,18 +977,22 @@ class VehicleSelectionController extends GetxController {
 
   void scheduleOverlayProjection({
     required LatLng pickup,
-    required LatLng drop,
+    required List<LatLng> drops,
     required double devicePixelRatio,
   }) {
     final pickupChanged = _lastProjectedPickup != pickup;
-    final dropChanged = _lastProjectedDrop != drop;
-    if (!pickupChanged && !dropChanged) return;
+    final dropsChanged =
+        _lastProjectedDrops.length != drops.length ||
+        !_lastProjectedDrops.asMap().entries.every(
+          (e) => e.value == drops[e.key],
+        );
+    if (!pickupChanged && !dropsChanged) return;
     _lastProjectedPickup = pickup;
-    _lastProjectedDrop = drop;
+    _lastProjectedDrops = List<LatLng>.from(drops);
     Future.microtask(
       () => projectOverlayOffsets(
         pickup: pickup,
-        drop: drop,
+        drops: drops,
         devicePixelRatio: devicePixelRatio,
       ),
     );
@@ -995,22 +1000,31 @@ class VehicleSelectionController extends GetxController {
 
   Future<void> projectOverlayOffsets({
     required LatLng pickup,
-    required LatLng drop,
+    required List<LatLng> drops,
     required double devicePixelRatio,
   }) async {
     if (mapController == null) return;
     final seq = ++_overlayProjectionSeq;
     final pickupRaw = await AppMapService.screenOffsetFor(mapController!, pickup);
-    final dropRaw = await AppMapService.screenOffsetFor(mapController!, drop);
+    final dropRaws = await Future.wait(
+      drops.map((d) => AppMapService.screenOffsetFor(mapController!, d)),
+    );
     if (seq != _overlayProjectionSeq) return;
 
-    Offset? toLogical(Offset? raw) {
+    Offset? normalize(Offset? raw) {
       if (raw == null) return null;
-      return Offset(raw.dx / devicePixelRatio, raw.dy / devicePixelRatio);
+      // Android map projection is reported in physical pixels; iOS aligns with
+      // logical pixels in our map stack. Keep both platform behaviors stable.
+      if (GetPlatform.isAndroid) {
+        return Offset(raw.dx / devicePixelRatio, raw.dy / devicePixelRatio);
+      }
+      return raw;
     }
 
-    pickupOverlayOffset.value = toLogical(pickupRaw);
-    dropOverlayOffset.value = toLogical(dropRaw);
+    pickupOverlayOffset.value = normalize(pickupRaw);
+    dropOverlayOffsets.assignAll(dropRaws.map(normalize).toList(growable: false));
+    dropOverlayOffset.value =
+        dropOverlayOffsets.isNotEmpty ? dropOverlayOffsets.last : null;
   }
 
   String compactAddress(String value) {
@@ -1023,6 +1037,11 @@ class VehicleSelectionController extends GetxController {
   String get pickupMapLabel => compactAddress(pickupEntity.address);
 
   String get destinationMapLabel => compactAddress(destinationEntity.address);
+
+  String dropMapLabelAt(int index) {
+    if (index < 0 || index >= destinations.length) return destinationMapLabel;
+    return compactAddress(destinations[index].address);
+  }
 
   String get destinationEtaBadgeText {
     final minutes = selectedEstimate?.durationMinutes ?? 0;
@@ -1066,20 +1085,35 @@ class VehicleSelectionController extends GetxController {
   }
 
   Future<void> editDropFromMap() async {
-    await _openLocationEdit(isEditingPickup: false);
+    await _openLocationEdit(
+      isEditingPickup: false,
+      destinationIndex: destinations.length - 1,
+    );
   }
 
-  Future<void> _openLocationEdit({required bool isEditingPickup}) async {
+  Future<void> editDropAtIndexFromMap(int index) async {
+    if (index < 0 || index >= destinations.length) return;
+    await _openLocationEdit(isEditingPickup: false, destinationIndex: index);
+  }
+
+  Future<void> _openLocationEdit({
+    required bool isEditingPickup,
+    int? destinationIndex,
+  }) async {
     if (Get.isRegistered<LocationSelectionController>()) {
       Get.delete<LocationSelectionController>();
     }
+
+    final safeDestinationIndex = destinationIndex == null
+        ? destinations.length - 1
+        : destinationIndex.clamp(0, destinations.length - 1);
 
     final result = await Get.toNamed(
       AppRoutes.locationSelection,
       arguments: {
         'fromVehicleSelectionEdit': true,
         'editTarget': isEditingPickup ? 'pickup' : 'drop',
-        'activeSegmentIndex': isEditingPickup ? 0 : 1,
+        'activeSegmentIndex': isEditingPickup ? 0 : safeDestinationIndex + 1,
         // In edit mode we keep existing values prefilled.
         'clearPickupOnOpen': false,
         'clearDestinationOnOpen': false,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' hide Marker;
@@ -352,8 +353,11 @@ class ConfirmPickupScreen extends StatelessWidget {
       initialLatLng,
     );
     if (raw == null) return null;
-    final dpr = MediaQuery.of(context).devicePixelRatio;
-    return Offset(raw.dx / dpr, raw.dy / dpr);
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      final dpr = MediaQuery.of(context).devicePixelRatio;
+      return Offset(raw.dx / dpr, raw.dy / dpr);
+    }
+    return raw;
   }
 
   Set<Circle> _buildRouteCircles({required LatLng from, required LatLng to}) {
