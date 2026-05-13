@@ -746,14 +746,16 @@ class DriverAcceptedScreen extends StatelessWidget {
             ),
             SizedBox(width: 2.w), // 2px gap from Figma
             Flexible(
-              child: Text(
-                c.arrivalLabel.value,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.homeCaption.copyWith(
-                  fontSize: 15.sp,
-                  color: AppColors.textBody,
-                  fontWeight: FontWeight.w500,
-                  height: 20 / 15,
+              child: Obx(
+                () => Text(
+                  c.driverAssignedSheetArrivalEtaLine,
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.homeCaption.copyWith(
+                    fontSize: 15.sp,
+                    color: AppColors.textBody,
+                    fontWeight: FontWeight.w500,
+                    height: 20 / 15,
+                  ),
                 ),
               ),
             ),

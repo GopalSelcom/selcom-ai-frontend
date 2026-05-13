@@ -1235,6 +1235,11 @@ class DriverAcceptedController extends GetxController
         routeTarget.value != oldTarget) {
       _fitRouteBounds();
     }
+
+    final rootEta = payload.etaSeconds;
+    if (rootEta != null && rootEta.toDouble() > 0) {
+      _applySocketEtaSecondsToLabels(rootEta.toDouble(), skipIfArrived: true);
+    }
   }
 
   void _applyUnifiedDriverVehicleLine({
@@ -1511,6 +1516,53 @@ class DriverAcceptedController extends GetxController
     return (etaSeconds / 60).ceil();
   }
 
+  /// Pickup-phase statuses: map chip + driver-assigned sheet use same rule.
+  bool _isDriverHeadingToPickupForEta(String rideStatusRaw) {
+    final s = rideStatusRaw.trim().toLowerCase();
+    if (s.isEmpty || s == 'driver_arrived') return false;
+    return s == 'driver_assigned' ||
+        s == 'driver_arriving' ||
+        s == 'accepted' ||
+        s == 'driver_en_route' ||
+        s == 'en_route';
+  }
+
+  void _applySocketEtaSecondsToLabels(
+    double etaSeconds, {
+    required bool skipIfArrived,
+  }) {
+    if (skipIfArrived && currentRideStatus.value.toLowerCase() == 'driver_arrived') {
+      return;
+    }
+    if (etaSeconds <= 0) return;
+    currentEtaSeconds.value = etaSeconds;
+    final minutes = (etaSeconds / 60).ceil();
+    etaLabel.value = '$minutes ${minutes == 1 ? 'Min' : 'Mins'}';
+    final rideStatus = currentRideStatus.value.toLowerCase();
+    if (_isDriverHeadingToPickupForEta(rideStatus)) {
+      arrivalLabel.value =
+          AppStrings.driverWillArrivingInMinutes.trParams({
+        'minutes': '$minutes',
+      });
+    }
+  }
+
+  /// Driver-assigned sheet first line — matches map chip math on [currentEtaSeconds].
+  String get driverAssignedSheetArrivalEtaLine {
+    final st = currentRideStatus.value.toLowerCase();
+    if (st == 'driver_arrived') {
+      return arrivalLabel.value;
+    }
+    final secs = currentEtaSeconds.value;
+    if (secs > 0 && _isDriverHeadingToPickupForEta(st)) {
+      final minutes = (secs / 60).ceil();
+      return AppStrings.driverWillArrivingInMinutes.trParams({
+        'minutes': '$minutes',
+      });
+    }
+    return arrivalLabel.value;
+  }
+
   bool get shouldShowRideEtaBadge {
     final status = currentRideStatus.value;
     if (rideEtaMinutes <= 0) return false;
@@ -1550,21 +1602,10 @@ class DriverAcceptedController extends GetxController
 
     final eta = payload.eta;
     if (eta != null) {
-      currentEtaSeconds.value = eta.toDouble();
-      if (!isPickupArrived && eta > 0) {
-        final minutes = (eta / 60).ceil();
-        etaLabel.value = '$minutes ${minutes == 1 ? 'Min' : 'Mins'}';
-        final rideStatus = currentRideStatus.value.toLowerCase();
-        final isPickupPhase = rideStatus == 'driver_assigned' ||
-            rideStatus == 'driver_arriving' ||
-            rideStatus == 'accepted';
-        if (isPickupPhase) {
-          arrivalLabel.value =
-              AppStrings.driverWillArrivingInMinutes.trParams({
-            'minutes': '$minutes',
-          });
-        }
-      } else if (!isPickupArrived && eta <= 0) {
+      final etaSecs = eta.toDouble();
+      if (!isPickupArrived && etaSecs > 0) {
+        _applySocketEtaSecondsToLabels(etaSecs, skipIfArrived: false);
+      } else if (!isPickupArrived && etaSecs <= 0) {
         final statusForEta = (payload.status ?? currentRideStatus.value)
             .toLowerCase();
         final inRide = statusForEta.contains('progress') ||
