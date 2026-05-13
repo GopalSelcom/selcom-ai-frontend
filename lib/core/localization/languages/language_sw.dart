@@ -88,6 +88,7 @@ class LanguageSw extends Languages {
     'ride_started_description': '',
     'finding_your_driver': '',
     'finding_driver_default_description': '',
+    'finding_driver_minutes_remain': '',
     'driver_will_arriving_in_minutes': '',
     'driver_assigned': '',
     'driver_arriving': '',
@@ -795,6 +796,10 @@ class LanguageSw extends Languages {
   @override
   String get findingDriverDefaultDescription =>
       values['finding_driver_default_description'] ?? '';
+
+  @override
+  String get findingDriverMinutesRemain =>
+      values['finding_driver_minutes_remain'] ?? '';
 
   @override
   String get driverWillArrivingInMinutes =>

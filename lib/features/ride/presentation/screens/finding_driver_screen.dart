@@ -333,18 +333,19 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
 
                 SizedBox(height: 20.h),
 
-                // 3. Timer (Icon + Text)
+                // 3. Timer: M:SS countdown + floor-minute "X min remaining"
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Icon(
                       Icons.access_time_rounded,
                       color: AppColors.textHeading,
                       size: 20.sp,
                     ),
-                    SizedBox(width: 8.w),
+                    SizedBox(width: 4.w),
                     Text(
-                      '${c.remainingSeconds.value ~/ 60} minutes remain',
+                      c.findingDriverMinutesRemainLabel(),
                       style: AppTextStyles.homeCaption.copyWith(
                         fontSize: 15.sp,
                         fontWeight: FontWeight.w600,

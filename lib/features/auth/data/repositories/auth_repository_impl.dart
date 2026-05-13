@@ -6,6 +6,7 @@ import '../../../../core/data/models/responses/send_otp_response.dart';
 import '../../../../core/data/models/requests/verify_otp_request.dart';
 import '../../../../core/data/models/responses/verify_otp_response.dart';
 import '../../../../core/data/models/user_model.dart';
+import '../../../../core/data/models/responses/onboarding_banners_response.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_data_source.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
@@ -85,6 +86,18 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final result = await remoteDataSource.logout();
       return Right(result);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<OnboardingBannerItem>>>
+      getOnboardingBanners() async {
+    try {
+      final list = await remoteDataSource.getOnboardingBanners();
+      return Right(list);
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));

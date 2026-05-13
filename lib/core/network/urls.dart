@@ -117,6 +117,7 @@ class _SettingsEndpoints {
 class _CommonEndpoints {
   const _CommonEndpoints();
 
+  final onboardingBanner = "go/banner";
   final getSettings = "get_setting";
   final aboutUs = "get_setting?type=1";
   final terms = "get_setting?type=2";

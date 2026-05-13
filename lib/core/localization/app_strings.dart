@@ -111,6 +111,8 @@ class AppStrings {
   static const String findingYourDriver = 'finding_your_driver';
   static const String findingDriverDefaultDescription =
       'finding_driver_default_description';
+  static const String findingDriverMinutesRemain =
+      'finding_driver_minutes_remain';
   static const String driverWillArrivingInMinutes =
       'driver_will_arriving_in_minutes';
   static const String driverAssigned = 'driver_assigned';

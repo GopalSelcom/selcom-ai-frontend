@@ -198,6 +198,7 @@ class DriverSnapshot {
   String? vehicleType;
   String? vehicleYear;
   String? verificationCode;
+  double? rating;
 
   DriverSnapshot({
     this.driverId,
@@ -211,6 +212,7 @@ class DriverSnapshot {
     this.vehicleType,
     this.vehicleYear,
     this.verificationCode,
+    this.rating,
   });
 
   factory DriverSnapshot.fromJson(Map<String, dynamic> json) => DriverSnapshot(
@@ -223,8 +225,9 @@ class DriverSnapshot {
     vehicleModel: json["vehicle_model"],
     vehicleRegistrationNumber: json["vehicle_registration_number"],
     vehicleType: json["vehicle_type"],
-    vehicleYear: json["vehicle_year"],
-    verificationCode: json["verification_code"],
+    vehicleYear: json["vehicle_year"]?.toString(),
+    verificationCode: json["verification_code"]?.toString(),
+    rating: (json["rating"] as num?)?.toDouble(),
   );
 
   Map<String, dynamic> toJson() => {
@@ -239,6 +242,7 @@ class DriverSnapshot {
     "vehicle_type": vehicleType,
     "vehicle_year": vehicleYear,
     "verification_code": verificationCode,
+    "rating": rating,
   };
 }
 
