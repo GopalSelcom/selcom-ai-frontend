@@ -90,6 +90,7 @@ abstract class Languages {
   String get rideStartedDescription;
   String get findingYourDriver;
   String get findingDriverDefaultDescription;
+  String get findingDriverMinutesRemain;
   String get driverWillArrivingInMinutes;
   String get driverAssigned;
   String get driverArriving;

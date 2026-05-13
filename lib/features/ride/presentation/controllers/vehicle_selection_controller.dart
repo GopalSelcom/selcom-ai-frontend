@@ -781,6 +781,7 @@ class VehicleSelectionController extends GetxController {
                       'isBookedForOther': isBookedForOther,
                       'passengerName': passengerName,
                       'passengerPhone': passengerPhone,
+                      'cancel_time': ride.cancelTime,
                     },
                   );
                 },

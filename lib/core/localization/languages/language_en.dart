@@ -101,6 +101,7 @@ class LanguageEn extends Languages {
     'finding_your_driver': 'Finding Your Driver',
     'finding_driver_default_description':
         'The driver will pick you up as soon as possible after they confirm your order',
+    'finding_driver_minutes_remain': '@minutes min remaining',
     'driver_will_arriving_in_minutes':
         'Driver will arrive in @minutes min...',
     'driver_assigned': 'Driver Assigned',
@@ -876,6 +877,10 @@ class LanguageEn extends Languages {
   @override
   String get findingDriverDefaultDescription =>
       values['finding_driver_default_description'] ?? '';
+
+  @override
+  String get findingDriverMinutesRemain =>
+      values['finding_driver_minutes_remain'] ?? '';
 
   @override
   String get driverWillArrivingInMinutes =>
