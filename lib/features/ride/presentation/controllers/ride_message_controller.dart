@@ -22,12 +22,17 @@ class RideMessageController extends GetxController {
 
   final RideChatRepository _repository;
 
+  /// Session cache for `GET go/chat/quick-replies` (admin list changes rarely).
+  static List<String>? _sessionQuickRepliesCache;
+
   final TextEditingController messageController = TextEditingController();
   final ScrollController scrollController = ScrollController();
 
   final messages = <RideChatMessage>[].obs;
   final isSocketConnected = false.obs;
   final isSending = false.obs;
+  final quickReplies = <String>[].obs;
+  final hideQuickRepliesBecauseTyping = false.obs;
 
   late final String rideId;
   String driverName = 'John Anthany deo';
@@ -53,6 +58,7 @@ class RideMessageController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    messageController.addListener(_onComposerTextChanged);
     _parseArgs();
     if (rideId.isEmpty) {
       Future.microtask(() {
@@ -69,6 +75,7 @@ class RideMessageController extends GetxController {
 
   @override
   void onClose() {
+    messageController.removeListener(_onComposerTextChanged);
     _chatSub?.cancel();
     _connectionSub?.cancel();
     _rideStatusSub?.cancel();
@@ -159,16 +166,10 @@ class RideMessageController extends GetxController {
     });
     isSocketConnected.value = socket.isConnected;
 
-    // 2. Fetch history
-    try {
-      final history = await _repository.getHistory(rideId: rideId);
-      if (history.isNotEmpty) {
-        messages.assignAll(history);
-      }
-    } catch (e, stackTrace) {
-      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      debugPrint("Error fetching chat history: $e");
-    }
+    await Future.wait([
+      _loadQuickReplies(),
+      _loadChatHistory(),
+    ]);
 
     // 3. Connect/Join room
     await _repository.ensureConnected();
@@ -186,6 +187,41 @@ class RideMessageController extends GetxController {
     });
 
     _scrollToBottom();
+  }
+
+  void _onComposerTextChanged() {
+    final hide = messageController.text.trim().isNotEmpty;
+    if (hideQuickRepliesBecauseTyping.value != hide) {
+      hideQuickRepliesBecauseTyping.value = hide;
+    }
+  }
+
+  Future<void> _loadQuickReplies() async {
+    if (_sessionQuickRepliesCache != null) {
+      quickReplies.assignAll(_sessionQuickRepliesCache!);
+      return;
+    }
+    try {
+      final list = await _repository.fetchQuickReplies(role: 'passenger');
+      _sessionQuickRepliesCache = List<String>.from(list);
+      quickReplies.assignAll(list);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      _sessionQuickRepliesCache = const [];
+      quickReplies.clear();
+    }
+  }
+
+  Future<void> _loadChatHistory() async {
+    try {
+      final history = await _repository.getHistory(rideId: rideId);
+      if (history.isNotEmpty) {
+        messages.assignAll(history);
+      }
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      debugPrint("Error fetching chat history: $e");
+    }
   }
 
   void _updateRideStatusFromStr(String statusStr) {
@@ -206,13 +242,6 @@ class RideMessageController extends GetxController {
     return words[0] +
         words.skip(1).map((w) => w[0].toUpperCase() + w.substring(1)).join('');
   }
-
-  /// One-tap phrases (localized); tap sends immediately.
-  List<String> get quickReplyLabels => [
-        AppStrings.rideChatQuickPassengerComingToRoad.tr,
-        AppStrings.rideChatQuickPassengerThereIn5Mins.tr,
-        AppStrings.rideChatQuickPassengerBigBag.tr,
-      ];
 
   Future<void> sendQuickReply(String text) =>
       sendMessageWithText(text.trim());

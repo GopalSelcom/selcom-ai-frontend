@@ -1,4 +1,5 @@
 import '../../../../core/data/models/responses/rides/active_ride_response.dart';
+import '../../../../core/data/models/responses/chat_quick_replies_response.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../models/ride_management_models.dart';
@@ -13,48 +14,73 @@ import '../../../../core/services/error_reporting/error_reporter.dart';
 
 abstract class RideRemoteDataSource {
   Future<ActiveRideResponseModel?> getActiveRide();
+
   Future<List<RecentDestinationModel>> getRecentDestinations();
+
   Future<List<RideModel>> getRideHistory({int page = 1, int limit = 10});
+
   Future<RideModel> getRideDetails(String rideId);
+
   Future<RideCancellationChargesModel> getCancellationCharges(String rideId);
+
   Future<bool> cancelRide(String rideId, String reason);
+
   Future<bool> cancelVoiceCall(String rideId);
+
   Future<DestinationUpdatePreviewModel> previewUpdateDestination(
     String rideId,
     Map<String, dynamic> destination,
   );
+
   Future<DestinationUpdateAppliedModel> confirmUpdateDestination(
     String rideId,
     Map<String, dynamic> destination,
   );
+
   Future<bool> updatePickup(String rideId, Map<String, dynamic> pickup);
+
   Future<bool> increaseFare(String rideId, int newFare);
+
   Future<ReceiptModel> getReceipt(String rideId);
+
   Future<bool> rateDriver(String rideId, int rating, String comment);
+
   Future<bool> submitFeedback(String rideId, String category, String message);
+
   Future<String> validateRidePayment(ValidateRidePaymentRequest request);
+
   Future<bool> walletDummyPaymentRequest(DummyPaymentRequest request);
+
   Future<Map<String, dynamic>> getChatMessages(
     String rideId, {
     int page = 1,
     int limit = 50,
   });
+
   Future<bool> sendChatMessage(String rideId, String message);
+
+  Future<List<String>> getChatQuickReplies({String role = 'passenger'});
+
   Future<bool> updateActivityToken(String rideId, String token);
+
   Future<dynamic> updateStops(
     String rideId, {
     required List<Map<String, dynamic>> stops,
     bool confirm = false,
     required String idempotencyKey,
   });
+
   Future<void> cancelPendingStops(String rideId);
+
   Future<CheckBookModeResult> checkBookMode({
     required double riderLat,
     required double riderLng,
     required double pickupLat,
     required double pickupLng,
   });
+
   Future<EmergencyContactsResponse> getEmergencyContacts();
+
   Future<PdfLinkModel> uploadReceiptPdf({
     required String rideId,
     required String pdfPath,
@@ -200,10 +226,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       request: ApiRequest(
         endpoint: "${URLS.ride.base}/$rideId/update-destination",
         method: ApiMethod.put,
-        body: {
-          'destination': destination,
-          'confirm': false,
-        },
+        body: {'destination': destination, 'confirm': false},
         errorPresentationType: ErrorPresentationType.none,
       ),
     );
@@ -232,10 +255,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       request: ApiRequest(
         endpoint: "${URLS.ride.base}/$rideId/update-destination",
         method: ApiMethod.put,
-        body: {
-          'destination': destination,
-          'confirm': true,
-        },
+        body: {'destination': destination, 'confirm': true},
         errorPresentationType: ErrorPresentationType.none,
       ),
     );
@@ -370,6 +390,29 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       ),
     );
     return response.statusCode == 200;
+  }
+
+  @override
+  Future<List<String>> getChatQuickReplies({String role = 'passenger'}) async {
+    try {
+      final response = await ApiService().call(
+        request: ApiRequest(
+          endpoint: URLS.common.chatQuickReplies,
+          method: ApiMethod.get,
+          queryParams: {'role': role},
+        ),
+      );
+      if (response.statusCode == 200 && response.data != null) {
+        return parseChatQuickRepliesFromResponse(
+          response.data is Map<String, dynamic>
+              ? response.data as Map<String, dynamic>
+              : Map<String, dynamic>.from(response.data as Map),
+        );
+      }
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+    }
+    return const [];
   }
 
   @override
