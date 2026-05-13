@@ -230,6 +230,8 @@ abstract class Languages {
   String get pickAnyTagsThatMatchThisTrip;
   String get pickup;
   String get pickupPoint;
+  String get pickupConfirmationNoteLabel;
+  String get pickupConfirmationNoteHint;
   String get pin;
   String get pinLocked;
   String get pleaseConfirmPickupPointToContinue;

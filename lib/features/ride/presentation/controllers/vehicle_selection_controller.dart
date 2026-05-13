@@ -636,6 +636,12 @@ class VehicleSelectionController extends GetxController {
       final isBookedForOther = (confirmed['isBookedForOther'] as bool?) ?? false;
       final passengerName = confirmed['passengerName'] as String?;
       final passengerPhone = confirmed['passengerPhone'] as String?;
+      final rawRideNote = confirmed['note'];
+      final rideNote = rawRideNote == null
+          ? ''
+          : (rawRideNote is String
+              ? rawRideNote.trim()
+              : rawRideNote.toString().trim());
 
       // 1) Validate payment first (Validate Ride Payment - Block).
       final refreshedSelectedEstimate = selectedEstimate;
@@ -721,6 +727,7 @@ class VehicleSelectionController extends GetxController {
                 isBookedForOther: isBookedForOther,
                 passengerName: isBookedForOther ? passengerName : null,
                 passengerPhone: isBookedForOther ? passengerPhone : null,
+                note: rideNote,
               );
               final result = await homeRepository.bookRide(request);
               await result.fold<Future<void>>(

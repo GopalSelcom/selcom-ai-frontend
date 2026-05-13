@@ -36,6 +36,8 @@ class ConfirmPickupController extends GetxController {
   final bookingMode = BookingMode.self.obs;
   final passengerName = ''.obs;
   final passengerPhone = ''.obs;
+  final TextEditingController noteForDriverController =
+      TextEditingController();
   late LatLng _initialLatLng;
   late String initialAddress;
 
@@ -49,6 +51,12 @@ class ConfirmPickupController extends GetxController {
           _pickupMoveThreshold ||
       (selectedLatLng.value.longitude - _initialLatLng.longitude).abs() >
           _pickupMoveThreshold;
+
+  @override
+  void onClose() {
+    noteForDriverController.dispose();
+    super.onClose();
+  }
 
   @override
   void onInit() {
@@ -160,6 +168,7 @@ class ConfirmPickupController extends GetxController {
           'pickupAddress': address.value.trim().isEmpty
               ? 'Selected pickup point'
               : address.value.trim(),
+          'note': noteForDriverController.text.trim(),
           'isBookedForOther': bookingMode.value == BookingMode.other,
           'passengerName': bookingMode.value == BookingMode.other
               ? passengerName.value.trim()
@@ -177,6 +186,7 @@ class ConfirmPickupController extends GetxController {
           'pickupAddress': address.value.trim().isEmpty
               ? 'Selected pickup point'
               : address.value.trim(),
+          'note': noteForDriverController.text.trim(),
           'isBookedForOther': false,
         },
       );

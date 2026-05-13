@@ -30,6 +30,7 @@ class AppTextField extends StatefulWidget {
   final Color? textFieldBackgroundColor;
   final Color? textColor;
   final bool enableEnhancedStyle;
+  final EdgeInsets? scrollPadding;
 
   const AppTextField({
     super.key,
@@ -57,6 +58,7 @@ class AppTextField extends StatefulWidget {
     this.textFieldBackgroundColor,
     this.textColor,
     this.enableEnhancedStyle = false,
+    this.scrollPadding,
   });
 
   @override
@@ -146,6 +148,7 @@ class _AppTextFieldState extends State<AppTextField> {
               child: TextField(
                 controller: widget.controller,
                 focusNode: _focusNode,
+                scrollPadding: widget.scrollPadding ?? const EdgeInsets.all(20),
                 keyboardType: widget.keyboardType,
                 textInputAction: widget.textInputAction,
                 obscureText: widget.isPassword,
