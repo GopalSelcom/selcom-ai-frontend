@@ -1193,6 +1193,8 @@ class DriverAcceptedController extends GetxController
       fallbackModel: (v?.vehicleName ?? '').trim(),
     );
 
+    _applyDriverRatingFromStatusPayload(payload, d);
+
     if (!isPinRequired.value) {
       otpDigits.clear();
     }
@@ -1251,6 +1253,29 @@ class DriverAcceptedController extends GetxController
     if (line.isNotEmpty) {
       driverVehicleLine.value = line;
     }
+  }
+
+  /// Prefer root `driver_avg_rating` from [ride:status_update], then snapshot `rating`.
+  void _applyDriverRatingFromStatusPayload(
+    EventRiderStatusUpdateResponse payload,
+    DriverSnapshot? d,
+  ) {
+    final fromRoot = _socketAverageRatingLabel(payload.driverAvgRating);
+    if (fromRoot != null) {
+      driverRating.value = fromRoot;
+      return;
+    }
+    final snap = d?.rating;
+    if (snap != null && snap > 0) {
+      driverRating.value = snap.toStringAsFixed(1);
+    }
+  }
+
+  String? _socketAverageRatingLabel(num? raw) {
+    if (raw == null) return null;
+    final v = raw.toDouble();
+    if (v <= 0) return null;
+    return v.toStringAsFixed(1);
   }
 
   void _applyBottomSheetStateForStatus(String rawStatus) {
