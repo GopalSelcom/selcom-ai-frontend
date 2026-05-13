@@ -140,8 +140,6 @@ class AppColors {
   static const Color iconHeartFilled = Color(0xFFF3004C);
   static const Color textNeutralButton = Color(0xFF7F7F7F);
   static const Color promotionBlue = Color(0xFF2668D2);
-  static const Color previousPickupBlue = Color(0xFF3B83ED);
-  static const Color previousPickupHalo = Color(0xFFB9D0EE);
   static const Color routeBlue = Color(0xFF3073E8);
   static const Color pinRed = Color(0xFFF52D56);
   static const Color dangerDeep = Color(0xFFE31E24);

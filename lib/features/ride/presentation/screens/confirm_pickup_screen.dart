@@ -327,8 +327,8 @@ class ConfirmPickupScreen extends StatelessWidget {
             from.longitude + (to.longitude - from.longitude) * t,
           ),
           radius: 5,
-          fillColor: AppColors.previousPickupBlue.withValues(alpha: 0.95),
-          strokeColor: AppColors.previousPickupBlue.withValues(alpha: 0.95),
+          fillColor: AppColors.primary.withValues(alpha: 0.95),
+          strokeColor: AppColors.primary.withValues(alpha: 0.95),
           strokeWidth: 1,
         ),
       );
@@ -357,7 +357,7 @@ class _PreviousPickupBlueSymbol extends StatelessWidget {
                 color: AppColors.transparent,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.previousPickupHalo.withValues(alpha: 0.68),
+                    color: AppColors.primary.withValues(alpha: 0.35),
                     blurRadius: size * 0.16,
                     spreadRadius: size * 0.02,
                   ),
@@ -373,7 +373,7 @@ class _PreviousPickupBlueSymbol extends StatelessWidget {
               height: size * 0.46,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.previousPickupBlue,
+                color: AppColors.primary,
                 border: Border.all(color: AppColors.white, width: 1.3),
               ),
             ),
@@ -386,7 +386,7 @@ class _PreviousPickupBlueSymbol extends StatelessWidget {
               child: CustomPaint(
                 size: Size(size * 0.18, size * 0.18),
                 painter: const _BlueTrianglePainter(
-                  AppColors.previousPickupBlue,
+                  AppColors.primary,
                 ),
               ),
             ),
