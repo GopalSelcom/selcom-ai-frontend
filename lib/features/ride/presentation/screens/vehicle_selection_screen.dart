@@ -12,6 +12,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
+import '../../../../shared/widgets/vehicle_selection_promo_chip.dart';
 import '../../../payment/presentation/widgets/payment_bar.dart';
 import '../controllers/vehicle_selection_controller.dart';
 
@@ -129,60 +130,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
           Positioned(
             top: MediaQuery.paddingOf(context).top + 60.h,
             right: 16.w,
-            child: GestureDetector(
-              onTap: controller.openPromotions,
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-                decoration: BoxDecoration(
-                  color: AppColors.promotionBlue,
-                  borderRadius: BorderRadius.circular(18.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.promotionBlue.withValues(alpha: 0.24),
-                      blurRadius: 14.r,
-                      offset: Offset(0, 6.h),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      // width: 22.w,
-                      // height: 22.w,
-                      child: SvgPictureAsset(
-                        AppAssets.icPromotions,
-                        width: 20.w,
-                        height: 20.w,
-                        placeholderBuilder: (_) => Container(
-                          width: 20.w,
-                          height: 20.w,
-                          decoration: const BoxDecoration(
-                            color: AppColors.white,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.percent,
-                            color: AppColors.promotionBlue,
-                            size: 14.sp,
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 6.w),
-                    Text(
-                      AppStrings.promotions.tr,
-                      style: AppTextStyles.homeCaption.copyWith(
-                        color: AppColors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12.sp,
-                        height: 16 / 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            child: VehicleSelectionPromoChip(controller: controller),
           ),
           Positioned(
             top: MediaQuery.paddingOf(context).top + 104.h,
@@ -241,9 +189,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
       final drops = controller.destinations
           .map((d) => LatLng(d.lat, d.lng))
           .toList(growable: false);
-      final lastDrop = drops.isEmpty
-          ? pickup
-          : drops.last;
+      final lastDrop = drops.isEmpty ? pickup : drops.last;
       final mid = LatLng(
         (pickup.latitude + lastDrop.latitude) / 2,
         (pickup.longitude + lastDrop.longitude) / 2,
@@ -566,6 +512,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                     return Obx(() {
                       final selected =
                           controller.selectedVehicleIndex.value == index;
+                      final _ = controller.appliedPromoCode.value;
                       return _vehicleCard(
                         index: index,
                         item: item,
@@ -579,7 +526,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
             Obx(() {
               return PaymentBar(
                 buttonLabel:
-                    '${AppStrings.bookRide.tr} ${CurrencyFormatter.formatWithApiCurrency(controller.selectedFareAmount, controller.currency)}',
+                    '${AppStrings.bookRide.tr} ${CurrencyFormatter.formatPayableOrFree(controller.selectedPayableFareAmount, controller.currency, freeLabel: AppStrings.rideFreeLabel.tr)}',
                 isLoading: controller.isBooking,
                 onActionButtonPressed: controller.bookRide,
               );
@@ -686,26 +633,78 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                         ),
                       ),
                     ],
+                    if (controller.appliedPromoCode.value.trim().isNotEmpty &&
+                        item.promoApplied != true &&
+                        (item.promoError?.trim().isNotEmpty ?? false)) ...[
+                      SizedBox(height: 2.h),
+                      Text(
+                        AppStrings.promoCodeNotValidForVehicle.tr,
+                        style: AppTextStyles.homeCaption.copyWith(
+                          color: AppColors.warningStrong,
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
-              Text(
-                CurrencyFormatter.formatWithApiCurrency(
-                  item.fareEstimate ?? 0,
-                  item.currency,
-                ),
-                style: TextStyle(
-                  fontFamily: AppTextStyles.metropolisFont,
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textHeading,
-                  letterSpacing: -0.4,
-                ),
-              ),
+              _vehicleFarePrice(item),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _vehicleFarePrice(FareEstimateItem item) {
+    final showPromo =
+        item.promoApplied == true &&
+        (item.discountedFare != null) &&
+        (item.fareEstimate ?? 0) > (item.discountedFare ?? 0);
+    if (!showPromo) {
+      return Text(
+        CurrencyFormatter.formatWithApiCurrency(
+          item.fareEstimate ?? 0,
+          item.currency,
+        ),
+        style: AppTextStyles.homeTitle.copyWith(
+          fontSize: 16.sp,
+          letterSpacing: -0.4,
+        ),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(
+          CurrencyFormatter.formatWithApiCurrency(
+            item.fareEstimate ?? 0,
+            item.currency,
+          ),
+          style: AppTextStyles.homeCaption.copyWith(
+            fontWeight: FontWeight.w500,
+            letterSpacing: -0.2,
+            decoration: TextDecoration.lineThrough,
+            decorationColor: AppColors.black,
+            decorationThickness: 3,
+            decorationStyle: TextDecorationStyle.solid,
+          ),
+        ),
+        SizedBox(height: 2.h),
+        Text(
+          CurrencyFormatter.formatPayableOrFree(
+            item.displayFare,
+            item.currency,
+            freeLabel: AppStrings.rideFreeLabel.tr,
+          ),
+          style: AppTextStyles.homeTitle.copyWith(
+            fontSize: 16.sp,
+            color: AppColors.primary,
+            letterSpacing: -0.4,
+          ),
+        ),
+      ],
     );
   }
 

@@ -18,3 +18,10 @@ class NetworkFailure extends Failure {
 class AuthFailure extends Failure {
   const AuthFailure(super.message);
 }
+
+/// Promo validate (`POST go/promo/validate`) — carries server [errorCode].
+class PromoValidationFailure extends Failure {
+  final String? errorCode;
+
+  const PromoValidationFailure(super.message, {this.errorCode});
+}

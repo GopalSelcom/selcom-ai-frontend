@@ -4,11 +4,14 @@ class FareEstimateRequest {
   final LocationEntity pickup;
   final LocationEntity? destination;
   final List<LocationEntity>? destinations;
+  /// When set, estimate API returns per-vehicle promo fields.
+  final String? promoCode;
 
   const FareEstimateRequest({
     required this.pickup,
     this.destination,
     this.destinations,
+    this.promoCode,
   });
 
   Map<String, dynamic> toJson() {
@@ -30,6 +33,11 @@ class FareEstimateRequest {
         'lng': destination!.lng,
         'address': destination!.address,
       };
+    }
+
+    final code = promoCode?.trim();
+    if (code != null && code.isNotEmpty) {
+      data['promo_code'] = code.toUpperCase();
     }
 
     return data;

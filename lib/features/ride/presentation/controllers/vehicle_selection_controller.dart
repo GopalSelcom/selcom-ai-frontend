@@ -32,6 +32,10 @@ import '../../domain/repositories/ride_repository.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../../../../core/services/app_region_service.dart';
 import '../../../../core/services/app_settings_service.dart';
+import '../../../../core/services/analytics_service.dart';
+import '../../../../core/errors/failures.dart';
+import '../../../../shared/widgets/ride_promo_code_sheet.dart';
+import '../../../../shared/widgets/promo_apply_success_dialog.dart';
 import '../../../../shared/utils/country_region_defaults.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 
@@ -60,8 +64,14 @@ class VehicleSelectionController extends GetxController {
   final lastSocketError = ''.obs;
   final nearbyDriverCount = 0.obs;
   final paymentStatus = PaymentStatus.pending.obs;
+
   /// Countdown shown in [PaymentStatusDialog]; initial duration from settings API.
   final paymentTimerSeconds = 300.obs;
+  final appliedPromoCode = ''.obs;
+  final promoValidatedAt = Rxn<DateTime>();
+  final promoSheetInlineError = RxnString();
+  final promoSheetLoading = false.obs;
+  Timer? _promoEstimateDebounce;
   final isRouteReady = false.obs;
   final isLocationIconsReady = false.obs;
   final isMapVisualReady = false.obs;
@@ -113,6 +123,7 @@ class VehicleSelectionController extends GetxController {
 
   @override
   void onClose() {
+    _promoEstimateDebounce?.cancel();
     _nearbyDriversSub?.cancel();
     _nearbyDriversErrorSub?.cancel();
     _nearbyDriversConnectionSub?.cancel();
@@ -208,15 +219,23 @@ class VehicleSelectionController extends GetxController {
     await _loadEstimates();
   }
 
-  Future<void> _loadEstimates() async {
-    isLoadingEstimates.value = true;
+  FareEstimateRequest _fareEstimateRequest() {
+    final trimmed = appliedPromoCode.value.trim();
+    return FareEstimateRequest(
+      pickup: pickupEntity,
+      destinations: destinations.toList(),
+      promoCode: trimmed.isEmpty ? null : trimmed,
+    );
+  }
+
+  Future<void> _loadEstimates({bool silent = false}) async {
+    if (!silent) {
+      isLoadingEstimates.value = true;
+    }
     isRouteReady.value = false;
     routePoints.clear();
     driverMarkerPoints.clear();
-    final req = FareEstimateRequest(
-      pickup: pickupEntity,
-      destinations: destinations.toList(),
-    );
+    final req = _fareEstimateRequest();
 
     final vehicleTypesResult = await homeRepository.getVehicleTypes();
     List<VehicleTypeModel> vehicleTypes = [];
@@ -250,6 +269,9 @@ class VehicleSelectionController extends GetxController {
               .map((e) => _withResolvedVehicleTypeId(e, vehicleTypes))
               .toList();
           estimates.assignAll(normalized);
+          if (appliedPromoCode.value.trim().isNotEmpty) {
+            promoValidatedAt.value = DateTime.now();
+          }
 
           if (model.routeGeometry?.coordinates != null &&
               model.routeGeometry!.coordinates!.isNotEmpty) {
@@ -288,7 +310,9 @@ class VehicleSelectionController extends GetxController {
         }
       },
     );
-    isLoadingEstimates.value = false;
+    if (!silent) {
+      isLoadingEstimates.value = false;
+    }
     _applyPreferredVehicleSelection();
 
     if (estimates.isNotEmpty) {
@@ -434,8 +458,13 @@ class VehicleSelectionController extends GetxController {
       perKmCharge: e.perKmCharge,
       perMinCharge: e.perMinCharge,
       minimumFare: e.minimumFare,
+      waypointCharge: e.waypointCharge,
       maxPassengers: e.maxPassengers ?? matched.maxPassengers,
       currency: e.currency,
+      promoApplied: e.promoApplied,
+      promoDiscount: e.promoDiscount,
+      discountedFare: e.discountedFare,
+      promoError: e.promoError,
     );
   }
 
@@ -511,7 +540,18 @@ class VehicleSelectionController extends GetxController {
     return estimates[i];
   }
 
-  int get selectedFareAmount => selectedEstimate?.fareEstimate ?? 0;
+  int get selectedPayableFareAmount => selectedEstimate?.displayFare ?? 0;
+
+  int get selectedOriginalFareAmount => selectedEstimate?.originalFare ?? 0;
+
+  int get selectedPromoSavingsAmount {
+    final e = selectedEstimate;
+    if (e == null) return 0;
+    if (e.promoApplied == true && (e.promoDiscount ?? 0) > 0) {
+      return e.promoDiscount!;
+    }
+    return 0;
+  }
 
   String get currency =>
       selectedEstimate?.currency ??
@@ -524,6 +564,16 @@ class VehicleSelectionController extends GetxController {
     selectedVehicleIndex.value = index;
     await loadDriverIcon();
     _requestNearbyDriversForCurrentSelection();
+    if (appliedPromoCode.value.trim().isNotEmpty) {
+      _scheduleSilentPromoEstimateRefresh();
+    }
+  }
+
+  void _scheduleSilentPromoEstimateRefresh() {
+    _promoEstimateDebounce?.cancel();
+    _promoEstimateDebounce = Timer(const Duration(milliseconds: 450), () {
+      unawaited(_loadEstimates(silent: true));
+    });
   }
 
   Future<void> bookRide() async {
@@ -586,10 +636,7 @@ class VehicleSelectionController extends GetxController {
 
       // Re-estimate fare/route after pickup confirmation so pricing and ETA are fresh.
       final refreshedEstimateResult = await homeRepository.estimateFare(
-        FareEstimateRequest(
-          pickup: pickupEntity,
-          destinations: destinations.toList(),
-        ),
+        _fareEstimateRequest(),
       );
 
       final refreshedOk = await refreshedEstimateResult.fold<Future<bool>>(
@@ -664,23 +711,25 @@ class VehicleSelectionController extends GetxController {
       );
       if (!refreshedOk) return;
 
-      final isBookedForOther = (confirmed['isBookedForOther'] as bool?) ?? false;
+      if (!await _awaitPromoStalenessGuardIfNeeded()) {
+        return;
+      }
+
+      final isBookedForOther =
+          (confirmed['isBookedForOther'] as bool?) ?? false;
       final passengerName = confirmed['passengerName'] as String?;
       final passengerPhone = confirmed['passengerPhone'] as String?;
       final rawRideNote = confirmed['note'];
       final rideNote = rawRideNote == null
           ? ''
           : (rawRideNote is String
-              ? rawRideNote.trim()
-              : rawRideNote.toString().trim());
+                ? rawRideNote.trim()
+                : rawRideNote.toString().trim());
 
       // 1) Validate payment first (Validate Ride Payment - Block).
       final refreshedSelectedEstimate = selectedEstimate;
       final validateRequest = ValidateRidePaymentRequest(
-        fareEstimate:
-            refreshedSelectedEstimate?.fareEstimate ??
-            est.fareEstimate ??
-            selectedFareAmount,
+        fareEstimate: refreshedSelectedEstimate?.displayFare ?? est.displayFare,
         paymentMethod: pay.type,
         vehicleTypeId: resolvedVehicleTypeId,
       );
@@ -764,7 +813,8 @@ class VehicleSelectionController extends GetxController {
                 if (t.isEmpty) {
                   AppDialogs.showErrorDialog(
                     title: AppStrings.paymentValidationFailed.tr,
-                    message: AppStrings.validationIdMissingFromServerResponse.tr,
+                    message:
+                        AppStrings.validationIdMissingFromServerResponse.tr,
                   );
                   return null;
                 }
@@ -785,8 +835,7 @@ class VehicleSelectionController extends GetxController {
             try {
               final request = BookRideRequest(
                 validationId: blockValidationId,
-                idempotencyKey:
-                    'idem_${DateTime.now().millisecondsSinceEpoch}',
+                idempotencyKey: 'idem_${DateTime.now().millisecondsSinceEpoch}',
                 pickup: pickupEntity,
                 destinations: destinations.toList(),
                 vehicleTypeId: resolvedVehicleTypeId,
@@ -795,6 +844,10 @@ class VehicleSelectionController extends GetxController {
                 passengerName: isBookedForOther ? passengerName : null,
                 passengerPhone: isBookedForOther ? passengerPhone : null,
                 note: rideNote,
+                fareEstimate: selectedOriginalFareAmount,
+                promoCode: appliedPromoCode.value.trim().isEmpty
+                    ? null
+                    : appliedPromoCode.value.trim(),
               );
               final result = await homeRepository.bookRide(request);
               await result.fold<Future<void>>(
@@ -814,17 +867,30 @@ class VehicleSelectionController extends GetxController {
                   if (rideId == null || rideId.isEmpty || ride == null) {
                     AppDialogs.showErrorDialog(
                       title: 'Booking',
-                      message: data.message ??
+                      message:
+                          data.message ??
                           'Ride was created but ride id is missing from the response.',
                     );
                     return;
                   }
 
-                  if (!rideBookResponseIndicatesPaymentApplied(ride, pay.type)) {
+                  final pc = ride.promoCode?.toString().trim();
+                  if (pc != null && pc.isNotEmpty) {
+                    unawaited(
+                      di.sl<AnalyticsService>().logEvent(
+                        'promo_applied_to_booking',
+                        parameters: {'code': pc},
+                      ),
+                    );
+                  }
+
+                  if (!rideBookResponseIndicatesPaymentApplied(
+                    ride,
+                    pay.type,
+                  )) {
                     AppDialogs.showConfirmationDialog(
                       title: AppStrings.bookRidePaymentNotAppliedTitle.tr,
-                      message:
-                          AppStrings.bookRidePaymentNotAppliedMessage.tr,
+                      message: AppStrings.bookRidePaymentNotAppliedMessage.tr,
                       confirmText: AppStrings.retry,
                       cancelText: AppStrings.cancel,
                       onConfirm: submitRideBooking,
@@ -882,8 +948,7 @@ class VehicleSelectionController extends GetxController {
     final completer = Completer<bool>();
     AppDialogs.showConfirmationDialog(
       title: AppStrings.paymentNotConfirmed.tr,
-      message:
-          AppStrings.weCouldNotConfirmYourPaymentBlockPleaseTryAgain.tr,
+      message: AppStrings.weCouldNotConfirmYourPaymentBlockPleaseTryAgain.tr,
       confirmText: AppStrings.retry,
       cancelText: AppStrings.cancel,
       onConfirm: () {
@@ -939,8 +1004,10 @@ class VehicleSelectionController extends GetxController {
 
   void _showPaymentStatusDialog() {
     paymentStatus.value = PaymentStatus.pending;
-    paymentTimerSeconds.value =
-        di.sl<AppSettingsService>().paymentWaitSeconds.value;
+    paymentTimerSeconds.value = di
+        .sl<AppSettingsService>()
+        .paymentWaitSeconds
+        .value;
 
     if (Get.isDialogOpen == true) return;
 
@@ -1095,7 +1162,10 @@ class VehicleSelectionController extends GetxController {
   }) async {
     if (mapController == null) return;
     final seq = ++_overlayProjectionSeq;
-    final pickupRaw = await AppMapService.screenOffsetFor(mapController!, pickup);
+    final pickupRaw = await AppMapService.screenOffsetFor(
+      mapController!,
+      pickup,
+    );
     final dropRaws = await Future.wait(
       drops.map((d) => AppMapService.screenOffsetFor(mapController!, d)),
     );
@@ -1113,9 +1183,12 @@ class VehicleSelectionController extends GetxController {
     }
 
     pickupOverlayOffset.value = normalize(pickupRaw);
-    dropOverlayOffsets.assignAll(dropRaws.map(normalize).toList(growable: false));
-    dropOverlayOffset.value =
-        dropOverlayOffsets.isNotEmpty ? dropOverlayOffsets.last : null;
+    dropOverlayOffsets.assignAll(
+      dropRaws.map(normalize).toList(growable: false),
+    );
+    dropOverlayOffset.value = dropOverlayOffsets.isNotEmpty
+        ? dropOverlayOffsets.last
+        : null;
   }
 
   String compactAddress(String value) {
@@ -1152,13 +1225,157 @@ class VehicleSelectionController extends GetxController {
   Color get socketDriverStatusColor =>
       isSocketConnected.value ? AppColors.success : AppColors.warningStrong;
 
-  Color get socketDriverStatusBackground =>
-      isSocketConnected.value
-          ? AppColors.bgSuccessBanner
-          : AppColors.bgWarningLight;
+  Color get socketDriverStatusBackground => isSocketConnected.value
+      ? AppColors.bgSuccessBanner
+      : AppColors.bgWarningLight;
+
+  void _clearPromoAfterRouteChange() {
+    if (appliedPromoCode.value.trim().isEmpty) return;
+    appliedPromoCode.value = '';
+    promoValidatedAt.value = null;
+    Get.snackbar(
+      AppStrings.promoRemovedTitle.tr,
+      AppStrings.promoRemovedDestinationChanged.tr,
+      snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 3),
+    );
+  }
+
+  Future<bool> _awaitPromoStalenessGuardIfNeeded() async {
+    final code = appliedPromoCode.value.trim();
+    if (code.isEmpty) return true;
+    final at = promoValidatedAt.value;
+    if (at != null &&
+        DateTime.now().difference(at) <= const Duration(minutes: 5)) {
+      return true;
+    }
+    final est = selectedEstimate;
+    final vid = (est?.vehicleTypeId ?? '').trim();
+    if (vid.isEmpty || !_looksLikeBackendVehicleTypeId(vid)) {
+      return true;
+    }
+    final fare = est!.originalFare;
+    final result = await homeRepository.validatePromo(
+      code: code,
+      vehicleTypeId: vid,
+      fareEstimate: fare,
+    );
+    return result.fold<Future<bool>>(
+      (f) async {
+        final msg = f is PromoValidationFailure && f.errorCode != null
+            ? userMessageForPromoSheetError(f.errorCode!)
+            : f.message;
+        AppDialogs.showErrorDialog(
+          title: AppStrings.promoNotAppliedTitle.tr,
+          message: msg,
+        );
+        appliedPromoCode.value = '';
+        promoValidatedAt.value = null;
+        await _loadEstimates();
+        return false;
+      },
+      (data) async {
+        appliedPromoCode.value = data.code;
+        promoValidatedAt.value = DateTime.now();
+        return true;
+      },
+    );
+  }
+
+  String userMessageForPromoSheetError(String code) {
+    switch (code.trim()) {
+      case 'VALID_PROMO_INVALID':
+        return AppStrings.promoErrorInvalid.tr;
+      case 'VALID_PROMO_EXPIRED':
+        return AppStrings.promoErrorExpired.tr;
+      case 'VALID_PROMO_NOT_APPLICABLE':
+        return AppStrings.promoErrorNotApplicable.tr;
+      case 'INVALID_INPUT':
+        return AppStrings.couldNotResolveVehicleTypeIdPleaseTryAgain.tr;
+      default:
+        return AppStrings.promoErrorNetwork.tr;
+    }
+  }
+
+  Future<void> applyPromoFromSheet(String raw) async {
+    final code = raw.trim().toUpperCase();
+    if (code.isEmpty) return;
+    final est = selectedEstimate;
+    final vid = (est?.vehicleTypeId ?? '').trim();
+    if (vid.isEmpty || !_looksLikeBackendVehicleTypeId(vid)) {
+      promoSheetInlineError.value = 'INVALID_INPUT';
+      return;
+    }
+    final fare = est!.originalFare;
+    promoSheetLoading.value = true;
+    promoSheetInlineError.value = null;
+    final result = await homeRepository.validatePromo(
+      code: code,
+      vehicleTypeId: vid,
+      fareEstimate: fare,
+    );
+    promoSheetLoading.value = false;
+    await result.fold<Future<void>>(
+      (f) async {
+        final err = f is PromoValidationFailure ? f.errorCode : null;
+        promoSheetInlineError.value = (err != null && err.isNotEmpty)
+            ? err
+            : 'NETWORK';
+        unawaited(
+          di.sl<AnalyticsService>().logEvent(
+            'promo_validated',
+            parameters: {'success': 'false', 'error_code': err ?? 'unknown'},
+          ),
+        );
+      },
+      (data) async {
+        unawaited(
+          di.sl<AnalyticsService>().logEvent(
+            'promo_validated',
+            parameters: {'success': 'true', 'code': data.code},
+          ),
+        );
+        appliedPromoCode.value = data.code;
+        promoValidatedAt.value = DateTime.now();
+        if (Get.isBottomSheetOpen ?? false) {
+          Get.back<void>();
+        }
+        await _showPromoApplySuccessCelebration();
+        await _loadEstimates();
+      },
+    );
+  }
+
+  Future<void> clearAppliedPromo() async {
+    if (appliedPromoCode.value.trim().isEmpty) return;
+    appliedPromoCode.value = '';
+    promoValidatedAt.value = null;
+    await _loadEstimates();
+  }
+
+  void openPromoEntrySheet() {
+    promoSheetInlineError.value = null;
+    promoSheetLoading.value = false;
+    Get.bottomSheet<void>(
+      RidePromoCodeSheet(controller: this),
+      isScrollControlled: true,
+      backgroundColor: AppColors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+    );
+  }
+
+  Future<void> _showPromoApplySuccessCelebration() async {
+    await Get.dialog<void>(
+      const PromoApplySuccessDialog(),
+      barrierDismissible: true,
+      barrierColor: Colors.black38,
+    );
+  }
 
   void openPromotions() {
-    Get.toNamed(AppRoutes.promotions);
+    openPromoEntrySheet();
   }
 
   void closeVehicleSelection() {
@@ -1244,7 +1461,9 @@ class VehicleSelectionController extends GetxController {
       final lng = (m['lng'] as num?)?.toDouble();
       final address = (m['address'] as String?)?.trim() ?? '';
       if (lat == null || lng == null || address.isEmpty) continue;
-      nextDestinations.add(LocationEntity(lat: lat, lng: lng, address: address));
+      nextDestinations.add(
+        LocationEntity(lat: lat, lng: lng, address: address),
+      );
     }
     if (nextDestinations.isEmpty) return;
 
@@ -1259,6 +1478,7 @@ class VehicleSelectionController extends GetxController {
     update(['route_header']);
 
     isMapVisualReady.value = false;
+    _clearPromoAfterRouteChange();
     await loadLocationIcons();
     await _loadEstimates();
   }

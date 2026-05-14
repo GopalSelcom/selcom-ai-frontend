@@ -265,6 +265,23 @@ class LanguageSw extends Languages {
     'promo_applied_with_title': '',
     'promocode_list': '',
     'promotions': '',
+    'have_promo_code': 'Una msimbo wa promosi?',
+    'ride_promo_sheet_subtitle':
+        'Tunathibitisha msimbo kwa safari hii na bei yako ya sasa.',
+    'promo_apply_success_message': 'Msimbo wa promosi umetumika kwa mafanikio.',
+    'promo_apply': 'Tumia',
+    'promo_removed_title': 'Promosi imeondolewa',
+    'promo_removed_destination_changed':
+        'Njia imebadilika — promosi imefutwa.',
+    'promo_error_invalid': 'Msimbo si sahihi',
+    'promo_error_expired': 'Msimbo huu umeisha muda',
+    'promo_error_not_applicable': 'Msimbo huu hautumiki kwa safari hii',
+    'promo_error_network': 'Imeshindikana kuthibitisha. Jaribu tena.',
+    'promo_not_applied_title': 'Promosi haijatumiwa',
+    'promo_code_not_valid_for_vehicle': 'Si sahihi kwa chombo hiki',
+    'promo_applied_saving_suffix': 'imetumika — Unapata @amount',
+    'ride_free_label': 'BURE',
+    'receipt_promo_line': 'Promosi (@code)',
     'rating': '',
     'rating_given': '',
     'rating_required': '',
@@ -1398,6 +1415,57 @@ class LanguageSw extends Languages {
 
   @override
   String get promotions => values['promotions'] ?? '';
+
+  @override
+  String get havePromoCode => values['have_promo_code'] ?? '';
+
+  @override
+  String get ridePromoSheetSubtitle =>
+      values['ride_promo_sheet_subtitle'] ?? '';
+
+  @override
+  String get promoApplySuccessMessage =>
+      values['promo_apply_success_message'] ?? '';
+
+  @override
+  String get promoApply => values['promo_apply'] ?? '';
+
+  @override
+  String get promoRemovedTitle => values['promo_removed_title'] ?? '';
+
+  @override
+  String get promoRemovedDestinationChanged =>
+      values['promo_removed_destination_changed'] ?? '';
+
+  @override
+  String get promoErrorInvalid => values['promo_error_invalid'] ?? '';
+
+  @override
+  String get promoErrorExpired => values['promo_error_expired'] ?? '';
+
+  @override
+  String get promoErrorNotApplicable =>
+      values['promo_error_not_applicable'] ?? '';
+
+  @override
+  String get promoErrorNetwork => values['promo_error_network'] ?? '';
+
+  @override
+  String get promoNotAppliedTitle => values['promo_not_applied_title'] ?? '';
+
+  @override
+  String get promoCodeNotValidForVehicle =>
+      values['promo_code_not_valid_for_vehicle'] ?? '';
+
+  @override
+  String get promoAppliedSavingSuffix =>
+      values['promo_applied_saving_suffix'] ?? '';
+
+  @override
+  String get rideFreeLabel => values['ride_free_label'] ?? '';
+
+  @override
+  String get receiptPromoLine => values['receipt_promo_line'] ?? '';
 
   @override
   String get rating => values['rating'] ?? '';

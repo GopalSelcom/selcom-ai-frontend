@@ -315,6 +315,16 @@ class ReceiptPdfGenerator {
                 receipt.timeCharge,
                 receipt.currency,
               ),
+              if (receipt.promoDiscountAmount > 0 &&
+                  (receipt.promoCode?.trim().isNotEmpty ?? false))
+                _fareRow(
+                  AppStrings.receiptPromoLine
+                      .trParams({'code': receipt.promoCode!.trim()})
+                      .tr,
+                  -receipt.promoDiscountAmount,
+                  receipt.currency,
+                  valueColor: PdfColors.green700,
+                ),
               if (receipt.discount > 0)
                 _fareRow(
                   AppStrings.discount.tr,
@@ -339,9 +349,10 @@ class ReceiptPdfGenerator {
                     ),
                   ),
                   pw.Text(
-                    CurrencyFormatter.formatWithApiCurrency(
+                    CurrencyFormatter.formatPayableOrFree(
                       receipt.total,
                       receipt.currency,
+                      freeLabel: AppStrings.rideFreeLabel.tr,
                     ),
                     style: pw.TextStyle(
                       fontSize: 15,

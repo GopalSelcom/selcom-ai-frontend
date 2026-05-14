@@ -368,6 +368,23 @@ class AppStrings {
   static const String promoAppliedWithTitle = 'promo_applied_with_title';
   static const String promocodeList = 'promocode_list';
   static const String promotions = 'promotions';
+  static const String havePromoCode = 'have_promo_code';
+  static const String ridePromoSheetSubtitle = 'ride_promo_sheet_subtitle';
+  static const String promoApplySuccessMessage = 'promo_apply_success_message';
+  static const String promoApply = 'promo_apply';
+  static const String promoRemovedTitle = 'promo_removed_title';
+  static const String promoRemovedDestinationChanged =
+      'promo_removed_destination_changed';
+  static const String promoErrorInvalid = 'promo_error_invalid';
+  static const String promoErrorExpired = 'promo_error_expired';
+  static const String promoErrorNotApplicable = 'promo_error_not_applicable';
+  static const String promoErrorNetwork = 'promo_error_network';
+  static const String promoNotAppliedTitle = 'promo_not_applied_title';
+  static const String promoCodeNotValidForVehicle =
+      'promo_code_not_valid_for_vehicle';
+  static const String promoAppliedSavingSuffix = 'promo_applied_saving_suffix';
+  static const String rideFreeLabel = 'ride_free_label';
+  static const String receiptPromoLine = 'receipt_promo_line';
   static const String rating = 'rating';
   static const String ratingGiven = 'rating_given';
   static const String ratingRequired = 'rating_required';

@@ -5,6 +5,7 @@ import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/data/models/requests/book_ride_request.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
+import '../../../../core/data/models/responses/rides/promo_validate_response.dart';
 import '../models/geocode_response_model.dart';
 import '../models/places_models.dart';
 import '../../../../core/network/api_service.dart';
@@ -28,6 +29,13 @@ abstract class HomeRemoteDataSource {
   Future<FareEstimateResponseModel> estimateFare(FareEstimateRequest request);
 
   Future<BookRideResponse> bookRide(BookRideRequest request);
+
+  /// `POST go/promo/validate` — does not show global error dialogs on 4xx.
+  Future<PromoValidateResponse> validatePromo({
+    required String code,
+    required String vehicleTypeId,
+    required int fareEstimate,
+  });
 }
 
 class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
@@ -193,5 +201,32 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     }
 
     throw Exception('Unable to complete your booking at this time.');
+  }
+
+  @override
+  Future<PromoValidateResponse> validatePromo({
+    required String code,
+    required String vehicleTypeId,
+    required int fareEstimate,
+  }) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.ride.promoValidate,
+        method: ApiMethod.post,
+        body: {
+          'code': code.trim().toUpperCase(),
+          'vehicle_type_id': vehicleTypeId,
+          'fare_estimate': fareEstimate,
+        },
+        errorPresentationType: ErrorPresentationType.none,
+        showLoader: false,
+      ),
+    );
+
+    final body = response.data;
+    return PromoValidateResponse.fromHttpResponse(
+      httpStatus: response.statusCode,
+      body: body,
+    );
   }
 }

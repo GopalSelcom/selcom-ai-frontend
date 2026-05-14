@@ -107,6 +107,15 @@ class CurrencyFormatter {
     }
   }
 
+  static String formatPayableOrFree(
+    num amount,
+    String? apiCurrencyCode, {
+    required String freeLabel,
+  }) {
+    if (amount <= 0) return freeLabel;
+    return formatWithApiCurrency(amount, apiCurrencyCode);
+  }
+
   static String formatWithConfig(num amount, CurrencyFormatConfig config) {
     final formatter = NumberFormat.decimalPattern(config.locale)
       ..minimumFractionDigits = config.decimalDigits

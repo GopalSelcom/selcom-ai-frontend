@@ -66,6 +66,9 @@ class ReceiptModel {
   final String currency;
   final String paymentMethod;
   final String? completedAt;
+  /// From `fare_breakdown.promo_code` when ride used a promo.
+  final String? promoCode;
+  final int promoDiscountAmount;
   // Driver & vehicle
   final String? driverName;
   final String? vehicleModel;
@@ -89,6 +92,8 @@ class ReceiptModel {
     required this.currency,
     required this.paymentMethod,
     this.completedAt,
+    this.promoCode,
+    this.promoDiscountAmount = 0,
     this.driverName,
     this.vehicleModel,
     this.vehicleColor,
@@ -108,15 +113,25 @@ class ReceiptModel {
     final pickup = (json['pickup'] as Map?)?.cast<String, dynamic>() ?? {};
     final destination =
         (json['destination'] as Map?)?.cast<String, dynamic>() ?? {};
+    final totalRaw =
+        fareBreakdown['total_amount'] ?? fareBreakdown['total_fare'] ?? 0;
+    final totalParsed = totalRaw is num
+        ? totalRaw.toInt()
+        : int.tryParse(totalRaw.toString()) ?? 0;
+    final promoDisc =
+        (fareBreakdown['promo_discount'] as num?)?.toInt() ?? 0;
+
     return ReceiptModel(
       rideId: json['ride_id'] ?? '',
       baseFare: (fareBreakdown['base_fare'] ?? 0) as int,
       distanceCharge: (fareBreakdown['distance_charge'] ?? 0) as int,
       timeCharge: (fareBreakdown['time_charge'] ?? 0) as int,
-      total: (fareBreakdown['total_fare'] ?? 0) as int,
+      total: totalParsed,
       discount: 0,
       tax: 0,
       currency: (fareBreakdown['currency'] ?? CurrencyCode.tzs) as String,
+      promoCode: fareBreakdown['promo_code']?.toString(),
+      promoDiscountAmount: promoDisc,
       paymentMethod: (json['payment_method'] ?? '') as String,
       completedAt: json['completed_at'] as String?,
       driverName: driverSnap['name'] as String?,

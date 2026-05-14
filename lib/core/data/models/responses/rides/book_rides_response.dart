@@ -462,29 +462,45 @@ class FareBreakdown {
   int? rideCharge;
   int? bookingFee;
   int? totalAmount;
+  final String? promoCode;
+  final int? promoDiscount;
 
-  FareBreakdown({this.rideCharge, this.bookingFee, this.totalAmount});
+  FareBreakdown({
+    this.rideCharge,
+    this.bookingFee,
+    this.totalAmount,
+    this.promoCode,
+    this.promoDiscount,
+  });
 
   FareBreakdown copyWith({
     int? rideCharge,
     int? bookingFee,
     int? totalAmount,
+    String? promoCode,
+    int? promoDiscount,
   }) => FareBreakdown(
     rideCharge: rideCharge ?? this.rideCharge,
     bookingFee: bookingFee ?? this.bookingFee,
     totalAmount: totalAmount ?? this.totalAmount,
+    promoCode: promoCode ?? this.promoCode,
+    promoDiscount: promoDiscount ?? this.promoDiscount,
   );
 
   factory FareBreakdown.fromJson(Map<String, dynamic> json) => FareBreakdown(
     rideCharge: (json["ride_charge"] as num?)?.toInt(),
     bookingFee: (json["booking_fee"] as num?)?.toInt(),
     totalAmount: (json["total_amount"] as num?)?.toInt(),
+    promoCode: json["promo_code"]?.toString(),
+    promoDiscount: (json["promo_discount"] as num?)?.toInt(),
   );
 
   Map<String, dynamic> toJson() => {
     "ride_charge": rideCharge,
     "booking_fee": bookingFee,
     "total_amount": totalAmount,
+    "promo_code": promoCode,
+    "promo_discount": promoDiscount,
   };
 }
 
