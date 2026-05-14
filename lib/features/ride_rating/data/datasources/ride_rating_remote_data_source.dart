@@ -39,6 +39,12 @@ class RideRatingRemoteDataSourceImpl implements RideRatingRemoteDataSource {
       return null;
     }
 
+    if (response.statusCode == 400 ||
+        response.statusCode == 404 ||
+        response.statusCode == 405) {
+      return null;
+    }
+
     throw Exception(
       _errorMessageFromResponse(response, 'Unable to load ride.'),
     );

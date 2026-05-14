@@ -122,7 +122,15 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         return;
       }
       _didCheckPendingReviewOnHomeLaunch = true;
-      await rideRatingController.tryOpenRatingSheetAfterHomeLoad();
+      try {
+        await rideRatingController.tryOpenRatingSheetAfterHomeLoad();
+      } catch (e, stackTrace) {
+        developer.log(
+          'Pending review prompt failed: $e',
+          name: 'HomeController',
+          stackTrace: stackTrace,
+        );
+      }
     });
 
     // Request Notification Permission (Best practice: delayed until Home Screen)

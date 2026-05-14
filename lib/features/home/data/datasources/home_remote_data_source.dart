@@ -84,7 +84,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     if (response.statusCode == 200 && response.data != null) {
       return ReverseGeocodeModel.fromJson(response.data);
     }
-    if (response.statusCode == 400) {
+    if (response.statusCode == 400 || response.statusCode == 405) {
       return null;
     }
     throw Exception('Reverse geocoding failed');
