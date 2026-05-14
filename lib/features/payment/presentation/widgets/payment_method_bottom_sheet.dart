@@ -78,16 +78,25 @@ class PaymentMethodBottomSheet extends StatelessWidget {
                   final method = controller.paymentMethods[index];
                   final isSelected =
                       controller.selectedPayment.value?.id == method.id;
-                  return _PaymentMethodTile(
-                    method: method,
-                    isSelected: isSelected,
-                    onTap: () {
-                      controller.selectPaymentMethod(method);
-                      Get.back();
-                    },
-                    walletBalance: method.type == 'wallet'
-                        ? controller.walletBalance.value
-                        : null,
+                  // Backend `is_available: false` — show row but block taps and
+                  // grey it out so the user knows the method exists but cannot pick it.
+                  final enabled = method.isAvailable;
+                  return Opacity(
+                    opacity: enabled ? 1 : 0.45,
+                    child: IgnorePointer(
+                      ignoring: !enabled,
+                      child: _PaymentMethodTile(
+                        method: method,
+                        isSelected: isSelected,
+                        onTap: () {
+                          controller.selectPaymentMethod(method);
+                          Get.back();
+                        },
+                        walletBalance: method.type == 'wallet'
+                            ? controller.walletBalance.value
+                            : null,
+                      ),
+                    ),
                   );
                 },
               );

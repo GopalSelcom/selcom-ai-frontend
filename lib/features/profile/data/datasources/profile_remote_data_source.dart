@@ -210,8 +210,42 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      final List data = response.data['data'] ?? [];
-      return data.map((e) => PaymentMethodModel.fromJson(e)).toList();
+      // API shape (go/user/payment-methods):
+      // { "data": { "default": "wallet", "methods": [ { "type", "label", ... } ] } }
+      // Legacy: { "data": [ { ... }, ... ] }
+      final rawData = response.data['data'];
+      final List<dynamic> rows;
+      if (rawData is List) {
+        rows = rawData;
+      } else if (rawData is Map) {
+        final methods = rawData['methods'];
+        rows = methods is List ? methods : <dynamic>[];
+      } else {
+        rows = <dynamic>[];
+      }
+      final models = rows
+          .map((e) {
+            if (e is! Map) {
+              return null;
+            }
+            return PaymentMethodModel.fromJson(Map<String, dynamic>.from(e));
+          })
+          .whereType<PaymentMethodModel>()
+          .toList();
+
+      if (rawData is Map) {
+        final def = rawData['default']?.toString().trim();
+        if (def != null && def.isNotEmpty) {
+          final idx = models.indexWhere(
+            (m) => m.type == def || m.id == def,
+          );
+          if (idx > 0) {
+            models.insert(0, models.removeAt(idx));
+          }
+        }
+      }
+
+      return models;
     }
     return [];
   }

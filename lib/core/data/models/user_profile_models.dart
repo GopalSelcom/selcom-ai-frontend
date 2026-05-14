@@ -90,20 +90,31 @@ class PaymentMethodModel {
   final String label;
   final String type; // wallet, card
   final String? icon;
+  final bool isAvailable;
 
   PaymentMethodModel({
     required this.id,
     required this.label,
     required this.type,
     this.icon,
+    this.isAvailable = true,
   });
 
   factory PaymentMethodModel.fromJson(Map<String, dynamic> json) {
+    final rawAvail = json['is_available'];
+    final bool available = rawAvail == null
+        ? true
+        : rawAvail is bool
+            ? rawAvail
+            : rawAvail == 1 ||
+                rawAvail.toString().trim().toLowerCase() == 'true';
+
     return PaymentMethodModel(
       id: json['id'] ?? json['type'] ?? '',
       label: json['label'] ?? '',
       type: json['type'] ?? '',
       icon: json['icon'],
+      isAvailable: available,
     );
   }
 }

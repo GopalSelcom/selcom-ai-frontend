@@ -58,16 +58,49 @@ class PaymentMethodController extends GetxController {
         }
       },
     );
-    
-    if (selectedPayment.value == null && paymentMethods.isNotEmpty) {
-      selectedPayment.value = paymentMethods.first;
-    }
-    
+
+    // After API load: pick an allowed default, and fix selection if the backend
+    // marked the current method unavailable.
+    _syncSelectedPaymentWithAvailability();
+
     isLoading.value = false;
   }
 
   void selectPaymentMethod(PaymentMethodModel method) {
+    if (!method.isAvailable) {
+      return;
+    }
     selectedPayment.value = method;
+  }
+
+  /// Keeps [selectedPayment] on a method the user is allowed to use. The list
+  /// order from the API already prefers `default`; here we only skip entries
+  /// with `is_available: false`.
+  void _syncSelectedPaymentWithAvailability() {
+    if (paymentMethods.isEmpty) {
+      selectedPayment.value = null;
+      return;
+    }
+
+    final current = selectedPayment.value;
+    if (current != null) {
+      final refreshed = paymentMethods.firstWhereOrNull(
+        (m) => m.id == current.id && m.type == current.type,
+      );
+      if (refreshed != null && refreshed.isAvailable) {
+        selectedPayment.value = refreshed;
+        return;
+      }
+    }
+
+    PaymentMethodModel? firstAllowed;
+    for (final m in paymentMethods) {
+      if (m.isAvailable) {
+        firstAllowed = m;
+        break;
+      }
+    }
+    selectedPayment.value = firstAllowed ?? paymentMethods.first;
   }
 
   List<PaymentMethodModel> _dummyPayments() {
