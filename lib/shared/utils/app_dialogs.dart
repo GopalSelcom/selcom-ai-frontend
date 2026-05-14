@@ -702,7 +702,7 @@ class AppDialogs {
   }
 
   /// Shows a simple loading dialog.
-  static void showLoadingDialog({String message = AppStrings.loading}) {
+  static void showLoadingDialog({String message = ""}) {
     Get.dialog(
       PopScope(
         canPop: false,
@@ -710,7 +710,7 @@ class AppDialogs {
           child: Container(
             padding: EdgeInsets.all(24.w),
             decoration: BoxDecoration(
-              color: AppColors.cardBackground,
+              color: AppColors.transparent,
               borderRadius: BorderRadius.circular(16.r),
             ),
             child: Column(

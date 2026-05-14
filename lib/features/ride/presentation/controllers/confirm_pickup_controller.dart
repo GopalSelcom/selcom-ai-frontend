@@ -38,8 +38,13 @@ class ConfirmPickupController extends GetxController {
   final passengerPhone = ''.obs;
   final TextEditingController noteForDriverController =
       TextEditingController();
+  late final VoidCallback _pickupNoteListener;
   late LatLng _initialLatLng;
   late String initialAddress;
+
+  /// Drives Obx for pickup note chip (TextEditingController is not reactive).
+  final noteChipRevision = 0.obs;
+  final isPickupNoteExpanded = false.obs;
 
   GoogleMapController? mapController;
 
@@ -52,8 +57,16 @@ class ConfirmPickupController extends GetxController {
       (selectedLatLng.value.longitude - _initialLatLng.longitude).abs() >
           _pickupMoveThreshold;
 
+  void togglePickupNoteExpanded() {
+    isPickupNoteExpanded.value = !isPickupNoteExpanded.value;
+    if (!isPickupNoteExpanded.value) {
+      FocusManager.instance.primaryFocus?.unfocus();
+    }
+  }
+
   @override
   void onClose() {
+    noteForDriverController.removeListener(_pickupNoteListener);
     noteForDriverController.dispose();
     super.onClose();
   }
@@ -73,6 +86,12 @@ class ConfirmPickupController extends GetxController {
     initialAddress =
         (args['pickupAddress'] as String?)?.trim() ?? 'Selected pickup point';
     address.value = initialAddress;
+
+    _pickupNoteListener = () {
+      if (isClosed) return;
+      noteChipRevision.value++;
+    };
+    noteForDriverController.addListener(_pickupNoteListener);
   }
 
   Future<void> onMapCreated(GoogleMapController controller) async {

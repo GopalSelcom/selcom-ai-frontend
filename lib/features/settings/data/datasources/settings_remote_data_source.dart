@@ -1,4 +1,5 @@
 import '../../../../core/network/api_service.dart';
+import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
 import '../../../../core/localization/app_strings.dart';
 import 'package:get/get.dart';
@@ -32,6 +33,9 @@ class SettingsRemoteDataSourceImpl implements SettingsRemoteDataSource {
         }
       }
     }
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return AppSettingsModel.fromJson({});
+    }
     throw Exception(response.data?['message'] ?? AppStrings.failedToLoadSettings.tr);
   }
 
@@ -50,6 +54,9 @@ class SettingsRemoteDataSourceImpl implements SettingsRemoteDataSource {
               response.data['response'] ??
               response.data) as Map<String, dynamic>;
       return RidePinPreferenceModel.fromJson(payload);
+    }
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return RidePinPreferenceModel.fromJson({});
     }
     throw Exception(
       response.data?['message'] ?? AppStrings.failedToLoadRidePinPreference.tr,
@@ -74,6 +81,9 @@ class SettingsRemoteDataSourceImpl implements SettingsRemoteDataSource {
               response.data['response'] ??
               response.data) as Map<String, dynamic>;
       return RidePinPreferenceModel.fromJson(payload);
+    }
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return RidePinPreferenceModel.fromJson({});
     }
     throw Exception(
       response.data?['message'] ?? AppStrings.failedToUpdateRidePinPreference.tr,

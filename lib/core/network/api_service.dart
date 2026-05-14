@@ -621,6 +621,14 @@ class ApiService {
       );
     }
 
+    if (statusCode == 405) {
+      return Response(
+        requestOptions: e.requestOptions,
+        statusCode: statusCode,
+        data: e.response?.data ?? {'message': AppStrings.badRequest.tr},
+      );
+    }
+
     switch (e.type) {
       case DioExceptionType.connectionTimeout:
         message = AppStrings.connectionTimeout.tr;

@@ -1,4 +1,5 @@
 import '../../../../core/network/api_service.dart';
+import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
 import '../../../../core/data/models/requests/send_otp_request.dart';
 import '../../../../core/data/models/requests/save_user_additional_details_request.dart';
@@ -112,6 +113,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
     if (response.statusCode == 200 && response.data != null) {
       return UserModel.fromJson(response.data['response'] ?? {});
+    }
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return UserModel.fromJson({});
     }
     throw Exception(
       response.data?['message'] ?? 'Failed to save additional details',
