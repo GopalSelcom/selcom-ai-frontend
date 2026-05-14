@@ -316,6 +316,13 @@ class RideDetailsScreen extends StatelessWidget {
                                 AppStrings.bookingFeesAndConvenienceCharges.tr,
                             amount: controller.bookingFeeLabel,
                           ),
+                          if (controller.showPromoFareLine) ...[
+                            SizedBox(height: 4.h),
+                            FareBreakdownRow(
+                              title: controller.promoFareLineTitle,
+                              amount: controller.promoFareLineAmountLabel,
+                            ),
+                          ],
                           SizedBox(height: 4.h),
                           FareBreakdownRow(
                             title: AppStrings.totalAmount.tr,

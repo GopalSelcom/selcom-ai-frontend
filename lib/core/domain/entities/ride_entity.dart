@@ -134,6 +134,9 @@ class RideEntity {
   final String? passengerName;
   final String? passengerPhone;
   final List<PdfLinkEntity>? pdfLinks;
+  /// Applied promo on this ride (GET ride / history payloads).
+  final String? promoCode;
+  final int? promoDiscount;
 
   const RideEntity({
     required this.id,
@@ -168,6 +171,8 @@ class RideEntity {
     this.passengerName,
     this.passengerPhone,
     this.pdfLinks,
+    this.promoCode,
+    this.promoDiscount,
   });
 
   RideEntity copyWith({
@@ -203,6 +208,8 @@ class RideEntity {
     String? passengerName,
     String? passengerPhone,
     List<PdfLinkEntity>? pdfLinks,
+    String? promoCode,
+    int? promoDiscount,
   }) {
     return RideEntity(
       id: id ?? this.id,
@@ -237,6 +244,8 @@ class RideEntity {
       passengerName: passengerName ?? this.passengerName,
       passengerPhone: passengerPhone ?? this.passengerPhone,
       pdfLinks: pdfLinks ?? this.pdfLinks,
+      promoCode: promoCode ?? this.promoCode,
+      promoDiscount: promoDiscount ?? this.promoDiscount,
     );
   }
 }
