@@ -29,11 +29,14 @@ class PaymentMethodController extends GetxController {
   }
 
   Future<void> loadWalletBalance() async {
+    // TODO: Skip API call for now, as it's still pending on backend
+    /*
     final result = await profileRepository.getWalletBalance();
     result.fold(
       (_) => null,
       (balance) => walletBalance.value = balance,
     );
+    */
   }
 
   Future<void> loadPaymentMethods() async {
