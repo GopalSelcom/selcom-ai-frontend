@@ -118,7 +118,7 @@ class PaymentCardActionBottomSheet extends StatelessWidget {
           if (secondaryButtonLabel == null) ...[
             AppPrimaryButton(
               label: primaryButtonLabel,
-              iconAsset: AppAssets.icArrowRight,
+              iconAsset: AppAssets.locationIcArrowRight,
               isLoading: isPrimaryLoading,
               onPressed: onPrimaryPressed,
             ),

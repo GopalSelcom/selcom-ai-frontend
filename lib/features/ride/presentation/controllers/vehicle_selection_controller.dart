@@ -93,6 +93,10 @@ class VehicleSelectionController extends GetxController {
   List<LatLng> _lastProjectedDrops = const <LatLng>[];
   int _overlayProjectionSeq = 0;
 
+  /// Incremented when the [GoogleMap] widget is disposed or this controller
+  /// closes, so stale [Future.microtask] / async callbacks skip map I/O.
+  int _mapDisposedGeneration = 0;
+
   BitmapDescriptor? driverIcon;
   BitmapDescriptor? pickupIcon;
   BitmapDescriptor? dropIcon;
@@ -112,7 +116,31 @@ class VehicleSelectionController extends GetxController {
     _nearbyDriversSub?.cancel();
     _nearbyDriversErrorSub?.cancel();
     _nearbyDriversConnectionSub?.cancel();
+    _invalidateMapSession();
     super.onClose();
+  }
+
+  /// Called from [AppGoogleMap.onMapDisposed] when the map widget is removed.
+  void onMapDisposed() => _invalidateMapSession();
+
+  void _invalidateMapSession() {
+    mapController = null;
+    _mapDisposedGeneration++;
+    // Drop any in-flight overlay projection that still holds the old controller.
+    _overlayProjectionSeq++;
+  }
+
+  /// [_fitBounds] is also invoked via [Future.microtask] after async estimate work.
+  /// Capture [_mapDisposedGeneration] now so a dispose that happens before the
+  /// microtask runs causes an immediate no-op instead of touching a dead controller.
+  void _scheduleFitBoundsMicrotask() {
+    final gen = _mapDisposedGeneration;
+    Future.microtask(() => _fitBounds(disposalGenWhenScheduled: gen));
+  }
+
+  bool _isGoogleMapDisposedUseError(Object e) {
+    final s = e.toString().toLowerCase();
+    return s.contains('googlemapcontroller') && s.contains('disposed');
   }
 
   void _parseArguments() {
@@ -268,7 +296,7 @@ class VehicleSelectionController extends GetxController {
     }
 
     _requestNearbyDriversForCurrentSelection();
-    Future.microtask(_fitBounds);
+    _scheduleFitBoundsMicrotask();
   }
 
   void _useStraightLineFallback() {
@@ -630,7 +658,7 @@ class VehicleSelectionController extends GetxController {
 
           await loadDriverIcon();
           _requestNearbyDriversForCurrentSelection();
-          Future.microtask(_fitBounds);
+          _scheduleFitBoundsMicrotask();
           return true;
         },
       );
@@ -1072,6 +1100,7 @@ class VehicleSelectionController extends GetxController {
       drops.map((d) => AppMapService.screenOffsetFor(mapController!, d)),
     );
     if (seq != _overlayProjectionSeq) return;
+    if (mapController == null) return;
 
     Offset? normalize(Offset? raw) {
       if (raw == null) return null;
@@ -1234,8 +1263,13 @@ class VehicleSelectionController extends GetxController {
     await _loadEstimates();
   }
 
-  Future<void> _fitBounds() async {
+  Future<void> _fitBounds({int? disposalGenWhenScheduled}) async {
     if (mapController == null || routePoints.length < 2) return;
+
+    // Stale microtask: map was disposed/recreated after this callback was queued.
+    final scheduledGen = disposalGenWhenScheduled ?? _mapDisposedGeneration;
+    if (scheduledGen != _mapDisposedGeneration) return;
+
     final pts = routePoints.toList();
     double minLat = pts.first.latitude;
     double maxLat = pts.first.latitude;
@@ -1255,18 +1289,25 @@ class VehicleSelectionController extends GetxController {
     final latPad = (latSpan * 0.20).clamp(0.0005, 0.01);
     final lngPad = (lngSpan * 0.20).clamp(0.0005, 0.01);
 
+    if (scheduledGen != _mapDisposedGeneration || mapController == null) return;
+
     // Bounds padding (screen pixels):
     // - lower => more zoom in
     // - higher => more zoom out
-    await mapController!.animateCamera(
-      CameraUpdate.newLatLngBounds(
-        LatLngBounds(
-          southwest: LatLng(minLat - latPad, minLng - lngPad),
-          northeast: LatLng(maxLat + latPad, maxLng + lngPad),
+    try {
+      await mapController!.animateCamera(
+        CameraUpdate.newLatLngBounds(
+          LatLngBounds(
+            southwest: LatLng(minLat - latPad, minLng - lngPad),
+            northeast: LatLng(maxLat + latPad, maxLng + lngPad),
+          ),
+          42,
         ),
-        42,
-      ),
-    );
+      );
+    } catch (e) {
+      if (!_isGoogleMapDisposedUseError(e)) rethrow;
+      // Map removed while awaiting — plugin throws; not an app defect.
+    }
   }
 }
 
