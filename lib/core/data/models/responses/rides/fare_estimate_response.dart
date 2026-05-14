@@ -1,17 +1,45 @@
 class FareEstimateResponseModel {
   final int? statusCode;
   final String? message;
+  final String? errorCode;
   final FareEstimateData? data;
 
-  FareEstimateResponseModel({this.statusCode, this.message, this.data});
+  FareEstimateResponseModel({
+    this.statusCode,
+    this.message,
+    this.errorCode,
+    this.data,
+  });
 
   factory FareEstimateResponseModel.fromJson(Map<String, dynamic> json) {
+    final scRaw = json['status_code'];
+    final int? statusCode = switch (scRaw) {
+      null => null,
+      final int i => i,
+      final num n => n.toInt(),
+      final String s => int.tryParse(s.trim()),
+      _ => int.tryParse(scRaw.toString()),
+    };
+
+    FareEstimateData? data;
+    final dataRaw = json['data'];
+    if (dataRaw != null && dataRaw is Map) {
+      try {
+        data = FareEstimateData.fromJson(
+          dataRaw is Map<String, dynamic>
+              ? dataRaw
+              : Map<String, dynamic>.from(dataRaw),
+        );
+      } catch (_) {
+        data = null;
+      }
+    }
+
     return FareEstimateResponseModel(
-      statusCode: json['status_code'],
-      message: json['message'],
-      data: json['data'] != null
-          ? FareEstimateData.fromJson(json['data'])
-          : null,
+      statusCode: statusCode,
+      message: json['message']?.toString(),
+      errorCode: json['error_code']?.toString(),
+      data: data,
     );
   }
 
@@ -19,6 +47,7 @@ class FareEstimateResponseModel {
     return {
       'status_code': statusCode,
       'message': message,
+      'error_code': errorCode,
       'data': data?.toJson(),
     };
   }

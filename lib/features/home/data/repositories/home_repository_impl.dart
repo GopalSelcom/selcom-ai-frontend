@@ -77,6 +77,13 @@ class HomeRepositoryImpl implements HomeRepository {
   ) async {
     try {
       final response = await remoteDataSource.estimateFare(request);
+      if (!response.isSuccess) {
+        final msg = (response.message ?? '').trim();
+        final display = msg.isEmpty
+            ? 'Unable to estimate fare for this route.'
+            : msg;
+        return Left(ServerFailure(display));
+      }
       return Right(FareEstimateModel.fromResponse(response));
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);

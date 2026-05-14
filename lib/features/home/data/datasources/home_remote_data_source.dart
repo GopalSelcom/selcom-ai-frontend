@@ -115,16 +115,53 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       ),
     );
 
-    if (response.statusCode == 200 && response.data != null) {
-      return FareEstimateResponseModel.fromJson(response.data);
+    final raw = response.data;
+    Map<String, dynamic>? map;
+    if (raw is Map<String, dynamic>) {
+      map = Map<String, dynamic>.from(raw);
+    } else if (raw is Map) {
+      map = Map<String, dynamic>.from(raw);
     }
 
-    final data = response.data;
-    if (data is Map<String, dynamic>) {
-      final message = (data['message'] as String?)?.trim();
-      if (message != null && message.isNotEmpty) {
-        throw Exception(message);
+    if (map != null) {
+      final httpStatus = response.statusCode;
+      if (httpStatus != null && !map.containsKey('status_code')) {
+        map['status_code'] = httpStatus;
       }
+      late final FareEstimateResponseModel model;
+      try {
+        model = FareEstimateResponseModel.fromJson(map);
+      } catch (_) {
+        final code = map['error_code']?.toString().trim();
+        if (code == 'VALID_DISTANCE_EXCEEDED') {
+          final sc = map['status_code'];
+          final int? parsedStatus = switch (sc) {
+            null => httpStatus,
+            final int i => i,
+            final num n => n.toInt(),
+            final String s => int.tryParse(s.trim()),
+            _ => int.tryParse(sc.toString()),
+          };
+          model = FareEstimateResponseModel(
+            statusCode: parsedStatus ?? httpStatus ?? 400,
+            message: map['message']?.toString(),
+            errorCode: code,
+            data: null,
+          );
+        } else {
+          rethrow;
+        }
+      }
+      if (!model.isSuccess) {
+        if (model.errorCode?.trim() == 'VALID_DISTANCE_EXCEEDED') {
+          return model;
+        }
+        final msg = (model.message ?? '').trim();
+        throw Exception(
+          msg.isEmpty ? 'Unable to estimate fare for this route.' : msg,
+        );
+      }
+      return model;
     }
 
     throw Exception('Unable to estimate fare for this route.');
