@@ -621,6 +621,12 @@ class HomeController extends GetxController with WidgetsBindingObserver {
           }
         },
         (data) {
+          if (data == null) {
+            if (currentMapAddress.value == AppStrings.locating.tr) {
+              currentMapAddress.value = AppStrings.currentLocation.tr;
+            }
+            return;
+          }
           developer.log(
             "📍 Reverse Geocode Success. Status: ${data.data?.status}, Results: ${data.data?.results?.length}",
             name: 'HomeController',

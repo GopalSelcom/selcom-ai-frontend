@@ -238,21 +238,22 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
         controller.pickupEntity.lat,
         controller.pickupEntity.lng,
       );
-      final drop = LatLng(
-        controller.destinationEntity.lat,
-        controller.destinationEntity.lng,
-      );
+      final drops = controller.destinations
+          .map((d) => LatLng(d.lat, d.lng))
+          .toList(growable: false);
+      final lastDrop = drops.isEmpty
+          ? pickup
+          : drops.last;
       final mid = LatLng(
-        (pickup.latitude + drop.latitude) / 2,
-        (pickup.longitude + drop.longitude) / 2,
+        (pickup.latitude + lastDrop.latitude) / 2,
+        (pickup.longitude + lastDrop.longitude) / 2,
       );
-      final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
       final drivers = controller.driverMarkerPoints.toList();
       final markers = <Marker>{};
       controller.scheduleOverlayProjection(
         pickup: pickup,
-        drop: drop,
-        devicePixelRatio: devicePixelRatio,
+        drops: drops,
+        devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
       );
       for (var i = 0; i < drivers.length; i++) {
         final jitter = drivers[i];
@@ -319,23 +320,23 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
               controller.onMapCreated(c);
               await controller.projectOverlayOffsets(
                 pickup: pickup,
-                drop: drop,
-                devicePixelRatio: devicePixelRatio,
+                drops: drops,
+                devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
               );
             },
             onCameraMove: (_) {
               controller.projectOverlayOffsets(
                 pickup: pickup,
-                drop: drop,
-                devicePixelRatio: devicePixelRatio,
+                drops: drops,
+                devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
               );
             },
             onCameraIdle: () async {
               controller.onCameraIdle();
               await controller.projectOverlayOffsets(
                 pickup: pickup,
-                drop: drop,
-                devicePixelRatio: devicePixelRatio,
+                drops: drops,
+                devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
               );
             },
             polylines: {
@@ -380,22 +381,30 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
             );
           }),
           Obx(() {
-            final offset = controller.dropOverlayOffset.value;
-            if (offset == null) return const SizedBox.shrink();
-            return Positioned(
-              left: offset.dx,
-              top: offset.dy - 8.h,
-              child: FractionalTranslation(
-                translation: const Offset(-0.5, -1.0),
-                child: _locationEditBubble(
-                  label: controller.destinationMapLabel,
-                  onTap: controller.editDropFromMap,
-                  bubbleColor: AppColors.pinRed,
-                  textColor: AppColors.white,
-                  leadingLabel: controller.destinationEtaBadgeText,
-                  onEditTap: controller.editDropFromMap,
-                ),
-              ),
+            final offsets = controller.dropOverlayOffsets;
+            if (offsets.isEmpty) return const SizedBox.shrink();
+            return Stack(
+              children: [
+                for (var i = 0; i < offsets.length; i++)
+                  if (offsets[i] != null)
+                    Positioned(
+                      left: offsets[i]!.dx,
+                      top: offsets[i]!.dy - 8.h,
+                      child: FractionalTranslation(
+                        translation: const Offset(-0.5, -1.0),
+                        child: _locationEditBubble(
+                          label: controller.dropMapLabelAt(i),
+                          onTap: () => controller.editDropAtIndexFromMap(i),
+                          bubbleColor: AppColors.pinRed,
+                          textColor: AppColors.white,
+                          leadingLabel: i == offsets.length - 1
+                              ? controller.destinationEtaBadgeText
+                              : null,
+                          onEditTap: () => controller.editDropAtIndexFromMap(i),
+                        ),
+                      ),
+                    ),
+              ],
             );
           }),
         ],
