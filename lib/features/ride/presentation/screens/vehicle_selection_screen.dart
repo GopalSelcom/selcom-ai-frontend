@@ -307,6 +307,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
         children: [
           AppGoogleMap(
             key: const ValueKey('vehicle_selection_map'),
+            onMapDisposed: () => controller.onMapDisposed(),
             // Manual initial zoom level:
             // - Increase value => more zoom in
             // - Decrease value => more zoom out
