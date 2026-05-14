@@ -134,7 +134,7 @@ class OnboardingScreen extends GetView<OnboardingController> {
                               ),
                               SizedBox(width: 12.w),
                               SvgPictureAsset(
-                                AppAssets.icArrowRight,
+                                AppAssets.locationIcArrowRight,
                                 color: AppColors.white,
                                 height: 24.h,
                               ),

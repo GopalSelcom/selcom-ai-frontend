@@ -864,7 +864,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         label: AppStrings.bookRide.tr,
         height: 56.h,
         borderRadius: 16.r,
-        iconAsset: AppAssets.icArrowRight,
+        iconAsset: AppAssets.locationIcArrowRight,
         iconColor: AppColors.white,
         isLoading: controller.isProceedingToBooking.value,
         onPressed: () async {
