@@ -71,6 +71,7 @@ class _ConfirmStopScreenState extends State<ConfirmStopScreen> {
                   lng: _currentLng.value,
                 );
                 result.fold((_) => null, (data) {
+                  if (data == null) return null;
                   final formatted =
                       data.data?.results?.firstOrNull?.formattedAddress ?? "";
                   if (formatted.isNotEmpty) {

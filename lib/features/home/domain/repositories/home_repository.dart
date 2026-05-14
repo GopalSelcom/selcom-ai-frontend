@@ -16,7 +16,7 @@ abstract class HomeRepository {
     required String sessionToken,
   });
 
-  Future<Either<Failure, ReverseGeocodeModel>> reverseGeocode({
+  Future<Either<Failure, ReverseGeocodeModel?>> reverseGeocode({
     required double lat,
     required double lng,
   });

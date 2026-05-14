@@ -97,6 +97,7 @@ class ConfirmPickupController extends GetxController {
     isResolvingAddress.value = false;
 
     result.fold((_) {}, (data) {
+      if (data == null) return;
       final results = data.data?.results;
       final nextAddress = (results != null && results.isNotEmpty)
           ? results.first.formattedAddress

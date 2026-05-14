@@ -18,7 +18,7 @@ abstract class HomeRemoteDataSource {
     required String sessionToken,
   });
 
-  Future<ReverseGeocodeModel> reverseGeocode({
+  Future<ReverseGeocodeModel?> reverseGeocode({
     required double lat,
     required double lng,
   });
@@ -69,7 +69,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   }
 
   @override
-  Future<ReverseGeocodeModel> reverseGeocode({
+  Future<ReverseGeocodeModel?> reverseGeocode({
     required double lat,
     required double lng,
   }) async {
@@ -83,6 +83,9 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
 
     if (response.statusCode == 200 && response.data != null) {
       return ReverseGeocodeModel.fromJson(response.data);
+    }
+    if (response.statusCode == 400) {
+      return null;
     }
     throw Exception('Reverse geocoding failed');
   }

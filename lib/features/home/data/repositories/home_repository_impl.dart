@@ -45,7 +45,7 @@ class HomeRepositoryImpl implements HomeRepository {
   }
 
   @override
-  Future<Either<Failure, ReverseGeocodeModel>> reverseGeocode({
+  Future<Either<Failure, ReverseGeocodeModel?>> reverseGeocode({
     required double lat,
     required double lng,
   }) async {
