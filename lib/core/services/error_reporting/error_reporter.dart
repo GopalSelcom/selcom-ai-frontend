@@ -94,7 +94,7 @@ class ErrorReporter {
     List<Map<String, dynamic>>? extraData,
     bool fatal = false,
   }) async {
-    if (kDebugMode) {
+    if (!kDebugMode) {
       return;
     }
 

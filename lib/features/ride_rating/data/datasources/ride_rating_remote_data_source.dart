@@ -2,6 +2,7 @@ import '../../../../core/data/models/requests/submit_ride_rating_request.dart';
 import '../models/ride_rating_ride_model.dart';
 import '../models/ride_rating_tag_model.dart';
 import '../../../../core/network/api_service.dart';
+import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
 
 abstract class RideRatingRemoteDataSource {
@@ -36,6 +37,11 @@ class RideRatingRemoteDataSourceImpl implements RideRatingRemoteDataSource {
       if (pendingReview is Map<String, dynamic>) {
         return RideRatingRideModel.fromPendingReviewJson(pendingReview);
       }
+      return null;
+    }
+
+    if (isExpectedClientBusinessHttpStatus(response.statusCode) ||
+        response.statusCode == 404) {
       return null;
     }
 
@@ -75,6 +81,10 @@ class RideRatingRemoteDataSourceImpl implements RideRatingRemoteDataSource {
       return const <RideRatingTagModel>[];
     }
 
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return const <RideRatingTagModel>[];
+    }
+
     throw Exception(
       _errorMessageFromResponse(response, 'Unable to load review tags.'),
     );
@@ -93,6 +103,10 @@ class RideRatingRemoteDataSourceImpl implements RideRatingRemoteDataSource {
 
     if (response.statusCode == 200) {
       return true;
+    }
+
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return false;
     }
 
     final errorCode = _errorCodeFromResponse(response);
@@ -118,6 +132,10 @@ class RideRatingRemoteDataSourceImpl implements RideRatingRemoteDataSource {
 
     if (response.statusCode == 200) {
       return true;
+    }
+
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return false;
     }
 
     final errorCode = _errorCodeFromResponse(response);

@@ -1,5 +1,6 @@
 class AppAssets {
   static const String _imagePath = 'assets/images';
+  static const String _jsonPath = 'assets/json';
 
   // Home Screen
   static const String mapBackground = '$_imagePath/map_background.png';
@@ -75,4 +76,8 @@ class AppAssets {
       '$_paymentPath/add_card_success.png';
   static const String imgPaymentDeleteCardConfirm =
       '$_paymentPath/delete_card_confirm.png';
+
+  ///animations:-
+  static const String carAnimation =
+      '$_jsonPath/car_animation.json';
 }

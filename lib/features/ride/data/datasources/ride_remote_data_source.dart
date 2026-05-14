@@ -7,6 +7,7 @@ import '../models/emergency_contacts_response.dart';
 import '../models/stop_update_models.dart';
 import '../models/destination_update_models.dart';
 import '../../../../core/network/api_service.dart';
+import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
 import 'dart:developer' as developer;
 import 'package:dio/dio.dart';
@@ -173,6 +174,9 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
           response.data['data']?['ride'] ?? response.data['data'] ?? {};
       return RideModel.fromJson(rideData);
     }
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return RideModel.fromJson({'_id': rideId});
+    }
     throw Exception('Failed to get ride details');
   }
 
@@ -190,6 +194,9 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
     if (response.statusCode == 200 && response.data != null) {
       final data = Map<String, dynamic>.from(response.data['data'] ?? {});
       return RideCancellationChargesModel.fromJson(data);
+    }
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return RideCancellationChargesModel.fromJson({'ride_id': rideId});
     }
     throw Exception('Failed to fetch cancellation charges');
   }
@@ -241,6 +248,9 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
         );
       }
     }
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return DestinationUpdatePreviewModel.fromJson({});
+    }
     throw Exception(
       response.data?['message']?.toString() ?? 'Failed to preview destination',
     );
@@ -269,6 +279,9 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
           Map<String, dynamic>.from(raw),
         );
       }
+    }
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return DestinationUpdateAppliedModel.fromJson({});
     }
     throw Exception(
       response.data?['message']?.toString() ?? 'Failed to update destination',
@@ -313,6 +326,9 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
           (response.data['data'] as Map?)?['receipt'] as Map<String, dynamic>?;
       return ReceiptModel.fromJson(receiptJson ?? {});
     }
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return ReceiptModel.fromJson({'ride_id': rideId});
+    }
     throw Exception('Failed to get receipt');
   }
 
@@ -356,6 +372,9 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
 
     if (response.statusCode == 200 && response.data != null) {
       return response.data['data']?['validation_id'] ?? '';
+    }
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return '';
     }
     throw Exception('Payment validation failed');
   }
@@ -491,6 +510,12 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
         return StopUpdatePreviewModel.fromJson(data);
       }
     }
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      if (confirm) {
+        return StopUpdateAppliedModel.fromJson({});
+      }
+      return StopUpdatePreviewModel.fromJson({});
+    }
     throw Exception(response.data?['message'] ?? 'Failed to update stops');
   }
 
@@ -534,6 +559,13 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
         Map<String, dynamic>.from(response.data),
       );
     }
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return const CheckBookModeResult(
+        showBookForOtherOption: false,
+        distanceKm: null,
+        thresholdKm: 1.0,
+      );
+    }
     throw Exception('Failed to check book mode');
   }
 
@@ -559,6 +591,13 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
           Map<String, dynamic>.from(raw),
         );
       }
+    }
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return EmergencyContactsResponse(
+        statusCode: response.statusCode ?? 400,
+        message: '',
+        data: EmergencyContactsData.fromJson({}),
+      );
     }
     throw Exception('Failed to fetch emergency contacts');
   }
@@ -587,6 +626,9 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
     if (response.statusCode == 200 && response.data != null) {
       final data = response.data['data'] ?? {};
       return PdfLinkModel.fromJson(data);
+    }
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return PdfLinkModel.fromJson({});
     }
     throw Exception(response.data?['message'] ?? 'Failed to upload PDF');
   }

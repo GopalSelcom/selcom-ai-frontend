@@ -122,7 +122,15 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         return;
       }
       _didCheckPendingReviewOnHomeLaunch = true;
-      await rideRatingController.tryOpenRatingSheetAfterHomeLoad();
+      try {
+        await rideRatingController.tryOpenRatingSheetAfterHomeLoad();
+      } catch (e, stackTrace) {
+        developer.log(
+          'Pending review prompt failed: $e',
+          name: 'HomeController',
+          stackTrace: stackTrace,
+        );
+      }
     });
 
     // Request Notification Permission (Best practice: delayed until Home Screen)
@@ -709,24 +717,41 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     required double pickupLat,
     required double pickupLng,
     required List<LocationEntity> destinations,
+    bool showHomeFareEstimateLoader = false,
   }) async {
-    final req = FareEstimateRequest(
-      pickup: LocationEntity(
-        lat: pickupLat,
-        lng: pickupLng,
-        address: pickupAddress,
-      ),
-      destinations: destinations,
-    );
-
-    final result = await homeRepository.estimateFare(req);
-    bool canProceed = false;
-    result.fold((failure) {
-      AppDialogs.showErrorDialog(
-        message: _extractEstimateErrorMessage(failure.message),
+    if (showHomeFareEstimateLoader) {
+      AppDialogs.showLoadingDialog();
+    }
+    try {
+      final req = FareEstimateRequest(
+        pickup: LocationEntity(
+          lat: pickupLat,
+          lng: pickupLng,
+          address: pickupAddress,
+        ),
+        destinations: destinations,
       );
-    }, (_) => canProceed = true);
-    return canProceed;
+
+      final result = await homeRepository.estimateFare(req);
+
+      if (showHomeFareEstimateLoader && (Get.isDialogOpen ?? false)) {
+        Get.back();
+      }
+
+      bool canProceed = false;
+      result.fold((failure) {
+        AppDialogs.showErrorDialog(
+          message: _extractEstimateErrorMessage(failure.message),
+        );
+      }, (_) => canProceed = true);
+      return canProceed;
+    } catch (e, stackTrace) {
+      if (showHomeFareEstimateLoader && (Get.isDialogOpen ?? false)) {
+        Get.back();
+      }
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      rethrow;
+    }
   }
 
   String _extractEstimateErrorMessage(String rawMessage) {
@@ -791,6 +816,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       pickupLat: pickupLL.latitude,
       pickupLng: pickupLL.longitude,
       destinations: [LocationEntity(lat: dLat, lng: dLng, address: destAddr)],
+      showHomeFareEstimateLoader: true,
     );
     if (!canProceed) return;
 
@@ -852,6 +878,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       pickupLat: pickupLL.latitude,
       pickupLng: pickupLL.longitude,
       destinations: [LocationEntity(lat: dLat, lng: dLng, address: destAddr)],
+      showHomeFareEstimateLoader: true,
     );
     if (!canProceed) return;
 
@@ -872,9 +899,13 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }
 
   /// Pickup = current map center; destination = [RecentDestinationModel].
+  ///
+  /// Set [showHomeFareEstimateLoader] when the tap originates from the home
+  /// sheet so the home overlay can run during fare estimate.
   Future<void> navigateToVehicleSelectionForRecentDestination(
-    RecentDestinationModel loc,
-  ) async {
+    RecentDestinationModel loc, {
+    bool showHomeFareEstimateLoader = false,
+  }) async {
     final destAddr = loc.address.trim();
     if (destAddr.isEmpty) return;
 
@@ -892,6 +923,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       destinations: [
         LocationEntity(lat: loc.lat, lng: loc.lng, address: destAddr),
       ],
+      showHomeFareEstimateLoader: showHomeFareEstimateLoader,
     );
     if (!canProceed) return;
 

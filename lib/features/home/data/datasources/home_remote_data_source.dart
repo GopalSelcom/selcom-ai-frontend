@@ -9,6 +9,7 @@ import '../../../../core/data/models/responses/rides/promo_validate_response.dar
 import '../models/geocode_response_model.dart';
 import '../models/places_models.dart';
 import '../../../../core/network/api_service.dart';
+import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
 
 abstract class HomeRemoteDataSource {
@@ -92,7 +93,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     if (response.statusCode == 200 && response.data != null) {
       return ReverseGeocodeModel.fromJson(response.data);
     }
-    if (response.statusCode == 400) {
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
       return null;
     }
     throw Exception('Reverse geocoding failed');
@@ -110,6 +111,9 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
 
     if (response.statusCode == 200 && response.data != null) {
       return GeocodeResponse.fromJson(response.data);
+    }
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return GeocodeResponse(results: const [], status: 'ZERO_RESULTS');
     }
     throw Exception('Geocoding failed');
   }
@@ -167,6 +171,9 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
         if (model.errorCode?.trim() == 'VALID_DISTANCE_EXCEEDED') {
           return model;
         }
+        if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+          return model;
+        }
         final msg = (model.message ?? '').trim();
         throw Exception(
           msg.isEmpty ? 'Unable to estimate fare for this route.' : msg,
@@ -175,6 +182,14 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       return model;
     }
 
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return FareEstimateResponseModel(
+        statusCode: response.statusCode,
+        message: null,
+        errorCode: null,
+        data: null,
+      );
+    }
     throw Exception('Unable to estimate fare for this route.');
   }
 
@@ -190,6 +205,27 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
 
     if (response.statusCode == 200 && response.data != null) {
       return BookRideResponse.fromJson(response.data);
+    }
+
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      final raw = response.data;
+      if (raw is Map<String, dynamic>) {
+        try {
+          return BookRideResponse.fromJson(raw);
+        } catch (_) {}
+      }
+      if (raw is Map) {
+        try {
+          return BookRideResponse.fromJson(
+            Map<String, dynamic>.from(raw),
+          );
+        } catch (_) {}
+      }
+      return BookRideResponse(
+        statusCode: response.statusCode,
+        message: null,
+        data: null,
+      );
     }
 
     final data = response.data;

@@ -294,23 +294,144 @@ class ConfirmPickupScreen extends StatelessWidget {
                             );
                           }),
                           SizedBox(height: 16.h),
-                          AppTextField(
-                            controller: c.noteForDriverController,
-                            label: AppStrings.pickupConfirmationNoteLabel.tr,
-                            hintText: AppStrings.pickupConfirmationNoteHint.tr,
-                            keyboardType: TextInputType.multiline,
-                            maxLines: 4,
-                            maxLength: 500,
-                            showCounter: true,
-                            textInputAction: TextInputAction.newline,
-                            scrollPadding: EdgeInsets.fromLTRB(
-                              20,
-                              mq.padding.top + 56,
-                              20,
-                              mq.viewInsets.bottom + 120,
-                            ),
-                            onChanged: (_) {},
-                          ),
+                          Obx(() {
+                            c.noteChipRevision.value;
+                            final expanded = c.isPickupNoteExpanded.value;
+                            final noteText =
+                                c.noteForDriverController.text.trim();
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: c.togglePickupNoteExpanded,
+                                    borderRadius: BorderRadius.circular(12.r),
+                                    child: Ink(
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primary.withValues(
+                                          alpha: 0.10,
+                                        ),
+                                        borderRadius: BorderRadius.circular(
+                                          12.r,
+                                        ),
+                                        border: Border.all(
+                                          color: AppColors.primary,
+                                          width: 1,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: AppColors.primary
+                                                .withValues(alpha: 0.15),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 14.w,
+                                        vertical: 12.h,
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Text(
+                                            AppStrings
+                                                .pickupConfirmationNoteLabel
+                                                .tr,
+                                            style: AppTextStyles.homeSubtitle
+                                                .copyWith(
+                                              color: AppColors.primary,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 15.sp,
+                                            ),
+                                          ),
+                                          SizedBox(width: 10.w),
+                                          Expanded(
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.end,
+                                              children: [
+                                                if (noteText.isNotEmpty &&
+                                                    !expanded)
+                                                  Flexible(
+                                                    child: Text(
+                                                      noteText,
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow
+                                                          .ellipsis,
+                                                      textAlign: TextAlign.end,
+                                                      style: AppTextStyles
+                                                          .homeCaption
+                                                          .copyWith(
+                                                        color: AppColors
+                                                            .textBody,
+                                                        fontSize: 13.sp,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                if (noteText.isNotEmpty &&
+                                                    !expanded)
+                                                  SizedBox(width: 6.w),
+                                                AnimatedRotation(
+                                                  turns:
+                                                      expanded ? 0.5 : 0.0,
+                                                  duration: const Duration(
+                                                    milliseconds: 220,
+                                                  ),
+                                                  curve: Curves.easeInOutCubic,
+                                                  child: Icon(
+                                                    Icons.keyboard_arrow_down,
+                                                    color: AppColors.primary,
+                                                    size: 26.sp,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                AnimatedSize(
+                                  duration: const Duration(milliseconds: 280),
+                                  curve: Curves.easeInOutCubic,
+                                  alignment: Alignment.topCenter,
+                                  clipBehavior: Clip.hardEdge,
+                                  child: expanded
+                                      ? Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.stretch,
+                                          children: [
+                                            SizedBox(height: 10.h),
+                                            AppTextField(
+                                              controller:
+                                                  c.noteForDriverController,
+                                              hintText: AppStrings
+                                                  .pickupConfirmationNoteHint
+                                                  .tr,
+                                              keyboardType:
+                                                  TextInputType.multiline,
+                                              maxLines: 2,
+                                              textInputAction:
+                                                  TextInputAction.newline,
+                                              scrollPadding:
+                                                  EdgeInsets.fromLTRB(
+                                                20,
+                                                mq.padding.top + 56,
+                                                20,
+                                                mq.viewInsets.bottom + 120,
+                                              ),
+                                              onChanged: (_) {},
+                                            ),
+                                          ],
+                                        )
+                                      : const SizedBox.shrink(),
+                                ),
+                              ],
+                            );
+                          }),
                           SizedBox(height: 20.h),
                           Obx(
                             () => SizedBox(

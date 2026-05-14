@@ -85,6 +85,7 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
             top: topPad + 8.h,
             left: 16,
             right: 16,
+            isProfileIconVisible: false,
             onProfileTap: c.openProfile,
             addressWidget: Expanded(
               child: Obx(
