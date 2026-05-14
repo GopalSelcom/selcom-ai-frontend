@@ -31,6 +31,7 @@ import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../../../../core/services/app_region_service.dart';
+import '../../../../core/services/app_settings_service.dart';
 import '../../../../shared/utils/country_region_defaults.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 
@@ -59,7 +60,8 @@ class VehicleSelectionController extends GetxController {
   final lastSocketError = ''.obs;
   final nearbyDriverCount = 0.obs;
   final paymentStatus = PaymentStatus.pending.obs;
-  final paymentTimerSeconds = 120.obs;
+  /// Countdown shown in [PaymentStatusDialog]; initial duration from settings API.
+  final paymentTimerSeconds = 300.obs;
   final isRouteReady = false.obs;
   final isLocationIconsReady = false.obs;
   final isMapVisualReady = false.obs;
@@ -696,7 +698,9 @@ class VehicleSelectionController extends GetxController {
             _showPaymentStatusDialog();
 
             final blockOk = await _waitForPaymentBlockStatus(
-              timeout: const Duration(minutes: 2),
+              timeout: Duration(
+                seconds: di.sl<AppSettingsService>().paymentWaitSeconds.value,
+              ),
             );
 
             if (blockOk) {
@@ -868,7 +872,7 @@ class VehicleSelectionController extends GetxController {
   }
 
   Future<bool> _waitForPaymentBlockStatus({
-    Duration timeout = const Duration(minutes: 2),
+    Duration timeout = const Duration(seconds: 300),
   }) async {
     final completer = Completer<bool>();
     late StreamSubscription<PaymentStatusUpdateResponse> sub;
@@ -906,7 +910,8 @@ class VehicleSelectionController extends GetxController {
 
   void _showPaymentStatusDialog() {
     paymentStatus.value = PaymentStatus.pending;
-    paymentTimerSeconds.value = 120;
+    paymentTimerSeconds.value =
+        di.sl<AppSettingsService>().paymentWaitSeconds.value;
 
     if (Get.isDialogOpen == true) return;
 

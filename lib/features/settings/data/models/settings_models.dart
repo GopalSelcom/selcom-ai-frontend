@@ -1,7 +1,14 @@
 class AppSettingsModel {
-  final Map<String, bool> features;
+  /// Server `payment_timer` (seconds); used when absent or invalid.
+  static const int defaultPaymentTimerSeconds = 300;
 
-  const AppSettingsModel({required this.features});
+  final Map<String, bool> features;
+  final int paymentTimerSeconds;
+
+  const AppSettingsModel({
+    required this.features,
+    this.paymentTimerSeconds = defaultPaymentTimerSeconds,
+  });
 
   factory AppSettingsModel.fromJson(Map<String, dynamic> json) {
     bool parseBool(dynamic value) {
@@ -16,7 +23,22 @@ class AppSettingsModel {
       }
     }
 
-    return AppSettingsModel(features: featureMap);
+    return AppSettingsModel(
+      features: featureMap,
+      paymentTimerSeconds: _parsePaymentTimerSeconds(json['payment_timer']),
+    );
+  }
+
+  static int _parsePaymentTimerSeconds(dynamic value) {
+    if (value == null) return defaultPaymentTimerSeconds;
+    final int? parsed = switch (value) {
+      final int v => v,
+      final num v => v.toInt(),
+      final String v => int.tryParse(v.trim()),
+      _ => null,
+    };
+    if (parsed == null || parsed <= 0) return defaultPaymentTimerSeconds;
+    return parsed;
   }
 
   bool featureEnabled(String key, {bool fallback = false}) {
