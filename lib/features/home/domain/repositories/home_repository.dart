@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/data/models/requests/book_ride_request.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/responses/rides/book_rides_response.dart';
+import '../../../../core/data/models/responses/rides/promo_available_response.dart';
 import '../../../../core/data/models/responses/rides/promo_validate_response.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/errors/failures.dart';
@@ -34,5 +35,10 @@ abstract class HomeRepository {
     required String code,
     required String vehicleTypeId,
     required int fareEstimate,
+  });
+
+  Future<Either<Failure, List<AvailablePromoItem>>> getAvailablePromos({
+    String? vehicleTypeId,
+    int? fareEstimate,
   });
 }

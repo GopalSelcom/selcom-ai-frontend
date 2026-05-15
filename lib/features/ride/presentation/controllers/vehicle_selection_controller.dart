@@ -34,8 +34,7 @@ import '../../../../core/services/app_region_service.dart';
 import '../../../../core/services/app_settings_service.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/errors/failures.dart';
-import '../../../../shared/widgets/ride_promo_code_sheet.dart';
-import '../../../../shared/widgets/promo_apply_success_dialog.dart';
+import '../../../promotions/presentation/promo_code_route_args.dart';
 import '../../../../shared/utils/country_region_defaults.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 
@@ -69,8 +68,6 @@ class VehicleSelectionController extends GetxController {
   final paymentTimerSeconds = 300.obs;
   final appliedPromoCode = ''.obs;
   final promoValidatedAt = Rxn<DateTime>();
-  final promoSheetInlineError = RxnString();
-  final promoSheetLoading = false.obs;
   Timer? _promoEstimateDebounce;
   final isRouteReady = false.obs;
   final isLocationIconsReady = false.obs;
@@ -1297,55 +1294,6 @@ class VehicleSelectionController extends GetxController {
     }
   }
 
-  Future<void> applyPromoFromSheet(String raw) async {
-    final code = raw.trim().toUpperCase();
-    if (code.isEmpty) return;
-    final est = selectedEstimate;
-    final vid = (est?.vehicleTypeId ?? '').trim();
-    if (vid.isEmpty || !_looksLikeBackendVehicleTypeId(vid)) {
-      promoSheetInlineError.value = 'INVALID_INPUT';
-      return;
-    }
-    final fare = est!.originalFare;
-    promoSheetLoading.value = true;
-    promoSheetInlineError.value = null;
-    final result = await homeRepository.validatePromo(
-      code: code,
-      vehicleTypeId: vid,
-      fareEstimate: fare,
-    );
-    promoSheetLoading.value = false;
-    await result.fold<Future<void>>(
-      (f) async {
-        final err = f is PromoValidationFailure ? f.errorCode : null;
-        promoSheetInlineError.value = (err != null && err.isNotEmpty)
-            ? err
-            : 'NETWORK';
-        unawaited(
-          di.sl<AnalyticsService>().logEvent(
-            'promo_validated',
-            parameters: {'success': 'false', 'error_code': err ?? 'unknown'},
-          ),
-        );
-      },
-      (data) async {
-        unawaited(
-          di.sl<AnalyticsService>().logEvent(
-            'promo_validated',
-            parameters: {'success': 'true', 'code': data.code},
-          ),
-        );
-        appliedPromoCode.value = data.code;
-        promoValidatedAt.value = DateTime.now();
-        if (Get.isBottomSheetOpen ?? false) {
-          Get.back<void>();
-        }
-        await _showPromoApplySuccessCelebration();
-        await _loadEstimates();
-      },
-    );
-  }
-
   Future<void> clearAppliedPromo() async {
     if (appliedPromoCode.value.trim().isEmpty) return;
     appliedPromoCode.value = '';
@@ -1353,29 +1301,33 @@ class VehicleSelectionController extends GetxController {
     await _loadEstimates();
   }
 
-  void openPromoEntrySheet() {
-    promoSheetInlineError.value = null;
-    promoSheetLoading.value = false;
-    Get.bottomSheet<void>(
-      RidePromoCodeSheet(controller: this),
-      isScrollControlled: true,
-      backgroundColor: AppColors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-    );
-  }
+  Future<void> openPromotions() async {
+    final est = selectedEstimate;
+    final vid = (est?.vehicleTypeId ?? '').trim();
+    if (vid.isEmpty || !_looksLikeBackendVehicleTypeId(vid)) {
+      AppDialogs.showErrorDialog(
+        title: AppStrings.vehicleType.tr,
+        message: AppStrings.couldNotResolveVehicleTypeIdPleaseTryAgain.tr,
+      );
+      return;
+    }
 
-  Future<void> _showPromoApplySuccessCelebration() async {
-    await Get.dialog<void>(
-      const PromoApplySuccessDialog(),
-      barrierDismissible: true,
-      barrierColor: Colors.black38,
+    final result = await Get.toNamed<dynamic>(
+      AppRoutes.promotions,
+      arguments: PromoCodeRouteArgs(
+        vehicleTypeId: vid,
+        fareEstimate: est!.originalFare,
+        appliedCode: appliedPromoCode.value.trim(),
+      ).toMap(),
     );
-  }
 
-  void openPromotions() {
-    openPromoEntrySheet();
+    if (result is! Map) return;
+    final code = result['code']?.toString().trim().toUpperCase();
+    if (code == null || code.isEmpty) return;
+
+    appliedPromoCode.value = code;
+    promoValidatedAt.value = DateTime.now();
+    await _loadEstimates();
   }
 
   void closeVehicleSelection() {

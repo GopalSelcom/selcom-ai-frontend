@@ -235,10 +235,6 @@ class ProfileController extends GetxController {
     Get.toNamed(AppRoutes.contactUs);
   }
 
-  void openPromotions() {
-    Get.toNamed(AppRoutes.promotions);
-  }
-
   void openFavoriteLocations() {
     Get.toNamed(AppRoutes.favoriteLocations);
   }

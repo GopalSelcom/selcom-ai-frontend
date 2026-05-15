@@ -139,7 +139,9 @@ class AppColors {
   static const Color iconHeartOutline = Color(0xFF292D32);
   static const Color iconHeartFilled = Color(0xFFF3004C);
   static const Color textNeutralButton = Color(0xFF7F7F7F);
-  static const Color promotionBlue = Color(0xFF2668D2);
+  static const Color promotionBlue = Color(0xFF2668D2); // Active badge circle + accent in SVG
+  static const Color promoBadgeStarDisabled = Color(0xFFD8DEE8); // Disabled badge circle (placeholder + SVG star)
+  static const Color promoBadgeAccentDisabled = Color(0xFF9AA8BA); // Disabled % icon (placeholder + SVG accent)
   static const Color routeBlue = Color(0xFF3073E8);
   static const Color pinRed = Color(0xFFF52D56);
   static const Color dangerDeep = Color(0xFFE31E24);

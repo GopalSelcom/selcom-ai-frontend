@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/data/models/requests/book_ride_request.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/responses/rides/book_rides_response.dart';
+import '../../../../core/data/models/responses/rides/promo_available_response.dart';
 import '../../../../core/data/models/responses/rides/promo_validate_response.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/errors/failures.dart';
@@ -126,6 +127,31 @@ class HomeRepositoryImpl implements HomeRepository {
         PromoValidationFailure(
           msg.isEmpty ? 'Promo code cannot be applied.' : msg,
           errorCode: (err == null || err.isEmpty) ? null : err,
+        ),
+      );
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<AvailablePromoItem>>> getAvailablePromos({
+    String? vehicleTypeId,
+    int? fareEstimate,
+  }) async {
+    try {
+      final r = await remoteDataSource.getAvailablePromos(
+        vehicleTypeId: vehicleTypeId,
+        fareEstimate: fareEstimate,
+      );
+      if (r.isSuccess && r.data != null) {
+        return Right(r.data!.promos);
+      }
+      final msg = (r.message ?? '').trim();
+      return Left(
+        ServerFailure(
+          msg.isEmpty ? 'Unable to load promo codes.' : msg,
         ),
       );
     } catch (e, stackTrace) {

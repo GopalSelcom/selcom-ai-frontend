@@ -26,7 +26,6 @@ abstract class Languages {
   String get appSettings;
   String get appTitle;
   String get apply;
-  String get applyPromoCode;
   String get areYouSureWantToAddNdeleteThisCard;
   String get areYouSureYouWantToCancel;
   String get blinkYourEyes;
@@ -165,7 +164,6 @@ abstract class Languages {
   String get logout;
   String get loremIpsumDolorSitAmetConsectetur;
   String get makingYourDriveBestIsOurResponsibility;
-  String get maximumPromoTzs1500;
   String get maybeLater;
   String get markAllReadCount;
   String get message;
@@ -271,15 +269,10 @@ abstract class Languages {
   String get thankYouForRidingWithSelcomGo;
   String get mobileMoney;
   String get card;
-  String get promoCodeCodeApplied;
-  String get promoCodeAppliedWithCode;
-  String get promoAppliedWithTitle;
   String get promocodeList;
   String get promotions;
   String get havePromoCode;
-  String get ridePromoSheetSubtitle;
   String get promoApplySuccessMessage;
-  String get promoApply;
   String get promoRemovedTitle;
   String get promoRemovedDestinationChanged;
   String get promoErrorInvalid;
@@ -288,9 +281,12 @@ abstract class Languages {
   String get promoErrorNetwork;
   String get promoNotAppliedTitle;
   String get promoCodeNotValidForVehicle;
-  String get promoAppliedSavingSuffix;
   String get rideFreeLabel;
   String get receiptPromoLine;
+  String get promoMinRideAmount;
+  String get promoExpiresToday;
+  String get noAvailablePromoCodes;
+  String get failedToLoadPromoCodes;
   String get rating;
   String get ratingGiven;
   String get ratingRequired;

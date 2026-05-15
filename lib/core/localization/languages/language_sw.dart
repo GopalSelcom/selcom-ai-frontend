@@ -16,7 +16,6 @@ class LanguageSw extends Languages {
     'app_settings': '',
     'app_title': '',
     'apply': '',
-    'apply_promo_code': '',
     'are_you_sure_want_to_add_ndelete_this_card': '',
     'are_you_sure_you_want_to_cancel': '',
     'blink_your_eyes': '',
@@ -163,7 +162,6 @@ class LanguageSw extends Languages {
     'logout': '',
     'lorem_ipsum_dolor_sit_amet_consectetur': '',
     'making_your_drive_best_is_our_responsibility': '',
-    'maximum_promo_tzs1500': '',
     'maybe_later': '',
     'mark_all_read_count': '',
     'message': '',
@@ -260,16 +258,10 @@ class LanguageSw extends Languages {
     'thank_you_for_riding_with_selcom_go': '',
     'mobile_money': '',
     'card': '',
-    'promo_code_code_applied': '',
-    'promo_code_applied_with_code': '',
-    'promo_applied_with_title': '',
     'promocode_list': '',
     'promotions': '',
     'have_promo_code': 'Una msimbo wa promosi?',
-    'ride_promo_sheet_subtitle':
-        'Tunathibitisha msimbo kwa safari hii na bei yako ya sasa.',
     'promo_apply_success_message': 'Msimbo wa promosi umetumika kwa mafanikio.',
-    'promo_apply': 'Tumia',
     'promo_removed_title': 'Promosi imeondolewa',
     'promo_removed_destination_changed':
         'Njia imebadilika — promosi imefutwa.',
@@ -279,9 +271,12 @@ class LanguageSw extends Languages {
     'promo_error_network': 'Imeshindikana kuthibitisha. Jaribu tena.',
     'promo_not_applied_title': 'Promosi haijatumiwa',
     'promo_code_not_valid_for_vehicle': 'Si sahihi kwa chombo hiki',
-    'promo_applied_saving_suffix': 'imetumika — Unapata @amount',
     'ride_free_label': 'BURE',
     'receipt_promo_line': 'Promosi (@code)',
+    'promo_min_ride_amount': 'Kiasi cha chini @amount',
+    'promo_expires_today': 'Inaisha leo',
+    'no_available_promo_codes': 'Hakuna misimbo ya promosheni kwa sasa',
+    'failed_to_load_promo_codes': 'Imeshindwa kupakia misimbo ya promosheni',
     'rating': '',
     'rating_given': '',
     'rating_required': '',
@@ -596,9 +591,6 @@ class LanguageSw extends Languages {
 
   @override
   String get apply => values['apply'] ?? '';
-
-  @override
-  String get applyPromoCode => values['apply_promo_code'] ?? '';
 
   @override
   String get areYouSureWantToAddNdeleteThisCard =>
@@ -1057,9 +1049,6 @@ class LanguageSw extends Languages {
       values['making_your_drive_best_is_our_responsibility'] ?? '';
 
   @override
-  String get maximumPromoTzs1500 => values['maximum_promo_tzs1500'] ?? '';
-
-  @override
   String get maybeLater => values['maybe_later'] ?? '';
 
   @override
@@ -1401,16 +1390,6 @@ class LanguageSw extends Languages {
   String get card => values['card'] ?? '';
 
   @override
-  String get promoCodeCodeApplied => values['promo_code_code_applied'] ?? '';
-
-  @override
-  String get promoCodeAppliedWithCode =>
-      values['promo_code_applied_with_code'] ?? '';
-
-  @override
-  String get promoAppliedWithTitle => values['promo_applied_with_title'] ?? '';
-
-  @override
   String get promocodeList => values['promocode_list'] ?? '';
 
   @override
@@ -1420,15 +1399,8 @@ class LanguageSw extends Languages {
   String get havePromoCode => values['have_promo_code'] ?? '';
 
   @override
-  String get ridePromoSheetSubtitle =>
-      values['ride_promo_sheet_subtitle'] ?? '';
-
-  @override
   String get promoApplySuccessMessage =>
       values['promo_apply_success_message'] ?? '';
-
-  @override
-  String get promoApply => values['promo_apply'] ?? '';
 
   @override
   String get promoRemovedTitle => values['promo_removed_title'] ?? '';
@@ -1458,14 +1430,22 @@ class LanguageSw extends Languages {
       values['promo_code_not_valid_for_vehicle'] ?? '';
 
   @override
-  String get promoAppliedSavingSuffix =>
-      values['promo_applied_saving_suffix'] ?? '';
-
-  @override
   String get rideFreeLabel => values['ride_free_label'] ?? '';
 
   @override
   String get receiptPromoLine => values['receipt_promo_line'] ?? '';
+
+  @override
+  String get promoMinRideAmount => values['promo_min_ride_amount'] ?? '';
+
+  @override
+  String get promoExpiresToday => values['promo_expires_today'] ?? '';
+
+  @override
+  String get noAvailablePromoCodes => values['no_available_promo_codes'] ?? '';
+
+  @override
+  String get failedToLoadPromoCodes => values['failed_to_load_promo_codes'] ?? '';
 
   @override
   String get rating => values['rating'] ?? '';

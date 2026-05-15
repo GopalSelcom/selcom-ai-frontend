@@ -46,6 +46,7 @@ class AppAssets {
   static const String mapVehicleRickshawSvg = '$_imagePath/rickshaw.svg';
   static const String icPromotions = '$_imagePath/ic_promotions.svg';
   static const String icPromoCode = '$_imagePath/ic_promo_code.svg';
+  static const String icPromoCodeDisabled = '$_imagePath/ic_promo_code_disabled.svg';
 
   // Profile
   static const String icFaceScan = '$_imagePath/ic_face_scan.svg';

@@ -5,6 +5,7 @@ import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/data/models/requests/book_ride_request.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
+import '../../../../core/data/models/responses/rides/promo_available_response.dart';
 import '../../../../core/data/models/responses/rides/promo_validate_response.dart';
 import '../models/geocode_response_model.dart';
 import '../models/places_models.dart';
@@ -36,6 +37,12 @@ abstract class HomeRemoteDataSource {
     required String code,
     required String vehicleTypeId,
     required int fareEstimate,
+  });
+
+  /// `GET go/promo/available` — rider-facing promo list (not admin CRUD).
+  Future<PromoAvailableResponse> getAvailablePromos({
+    String? vehicleTypeId,
+    int? fareEstimate,
   });
 }
 
@@ -263,6 +270,36 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     return PromoValidateResponse.fromHttpResponse(
       httpStatus: response.statusCode,
       body: body,
+    );
+  }
+
+  @override
+  Future<PromoAvailableResponse> getAvailablePromos({
+    String? vehicleTypeId,
+    int? fareEstimate,
+  }) async {
+    final query = <String, dynamic>{};
+    final vid = vehicleTypeId?.trim();
+    if (vid != null && vid.isNotEmpty) {
+      query['vehicle_type_id'] = vid;
+    }
+    if (fareEstimate != null && fareEstimate > 0) {
+      query['fare_estimate'] = fareEstimate;
+    }
+
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.ride.promoAvailable,
+        method: ApiMethod.get,
+        queryParams: query.isEmpty ? null : query,
+        errorPresentationType: ErrorPresentationType.none,
+        showLoader: false,
+      ),
+    );
+
+    return PromoAvailableResponse.fromHttpResponse(
+      httpStatus: response.statusCode,
+      body: response.data,
     );
   }
 }

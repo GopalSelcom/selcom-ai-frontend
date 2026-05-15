@@ -566,6 +566,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
             ),
           ),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _vehicleThumb(img),
               SizedBox(width: 18.w),
@@ -636,13 +637,22 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                     if (controller.appliedPromoCode.value.trim().isNotEmpty &&
                         item.promoApplied != true &&
                         (item.promoError?.trim().isNotEmpty ?? false)) ...[
-                      SizedBox(height: 2.h),
-                      Text(
-                        AppStrings.promoCodeNotValidForVehicle.tr,
-                        style: AppTextStyles.homeCaption.copyWith(
-                          color: AppColors.warningStrong,
-                          fontSize: 11.sp,
-                          fontWeight: FontWeight.w600,
+                      SizedBox(height: 4.h),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            AppStrings.promoCodeNotValidForVehicle.tr,
+                            maxLines: 1,
+                            style: AppTextStyles.homeCaption.copyWith(
+                              color: AppColors.warningStrong,
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.w600,
+                              height: 1.2,
+                            ),
+                          ),
                         ),
                       ),
                     ],

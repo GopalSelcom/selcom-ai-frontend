@@ -42,7 +42,7 @@ class VehicleSelectionPromoChip extends StatelessWidget {
               ],
             ),
             child: InkWell(
-              onTap: controller.openPromoEntrySheet,
+              onTap: () => unawaited(controller.openPromotions()),
               borderRadius: BorderRadius.circular(18.r),
               child: Padding(
                 padding: EdgeInsets.fromLTRB(

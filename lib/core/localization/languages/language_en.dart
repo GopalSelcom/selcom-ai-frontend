@@ -16,7 +16,6 @@ class LanguageEn extends Languages {
     'app_settings': 'App Settings',
     'app_title': 'Selcom Rides',
     'apply': 'APPLY',
-    'apply_promo_code': 'Apply Promo code',
     'are_you_sure_want_to_add_ndelete_this_card':
         'Are you sure want to add Delete this card?',
     'are_you_sure_you_want_to_cancel': 'Are you sure you want to cancel?',
@@ -185,7 +184,6 @@ class LanguageEn extends Languages {
         'Lorem ipsum dolor sit amet, consectetur',
     'making_your_drive_best_is_our_responsibility':
         'Making your drive best is our responsibility',
-    'maximum_promo_tzs1500': 'Maximum Promo TZS 1500',
     'maybe_later': 'Maybe Later',
     'mark_all_read_count': 'Mark all read (@count)',
     'message': 'Message',
@@ -300,16 +298,10 @@ class LanguageEn extends Languages {
     'thank_you_for_riding_with_selcom_go': 'Thank you for riding with Selcom Go!',
     'mobile_money': 'Mobile Money',
     'card': 'Card',
-    'promo_code_code_applied': 'Promo code \$code applied!',
-    'promo_code_applied_with_code': 'Promo code @code applied!',
-    'promo_applied_with_title': 'Promo "@title" applied!',
     'promocode_list': 'Promocode list',
     'promotions': 'Promotions',
     'have_promo_code': 'Have a promo code?',
-    'ride_promo_sheet_subtitle':
-        'We validate the code for this ride and your current fare estimate.',
     'promo_apply_success_message': 'Promo code applied successfully.',
-    'promo_apply': 'Apply',
     'promo_removed_title': 'Promo removed',
     'promo_removed_destination_changed':
         'Your route changed — the promo was cleared.',
@@ -319,9 +311,12 @@ class LanguageEn extends Languages {
     'promo_error_network': "Couldn't check the code. Try again.",
     'promo_not_applied_title': 'Promo not applied',
     'promo_code_not_valid_for_vehicle': 'Code not valid for this vehicle',
-    'promo_applied_saving_suffix': 'applied — Saving @amount',
     'ride_free_label': 'FREE',
     'receipt_promo_line': 'Promo (@code)',
+    'promo_min_ride_amount': 'Min. ride @amount',
+    'promo_expires_today': 'Expires today',
+    'no_available_promo_codes': 'No promo codes available right now',
+    'failed_to_load_promo_codes': 'Could not load promo codes',
     'rating': 'Rating',
     'rating_given': 'rating given',
     'rating_required': 'Rating required',
@@ -677,9 +672,6 @@ class LanguageEn extends Languages {
 
   @override
   String get apply => values['apply'] ?? '';
-
-  @override
-  String get applyPromoCode => values['apply_promo_code'] ?? '';
 
   @override
   String get areYouSureWantToAddNdeleteThisCard =>
@@ -1138,9 +1130,6 @@ class LanguageEn extends Languages {
       values['making_your_drive_best_is_our_responsibility'] ?? '';
 
   @override
-  String get maximumPromoTzs1500 => values['maximum_promo_tzs1500'] ?? '';
-
-  @override
   String get maybeLater => values['maybe_later'] ?? '';
 
   @override
@@ -1482,16 +1471,6 @@ class LanguageEn extends Languages {
   String get card => values['card'] ?? '';
 
   @override
-  String get promoCodeCodeApplied => values['promo_code_code_applied'] ?? '';
-
-  @override
-  String get promoCodeAppliedWithCode =>
-      values['promo_code_applied_with_code'] ?? '';
-
-  @override
-  String get promoAppliedWithTitle => values['promo_applied_with_title'] ?? '';
-
-  @override
   String get promocodeList => values['promocode_list'] ?? '';
 
   @override
@@ -1501,15 +1480,8 @@ class LanguageEn extends Languages {
   String get havePromoCode => values['have_promo_code'] ?? '';
 
   @override
-  String get ridePromoSheetSubtitle =>
-      values['ride_promo_sheet_subtitle'] ?? '';
-
-  @override
   String get promoApplySuccessMessage =>
       values['promo_apply_success_message'] ?? '';
-
-  @override
-  String get promoApply => values['promo_apply'] ?? '';
 
   @override
   String get promoRemovedTitle => values['promo_removed_title'] ?? '';
@@ -1539,14 +1511,22 @@ class LanguageEn extends Languages {
       values['promo_code_not_valid_for_vehicle'] ?? '';
 
   @override
-  String get promoAppliedSavingSuffix =>
-      values['promo_applied_saving_suffix'] ?? '';
-
-  @override
   String get rideFreeLabel => values['ride_free_label'] ?? '';
 
   @override
   String get receiptPromoLine => values['receipt_promo_line'] ?? '';
+
+  @override
+  String get promoMinRideAmount => values['promo_min_ride_amount'] ?? '';
+
+  @override
+  String get promoExpiresToday => values['promo_expires_today'] ?? '';
+
+  @override
+  String get noAvailablePromoCodes => values['no_available_promo_codes'] ?? '';
+
+  @override
+  String get failedToLoadPromoCodes => values['failed_to_load_promo_codes'] ?? '';
 
   @override
   String get rating => values['rating'] ?? '';

@@ -25,7 +25,8 @@ import '../../features/ride/presentation/screens/vehicle_selection_screen.dart';
 import '../../features/ride/presentation/screens/confirm_pickup_screen.dart';
 import '../../features/profile/presentation/screens/contact_us_screen.dart';
 import '../../features/profile/presentation/bindings/contact_us_binding.dart';
-import '../../features/promotions/presentation/screens/promocode_screen.dart';
+import '../../features/promotions/presentation/bindings/promo_code_binding.dart';
+import '../../features/promotions/presentation/screens/promo_code_screen.dart';
 import '../../features/profile/presentation/screens/favorite_locations_screen.dart';
 import '../../features/profile/presentation/bindings/favorite_locations_binding.dart';
 import '../../features/ride/presentation/bindings/ride_message_binding.dart';
@@ -113,7 +114,11 @@ class AppRoutes {
       page: () => const ContactUsScreen(),
       binding: ContactUsBinding(),
     ),
-    GetPage(name: promotions, page: () => const PromocodeScreen()),
+    GetPage(
+      name: promotions,
+      page: () => const PromoCodeScreen(),
+      binding: PromoCodeBinding(),
+    ),
     GetPage(
       name: favoriteLocations,
       page: () => const FavoriteLocationsScreen(),

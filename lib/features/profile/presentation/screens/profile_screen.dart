@@ -504,11 +504,6 @@ class ProfileScreen extends StatelessWidget {
               onTap: controller.openPaymentMethods,
             ),
             MenuItemWidget(
-              icon: Iconsax.gift,
-              title: AppStrings.promotions.tr,
-              onTap: controller.openPromotions,
-            ),
-            MenuItemWidget(
               icon: Iconsax.message_question,
               title: AppStrings.help.tr,
               onTap: controller.openContactUs,

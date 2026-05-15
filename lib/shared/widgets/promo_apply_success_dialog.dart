@@ -7,14 +7,19 @@ import 'package:get/get.dart';
 import '../../core/localization/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/widgets/payment_dialog_header_section.dart';
 
-/// Lightweight success overlay after a promo validates; auto-closes after 3s.
+/// Promo apply success overlay — same visual pattern as payment success, promo-only.
 class PromoApplySuccessDialog extends StatefulWidget {
-  const PromoApplySuccessDialog({super.key});
+  const PromoApplySuccessDialog({
+    super.key,
+    this.displayDuration = const Duration(seconds: 2),
+  });
+
+  final Duration displayDuration;
 
   @override
-  State<PromoApplySuccessDialog> createState() =>
-      _PromoApplySuccessDialogState();
+  State<PromoApplySuccessDialog> createState() => _PromoApplySuccessDialogState();
 }
 
 class _PromoApplySuccessDialogState extends State<PromoApplySuccessDialog> {
@@ -23,7 +28,7 @@ class _PromoApplySuccessDialogState extends State<PromoApplySuccessDialog> {
   @override
   void initState() {
     super.initState();
-    _autoClose = Timer(const Duration(seconds: 2), () {
+    _autoClose = Timer(widget.displayDuration, () {
       if (!mounted) return;
       if (Get.isDialogOpen ?? false) {
         Get.back<void>();
@@ -39,42 +44,43 @@ class _PromoApplySuccessDialogState extends State<PromoApplySuccessDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      type: MaterialType.transparency,
-      child: Center(
-        child: Container(
-          width: 260.w,
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 22.h),
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(20.r),
-            boxShadow: const [
-              BoxShadow(
-                color: AppColors.shadowSoft,
-                blurRadius: 24,
-                offset: Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.check_circle_rounded,
-                color: AppColors.success,
-                size: 48.sp,
-              ),
-              SizedBox(height: 14.h),
-              Text(
+    return Dialog(
+      insetPadding: EdgeInsets.symmetric(horizontal: 24.w),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(28.r),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const PaymentSuccessDialogHeader(),
+            Padding(
+              padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 8.h),
+              child: Text(
                 AppStrings.promoApplySuccessMessage.tr,
                 textAlign: TextAlign.center,
-                style: AppTextStyles.homeSubtitle.copyWith(
-                  color: AppColors.textHeading,
+                style: AppTextStyles.homeTitle.copyWith(
                   fontWeight: FontWeight.w600,
+                  color: AppColors.textPaymentDialogMessage,
+                  height: 26 / 20,
+                  letterSpacing: -0.4,
                 ),
               ),
-            ],
-          ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(28.w, 0, 28.w, 20.h),
+              child: Text(
+                AppStrings.thankYouForRidingWithUsSeeYouOnTheNextTrip.tr,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.homeSubtitle.copyWith(
+                  color: AppColors.textBody,
+                  height: 1.25,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

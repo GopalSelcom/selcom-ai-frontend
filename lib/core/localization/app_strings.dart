@@ -18,7 +18,6 @@ class AppStrings {
   static const String appSettings = 'app_settings';
   static const String appTitle = 'app_title';
   static const String apply = 'apply';
-  static const String applyPromoCode = 'apply_promo_code';
   static const String areYouSureWantToAddNdeleteThisCard =
       'are_you_sure_want_to_add_ndelete_this_card';
   static const String areYouSureYouWantToCancel =
@@ -206,7 +205,6 @@ class AppStrings {
       'lorem_ipsum_dolor_sit_amet_consectetur';
   static const String makingYourDriveBestIsOurResponsibility =
       'making_your_drive_best_is_our_responsibility';
-  static const String maximumPromoTzs1500 = 'maximum_promo_tzs1500';
   static const String maybeLater = 'maybe_later';
   static const String markAllReadCount = 'mark_all_read_count';
   static const String message = 'message';
@@ -363,15 +361,10 @@ class AppStrings {
       'thank_you_for_riding_with_selcom_go';
   static const String mobileMoney = 'mobile_money';
   static const String card = 'card';
-  static const String promoCodeCodeApplied = 'promo_code_code_applied';
-  static const String promoCodeAppliedWithCode = 'promo_code_applied_with_code';
-  static const String promoAppliedWithTitle = 'promo_applied_with_title';
   static const String promocodeList = 'promocode_list';
   static const String promotions = 'promotions';
   static const String havePromoCode = 'have_promo_code';
-  static const String ridePromoSheetSubtitle = 'ride_promo_sheet_subtitle';
   static const String promoApplySuccessMessage = 'promo_apply_success_message';
-  static const String promoApply = 'promo_apply';
   static const String promoRemovedTitle = 'promo_removed_title';
   static const String promoRemovedDestinationChanged =
       'promo_removed_destination_changed';
@@ -382,9 +375,12 @@ class AppStrings {
   static const String promoNotAppliedTitle = 'promo_not_applied_title';
   static const String promoCodeNotValidForVehicle =
       'promo_code_not_valid_for_vehicle';
-  static const String promoAppliedSavingSuffix = 'promo_applied_saving_suffix';
   static const String rideFreeLabel = 'ride_free_label';
   static const String receiptPromoLine = 'receipt_promo_line';
+  static const String promoMinRideAmount = 'promo_min_ride_amount';
+  static const String promoExpiresToday = 'promo_expires_today';
+  static const String noAvailablePromoCodes = 'no_available_promo_codes';
+  static const String failedToLoadPromoCodes = 'failed_to_load_promo_codes';
   static const String rating = 'rating';
   static const String ratingGiven = 'rating_given';
   static const String ratingRequired = 'rating_required';
