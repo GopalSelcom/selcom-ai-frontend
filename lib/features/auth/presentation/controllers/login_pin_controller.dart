@@ -41,7 +41,8 @@ enum LoginPinChangeStep { current, newPin, confirmNew }
 ///
 /// - **setup:** enter → confirm → `SetupLoginPinUseCase` → `Get.offAllNamed(nextRoute)`.
 /// - **login:** PIN verify or tap biometric → session refresh → home or phone.
-/// - **change:** current → new → confirm → `ChangeLoginPinUseCase` → success dialog.
+/// - **change:** current → new → confirm → `ChangeLoginPinUseCase` (old PIN
+///   validated by API on submit) → success dialog.
 ///
 /// Route args: `{ 'mode': 'setup'|'login'|'change', 'nextRoute': AppRoutes.* }`.
 /// API: `/v4/go/auth/pin/*`, `/auth/biometric`.
@@ -95,6 +96,13 @@ class LoginPinController extends GetxController {
   String _firstPin = '';
   String _newPinCandidate = '';
   Timer? _lockTimer;
+
+  /// Prevents [AppOtpField.onChanged] from clearing [errorMessage] when we
+  /// programmatically clear the PIN after an API error.
+  bool _suppressPinFieldCallbacks = false;
+
+  /// Used by [LoginPinScreen] — do not clear errors while resetting PIN fields.
+  bool get ignorePinFieldCallbacks => _suppressPinFieldCallbacks;
 
   final pinController = TextEditingController();
 
@@ -288,6 +296,7 @@ class LoginPinController extends GetxController {
 
   void _startLockCountdown(DateTime until) {
     isInputDisabled.value = true;
+    errorMessage.value = '';
     void tick() {
       final remaining = until.difference(DateTime.now());
       if (remaining.isNegative) {
@@ -314,14 +323,28 @@ class LoginPinController extends GetxController {
     if (focus != null && focus.hasFocus) {
       focus.unfocus();
     }
+    _suppressPinFieldCallbacks = true;
     pinController.clear();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _suppressPinFieldCallbacks = false;
+    });
     hasError.value = false;
     errorMessage.value = '';
   }
 
-  void _resetPinField() {
+  void _clearPinInputSilently() {
+    _suppressPinFieldCallbacks = true;
     pinController.clear();
-    hasError.value = false;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _suppressPinFieldCallbacks = false;
+    });
+  }
+
+  /// Shows API/validation error under the PIN field and clears digits for retry.
+  void _showPinError(String message) {
+    hasError.value = true;
+    errorMessage.value = message;
+    _clearPinInputSilently();
   }
 
   /// Called when all 4 digits entered — branches by [mode] and setup/change step.
@@ -329,9 +352,7 @@ class LoginPinController extends GetxController {
     if (isLoading.value || isInputDisabled.value) return;
 
     if (!LoginPinValidator.isValidFormat(pin)) {
-      hasError.value = true;
-      errorMessage.value = AppStrings.pinMustBeExactly4Digits.tr;
-      _resetPinField();
+      _showPinError(AppStrings.pinMustBeExactly4Digits.tr);
       return;
     }
 
@@ -354,11 +375,9 @@ class LoginPinController extends GetxController {
     }
 
     if (pin != _firstPin) {
-      hasError.value = true;
-      errorMessage.value = AppStrings.pinsDoNotMatch.tr;
       setupStep.value = LoginPinSetupStep.enter;
       _firstPin = '';
-      _resetPinField();
+      _showPinError(AppStrings.pinsDoNotMatch.tr);
       return;
     }
 
@@ -368,7 +387,6 @@ class LoginPinController extends GetxController {
 
     result.fold(
       (failure) {
-        hasError.value = true;
         if (_handlePinApiFailure(failure, forSetup: true)) {
           unawaited(
             analyticsService.logEvent(
@@ -381,7 +399,9 @@ class LoginPinController extends GetxController {
           );
           return;
         }
-        errorMessage.value = failure.message;
+        setupStep.value = LoginPinSetupStep.enter;
+        _firstPin = '';
+        _showPinError(failure.message);
         unawaited(
           analyticsService.logEvent(
             'go_pin_setup_failed',
@@ -391,9 +411,6 @@ class LoginPinController extends GetxController {
             },
           ),
         );
-        setupStep.value = LoginPinSetupStep.enter;
-        _firstPin = '';
-        _resetPinField();
       },
       (_) async {
         unawaited(analyticsService.logEvent('go_pin_setup_success'));
@@ -409,11 +426,9 @@ class LoginPinController extends GetxController {
     isLoading.value = false;
 
     result.fold(
-      (failure) async {
-        hasError.value = true;
+      (failure) {
         if (_handlePinApiFailure(failure)) return;
-        errorMessage.value = failure.message;
-        _resetPinField();
+        _showPinError(failure.message);
       },
       (_) async {
         unawaited(analyticsService.logEvent('go_pin_login_success'));
@@ -433,50 +448,62 @@ class LoginPinController extends GetxController {
         changeStep.value = LoginPinChangeStep.confirmNew;
         clearPinInput();
       case LoginPinChangeStep.confirmNew:
-        if (pin != _newPinCandidate) {
-          hasError.value = true;
-          errorMessage.value = AppStrings.pinsDoNotMatch.tr;
-          changeStep.value = LoginPinChangeStep.newPin;
-          _newPinCandidate = '';
-          _resetPinField();
-          return;
-        }
-        isLoading.value = true;
-        final result = await changeLoginPinUseCase(
-          oldPin: _firstPin,
-          newPin: _newPinCandidate,
-        );
-        isLoading.value = false;
-        result.fold(
-          (failure) {
-            hasError.value = true;
-            if (_handlePinApiFailure(failure, forChangePin: true)) return;
-            errorMessage.value = failure.message;
-            changeStep.value = LoginPinChangeStep.current;
-            _firstPin = '';
-            _newPinCandidate = '';
-            _resetPinField();
-          },
-          (_) {
-            AppDialogs.showSuccessDialog(
-              message: AppStrings.loginPinChangedSuccessfully.tr,
-              onConfirm: () => Get.back(),
-            );
-          },
-        );
+        await _submitChangePin(pin);
     }
+  }
+
+  Future<void> _submitChangePin(String pin) async {
+    if (pin != _newPinCandidate) {
+      changeStep.value = LoginPinChangeStep.newPin;
+      _newPinCandidate = '';
+      _showPinError(AppStrings.pinsDoNotMatch.tr);
+      return;
+    }
+
+    isLoading.value = true;
+    final result = await changeLoginPinUseCase(
+      oldPin: _firstPin,
+      newPin: _newPinCandidate,
+    );
+    isLoading.value = false;
+
+    result.fold(
+      (failure) {
+        if (_handlePinApiFailure(failure, forChangePin: true)) return;
+        changeStep.value = LoginPinChangeStep.current;
+        _firstPin = '';
+        _newPinCandidate = '';
+        _showPinError(failure.message);
+      },
+      (_) {
+        AppDialogs.showSuccessDialog(
+          message: AppStrings.loginPinChangedSuccessfully.tr,
+          onConfirm: () => Get.back(),
+        );
+      },
+    );
   }
 
   String _incorrectPinMessage(LoginPinFailure failure) {
     final left = failure.attemptsRemaining;
     if (left == 1) return AppStrings.pinIncorrectOneAttemptLeft.tr;
-    if (left != null) {
+    if (left != null && left > 0) {
       return AppStrings.pinIncorrectAttemptsLeft.trParams({
         'count': '$left',
       });
     }
     if (failure.message.isNotEmpty) return failure.message;
     return AppStrings.incorrectPin.tr;
+  }
+
+  void _applyPinLock({DateTime? until}) {
+    isInputDisabled.value = true;
+    if (until != null && until.isAfter(DateTime.now())) {
+      _startLockCountdown(until);
+    } else {
+      lockCountdownLabel.value = '';
+      _showPinError(AppStrings.pinLocked.tr);
+    }
   }
 
   /// Maps server `error_code` (e.g. AUTH_PIN_LOCKED) to banner / lock countdown.
@@ -489,37 +516,46 @@ class LoginPinController extends GetxController {
 
     switch (failure.errorCode) {
       case 'AUTH_PIN_NOT_SET':
-        errorMessage.value = failure.message;
-        _resetPinField();
+        _showPinError(failure.message);
         return true;
       case 'AUTH_USER_BLOCKED':
-        errorMessage.value =
-            AppStrings.accountUnavailablePleaseContactSupport.tr;
         isInputDisabled.value = true;
-        _resetPinField();
+        _showPinError(
+          AppStrings.accountUnavailablePleaseContactSupport.tr,
+        );
         return true;
       case 'AUTH_PIN_LOCKED':
         unawaited(analyticsService.logEvent('go_pin_locked'));
-        if (failure.lockedUntil != null) {
-          _startLockCountdown(failure.lockedUntil!);
-        } else {
-          isInputDisabled.value = true;
-        }
-        errorMessage.value = failure.message;
-        _resetPinField();
-        return true;
-      case 'AUTH_PIN_INCORRECT':
-        errorMessage.value = _incorrectPinMessage(failure);
         if (forChangePin) {
           changeStep.value = LoginPinChangeStep.current;
           _firstPin = '';
           _newPinCandidate = '';
         }
-        _resetPinField();
+        _applyPinLock(until: failure.lockedUntil);
+        _clearPinInputSilently();
+        return true;
+      case 'AUTH_PIN_INCORRECT':
+        final left = failure.attemptsRemaining;
+        if (left != null && left <= 0) {
+          unawaited(analyticsService.logEvent('go_pin_locked'));
+          if (forChangePin) {
+            changeStep.value = LoginPinChangeStep.current;
+            _firstPin = '';
+            _newPinCandidate = '';
+          }
+          _applyPinLock(until: failure.lockedUntil);
+          _clearPinInputSilently();
+          return true;
+        }
+        if (forChangePin) {
+          changeStep.value = LoginPinChangeStep.current;
+          _firstPin = '';
+          _newPinCandidate = '';
+        }
+        _showPinError(_incorrectPinMessage(failure));
         return true;
       case 'AUTH_PIN_INVALID_FORMAT':
       case 'AUTH_PIN_TOO_WEAK':
-        errorMessage.value = failure.message;
         if (forSetup) {
           setupStep.value = LoginPinSetupStep.enter;
           _firstPin = '';
@@ -528,7 +564,7 @@ class LoginPinController extends GetxController {
           changeStep.value = LoginPinChangeStep.newPin;
           _newPinCandidate = '';
         }
-        _resetPinField();
+        _showPinError(failure.message);
         return true;
       case 'AUTH_PIN_ALREADY_SET':
         if (forSetup) {

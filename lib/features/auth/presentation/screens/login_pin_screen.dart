@@ -45,9 +45,7 @@ class LoginPinScreen extends GetView<LoginPinController> {
             titleWidget: _buildTitle(context),
             subtitleWidget: _buildSubtitle(context),
             pinField: _buildPinFieldWithError(context),
-            errorBanner: controller.mode == LoginPinScreenMode.login
-                ? null
-                : _buildErrorBanner(),
+            errorBanner: null,
             body: controller.mode == LoginPinScreenMode.login
                 ? _buildLoginFooterActions(context)
                 : const SizedBox.shrink(),
@@ -68,9 +66,6 @@ class LoginPinScreen extends GetView<LoginPinController> {
   }
 
   Widget _buildPinFieldWithError(BuildContext context) {
-    if (controller.mode != LoginPinScreenMode.login) {
-      return _buildPinField(context);
-    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -111,8 +106,14 @@ class LoginPinScreen extends GetView<LoginPinController> {
               ),
               onCompleted: disabled ? (_) {} : controller.onPinCompleted,
               onChanged: (_) {
+                if (controller.ignorePinFieldCallbacks ||
+                    controller.isInputDisabled.value) {
+                  return;
+                }
                 if (controller.hasError.value) {
                   controller.hasError.value = false;
+                }
+                if (controller.errorMessage.value.isNotEmpty) {
                   controller.errorMessage.value = '';
                 }
               },
