@@ -600,16 +600,40 @@ class ApiService {
 
   // ── Error Handling ──
 
+  /// When callers handle errors themselves, keep the server envelope intact.
+  bool _passThroughClientErrorBody(ApiRequest request, int statusCode) {
+    if (request.errorPresentationType != ErrorPresentationType.none) {
+      return false;
+    }
+    return statusCode == 400 ||
+        statusCode == 401 ||
+        statusCode == 403 ||
+        statusCode == 404 ||
+        statusCode == 409 ||
+        statusCode == 412 ||
+        statusCode == 423;
+  }
+
   Future<Response> _handleDioError(DioException e, ApiRequest request) async {
     String message = AppStrings.somethingWentWrongPleaseTryAgain.tr;
     int statusCode = e.response?.statusCode ?? 500;
+    final responseData = e.response?.data;
+
+    if (_passThroughClientErrorBody(request, statusCode) &&
+        responseData != null) {
+      return Response(
+        requestOptions: e.requestOptions,
+        statusCode: statusCode,
+        data: responseData,
+      );
+    }
 
     // Let the interceptor handle 401 errors
     if (statusCode == 401) {
       return Response(
         requestOptions: e.requestOptions,
         statusCode: statusCode,
-        data: e.response?.data ?? {'message': AppStrings.unauthorized.tr},
+        data: responseData ?? {'message': AppStrings.unauthorized.tr},
       );
     }
 
@@ -617,7 +641,7 @@ class ApiService {
       return Response(
         requestOptions: e.requestOptions,
         statusCode: statusCode,
-        data: e.response?.data ?? {'message': AppStrings.badRequest.tr},
+        data: responseData ?? {'message': AppStrings.badRequest.tr},
       );
     }
 

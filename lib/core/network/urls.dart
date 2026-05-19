@@ -38,6 +38,14 @@ class _AuthEndpoints {
   final saveUserDetails = "save_user_additional_details";
   final refreshToken = "refresh_token";
   final logout = "logout";
+
+  /// App login PIN + biometric (`AUTH-PIN-BIOMETRIC-FLUTTER-GUIDE`) — not ride PIN.
+  final pinStatus = "go/auth/pin/status";
+  final pinSetup = "go/auth/pin/setup";
+  final pinVerify = "go/auth/pin/verify";
+  final pinChange = "go/auth/pin/change";
+  final pinDelete = "go/auth/pin";
+  final biometricLogin = "go/auth/biometric";
 }
 
 /// ─────────────────────────────────

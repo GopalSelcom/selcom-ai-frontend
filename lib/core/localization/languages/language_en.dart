@@ -600,6 +600,43 @@ class LanguageEn extends Languages {
     'other': 'Other',
     'info': 'Info',
     'enter_custom_label': 'Enter custom label',
+    'login_and_security': 'Login & security',
+    'create_login_pin_title': 'Create a 4-digit PIN',
+    'create_login_pin_subtitle':
+        'You\'ll use this to sign in faster next time.',
+    'confirm_login_pin_title': 'Confirm your PIN',
+    'pins_do_not_match': 'PINs don\'t match',
+    'welcome_back_pin': 'Welcome back, @name',
+    'biometric_unlock_hint':
+        'Use Face ID or fingerprint to unlock the app quickly.',
+    'not_you_sign_in_with_otp': 'Not you, @name?',
+    'enter_login_pin_title': 'Enter your PIN',
+    'enter_login_pin_subtitle': 'Sign in to @maskedPhone',
+    'forgot_login_pin': 'Forgot PIN?',
+    'use_different_account': 'Use a different account',
+    'unlock_with_biometric': 'Unlock with Face ID / Fingerprint',
+    'use_pin_instead': 'Use PIN instead',
+    'biometric_login': 'Biometric login',
+    'set_pin_first_for_biometric': 'Set a PIN first to enable Face ID.',
+    'change_login_pin': 'Change PIN',
+    'pin_too_weak_choose_another': 'Try a less obvious PIN',
+    'pin_incorrect_attempts_left':
+        'Incorrect PIN. @count @tries left.',
+    'pin_locked_try_again_in':
+        'Too many wrong attempts. Try again in @time.',
+    'change_login_pin_title': 'Change PIN',
+    'enter_current_login_pin': 'Enter current PIN',
+    'enter_new_login_pin': 'Enter new PIN',
+    'confirm_new_login_pin': 'Confirm new PIN',
+    'change_login_pin_current_subtitle':
+        'Enter your current 4-digit PIN to continue.',
+    'change_login_pin_new_subtitle': 'Choose a new 4-digit PIN.',
+    'change_login_pin_confirm_subtitle':
+        'Re-enter your new PIN to confirm.',
+    'account_unavailable_please_contact_support':
+        'Account unavailable. Please contact support.',
+    'login_pin_set_successfully': 'PIN set successfully',
+    'login_pin_changed_successfully': 'PIN changed successfully',
     'connection_timed_out_please_check_internet':
         'Connection timed out. Please check your internet.',
     'no_internet_connection': 'No internet connection',
@@ -631,6 +668,7 @@ class LanguageEn extends Languages {
     'unexpected_error_occurred_with_error': 'Unexpected error occurred: @error',
     'invalid_otp': 'Invalid OTP.',
     'incorrect_pin': 'Incorrect PIN.',
+    'pin_must_be_exactly_4_digits': 'PIN must be exactly 4 digits',
   };
 
   @override
@@ -2382,6 +2420,110 @@ class LanguageEn extends Languages {
   String get incorrectPin => values['incorrect_pin'] ?? '';
 
   @override
+  String get pinMustBeExactly4Digits =>
+      values['pin_must_be_exactly_4_digits'] ?? '';
+
+  @override
   // TODO: implement savedLocations
   String get savedLocations => values['saved_locations'] ?? '';
+
+  @override
+  String get loginAndSecurity => values['login_and_security'] ?? '';
+
+  @override
+  String get createLoginPinTitle => values['create_login_pin_title'] ?? '';
+
+  @override
+  String get createLoginPinSubtitle =>
+      values['create_login_pin_subtitle'] ?? '';
+
+  @override
+  String get confirmLoginPinTitle => values['confirm_login_pin_title'] ?? '';
+
+  @override
+  String get pinsDoNotMatch => values['pins_do_not_match'] ?? '';
+
+  @override
+  String get welcomeBackPin => values['welcome_back_pin'] ?? '';
+
+  @override
+  String get biometricUnlockHint => values['biometric_unlock_hint'] ?? '';
+
+  @override
+  String get notYouSignInWithOtp => values['not_you_sign_in_with_otp'] ?? '';
+
+  @override
+  String get enterLoginPinTitle => values['enter_login_pin_title'] ?? '';
+
+  @override
+  String get enterLoginPinSubtitle => values['enter_login_pin_subtitle'] ?? '';
+
+  @override
+  String get forgotLoginPin => values['forgot_login_pin'] ?? '';
+
+  @override
+  String get useDifferentAccount => values['use_different_account'] ?? '';
+
+  @override
+  String get unlockWithBiometric => values['unlock_with_biometric'] ?? '';
+
+  @override
+  String get usePinInstead => values['use_pin_instead'] ?? '';
+
+  @override
+  String get biometricLogin => values['biometric_login'] ?? '';
+
+  @override
+  String get setPinFirstForBiometric =>
+      values['set_pin_first_for_biometric'] ?? '';
+
+  @override
+  String get changeLoginPin => values['change_login_pin'] ?? '';
+
+  @override
+  String get pinTooWeakChooseAnother =>
+      values['pin_too_weak_choose_another'] ?? '';
+
+  @override
+  String get pinIncorrectAttemptsLeft =>
+      values['pin_incorrect_attempts_left'] ?? '';
+
+  @override
+  String get pinLockedTryAgainIn => values['pin_locked_try_again_in'] ?? '';
+
+  @override
+  String get changeLoginPinTitle => values['change_login_pin_title'] ?? '';
+
+  @override
+  String get enterCurrentLoginPin => values['enter_current_login_pin'] ?? '';
+
+  @override
+  String get enterNewLoginPin => values['enter_new_login_pin'] ?? '';
+
+  @override
+  String get confirmNewLoginPin => values['confirm_new_login_pin'] ?? '';
+
+  @override
+  String get changeLoginPinCurrentSubtitle =>
+      values['change_login_pin_current_subtitle'] ?? '';
+
+  @override
+  String get changeLoginPinNewSubtitle =>
+      values['change_login_pin_new_subtitle'] ?? '';
+
+  @override
+  String get changeLoginPinConfirmSubtitle =>
+      values['change_login_pin_confirm_subtitle'] ?? '';
+
+  @override
+  String get accountUnavailablePleaseContactSupport =>
+      values['account_unavailable_please_contact_support'] ?? '';
+
+  @override
+  String get loginPinSetSuccessfully =>
+      values['login_pin_set_successfully'] ?? '';
+
+  @override
+  String get loginPinChangedSuccessfully =>
+      values['login_pin_changed_successfully'] ?? '';
 }

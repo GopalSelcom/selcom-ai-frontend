@@ -11,6 +11,10 @@ import '../controllers/settings_controller.dart';
 import '../../widgets/menu_item_widget.dart';
 import '../widgets/settings_toggle_tile.dart';
 
+/// App settings: login security, optional ride PIN, notification/language/change PIN.
+///
+/// **Login & security** — biometric toggle only when [SettingsController.shouldShowBiometricLoginSetting].
+/// **General card** — notification, language, change PIN (only if [SettingsController.loginPinSet]).
 class SettingsScreen extends GetView<SettingsController> {
   const SettingsScreen({super.key});
 
@@ -34,6 +38,39 @@ class SettingsScreen extends GetView<SettingsController> {
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 16.h),
                   children: [
+                    Obx(() {
+                      if (!controller.shouldShowBiometricLoginSetting) {
+                        return const SizedBox.shrink();
+                      }
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            AppStrings.loginAndSecurity.tr,
+                            style: AppTextStyles.sectionTitle.copyWith(
+                              color: AppColors.textBody,
+                              fontSize: 15.sp,
+                            ),
+                          ),
+                          SizedBox(height: 14.h),
+                          SettingsToggleTile(
+                            icon: Iconsax.finger_scan,
+                            title: AppStrings.biometricLogin.tr,
+                            subtitle: controller.canToggleBiometricLogin
+                                ? AppStrings.unlockWithBiometric.tr
+                                : AppStrings.setPinFirstForBiometric.tr,
+                            statusText: controller.biometricLoginEnabled.value
+                                ? AppStrings.currentStatusRequired.tr
+                                : AppStrings.currentStatusOptional.tr,
+                            value: controller.biometricLoginEnabled.value,
+                            enabled: controller.canToggleBiometricLogin,
+                            isSaving: controller.isSavingBiometric.value,
+                            onChanged: controller.onToggleBiometricLogin,
+                          ),
+                          SizedBox(height: 20.h),
+                        ],
+                      );
+                    }),
                     if (controller.shouldShowRidePinSetting) ...[
                       Text(
                         AppStrings.appSettings.tr,
@@ -78,21 +115,34 @@ class SettingsScreen extends GetView<SettingsController> {
                         border: Border.all(color: AppColors.divider),
                         borderRadius: BorderRadius.circular(16.r),
                       ),
-                      child: Column(
-                        children: [
-                          MenuItemWidget(
-                            icon: Iconsax.reserve,
-                            title: AppStrings.notification.tr,
-                            onTap: controller.openNotifications,
-                          ),
-                          MenuItemWidget(
-                            icon: Iconsax.language_square,
-                            title:
-                                '${AppStrings.language.tr} (${controller.currentLanguageLabel})',
-                            onTap: () => controller.toggleLanguage(context),
-                            showDivider: false,
-                          ),
-                        ],
+                      child: Obx(
+                        () {
+                          final pinSet = controller.loginPinSet.value;
+                          return Column(
+                            children: [
+                              MenuItemWidget(
+                                icon: Iconsax.reserve,
+                                title: AppStrings.notification.tr,
+                                onTap: controller.openNotifications,
+                              ),
+                              MenuItemWidget(
+                                icon: Iconsax.language_square,
+                                title:
+                                    '${AppStrings.language.tr} (${controller.currentLanguageLabel})',
+                                onTap: () =>
+                                    controller.toggleLanguage(context),
+                                showDivider: pinSet,
+                              ),
+                              if (pinSet)
+                                MenuItemWidget(
+                                  icon: Iconsax.lock,
+                                  title: AppStrings.changeLoginPin.tr,
+                                  onTap: controller.openChangeLoginPin,
+                                  showDivider: false,
+                                ),
+                            ],
+                          );
+                        },
                       ),
                     ),
                   ],

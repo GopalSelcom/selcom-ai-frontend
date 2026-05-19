@@ -40,7 +40,13 @@ import '../config/app_config.dart';
 import '../services/analytics_service.dart';
 import '../services/app_region_service.dart';
 import '../services/app_settings_service.dart';
+import '../services/biometric_service.dart';
+import '../services/login_pin_gate_service.dart';
 import '../services/notification_service.dart';
+import '../../features/auth/data/datasources/login_pin_remote_data_source.dart';
+import '../../features/auth/data/repositories/login_pin_repository_impl.dart';
+import '../../features/auth/domain/repositories/login_pin_repository.dart';
+import '../../features/auth/domain/usecases/login_pin_usecases.dart';
 import '../network/api_service.dart';
 import '../network/headers.dart';
 import '../network/network_connectivity_service.dart';
@@ -116,6 +122,28 @@ Future<void> init() async {
   sl.registerLazySingleton(() => ProfileUseCase(sl()));
   sl.registerLazySingleton(() => SettingsUseCase(sl()));
   sl.registerLazySingleton(() => AppSettingsService(settingsUseCase: sl()));
+
+  // ── Login PIN & biometric (app sign-in — not ride PIN) ──
+  sl.registerLazySingleton(() => BiometricService());
+  sl.registerLazySingleton<LoginPinRemoteDataSource>(
+    () => LoginPinRemoteDataSourceImpl(),
+  );
+  sl.registerLazySingleton<LoginPinRepository>(
+    () => LoginPinRepositoryImpl(remoteDataSource: sl()),
+  );
+  sl.registerLazySingleton(() => GetLoginPinStatusUseCase(sl()));
+  sl.registerLazySingleton(() => SetupLoginPinUseCase(sl()));
+  sl.registerLazySingleton(() => VerifyLoginPinUseCase(sl()));
+  sl.registerLazySingleton(() => ChangeLoginPinUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteLoginPinUseCase(sl()));
+  sl.registerLazySingleton(() => SetLoginBiometricUseCase(sl()));
+  sl.registerLazySingleton(() => RefreshLoginSessionUseCase(sl()));
+  sl.registerLazySingleton(
+    () => LoginPinGateService(
+      loginPinRepository: sl(),
+      biometricService: sl(),
+    ),
+  );
 
   // BLoCs / Controllers
   sl.registerFactory(() => MyRidesController(rideUseCase: sl()));

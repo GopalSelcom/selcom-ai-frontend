@@ -34,7 +34,20 @@ class ErrorMapper {
             case 'AUTH_OTP_INVALID':
               return AuthFailure(message ?? AppStrings.invalidOtp.tr);
             case 'AUTH_PIN_WRONG':
+            case 'AUTH_PIN_INCORRECT':
               return AuthFailure(message ?? AppStrings.incorrectPin.tr);
+            case 'AUTH_PIN_INVALID_FORMAT':
+            case 'AUTH_PIN_TOO_WEAK':
+            case 'AUTH_PIN_ALREADY_SET':
+            case 'AUTH_PIN_NOT_SET':
+            case 'AUTH_PIN_REQUIRED_FOR_BIOMETRIC':
+              return ServerFailure(message ?? AppStrings.anUnexpectedErrorOccurred.tr);
+            case 'AUTH_PIN_LOCKED':
+              return ServerFailure(message ?? AppStrings.pinLocked.tr);
+            case 'AUTH_USER_BLOCKED':
+              return ServerFailure(
+                message ?? AppStrings.accountUnavailablePleaseContactSupport.tr,
+              );
             case 'RIDE_ALREADY_ACTIVE':
               return ServerFailure(
                 message ?? AppStrings.youAlreadyHaveAnActiveRide.tr,

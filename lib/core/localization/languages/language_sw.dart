@@ -2301,6 +2301,110 @@ class LanguageSw extends Languages {
   String get incorrectPin => values['incorrect_pin'] ?? '';
 
   @override
+  String get pinMustBeExactly4Digits =>
+      values['pin_must_be_exactly_4_digits'] ?? '';
+
+  @override
   // TODO: implement savedLocations
   String get savedLocations => values['saved_locations'] ?? '';
+
+  @override
+  String get loginAndSecurity => values['login_and_security'] ?? '';
+
+  @override
+  String get createLoginPinTitle => values['create_login_pin_title'] ?? '';
+
+  @override
+  String get createLoginPinSubtitle =>
+      values['create_login_pin_subtitle'] ?? '';
+
+  @override
+  String get confirmLoginPinTitle => values['confirm_login_pin_title'] ?? '';
+
+  @override
+  String get pinsDoNotMatch => values['pins_do_not_match'] ?? '';
+
+  @override
+  String get welcomeBackPin => values['welcome_back_pin'] ?? '';
+
+  @override
+  String get biometricUnlockHint => values['biometric_unlock_hint'] ?? '';
+
+  @override
+  String get notYouSignInWithOtp => values['not_you_sign_in_with_otp'] ?? '';
+
+  @override
+  String get enterLoginPinTitle => values['enter_login_pin_title'] ?? '';
+
+  @override
+  String get enterLoginPinSubtitle => values['enter_login_pin_subtitle'] ?? '';
+
+  @override
+  String get forgotLoginPin => values['forgot_login_pin'] ?? '';
+
+  @override
+  String get useDifferentAccount => values['use_different_account'] ?? '';
+
+  @override
+  String get unlockWithBiometric => values['unlock_with_biometric'] ?? '';
+
+  @override
+  String get usePinInstead => values['use_pin_instead'] ?? '';
+
+  @override
+  String get biometricLogin => values['biometric_login'] ?? '';
+
+  @override
+  String get setPinFirstForBiometric =>
+      values['set_pin_first_for_biometric'] ?? '';
+
+  @override
+  String get changeLoginPin => values['change_login_pin'] ?? '';
+
+  @override
+  String get pinTooWeakChooseAnother =>
+      values['pin_too_weak_choose_another'] ?? '';
+
+  @override
+  String get pinIncorrectAttemptsLeft =>
+      values['pin_incorrect_attempts_left'] ?? '';
+
+  @override
+  String get pinLockedTryAgainIn => values['pin_locked_try_again_in'] ?? '';
+
+  @override
+  String get changeLoginPinTitle => values['change_login_pin_title'] ?? '';
+
+  @override
+  String get enterCurrentLoginPin => values['enter_current_login_pin'] ?? '';
+
+  @override
+  String get enterNewLoginPin => values['enter_new_login_pin'] ?? '';
+
+  @override
+  String get confirmNewLoginPin => values['confirm_new_login_pin'] ?? '';
+
+  @override
+  String get changeLoginPinCurrentSubtitle =>
+      values['change_login_pin_current_subtitle'] ?? '';
+
+  @override
+  String get changeLoginPinNewSubtitle =>
+      values['change_login_pin_new_subtitle'] ?? '';
+
+  @override
+  String get changeLoginPinConfirmSubtitle =>
+      values['change_login_pin_confirm_subtitle'] ?? '';
+
+  @override
+  String get accountUnavailablePleaseContactSupport =>
+      values['account_unavailable_please_contact_support'] ?? '';
+
+  @override
+  String get loginPinSetSuccessfully =>
+      values['login_pin_set_successfully'] ?? '';
+
+  @override
+  String get loginPinChangedSuccessfully =>
+      values['login_pin_changed_successfully'] ?? '';
 }

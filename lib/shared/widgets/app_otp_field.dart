@@ -4,6 +4,13 @@ import 'package:pin_code_fields/pin_code_fields.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 
+/// Shared OTP / PIN digit input (4 boxes, optional obscure).
+///
+/// Used on OTP screen, login PIN setup/login/change ([LoginPinScreen]).
+///
+/// **Lifecycle:** owns an internal [FocusNode]; parent may pass [controller].
+/// [PinCodeTextField] must use `autoDisposeControllers: false` so we do not double-dispose
+/// the focus node or external controller on route pop during auth navigation.
 class AppOtpField extends StatefulWidget {
   final int length;
   final Function(String) onCompleted;
@@ -14,6 +21,7 @@ class AppOtpField extends StatefulWidget {
   final double? fieldWidth;
   final TextStyle? textStyle;
   final MainAxisAlignment mainAxisAlignment;
+  final bool obscureText;
 
   const AppOtpField({
     super.key,
@@ -26,6 +34,7 @@ class AppOtpField extends StatefulWidget {
     this.fieldWidth,
     this.textStyle,
     this.mainAxisAlignment = MainAxisAlignment.spaceBetween,
+    this.obscureText = false,
   });
 
   @override
@@ -43,12 +52,16 @@ class _AppOtpFieldState extends State<AppOtpField> {
   }
 
   void _onFocusChanged() {
+    if (!mounted) return;
     _isFocused.value = _focusNode.hasFocus;
   }
 
   @override
   void dispose() {
     _focusNode.removeListener(_onFocusChanged);
+    if (_focusNode.hasFocus) {
+      _focusNode.unfocus();
+    }
     _focusNode.dispose();
     _isFocused.dispose();
     super.dispose();
@@ -102,6 +115,9 @@ class _AppOtpFieldState extends State<AppOtpField> {
                 length: widget.length,
                 controller: widget.controller,
                 focusNode: _focusNode,
+                // Parent owns focus node (and optional controller); default true
+                // would dispose them again in PinCodeTextField.dispose().
+                autoDisposeControllers: false,
                 onChanged: widget.onChanged ?? (v) {},
                 onCompleted: widget.onCompleted,
                 keyboardType: TextInputType.number,
@@ -123,6 +139,7 @@ class _AppOtpFieldState extends State<AppOtpField> {
                 cursorColor: AppColors.primary,
                 animationDuration: const Duration(milliseconds: 300),
                 enableActiveFill: true,
+                obscureText: widget.obscureText,
                 textStyle: widget.textStyle ?? AppTextStyles.screenTitle,
                 beforeTextPaste: (text) => true,
               ),

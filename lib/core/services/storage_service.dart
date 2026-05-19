@@ -14,6 +14,12 @@ class StorageKeys {
   static const String selectedPhoneCountryId = 'selected_phone_country_id';
   static const String signupCompleted = 'signup_completed';
   static const String stopsIdempotencyPrefix = 'stops_idem_';
+
+  /// Login PIN verify (`/go/auth/pin/verify`) — not ride PIN.
+  static const String loginMobileNumber = 'login_mobile_number';
+  static const String loginCountryCode = 'login_country_code';
+  static const String biometricLoginEnabled = 'biometric_login_enabled';
+  static const String forgotLoginPinPending = 'forgot_login_pin_pending';
 }
 
 /// A service class for handling secure data persistence using FlutterSecureStorage.

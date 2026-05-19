@@ -40,6 +40,8 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Use Face ID to quickly sign in to Selcom Go.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Selcom Go needs access to your camera to capture a selfie for identity verification.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>

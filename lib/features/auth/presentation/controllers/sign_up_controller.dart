@@ -4,7 +4,9 @@ import 'dart:convert';
 
 import '../../../../core/data/models/requests/save_user_additional_details_request.dart';
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/di/injection_container.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/services/login_pin_gate_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../domain/usecases/save_user_additional_details_use_case.dart';
 
@@ -87,7 +89,18 @@ class SignUpController extends GetxController {
         jsonEncode(user.toJson()),
       );
       await StorageService().write(StorageKeys.signupCompleted, 'true');
-      Get.offAllNamed(AppRoutes.home);
+      // New signup may require app login PIN setup when pin_set == false.
+      final nextRoute = await sl<LoginPinGateService>().resolvePostAuthRoute(
+        defaultRoute: AppRoutes.home,
+      );
+      if (nextRoute == AppRoutes.pinSetup) {
+        Get.offAllNamed(
+          AppRoutes.pinSetup,
+          arguments: {'mode': 'setup', 'nextRoute': AppRoutes.home},
+        );
+      } else {
+        Get.offAllNamed(AppRoutes.home);
+      }
       return true;
     });
   }

@@ -8,7 +8,10 @@ import '../../features/auth/presentation/screens/phone_input_screen.dart';
 import '../../features/auth/presentation/screens/otp_screen.dart';
 import '../../features/auth/presentation/screens/profile_loading_screen.dart';
 import '../../features/auth/presentation/screens/sign_up.dart';
+import '../../features/auth/presentation/screens/login_pin_screen.dart';
+import '../../features/auth/presentation/screens/biometric_unlock_screen.dart';
 import '../../features/auth/presentation/bindings/auth_binding.dart';
+import '../../features/auth/presentation/bindings/login_pin_binding.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/home/presentation/bindings/home_binding.dart';
 import '../../features/home/presentation/screens/location_selection_screen.dart';
@@ -42,6 +45,11 @@ class AppRoutes {
   static const String otp = '/auth/otp';
   static const String profileLoading = '/auth/profile-loading';
   static const String signUp = '/auth/sign-up';
+  // App login PIN / biometric (not ride PIN).
+  static const String pinSetup = '/auth/pin-setup';
+  static const String pinLogin = '/auth/pin-login';
+  static const String pinChange = '/auth/pin-change';
+  static const String biometricUnlock = '/auth/biometric-unlock';
   static const String home = '/home';
   static const String locationSelection = '/location-selection';
   static const String booking = '/booking';
@@ -82,6 +90,26 @@ class AppRoutes {
       name: signUp,
       page: () => const SignUpScreen(),
       binding: AuthBinding(),
+    ),
+    GetPage(
+      name: pinSetup,
+      page: () => const LoginPinScreen(),
+      binding: LoginPinBinding(),
+    ),
+    GetPage(
+      name: pinLogin,
+      page: () => const LoginPinScreen(),
+      binding: LoginPinBinding(),
+    ),
+    GetPage(
+      name: pinChange,
+      page: () => const LoginPinScreen(),
+      binding: LoginPinBinding(),
+    ),
+    GetPage(
+      name: biometricUnlock,
+      page: () => const BiometricUnlockScreen(),
+      binding: BiometricUnlockBinding(),
     ),
     GetPage(name: home, page: () => const HomeScreen(), binding: HomeBinding()),
     GetPage(

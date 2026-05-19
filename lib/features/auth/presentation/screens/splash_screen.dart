@@ -8,7 +8,7 @@ import '../../../../core/constants/app_assets.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/app_settings_service.dart';
-import '../../../../core/services/storage_service.dart';
+import '../../../../core/services/login_pin_gate_service.dart';
 import '../../../../core/services/voip_callkit_bridge_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
@@ -36,25 +36,33 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (!mounted) return;
 
-    // Check for existing valid session token
-    final token = await StorageService().read(StorageKeys.authorizationToken);
-    final signupCompleted =
-        await StorageService().read(StorageKeys.signupCompleted);
-
     if (!mounted) return;
 
-    if (token != null && token.isNotEmpty) {
+    // Cold start: session → pin-login, biometric-unlock, pin-setup, or home ([LoginPinGateService]).
+    final gate = sl<LoginPinGateService>();
+    final hasSession = await gate.hasStoredSession();
+
+    if (hasSession) {
       await VoipCallkitBridgeService.instance.syncCachedTokenToBackend();
-      if (signupCompleted == 'false') {
-        Get.offAllNamed(AppRoutes.phone);
-      } else {
-        // For existing logged-in users where this flag may be absent,
-        // default to home to preserve prior behavior.
-        Get.offAllNamed(AppRoutes.home);
+      final nextRoute = await gate.resolveColdStartRoute();
+      if (!mounted) return;
+
+      if (nextRoute == AppRoutes.pinSetup) {
+        Get.offAllNamed(
+          AppRoutes.pinSetup,
+          arguments: {
+            'mode': 'setup',
+            'nextRoute': AppRoutes.home,
+          },
+        );
+        return;
       }
-    } else {
-      Get.offAllNamed(AppRoutes.onboarding);
+
+      Get.offAllNamed(nextRoute);
+      return;
     }
+
+    Get.offAllNamed(AppRoutes.onboarding);
   }
 
   @override

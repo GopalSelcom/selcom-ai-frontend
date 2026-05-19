@@ -1,15 +1,19 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/config/app_config.dart';
+import '../../../../core/di/injection_container.dart';
 import '../../../../core/data/models/requests/send_otp_request.dart';
 import '../../../../core/data/models/requests/verify_otp_request.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/app_region_service.dart';
+import '../../../../core/services/login_pin_gate_service.dart';
 import '../../../../core/services/storage_service.dart';
+import '../../domain/usecases/login_pin_usecases.dart';
 import '../../../../core/services/voip_callkit_bridge_service.dart';
 import '../../../../shared/data/countries_phone_data.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
@@ -226,11 +230,38 @@ class AuthController extends GetxController {
 
           await VoipCallkitBridgeService.instance.syncCachedTokenToBackend();
 
+          await sl<LoginPinGateService>().saveLoginIdentity(
+            mobileNumber: mobileNumber.value,
+            countryCode: countryCode.value,
+          );
+
+          // App login PIN after OTP: forgot → delete PIN + pin-setup; else resolvePostAuthRoute.
+          final forgotPending = await StorageService().read(
+            StorageKeys.forgotLoginPinPending,
+          );
+          if (forgotPending == 'true') {
+            await StorageService().delete(StorageKeys.forgotLoginPinPending);
+            await sl<DeleteLoginPinUseCase>().call();
+            await _navigateAfterOtp(AppRoutes.pinSetup, arguments: {
+              'mode': 'setup',
+              'nextRoute': AppRoutes.home,
+            });
+            return true;
+          }
+
           if (isUserAlreadyRegistered) {
-            // Existing flow for already-registered users.
-            Get.offAllNamed(AppRoutes.profileLoading);
+            final nextRoute = await sl<LoginPinGateService>().resolvePostAuthRoute(
+              defaultRoute: AppRoutes.profileLoading,
+            );
+            if (nextRoute == AppRoutes.pinSetup) {
+              await _navigateAfterOtp(AppRoutes.pinSetup, arguments: {
+                'mode': 'setup',
+                'nextRoute': AppRoutes.profileLoading,
+              });
+            } else {
+              await _navigateAfterOtp(AppRoutes.profileLoading);
+            }
           } else {
-            // New users continue to signup details screen.
             Get.offNamed(AppRoutes.signUp);
           }
           return true;
@@ -252,5 +283,18 @@ class AuthController extends GetxController {
 
   void completeProfileLoading() {
     Get.offAllNamed(AppRoutes.home);
+  }
+
+  /// Unfocuses OTP field then navigates — avoids [AppOtpField] dispose races on offAll.
+  Future<void> _navigateAfterOtp(
+    String route, {
+    Object? arguments,
+  }) async {
+    final focus = FocusManager.instance.primaryFocus;
+    if (focus != null && focus.hasFocus) {
+      focus.unfocus();
+    }
+    await Future<void>.delayed(Duration.zero);
+    Get.offAllNamed(route, arguments: arguments);
   }
 }

@@ -641,6 +641,7 @@ class AppStrings {
   static const String invalidOtpPleaseTryAgain = 'invalid_otp_please_try_again';
   static const String invalidOtp = 'invalid_otp';
   static const String incorrectPin = 'incorrect_pin';
+  static const String pinMustBeExactly4Digits = 'pin_must_be_exactly_4_digits';
   static const String cameraAccessNeededForSelfieVerification =
       'camera_access_needed_for_selfie_verification';
   static const String cardReadyToUseYouCanManageOrRemoveAnytime =
@@ -670,4 +671,42 @@ class AppStrings {
   static const String other = 'other';
   static const String info = 'info';
   static const String enterCustomLabel = 'enter_custom_label';
+
+  // App login PIN & biometric (not ride PIN)
+  static const String loginAndSecurity = 'login_and_security';
+  static const String createLoginPinTitle = 'create_login_pin_title';
+  static const String createLoginPinSubtitle = 'create_login_pin_subtitle';
+  static const String confirmLoginPinTitle = 'confirm_login_pin_title';
+  static const String pinsDoNotMatch = 'pins_do_not_match';
+  static const String welcomeBackPin = 'welcome_back_pin';
+  static const String biometricUnlockHint = 'biometric_unlock_hint';
+  static const String notYouSignInWithOtp = 'not_you_sign_in_with_otp';
+  static const String enterLoginPinTitle = 'enter_login_pin_title';
+  static const String enterLoginPinSubtitle = 'enter_login_pin_subtitle';
+  static const String forgotLoginPin = 'forgot_login_pin';
+  static const String useDifferentAccount = 'use_different_account';
+  static const String unlockWithBiometric = 'unlock_with_biometric';
+  static const String usePinInstead = 'use_pin_instead';
+  static const String biometricLogin = 'biometric_login';
+  static const String setPinFirstForBiometric = 'set_pin_first_for_biometric';
+  static const String changeLoginPin = 'change_login_pin';
+  static const String pinTooWeakChooseAnother = 'pin_too_weak_choose_another';
+  static const String pinIncorrectAttemptsLeft =
+      'pin_incorrect_attempts_left';
+  static const String pinLockedTryAgainIn = 'pin_locked_try_again_in';
+  static const String changeLoginPinTitle = 'change_login_pin_title';
+  static const String enterCurrentLoginPin = 'enter_current_login_pin';
+  static const String enterNewLoginPin = 'enter_new_login_pin';
+  static const String confirmNewLoginPin = 'confirm_new_login_pin';
+  static const String changeLoginPinCurrentSubtitle =
+      'change_login_pin_current_subtitle';
+  static const String changeLoginPinNewSubtitle =
+      'change_login_pin_new_subtitle';
+  static const String changeLoginPinConfirmSubtitle =
+      'change_login_pin_confirm_subtitle';
+  static const String accountUnavailablePleaseContactSupport =
+      'account_unavailable_please_contact_support';
+  static const String loginPinSetSuccessfully = 'login_pin_set_successfully';
+  static const String loginPinChangedSuccessfully =
+      'login_pin_changed_successfully';
 }
