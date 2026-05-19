@@ -1,6 +1,9 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
@@ -24,18 +27,20 @@ class OnboardingScreen extends GetView<OnboardingController> {
             // Illustration Section
             Expanded(
               flex: 5,
-              child: PageView.builder(
-                onPageChanged: controller.onPageChanged,
-                itemCount: controller.slides.length,
-                itemBuilder: (context, index) {
-                  final slide = controller.slides[index];
-                  return SvgPictureAsset(
-                    slide.image,
-                    width: double.infinity,
-                    fit: BoxFit.contain,
-                  );
-                },
-              ),
+              child: Obx(() {
+                final settled = controller.bannerFetchSettled.value;
+                return PageView.builder(
+                  onPageChanged: controller.onPageChanged,
+                  itemCount: controller.slides.length,
+                  itemBuilder: (context, index) {
+                    final slide = controller.slides[index];
+                    if (!settled) {
+                      return const _OnboardingIllustrationShimmer();
+                    }
+                    return _OnboardingIllustration(slide: slide);
+                  },
+                );
+              }),
             ),
 
             // Content Section
@@ -129,7 +134,7 @@ class OnboardingScreen extends GetView<OnboardingController> {
                               ),
                               SizedBox(width: 12.w),
                               SvgPictureAsset(
-                                AppAssets.icArrowRight,
+                                AppAssets.locationIcArrowRight,
                                 color: AppColors.white,
                                 height: 20.h,
                               ),
@@ -156,6 +161,64 @@ class OnboardingScreen extends GetView<OnboardingController> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _OnboardingIllustration extends StatelessWidget {
+  const _OnboardingIllustration({required this.slide});
+
+  final OnboardingSlide slide;
+
+  @override
+  Widget build(BuildContext context) {
+    if (slide.usesNetworkImage) {
+      final raw = slide.networkImageUrl!.trim();
+      final lower = raw.toLowerCase();
+      if (lower.endsWith('.svg')) {
+        return SvgPicture.network(
+          raw,
+          width: double.infinity,
+          fit: BoxFit.contain,
+          placeholderBuilder: (_) => const _OnboardingIllustrationShimmer(),
+        );
+      }
+      return CachedNetworkImage(
+        imageUrl: raw,
+        width: double.infinity,
+        fit: BoxFit.contain,
+        placeholder: (_, __) => const _OnboardingIllustrationShimmer(),
+        errorWidget: (_, __, ___) => SvgPictureAsset(
+          slide.image,
+          width: double.infinity,
+          fit: BoxFit.contain,
+        ),
+      );
+    }
+
+    return SvgPictureAsset(
+      slide.image,
+      width: double.infinity,
+      fit: BoxFit.contain,
+    );
+  }
+}
+
+class _OnboardingIllustrationShimmer extends StatelessWidget {
+  const _OnboardingIllustrationShimmer();
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+      baseColor: AppColors.skeletonBase,
+      highlightColor: AppColors.skeletonHighlight,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppColors.skeletonBase,
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20.r)),
+        ),
+        child: const SizedBox.expand(),
       ),
     );
   }

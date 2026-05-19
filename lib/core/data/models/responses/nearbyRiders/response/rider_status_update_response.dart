@@ -25,6 +25,10 @@ class EventRiderStatusUpdateResponse {
   bool? pinRequired;
   int? currentStopIndex;
   String? rideStopStatus;
+  /// Root-level average from socket (e.g. `ride:status_update`).
+  num? driverAvgRating;
+  num? riderAvgRating;
+  num? etaSeconds;
 
   EventRiderStatusUpdateResponse({
     this.rideId,
@@ -39,6 +43,9 @@ class EventRiderStatusUpdateResponse {
     this.pinRequired,
     this.currentStopIndex,
     this.rideStopStatus,
+    this.driverAvgRating,
+    this.riderAvgRating,
+    this.etaSeconds,
   });
 
   factory EventRiderStatusUpdateResponse.fromJson(Map<String, dynamic> json) =>
@@ -63,6 +70,9 @@ class EventRiderStatusUpdateResponse {
         pinRequired: json["pin_required"],
         currentStopIndex: json["current_stop_index"],
         rideStopStatus: json["ride_stop_status"] ?? json["status"],
+        driverAvgRating: json["driver_avg_rating"] as num?,
+        riderAvgRating: json["rider_avg_rating"] as num?,
+        etaSeconds: json["eta_seconds"] as num?,
       );
 
   Map<String, dynamic> toJson() => {
@@ -78,6 +88,9 @@ class EventRiderStatusUpdateResponse {
     "pin_required": pinRequired,
     "current_stop_index": currentStopIndex,
     "ride_stop_status": rideStopStatus,
+    "driver_avg_rating": driverAvgRating,
+    "rider_avg_rating": riderAvgRating,
+    "eta_seconds": etaSeconds,
   };
 }
 
@@ -123,6 +136,7 @@ class DriverSnapshot {
   String? vehicleType;
   String? vehicleYear;
   String? verificationCode;
+  double? rating;
 
   DriverSnapshot({
     this.driverId,
@@ -138,6 +152,7 @@ class DriverSnapshot {
     this.vehicleType,
     this.vehicleYear,
     this.verificationCode,
+    this.rating,
   });
 
   factory DriverSnapshot.fromJson(Map<String, dynamic> json) => DriverSnapshot(
@@ -154,6 +169,7 @@ class DriverSnapshot {
     vehicleType: json['vehicle_type'],
     vehicleYear: json["vehicle_year"],
     verificationCode: json["verification_code"],
+    rating: (json["rating"] as num?)?.toDouble(),
   );
 
   Map<String, dynamic> toJson() => {
@@ -170,6 +186,7 @@ class DriverSnapshot {
     "vehicle_type": vehicleType,
     "vehicle_year": vehicleYear,
     "verification_code": verificationCode,
+    "rating": rating,
   };
 }
 

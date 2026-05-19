@@ -316,6 +316,13 @@ class RideDetailsScreen extends StatelessWidget {
                                 AppStrings.bookingFeesAndConvenienceCharges.tr,
                             amount: controller.bookingFeeLabel,
                           ),
+                          if (controller.showPromoFareLine) ...[
+                            SizedBox(height: 4.h),
+                            FareBreakdownRow(
+                              title: controller.promoFareLineTitle,
+                              amount: controller.promoFareLineAmountLabel,
+                            ),
+                          ],
                           SizedBox(height: 4.h),
                           FareBreakdownRow(
                             title: AppStrings.totalAmount.tr,
@@ -339,13 +346,20 @@ class RideDetailsScreen extends StatelessWidget {
             SafeArea(
               top: false,
               child: Obx(() {
+                final rc = controller.ratingController;
                 final bool isSimpleDoneFlow =
-                    controller.hasExistingRating || !controller.canShowReviewInput;
-                final bool isSubmitting =
-                    controller.ratingController.isSubmitting.value;
-                final bool canSubmit = controller.ratingController.canSubmit;
-                final bool shouldShowButton =
-                    isSimpleDoneFlow || isSubmitting || canSubmit;
+                    controller.hasExistingRating ||
+                        !controller.canShowReviewInput;
+                final bool needsReviewForm =
+                    controller.canShowReviewInput &&
+                        !controller.hasExistingRating;
+                final bool isSubmitting = rc.isSubmitting.value;
+                final bool canSubmit = rc.canSubmit;
+                final bool formComplete = rc.isRatingFormComplete;
+                final bool shouldShowButton = isSimpleDoneFlow ||
+                    (needsReviewForm &&
+                        formComplete &&
+                        (isSubmitting || canSubmit));
 
                 return Padding(
                   padding: EdgeInsets.fromLTRB(
@@ -370,19 +384,18 @@ class RideDetailsScreen extends StatelessWidget {
                         ? AppPrimaryButton(
                             key: const ValueKey('ride-details-done-visible'),
                             label: AppStrings.done.tr,
-                            isLoading: !isSimpleDoneFlow && isSubmitting,
+                            isLoading:
+                                !isSimpleDoneFlow && isSubmitting,
                             onPressed: isSimpleDoneFlow
                                 ? (controller.openedFromCompletionFlow
                                       ? handleCompletionExit
                                       : () => Navigator.pop(context))
-                                : () => controller.ratingController.onSubmitTap(
-                                    // Route success-dialog "Continue" by source:
-                                    // completion flow -> Home, My Rides -> pop.
-                                    onSuccessConfirmed:
-                                        controller.openedFromCompletionFlow
-                                        ? handleCompletionExit
-                                        : () => Navigator.pop(context),
-                                  ),
+                                : () => rc.onSubmitTap(
+                                      onSuccessConfirmed:
+                                          controller.openedFromCompletionFlow
+                                          ? handleCompletionExit
+                                          : () => Navigator.pop(context),
+                                    ),
                           )
                         : const SizedBox.shrink(
                             key: ValueKey('ride-details-done-hidden'),

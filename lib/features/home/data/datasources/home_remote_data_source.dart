@@ -5,9 +5,12 @@ import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/data/models/requests/book_ride_request.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
+import '../../../../core/data/models/responses/rides/promo_available_response.dart';
+import '../../../../core/data/models/responses/rides/promo_validate_response.dart';
 import '../models/geocode_response_model.dart';
 import '../models/places_models.dart';
 import '../../../../core/network/api_service.dart';
+import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
 
 abstract class HomeRemoteDataSource {
@@ -18,7 +21,7 @@ abstract class HomeRemoteDataSource {
     required String sessionToken,
   });
 
-  Future<ReverseGeocodeModel> reverseGeocode({
+  Future<ReverseGeocodeModel?> reverseGeocode({
     required double lat,
     required double lng,
   });
@@ -28,6 +31,19 @@ abstract class HomeRemoteDataSource {
   Future<FareEstimateResponseModel> estimateFare(FareEstimateRequest request);
 
   Future<BookRideResponse> bookRide(BookRideRequest request);
+
+  /// `POST go/promo/validate` — does not show global error dialogs on 4xx.
+  Future<PromoValidateResponse> validatePromo({
+    required String code,
+    required String vehicleTypeId,
+    required int fareEstimate,
+  });
+
+  /// `GET go/promo/available` — rider-facing promo list (not admin CRUD).
+  Future<PromoAvailableResponse> getAvailablePromos({
+    String? vehicleTypeId,
+    int? fareEstimate,
+  });
 }
 
 class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
@@ -69,7 +85,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   }
 
   @override
-  Future<ReverseGeocodeModel> reverseGeocode({
+  Future<ReverseGeocodeModel?> reverseGeocode({
     required double lat,
     required double lng,
   }) async {
@@ -83,6 +99,9 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
 
     if (response.statusCode == 200 && response.data != null) {
       return ReverseGeocodeModel.fromJson(response.data);
+    }
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return null;
     }
     throw Exception('Reverse geocoding failed');
   }
@@ -100,6 +119,9 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     if (response.statusCode == 200 && response.data != null) {
       return GeocodeResponse.fromJson(response.data);
     }
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return GeocodeResponse(results: const [], status: 'ZERO_RESULTS');
+    }
     throw Exception('Geocoding failed');
   }
 
@@ -115,18 +137,66 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       ),
     );
 
-    if (response.statusCode == 200 && response.data != null) {
-      return FareEstimateResponseModel.fromJson(response.data);
+    final raw = response.data;
+    Map<String, dynamic>? map;
+    if (raw is Map<String, dynamic>) {
+      map = Map<String, dynamic>.from(raw);
+    } else if (raw is Map) {
+      map = Map<String, dynamic>.from(raw);
     }
 
-    final data = response.data;
-    if (data is Map<String, dynamic>) {
-      final message = (data['message'] as String?)?.trim();
-      if (message != null && message.isNotEmpty) {
-        throw Exception(message);
+    if (map != null) {
+      final httpStatus = response.statusCode;
+      if (httpStatus != null && !map.containsKey('status_code')) {
+        map['status_code'] = httpStatus;
       }
+      late final FareEstimateResponseModel model;
+      try {
+        model = FareEstimateResponseModel.fromJson(map);
+      } catch (_) {
+        final code = map['error_code']?.toString().trim();
+        if (code == 'VALID_DISTANCE_EXCEEDED') {
+          final sc = map['status_code'];
+          final int? parsedStatus = switch (sc) {
+            null => httpStatus,
+            final int i => i,
+            final num n => n.toInt(),
+            final String s => int.tryParse(s.trim()),
+            _ => int.tryParse(sc.toString()),
+          };
+          model = FareEstimateResponseModel(
+            statusCode: parsedStatus ?? httpStatus ?? 400,
+            message: map['message']?.toString(),
+            errorCode: code,
+            data: null,
+          );
+        } else {
+          rethrow;
+        }
+      }
+      if (!model.isSuccess) {
+        if (model.errorCode?.trim() == 'VALID_DISTANCE_EXCEEDED') {
+          return model;
+        }
+        if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+          return model;
+        }
+        final msg = (model.message ?? '').trim();
+        throw Exception(
+          msg.isEmpty ? 'Unable to estimate fare for this route.' : msg,
+        );
+      }
+      return model;
     }
 
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return FareEstimateResponseModel(
+        statusCode: response.statusCode,
+        message: null,
+        errorCode: null,
+        data: null,
+      );
+    }
     throw Exception('Unable to estimate fare for this route.');
   }
 
@@ -144,6 +214,27 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       return BookRideResponse.fromJson(response.data);
     }
 
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      final raw = response.data;
+      if (raw is Map<String, dynamic>) {
+        try {
+          return BookRideResponse.fromJson(raw);
+        } catch (_) {}
+      }
+      if (raw is Map) {
+        try {
+          return BookRideResponse.fromJson(
+            Map<String, dynamic>.from(raw),
+          );
+        } catch (_) {}
+      }
+      return BookRideResponse(
+        statusCode: response.statusCode,
+        message: null,
+        data: null,
+      );
+    }
+
     final data = response.data;
     if (data is Map<String, dynamic>) {
       final message = (data['message'] as String?)?.trim();
@@ -153,5 +244,62 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     }
 
     throw Exception('Unable to complete your booking at this time.');
+  }
+
+  @override
+  Future<PromoValidateResponse> validatePromo({
+    required String code,
+    required String vehicleTypeId,
+    required int fareEstimate,
+  }) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.ride.promoValidate,
+        method: ApiMethod.post,
+        body: {
+          'code': code.trim().toUpperCase(),
+          'vehicle_type_id': vehicleTypeId,
+          'fare_estimate': fareEstimate,
+        },
+        errorPresentationType: ErrorPresentationType.none,
+        showLoader: false,
+      ),
+    );
+
+    final body = response.data;
+    return PromoValidateResponse.fromHttpResponse(
+      httpStatus: response.statusCode,
+      body: body,
+    );
+  }
+
+  @override
+  Future<PromoAvailableResponse> getAvailablePromos({
+    String? vehicleTypeId,
+    int? fareEstimate,
+  }) async {
+    final query = <String, dynamic>{};
+    final vid = vehicleTypeId?.trim();
+    if (vid != null && vid.isNotEmpty) {
+      query['vehicle_type_id'] = vid;
+    }
+    if (fareEstimate != null && fareEstimate > 0) {
+      query['fare_estimate'] = fareEstimate;
+    }
+
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.ride.promoAvailable,
+        method: ApiMethod.get,
+        queryParams: query.isEmpty ? null : query,
+        errorPresentationType: ErrorPresentationType.none,
+        showLoader: false,
+      ),
+    );
+
+    return PromoAvailableResponse.fromHttpResponse(
+      httpStatus: response.statusCode,
+      body: response.data,
+    );
   }
 }

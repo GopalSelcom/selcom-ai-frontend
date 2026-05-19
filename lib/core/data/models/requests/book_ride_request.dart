@@ -11,6 +11,10 @@ class BookRideRequest {
   final bool isBookedForOther;
   final String? passengerName;
   final String? passengerPhone;
+  final String note;
+  /// Pre-discount fare for the selected vehicle (server re-validates promo).
+  final int? fareEstimate;
+  final String? promoCode;
 
   const BookRideRequest({
     required this.validationId,
@@ -23,6 +27,9 @@ class BookRideRequest {
     this.isBookedForOther = false,
     this.passengerName,
     this.passengerPhone,
+    this.note = '',
+    this.fareEstimate,
+    this.promoCode,
   });
 
   Map<String, dynamic> toJson() {
@@ -37,7 +44,16 @@ class BookRideRequest {
       'vehicle_type_id': vehicleTypeId,
       'payment_method': paymentMethod,
       'is_booked_for_other': isBookedForOther,
+      'note': note,
     };
+
+    if (fareEstimate != null) {
+      data['fare_estimate'] = fareEstimate;
+    }
+    final promo = promoCode?.trim();
+    if (promo != null && promo.isNotEmpty) {
+      data['promo_code'] = promo.toUpperCase();
+    }
 
     if (isBookedForOther) {
       if (passengerName != null) data['passenger_name'] = passengerName;

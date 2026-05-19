@@ -35,7 +35,6 @@ import '../../features/ride/presentation/controllers/my_rides_controller.dart';
 import '../../features/auth/data/datasources/auth_remote_data_source.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
-import '../../features/promotions/presentation/controllers/promocode_controller.dart';
 import '../../features/payment/presentation/controllers/payment_method_controller.dart';
 import '../config/app_config.dart';
 import '../services/analytics_service.dart';
@@ -123,7 +122,6 @@ Future<void> init() async {
   sl.registerFactory(
     () => ProfileController(profileUseCase: sl(), appSettingsService: sl()),
   );
-  sl.registerFactory(() => PromocodeController());
   sl.registerFactory(() => PaymentMethodController(profileRepository: sl()));
 
   // ── Notification Feature ──

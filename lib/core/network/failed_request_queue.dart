@@ -68,16 +68,25 @@ class FailedRequestQueue {
     // Generate hash for deduplication
     final hash = _hashRequest(request);
 
-    // Check for duplicates
-    if (contains(hash)) {
+    // Same logical request may be fired twice in parallel (e.g. active ride
+    // polls). If the first is already queued, complete this caller with the
+    // same outcome as the queued request instead of surfacing a user-facing error.
+    final existing = _firstWithHash(hash);
+    if (existing != null) {
       developer.log(
-        "🔄 Duplicate request detected, skipping: ${request.endpoint}",
+        "🔄 Duplicate request coalesced with queued: ${request.endpoint}",
         name: 'FailedRequestQueue',
       );
-      completer.completeError(
-        DioException(
-          requestOptions: RequestOptions(path: request.endpoint),
-          message: AppStrings.duplicateRequestAlreadyQueued.tr,
+      unawaited(
+        existing.completer.future.then<void>(
+          (response) {
+            if (!completer.isCompleted) completer.complete(response);
+          },
+          onError: (Object e, StackTrace stackTrace) {
+            if (!completer.isCompleted) {
+              completer.completeError(e, stackTrace);
+            }
+          },
         ),
       );
       return false;
@@ -116,9 +125,11 @@ class FailedRequestQueue {
     return false;
   }
 
-  /// Check if a request hash exists in queue
-  bool contains(String hash) {
-    return _queue.any((req) => req.requestHash == hash);
+  FailedRequest? _firstWithHash(String hash) {
+    for (final req in _queue) {
+      if (req.requestHash == hash) return req;
+    }
+    return null;
   }
 
   /// Clear all requests from queue

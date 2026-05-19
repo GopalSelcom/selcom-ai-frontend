@@ -17,6 +17,7 @@ import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/driver_search_timeout_from_cancel_time.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../../../core/utils/map_marker_utils.dart';
@@ -33,8 +34,9 @@ class FindingDriverController extends GetxController {
   final RideRepository rideRepository;
   final AppSocketService _socketService = AppSocketService();
 
-  /// Total search window (product: 9 minutes).
-  static const int searchTimeoutSeconds = 540;
+  /// Total search window in seconds (from API `cancel_time` ms, else default 9 min).
+  late final int _searchTimeoutSeconds;
+  static const int _defaultSearchTimeoutSeconds = 540;
 
   late final String rideId;
   late final LatLng pickupLatLng;
@@ -52,7 +54,7 @@ class FindingDriverController extends GetxController {
   final lastSocketError = ''.obs;
   final isLoadingNearbyDrivers = false.obs;
 
-  final remainingSeconds = searchTimeoutSeconds.obs;
+  final remainingSeconds = _defaultSearchTimeoutSeconds.obs;
   final Rxn<LatLng> assignedDriverLocation = Rxn<LatLng>();
   final Rxn<LatLng> animatedRiderLocation = Rxn<LatLng>();
   final Rxn<BitmapDescriptor> assignedDriverMarkerIcon =
@@ -222,6 +224,10 @@ class FindingDriverController extends GetxController {
     passengerName.value = args['passengerName'] as String?;
     passengerPhone.value = args['passengerPhone'] as String?;
 
+    _searchTimeoutSeconds = driverSearchTimeoutSecondsFromCancelTimeMillis(
+      args['cancel_time'],
+    );
+
     _buildDummyRoute(plat, plng, dlat, dlng);
     _setPickupRouteFallback();
   }
@@ -272,7 +278,7 @@ class FindingDriverController extends GetxController {
       assignedDriverLocation.value != null && shouldShowPickupRoute;
 
   void _startCountdown() {
-    remainingSeconds.value = searchTimeoutSeconds;
+    remainingSeconds.value = _searchTimeoutSeconds;
     _countdownTimer?.cancel();
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (remainingSeconds.value <= 0) {
@@ -650,7 +656,23 @@ class FindingDriverController extends GetxController {
   }
 
   int get remainingWholeMinutes =>
-      (remainingSeconds.value / 60).ceil().clamp(0, searchTimeoutSeconds ~/ 60);
+      (remainingSeconds.value ~/ 60).clamp(0, _searchTimeoutSeconds ~/ 60);
+
+  /// Countdown shown as `M:SS` (e.g. 9:00 → 8:59 → …) aligned with [remainingSeconds].
+  String findingDriverCountdownMmSs() {
+    final s = remainingSeconds.value.clamp(0, 999999);
+    final m = s ~/ 60;
+    final sec = s % 60;
+    return '$m:${sec.toString().padLeft(2, '0')}';
+  }
+
+  /// Localized "X min remaining" — whole minutes = floor(seconds / 60) so 8:59 shows 8.
+  String findingDriverMinutesRemainLabel() {
+    final mins = remainingSeconds.value ~/ 60;
+    return AppStrings.findingDriverMinutesRemain.trParams({
+      'minutes': '$mins',
+    });
+  }
 
   Future<void> confirmCancelRide() async {
     // 1. Initial Confirmation

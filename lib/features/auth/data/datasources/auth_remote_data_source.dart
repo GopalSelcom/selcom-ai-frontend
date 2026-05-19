@@ -1,4 +1,5 @@
 import '../../../../core/network/api_service.dart';
+import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
 import '../../../../core/data/models/requests/send_otp_request.dart';
 import '../../../../core/data/models/requests/save_user_additional_details_request.dart';
@@ -6,6 +7,7 @@ import '../../../../core/data/models/responses/send_otp_response.dart';
 import '../../../../core/data/models/requests/verify_otp_request.dart';
 import '../../../../core/data/models/responses/verify_otp_response.dart';
 import '../../../../core/data/models/user_model.dart';
+import '../../../../core/data/models/responses/onboarding_banners_response.dart';
 
 abstract class AuthRemoteDataSource {
   Future<SendOtpResponseModel?> sendOtp({required SendOtpRequest request});
@@ -23,6 +25,9 @@ abstract class AuthRemoteDataSource {
   Future<String> refreshToken();
 
   Future<bool> logout();
+
+  /// Public onboarding carousel; no auth token required.
+  Future<List<OnboardingBannerItem>> getOnboardingBanners();
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -109,6 +114,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     if (response.statusCode == 200 && response.data != null) {
       return UserModel.fromJson(response.data['response'] ?? {});
     }
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return UserModel.fromJson({});
+    }
     throw Exception(
       response.data?['message'] ?? 'Failed to save additional details',
     );
@@ -146,5 +154,28 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     );
 
     return response.statusCode == 200;
+  }
+
+  @override
+  Future<List<OnboardingBannerItem>> getOnboardingBanners() async {
+    try {
+      final response = await ApiService().call(
+        request: ApiRequest(
+          endpoint: URLS.common.onboardingBanner,
+          method: ApiMethod.get,
+          skipAuthInterceptor: true,
+          shouldQueue: false,
+        ),
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        return parseOnboardingBannersFromResponse(
+          response.data is Map<String, dynamic>
+              ? response.data as Map<String, dynamic>
+              : Map<String, dynamic>.from(response.data as Map),
+        );
+      }
+    } catch (_) {}
+    return const [];
   }
 }

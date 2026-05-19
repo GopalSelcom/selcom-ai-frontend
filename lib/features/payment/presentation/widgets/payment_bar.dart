@@ -48,11 +48,15 @@ class PaymentBar extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          Text(
-                            AppStrings.payUsing.tr,
-                            style: AppTextStyles.homeCaption.copyWith(
-                              color: AppColors.white,
-                              fontSize: 14.sp,
+                          Flexible(
+                            child: Text(
+                              AppStrings.payUsing.tr,
+                              style: AppTextStyles.homeCaption.copyWith(
+                                color: AppColors.white,
+                                fontSize: 14.sp,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           SizedBox(width: 6.w),

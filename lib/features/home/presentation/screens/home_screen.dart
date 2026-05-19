@@ -425,8 +425,10 @@ class HomeScreen extends GetView<HomeController> {
         address: loc.address,
         distance: distance,
         isFavorite: isFavorite,
-        onTap: () =>
-            controller.navigateToVehicleSelectionForRecentDestination(loc),
+        onTap: () => controller.navigateToVehicleSelectionForRecentDestination(
+          loc,
+          showHomeFareEstimateLoader: true,
+        ),
         onFavoriteTap: () => controller.toggleFavoriteForRecent(loc),
       );
     });

@@ -18,7 +18,6 @@ class AppStrings {
   static const String appSettings = 'app_settings';
   static const String appTitle = 'app_title';
   static const String apply = 'apply';
-  static const String applyPromoCode = 'apply_promo_code';
   static const String areYouSureWantToAddNdeleteThisCard =
       'are_you_sure_want_to_add_ndelete_this_card';
   static const String areYouSureYouWantToCancel =
@@ -30,6 +29,20 @@ class AppStrings {
   static const String bookingFeesAndConvenienceCharges =
       'booking_fees_and_convenience_charges';
   static const String bookingForName = 'booking_for_name';
+  static const String bookingForSomeoneElsePrompt =
+      'booking_for_someone_else_prompt';
+  static const String bookingForSomeoneElseSubtitle =
+      'booking_for_someone_else_subtitle';
+  static const String bookingRideOptionForMe = 'booking_ride_option_for_me';
+  static const String bookingRideOptionForSomeoneElse =
+      'booking_ride_option_for_someone_else';
+  static const String notificationPhoneRequired = 'notification_phone_required';
+  static const String notificationPhoneSubtitle = 'notification_phone_subtitle';
+  static const String notificationPhoneTitle = 'notification_phone_title';
+  static const String enterPassengerFullName = 'enter_passenger_full_name';
+  static const String passengerDetailsTitle = 'passenger_details_title';
+  static const String passengerNameLabel = 'passenger_name_label';
+  static const String passengerPhoneLabel = 'passenger_phone_label';
   static const String
   byContinuingYouAgreeThatYouHaveReadAndAcceptOurTAndCsAndPrivacyPolicy =
       'by_continuing_you_agree_that_you_have_read_and_accept_our_tand_cs_and_privacy_policy';
@@ -97,6 +110,8 @@ class AppStrings {
   static const String findingYourDriver = 'finding_your_driver';
   static const String findingDriverDefaultDescription =
       'finding_driver_default_description';
+  static const String findingDriverMinutesRemain =
+      'finding_driver_minutes_remain';
   static const String driverWillArrivingInMinutes =
       'driver_will_arriving_in_minutes';
   static const String driverAssigned = 'driver_assigned';
@@ -190,7 +205,6 @@ class AppStrings {
       'lorem_ipsum_dolor_sit_amet_consectetur';
   static const String makingYourDriveBestIsOurResponsibility =
       'making_your_drive_best_is_our_responsibility';
-  static const String maximumPromoTzs1500 = 'maximum_promo_tzs1500';
   static const String maybeLater = 'maybe_later';
   static const String markAllReadCount = 'mark_all_read_count';
   static const String message = 'message';
@@ -253,6 +267,10 @@ class AppStrings {
       'please_wait_while_we_process_your_request';
   static const String paymentMode = 'payment_mode';
   static const String paymentNotConfirmed = 'payment_not_confirmed';
+  static const String bookRidePaymentNotAppliedTitle =
+      'book_ride_payment_not_applied_title';
+  static const String bookRidePaymentNotAppliedMessage =
+      'book_ride_payment_not_applied_message';
   static const String paymentValidationFailed = 'payment_validation_failed';
   static const String phoneNumberUnavailable = 'phone_number_unavailable';
   static const String phoneWithNumber = 'phone_with_number';
@@ -260,6 +278,10 @@ class AppStrings {
       'pick_any_tags_that_match_this_trip';
   static const String pickup = 'pickup';
   static const String pickupPoint = 'pickup_point';
+  static const String pickupConfirmationNoteLabel =
+      'pickup_confirmation_note_label';
+  static const String pickupConfirmationNoteHint =
+      'pickup_confirmation_note_hint';
   static const String pin = 'pin';
   static const String pinLocked = 'pin_locked';
   static const String pinLockedMessageRetryInTime =
@@ -339,11 +361,26 @@ class AppStrings {
       'thank_you_for_riding_with_selcom_go';
   static const String mobileMoney = 'mobile_money';
   static const String card = 'card';
-  static const String promoCodeCodeApplied = 'promo_code_code_applied';
-  static const String promoCodeAppliedWithCode = 'promo_code_applied_with_code';
-  static const String promoAppliedWithTitle = 'promo_applied_with_title';
   static const String promocodeList = 'promocode_list';
   static const String promotions = 'promotions';
+  static const String havePromoCode = 'have_promo_code';
+  static const String promoApplySuccessMessage = 'promo_apply_success_message';
+  static const String promoRemovedTitle = 'promo_removed_title';
+  static const String promoRemovedDestinationChanged =
+      'promo_removed_destination_changed';
+  static const String promoErrorInvalid = 'promo_error_invalid';
+  static const String promoErrorExpired = 'promo_error_expired';
+  static const String promoErrorNotApplicable = 'promo_error_not_applicable';
+  static const String promoErrorNetwork = 'promo_error_network';
+  static const String promoNotAppliedTitle = 'promo_not_applied_title';
+  static const String promoCodeNotValidForVehicle =
+      'promo_code_not_valid_for_vehicle';
+  static const String rideFreeLabel = 'ride_free_label';
+  static const String receiptPromoLine = 'receipt_promo_line';
+  static const String promoMinRideAmount = 'promo_min_ride_amount';
+  static const String promoExpiresToday = 'promo_expires_today';
+  static const String noAvailablePromoCodes = 'no_available_promo_codes';
+  static const String failedToLoadPromoCodes = 'failed_to_load_promo_codes';
   static const String rating = 'rating';
   static const String ratingGiven = 'rating_given';
   static const String ratingRequired = 'rating_required';

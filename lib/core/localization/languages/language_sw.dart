@@ -16,7 +16,6 @@ class LanguageSw extends Languages {
     'app_settings': '',
     'app_title': '',
     'apply': '',
-    'apply_promo_code': '',
     'are_you_sure_want_to_add_ndelete_this_card': '',
     'are_you_sure_you_want_to_cancel': '',
     'blink_your_eyes': '',
@@ -24,6 +23,17 @@ class LanguageSw extends Languages {
     'book_ride_with_fare': '',
     'booking_fees_and_convenience_charges': '',
     'booking_for_name': '',
+    'booking_for_someone_else_prompt': '',
+    'booking_for_someone_else_subtitle': '',
+    'booking_ride_option_for_me': '',
+    'booking_ride_option_for_someone_else': '',
+    'notification_phone_required': '',
+    'notification_phone_subtitle': '',
+    'notification_phone_title': '',
+    'enter_passenger_full_name': '',
+    'passenger_details_title': '',
+    'passenger_name_label': '',
+    'passenger_phone_label': '',
     'by_continuing_you_agree_that_you_have_read_and_accept_our_tand_cs_and_privacy_policy':
         '',
     'call': '',
@@ -77,6 +87,7 @@ class LanguageSw extends Languages {
     'ride_started_description': '',
     'finding_your_driver': '',
     'finding_driver_default_description': '',
+    'finding_driver_minutes_remain': '',
     'driver_will_arriving_in_minutes': '',
     'driver_assigned': '',
     'driver_arriving': '',
@@ -151,7 +162,6 @@ class LanguageSw extends Languages {
     'logout': '',
     'lorem_ipsum_dolor_sit_amet_consectetur': '',
     'making_your_drive_best_is_our_responsibility': '',
-    'maximum_promo_tzs1500': '',
     'maybe_later': '',
     'mark_all_read_count': '',
     'message': '',
@@ -200,12 +210,16 @@ class LanguageSw extends Languages {
     'please_wait_while_we_process_your_request': '',
     'payment_mode': '',
     'payment_not_confirmed': '',
+    'book_ride_payment_not_applied_title': '',
+    'book_ride_payment_not_applied_message': '',
     'payment_validation_failed': '',
     'phone_number_unavailable': '',
     'phone_with_number': '',
     'pick_any_tags_that_match_this_trip': '',
     'pickup': '',
     'pickup_point': '',
+    'pickup_confirmation_note_label': '',
+    'pickup_confirmation_note_hint': '',
     'pin': '',
     'pin_locked': '',
     'please_confirm_pickup_point_to_continue': '',
@@ -244,11 +258,25 @@ class LanguageSw extends Languages {
     'thank_you_for_riding_with_selcom_go': '',
     'mobile_money': '',
     'card': '',
-    'promo_code_code_applied': '',
-    'promo_code_applied_with_code': '',
-    'promo_applied_with_title': '',
     'promocode_list': '',
     'promotions': '',
+    'have_promo_code': 'Una msimbo wa promosi?',
+    'promo_apply_success_message': 'Msimbo wa promosi umetumika kwa mafanikio.',
+    'promo_removed_title': 'Promosi imeondolewa',
+    'promo_removed_destination_changed':
+        'Njia imebadilika — promosi imefutwa.',
+    'promo_error_invalid': 'Msimbo si sahihi',
+    'promo_error_expired': 'Msimbo huu umeisha muda',
+    'promo_error_not_applicable': 'Msimbo huu hautumiki kwa safari hii',
+    'promo_error_network': 'Imeshindikana kuthibitisha. Jaribu tena.',
+    'promo_not_applied_title': 'Promosi haijatumiwa',
+    'promo_code_not_valid_for_vehicle': 'Si sahihi kwa chombo hiki',
+    'ride_free_label': 'BURE',
+    'receipt_promo_line': 'Promosi (@code)',
+    'promo_min_ride_amount': 'Kiasi cha chini @amount',
+    'promo_expires_today': 'Inaisha leo',
+    'no_available_promo_codes': 'Hakuna misimbo ya promosheni kwa sasa',
+    'failed_to_load_promo_codes': 'Imeshindwa kupakia misimbo ya promosheni',
     'rating': '',
     'rating_given': '',
     'rating_required': '',
@@ -565,9 +593,6 @@ class LanguageSw extends Languages {
   String get apply => values['apply'] ?? '';
 
   @override
-  String get applyPromoCode => values['apply_promo_code'] ?? '';
-
-  @override
   String get areYouSureWantToAddNdeleteThisCard =>
       values['are_you_sure_want_to_add_ndelete_this_card'] ?? '';
 
@@ -590,6 +615,22 @@ class LanguageSw extends Languages {
 
   @override
   String get bookingForName => values['booking_for_name'] ?? '';
+
+  @override
+  String get bookingForSomeoneElsePrompt =>
+      values['booking_for_someone_else_prompt'] ?? '';
+
+  @override
+  String get bookingForSomeoneElseSubtitle =>
+      values['booking_for_someone_else_subtitle'] ?? '';
+
+  @override
+  String get bookingRideOptionForMe =>
+      values['booking_ride_option_for_me'] ?? '';
+
+  @override
+  String get bookingRideOptionForSomeoneElse =>
+      values['booking_ride_option_for_someone_else'] ?? '';
 
   @override
   String
@@ -764,6 +805,10 @@ class LanguageSw extends Languages {
   @override
   String get findingDriverDefaultDescription =>
       values['finding_driver_default_description'] ?? '';
+
+  @override
+  String get findingDriverMinutesRemain =>
+      values['finding_driver_minutes_remain'] ?? '';
 
   @override
   String get driverWillArrivingInMinutes =>
@@ -1004,9 +1049,6 @@ class LanguageSw extends Languages {
       values['making_your_drive_best_is_our_responsibility'] ?? '';
 
   @override
-  String get maximumPromoTzs1500 => values['maximum_promo_tzs1500'] ?? '';
-
-  @override
   String get maybeLater => values['maybe_later'] ?? '';
 
   @override
@@ -1092,6 +1134,32 @@ class LanguageSw extends Languages {
       '';
 
   @override
+  String get notificationPhoneRequired =>
+      values['notification_phone_required'] ?? '';
+
+  @override
+  String get notificationPhoneSubtitle =>
+      values['notification_phone_subtitle'] ?? '';
+
+  @override
+  String get notificationPhoneTitle =>
+      values['notification_phone_title'] ?? '';
+
+  @override
+  String get enterPassengerFullName =>
+      values['enter_passenger_full_name'] ?? '';
+
+  @override
+  String get passengerDetailsTitle =>
+      values['passenger_details_title'] ?? '';
+
+  @override
+  String get passengerNameLabel => values['passenger_name_label'] ?? '';
+
+  @override
+  String get passengerPhoneLabel => values['passenger_phone_label'] ?? '';
+
+  @override
   String get notification => values['notification'] ?? '';
 
   @override
@@ -1162,6 +1230,14 @@ class LanguageSw extends Languages {
   String get paymentNotConfirmed => values['payment_not_confirmed'] ?? '';
 
   @override
+  String get bookRidePaymentNotAppliedTitle =>
+      values['book_ride_payment_not_applied_title'] ?? '';
+
+  @override
+  String get bookRidePaymentNotAppliedMessage =>
+      values['book_ride_payment_not_applied_message'] ?? '';
+
+  @override
   String get paymentValidationFailed =>
       values['payment_validation_failed'] ?? '';
 
@@ -1180,6 +1256,14 @@ class LanguageSw extends Languages {
 
   @override
   String get pickupPoint => values['pickup_point'] ?? '';
+
+  @override
+  String get pickupConfirmationNoteLabel =>
+      values['pickup_confirmation_note_label'] ?? '';
+
+  @override
+  String get pickupConfirmationNoteHint =>
+      values['pickup_confirmation_note_hint'] ?? '';
 
   @override
   String get pin => values['pin'] ?? '';
@@ -1306,20 +1390,62 @@ class LanguageSw extends Languages {
   String get card => values['card'] ?? '';
 
   @override
-  String get promoCodeCodeApplied => values['promo_code_code_applied'] ?? '';
-
-  @override
-  String get promoCodeAppliedWithCode =>
-      values['promo_code_applied_with_code'] ?? '';
-
-  @override
-  String get promoAppliedWithTitle => values['promo_applied_with_title'] ?? '';
-
-  @override
   String get promocodeList => values['promocode_list'] ?? '';
 
   @override
   String get promotions => values['promotions'] ?? '';
+
+  @override
+  String get havePromoCode => values['have_promo_code'] ?? '';
+
+  @override
+  String get promoApplySuccessMessage =>
+      values['promo_apply_success_message'] ?? '';
+
+  @override
+  String get promoRemovedTitle => values['promo_removed_title'] ?? '';
+
+  @override
+  String get promoRemovedDestinationChanged =>
+      values['promo_removed_destination_changed'] ?? '';
+
+  @override
+  String get promoErrorInvalid => values['promo_error_invalid'] ?? '';
+
+  @override
+  String get promoErrorExpired => values['promo_error_expired'] ?? '';
+
+  @override
+  String get promoErrorNotApplicable =>
+      values['promo_error_not_applicable'] ?? '';
+
+  @override
+  String get promoErrorNetwork => values['promo_error_network'] ?? '';
+
+  @override
+  String get promoNotAppliedTitle => values['promo_not_applied_title'] ?? '';
+
+  @override
+  String get promoCodeNotValidForVehicle =>
+      values['promo_code_not_valid_for_vehicle'] ?? '';
+
+  @override
+  String get rideFreeLabel => values['ride_free_label'] ?? '';
+
+  @override
+  String get receiptPromoLine => values['receipt_promo_line'] ?? '';
+
+  @override
+  String get promoMinRideAmount => values['promo_min_ride_amount'] ?? '';
+
+  @override
+  String get promoExpiresToday => values['promo_expires_today'] ?? '';
+
+  @override
+  String get noAvailablePromoCodes => values['no_available_promo_codes'] ?? '';
+
+  @override
+  String get failedToLoadPromoCodes => values['failed_to_load_promo_codes'] ?? '';
 
   @override
   String get rating => values['rating'] ?? '';

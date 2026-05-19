@@ -57,10 +57,16 @@ class AppGoogleMap extends StatefulWidget {
     this.trackRider = false,
     this.onTrackingChanged,
     this.onRiderPositionUpdate,
+    this.onMapDisposed,
   });
 
   final CameraPosition initialCameraPosition;
   final void Function(GoogleMapController controller) onMapCreated;
+
+  /// Called when this map's [State] is disposed — clear any retained
+  /// [GoogleMapController] in your GetX/controller so async work cannot call
+  /// [GoogleMapController.animateCamera] after the platform view is gone.
+  final VoidCallback? onMapDisposed;
 
   final Set<Marker> markers;
   final Set<Polyline> polylines;
@@ -271,6 +277,7 @@ class AppGoogleMapState extends State<AppGoogleMap>
   }
 
   /// Updates the rider's target position and starts a smooth animation towards it.
+  @override
   void updateRiderPosition(
     LatLng position, {
     double rotation = 0.0,
@@ -280,12 +287,21 @@ class AppGoogleMapState extends State<AppGoogleMap>
   }
 
   /// The current interpolated position of the rider icon.
+  @override
   LatLng? get currentAnimatedPosition => super.currentAnimatedPosition;
 
   /// Instantly snaps the rider icon to a new position.
   void snapRider(LatLng position, {double rotation = 0.0}) {
     snapPosition(position, rotation: rotation);
     setState(() {});
+  }
+
+  @override
+  void dispose() {
+    // Runs before the platform GoogleMap is torn down; listeners/async map
+    // work should treat the controller as invalid immediately after this.
+    widget.onMapDisposed?.call();
+    super.dispose();
   }
 
   @override

@@ -1,17 +1,45 @@
 class FareEstimateResponseModel {
   final int? statusCode;
   final String? message;
+  final String? errorCode;
   final FareEstimateData? data;
 
-  FareEstimateResponseModel({this.statusCode, this.message, this.data});
+  FareEstimateResponseModel({
+    this.statusCode,
+    this.message,
+    this.errorCode,
+    this.data,
+  });
 
   factory FareEstimateResponseModel.fromJson(Map<String, dynamic> json) {
+    final scRaw = json['status_code'];
+    final int? statusCode = switch (scRaw) {
+      null => null,
+      final int i => i,
+      final num n => n.toInt(),
+      final String s => int.tryParse(s.trim()),
+      _ => int.tryParse(scRaw.toString()),
+    };
+
+    FareEstimateData? data;
+    final dataRaw = json['data'];
+    if (dataRaw != null && dataRaw is Map) {
+      try {
+        data = FareEstimateData.fromJson(
+          dataRaw is Map<String, dynamic>
+              ? dataRaw
+              : Map<String, dynamic>.from(dataRaw),
+        );
+      } catch (_) {
+        data = null;
+      }
+    }
+
     return FareEstimateResponseModel(
-      statusCode: json['status_code'],
-      message: json['message'],
-      data: json['data'] != null
-          ? FareEstimateData.fromJson(json['data'])
-          : null,
+      statusCode: statusCode,
+      message: json['message']?.toString(),
+      errorCode: json['error_code']?.toString(),
+      data: data,
     );
   }
 
@@ -19,6 +47,7 @@ class FareEstimateResponseModel {
     return {
       'status_code': statusCode,
       'message': message,
+      'error_code': errorCode,
       'data': data?.toJson(),
     };
   }
@@ -98,6 +127,10 @@ class FareEstimateItem {
   final int? waypointCharge;
   final int? maxPassengers;
   final String? currency;
+  final bool? promoApplied;
+  final int? promoDiscount;
+  final int? discountedFare;
+  final String? promoError;
 
   FareEstimateItem({
     this.vehicleTypeId,
@@ -113,9 +146,33 @@ class FareEstimateItem {
     this.waypointCharge,
     this.maxPassengers,
     this.currency,
+    this.promoApplied,
+    this.promoDiscount,
+    this.discountedFare,
+    this.promoError,
   });
 
+  /// Amount the rider pays when a promo applies; otherwise base estimate.
+  int get displayFare {
+    if (promoApplied == true &&
+        discountedFare != null &&
+        discountedFare! >= 0) {
+      return discountedFare!;
+    }
+    return fareEstimate ?? 0;
+  }
+
+  int get originalFare => fareEstimate ?? 0;
+
   factory FareEstimateItem.fromJson(Map<String, dynamic> json) {
+    bool? promoApplied;
+    final raw = json['promo_applied'];
+    if (raw is bool) {
+      promoApplied = raw;
+    } else if (raw != null) {
+      promoApplied = raw == 1 || raw == '1' || raw == true;
+    }
+
     return FareEstimateItem(
       vehicleTypeId: json['vehicle_type_id'],
       vehicleName: json['vehicle_name'],
@@ -130,6 +187,10 @@ class FareEstimateItem {
       waypointCharge: (json['waypoint_charge'] as num?)?.toInt(),
       maxPassengers: (json['max_passengers'] as num?)?.toInt(),
       currency: json['currency'],
+      promoApplied: promoApplied,
+      promoDiscount: (json['promo_discount'] as num?)?.toInt(),
+      discountedFare: (json['discounted_fare'] as num?)?.toInt(),
+      promoError: json['promo_error']?.toString(),
     );
   }
 
@@ -148,6 +209,10 @@ class FareEstimateItem {
       'waypoint_charge': waypointCharge,
       'max_passengers': maxPassengers,
       'currency': currency,
+      'promo_applied': promoApplied,
+      'promo_discount': promoDiscount,
+      'discounted_fare': discountedFare,
+      'promo_error': promoError,
     };
   }
 }

@@ -6,7 +6,6 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:selcom_rides_frontend/shared/widgets/map_widgets.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
-import 'package:iconsax/iconsax.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -17,7 +16,6 @@ import '../../../../shared/widgets/app_primary_button.dart';
 import '../controllers/driver_accepted_controller.dart';
 import '../controllers/ride_share_controller.dart';
 import '../widgets/ride_common_widgets.dart';
-import '../../../../shared/utils/phone_formatter.dart';
 
 /// SCR-11 — Driver accepted (heading to pickup). See `.agent/context/frontend/SCREENS.md`.
 class DriverAcceptedScreen extends StatelessWidget {
@@ -80,45 +78,18 @@ class DriverAcceptedScreen extends StatelessWidget {
               right: 16,
               onProfileTap: c.openProfile,
               addressWidget: Expanded(
-                child: Obx(() {
-                  final ride = c.ride.value;
-                  final isForOther = ride?.isBookedForOther ?? false;
-                  return isForOther && ride != null
-                      ? AppMapLocationSummaryCard(
-                          leading: Container(
-                            padding: EdgeInsets.all(6.w),
-                            decoration: const BoxDecoration(
-                              color: AppColors.surfaceSubtle,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Iconsax.user,
-                              color: AppColors.primary,
-                              size: 20.sp,
-                            ),
-                          ),
-                          label: AppStrings.bookingForName.trParams({
-                            'name': ride.passengerName ?? AppStrings.someone.tr,
-                          }),
-                          address: AppStrings.phoneWithNumber.trParams({
-                            'phone': TanzaniaPhoneFormatter.formatInternational(
-                              ride.passengerPhone ?? '',
-                            ),
-                          }),
-                          maxAddressLines: 1,
-                        )
-                      : RideLocationSummaryCard(
-                          pickupAddress: c.pickupAddress.isEmpty
-                              ? AppStrings.currentLocation.tr
-                              : c.pickupAddress,
-                          destinationAddress: c.destinationAddress.isEmpty
-                              ? AppStrings.destination.tr
-                              : c.destinationAddress,
-                          // Controller already normalizes this as: all stops except final destination.
-                          intermediateStops: c.summaryIntermediateStops
-                              .toList(),
-                        );
-                }),
+                child: Obx(
+                  () => RideLocationSummaryCard(
+                    pickupAddress: c.pickupAddress.isEmpty
+                        ? AppStrings.currentLocation.tr
+                        : c.pickupAddress,
+                    destinationAddress: c.destinationAddress.isEmpty
+                        ? AppStrings.destination.tr
+                        : c.destinationAddress,
+                    // Controller already normalizes this as: all stops except final destination.
+                    intermediateStops: c.summaryIntermediateStops.toList(),
+                  ),
+                ),
               ),
             ),
             Obx(() {
@@ -775,14 +746,16 @@ class DriverAcceptedScreen extends StatelessWidget {
             ),
             SizedBox(width: 2.w), // 2px gap from Figma
             Flexible(
-              child: Text(
-                c.arrivalLabel.value,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.homeCaption.copyWith(
-                  fontSize: 15.sp,
-                  color: AppColors.textBody,
-                  fontWeight: FontWeight.w500,
-                  height: 20 / 15,
+              child: Obx(
+                () => Text(
+                  c.driverAssignedSheetArrivalEtaLine,
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.homeCaption.copyWith(
+                    fontSize: 15.sp,
+                    color: AppColors.textBody,
+                    fontWeight: FontWeight.w500,
+                    height: 20 / 15,
+                  ),
                 ),
               ),
             ),

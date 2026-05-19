@@ -12,6 +12,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
+import '../../../../shared/widgets/vehicle_selection_promo_chip.dart';
 import '../../../payment/presentation/widgets/payment_bar.dart';
 import '../controllers/vehicle_selection_controller.dart';
 
@@ -129,60 +130,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
           Positioned(
             top: MediaQuery.paddingOf(context).top + 60.h,
             right: 16.w,
-            child: GestureDetector(
-              onTap: controller.openPromotions,
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-                decoration: BoxDecoration(
-                  color: AppColors.promotionBlue,
-                  borderRadius: BorderRadius.circular(18.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.promotionBlue.withValues(alpha: 0.24),
-                      blurRadius: 14.r,
-                      offset: Offset(0, 6.h),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      // width: 22.w,
-                      // height: 22.w,
-                      child: SvgPictureAsset(
-                        AppAssets.icPromotions,
-                        width: 20.w,
-                        height: 20.w,
-                        placeholderBuilder: (_) => Container(
-                          width: 20.w,
-                          height: 20.w,
-                          decoration: const BoxDecoration(
-                            color: AppColors.white,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.percent,
-                            color: AppColors.promotionBlue,
-                            size: 14.sp,
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 6.w),
-                    Text(
-                      AppStrings.promotions.tr,
-                      style: AppTextStyles.homeCaption.copyWith(
-                        color: AppColors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12.sp,
-                        height: 16 / 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            child: VehicleSelectionPromoChip(controller: controller),
           ),
           Positioned(
             top: MediaQuery.paddingOf(context).top + 104.h,
@@ -238,21 +186,20 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
         controller.pickupEntity.lat,
         controller.pickupEntity.lng,
       );
-      final drop = LatLng(
-        controller.destinationEntity.lat,
-        controller.destinationEntity.lng,
-      );
+      final drops = controller.destinations
+          .map((d) => LatLng(d.lat, d.lng))
+          .toList(growable: false);
+      final lastDrop = drops.isEmpty ? pickup : drops.last;
       final mid = LatLng(
-        (pickup.latitude + drop.latitude) / 2,
-        (pickup.longitude + drop.longitude) / 2,
+        (pickup.latitude + lastDrop.latitude) / 2,
+        (pickup.longitude + lastDrop.longitude) / 2,
       );
-      final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
       final drivers = controller.driverMarkerPoints.toList();
       final markers = <Marker>{};
       controller.scheduleOverlayProjection(
         pickup: pickup,
-        drop: drop,
-        devicePixelRatio: devicePixelRatio,
+        drops: drops,
+        devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
       );
       for (var i = 0; i < drivers.length; i++) {
         final jitter = drivers[i];
@@ -306,6 +253,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
         children: [
           AppGoogleMap(
             key: const ValueKey('vehicle_selection_map'),
+            onMapDisposed: () => controller.onMapDisposed(),
             // Manual initial zoom level:
             // - Increase value => more zoom in
             // - Decrease value => more zoom out
@@ -319,23 +267,23 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
               controller.onMapCreated(c);
               await controller.projectOverlayOffsets(
                 pickup: pickup,
-                drop: drop,
-                devicePixelRatio: devicePixelRatio,
+                drops: drops,
+                devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
               );
             },
             onCameraMove: (_) {
               controller.projectOverlayOffsets(
                 pickup: pickup,
-                drop: drop,
-                devicePixelRatio: devicePixelRatio,
+                drops: drops,
+                devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
               );
             },
             onCameraIdle: () async {
               controller.onCameraIdle();
               await controller.projectOverlayOffsets(
                 pickup: pickup,
-                drop: drop,
-                devicePixelRatio: devicePixelRatio,
+                drops: drops,
+                devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
               );
             },
             polylines: {
@@ -380,22 +328,30 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
             );
           }),
           Obx(() {
-            final offset = controller.dropOverlayOffset.value;
-            if (offset == null) return const SizedBox.shrink();
-            return Positioned(
-              left: offset.dx,
-              top: offset.dy - 8.h,
-              child: FractionalTranslation(
-                translation: const Offset(-0.5, -1.0),
-                child: _locationEditBubble(
-                  label: controller.destinationMapLabel,
-                  onTap: controller.editDropFromMap,
-                  bubbleColor: AppColors.pinRed,
-                  textColor: AppColors.white,
-                  leadingLabel: controller.destinationEtaBadgeText,
-                  onEditTap: controller.editDropFromMap,
-                ),
-              ),
+            final offsets = controller.dropOverlayOffsets;
+            if (offsets.isEmpty) return const SizedBox.shrink();
+            return Stack(
+              children: [
+                for (var i = 0; i < offsets.length; i++)
+                  if (offsets[i] != null)
+                    Positioned(
+                      left: offsets[i]!.dx,
+                      top: offsets[i]!.dy - 8.h,
+                      child: FractionalTranslation(
+                        translation: const Offset(-0.5, -1.0),
+                        child: _locationEditBubble(
+                          label: controller.dropMapLabelAt(i),
+                          onTap: () => controller.editDropAtIndexFromMap(i),
+                          bubbleColor: AppColors.pinRed,
+                          textColor: AppColors.white,
+                          leadingLabel: i == offsets.length - 1
+                              ? controller.destinationEtaBadgeText
+                              : null,
+                          onEditTap: () => controller.editDropAtIndexFromMap(i),
+                        ),
+                      ),
+                    ),
+              ],
             );
           }),
         ],
@@ -556,6 +512,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                     return Obx(() {
                       final selected =
                           controller.selectedVehicleIndex.value == index;
+                      final _ = controller.appliedPromoCode.value;
                       return _vehicleCard(
                         index: index,
                         item: item,
@@ -569,7 +526,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
             Obx(() {
               return PaymentBar(
                 buttonLabel:
-                    '${AppStrings.bookRide.tr} ${CurrencyFormatter.formatWithApiCurrency(controller.selectedFareAmount, controller.currency)}',
+                    '${AppStrings.bookRide.tr} ${CurrencyFormatter.formatPayableOrFree(controller.selectedPayableFareAmount, controller.currency, freeLabel: AppStrings.rideFreeLabel.tr)}',
                 isLoading: controller.isBooking,
                 onActionButtonPressed: controller.bookRide,
               );
@@ -609,6 +566,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
             ),
           ),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _vehicleThumb(img),
               SizedBox(width: 18.w),
@@ -676,26 +634,87 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                         ),
                       ),
                     ],
+                    if (controller.appliedPromoCode.value.trim().isNotEmpty &&
+                        item.promoApplied != true &&
+                        (item.promoError?.trim().isNotEmpty ?? false)) ...[
+                      SizedBox(height: 4.h),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            AppStrings.promoCodeNotValidForVehicle.tr,
+                            maxLines: 1,
+                            style: AppTextStyles.homeCaption.copyWith(
+                              color: AppColors.warningStrong,
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.w600,
+                              height: 1.2,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
-              Text(
-                CurrencyFormatter.formatWithApiCurrency(
-                  item.fareEstimate ?? 0,
-                  item.currency,
-                ),
-                style: TextStyle(
-                  fontFamily: AppTextStyles.metropolisFont,
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textHeading,
-                  letterSpacing: -0.4,
-                ),
-              ),
+              _vehicleFarePrice(item),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _vehicleFarePrice(FareEstimateItem item) {
+    final showPromo =
+        item.promoApplied == true &&
+        (item.discountedFare != null) &&
+        (item.fareEstimate ?? 0) > (item.discountedFare ?? 0);
+    if (!showPromo) {
+      return Text(
+        CurrencyFormatter.formatWithApiCurrency(
+          item.fareEstimate ?? 0,
+          item.currency,
+        ),
+        style: AppTextStyles.homeTitle.copyWith(
+          fontSize: 16.sp,
+          letterSpacing: -0.4,
+        ),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(
+          CurrencyFormatter.formatWithApiCurrency(
+            item.fareEstimate ?? 0,
+            item.currency,
+          ),
+          style: AppTextStyles.homeCaption.copyWith(
+            fontWeight: FontWeight.w500,
+            letterSpacing: -0.2,
+            decoration: TextDecoration.lineThrough,
+            decorationColor: AppColors.black,
+            decorationThickness: 3,
+            decorationStyle: TextDecorationStyle.solid,
+          ),
+        ),
+        SizedBox(height: 2.h),
+        Text(
+          CurrencyFormatter.formatPayableOrFree(
+            item.displayFare,
+            item.currency,
+            freeLabel: AppStrings.rideFreeLabel.tr,
+          ),
+          style: AppTextStyles.homeTitle.copyWith(
+            fontSize: 16.sp,
+            color: AppColors.primary,
+            letterSpacing: -0.4,
+          ),
+        ),
+      ],
     );
   }
 

@@ -26,7 +26,6 @@ abstract class Languages {
   String get appSettings;
   String get appTitle;
   String get apply;
-  String get applyPromoCode;
   String get areYouSureWantToAddNdeleteThisCard;
   String get areYouSureYouWantToCancel;
   String get blinkYourEyes;
@@ -34,6 +33,10 @@ abstract class Languages {
   String get bookRideWithFare;
   String get bookingFeesAndConvenienceCharges;
   String get bookingForName;
+  String get bookingForSomeoneElsePrompt;
+  String get bookingForSomeoneElseSubtitle;
+  String get bookingRideOptionForMe;
+  String get bookingRideOptionForSomeoneElse;
   String
   get byContinuingYouAgreeThatYouHaveReadAndAcceptOurTAndCsAndPrivacyPolicy;
   String get call;
@@ -86,6 +89,7 @@ abstract class Languages {
   String get rideStartedDescription;
   String get findingYourDriver;
   String get findingDriverDefaultDescription;
+  String get findingDriverMinutesRemain;
   String get driverWillArrivingInMinutes;
   String get driverAssigned;
   String get driverArriving;
@@ -160,7 +164,6 @@ abstract class Languages {
   String get logout;
   String get loremIpsumDolorSitAmetConsectetur;
   String get makingYourDriveBestIsOurResponsibility;
-  String get maximumPromoTzs1500;
   String get maybeLater;
   String get markAllReadCount;
   String get message;
@@ -188,6 +191,9 @@ abstract class Languages {
   String get noRecentLocations;
   String
   get noteByProceedingYouConsentToGetCallsWhatsappOrSmsMessagesIncludingByAu;
+  String get notificationPhoneRequired;
+  String get notificationPhoneSubtitle;
+  String get notificationPhoneTitle;
   String get notification;
   String get notifications;
   String get ok;
@@ -197,6 +203,10 @@ abstract class Languages {
   String get pleaseEnterLabel;
   String get otpResentSuccessfully;
   String get past;
+  String get enterPassengerFullName;
+  String get passengerDetailsTitle;
+  String get passengerNameLabel;
+  String get passengerPhoneLabel;
   String get payUsing;
   String get payment;
   String get processing;
@@ -211,12 +221,16 @@ abstract class Languages {
   String get pleaseWaitWhileWeProcessYourRequest;
   String get paymentMode;
   String get paymentNotConfirmed;
+  String get bookRidePaymentNotAppliedTitle;
+  String get bookRidePaymentNotAppliedMessage;
   String get paymentValidationFailed;
   String get phoneNumberUnavailable;
   String get phoneWithNumber;
   String get pickAnyTagsThatMatchThisTrip;
   String get pickup;
   String get pickupPoint;
+  String get pickupConfirmationNoteLabel;
+  String get pickupConfirmationNoteHint;
   String get pin;
   String get pinLocked;
   String get pleaseConfirmPickupPointToContinue;
@@ -255,11 +269,24 @@ abstract class Languages {
   String get thankYouForRidingWithSelcomGo;
   String get mobileMoney;
   String get card;
-  String get promoCodeCodeApplied;
-  String get promoCodeAppliedWithCode;
-  String get promoAppliedWithTitle;
   String get promocodeList;
   String get promotions;
+  String get havePromoCode;
+  String get promoApplySuccessMessage;
+  String get promoRemovedTitle;
+  String get promoRemovedDestinationChanged;
+  String get promoErrorInvalid;
+  String get promoErrorExpired;
+  String get promoErrorNotApplicable;
+  String get promoErrorNetwork;
+  String get promoNotAppliedTitle;
+  String get promoCodeNotValidForVehicle;
+  String get rideFreeLabel;
+  String get receiptPromoLine;
+  String get promoMinRideAmount;
+  String get promoExpiresToday;
+  String get noAvailablePromoCodes;
+  String get failedToLoadPromoCodes;
   String get rating;
   String get ratingGiven;
   String get ratingRequired;

@@ -49,6 +49,8 @@ class _RideEndpoints {
   final estimateFare = "go/rides/estimate";
   final getVehicleTypes = "go/vehicles/types";
   final bookRide = "go/rides/book";
+  final promoValidate = "go/promo/validate";
+  final promoAvailable = "go/promo/available";
   final history = "go/rides/history";
   final recentDestinations = "go/rides/recent-destinations";
   final activeRide = "go/rides/active";
@@ -117,6 +119,8 @@ class _SettingsEndpoints {
 class _CommonEndpoints {
   const _CommonEndpoints();
 
+  final onboardingBanner = "go/banner";
+  final chatQuickReplies = "go/chat/quick-replies";
   final getSettings = "get_setting";
   final aboutUs = "get_setting?type=1";
   final terms = "get_setting?type=2";

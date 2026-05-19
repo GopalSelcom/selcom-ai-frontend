@@ -303,6 +303,16 @@ class ReceiptImageGenerator {
                 receipt.currency,
               ),
               _fareRow(AppStrings.timeCharge.tr, receipt.timeCharge, receipt.currency),
+              if (receipt.promoDiscountAmount > 0 &&
+                  (receipt.promoCode?.trim().isNotEmpty ?? false))
+                _fareRow(
+                  AppStrings.receiptPromoLine
+                      .trParams({'code': receipt.promoCode!.trim()})
+                      .tr,
+                  -receipt.promoDiscountAmount,
+                  receipt.currency,
+                  valueColor: Colors.green.shade700,
+                ),
               if (receipt.discount > 0)
                 _fareRow(
                   AppStrings.discount.tr,
@@ -327,9 +337,10 @@ class ReceiptImageGenerator {
                     ),
                   ),
                   Text(
-                    CurrencyFormatter.formatWithApiCurrency(
+                    CurrencyFormatter.formatPayableOrFree(
                       receipt.total,
                       receipt.currency,
+                      freeLabel: AppStrings.rideFreeLabel.tr,
                     ),
                     style: const TextStyle(
                       fontSize: 15,

@@ -7,6 +7,7 @@ import '../../../../core/data/models/requests/create_saved_place_request.dart';
 import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
 import '../../../../core/data/models/responses/create_saved_place_response.dart';
 import '../../../../core/network/api_service.dart';
+import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../models/contact_us_models.dart';
@@ -64,6 +65,9 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       );
       return profileResponse.data.toUserModel();
     }
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return const UserModel(id: '');
+    }
     throw Exception('Failed to get profile');
   }
 
@@ -89,6 +93,22 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     if (response.statusCode == 200 && response.data != null) {
       return UserProfileUpdateResponse.fromJson(response.data);
     }
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      final d = response.data;
+      if (d is Map<String, dynamic>) {
+        return UserProfileUpdateResponse.fromJson(d);
+      }
+      if (d is Map) {
+        return UserProfileUpdateResponse.fromJson(
+          Map<String, dynamic>.from(d),
+        );
+      }
+      return UserProfileUpdateResponse(
+        statusCode: response.statusCode,
+        message: null,
+        response: null,
+      );
+    }
     throw Exception(response.data['message'] ?? 'Failed to update profile');
   }
 
@@ -109,6 +129,9 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
 
     if (response.statusCode == 200 && response.data != null) {
       return UserModel.fromJson(response.data['response'] ?? {});
+    }
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return UserModel.fromJson({});
     }
     throw Exception(response.data['message'] ?? 'Failed to update profile');
   }
@@ -210,8 +233,42 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      final List data = response.data['data'] ?? [];
-      return data.map((e) => PaymentMethodModel.fromJson(e)).toList();
+      // API shape (go/user/payment-methods):
+      // { "data": { "default": "wallet", "methods": [ { "type", "label", ... } ] } }
+      // Legacy: { "data": [ { ... }, ... ] }
+      final rawData = response.data['data'];
+      final List<dynamic> rows;
+      if (rawData is List) {
+        rows = rawData;
+      } else if (rawData is Map) {
+        final methods = rawData['methods'];
+        rows = methods is List ? methods : <dynamic>[];
+      } else {
+        rows = <dynamic>[];
+      }
+      final models = rows
+          .map((e) {
+            if (e is! Map) {
+              return null;
+            }
+            return PaymentMethodModel.fromJson(Map<String, dynamic>.from(e));
+          })
+          .whereType<PaymentMethodModel>()
+          .toList();
+
+      if (rawData is Map) {
+        final def = rawData['default']?.toString().trim();
+        if (def != null && def.isNotEmpty) {
+          final idx = models.indexWhere(
+            (m) => m.type == def || m.id == def,
+          );
+          if (idx > 0) {
+            models.insert(0, models.removeAt(idx));
+          }
+        }
+      }
+
+      return models;
     }
     return [];
   }
@@ -228,6 +285,13 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
 
     if (response.statusCode == 200 && response.data != null) {
       return EmailSubjectResponseModel.fromJson(response.data);
+    }
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return EmailSubjectResponseModel.fromJson({
+        'status_code': response.statusCode,
+        'message': '',
+        'response': <String>[],
+      });
     }
     throw Exception('Failed to get email subject');
   }
@@ -246,6 +310,12 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
 
     if (response.data != null) {
       return SendEmailResponseModel.fromJson(response.data);
+    }
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return SendEmailResponseModel(
+        statusCode: response.statusCode ?? 400,
+        message: '',
+      );
     }
     throw Exception('Failed to send email');
   }

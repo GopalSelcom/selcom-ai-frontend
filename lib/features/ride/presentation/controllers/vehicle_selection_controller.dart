@@ -9,6 +9,7 @@ import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/data/models/requests/book_ride_request.dart';
+import '../../../../core/data/models/responses/rides/book_rides_response.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/near_by_rider_response.dart';
@@ -30,6 +31,10 @@ import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../../../../core/services/app_region_service.dart';
+import '../../../../core/services/app_settings_service.dart';
+import '../../../../core/services/analytics_service.dart';
+import '../../../../core/errors/failures.dart';
+import '../../../promotions/presentation/promo_code_route_args.dart';
 import '../../../../shared/utils/country_region_defaults.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 
@@ -58,12 +63,18 @@ class VehicleSelectionController extends GetxController {
   final lastSocketError = ''.obs;
   final nearbyDriverCount = 0.obs;
   final paymentStatus = PaymentStatus.pending.obs;
-  final paymentTimerSeconds = 120.obs;
+
+  /// Countdown shown in [PaymentStatusDialog]; initial duration from settings API.
+  final paymentTimerSeconds = 300.obs;
+  final appliedPromoCode = ''.obs;
+  final promoValidatedAt = Rxn<DateTime>();
+  Timer? _promoEstimateDebounce;
   final isRouteReady = false.obs;
   final isLocationIconsReady = false.obs;
   final isMapVisualReady = false.obs;
   final pickupOverlayOffset = Rxn<Offset>();
   final dropOverlayOffset = Rxn<Offset>();
+  final dropOverlayOffsets = <Offset?>[].obs;
 
   /// Full route for polyline (API).
   final routePoints = <LatLng>[].obs;
@@ -86,8 +97,12 @@ class VehicleSelectionController extends GetxController {
 
   GoogleMapController? mapController;
   LatLng? _lastProjectedPickup;
-  LatLng? _lastProjectedDrop;
+  List<LatLng> _lastProjectedDrops = const <LatLng>[];
   int _overlayProjectionSeq = 0;
+
+  /// Incremented when the [GoogleMap] widget is disposed or this controller
+  /// closes, so stale [Future.microtask] / async callbacks skip map I/O.
+  int _mapDisposedGeneration = 0;
 
   BitmapDescriptor? driverIcon;
   BitmapDescriptor? pickupIcon;
@@ -105,10 +120,35 @@ class VehicleSelectionController extends GetxController {
 
   @override
   void onClose() {
+    _promoEstimateDebounce?.cancel();
     _nearbyDriversSub?.cancel();
     _nearbyDriversErrorSub?.cancel();
     _nearbyDriversConnectionSub?.cancel();
+    _invalidateMapSession();
     super.onClose();
+  }
+
+  /// Called from [AppGoogleMap.onMapDisposed] when the map widget is removed.
+  void onMapDisposed() => _invalidateMapSession();
+
+  void _invalidateMapSession() {
+    mapController = null;
+    _mapDisposedGeneration++;
+    // Drop any in-flight overlay projection that still holds the old controller.
+    _overlayProjectionSeq++;
+  }
+
+  /// [_fitBounds] is also invoked via [Future.microtask] after async estimate work.
+  /// Capture [_mapDisposedGeneration] now so a dispose that happens before the
+  /// microtask runs causes an immediate no-op instead of touching a dead controller.
+  void _scheduleFitBoundsMicrotask() {
+    final gen = _mapDisposedGeneration;
+    Future.microtask(() => _fitBounds(disposalGenWhenScheduled: gen));
+  }
+
+  bool _isGoogleMapDisposedUseError(Object e) {
+    final s = e.toString().toLowerCase();
+    return s.contains('googlemapcontroller') && s.contains('disposed');
   }
 
   void _parseArguments() {
@@ -176,15 +216,23 @@ class VehicleSelectionController extends GetxController {
     await _loadEstimates();
   }
 
-  Future<void> _loadEstimates() async {
-    isLoadingEstimates.value = true;
+  FareEstimateRequest _fareEstimateRequest() {
+    final trimmed = appliedPromoCode.value.trim();
+    return FareEstimateRequest(
+      pickup: pickupEntity,
+      destinations: destinations.toList(),
+      promoCode: trimmed.isEmpty ? null : trimmed,
+    );
+  }
+
+  Future<void> _loadEstimates({bool silent = false}) async {
+    if (!silent) {
+      isLoadingEstimates.value = true;
+    }
     isRouteReady.value = false;
     routePoints.clear();
     driverMarkerPoints.clear();
-    final req = FareEstimateRequest(
-      pickup: pickupEntity,
-      destinations: destinations.toList(),
-    );
+    final req = _fareEstimateRequest();
 
     final vehicleTypesResult = await homeRepository.getVehicleTypes();
     List<VehicleTypeModel> vehicleTypes = [];
@@ -218,6 +266,9 @@ class VehicleSelectionController extends GetxController {
               .map((e) => _withResolvedVehicleTypeId(e, vehicleTypes))
               .toList();
           estimates.assignAll(normalized);
+          if (appliedPromoCode.value.trim().isNotEmpty) {
+            promoValidatedAt.value = DateTime.now();
+          }
 
           if (model.routeGeometry?.coordinates != null &&
               model.routeGeometry!.coordinates!.isNotEmpty) {
@@ -256,7 +307,9 @@ class VehicleSelectionController extends GetxController {
         }
       },
     );
-    isLoadingEstimates.value = false;
+    if (!silent) {
+      isLoadingEstimates.value = false;
+    }
     _applyPreferredVehicleSelection();
 
     if (estimates.isNotEmpty) {
@@ -264,7 +317,7 @@ class VehicleSelectionController extends GetxController {
     }
 
     _requestNearbyDriversForCurrentSelection();
-    Future.microtask(_fitBounds);
+    _scheduleFitBoundsMicrotask();
   }
 
   void _useStraightLineFallback() {
@@ -402,8 +455,13 @@ class VehicleSelectionController extends GetxController {
       perKmCharge: e.perKmCharge,
       perMinCharge: e.perMinCharge,
       minimumFare: e.minimumFare,
+      waypointCharge: e.waypointCharge,
       maxPassengers: e.maxPassengers ?? matched.maxPassengers,
       currency: e.currency,
+      promoApplied: e.promoApplied,
+      promoDiscount: e.promoDiscount,
+      discountedFare: e.discountedFare,
+      promoError: e.promoError,
     );
   }
 
@@ -479,7 +537,18 @@ class VehicleSelectionController extends GetxController {
     return estimates[i];
   }
 
-  int get selectedFareAmount => selectedEstimate?.fareEstimate ?? 0;
+  int get selectedPayableFareAmount => selectedEstimate?.displayFare ?? 0;
+
+  int get selectedOriginalFareAmount => selectedEstimate?.originalFare ?? 0;
+
+  int get selectedPromoSavingsAmount {
+    final e = selectedEstimate;
+    if (e == null) return 0;
+    if (e.promoApplied == true && (e.promoDiscount ?? 0) > 0) {
+      return e.promoDiscount!;
+    }
+    return 0;
+  }
 
   String get currency =>
       selectedEstimate?.currency ??
@@ -492,6 +561,16 @@ class VehicleSelectionController extends GetxController {
     selectedVehicleIndex.value = index;
     await loadDriverIcon();
     _requestNearbyDriversForCurrentSelection();
+    if (appliedPromoCode.value.trim().isNotEmpty) {
+      _scheduleSilentPromoEstimateRefresh();
+    }
+  }
+
+  void _scheduleSilentPromoEstimateRefresh() {
+    _promoEstimateDebounce?.cancel();
+    _promoEstimateDebounce = Timer(const Duration(milliseconds: 450), () {
+      unawaited(_loadEstimates(silent: true));
+    });
   }
 
   Future<void> bookRide() async {
@@ -554,10 +633,7 @@ class VehicleSelectionController extends GetxController {
 
       // Re-estimate fare/route after pickup confirmation so pricing and ETA are fresh.
       final refreshedEstimateResult = await homeRepository.estimateFare(
-        FareEstimateRequest(
-          pickup: pickupEntity,
-          destinations: destinations.toList(),
-        ),
+        _fareEstimateRequest(),
       );
 
       final refreshedOk = await refreshedEstimateResult.fold<Future<bool>>(
@@ -626,23 +702,31 @@ class VehicleSelectionController extends GetxController {
 
           await loadDriverIcon();
           _requestNearbyDriversForCurrentSelection();
-          Future.microtask(_fitBounds);
+          _scheduleFitBoundsMicrotask();
           return true;
         },
       );
       if (!refreshedOk) return;
 
-      final isBookedForOther = (confirmed['isBookedForOther'] as bool?) ?? false;
+      if (!await _awaitPromoStalenessGuardIfNeeded()) {
+        return;
+      }
+
+      final isBookedForOther =
+          (confirmed['isBookedForOther'] as bool?) ?? false;
       final passengerName = confirmed['passengerName'] as String?;
       final passengerPhone = confirmed['passengerPhone'] as String?;
+      final rawRideNote = confirmed['note'];
+      final rideNote = rawRideNote == null
+          ? ''
+          : (rawRideNote is String
+                ? rawRideNote.trim()
+                : rawRideNote.toString().trim());
 
       // 1) Validate payment first (Validate Ride Payment - Block).
       final refreshedSelectedEstimate = selectedEstimate;
       final validateRequest = ValidateRidePaymentRequest(
-        fareEstimate:
-            refreshedSelectedEstimate?.fareEstimate ??
-            est.fareEstimate ??
-            selectedFareAmount,
+        fareEstimate: refreshedSelectedEstimate?.displayFare ?? est.displayFare,
         paymentMethod: pay.type,
         vehicleTypeId: resolvedVehicleTypeId,
       );
@@ -670,93 +754,174 @@ class VehicleSelectionController extends GetxController {
           if (!_socketService.isConnected) {
             await _socketService.connect();
           }
-          _socketService.joinPaymentRoom(validationId: validationId);
-          String txnId = generateTransactionId();
 
-         Future.delayed(const Duration(seconds: 5), () {
-           rideRepository.walletDummyPaymentRequest(
-             DummyPaymentRequest(
-               result: "SUCCESS",
-               transId: txnId,
-               validationId: validationId,
-             ),
-           );
-         });
-          _showPaymentStatusDialog();
+          var blockValidationId = validationId;
+          while (true) {
+            final roomValidationId = blockValidationId;
+            _socketService.joinPaymentRoom(validationId: roomValidationId);
+            final txnId = generateTransactionId();
 
-          final blockOk = await _waitForPaymentBlockStatus(
-            timeout: const Duration(minutes: 2),
-          );
+            Future.delayed(const Duration(seconds: 5), () {
+              rideRepository.walletDummyPaymentRequest(
+                DummyPaymentRequest(
+                  result: "SUCCESS",
+                  transId: txnId,
+                  validationId: roomValidationId,
+                ),
+              );
+            });
+            _showPaymentStatusDialog();
 
-          if (blockOk) {
-            paymentStatus.value = PaymentStatus.success;
-            await Future.delayed(const Duration(seconds: 2));
-          }
-
-          _closePaymentStatusDialogIfOpen();
-          if (!blockOk) {
-            AppDialogs.showErrorDialog(
-              title: AppStrings.paymentNotConfirmed.tr,
-              message:
-                  AppStrings.weCouldNotConfirmYourPaymentBlockPleaseTryAgain.tr,
+            final blockOk = await _waitForPaymentBlockStatus(
+              timeout: Duration(
+                seconds: di.sl<AppSettingsService>().paymentWaitSeconds.value,
+              ),
             );
-            return;
+
+            if (blockOk) {
+              paymentStatus.value = PaymentStatus.success;
+              await Future.delayed(const Duration(seconds: 2));
+            }
+
+            _closePaymentStatusDialogIfOpen();
+
+            if (blockOk) {
+              break;
+            }
+
+            final shouldRetry = await _offerPaymentBlockRetry();
+            if (!shouldRetry) {
+              return;
+            }
+
+            final reValidation = await rideRepository.validateRidePayment(
+              validateRequest,
+            );
+            final nextId = reValidation.fold<String?>(
+              (f) {
+                AppDialogs.showErrorDialog(
+                  title: AppStrings.paymentValidationFailed.tr,
+                  message: AppStrings.couldNotValidatePaymentPleaseTryAgain.tr,
+                );
+                return null;
+              },
+              (id) {
+                final t = id.trim();
+                if (t.isEmpty) {
+                  AppDialogs.showErrorDialog(
+                    title: AppStrings.paymentValidationFailed.tr,
+                    message:
+                        AppStrings.validationIdMissingFromServerResponse.tr,
+                  );
+                  return null;
+                }
+                return t;
+              },
+            );
+            if (nextId == null) {
+              return;
+            }
+            blockValidationId = nextId;
           }
 
-          // 2) Only after validation, submit ride booking.
-          final request = BookRideRequest(
-            validationId: validationId,
-            idempotencyKey: 'idem_${DateTime.now().millisecondsSinceEpoch}',
-            pickup: pickupEntity,
-            destinations: destinations.toList(),
-            vehicleTypeId: resolvedVehicleTypeId,
-            paymentMethod: pay.type,
-            isBookedForOther: isBookedForOther,
-            passengerName: isBookedForOther ? passengerName : null,
-            passengerPhone: isBookedForOther ? passengerPhone : null,
-          );
-          final result = await homeRepository.bookRide(request);
-          await result.fold<Future<void>>(
-            (f) async {
-              // Clean the message if it contains "Exception: "
-              String msg = f.message;
-              if (msg.startsWith('Exception: ')) {
-                msg = msg.replaceFirst('Exception: ', '');
-              }
-              AppDialogs.showErrorDialog(title: 'Booking failed', message: msg);
-            },
-            (data) async {
-              final rideId = data.data?.ride?.id;
-              if (rideId == null || rideId.isEmpty) {
-                AppDialogs.showErrorDialog(
-                  title: 'Booking',
-                  message:
-                      data.message ??
-                      'Ride was created but ride id is missing from the response.',
-                );
-                return;
-              }
+          // 2) Only after validation, submit ride booking (may retry if API OK but payment not applied).
+          var bookingSubmitInFlight = false;
+          Future<void> submitRideBooking() async {
+            if (bookingSubmitInFlight) return;
+            bookingSubmitInFlight = true;
+            try {
+              final request = BookRideRequest(
+                validationId: blockValidationId,
+                idempotencyKey: 'idem_${DateTime.now().millisecondsSinceEpoch}',
+                pickup: pickupEntity,
+                destinations: destinations.toList(),
+                vehicleTypeId: resolvedVehicleTypeId,
+                paymentMethod: pay.type,
+                isBookedForOther: isBookedForOther,
+                passengerName: isBookedForOther ? passengerName : null,
+                passengerPhone: isBookedForOther ? passengerPhone : null,
+                note: rideNote,
+                fareEstimate: selectedOriginalFareAmount,
+                promoCode: appliedPromoCode.value.trim().isEmpty
+                    ? null
+                    : appliedPromoCode.value.trim(),
+              );
+              final result = await homeRepository.bookRide(request);
+              await result.fold<Future<void>>(
+                (f) async {
+                  String msg = f.message;
+                  if (msg.startsWith('Exception: ')) {
+                    msg = msg.replaceFirst('Exception: ', '');
+                  }
+                  AppDialogs.showErrorDialog(
+                    title: 'Booking failed',
+                    message: msg,
+                  );
+                },
+                (data) async {
+                  final ride = data.data?.ride;
+                  final rideId = ride?.id;
+                  if (rideId == null || rideId.isEmpty || ride == null) {
+                    AppDialogs.showErrorDialog(
+                      title: 'Booking',
+                      message:
+                          data.message ??
+                          'Ride was created but ride id is missing from the response.',
+                    );
+                    return;
+                  }
 
-              Get.offNamed(
-                AppRoutes.findingDriver,
-                arguments: {
-                  'rideId': rideId,
-                  'vehicleType': _socketVehicleTypeForEstimate(est),
-                  'pickupLat': pickupEntity.lat,
-                  'pickupLng': pickupEntity.lng,
-                  'pickupAddress': pickupEntity.address,
-                  'destinationLat': destinationEntity.lat,
-                  'destinationLng': destinationEntity.lng,
-                  'destinationAddress': destinationEntity.address,
-                  'destinations': destinations.toList(),
-                  'fareBreakdown': data.data?.ride?.fareBreakdown?.toJson(),
-                  'isBookedForOther': isBookedForOther,
-                  'passengerName': passengerName,
-                  'passengerPhone': passengerPhone,
+                  final pc = ride.promoCode?.toString().trim();
+                  if (pc != null && pc.isNotEmpty) {
+                    unawaited(
+                      di.sl<AnalyticsService>().logEvent(
+                        'promo_applied_to_booking',
+                        parameters: {'code': pc},
+                      ),
+                    );
+                  }
+
+                  if (!rideBookResponseIndicatesPaymentApplied(
+                    ride,
+                    pay.type,
+                  )) {
+                    AppDialogs.showConfirmationDialog(
+                      title: AppStrings.bookRidePaymentNotAppliedTitle.tr,
+                      message: AppStrings.bookRidePaymentNotAppliedMessage.tr,
+                      confirmText: AppStrings.retry,
+                      cancelText: AppStrings.cancel,
+                      onConfirm: submitRideBooking,
+                    );
+                    return;
+                  }
+
+                  Get.offNamed(
+                    AppRoutes.findingDriver,
+                    arguments: {
+                      'rideId': rideId,
+                      'vehicleType': _socketVehicleTypeForEstimate(est),
+                      'pickupLat': pickupEntity.lat,
+                      'pickupLng': pickupEntity.lng,
+                      'pickupAddress': pickupEntity.address,
+                      'destinationLat': destinationEntity.lat,
+                      'destinationLng': destinationEntity.lng,
+                      'destinationAddress': destinationEntity.address,
+                      'destinations': destinations.toList(),
+                      'fareBreakdown': ride.fareBreakdown?.toJson(),
+                      'isBookedForOther': isBookedForOther,
+                      'passengerName': passengerName,
+                      'passengerPhone': passengerPhone,
+                      'cancel_time': ride.cancelTime,
+                    },
+                  );
                 },
               );
-            },
-          );
+            } finally {
+              bookingSubmitInFlight = false;
+            }
+          }
+
+          await submitRideBooking();
         },
       );
     } finally {
@@ -776,8 +941,29 @@ class VehicleSelectionController extends GetxController {
     return 'DEV-BLOCK-$formattedNumber';
   }
 
+  Future<bool> _offerPaymentBlockRetry() {
+    final completer = Completer<bool>();
+    AppDialogs.showConfirmationDialog(
+      title: AppStrings.paymentNotConfirmed.tr,
+      message: AppStrings.weCouldNotConfirmYourPaymentBlockPleaseTryAgain.tr,
+      confirmText: AppStrings.retry,
+      cancelText: AppStrings.cancel,
+      onConfirm: () {
+        if (!completer.isCompleted) {
+          completer.complete(true);
+        }
+      },
+      onCancel: () {
+        if (!completer.isCompleted) {
+          completer.complete(false);
+        }
+      },
+    );
+    return completer.future;
+  }
+
   Future<bool> _waitForPaymentBlockStatus({
-    Duration timeout = const Duration(minutes: 2),
+    Duration timeout = const Duration(seconds: 300),
   }) async {
     final completer = Completer<bool>();
     late StreamSubscription<PaymentStatusUpdateResponse> sub;
@@ -815,7 +1001,10 @@ class VehicleSelectionController extends GetxController {
 
   void _showPaymentStatusDialog() {
     paymentStatus.value = PaymentStatus.pending;
-    paymentTimerSeconds.value = 120;
+    paymentTimerSeconds.value = di
+        .sl<AppSettingsService>()
+        .paymentWaitSeconds
+        .value;
 
     if (Get.isDialogOpen == true) return;
 
@@ -942,18 +1131,22 @@ class VehicleSelectionController extends GetxController {
 
   void scheduleOverlayProjection({
     required LatLng pickup,
-    required LatLng drop,
+    required List<LatLng> drops,
     required double devicePixelRatio,
   }) {
     final pickupChanged = _lastProjectedPickup != pickup;
-    final dropChanged = _lastProjectedDrop != drop;
-    if (!pickupChanged && !dropChanged) return;
+    final dropsChanged =
+        _lastProjectedDrops.length != drops.length ||
+        !_lastProjectedDrops.asMap().entries.every(
+          (e) => e.value == drops[e.key],
+        );
+    if (!pickupChanged && !dropsChanged) return;
     _lastProjectedPickup = pickup;
-    _lastProjectedDrop = drop;
+    _lastProjectedDrops = List<LatLng>.from(drops);
     Future.microtask(
       () => projectOverlayOffsets(
         pickup: pickup,
-        drop: drop,
+        drops: drops,
         devicePixelRatio: devicePixelRatio,
       ),
     );
@@ -961,22 +1154,38 @@ class VehicleSelectionController extends GetxController {
 
   Future<void> projectOverlayOffsets({
     required LatLng pickup,
-    required LatLng drop,
+    required List<LatLng> drops,
     required double devicePixelRatio,
   }) async {
     if (mapController == null) return;
     final seq = ++_overlayProjectionSeq;
-    final pickupRaw = await AppMapService.screenOffsetFor(mapController!, pickup);
-    final dropRaw = await AppMapService.screenOffsetFor(mapController!, drop);
+    final pickupRaw = await AppMapService.screenOffsetFor(
+      mapController!,
+      pickup,
+    );
+    final dropRaws = await Future.wait(
+      drops.map((d) => AppMapService.screenOffsetFor(mapController!, d)),
+    );
     if (seq != _overlayProjectionSeq) return;
+    if (mapController == null) return;
 
-    Offset? toLogical(Offset? raw) {
+    Offset? normalize(Offset? raw) {
       if (raw == null) return null;
-      return Offset(raw.dx / devicePixelRatio, raw.dy / devicePixelRatio);
+      // Android map projection is reported in physical pixels; iOS aligns with
+      // logical pixels in our map stack. Keep both platform behaviors stable.
+      if (GetPlatform.isAndroid) {
+        return Offset(raw.dx / devicePixelRatio, raw.dy / devicePixelRatio);
+      }
+      return raw;
     }
 
-    pickupOverlayOffset.value = toLogical(pickupRaw);
-    dropOverlayOffset.value = toLogical(dropRaw);
+    pickupOverlayOffset.value = normalize(pickupRaw);
+    dropOverlayOffsets.assignAll(
+      dropRaws.map(normalize).toList(growable: false),
+    );
+    dropOverlayOffset.value = dropOverlayOffsets.isNotEmpty
+        ? dropOverlayOffsets.last
+        : null;
   }
 
   String compactAddress(String value) {
@@ -989,6 +1198,11 @@ class VehicleSelectionController extends GetxController {
   String get pickupMapLabel => compactAddress(pickupEntity.address);
 
   String get destinationMapLabel => compactAddress(destinationEntity.address);
+
+  String dropMapLabelAt(int index) {
+    if (index < 0 || index >= destinations.length) return destinationMapLabel;
+    return compactAddress(destinations[index].address);
+  }
 
   String get destinationEtaBadgeText {
     final minutes = selectedEstimate?.durationMinutes ?? 0;
@@ -1008,13 +1222,112 @@ class VehicleSelectionController extends GetxController {
   Color get socketDriverStatusColor =>
       isSocketConnected.value ? AppColors.success : AppColors.warningStrong;
 
-  Color get socketDriverStatusBackground =>
-      isSocketConnected.value
-          ? AppColors.bgSuccessBanner
-          : AppColors.bgWarningLight;
+  Color get socketDriverStatusBackground => isSocketConnected.value
+      ? AppColors.bgSuccessBanner
+      : AppColors.bgWarningLight;
 
-  void openPromotions() {
-    Get.toNamed(AppRoutes.promotions);
+  void _clearPromoAfterRouteChange() {
+    if (appliedPromoCode.value.trim().isEmpty) return;
+    appliedPromoCode.value = '';
+    promoValidatedAt.value = null;
+    Get.snackbar(
+      AppStrings.promoRemovedTitle.tr,
+      AppStrings.promoRemovedDestinationChanged.tr,
+      snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 3),
+    );
+  }
+
+  Future<bool> _awaitPromoStalenessGuardIfNeeded() async {
+    final code = appliedPromoCode.value.trim();
+    if (code.isEmpty) return true;
+    final at = promoValidatedAt.value;
+    if (at != null &&
+        DateTime.now().difference(at) <= const Duration(minutes: 5)) {
+      return true;
+    }
+    final est = selectedEstimate;
+    final vid = (est?.vehicleTypeId ?? '').trim();
+    if (vid.isEmpty || !_looksLikeBackendVehicleTypeId(vid)) {
+      return true;
+    }
+    final fare = est!.originalFare;
+    final result = await homeRepository.validatePromo(
+      code: code,
+      vehicleTypeId: vid,
+      fareEstimate: fare,
+    );
+    return result.fold<Future<bool>>(
+      (f) async {
+        final msg = f is PromoValidationFailure && f.errorCode != null
+            ? userMessageForPromoSheetError(f.errorCode!)
+            : f.message;
+        AppDialogs.showErrorDialog(
+          title: AppStrings.promoNotAppliedTitle.tr,
+          message: msg,
+        );
+        appliedPromoCode.value = '';
+        promoValidatedAt.value = null;
+        await _loadEstimates();
+        return false;
+      },
+      (data) async {
+        appliedPromoCode.value = data.code;
+        promoValidatedAt.value = DateTime.now();
+        return true;
+      },
+    );
+  }
+
+  String userMessageForPromoSheetError(String code) {
+    switch (code.trim()) {
+      case 'VALID_PROMO_INVALID':
+        return AppStrings.promoErrorInvalid.tr;
+      case 'VALID_PROMO_EXPIRED':
+        return AppStrings.promoErrorExpired.tr;
+      case 'VALID_PROMO_NOT_APPLICABLE':
+        return AppStrings.promoErrorNotApplicable.tr;
+      case 'INVALID_INPUT':
+        return AppStrings.couldNotResolveVehicleTypeIdPleaseTryAgain.tr;
+      default:
+        return AppStrings.promoErrorNetwork.tr;
+    }
+  }
+
+  Future<void> clearAppliedPromo() async {
+    if (appliedPromoCode.value.trim().isEmpty) return;
+    appliedPromoCode.value = '';
+    promoValidatedAt.value = null;
+    await _loadEstimates();
+  }
+
+  Future<void> openPromotions() async {
+    final est = selectedEstimate;
+    final vid = (est?.vehicleTypeId ?? '').trim();
+    if (vid.isEmpty || !_looksLikeBackendVehicleTypeId(vid)) {
+      AppDialogs.showErrorDialog(
+        title: AppStrings.vehicleType.tr,
+        message: AppStrings.couldNotResolveVehicleTypeIdPleaseTryAgain.tr,
+      );
+      return;
+    }
+
+    final result = await Get.toNamed<dynamic>(
+      AppRoutes.promotions,
+      arguments: PromoCodeRouteArgs(
+        vehicleTypeId: vid,
+        fareEstimate: est!.originalFare,
+        appliedCode: appliedPromoCode.value.trim(),
+      ).toMap(),
+    );
+
+    if (result is! Map) return;
+    final code = result['code']?.toString().trim().toUpperCase();
+    if (code == null || code.isEmpty) return;
+
+    appliedPromoCode.value = code;
+    promoValidatedAt.value = DateTime.now();
+    await _loadEstimates();
   }
 
   void closeVehicleSelection() {
@@ -1032,20 +1345,35 @@ class VehicleSelectionController extends GetxController {
   }
 
   Future<void> editDropFromMap() async {
-    await _openLocationEdit(isEditingPickup: false);
+    await _openLocationEdit(
+      isEditingPickup: false,
+      destinationIndex: destinations.length - 1,
+    );
   }
 
-  Future<void> _openLocationEdit({required bool isEditingPickup}) async {
+  Future<void> editDropAtIndexFromMap(int index) async {
+    if (index < 0 || index >= destinations.length) return;
+    await _openLocationEdit(isEditingPickup: false, destinationIndex: index);
+  }
+
+  Future<void> _openLocationEdit({
+    required bool isEditingPickup,
+    int? destinationIndex,
+  }) async {
     if (Get.isRegistered<LocationSelectionController>()) {
       Get.delete<LocationSelectionController>();
     }
+
+    final safeDestinationIndex = destinationIndex == null
+        ? destinations.length - 1
+        : destinationIndex.clamp(0, destinations.length - 1);
 
     final result = await Get.toNamed(
       AppRoutes.locationSelection,
       arguments: {
         'fromVehicleSelectionEdit': true,
         'editTarget': isEditingPickup ? 'pickup' : 'drop',
-        'activeSegmentIndex': isEditingPickup ? 0 : 1,
+        'activeSegmentIndex': isEditingPickup ? 0 : safeDestinationIndex + 1,
         // In edit mode we keep existing values prefilled.
         'clearPickupOnOpen': false,
         'clearDestinationOnOpen': false,
@@ -1085,7 +1413,9 @@ class VehicleSelectionController extends GetxController {
       final lng = (m['lng'] as num?)?.toDouble();
       final address = (m['address'] as String?)?.trim() ?? '';
       if (lat == null || lng == null || address.isEmpty) continue;
-      nextDestinations.add(LocationEntity(lat: lat, lng: lng, address: address));
+      nextDestinations.add(
+        LocationEntity(lat: lat, lng: lng, address: address),
+      );
     }
     if (nextDestinations.isEmpty) return;
 
@@ -1100,12 +1430,18 @@ class VehicleSelectionController extends GetxController {
     update(['route_header']);
 
     isMapVisualReady.value = false;
+    _clearPromoAfterRouteChange();
     await loadLocationIcons();
     await _loadEstimates();
   }
 
-  Future<void> _fitBounds() async {
+  Future<void> _fitBounds({int? disposalGenWhenScheduled}) async {
     if (mapController == null || routePoints.length < 2) return;
+
+    // Stale microtask: map was disposed/recreated after this callback was queued.
+    final scheduledGen = disposalGenWhenScheduled ?? _mapDisposedGeneration;
+    if (scheduledGen != _mapDisposedGeneration) return;
+
     final pts = routePoints.toList();
     double minLat = pts.first.latitude;
     double maxLat = pts.first.latitude;
@@ -1125,17 +1461,58 @@ class VehicleSelectionController extends GetxController {
     final latPad = (latSpan * 0.20).clamp(0.0005, 0.01);
     final lngPad = (lngSpan * 0.20).clamp(0.0005, 0.01);
 
+    if (scheduledGen != _mapDisposedGeneration || mapController == null) return;
+
     // Bounds padding (screen pixels):
     // - lower => more zoom in
     // - higher => more zoom out
-    await mapController!.animateCamera(
-      CameraUpdate.newLatLngBounds(
-        LatLngBounds(
-          southwest: LatLng(minLat - latPad, minLng - lngPad),
-          northeast: LatLng(maxLat + latPad, maxLng + lngPad),
+    try {
+      await mapController!.animateCamera(
+        CameraUpdate.newLatLngBounds(
+          LatLngBounds(
+            southwest: LatLng(minLat - latPad, minLng - lngPad),
+            northeast: LatLng(maxLat + latPad, maxLng + lngPad),
+          ),
+          42,
         ),
-        42,
-      ),
-    );
+      );
+    } catch (e) {
+      if (!_isGoogleMapDisposedUseError(e)) rethrow;
+      // Map removed while awaiting — plugin throws; not an app defect.
+    }
   }
+}
+
+/// True when [ride] looks like a successful hold/charge for prepaid [paymentMethodType].
+bool rideBookResponseIndicatesPaymentApplied(
+  Ride ride,
+  String paymentMethodType,
+) {
+  final type = paymentMethodType.toLowerCase().trim().replaceAll('-', '_');
+  const nonPrepaid = {'cash', 'cod', 'pay_on_delivery', 'pod'};
+  if (nonPrepaid.contains(type)) return true;
+
+  final rawStatus = ride.paymentStatus?.toString().trim().toLowerCase() ?? '';
+  const okStatuses = {
+    'blocked',
+    'block',
+    'completed',
+    'captured',
+    'authorized',
+    'authorised',
+    'paid',
+    'success',
+  };
+  if (rawStatus.isNotEmpty && okStatuses.contains(rawStatus)) return true;
+
+  final blocked = ride.blockedAmount;
+  if (blocked != null && blocked > 0) return true;
+
+  final blockVid = (ride.blockValidationId ?? '').toString().trim();
+  if (blockVid.isNotEmpty) return true;
+
+  final trans = ride.blockTransid?.toString().trim() ?? '';
+  if (trans.isNotEmpty && trans != 'null') return true;
+
+  return false;
 }

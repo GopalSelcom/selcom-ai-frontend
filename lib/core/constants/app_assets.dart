@@ -1,5 +1,6 @@
 class AppAssets {
   static const String _imagePath = 'assets/images';
+  static const String _jsonPath = 'assets/json';
 
   // Home Screen
   static const String mapBackground = '$_imagePath/map_background.png';
@@ -28,7 +29,6 @@ class AppAssets {
   static const String onboarding1 = '$_imagePath/onboarding_1.svg';
   static const String onboarding2 = '$_imagePath/onboarding_2.svg';
   static const String onboarding3 = '$_imagePath/onboarding_3.svg';
-  static const String icArrowRight = '$_imagePath/ic_arrow_right.svg';
   static const String icTanzaniaFlag = '$_imagePath/ic_tanzania_flag.svg';
   static const String icError = '$_imagePath/ic_error.svg';
 
@@ -46,6 +46,7 @@ class AppAssets {
   static const String mapVehicleRickshawSvg = '$_imagePath/rickshaw.svg';
   static const String icPromotions = '$_imagePath/ic_promotions.svg';
   static const String icPromoCode = '$_imagePath/ic_promo_code.svg';
+  static const String icPromoCodeDisabled = '$_imagePath/ic_promo_code_disabled.svg';
 
   // Profile
   static const String icFaceScan = '$_imagePath/ic_face_scan.svg';
@@ -76,4 +77,8 @@ class AppAssets {
       '$_paymentPath/add_card_success.png';
   static const String imgPaymentDeleteCardConfirm =
       '$_paymentPath/delete_card_confirm.png';
+
+  ///animations:-
+  static const String carAnimation =
+      '$_jsonPath/car_animation.json';
 }

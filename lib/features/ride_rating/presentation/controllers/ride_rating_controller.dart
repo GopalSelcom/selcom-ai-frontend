@@ -67,6 +67,15 @@ class RideRatingController extends GetxController {
     return true;
   }
 
+  /// Stars, tags, and comment rules satisfied (ignores [isSubmitting]). Used for when to show the ride-details Done action.
+  bool get isRatingFormComplete {
+    final r = selectedRating.value;
+    if (r < 1) return false;
+    if (selectedTags.isEmpty) return false;
+    if (r <= 2 && commentText.value.trim().isEmpty) return false;
+    return true;
+  }
+
   String vehicleImageAssetForType(String vehicleType) {
     return VehicleImageUtils.imageAssetForVehicleType(vehicleType);
   }
@@ -74,7 +83,13 @@ class RideRatingController extends GetxController {
   Future<void> tryOpenRatingSheetAfterHomeLoad() async {
     if (_hasPromptedThisSession) return;
     _hasPromptedThisSession = true;
-    await _loadPendingReviewRide();
+    try {
+      await _loadPendingReviewRide();
+    } catch (_) {
+      pendingReviewRide.value = null;
+      selectedRating.value = 0;
+      isLoadingRide.value = false;
+    }
     if (pendingReviewRide.value != null) {
       _openRatingBottomSheet();
     }
@@ -108,29 +123,35 @@ class RideRatingController extends GetxController {
 
   Future<void> _loadPendingReviewRide() async {
     isLoadingRide.value = true;
-    final result = await getLastCompletedRideUseCase();
-    result.fold((failure) => _handleFailure(failure), (ride) {
-      if (ride == null) {
-        pendingReviewRide.value = null;
-        selectedRating.value = 0;
-        return;
-      }
+    try {
+      final result = await getLastCompletedRideUseCase();
+      result.fold((failure) => _handleFailure(failure), (ride) {
+        if (ride == null) {
+          pendingReviewRide.value = null;
+          selectedRating.value = 0;
+          return;
+        }
 
-      final isPending = _isWithinPendingReviewWindow(ride);
-      pendingReviewRide.value = isPending ? ride : null;
+        final isPending = _isWithinPendingReviewWindow(ride);
+        pendingReviewRide.value = isPending ? ride : null;
 
-      if (!isPending) {
-        selectedRating.value = 0;
-        return;
-      }
+        if (!isPending) {
+          selectedRating.value = 0;
+          return;
+        }
 
-      final initialRating = ride.riderRating;
-      selectedRating.value =
-          (initialRating != null && initialRating >= 1 && initialRating <= 5)
-          ? initialRating
-          : 0;
-    });
-    isLoadingRide.value = false;
+        final initialRating = ride.riderRating;
+        selectedRating.value =
+            (initialRating != null && initialRating >= 1 && initialRating <= 5)
+            ? initialRating
+            : 0;
+      });
+    } catch (_) {
+      pendingReviewRide.value = null;
+      selectedRating.value = 0;
+    } finally {
+      isLoadingRide.value = false;
+    }
   }
 
   Future<void> onRatingSelected(int rating) async {
@@ -246,8 +267,8 @@ class RideRatingController extends GetxController {
     result.fold((failure) => _handleFailure(failure), (ok) async {
       if (!ok) {
         AppDialogs.showErrorDialog(
-          title:   AppStrings.skipFailed.tr,
-          message:     AppStrings.unableToSkipRatingNow.tr,
+          title: AppStrings.skipFailed.tr,
+          message: AppStrings.unableToSkipRatingNow.tr,
         );
         return;
       }

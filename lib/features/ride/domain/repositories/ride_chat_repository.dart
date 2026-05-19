@@ -16,5 +16,7 @@ abstract class RideChatRepository {
     int page = 1,
   });
 
+  Future<List<String>> fetchQuickReplies({String role = 'passenger'});
+
   void joinRideRoom({required String rideId});
 }
