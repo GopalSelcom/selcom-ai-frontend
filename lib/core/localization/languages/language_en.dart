@@ -94,6 +94,7 @@ class LanguageEn extends Languages {
     'driver_is_heading_to_pickup': 'Driver is heading to pickup',
     'driver_assigned_description':
         'A driver has accepted your ride and is on the way.',
+    'driver_has_accepted_your_ride': 'Driver has accepted your ride',
     'driver_arrived_description':
         'Your driver has arrived at the pickup location.',
     'ride_started_description': 'You are on your way to the destination.',
@@ -872,6 +873,10 @@ class LanguageEn extends Languages {
   @override
   String get driverAssignedDescription =>
       values['driver_assigned_description'] ?? '';
+
+  @override
+  String get driverHasAcceptedYourRide =>
+      values['driver_has_accepted_your_ride'] ?? '';
 
   @override
   String get driverArrivedDescription =>

@@ -4,15 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:selcom_rides_frontend/shared/widgets/map_widgets.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
+import '../../../../shared/widgets/app_google_map.dart';
+import '../../../../shared/widgets/app_map_top_header.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
+import '../../../../shared/widgets/ride_location_summary_card.dart';
 import '../controllers/driver_accepted_controller.dart';
 import '../controllers/ride_share_controller.dart';
 import '../widgets/ride_common_widgets.dart';
@@ -695,14 +697,17 @@ class DriverAcceptedScreen extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 13.h),
-                Text(
-                  c.rideProgressTitle,
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.homeTitle.copyWith(
-                    color: AppColors.textHeading,
-                    fontWeight: FontWeight.w700,
-                    height: 34 / 20,
-                    letterSpacing: -0.4,
+                // Rebuild when [currentRideStatus] changes (in-trip phases).
+                Obx(
+                  () => Text(
+                    c.rideProgressTitle,
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.homeTitle.copyWith(
+                      color: AppColors.textHeading,
+                      fontWeight: FontWeight.w700,
+                      height: 34 / 20,
+                      letterSpacing: -0.4,
+                    ),
                   ),
                 ),
                 SizedBox(height: 8.h),
@@ -1031,13 +1036,15 @@ class DriverAcceptedScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          c.rideProgressTitle,
-          textAlign: TextAlign.center,
-          style: AppTextStyles.homeTitle.copyWith(
-            fontSize: 38.sp / 2,
-            color: AppColors.textHeading,
-            fontWeight: FontWeight.w700,
+        Obx(
+          () => Text(
+            c.rideProgressTitle,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.homeTitle.copyWith(
+              fontSize: 38.sp / 2,
+              color: AppColors.textHeading,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
         SizedBox(height: 14.h),

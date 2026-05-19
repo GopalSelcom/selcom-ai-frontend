@@ -312,7 +312,8 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
                 ),
               ),
 
-              if (!c.isRideCancelled.value) ...[
+              // Countdown + progress only while status is still `searching`.
+              if (c.isSearchingPhase && !c.isRideCancelled.value) ...[
                 SizedBox(height: 36.h),
 
                 // 2. Bolt-like Linear Progress Bar

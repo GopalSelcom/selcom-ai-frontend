@@ -85,6 +85,7 @@ abstract class Languages {
   String get driverIsHeadingToYourLocation;
   String get driverIsHeadingToPickup;
   String get driverAssignedDescription;
+  String get driverHasAcceptedYourRide;
   String get driverArrivedDescription;
   String get rideStartedDescription;
   String get findingYourDriver;
