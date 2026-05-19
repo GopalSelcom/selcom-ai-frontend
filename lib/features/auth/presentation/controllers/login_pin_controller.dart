@@ -11,6 +11,7 @@ import '../../../../core/errors/login_pin_failure.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/analytics_service.dart';
+import '../../../../core/services/biometric_service.dart';
 import '../../../../core/services/login_pin_gate_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/services/voip_callkit_bridge_service.dart';
@@ -39,7 +40,7 @@ enum LoginPinChangeStep { current, newPin, confirmNew }
 /// **Not ride PIN** (`ride-pin-preference` is separate in settings).
 ///
 /// - **setup:** enter → confirm → `SetupLoginPinUseCase` → `Get.offAllNamed(nextRoute)`.
-/// - **login:** `VerifyLoginPinUseCase` → refresh tokens → home or phone (signup incomplete).
+/// - **login:** PIN verify or tap biometric → session refresh → home or phone.
 /// - **change:** current → new → confirm → `ChangeLoginPinUseCase` → success dialog.
 ///
 /// Route args: `{ 'mode': 'setup'|'login'|'change', 'nextRoute': AppRoutes.* }`.
@@ -53,6 +54,8 @@ class LoginPinController extends GetxController {
     required this.deleteLoginPinUseCase,
     required this.loginPinGateService,
     required this.analyticsService,
+    required this.biometricService,
+    required this.refreshLoginSessionUseCase,
   });
 
   final SetupLoginPinUseCase setupLoginPinUseCase;
@@ -62,6 +65,8 @@ class LoginPinController extends GetxController {
   final DeleteLoginPinUseCase deleteLoginPinUseCase;
   final LoginPinGateService loginPinGateService;
   final AnalyticsService analyticsService;
+  final BiometricService biometricService;
+  final RefreshLoginSessionUseCase refreshLoginSessionUseCase;
 
   late final LoginPinScreenMode mode;
   String _nextRoute = AppRoutes.home;
@@ -69,10 +74,23 @@ class LoginPinController extends GetxController {
   final setupStep = LoginPinSetupStep.enter.obs;
   final changeStep = LoginPinChangeStep.current.obs;
   final isLoading = false.obs;
+
+  /// Biometric tap only — avoids full-screen loader over the PIN screen.
+  final isBiometricLoading = false.obs;
   final hasError = false.obs;
   final errorMessage = ''.obs;
   final isInputDisabled = false.obs;
   final lockCountdownLabel = ''.obs;
+
+  /// Server `biometric_enabled` + device hardware (login screen only).
+  final biometricLoginEnabled = false.obs;
+  final biometricHardwareAvailable = false.obs;
+
+  bool get showBiometricUnlockButton =>
+      mode == LoginPinScreenMode.login &&
+      biometricLoginEnabled.value &&
+      biometricHardwareAvailable.value &&
+      !isInputDisabled.value;
 
   String _firstPin = '';
   String _newPinCandidate = '';
@@ -101,7 +119,7 @@ class LoginPinController extends GetxController {
       unawaited(analyticsService.logEvent('go_pin_setup_started'));
     }
     if (mode == LoginPinScreenMode.login) {
-      unawaited(_loadLockState());
+      unawaited(_loadLoginStatusForLoginMode());
     }
   }
 
@@ -146,10 +164,7 @@ class LoginPinController extends GetxController {
       case LoginPinScreenMode.setup:
         return AppStrings.createLoginPinSubtitle.tr;
       case LoginPinScreenMode.login:
-        if (maskedPhone.isEmpty) return AppStrings.enterLoginPinTitle.tr;
-        return AppStrings.enterLoginPinSubtitle.trParams({
-          'maskedPhone': maskedPhone,
-        });
+        return AppStrings.enterLoginPinMessage.tr;
       case LoginPinScreenMode.change:
         return subtitleForChange(changeStep: changeStep.value);
     }
@@ -212,14 +227,63 @@ class LoginPinController extends GetxController {
     maskedPhone.value = await maskedPhoneSubtitle();
   }
 
-  Future<void> _loadLockState() async {
+  Future<void> _loadLoginStatusForLoginMode() async {
+    biometricHardwareAvailable.value = await biometricService.isAvailable();
+
     final statusResult = await getLoginPinStatusUseCase();
     statusResult.fold((_) {}, (status) {
+      biometricLoginEnabled.value = status.biometricEnabled;
       final until = status.lockedUntil;
       if (until != null && until.isAfter(DateTime.now())) {
         _startLockCountdown(until);
       }
     });
+  }
+
+  /// Face ID / fingerprint on login screen (no separate unlock route).
+  Future<void> authenticateWithBiometric() async {
+    if (!showBiometricUnlockButton ||
+        isLoading.value ||
+        isBiometricLoading.value) {
+      return;
+    }
+
+    isBiometricLoading.value = true;
+    hasError.value = false;
+    errorMessage.value = '';
+
+    try {
+      final ok = await biometricService.authenticate(
+        localizedReason: AppStrings.unlockWithBiometric.tr,
+      );
+      if (!ok) return;
+
+      final refreshed = await refreshLoginSessionUseCase();
+      if (!refreshed) {
+        hasError.value = true;
+        errorMessage.value = AppStrings.sessionExpiredPleaseLoginAgain.tr;
+        AppDialogs.showErrorDialog(
+          message: AppStrings.sessionExpiredPleaseLoginAgain.tr,
+        );
+        return;
+      }
+
+      unawaited(analyticsService.logEvent('go_biometric_login_success'));
+      await _navigateAfterSuccessfulLogin();
+    } finally {
+      isBiometricLoading.value = false;
+    }
+  }
+
+  Future<void> _navigateAfterSuccessfulLogin() async {
+    await VoipCallkitBridgeService.instance.syncCachedTokenToBackend();
+    final signupCompleted =
+        await StorageService().read(StorageKeys.signupCompleted);
+    if (signupCompleted == 'false') {
+      Get.offAllNamed(AppRoutes.phone);
+    } else {
+      Get.offAllNamed(AppRoutes.home);
+    }
   }
 
   void _startLockCountdown(DateTime until) {
@@ -353,14 +417,7 @@ class LoginPinController extends GetxController {
       },
       (_) async {
         unawaited(analyticsService.logEvent('go_pin_login_success'));
-        await VoipCallkitBridgeService.instance.syncCachedTokenToBackend();
-        final signupCompleted =
-            await StorageService().read(StorageKeys.signupCompleted);
-        if (signupCompleted == 'false') {
-          Get.offAllNamed(AppRoutes.phone);
-        } else {
-          Get.offAllNamed(AppRoutes.home);
-        }
+        await _navigateAfterSuccessfulLogin();
       },
     );
   }
@@ -410,6 +467,18 @@ class LoginPinController extends GetxController {
     }
   }
 
+  String _incorrectPinMessage(LoginPinFailure failure) {
+    final left = failure.attemptsRemaining;
+    if (left == 1) return AppStrings.pinIncorrectOneAttemptLeft.tr;
+    if (left != null) {
+      return AppStrings.pinIncorrectAttemptsLeft.trParams({
+        'count': '$left',
+      });
+    }
+    if (failure.message.isNotEmpty) return failure.message;
+    return AppStrings.incorrectPin.tr;
+  }
+
   /// Maps server `error_code` (e.g. AUTH_PIN_LOCKED) to banner / lock countdown.
   bool _handlePinApiFailure(
     Failure failure, {
@@ -440,16 +509,7 @@ class LoginPinController extends GetxController {
         _resetPinField();
         return true;
       case 'AUTH_PIN_INCORRECT':
-        final left = failure.attemptsRemaining;
-        if (left != null) {
-          final tries = left == 1 ? 'try' : 'tries';
-          errorMessage.value = AppStrings.pinIncorrectAttemptsLeft.trParams({
-            'count': '$left',
-            'tries': tries,
-          });
-        } else {
-          errorMessage.value = failure.message;
-        }
+        errorMessage.value = _incorrectPinMessage(failure);
         if (forChangePin) {
           changeStep.value = LoginPinChangeStep.current;
           _firstPin = '';

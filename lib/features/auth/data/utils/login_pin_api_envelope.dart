@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 
 /// Parses AUTH-PIN-BIOMETRIC API envelope: `{ status_code, message, data, error_code }`.
@@ -9,6 +11,28 @@ class LoginPinApiEnvelope {
   static Map<String, dynamic>? asMap(dynamic raw) {
     if (raw is Map<String, dynamic>) return raw;
     if (raw is Map) return Map<String, dynamic>.from(raw);
+    if (raw is String && raw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw);
+        return asMap(decoded);
+      } catch (_) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  /// Reads `attempts_remaining` from nested `data` or the envelope root.
+  static int? attemptsRemaining(Map<String, dynamic> envelope) {
+    final nested = dataPayload(envelope);
+    for (final map in [nested, envelope]) {
+      if (map == null) continue;
+      final raw = map['attempts_remaining'];
+      if (raw == null) continue;
+      if (raw is int) return raw;
+      if (raw is num) return raw.toInt();
+      return int.tryParse(raw.toString());
+    }
     return null;
   }
 

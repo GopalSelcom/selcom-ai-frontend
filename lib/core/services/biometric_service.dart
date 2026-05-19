@@ -3,7 +3,7 @@ import 'package:local_auth/local_auth.dart';
 /// Device biometric gate for app login (Face ID / fingerprint).
 ///
 /// Server only stores `biometric_enabled`; unlock still requires valid session refresh.
-/// Used by [BiometricUnlockController], [SettingsController], [LoginPinGateService].
+/// Used by [LoginPinController], [SettingsController], [LoginPinGateService].
 class BiometricService {
   BiometricService() : _auth = LocalAuthentication();
 

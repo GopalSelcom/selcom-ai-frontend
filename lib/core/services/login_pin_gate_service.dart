@@ -7,8 +7,8 @@ import 'storage_service.dart';
 /// Cold-start and post-OTP routing for **app login PIN** / biometric.
 ///
 /// Not ride PIN (`ride-pin-preference`). After splash with session:
-/// locked → [AppRoutes.pinLogin]; biometric+hardware → [AppRoutes.biometricUnlock];
-/// else `pin_set` → pin-login; else home/phone. After OTP: `pin_set == false` → pin-setup.
+/// locked or `pin_set` → [AppRoutes.pinLogin] (biometric button on that screen when enabled).
+/// Else home/phone. After OTP: `pin_set == false` → pin-setup.
 class LoginPinGateService {
   LoginPinGateService({
     required this.loginPinRepository,
@@ -48,7 +48,7 @@ class LoginPinGateService {
 
   /// Returns the next [AppRoutes] name after splash when a session exists.
   ///
-  /// Order: locked PIN → biometric (if enabled + hardware) → PIN login → home/phone.
+  /// Order: locked PIN → PIN login (biometric optional on screen) → home/phone.
   Future<String> resolveColdStartRoute() async {
     if (!await hasStoredSession()) {
       return AppRoutes.onboarding;
@@ -69,10 +69,6 @@ class LoginPinGateService {
         status.lockedUntil!.isAfter(DateTime.now()) &&
         status.pinSet) {
       return AppRoutes.pinLogin;
-    }
-
-    if (status.biometricEnabled && await biometricService.isAvailable()) {
-      return AppRoutes.biometricUnlock;
     }
 
     if (status.pinSet) {

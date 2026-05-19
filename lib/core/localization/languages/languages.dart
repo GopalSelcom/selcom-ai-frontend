@@ -553,6 +553,7 @@ abstract class Languages {
   String get notYouSignInWithOtp;
   String get enterLoginPinTitle;
   String get enterLoginPinSubtitle;
+  String get enterLoginPinMessage;
   String get forgotLoginPin;
   String get useDifferentAccount;
   String get unlockWithBiometric;
@@ -562,6 +563,7 @@ abstract class Languages {
   String get changeLoginPin;
   String get pinTooWeakChooseAnother;
   String get pinIncorrectAttemptsLeft;
+  String get pinIncorrectOneAttemptLeft;
   String get pinLockedTryAgainIn;
   String get changeLoginPinTitle;
   String get enterCurrentLoginPin;

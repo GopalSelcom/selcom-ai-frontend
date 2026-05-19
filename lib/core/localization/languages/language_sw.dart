@@ -2340,6 +2340,9 @@ class LanguageSw extends Languages {
   String get enterLoginPinSubtitle => values['enter_login_pin_subtitle'] ?? '';
 
   @override
+  String get enterLoginPinMessage => values['enter_login_pin_message'] ?? '';
+
+  @override
   String get forgotLoginPin => values['forgot_login_pin'] ?? '';
 
   @override
@@ -2368,6 +2371,10 @@ class LanguageSw extends Languages {
   @override
   String get pinIncorrectAttemptsLeft =>
       values['pin_incorrect_attempts_left'] ?? '';
+
+  @override
+  String get pinIncorrectOneAttemptLeft =>
+      values['pin_incorrect_one_attempt_left'] ?? '';
 
   @override
   String get pinLockedTryAgainIn => values['pin_locked_try_again_in'] ?? '';

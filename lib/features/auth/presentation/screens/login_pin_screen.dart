@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:iconsax/iconsax.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
@@ -16,7 +17,8 @@ import '../widgets/login_pin_auth_shell.dart';
 /// Used by routes `pin-setup`, `pin-login`, `pin-change` ([AppRoutes]).
 /// - **setup / login:** [LoginPinHeaderStyle.branded] (logo, centered titles).
 /// - **change:** [LoginPinHeaderStyle.compact] (left-aligned like phone/OTP).
-/// - **Loading:** centered full-screen overlay while [LoginPinController.isLoading].
+/// - **PIN loading:** full-screen overlay while [LoginPinController.isLoading].
+/// - **Biometric loading:** spinner on the scan button only ([LoginPinController.isBiometricLoading]).
 ///
 /// PIN digits: [AppOtpField] + shared [LoginPinController.pinController].
 class LoginPinScreen extends GetView<LoginPinController> {
@@ -42,8 +44,10 @@ class LoginPinScreen extends GetView<LoginPinController> {
             showBackButton: controller.mode != LoginPinScreenMode.login,
             titleWidget: _buildTitle(context),
             subtitleWidget: _buildSubtitle(context),
-            pinField: _buildPinField(),
-            errorBanner: _buildErrorBanner(),
+            pinField: _buildPinFieldWithError(context),
+            errorBanner: controller.mode == LoginPinScreenMode.login
+                ? null
+                : _buildErrorBanner(),
             body: controller.mode == LoginPinScreenMode.login
                 ? _buildLoginFooterActions(context)
                 : const SizedBox.shrink(),
@@ -63,9 +67,24 @@ class LoginPinScreen extends GetView<LoginPinController> {
     });
   }
 
-  Widget _buildPinField() {
+  Widget _buildPinFieldWithError(BuildContext context) {
+    if (controller.mode != LoginPinScreenMode.login) {
+      return _buildPinField(context);
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildPinField(context),
+        SizedBox(height: 12.h),
+        _buildErrorBanner(),
+      ],
+    );
+  }
+
+  Widget _buildPinField(BuildContext context) {
     return Obx(() {
-      final disabled = controller.isInputDisabled.value;
+      final disabled = controller.isInputDisabled.value ||
+          controller.isBiometricLoading.value;
       final hasError = controller.hasError.value ||
           controller.errorMessage.value.isNotEmpty ||
           controller.lockCountdownLabel.value.isNotEmpty;
@@ -113,6 +132,80 @@ class LoginPinScreen extends GetView<LoginPinController> {
     });
   }
 
+  Widget _buildBiometricUnlockButton(
+    BuildContext context, {
+    required bool disabled,
+  }) {
+    final isBiometricLoading = controller.isBiometricLoading.value;
+    final isBusy = disabled || isBiometricLoading;
+
+    return Padding(
+      padding: EdgeInsets.only(top: 24.h),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: isBusy ? null : controller.authenticateWithBiometric,
+          borderRadius: BorderRadius.circular(16.r),
+          child: Opacity(
+            opacity: isBiometricLoading ? 0.85 : 1,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 64.w,
+                    height: 64.w,
+                    decoration: BoxDecoration(
+                      color: AppColors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: AppColors.primary,
+                        width: 1.2.w,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.inputFocusShadow,
+                          blurRadius: 0,
+                          spreadRadius: 3,
+                        ),
+                      ],
+                    ),
+                    child: isBiometricLoading
+                        ? Center(
+                            child: SizedBox(
+                              width: 28.w,
+                              height: 28.w,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5.w,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          )
+                        : Icon(
+                            Iconsax.finger_scan,
+                            size: 32.w,
+                            color: AppColors.primary,
+                          ),
+                  ),
+                  SizedBox(height: 10.h),
+                  Text(
+                    AppStrings.unlockWithBiometric.tr,
+                    textAlign: TextAlign.center,
+                    style: LoginPinAuthShell.subtitleStyle(context).copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildTitle(BuildContext context) {
     if (controller.mode == LoginPinScreenMode.login) {
       return Obx(() {
@@ -144,17 +237,11 @@ class LoginPinScreen extends GetView<LoginPinController> {
 
   Widget _buildSubtitle(BuildContext context) {
     if (controller.mode == LoginPinScreenMode.login) {
-      return Obx(() {
-        final maskedPhone = controller.maskedPhone.value;
-        if (maskedPhone.isEmpty) return const SizedBox.shrink();
-        return Text(
-          AppStrings.enterLoginPinSubtitle.trParams({
-            'maskedPhone': maskedPhone,
-          }),
-          textAlign: TextAlign.center,
-          style: LoginPinAuthShell.subtitleStyle(context, style: _headerStyle),
-        );
-      });
+      return Text(
+        AppStrings.enterLoginPinMessage.tr,
+        textAlign: TextAlign.center,
+        style: LoginPinAuthShell.subtitleStyle(context, style: _headerStyle),
+      );
     }
 
     if (controller.mode == LoginPinScreenMode.change) {
@@ -178,33 +265,44 @@ class LoginPinScreen extends GetView<LoginPinController> {
 
   Widget _buildLoginFooterActions(BuildContext context) {
     return Obx(() {
-      final disabled = controller.isInputDisabled.value;
+      final disabled = controller.isInputDisabled.value ||
+          controller.isBiometricLoading.value;
       final linkStyle = LoginPinAuthShell.subtitleStyle(context);
 
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      return Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: GestureDetector(
-              onTap: disabled ? null : controller.useDifferentAccount,
-              child: Text(
-                controller.notYouLabel,
-                style: linkStyle,
-                textAlign: TextAlign.start,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: disabled ? null : controller.useDifferentAccount,
+                  child: Text(
+                    controller.notYouLabel,
+                    style: linkStyle,
+                    textAlign: TextAlign.start,
+                  ),
+                ),
               ),
-            ),
-          ),
-          SizedBox(width: 10.w),
-          Expanded(
-            child: GestureDetector(
-              onTap: disabled ? null : controller.openForgotPin,
-              child: Text(
-                AppStrings.forgotLoginPin.tr,
-                style: linkStyle,
-                textAlign: TextAlign.end,
+              SizedBox(width: 10.w),
+              Expanded(
+                child: GestureDetector(
+                  onTap: disabled ? null : controller.openForgotPin,
+                  child: Text(
+                    AppStrings.forgotLoginPin.tr,
+                    style: linkStyle,
+                    textAlign: TextAlign.end,
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
+          if (controller.showBiometricUnlockButton)
+            _buildBiometricUnlockButton(
+              context,
+              disabled: controller.isInputDisabled.value,
+            ),
         ],
       );
     });

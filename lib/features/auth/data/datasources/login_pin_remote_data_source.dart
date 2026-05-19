@@ -66,16 +66,7 @@ class LoginPinRemoteDataSourceImpl implements LoginPinRemoteDataSource {
         envelope['message']?.toString() ??
         AppStrings.somethingWentWrongPleaseTryAgain.tr;
     final nested = LoginPinApiEnvelope.dataPayload(envelope);
-
-    int? attempts;
-    if (nested != null) {
-      final attemptsRaw = nested['attempts_remaining'];
-      if (attemptsRaw is int) {
-        attempts = attemptsRaw;
-      } else if (attemptsRaw != null) {
-        attempts = int.tryParse(attemptsRaw.toString());
-      }
-    }
+    final attempts = LoginPinApiEnvelope.attemptsRemaining(envelope);
 
     final lockedRaw =
         envelope['locked_until'] ??

@@ -14,7 +14,7 @@ import '../../../../shared/widgets/app_back_button.dart';
 /// - **branded:** back + centered logo, centered title/subtitle, spacer before footer.
 /// - **compact:** back only, left-aligned title/subtitle (phone/OTP typography), no logo.
 ///
-/// Also used by [BiometricUnlockScreen]. Parent owns loading overlay on [LoginPinScreen].
+/// Parent owns loading overlay on [LoginPinScreen] (including biometric unlock tap).
 enum LoginPinHeaderStyle {
   /// Centered logo + titles (setup / login).
   branded,

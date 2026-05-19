@@ -612,6 +612,7 @@ class LanguageEn extends Languages {
     'not_you_sign_in_with_otp': 'Not you, @name?',
     'enter_login_pin_title': 'Enter your PIN',
     'enter_login_pin_subtitle': 'Sign in to @maskedPhone',
+    'enter_login_pin_message': 'Enter your 4-digit PIN to continue.',
     'forgot_login_pin': 'Forgot PIN?',
     'use_different_account': 'Use a different account',
     'unlock_with_biometric': 'Unlock with Face ID / Fingerprint',
@@ -621,7 +622,9 @@ class LanguageEn extends Languages {
     'change_login_pin': 'Change PIN',
     'pin_too_weak_choose_another': 'Try a less obvious PIN',
     'pin_incorrect_attempts_left':
-        'Incorrect PIN. @count @tries left.',
+        'Incorrect PIN. You have @count attempts remaining.',
+    'pin_incorrect_one_attempt_left':
+        'Incorrect PIN. You have 1 attempt remaining.',
     'pin_locked_try_again_in':
         'Too many wrong attempts. Try again in @time.',
     'change_login_pin_title': 'Change PIN',
@@ -2459,6 +2462,9 @@ class LanguageEn extends Languages {
   String get enterLoginPinSubtitle => values['enter_login_pin_subtitle'] ?? '';
 
   @override
+  String get enterLoginPinMessage => values['enter_login_pin_message'] ?? '';
+
+  @override
   String get forgotLoginPin => values['forgot_login_pin'] ?? '';
 
   @override
@@ -2487,6 +2493,10 @@ class LanguageEn extends Languages {
   @override
   String get pinIncorrectAttemptsLeft =>
       values['pin_incorrect_attempts_left'] ?? '';
+
+  @override
+  String get pinIncorrectOneAttemptLeft =>
+      values['pin_incorrect_one_attempt_left'] ?? '';
 
   @override
   String get pinLockedTryAgainIn => values['pin_locked_try_again_in'] ?? '';

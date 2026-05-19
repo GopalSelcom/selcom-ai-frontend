@@ -683,6 +683,7 @@ class AppStrings {
   static const String notYouSignInWithOtp = 'not_you_sign_in_with_otp';
   static const String enterLoginPinTitle = 'enter_login_pin_title';
   static const String enterLoginPinSubtitle = 'enter_login_pin_subtitle';
+  static const String enterLoginPinMessage = 'enter_login_pin_message';
   static const String forgotLoginPin = 'forgot_login_pin';
   static const String useDifferentAccount = 'use_different_account';
   static const String unlockWithBiometric = 'unlock_with_biometric';
@@ -693,6 +694,8 @@ class AppStrings {
   static const String pinTooWeakChooseAnother = 'pin_too_weak_choose_another';
   static const String pinIncorrectAttemptsLeft =
       'pin_incorrect_attempts_left';
+  static const String pinIncorrectOneAttemptLeft =
+      'pin_incorrect_one_attempt_left';
   static const String pinLockedTryAgainIn = 'pin_locked_try_again_in';
   static const String changeLoginPinTitle = 'change_login_pin_title';
   static const String enterCurrentLoginPin = 'enter_current_login_pin';
