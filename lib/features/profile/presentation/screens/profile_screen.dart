@@ -1,19 +1,18 @@
 import 'dart:ui';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
-import 'package:selcom_rides_frontend/core/localization/localization.dart';
+
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/phone_formatter.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-
 import '../controllers/profile_controller.dart';
 import '../widgets/menu_item_widget.dart';
 import '../widgets/wallet_summary_card.dart';
@@ -22,27 +21,6 @@ class ProfileScreen extends StatelessWidget {
   ProfileScreen({super.key});
 
   final ProfileController controller = Get.put(sl<ProfileController>());
-
-  Future<void> _toggleLanguage(BuildContext context) async {
-    final current = Get.locale ?? Get.deviceLocale ?? const Locale('en');
-    final nextCode = current.languageCode == 'sw' ? 'en' : 'sw';
-    await Localization.instance.changeLanguage(context, nextCode);
-    Get.snackbar(
-      AppStrings.language.tr,
-      nextCode == 'sw'
-          ? AppStrings.switchedToSwahili.tr
-          : AppStrings.switchedToEnglish.tr,
-      snackPosition: SnackPosition.BOTTOM,
-      duration: const Duration(seconds: 2),
-    );
-  }
-
-  String _currentLanguageLabel(BuildContext context) {
-    final current = Get.locale ?? Get.deviceLocale ?? const Locale('en');
-    return current.languageCode == 'sw'
-        ? AppStrings.swahili.tr
-        : AppStrings.english.tr;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -517,11 +495,6 @@ class ProfileScreen extends StatelessWidget {
               icon: Iconsax.heart,
               title: AppStrings.savedLocations.tr,
               onTap: controller.openFavoriteLocations,
-            ),
-            MenuItemWidget(
-              icon: Iconsax.reserve,
-              title: AppStrings.notification.tr,
-              onTap: controller.openNotifications,
               showDivider: controller.showSettingsOption.value,
             ),
             if (controller.showSettingsOption.value)
@@ -529,14 +502,8 @@ class ProfileScreen extends StatelessWidget {
                 icon: Iconsax.setting_2,
                 title: AppStrings.settings.tr,
                 onTap: controller.openSettings,
+                showDivider: false,
               ),
-            MenuItemWidget(
-              icon: Iconsax.language_square,
-              title:
-                  '${AppStrings.language.tr} (${_currentLanguageLabel(context)})',
-              onTap: () => _toggleLanguage(context),
-              showDivider: false,
-            ),
           ],
         ),
       ),
