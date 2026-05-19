@@ -18,7 +18,7 @@ class AppAssets {
   static const String icOtherChip = '$_imagePath/ic_other_chip.svg';
 
   // Models
-  static const String gariPlus = '$_imagePath/gari_plus.png';
+  static const String gariPlus = '$_imagePath/img_cab.png';
 
   static const String imgBoda = '$_imagePath/img_boda.png';
   static const String imgBajaji = '$_imagePath/img_bajaji.png';

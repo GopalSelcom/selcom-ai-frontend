@@ -131,7 +131,7 @@ class OnboardingScreen extends GetView<OnboardingController> {
                               SvgPictureAsset(
                                 AppAssets.icArrowRight,
                                 color: AppColors.white,
-                                height: 24.h,
+                                height: 20.h,
                               ),
                             ],
                           ),
