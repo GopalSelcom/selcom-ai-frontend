@@ -161,6 +161,7 @@ class DriverAcceptedController extends GetxController
       Rxn<DestinationUpdatePreviewModel>();
   double? _pendingDestinationTargetLat;
   double? _pendingDestinationTargetLng;
+  bool _isStopUpdateProgressOpen = false;
 
   void updateSheetSize(double size) {
     sheetSize.value = size;
@@ -2254,26 +2255,29 @@ class DriverAcceptedController extends GetxController
     final active = isUpdatingStops.value || isUpdatingDestination.value;
     if (active) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!(Get.isBottomSheetOpen ?? false)) {
-          Get.bottomSheet(
-            const StopUpdateProgressModal(),
-            isDismissible: false,
-            enableDrag: false,
-            backgroundColor: AppColors.transparent,
-          );
+        if (!_isStopUpdateProgressOpen) {
+          _isStopUpdateProgressOpen = true;
+          AppDialogs.showAnimatedBottomSheet(
+            child: const StopUpdateProgressModal(),
+            barrierDismissible: false,
+          ).then((_) => _isStopUpdateProgressOpen = false);
         }
       });
     } else {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (Get.isBottomSheetOpen ?? false) {
+        if (_isStopUpdateProgressOpen) {
           if (stopUpdateProgressStep.value == 3) {
             Future.delayed(const Duration(seconds: 3), () {
-              if (Get.isBottomSheetOpen ?? false) Get.back();
+              if (_isStopUpdateProgressOpen) {
+                AppDialogs.closeActiveDialog();
+                _isStopUpdateProgressOpen = false;
+              }
               stopUpdateProgressStep.value = 0;
               isDestinationUpdateFlow.value = false;
             });
           } else {
-            Get.back();
+            AppDialogs.closeActiveDialog();
+            _isStopUpdateProgressOpen = false;
             stopUpdateProgressStep.value = 0;
             isDestinationUpdateFlow.value = false;
           }

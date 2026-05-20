@@ -8,6 +8,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../controllers/payment_method_controller.dart';
 import './payment_method_bottom_sheet.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 
 class PaymentBar extends StatelessWidget {
   final String buttonLabel;
@@ -133,11 +134,9 @@ class PaymentBar extends StatelessWidget {
   }
 
   void _openPaymentSheet(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.transparent,
-      builder: (ctx) => const PaymentMethodBottomSheet(),
+    AppDialogs.showAnimatedBottomSheet(
+      child: const PaymentMethodBottomSheet(),
+      barrierDismissible: true,
     );
   }
 }

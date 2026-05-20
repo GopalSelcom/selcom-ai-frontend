@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:get/get.dart';
-import 'package:m7_livelyness_detection/index.dart';
+import 'package:m7_livelyness_detection/index.dart' hide Rx;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:selcom_rides_frontend/core/constants/app_assets.dart';
@@ -12,13 +12,13 @@ import '../../domain/entities/payment_card.dart';
 import '../screens/add_card_screen.dart';
 import '../screens/card_details_screen.dart';
 import '../widgets/payment_card_action_bottom_sheet.dart';
-import '../widgets/selcom_pesa_connect_bottom_sheet.dart';
 import '../widgets/selcom_pesa_linked_bottom_sheet.dart';
-import '../widgets/selcom_pesa_phone_input_bottom_sheet.dart';
-import '../widgets/selcom_pesa_otp_bottom_sheet.dart';
-import '../widgets/selcom_pesa_selfie_bottom_sheet.dart';
+import '../widgets/selcom_pesa_flow_bottom_sheet.dart';
+
+enum SelcomPesaStep { connect, phoneInput, otp, selfie }
 
 class PaymentMethodsController extends GetxController {
+  final Rx<SelcomPesaStep> selcomPesaStep = SelcomPesaStep.connect.obs;
   final RxString walletBalance = '43,829'.obs;
   final RxString walletNumber = '16010 00000 034'.obs;
   final RxBool isSelcomPesaLinked = false.obs;
@@ -73,36 +73,28 @@ class PaymentMethodsController extends GetxController {
 
   void linkSelcomPesa() {
     selcomPhoneController.clear();
-    Get.bottomSheet(
-      const SelcomPesaConnectBottomSheet(),
-      isScrollControlled: true,
-      backgroundColor: AppColors.transparent,
+    selcomPesaStep.value = SelcomPesaStep.connect;
+    AppDialogs.showAnimatedBottomSheet(
+      child: const SelcomPesaFlowBottomSheet(),
+      barrierDismissible: true,
     );
   }
 
   void openPhoneInput() {
-    if (Get.isBottomSheetOpen ?? false) {
-      Get.back();
-    }
     phoneError.value = '';
     _updateCanContinueSelcomPhone();
-    Get.bottomSheet(
-      const SelcomPesaPhoneInputBottomSheet(),
-      isScrollControlled: true,
-      backgroundColor: AppColors.transparent,
-    );
+    selcomPesaStep.value = SelcomPesaStep.phoneInput;
   }
 
   void openLinkedAccountSheet() {
-    Get.bottomSheet(
-      const SelcomPesaLinkedBottomSheet(),
-      isScrollControlled: true,
-      enableDrag: true,
+    AppDialogs.showAnimatedBottomSheet(
+      child: const SelcomPesaLinkedBottomSheet(),
+      barrierDismissible: true,
     );
   }
 
   void unlinkAccount() {
-    Get.back(); // Close bottom sheet
+    AppDialogs.closeActiveDialog(); // Close bottom sheet
     isSelcomPesaLinked.value = false;
     // Optional: Clear selection or reset other states
     AppDialogs.showSuccessDialog(
@@ -142,17 +134,10 @@ class PaymentMethodsController extends GetxController {
   }
 
   void openOtpInput() {
-    if (Get.isBottomSheetOpen ?? false) {
-      Get.back();
-    }
     otpController.clear();
     otpError.value = '';
     _startTimer();
-    Get.bottomSheet(
-      const SelcomPesaOtpBottomSheet(),
-      isScrollControlled: true,
-      backgroundColor: AppColors.transparent,
-    );
+    selcomPesaStep.value = SelcomPesaStep.otp;
   }
 
   void onOtpComplete(String pin) {
@@ -165,14 +150,7 @@ class PaymentMethodsController extends GetxController {
   }
 
   void openSelfieVerification() {
-    if (Get.isBottomSheetOpen ?? false) {
-      Get.back();
-    }
-    Get.bottomSheet(
-      const SelcomPesaSelfieBottomSheet(),
-      isScrollControlled: true,
-      backgroundColor: AppColors.transparent,
-    );
+    selcomPesaStep.value = SelcomPesaStep.selfie;
   }
 
   Future<void> takeSelfie() async {
@@ -186,9 +164,7 @@ class PaymentMethodsController extends GetxController {
     }
 
     if (isSimulator) {
-      if (Get.isBottomSheetOpen ?? false) {
-        Get.back(); // Close selfie sheet
-      }
+      AppDialogs.closeActiveDialog(); // Close selfie sheet
       AppDialogs.showVerificationSuccessDialog();
       Future.delayed(const Duration(seconds: 3), () {
         if (Get.isDialogOpen ?? false) {
@@ -256,9 +232,7 @@ class PaymentMethodsController extends GetxController {
 
       if (response != null && response.imgPath.isNotEmpty) {
         // Just mock the success as per user request
-        if (Get.isBottomSheetOpen ?? false) {
-          Get.back(); // Close selfie sheet
-        }
+        AppDialogs.closeActiveDialog(); // Close selfie sheet
 
         AppDialogs.showVerificationSuccessDialog();
 
@@ -281,19 +255,18 @@ class PaymentMethodsController extends GetxController {
     final result = await Get.to<PaymentCard>(() => const AddCardScreen());
 
     if (result != null) {
-      Get.bottomSheet(
-        PaymentCardActionBottomSheet(
+      AppDialogs.showAnimatedBottomSheet(
+        child: PaymentCardActionBottomSheet(
           title: AppStrings.yourCardHasBeenNaddedSuccessfully.tr,
           description:
               AppStrings.cardReadyToUseYouCanManageOrRemoveAnytime.tr,
           cardNumber: result.fullNumber,
           imageAssetPath: AppAssets.imgPaymentAddCardSuccess,
           primaryButtonLabel: AppStrings.ok.tr,
-          onPrimaryPressed: Get.back,
+          onPrimaryPressed: AppDialogs.closeActiveDialog,
           iconAsset: AppAssets.locationIcArrowRight,
         ),
-        isScrollControlled: true,
-        backgroundColor: AppColors.transparent,
+        barrierDismissible: true,
       );
     }
   }

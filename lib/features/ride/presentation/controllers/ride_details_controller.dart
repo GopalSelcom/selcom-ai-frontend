@@ -125,13 +125,12 @@ class RideDetailsController extends GetxController {
       openedFromCompletionFlow && canShowReviewInput && !hasExistingRating;
 
   void downloadSlip() {
-    Get.bottomSheet(
-      _ReceiptOptionsBottomSheet(
+    AppDialogs.showAnimatedBottomSheet(
+      child: _ReceiptOptionsBottomSheet(
         onDownload: _executeDownload,
         onShare: _executeShare,
       ),
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
+      barrierDismissible: true,
     );
   }
 
@@ -343,7 +342,7 @@ class _ReceiptOptionsBottomSheet extends StatelessWidget {
             title: 'Download Slip',
             subtitle: 'Save a copy to your gallery',
             onTap: () {
-              Get.back();
+              Navigator.of(context).pop();
               onDownload();
             },
           ),
@@ -353,7 +352,7 @@ class _ReceiptOptionsBottomSheet extends StatelessWidget {
             title: 'Share Slip',
             subtitle: 'Send receipt link to others',
             onTap: () {
-              Get.back();
+              Navigator.of(context).pop();
               onShare();
             },
           ),

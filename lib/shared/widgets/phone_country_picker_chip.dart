@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../data/countries_phone_data.dart';
+import '../../shared/utils/app_dialogs.dart';
 
 /// Duka-style: emoji flag + dial code, full list from [Countries.all] in a sheet.
 class PhoneCountryPickerChip extends StatelessWidget {
@@ -65,20 +66,15 @@ class PhoneCountryPickerChip extends StatelessWidget {
   }
 
   Future<void> _openSheet(BuildContext context) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.45),
-      builder: (ctx) {
-        return _CountryPickerSheet(
-          selected: selected,
-          onSelect: (c) {
-            Navigator.pop(ctx);
-            onChanged(c);
-          },
-        );
-      },
+    await AppDialogs.showAnimatedBottomSheet<void>(
+      barrierDismissible: true,
+      child: _CountryPickerSheet(
+        selected: selected,
+        onSelect: (c) {
+          Navigator.of(context).pop();
+          onChanged(c);
+        },
+      ),
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
@@ -63,6 +64,85 @@ class AppDialogs {
         );
       },
     );
+  }
+
+  /// Shows a common animated bottom sheet with a blurred barrier and iOS cubic transition.
+  static Future<T?> showAnimatedBottomSheet<T>({
+    required Widget child,
+    bool barrierDismissible = true,
+  }) {
+    bool hapticTriggered = false;
+
+    return showGeneralDialog<T>(
+      context: Get.context!,
+      barrierDismissible: barrierDismissible,
+      barrierLabel: 'BottomSheet',
+      barrierColor: Colors.transparent,
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (context, animation, secondaryAnimation) => const SizedBox.shrink(),
+      transitionBuilder: (context, animation, secondaryAnimation, _) {
+        final curvedAnimation = CurvedAnimation(
+          parent: animation,
+          curve: const Cubic(0.15, 0.85, 0.2, 1.0),
+        );
+
+        // Trigger light haptic impact at the start of entrance
+        if (!hapticTriggered && animation.value > 0.05) {
+          hapticTriggered = true;
+          HapticFeedback.lightImpact();
+        }
+
+        return Stack(
+          children: [
+            // Background blur barrier
+            GestureDetector(
+              onTap: barrierDismissible ? () => _dismissActiveDialog() : null,
+              child: AnimatedBuilder(
+                animation: curvedAnimation,
+                builder: (context, _) {
+                  final blurValue = 6.0 * curvedAnimation.value;
+                  final opacityValue = 0.25 * curvedAnimation.value;
+
+                  return BackdropFilter(
+                    filter: ImageFilter.blur(
+                      sigmaX: blurValue,
+                      sigmaY: blurValue,
+                    ),
+                    child: Container(
+                      color: Colors.black.withValues(alpha: opacityValue),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            // Bottom sheet content
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0.0, 1.0),
+                  end: Offset.zero,
+                ).animate(curvedAnimation),
+                child: Material(
+                  color: Colors.transparent,
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      bottom: MediaQuery.of(context).viewInsets.bottom,
+                    ),
+                    child: child,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  static void closeActiveDialog() {
+    _dismissActiveDialog();
   }
 
   static void _dismissActiveDialog() {

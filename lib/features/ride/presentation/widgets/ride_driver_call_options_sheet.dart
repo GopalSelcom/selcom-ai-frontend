@@ -24,8 +24,9 @@ class RideDriverCallOptionsSheet {
   }) {
     if (rideId.isEmpty) return;
 
-    Get.bottomSheet(
-      SafeArea(
+    AppDialogs.showAnimatedBottomSheet(
+      barrierDismissible: true,
+      child: SafeArea(
         top: false,
         child: Container(
           decoration: BoxDecoration(
@@ -62,9 +63,7 @@ class RideDriverCallOptionsSheet {
                   title: AppStrings.inAppCalling.tr,
                   icon: Icons.phone_in_talk_outlined,
                   onTap: () async {
-                    if (Get.isBottomSheetOpen ?? false) {
-                      Get.back();
-                    }
+                    AppDialogs.closeActiveDialog();
                     try {
                       await AgoraCalling.controller.placeCall(
                         rideId: rideId,
@@ -96,9 +95,7 @@ class RideDriverCallOptionsSheet {
                   title: AppStrings.normalCall.tr,
                   icon: Icons.call_outlined,
                   onTap: () {
-                    if (Get.isBottomSheetOpen ?? false) {
-                      Get.back();
-                    }
+                    AppDialogs.closeActiveDialog();
                     final phone = driverPhone.trim();
                     if (phone.isEmpty) {
                       AppDialogs.showErrorDialog(
@@ -115,8 +112,6 @@ class RideDriverCallOptionsSheet {
           ),
         ),
       ),
-      isScrollControlled: true,
-      backgroundColor: AppColors.transparent,
     );
   }
 

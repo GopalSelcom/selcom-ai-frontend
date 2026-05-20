@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
-import 'package:selcom_rides_frontend/core/theme/app_colors.dart';
 
 import '../../../../core/data/models/requests/submit_ride_rating_request.dart';
 import '../../../../core/errors/failures.dart';
@@ -46,6 +45,7 @@ class RideRatingController extends GetxController {
 
   bool _hasPromptedThisSession = false;
   int _latestTagRequestRating = 0;
+  bool _isRatingSheetOpen = false;
 
   bool get hasSelectedRating => selectedRating.value > 0;
 
@@ -282,20 +282,19 @@ class RideRatingController extends GetxController {
   }
 
   void closeBottomSheet() {
-    if (Get.isBottomSheetOpen ?? false) {
-      Get.close(1);
+    if (_isRatingSheetOpen) {
+      AppDialogs.closeActiveDialog();
+      _isRatingSheetOpen = false;
     }
   }
 
   void _openRatingBottomSheet() {
-    if (Get.isBottomSheetOpen ?? false) return;
-    Get.bottomSheet(
-      const RideRatingBottomSheet(),
-      isDismissible: true,
-      enableDrag: true,
-      isScrollControlled: true,
-      backgroundColor: AppColors.transparent,
-    );
+    if (_isRatingSheetOpen) return;
+    _isRatingSheetOpen = true;
+    AppDialogs.showAnimatedBottomSheet(
+      child: const RideRatingBottomSheet(),
+      barrierDismissible: true,
+    ).then((_) => _isRatingSheetOpen = false);
   }
 
   Future<void> _loadReviewTagsForRating(int rating) async {

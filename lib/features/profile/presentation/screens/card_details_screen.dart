@@ -13,6 +13,7 @@ import '../../../../shared/widgets/app_text_field.dart';
 import '../../domain/entities/payment_card.dart';
 import '../controllers/card_details_controller.dart';
 import '../widgets/payment_card_action_bottom_sheet.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 
 class CardDetailsScreen extends StatefulWidget {
   final PaymentCard card;
@@ -48,8 +49,9 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
   }
 
   void _openDeleteConfirmationSheet() {
-    Get.bottomSheet(
-      Obx(
+    AppDialogs.showAnimatedBottomSheet(
+      barrierDismissible: true,
+      child: Obx(
         () => PaymentCardActionBottomSheet(
           title: AppStrings.areYouSureWantToAddNdeleteThisCard.tr,
           description:
@@ -57,21 +59,17 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
           cardNumber: widget.card.fullNumber,
           imageAssetPath: AppAssets.imgPaymentDeleteCardConfirm,
           primaryButtonLabel: AppStrings.noCancel.tr,
-          onPrimaryPressed: Get.back,
+          onPrimaryPressed: AppDialogs.closeActiveDialog,
           secondaryButtonLabel: AppStrings.deleteCard.tr,
           onSecondaryPressed: () async {
             final isDeleted = await controller.deleteCard();
             if (!isDeleted) return;
-            if (Get.isBottomSheetOpen ?? false) {
-              Get.back();
-            }
+            AppDialogs.closeActiveDialog();
             Get.back();
           },
           isSecondaryLoading: controller.isDeleteLoading.value,
         ),
       ),
-      isScrollControlled: true,
-      backgroundColor: AppColors.transparent,
     );
   }
 

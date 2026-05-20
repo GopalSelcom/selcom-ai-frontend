@@ -18,6 +18,7 @@ import '../../../../shared/widgets/ride_location_summary_card.dart';
 import '../controllers/driver_accepted_controller.dart';
 import '../controllers/ride_share_controller.dart';
 import '../widgets/ride_common_widgets.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 
 /// SCR-11 — Driver accepted (heading to pickup). See `.agent/context/frontend/SCREENS.md`.
 class DriverAcceptedScreen extends StatelessWidget {
@@ -137,7 +138,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                 left: 16.w,
                 right: 16.w,
                 bottom: sheetTopOffset + 12.h,
-                child: _rideActionRow(c, shareController),
+                child: _rideActionRow(context, c, shareController),
               );
             }),
             Obx(() {
@@ -167,6 +168,7 @@ class DriverAcceptedScreen extends StatelessWidget {
   }
 
   Widget _rideActionRow(
+    BuildContext context,
     DriverAcceptedController c,
     RideShareController shareController,
   ) {
@@ -238,7 +240,7 @@ class DriverAcceptedScreen extends StatelessWidget {
         SizedBox(width: 10.w),
         _iconActionChip(
           icon: Icons.shield_outlined,
-          onTap: () => _showSafetyBottomSheet(c, shareController),
+          onTap: () => _showSafetyBottomSheet(context, c, shareController),
           color: AppColors.textHeading,
         ),
       ],
@@ -277,11 +279,13 @@ class DriverAcceptedScreen extends StatelessWidget {
   }
 
   void _showSafetyBottomSheet(
+    BuildContext context,
     DriverAcceptedController c,
     RideShareController shareController,
   ) {
-    Get.bottomSheet(
-      SafeArea(
+    AppDialogs.showAnimatedBottomSheet(
+      barrierDismissible: true,
+      child: SafeArea(
         top: false,
         bottom: false,
         child: Container(
@@ -319,7 +323,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                   title: AppStrings.shareLiveLocation.tr,
                   icon: Icons.share_location_outlined,
                   onTap: () {
-                    if (Get.isBottomSheetOpen ?? false) Get.back();
+                    Navigator.of(context).pop();
                     shareController.shareRide(c.rideId);
                   },
                 ),
@@ -337,7 +341,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                           title: contact.label,
                           icon: c.emergencyContactIconFor(contact.id),
                           onTap: () {
-                            if (Get.isBottomSheetOpen ?? false) Get.back();
+                            Navigator.of(context).pop();
                             unawaited(c.dialEmergencyContact(contact));
                           },
                         ),
@@ -350,8 +354,6 @@ class DriverAcceptedScreen extends StatelessWidget {
           ),
         ),
       ),
-      isScrollControlled: true,
-      backgroundColor: AppColors.transparent,
     );
   }
 

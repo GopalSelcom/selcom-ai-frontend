@@ -9,6 +9,7 @@ import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../controllers/contact_us_controller.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 
 class ContactUsScreen extends GetView<ContactUsController> {
   const ContactUsScreen({super.key});
@@ -135,8 +136,9 @@ class ContactUsScreen extends GetView<ContactUsController> {
   }
 
   void _showReasonPicker(BuildContext context) {
-    Get.bottomSheet(
-      Container(
+    AppDialogs.showAnimatedBottomSheet(
+      barrierDismissible: true,
+      child: Container(
         padding: EdgeInsets.symmetric(vertical: 20.h),
         decoration: BoxDecoration(
           color: AppColors.white,
@@ -162,7 +164,7 @@ class ContactUsScreen extends GetView<ContactUsController> {
                     ,
                     onTap: () {
                       controller.setSelectedReason(reason);
-                      Get.back();
+                      Navigator.of(context).pop();
                     },
                     trailing: Obx(
                       () => controller.selectedReason.value == reason
