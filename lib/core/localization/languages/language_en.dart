@@ -25,8 +25,7 @@ class LanguageEn extends Languages {
     'booking_fees_and_convenience_charges':
         'Booking Fees & Convenience Charges',
     'booking_for_name': 'Booking for @name',
-    'booking_for_someone_else_prompt':
-        'Are you booking this for someone else?',
+    'booking_for_someone_else_prompt': 'Are you booking this for someone else?',
     'booking_for_someone_else_subtitle':
         'You can enter their details so that we can directly send them ride information.',
     'booking_ride_option_for_me': 'No, booking for me',
@@ -89,8 +88,7 @@ class LanguageEn extends Languages {
     'driver_arrived_map_badge': 'Driver arrived',
     'driver_arrived_pickup_primary': 'Driver arrived at pickup',
     'driver_arrived_pickup_secondary': 'Meet your driver at pickup',
-    'driver_is_heading_to_your_location':
-        'Driver is heading to your location',
+    'driver_is_heading_to_your_location': 'Driver is heading to your location',
     'driver_is_heading_to_pickup': 'Driver is heading to pickup',
     'driver_assigned_description':
         'A driver has accepted your ride and is on the way.',
@@ -101,8 +99,7 @@ class LanguageEn extends Languages {
     'finding_driver_default_description':
         'The driver will pick you up as soon as possible after they confirm your order',
     'finding_driver_minutes_remain': '@minutes min remaining',
-    'driver_will_arriving_in_minutes':
-        'Driver will arrive in @minutes min...',
+    'driver_will_arriving_in_minutes': 'Driver will arrive in @minutes min...',
     'driver_assigned': 'Driver Assigned',
     'driver_arriving': 'Driver Arriving',
     'driver_en_route': 'Driver En Route',
@@ -115,7 +112,7 @@ class LanguageEn extends Languages {
     'enter_otp': 'Enter OTP',
     'enter_phone_number': 'Enter Phone number',
     'enter_phone_number_for_verification':
-        'Enter Phone number for verification',
+        'Enter phone number for verification',
     'enter_promo_code': 'Enter promo code',
     'enter_promocode': 'Enter Promocode',
     'enter_your_selcom_pesa_number': 'Enter your Selcom Pesa Number',
@@ -250,8 +247,7 @@ class LanguageEn extends Languages {
     'pickup': 'Pickup',
     'pickup_point': 'Pickup point',
     'pickup_confirmation_note_label': 'Additional note',
-    'pickup_confirmation_note_hint':
-        'Optional — building, gate, landmark…',
+    'pickup_confirmation_note_hint': 'Optional — building, gate, landmark…',
     'pin': 'PIN',
     'pin_locked': 'PIN Locked',
     'please_confirm_pickup_point_to_continue':
@@ -295,7 +291,8 @@ class LanguageEn extends Languages {
     'discount': 'Discount',
     'tax': 'Tax',
     'total': 'Total',
-    'thank_you_for_riding_with_selcom_go': 'Thank you for riding with Selcom Go!',
+    'thank_you_for_riding_with_selcom_go':
+        'Thank you for riding with Selcom Go!',
     'mobile_money': 'Mobile Money',
     'card': 'Card',
     'promocode_list': 'Promocode list',
@@ -374,7 +371,8 @@ class LanguageEn extends Languages {
     'search_stop_location': 'Search stop location',
     'in_app_calling': 'In app calling',
     'normal_call': 'Normal call',
-    'in_app_calling_will_be_available_soon': 'In app calling will available soon',
+    'in_app_calling_will_be_available_soon':
+        'In app calling will available soon',
     'update_failed': 'Update Failed',
     'update_in_progress': 'Update in progress',
     'a_previous_update_is_still_being_processed':
@@ -533,8 +531,7 @@ class LanguageEn extends Languages {
     'enter_your_email_optional': 'Enter your email (optional)',
     'i_agree_to_the_terms_and_conditions':
         'I agree to the Terms and Conditions',
-    'please_accept_terms_and_conditions':
-        'Please accept Terms and Conditions',
+    'please_accept_terms_and_conditions': 'Please accept Terms and Conditions',
     'your_selfie_will_be_captured_to_help_us_validate_you_against_your_id_please_hold_your':
         'Your selfie will be captured to help us validate you against your ID. Please hold your phone steady, ensure your face is within the circular frame, and follow the prompts.',
     'your_session_has_expired_please_login_again_to_continue':
@@ -568,7 +565,8 @@ class LanguageEn extends Languages {
         'Check your Selcom Pesa app and approve the verification request.',
     'selcom_pesa_connect_step_4':
         "You're all set! Your Selcom Pesa account is connected.",
-    'otp_sent_to_your_phone_number': 'OTP Sent to your @phoneNumber phone number',
+    'otp_sent_to_your_phone_number':
+        'OTP Sent to your @phoneNumber phone number',
     'require_verification_pin_before_starting_ride':
         'Require a verification PIN before starting a ride.',
     'ride_pin_required_by_admin_cannot_be_turned_off':
@@ -602,7 +600,8 @@ class LanguageEn extends Languages {
     'connection_timed_out_please_check_internet':
         'Connection timed out. Please check your internet.',
     'no_internet_connection': 'No internet connection',
-    'session_expired_please_login_again': 'Session expired. Please login again.',
+    'session_expired_please_login_again':
+        'Session expired. Please login again.',
     'session_expired_refreshing': 'Session expired. Refreshing...',
     'request_queue_full_please_try_again_later':
         'Request queue is full. Please try again later.',
@@ -626,7 +625,8 @@ class LanguageEn extends Languages {
     'server_timeout': 'Server timeout',
     'you_already_have_an_active_ride': 'You already have an active ride.',
     'insufficient_funds_in_wallet': 'Insufficient funds in wallet.',
-    'something_went_wrong_please_try_again': 'Something went wrong. Please try again.',
+    'something_went_wrong_please_try_again':
+        'Something went wrong. Please try again.',
     'unexpected_error_occurred_with_error': 'Unexpected error occurred: @error',
     'invalid_otp': 'Invalid OTP.',
     'incorrect_pin': 'Incorrect PIN.',
@@ -1203,7 +1203,8 @@ class LanguageEn extends Languages {
   String get noPastRidesFound => values['no_past_rides_found'] ?? '';
 
   @override
-  String get noRecentLocationsFound => values['no_recent_locations_found'] ?? '';
+  String get noRecentLocationsFound =>
+      values['no_recent_locations_found'] ?? '';
 
   @override
   String get noRecentLocations => values['no_recent_locations'] ?? '';
@@ -1223,16 +1224,14 @@ class LanguageEn extends Languages {
       values['notification_phone_subtitle'] ?? '';
 
   @override
-  String get notificationPhoneTitle =>
-      values['notification_phone_title'] ?? '';
+  String get notificationPhoneTitle => values['notification_phone_title'] ?? '';
 
   @override
   String get enterPassengerFullName =>
       values['enter_passenger_full_name'] ?? '';
 
   @override
-  String get passengerDetailsTitle =>
-      values['passenger_details_title'] ?? '';
+  String get passengerDetailsTitle => values['passenger_details_title'] ?? '';
 
   @override
   String get passengerNameLabel => values['passenger_name_label'] ?? '';
@@ -1298,7 +1297,8 @@ class LanguageEn extends Languages {
       values['driver_received_new_drop_off_location'] ?? '';
 
   @override
-  String get driverReceivedNewStops => values['driver_received_new_stops'] ?? '';
+  String get driverReceivedNewStops =>
+      values['driver_received_new_stops'] ?? '';
 
   @override
   String get pleaseWaitWhileWeProcessYourRequest =>
@@ -1360,7 +1360,8 @@ class LanguageEn extends Languages {
   String get pleaseEnterAPromoCode => values['please_enter_apromo_code'] ?? '';
 
   @override
-  String get pleaseEnterAValidEmail => values['please_enter_a_valid_email'] ?? '';
+  String get pleaseEnterAValidEmail =>
+      values['please_enter_a_valid_email'] ?? '';
 
   @override
   String get pleaseEnterAValidName => values['please_enter_a_valid_name'] ?? '';
@@ -1526,7 +1527,8 @@ class LanguageEn extends Languages {
   String get noAvailablePromoCodes => values['no_available_promo_codes'] ?? '';
 
   @override
-  String get failedToLoadPromoCodes => values['failed_to_load_promo_codes'] ?? '';
+  String get failedToLoadPromoCodes =>
+      values['failed_to_load_promo_codes'] ?? '';
 
   @override
   String get rating => values['rating'] ?? '';
@@ -1575,7 +1577,8 @@ class LanguageEn extends Languages {
   String get rideCompleted => values['ride_completed'] ?? '';
 
   @override
-  String get theRideHasBeenCancelled => values['the_ride_has_been_cancelled'] ?? '';
+  String get theRideHasBeenCancelled =>
+      values['the_ride_has_been_cancelled'] ?? '';
 
   @override
   String get youHaveReachedYourDestination =>
@@ -2095,7 +2098,8 @@ class LanguageEn extends Languages {
   String get email => values['email'] ?? '';
 
   @override
-  String get enterYourEmailOptional => values['enter_your_email_optional'] ?? '';
+  String get enterYourEmailOptional =>
+      values['enter_your_email_optional'] ?? '';
 
   @override
   String get iAgreeToTheTermsAndConditions =>
