@@ -10,42 +10,45 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
-import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/driver_location_socker_response.dart';
-import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/ride_stops_update_response.dart';
-import 'package:selcom_rides_frontend/core/data/models/responses/payment_status_response/payment_status_response.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:selcom_rides_frontend/features/ride/data/models/emergency_contacts_response.dart';
-import 'package:selcom_rides_frontend/features/ride/data/models/stop_update_models.dart';
-import 'package:selcom_rides_frontend/features/ride/data/models/destination_update_models.dart';
-import 'package:selcom_rides_frontend/core/data/models/requests/validate_ride_payment_request.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
-import '../../../../core/services/live_activity/live_activity_manager.dart';
-import '../../../../core/services/error_reporting/error_reporter.dart';
+
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
+import '../../../../core/data/models/responses/nearbyRiders/response/driver_location_socker_response.dart';
+import '../../../../core/data/models/responses/nearbyRiders/response/ride_stops_update_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
+import '../../../../core/data/models/responses/payment_status_response/payment_status_response.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/domain/entities/location_entity.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/app_map_service.dart';
+import '../../../../core/services/error_reporting/error_reporter.dart';
+import '../../../../core/services/live_activity/live_activity_manager.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
+import '../../../../core/services/storage_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
-import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../../../shared/utils/currency_formatter.dart';
+import '../../../../shared/utils/ride_active_navigation.dart';
+import '../../../../shared/utils/ride_pickup_status_labels.dart';
+import '../../../../shared/utils/ride_status_normalizer.dart';
 import '../../../../shared/utils/tanzania_license_plate_formatter.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
+import '../../data/models/destination_update_models.dart';
+import '../../data/models/emergency_contacts_response.dart';
+import '../../data/models/stop_update_models.dart';
 import '../../domain/repositories/ride_repository.dart';
+import '../screens/ride_details_screen.dart';
 import '../widgets/cancel_ride_dialogs.dart';
 import '../widgets/ride_driver_call_options_sheet.dart';
 import '../widgets/stop_update_progress_modal.dart';
-import '../../../../core/services/storage_service.dart';
-import '../screens/ride_details_screen.dart';
 import 'ride_details_controller.dart';
 
 /// SCR-11 — Driver accepted: live map, driver details, OTP.
@@ -86,6 +89,7 @@ class DriverAcceptedController extends GetxController
   final driverRating = ''.obs;
   final driverVehicleLine = ''.obs;
   final bottomSheetVehicleImageAsset = AppAssets.imgCab.obs;
+
   /// Formatted for UI, e.g. `T 123 ABC` (see [TanzaniaLicensePlateFormatter]).
   final plateDisplayFormatted = ''.obs;
   final vehicleSubtitle = ''.obs;
@@ -93,11 +97,13 @@ class DriverAcceptedController extends GetxController
   final isPinRequired = true.obs;
   final etaLabel = AppStrings.minutesShortCount.trParams({'count': '10'}).obs;
   final currentEtaSeconds = 0.0.obs;
-  final arrivalLabel = AppStrings.driverWillArrivingInMinutes
-      .trParams({'minutes': '1'})
-      .obs;
+  final arrivalLabel = AppStrings.driverWillArrivingInMinutes.trParams({
+    'minutes': '1',
+  }).obs;
   final unreadCount = 0.obs;
   final rideBottomSheetState = RideBottomSheetState.driverAssigned.obs;
+
+  // Normalized ride status from socket/API — use [normalizeRideStatusString] when writing.
   final currentRideStatus = 'driver_assigned'.obs;
   final isReasonProcessing = false.obs;
   final isCancelPayProcessing = false.obs;
@@ -269,8 +275,9 @@ class DriverAcceptedController extends GetxController
     }
     await _launchSystemPhoneDialer(
       phone: phone,
-      errorDialogTitle:
-          contact.label.isEmpty ? AppStrings.call.tr : contact.label,
+      errorDialogTitle: contact.label.isEmpty
+          ? AppStrings.call.tr
+          : contact.label,
     );
   }
 
@@ -432,7 +439,10 @@ class DriverAcceptedController extends GetxController
         if (locs.isNotEmpty) {
           final finalDestination = locs.last;
           if (finalDestination.lat != 0 && finalDestination.lng != 0) {
-            destinationLatLng = LatLng(finalDestination.lat, finalDestination.lng);
+            destinationLatLng = LatLng(
+              finalDestination.lat,
+              finalDestination.lng,
+            );
           }
           if (finalDestination.address.trim().isNotEmpty) {
             destinationAddress = finalDestination.address.trim();
@@ -531,7 +541,9 @@ class DriverAcceptedController extends GetxController
       summaryIntermediateStops.clear();
       return;
     }
-    final normalizedDestinationAddress = destinationAddress.trim().toLowerCase();
+    final normalizedDestinationAddress = destinationAddress
+        .trim()
+        .toLowerCase();
     final last = stops.last;
     final lastMatchesDestinationByAddress =
         normalizedDestinationAddress.isNotEmpty &&
@@ -738,6 +750,7 @@ class DriverAcceptedController extends GetxController
       _joinRideRoomIfNeeded();
     });
 
+    // Primary realtime status feed — always normalize before comparing.
     _rideStatusSub = _socketService.rideStatusStream.listen((payload) async {
       developer.log(
         "📥 Socket Event: ride_status_stream - Status: ${payload.status} for ride $rideId",
@@ -748,7 +761,7 @@ class DriverAcceptedController extends GetxController
       final status = (payload.status ?? '').toString().trim();
       _applyBottomSheetStateForStatus(status);
       _applyStatusPayload(payload);
-      final normalized = status.toLowerCase();
+      final normalized = normalizeRideStatusString(status);
       await _syncLiveActivityFromStatusPayload(payload);
       if (normalized == 'cancelled' || normalized == 'no_driver_found') {
         _navigatedAway = true;
@@ -886,27 +899,26 @@ class DriverAcceptedController extends GetxController
       _fetchRideDetails();
     });
 
-    _rideStopsUpdateFailedSub = _socketService.rideStopsUpdateFailedStream.listen((
-      res,
-    ) {
-      if (res.rideId != rideId) return;
-      _clearIdempotencyKey();
-      isUpdatingStops.value = false;
-      stopUpdateProgressStep.value = 0;
+    _rideStopsUpdateFailedSub = _socketService.rideStopsUpdateFailedStream
+        .listen((res) {
+          if (res.rideId != rideId) return;
+          _clearIdempotencyKey();
+          isUpdatingStops.value = false;
+          stopUpdateProgressStep.value = 0;
 
-      String userMessage = res.reason;
-      if (res.reason == 'da_patch_rejected') {
-        userMessage =
-            AppStrings.driversAppCouldntBeUpdatedBillingAdjustedBack.tr;
-      } else if (res.reason == 'payment_failed') {
-        userMessage = AppStrings.paymentHoldUpdateFailedNoChargesApplied.tr;
-      }
+          String userMessage = res.reason;
+          if (res.reason == 'da_patch_rejected') {
+            userMessage =
+                AppStrings.driversAppCouldntBeUpdatedBillingAdjustedBack.tr;
+          } else if (res.reason == 'payment_failed') {
+            userMessage = AppStrings.paymentHoldUpdateFailedNoChargesApplied.tr;
+          }
 
-      AppDialogs.showErrorDialog(
-        title: AppStrings.updateFailed.tr,
-        message: userMessage,
-      );
-    });
+          AppDialogs.showErrorDialog(
+            title: AppStrings.updateFailed.tr,
+            message: userMessage,
+          );
+        });
   }
 
   void _joinRideRoomIfNeeded() {
@@ -967,8 +979,6 @@ class DriverAcceptedController extends GetxController
       );
     });
   }
-
-
 
   void _syncBottomSheetVehicleImage(String? vehicleType) {
     final previousAsset = bottomSheetVehicleImageAsset.value;
@@ -1121,6 +1131,7 @@ class DriverAcceptedController extends GetxController
     }
   }
 
+  /// Applies driver/vehicle/PIN/route data from a status payload (socket or navigation seed).
   void _applyStatusPayload(EventRiderStatusUpdateResponse payload) {
     final status = (payload.status ?? '').toString().trim();
     if (status.isNotEmpty) {
@@ -1283,19 +1294,10 @@ class DriverAcceptedController extends GetxController
     return v.toStringAsFixed(1);
   }
 
+  /// Maps status → bottom sheet variant (pickup vs in-trip) and updates [currentRideStatus].
   void _applyBottomSheetStateForStatus(String rawStatus) {
-    final status = rawStatus.trim();
-    final canonicalStatus = status
-        .replaceAll('ridestatus.', '')
-        .replaceAll('RideStatus.', '')
-        .replaceAllMapped(
-          RegExp(r'([a-z0-9])([A-Z])'),
-          (m) => '${m.group(1)}_${m.group(2)}',
-        )
-        .replaceAll('-', '_')
-        .replaceAll(' ', '_');
-    final normalizedStatus = canonicalStatus.toLowerCase();
-    if (status.isEmpty) return;
+    final normalizedStatus = normalizeRideStatusString(rawStatus);
+    if (normalizedStatus.isEmpty) return;
     currentRideStatus.value = normalizedStatus;
 
     if (normalizedStatus == 'cancelled' ||
@@ -1339,10 +1341,21 @@ class DriverAcceptedController extends GetxController
   }
 
   /// Second line on the driver-assigned pickup sheet (below the ETA row).
-  String get driverPickupPhaseHeadline =>
-      currentRideStatus.value.toLowerCase() == 'driver_arrived'
-          ? AppStrings.driverArrivedPickupSecondary.tr
-          : AppStrings.driverIsHeadingToYourLocation.tr;
+  ///
+  /// Pickup progression: assigned → arriving → arrived (see [RidePickupStatusLabels]).
+  String get driverPickupPhaseHeadline {
+    switch (currentRideStatus.value) {
+      case 'driver_arrived':
+        return AppStrings.driverArrivedPickupSecondary.tr;
+      case 'driver_arriving':
+        return AppStrings.driverIsHeadingToPickup.tr;
+      case 'driver_assigned':
+      case 'accepted':
+        return AppStrings.driverHasAcceptedYourRide.tr;
+      default:
+        return AppStrings.driverIsHeadingToYourLocation.tr;
+    }
+  }
 
   void _openCompletedRideDetailsScreen() {
     if (_openedCompletedRideDetails) return;
@@ -1449,6 +1462,7 @@ class DriverAcceptedController extends GetxController
     }
   }
 
+  /// In-trip sheet headline. Pickup-phase titles use [RidePickupStatusLabels] in `default`.
   String get rideProgressTitle {
     switch (currentRideStatus.value) {
       case 'ride_completed':
@@ -1460,16 +1474,12 @@ class DriverAcceptedController extends GetxController
         return AppStrings.onYourWay.tr;
       case 'ride_started':
         return AppStrings.rideStarted.tr;
-      case 'driver_arrived':
-        return AppStrings.driverArrived.tr;
-      case 'driver_arriving':
-        return AppStrings.driverEnRoute.tr;
-      case 'driver_assigned':
       default:
-        return AppStrings.driverAssigned.tr;
+        return RidePickupStatusLabels.titleFor(currentRideStatus.value);
     }
   }
 
+  /// In-trip / pickup supporting line (ETA-aware where applicable).
   String get rideProgressSubtitle {
     final etaSeconds = currentEtaSeconds.value;
     final etaMinutes = etaSeconds > 0 ? (etaSeconds / 60).ceil() : 0;
@@ -1496,8 +1506,9 @@ class DriverAcceptedController extends GetxController
       case 'driver_arrived':
         return AppStrings.driverArrivedPickupPrimary.tr;
       case 'driver_arriving':
-      case 'driver_assigned':
         return AppStrings.driverIsHeadingToPickup.tr;
+      case 'driver_assigned':
+        return AppStrings.driverAssignedDescription.tr;
       case 'ride_completed':
       case 'completed':
         return arrivalDateLabel;
@@ -1518,7 +1529,7 @@ class DriverAcceptedController extends GetxController
 
   /// Pickup-phase statuses: map chip + driver-assigned sheet use same rule.
   bool _isDriverHeadingToPickupForEta(String rideStatusRaw) {
-    final s = rideStatusRaw.trim().toLowerCase();
+    final s = normalizeRideStatusString(rideStatusRaw);
     if (s.isEmpty || s == 'driver_arrived') return false;
     return s == 'driver_assigned' ||
         s == 'driver_arriving' ||
@@ -1531,17 +1542,18 @@ class DriverAcceptedController extends GetxController
     double etaSeconds, {
     required bool skipIfArrived,
   }) {
-    if (skipIfArrived && currentRideStatus.value.toLowerCase() == 'driver_arrived') {
+    if (skipIfArrived &&
+        normalizeRideStatusString(currentRideStatus.value) ==
+            'driver_arrived') {
       return;
     }
     if (etaSeconds <= 0) return;
     currentEtaSeconds.value = etaSeconds;
     final minutes = (etaSeconds / 60).ceil();
     etaLabel.value = '$minutes ${minutes == 1 ? 'Min' : 'Mins'}';
-    final rideStatus = currentRideStatus.value.toLowerCase();
+    final rideStatus = normalizeRideStatusString(currentRideStatus.value);
     if (_isDriverHeadingToPickupForEta(rideStatus)) {
-      arrivalLabel.value =
-          AppStrings.driverWillArrivingInMinutes.trParams({
+      arrivalLabel.value = AppStrings.driverWillArrivingInMinutes.trParams({
         'minutes': '$minutes',
       });
     }
@@ -1549,7 +1561,7 @@ class DriverAcceptedController extends GetxController
 
   /// Driver-assigned sheet first line — matches map chip math on [currentEtaSeconds].
   String get driverAssignedSheetArrivalEtaLine {
-    final st = currentRideStatus.value.toLowerCase();
+    final st = normalizeRideStatusString(currentRideStatus.value);
     if (st == 'driver_arrived') {
       return arrivalLabel.value;
     }
@@ -1572,8 +1584,10 @@ class DriverAcceptedController extends GetxController
   }
 
   void _applyTrackingPayload(TrackingUpdateSocketResponse payload) {
-    final trackingStatus =
-        (payload.status ?? '').toString().trim().toLowerCase();
+    final trackingStatus = (payload.status ?? '')
+        .toString()
+        .trim()
+        .toLowerCase();
     if (trackingStatus.isNotEmpty) {
       // Only trigger state updates from tracking payloads if it's a major transition.
       // High-frequency tracking often contains stale 'assigned' statuses.
@@ -1608,13 +1622,13 @@ class DriverAcceptedController extends GetxController
       } else if (!isPickupArrived && etaSecs <= 0) {
         final statusForEta = (payload.status ?? currentRideStatus.value)
             .toLowerCase();
-        final inRide = statusForEta.contains('progress') ||
+        final inRide =
+            statusForEta.contains('progress') ||
             statusForEta.contains('started');
         etaLabel.value = inRide ? AppStrings.nearby.tr : AppStrings.arriving.tr;
-        arrivalLabel.value =
-            inRide
-                ? AppStrings.almostThere.tr
-                : AppStrings.driverIsArriving.tr;
+        arrivalLabel.value = inRide
+            ? AppStrings.almostThere.tr
+            : AppStrings.driverIsArriving.tr;
       }
     }
 
@@ -2057,7 +2071,10 @@ class DriverAcceptedController extends GetxController
     result.fold(
       (f) {
         isUpdatingStops.value = false;
-        AppDialogs.showErrorDialog(title: AppStrings.error.tr, message: f.message);
+        AppDialogs.showErrorDialog(
+          title: AppStrings.error.tr,
+          message: f.message,
+        );
       },
       (res) {
         if (res is StopUpdatePreviewModel) {
@@ -2100,7 +2117,10 @@ class DriverAcceptedController extends GetxController
         _clearIdempotencyKey(); // Clear on failure
         isUpdatingStops.value = false;
         stopUpdateProgressStep.value = 0;
-        AppDialogs.showErrorDialog(title: AppStrings.error.tr, message: f.message);
+        AppDialogs.showErrorDialog(
+          title: AppStrings.error.tr,
+          message: f.message,
+        );
       },
       (res) async {
         if (res is StopUpdateAppliedModel) {
@@ -2177,7 +2197,8 @@ class DriverAcceptedController extends GetxController
         stopUpdateProgressStep.value = 0;
         AppDialogs.showInfoDialog(
           title: AppStrings.takingLongerThanExpected.tr,
-          message: AppStrings.theUpdateIsTakingSomeTimePleaseCheckBackShortly.tr,
+          message:
+              AppStrings.theUpdateIsTakingSomeTimePleaseCheckBackShortly.tr,
         );
         _fetchRideDetails();
       }
@@ -2296,7 +2317,9 @@ class DriverAcceptedController extends GetxController
     return mapped;
   }
 
-  Future<void> previewDropLocationUpdate(Map<String, dynamic> destination) async {
+  Future<void> previewDropLocationUpdate(
+    Map<String, dynamic> destination,
+  ) async {
     destinationUpdatePreview.value = null;
     final dest = _buildDestinationPayload(destination);
     if (dest == null) {
@@ -2307,7 +2330,10 @@ class DriverAcceptedController extends GetxController
       return;
     }
     // Step 1: preview update-destination (confirm=false).
-    final previewRes = await rideRepository.previewUpdateDestination(rideId, dest);
+    final previewRes = await rideRepository.previewUpdateDestination(
+      rideId,
+      dest,
+    );
     previewRes.fold(
       (f) => AppDialogs.showErrorDialog(
         title: AppStrings.error.tr,
@@ -2462,7 +2488,8 @@ class DriverAcceptedController extends GetxController
         _pendingDestinationTargetLng = null;
         AppDialogs.showInfoDialog(
           title: AppStrings.takingLongerThanExpected.tr,
-          message: AppStrings.theUpdateIsTakingSomeTimePleaseCheckBackShortly.tr,
+          message:
+              AppStrings.theUpdateIsTakingSomeTimePleaseCheckBackShortly.tr,
         );
         unawaited(_fetchRideDetails());
       }

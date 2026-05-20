@@ -15,7 +15,6 @@ class AppStrings {
   static const String addressMissing = 'address_missing';
   static const String anUnexpectedErrorOccurred =
       'an_unexpected_error_occurred';
-  static const String appSettings = 'app_settings';
   static const String appTitle = 'app_title';
   static const String apply = 'apply';
   static const String areYouSureWantToAddNdeleteThisCard =
@@ -105,6 +104,7 @@ class AppStrings {
       'driver_is_heading_to_your_location';
   static const String driverIsHeadingToPickup = 'driver_is_heading_to_pickup';
   static const String driverAssignedDescription = 'driver_assigned_description';
+  static const String driverHasAcceptedYourRide = 'driver_has_accepted_your_ride';
   static const String driverArrivedDescription = 'driver_arrived_description';
   static const String rideStartedDescription = 'ride_started_description';
   static const String findingYourDriver = 'finding_your_driver';

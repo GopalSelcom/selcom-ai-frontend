@@ -6,26 +6,30 @@ import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/near_by_rider_response.dart';
-import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/driver_location_socker_response.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/data/models/responses/nearbyRiders/response/driver_location_socker_response.dart';
+import '../../../../core/data/models/responses/nearbyRiders/response/near_by_rider_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
+import '../../../../core/data/models/ride_model.dart';
+import '../../../../core/domain/entities/location_entity.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/services/error_reporting/error_reporter.dart';
+import '../../../../core/services/live_activity/live_activity_manager.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/driver_search_timeout_from_cancel_time.dart';
+import '../../../../shared/utils/ride_active_navigation.dart';
+import '../../../../shared/utils/ride_pickup_status_labels.dart';
+import '../../../../shared/utils/ride_status_normalizer.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
-import '../../../../core/utils/map_marker_utils.dart';
-import '../../../../core/services/live_activity/live_activity_manager.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../widgets/cancel_ride_dialogs.dart';
-import '../../../../core/services/error_reporting/error_reporter.dart';
-import '../../../../core/domain/entities/location_entity.dart';
 
 /// SCR-10 — finding driver: search UI only; on assignment navigates to [AppRoutes.driverAccepted].
 class FindingDriverController extends GetxController {
@@ -64,10 +68,14 @@ class FindingDriverController extends GetxController {
   final routeTarget = ''.obs;
   final activeRoutePoints = <LatLng>[].obs;
 
+  /// Sheet headline — driven by [RidePickupStatusLabels] from socket/API status.
   final currentStatusLabel = AppStrings.findingYourDriver.tr.obs;
+  /// Sheet subline — paired with [currentStatusLabel].
   final currentDescriptionLabel =
       AppStrings.findingDriverDefaultDescription.tr
           .obs;
+  /// Canonical pickup-phase status (`searching`, `driver_assigned`, …).
+  final normalizedRideStatus = 'searching'.obs;
   final isRideCancelled = false.obs;
   final isReasonProcessing = false.obs;
   final isCancelPayProcessing = false.obs;
@@ -102,6 +110,102 @@ class FindingDriverController extends GetxController {
   bool _isUserInitiatedCancellation = false;
   bool _isNavigatingHomeAfterCancel = false;
 
+  /// When false, hide search countdown/progress (driver matched or later).
+  bool get isSearchingPhase => isRideSearchingStatus(normalizedRideStatus.value);
+
+  /// Updates sheet copy from [RidePickupStatusLabels] after status normalization.
+  void _applyPickupStatusLabels(String normalized) {
+    normalizedRideStatus.value = normalized.isEmpty ? 'searching' : normalized;
+    currentStatusLabel.value = RidePickupStatusLabels.titleFor(
+      normalizedRideStatus.value,
+    );
+    currentDescriptionLabel.value = RidePickupStatusLabels.descriptionFor(
+      normalizedRideStatus.value,
+    );
+  }
+
+  /// Stops search UI and opens driver-accepted (once per ride).
+  void _onDriverAssignedPhase(String normalized, EventRiderStatusUpdateResponse payload) {
+    _countdownTimer?.cancel();
+    _loadDriverMarkerIcon(
+      vehicleType: payload.driverSnapshot?.vehicleType,
+    );
+    if (!_didNavigateToAccepted) {
+      _navigateToDriverAccepted();
+    }
+  }
+
+  /// Central handler for `ride:status_update` and HTTP catch-up on this screen.
+  ///
+  /// Always normalizes [rawStatus] first — never compare raw socket strings directly.
+  void _handleRideStatus(String rawStatus, EventRiderStatusUpdateResponse payload) {
+    final normalized = normalizeRideStatusString(rawStatus);
+    if (normalized.isEmpty) return;
+
+    // Refresh labels immediately so the user sees the right phase before navigation.
+    _applyPickupStatusLabels(normalized);
+
+    switch (normalized) {
+      case 'searching':
+        break;
+      case 'driver_assigned':
+      case 'accepted':
+      case 'driver_arriving':
+      case 'driver_en_route':
+      case 'en_route':
+        _onDriverAssignedPhase(normalized, payload);
+        break;
+      case 'driver_arrived':
+        _onDriverAssignedPhase(normalized, payload);
+        _setDropRouteFallback();
+        _fitRouteBounds();
+        break;
+      case 'ride_started':
+      case 'ride_in_progress':
+        currentStatusLabel.value = AppStrings.rideStarted.tr;
+        currentDescriptionLabel.value =
+            AppStrings.rideStartedDescription.tr;
+        _onDriverAssignedPhase(normalized, payload);
+        _setDropRouteFallback();
+        _fitRouteBounds();
+        break;
+      case 'ride_completed':
+        currentStatusLabel.value = AppStrings.rideCompleted.tr;
+        currentDescriptionLabel.value =
+            AppStrings.youHaveReachedYourDestination.tr;
+        break;
+      case 'cancelled':
+        if (_isUserInitiatedCancellation) return;
+        isRideCancelled.value = true;
+        currentStatusLabel.value = AppStrings.rideCancelled.tr;
+        currentDescriptionLabel.value = AppStrings.theRideHasBeenCancelled.tr;
+        LiveActivityManager().endActivity(rideId);
+        _showCancelDialogThenGoHome(AppStrings.yourRideWasCancelled.tr);
+        break;
+      case 'no_driver_found':
+      case 'no_drivers_found':
+        if (_isUserInitiatedCancellation) return;
+        isRideCancelled.value = true;
+        currentStatusLabel.value = AppStrings.noDriverFound.tr;
+        currentDescriptionLabel.value = AppStrings.weCouldntFindADriverNearby.tr;
+        LiveActivityManager().endActivity(rideId);
+        _showCancelDialogThenGoHome(
+          AppStrings.noDriversNearbyPleaseTryAgainLater.tr,
+        );
+        break;
+      default:
+        if (shouldLeaveFindingDriverForPickup(normalized)) {
+          _onDriverAssignedPhase(normalized, payload);
+        } else {
+          developer.log(
+            "⚠️ Unhandled Socket Status: $normalized",
+            name: 'ORDER_TRACKING',
+          );
+        }
+        break;
+    }
+  }
+
   void updateSheetSize(double size) {
     sheetSize.value = size;
   }
@@ -124,6 +228,52 @@ class FindingDriverController extends GetxController {
     _initNearbyDriversSocket();
     _initRideRoomSocket();
     _loadMarkerIcons();
+    // HTTP catch-up in case socket events were missed during room join.
+    unawaited(_syncInitialRideStatusFromApi());
+  }
+
+  /// Polls ride details once so we don't stay on "Finding driver" after assignment.
+  Future<void> _syncInitialRideStatusFromApi() async {
+    if (rideId.isEmpty) return;
+    final result = await rideRepository.getRideDetails(rideId);
+    result.fold((_) {}, (ride) {
+      final rawStatus = rideStatusToApiValue(ride.status);
+      final normalized = normalizeRideStatusString(rawStatus);
+      if (isRideSearchingStatus(normalized)) return;
+
+      final d = ride.driverSnapshot;
+      DriverSnapshot? driverSnapshot;
+      if (d is DriverSnapshotModel) {
+        driverSnapshot = DriverSnapshot(
+          name: d.name,
+          phone: d.phone,
+          avatarUrl: d.avatarUrl,
+          vehicleColor: d.vehicleColor,
+          vehicleModel: d.vehicleModel,
+          vehicleRegistrationNumber: d.vehicleRegistrationNumber,
+          vehicleType: d.vehicleType,
+          verificationCode: d.verificationCode,
+          rating: d.rating,
+        );
+      } else if (d != null) {
+        driverSnapshot = DriverSnapshot(
+          name: d.name,
+          phone: d.phone,
+          avatarUrl: d.avatarUrl,
+          rating: d.rating,
+        );
+      }
+
+      final payload = EventRiderStatusUpdateResponse(
+        rideId: ride.id,
+        status: rawStatus,
+        pinCode: ride.pinCode,
+        pinRequired: ride.pinRequired,
+        driverSnapshot: driverSnapshot,
+      );
+      latestRideStatusPayload.value = payload;
+      _handleRideStatus(rawStatus, payload);
+    });
   }
 
   Future<void> _loadMarkerIcons() async {
@@ -401,68 +551,9 @@ class FindingDriverController extends GetxController {
         error: jsonEncode(payload.toJson()),
       );
       latestRideStatusPayload.value = payload;
-      final status = (payload.status ?? '').toString().trim().toLowerCase();
       _applyStatusPayload(payload);
-      // Removed _syncLiveActivityFromPayload(payload) to respect 'APNs-only' update model
-      if (status.isEmpty) return;
-
-      switch (status) {
-        case 'driver_assigned':
-        case 'accepted':
-          currentStatusLabel.value = AppStrings.driverAssigned.tr;
-          currentDescriptionLabel.value =
-              AppStrings.driverAssignedDescription.tr;
-          _loadDriverMarkerIcon(
-            vehicleType: payload.driverSnapshot?.vehicleType,
-          );
-          _navigateToDriverAccepted();
-          break;
-        case 'driver_arrived':
-          currentStatusLabel.value = AppStrings.driverArrived.tr;
-          currentDescriptionLabel.value =
-              AppStrings.driverArrivedDescription.tr;
-          _setDropRouteFallback();
-          _fitRouteBounds();
-          break;
-        case 'ride_started':
-        case 'ride_in_progress':
-          currentStatusLabel.value = AppStrings.rideStarted.tr;
-          currentDescriptionLabel.value =
-              AppStrings.rideStartedDescription.tr;
-          _setDropRouteFallback();
-          _fitRouteBounds();
-          break;
-        case 'ride_completed':
-          currentStatusLabel.value = AppStrings.rideCompleted.tr;
-          currentDescriptionLabel.value =
-              AppStrings.youHaveReachedYourDestination.tr;
-          break;
-        case 'cancelled':
-          if (_isUserInitiatedCancellation) return;
-          isRideCancelled.value = true;
-          currentStatusLabel.value = AppStrings.rideCancelled.tr;
-          currentDescriptionLabel.value = AppStrings.theRideHasBeenCancelled.tr;
-          LiveActivityManager().endActivity(rideId);
-          _showCancelDialogThenGoHome(AppStrings.yourRideWasCancelled.tr);
-          break;
-        case 'no_driver_found':
-        case 'no_drivers_found':
-          if (_isUserInitiatedCancellation) return;
-          isRideCancelled.value = true;
-          currentStatusLabel.value = AppStrings.noDriverFound.tr;
-          currentDescriptionLabel.value = AppStrings.weCouldntFindADriverNearby.tr;
-          LiveActivityManager().endActivity(rideId);
-          _showCancelDialogThenGoHome(
-            AppStrings.noDriversNearbyPleaseTryAgainLater.tr,
-          );
-          break;
-        default:
-          developer.log(
-            "⚠️ Unhandled Socket Status: $status",
-            name: 'ORDER_TRACKING',
-          );
-          break;
-      }
+      // Status string drives labels + navigation; route/ETA handled in _applyStatusPayload.
+      _handleRideStatus(payload.status?.toString() ?? '', payload);
     });
 
     _driverLocSub = _socketService.rideDriverLocationStream.listen((payload) {

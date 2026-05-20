@@ -81,6 +81,20 @@ class _AppFocusInputFieldState extends State<AppFocusInputField> {
     _isFocused.value = _focusNode.hasFocus;
   }
 
+  /// Keeps hint + input on the same line box (fixes M3 top-aligned hint).
+  static StrutStyle? _strutStyleFor(TextStyle? style) {
+    if (style == null) return null;
+    return StrutStyle(
+      fontFamily: style.fontFamily,
+      fontFamilyFallback: style.fontFamilyFallback,
+      fontSize: style.fontSize,
+      height: style.height ?? 1.2,
+      fontWeight: style.fontWeight,
+      forceStrutHeight: true,
+      leadingDistribution: TextLeadingDistribution.even,
+    );
+  }
+
   @override
   void dispose() {
     _focusNode.removeListener(_onFocusChange);
@@ -121,8 +135,12 @@ class _AppFocusInputFieldState extends State<AppFocusInputField> {
             keyboardType: widget.keyboardType,
             inputFormatters: widget.inputFormatters,
             style: widget.style,
+            strutStyle: _strutStyleFor(widget.style),
+            maxLines: 1,
+            minLines: 1,
             maxLength: widget.maxLength,
             onChanged: widget.onChanged,
+            textAlignVertical: TextAlignVertical.center,
             decoration: InputDecoration(
               hintText: widget.hintText,
               counterText: '',

@@ -1,4 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../../core/localization/app_strings.dart';
+import '../../../../../core/localization/localization.dart';
+import '../../../../../core/routes/app_routes.dart';
 import '../../../../../core/services/app_settings_service.dart';
 import '../../../../../shared/utils/app_dialogs.dart';
 import '../../../../../features/settings/domain/usecases/settings_usecase.dart';
@@ -88,5 +92,30 @@ class SettingsController extends GetxController {
     );
 
     isSaving.value = false;
+  }
+
+  void openNotifications() {
+    Get.toNamed(AppRoutes.notifications);
+  }
+
+  Future<void> toggleLanguage(BuildContext context) async {
+    final current = Get.locale ?? Get.deviceLocale ?? const Locale('en');
+    final nextCode = current.languageCode == 'sw' ? 'en' : 'sw';
+    await Localization.instance.changeLanguage(context, nextCode);
+    Get.snackbar(
+      AppStrings.language.tr,
+      nextCode == 'sw'
+          ? AppStrings.switchedToSwahili.tr
+          : AppStrings.switchedToEnglish.tr,
+      snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 2),
+    );
+  }
+
+  String get currentLanguageLabel {
+    final current = Get.locale ?? Get.deviceLocale ?? const Locale('en');
+    return current.languageCode == 'sw'
+        ? AppStrings.swahili.tr
+        : AppStrings.english.tr;
   }
 }

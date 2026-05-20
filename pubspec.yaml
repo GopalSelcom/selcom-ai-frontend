@@ -2,7 +2,7 @@ name: selcom_rides_frontend
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.0.0+10
+version: 1.0.0+11
 
 environment:
   sdk: ^3.10.7
@@ -115,6 +115,6 @@ flutter_launcher_icons:
   adaptive_icon_foreground: "assets/launcher_foreground.png"
 
 flutter_native_splash:
-  color: "#5CB75E"
+  color: "#51D71C"
   ios: true
   android: true

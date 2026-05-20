@@ -23,7 +23,6 @@ abstract class Languages {
   String get addCard;
   String get addressMissing;
   String get anUnexpectedErrorOccurred;
-  String get appSettings;
   String get appTitle;
   String get apply;
   String get areYouSureWantToAddNdeleteThisCard;
@@ -85,6 +84,7 @@ abstract class Languages {
   String get driverIsHeadingToYourLocation;
   String get driverIsHeadingToPickup;
   String get driverAssignedDescription;
+  String get driverHasAcceptedYourRide;
   String get driverArrivedDescription;
   String get rideStartedDescription;
   String get findingYourDriver;
