@@ -91,6 +91,7 @@ class _AppOtpFieldState extends State<AppOtpField> {
   late final TextEditingController _controller;
   late final bool _ownsController;
   final FocusNode _focusNode = FocusNode();
+  bool _disposed = false;
   bool _isFocused = false;
   int _filledLength = 0;
   bool _retryOnNextInput = false;
@@ -132,6 +133,7 @@ class _AppOtpFieldState extends State<AppOtpField> {
   }
 
   void _onFocusChanged() {
+    if (_disposed || !mounted) return;
     final focused = _focusNode.hasFocus;
     if (_isFocused != focused) {
       setState(() => _isFocused = focused);
@@ -139,6 +141,7 @@ class _AppOtpFieldState extends State<AppOtpField> {
   }
 
   void _onControllerChanged() {
+    if (_disposed || !mounted) return;
     final len = _onlyDigits(_effectiveController.text).length;
     if (_filledLength != len) {
       setState(() => _filledLength = len);
@@ -148,6 +151,7 @@ class _AppOtpFieldState extends State<AppOtpField> {
   String _onlyDigits(String value) => value.replaceAll(RegExp(r'\D'), '');
 
   void _restartWithDigit(String digit) {
+    if (_disposed || !mounted) return;
     _retryOnNextInput = false;
     _effectiveController.value = TextEditingValue(
       text: digit,
@@ -158,6 +162,7 @@ class _AppOtpFieldState extends State<AppOtpField> {
   }
 
   bool _handleHardwareKey(KeyEvent event) {
+    if (_disposed || !mounted) return false;
     if (event is! KeyDownEvent) return false;
     if (!_focusNode.hasFocus) return false;
     if (!_retryOnNextInput || !widget.hasError) return false;
@@ -172,14 +177,11 @@ class _AppOtpFieldState extends State<AppOtpField> {
   }
 
   void _handleChanged(String value) {
+    if (_disposed) return;
     final digits = _onlyDigits(value);
     final len = digits.length;
-    if (_filledLength != len) {
+    if (_filledLength != len && mounted) {
       setState(() => _filledLength = len);
-    }
-    if (digits != value) {
-      widget.onChanged?.call(digits);
-      return;
     }
     widget.onChanged?.call(digits);
   }
@@ -191,10 +193,12 @@ class _AppOtpFieldState extends State<AppOtpField> {
 
   @override
   void dispose() {
+    _disposed = true;
     HardwareKeyboard.instance.removeHandler(_handleHardwareKey);
     _effectiveController.removeListener(_onControllerChanged);
     _focusNode.removeListener(_onFocusChanged);
-    _focusNode.dispose();
+    // Do not dispose [_focusNode]: PinCodeTextField keeps a listener and may
+    // unfocus asynchronously after OTP verification navigation.
     if (_ownsController) {
       _controller.dispose();
     }
@@ -210,6 +214,7 @@ class _AppOtpFieldState extends State<AppOtpField> {
         ? AppColors.otpErrorShadow
         : AppColors.inputFocusShadow;
 
+    final isFocused = _isFocused;
     final isComplete = !widget.hasError && _filledLength >= widget.length;
     final activeCellIndex = _filledLength < widget.length
         ? _filledLength
@@ -222,7 +227,7 @@ class _AppOtpFieldState extends State<AppOtpField> {
       activeBorder = selectedBorder = inactiveBorder = AppColors.otpErrorBorder;
     } else if (isComplete) {
       activeBorder = selectedBorder = inactiveBorder = AppColors.primary;
-    } else if (_isFocused) {
+    } else if (isFocused) {
       activeBorder = AppColors.primary;
       selectedBorder = AppColors.primary;
       inactiveBorder = AppColors.primary;
@@ -232,7 +237,7 @@ class _AppOtpFieldState extends State<AppOtpField> {
 
     bool cellGlowsAt(int index) {
       if (widget.hasError) return true;
-      return _isFocused && !isComplete && index == activeCellIndex;
+      return isFocused && !isComplete && index == activeCellIndex;
     }
 
     return SizedBox(
