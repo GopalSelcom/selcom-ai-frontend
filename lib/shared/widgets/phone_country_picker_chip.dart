@@ -170,7 +170,7 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
                       Expanded(
                         child: Text(
                           'Select country',
-                          style: AppTextStyles.body.copyWith(
+                          style: AppTextStyles.homeTitle.copyWith(
                             fontSize: 17.sp,
                             fontWeight: FontWeight.w600,
                             color: AppColors.textHeading,
@@ -225,7 +225,7 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
                   ? Center(
                       child: Text(
                         'No countries found',
-                        style: AppTextStyles.body.copyWith(color: AppColors.textBody),
+                        style: AppTextStyles.homeSubtitle.copyWith(color: AppColors.textBody),
                       ),
                     )
                   : ListView.separated(
@@ -256,7 +256,7 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
                                 Expanded(
                                   child: Text(
                                     c.name,
-                                    style: AppTextStyles.body.copyWith(
+                                    style: AppTextStyles.homeSubtitle.copyWith(
                                       fontSize: 15.sp,
                                       color: AppColors.textHeading,
                                     ),
@@ -264,7 +264,7 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
                                 ),
                                 Text(
                                   c.dialCode,
-                                  style: AppTextStyles.body.copyWith(
+                                  style: AppTextStyles.homeSubtitle.copyWith(
                                     fontSize: 14.sp,
                                     color: AppColors.textBody,
                                   ),
