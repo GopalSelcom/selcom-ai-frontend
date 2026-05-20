@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -80,17 +81,22 @@ class OtpScreen extends GetView<AuthController> {
                         ),
                         SizedBox(height: 24.h),
 
-                        // Edit Phone Number
-                        InkWell(
-                          onTap: () => Get.back(),
+                        // Edit Phone Number (Cupertino text button; 15sp per Figma subtitle scale)
+                        CupertinoButton(
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size.zero,
+                          alignment: Alignment.centerLeft,
+                          onPressed: () => Get.back(),
                           child: Text(
                             AppStrings.editYourPhoneNumber.tr,
-                            style: AppTextStyles.homeSubtitle.copyWith(
-                              fontSize: 17.sp,
+                            style: AppTextStyles.onboardingSubtitle.copyWith(
+                              fontSize: 16.sp,
                               color: AppColors.primary,
                               decoration: TextDecoration.underline,
-                              fontWeight: FontWeight.w500,
-                              height: 22 / 17,
+                              decorationColor: AppColors.primary,
+                              decorationThickness: 1,
+                              decorationStyle: TextDecorationStyle.solid,
+                              height: 22 / 16,
                             ),
                           ),
                         ),
