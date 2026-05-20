@@ -118,7 +118,7 @@ class OnboardingScreen extends GetView<OnboardingController> {
                         labelStyle: AppTextStyles.onboardingButton,
                         iconAsset: AppAssets.locationIcArrowRight,
                         iconColor: AppColors.white,
-                        placeIconAfterLabel: true,
+                        alignIconToTrailingEnd: true,
                         showBottomInnerShadow: true,
                       ),
                     ),

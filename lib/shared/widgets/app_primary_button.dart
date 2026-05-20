@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
@@ -21,6 +22,9 @@ class AppPrimaryButton extends StatelessWidget {
   final double? borderRadius;
   final double? outlinedBorderWidth;
   final bool placeIconAfterLabel;
+  /// When true (and an icon is shown), label stays centered and the icon is pinned to the **right**
+  /// inside the horizontal padding — typical onboarding CTA. Ignored when [isLoading] or [outlined].
+  final bool alignIconToTrailingEnd;
   /// Inner shadow along the **bottom** of the fill only (onboarding CTA).
   /// Ignored when [outlined] is true.
   final bool showBottomInnerShadow;
@@ -44,6 +48,7 @@ class AppPrimaryButton extends StatelessWidget {
     this.borderRadius,
     this.outlinedBorderWidth,
     this.placeIconAfterLabel = false,
+    this.alignIconToTrailingEnd = false,
     this.showBottomInnerShadow = false,
     this.labelStyle,
   });
@@ -102,6 +107,23 @@ class AppPrimaryButton extends StatelessWidget {
               strokeWidth: 2,
             ),
           )
+        : alignIconToTrailingEnd &&
+                !outlined &&
+                iconWidget != null
+            ? Row(
+                children: [
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        label,
+                        style: resolvedLabelStyle(),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                  iconWidget,
+                ],
+              )
         : placeIconAfterLabel
             ? Row(
                 mainAxisAlignment: MainAxisAlignment.center,
