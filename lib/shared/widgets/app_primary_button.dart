@@ -5,6 +5,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/svg_picture_asset.dart';
+import 'pressable_button_y_shift.dart';
 
 class AppPrimaryButton extends StatelessWidget {
   final String label;
@@ -152,42 +153,48 @@ class AppPrimaryButton extends StatelessWidget {
                 ),
               );
 
+    final Widget button;
     if (showBottomInnerShadow && !outlined) {
-      return _buildPrimaryWithFace3d(
+      button = _buildPrimaryWithFace3d(
         buttonChild: buttonChild,
         effectiveBackgroundColor: effectiveBackgroundColor,
         effectiveBorderRadius: effectiveBorderRadius,
         effectiveTextColor: effectiveTextColor,
       );
+    } else {
+      button = SizedBox(
+        width: width ?? double.infinity,
+        height: height ?? 56.h,
+        child: ElevatedButton(
+          onPressed: isLoading ? null : onPressed,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: effectiveBackgroundColor,
+            disabledBackgroundColor: outlined
+                ? effectiveBackgroundColor
+                : effectiveBackgroundColor.withValues(alpha: 0.5),
+            foregroundColor: outlined
+                ? effectiveOutlinedTextColor
+                : effectiveTextColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(effectiveBorderRadius),
+              side: outlined
+                  ? BorderSide(
+                      color: effectiveOutlinedBorderColor,
+                      width: effectiveOutlinedBorderWidth,
+                    )
+                  : BorderSide.none,
+            ),
+            elevation: 0,
+            padding: EdgeInsets.symmetric(horizontal: 24.w),
+          ),
+          child: buttonChild,
+        ),
+      );
     }
 
-    return SizedBox(
-      width: width ?? double.infinity,
-      height: height ?? 56.h,
-      child: ElevatedButton(
-        onPressed: isLoading ? null : onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: effectiveBackgroundColor,
-          disabledBackgroundColor: outlined
-              ? effectiveBackgroundColor
-              : effectiveBackgroundColor.withValues(alpha: 0.5),
-          foregroundColor: outlined
-              ? effectiveOutlinedTextColor
-              : effectiveTextColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(effectiveBorderRadius),
-            side: outlined
-                ? BorderSide(
-                    color: effectiveOutlinedBorderColor,
-                    width: effectiveOutlinedBorderWidth,
-                  )
-                : BorderSide.none,
-          ),
-          elevation: 0,
-          padding: EdgeInsets.symmetric(horizontal: 24.w),
-        ),
-        child: buttonChild,
-      ),
+    return PressableButtonYShift(
+      interactionEnabled: onPressed != null && !isLoading,
+      child: button,
     );
   }
 
