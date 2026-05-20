@@ -67,8 +67,17 @@ class PhoneInputScreen extends GetView<AuthController> {
                           final hint = PhoneNationalRules.hintForIso(iso);
                           final country = Countries.findByIsoCode(iso);
 
+                          final phoneFieldStyle = TextStyle(
+                            fontFamily: AppTextStyles.metropolisFont,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16.sp,
+                            height: 1.2,
+                            letterSpacing: -0.16,
+                            color: AppColors.primary,
+                          );
+
                           return Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               PhoneCountryPickerChip(
                                 key: ValueKey('cc-$iso'),
@@ -86,12 +95,7 @@ class PhoneInputScreen extends GetView<AuthController> {
                                       PhoneNationalRules.inputFormattersForIso(
                                         iso,
                                       ),
-                                  style: AppTextStyles.body.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 16.sp,
-                                    color: AppColors.primary,
-                                    letterSpacing: -0.16,
-                                  ),
+                                  style: phoneFieldStyle,
                                   maxLength:
                                       PhoneNationalRules.maxDisplayCharactersForIso(
                                         iso,
@@ -103,10 +107,10 @@ class PhoneInputScreen extends GetView<AuthController> {
                                   hintText: hint.isEmpty
                                       ? AppStrings.eG7XxXxxXxx.tr
                                       : hint,
-                                  hintStyle: AppTextStyles.hint.copyWith(
-                                    fontSize: 16.sp,
-                                    color: AppColors.primary,
-                                    letterSpacing: -0.16,
+                                  hintStyle: phoneFieldStyle.copyWith(
+                                    color: AppColors.primary.withValues(
+                                      alpha: 0.5,
+                                    ),
                                   ),
                                   contentPadding: EdgeInsets.symmetric(
                                     horizontal: 16.w,
