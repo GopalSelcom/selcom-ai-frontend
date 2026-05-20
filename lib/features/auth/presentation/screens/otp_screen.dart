@@ -41,25 +41,27 @@ class OtpScreen extends GetView<AuthController> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         SizedBox(height: 10.h),
-                        AppBackButton(
-                          color: AppColors.textHeading,
-                          showOnlyWhenCanPop: false,
-                          onPressed: () {
-                            if (Navigator.of(context).canPop()) {
-                              Get.back();
-                            }
-                          },
-                        ),
-                        SizedBox(height: 16.h),
-
-                        // Title
-                        Text(
-                          AppStrings.verifyPhoneNumber.tr,
-                          style: AppTextStyles.onboardingTitle.copyWith(
-                            fontSize: 28.sp,
-                            height: 34 / 28,
-                            letterSpacing: -0.4,
-                          ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            AppBackButton(
+                              alignToParent: false,
+                              alignIconToStart: true,
+                              color: AppColors.textHeading,
+                              showOnlyWhenCanPop: false,
+                              size: 30.w,
+                              onPressed: () {
+                                if (Navigator.of(context).canPop()) {
+                                  Get.back();
+                                }
+                              },
+                            ),
+                            SizedBox(height: 13.h),
+                            Text(
+                              AppStrings.verifyPhoneNumber.tr,
+                              style: AppTextStyles.onboardingTitle,
+                            ),
+                          ],
                         ),
                         SizedBox(height: 8.h),
 
@@ -74,14 +76,9 @@ class OtpScreen extends GetView<AuthController> {
                                       controller.mobileNumber.value,
                                     ),
                               }),
-                          style: AppTextStyles.homeSubtitle.copyWith(
-                            fontSize: 15.sp,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.textBody,
-                            height: 20 / 15,
-                          ),
+                          style: AppTextStyles.onboardingSubtitle,
                         ),
-                        SizedBox(height: 26.h),
+                        SizedBox(height: 24.h),
 
                         // Edit Phone Number
                         InkWell(
@@ -112,7 +109,7 @@ class OtpScreen extends GetView<AuthController> {
                                 fontFamily: AppTextStyles.metropolisFont,
                                 fontSize: 34.sp,
                                 fontWeight: FontWeight.w400,
-                                color: AppColors.primary,
+                                color: AppColors.textHeading,
                                 height: 41 / 34,
                                 letterSpacing: -0.4,
                               ),
@@ -179,11 +176,13 @@ class OtpScreen extends GetView<AuthController> {
                                             Expanded(
                                               child: Text(
                                                 controller.errorMessage.value,
-                                                style:
-                                                    AppTextStyles.body.copyWith(
-                                                      color: AppColors.textHeading,
+                                                style: AppTextStyles.body
+                                                    .copyWith(
+                                                      color:
+                                                          AppColors.textHeading,
                                                       fontSize: 15.sp,
-                                                      fontWeight: FontWeight.w600,
+                                                      fontWeight:
+                                                          FontWeight.w600,
                                                     ),
                                               ),
                                             ),
