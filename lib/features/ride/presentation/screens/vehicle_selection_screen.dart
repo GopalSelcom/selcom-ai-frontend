@@ -130,11 +130,6 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
           Positioned(
             top: MediaQuery.paddingOf(context).top + 60.h,
             right: 16.w,
-            child: VehicleSelectionPromoChip(controller: controller),
-          ),
-          Positioned(
-            top: MediaQuery.paddingOf(context).top + 104.h,
-            right: 16.w,
             child: Obx(
               () => Container(
                 padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
@@ -477,17 +472,22 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
             SizedBox(height: 16.h),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  AppStrings.chooseRide.tr,
-                  style: AppTextStyles.homeTitle.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.black,
-                    letterSpacing: -0.4,
-                    height: 34 / 20,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Text(
+                      AppStrings.chooseRide.tr,
+                      style: AppTextStyles.homeTitle.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.black,
+                        letterSpacing: -0.4,
+                        height: 34 / 20,
+                      ),
+                    ),
                   ),
-                ),
+                  VehicleSelectionPromoChip(controller: controller),
+                ],
               ),
             ),
             SizedBox(height: 12.h),
