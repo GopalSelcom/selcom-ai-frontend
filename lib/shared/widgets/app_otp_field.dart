@@ -94,12 +94,10 @@ class _AppOtpFieldState extends State<AppOtpField> {
         ? AppColors.otpErrorShadow
         : AppColors.inputFocusShadow;
 
-    final isComplete =
-        !widget.hasError && _filledLength >= widget.length;
-    // After the last digit, the field often loses focus; keep chrome until
-    // the code is cleared or an error is shown.
-    final showActiveChrome =
-        widget.hasError || _isFocused || isComplete;
+    final isComplete = !widget.hasError && _filledLength >= widget.length;
+    final activeCellIndex = _filledLength < widget.length
+        ? _filledLength
+        : widget.length - 1;
 
     late final Color activeBorder;
     late final Color selectedBorder;
@@ -107,14 +105,18 @@ class _AppOtpFieldState extends State<AppOtpField> {
     if (widget.hasError) {
       activeBorder = selectedBorder = inactiveBorder = AppColors.otpErrorBorder;
     } else if (isComplete) {
-      // All cells use [inactiveColor] when unfocused; make every border primary.
       activeBorder = selectedBorder = inactiveBorder = AppColors.primary;
     } else if (_isFocused) {
       activeBorder = AppColors.primary;
       selectedBorder = AppColors.primary;
-      inactiveBorder = greyBorder;
+      inactiveBorder = AppColors.primary;
     } else {
       activeBorder = selectedBorder = inactiveBorder = greyBorder;
+    }
+
+    bool cellGlowsAt(int index) {
+      if (widget.hasError) return true;
+      return _isFocused && !isComplete && index == activeCellIndex;
     }
 
     return SizedBox(
@@ -127,12 +129,12 @@ class _AppOtpFieldState extends State<AppOtpField> {
               mainAxisAlignment: widget.mainAxisAlignment,
               children: List.generate(
                 widget.length,
-                (_) => Container(
+                (index) => Container(
                   width: w,
                   height: h,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(18.r),
-                    boxShadow: showActiveChrome
+                    boxShadow: cellGlowsAt(index)
                         ? [
                             BoxShadow(
                               color: glowColor,
@@ -156,6 +158,7 @@ class _AppOtpFieldState extends State<AppOtpField> {
             keyboardType: TextInputType.number,
             animationType: AnimationType.fade,
             mainAxisAlignment: widget.mainAxisAlignment,
+            showCursor: false,
             pinTheme: PinTheme(
               shape: PinCodeFieldShape.box,
               borderRadius: BorderRadius.circular(16.r),
@@ -169,7 +172,6 @@ class _AppOtpFieldState extends State<AppOtpField> {
               inactiveColor: inactiveBorder,
               borderWidth: 1.2.w,
             ),
-            cursorColor: AppColors.primary,
             animationDuration: const Duration(milliseconds: 300),
             enableActiveFill: true,
             textStyle: widget.textStyle ?? AppTextStyles.screenTitle,
