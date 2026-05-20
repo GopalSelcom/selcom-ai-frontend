@@ -238,6 +238,13 @@ class _MyAppState extends State<MyApp> {
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
+            builder: (context, child) {
+              return GestureDetector(
+                onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+                behavior: HitTestBehavior.translucent,
+                child: child ?? const SizedBox.shrink(),
+              );
+            },
             translations: GetxLanguagesTranslations(),
             initialBinding: InitialBinding(),
             initialRoute: AppRoutes.splash,
