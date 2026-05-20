@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/app_text_field.dart';
@@ -71,28 +73,15 @@ class ContactUsScreen extends GetView<ContactUsController> {
                 left: 24.w,
                 right: 24.w,
               ),
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 260),
-                switchInCurve: Curves.easeOutCubic,
-                switchOutCurve: Curves.easeInCubic,
-                transitionBuilder: (child, animation) => FadeTransition(
-                  opacity: animation,
-                  child: SizeTransition(
-                    sizeFactor: animation,
-                    axis: Axis.vertical,
-                    child: child,
-                  ),
+              child: AppAnimatedReveal(
+                show: controller.canSubmit.value,
+                visibleKey: const ValueKey('contact-submit-visible'),
+                hiddenKey: const ValueKey('contact-submit-hidden'),
+                child: AppPrimaryButton(
+                  label: AppStrings.submit.tr,
+                  onPressed: controller.sendMessage,
+                  isLoading: controller.isLoading.value,
                 ),
-                child: controller.canSubmit.value
-                    ? AppPrimaryButton(
-                        key: const ValueKey('contact-submit-visible'),
-                        label: AppStrings.submit.tr,
-                        onPressed: controller.sendMessage,
-                        isLoading: controller.isLoading.value,
-                      )
-                    : const SizedBox.shrink(
-                        key: ValueKey('contact-submit-hidden'),
-                      ),
               ),
             ),
           ),

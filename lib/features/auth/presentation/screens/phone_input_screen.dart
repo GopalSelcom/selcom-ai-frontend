@@ -7,6 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/data/countries_phone_data.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
+import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_focus_input_field.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/phone_country_picker_chip.dart';
@@ -155,33 +156,17 @@ class PhoneInputScreen extends GetView<AuthController> {
                           ),
                         ),
 
-                        // Button
                         Obx(
-                          () => AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 420),
-                            switchInCurve: Curves.easeOutQuart,
-                            switchOutCurve: Curves.easeInOutCubic,
-                            transitionBuilder: (child, animation) {
-                              return FadeTransition(
-                                opacity: animation,
-                                child: SizeTransition(
-                                  sizeFactor: animation,
-                                  axis: Axis.vertical,
-                                  child: child,
-                                ),
-                              );
-                            },
-                            child: controller.canRequestOtp
-                                ? AppPrimaryButton(
-                                    key: const ValueKey('otp-button-visible'),
-                                    label: AppStrings.getVerificationCode.tr,
-                                    isLoading: controller.isLoading.value,
-                                    onPressed: controller.sendOtpAndNavigate,
-                                    showBottomInnerShadow: true,
-                                  )
-                                : const SizedBox.shrink(
-                                    key: ValueKey('otp-button-hidden'),
-                                  ),
+                          () => AppAnimatedReveal(
+                            show: controller.canRequestOtp,
+                            visibleKey: const ValueKey('otp-button-visible'),
+                            hiddenKey: const ValueKey('otp-button-hidden'),
+                            child: AppPrimaryButton(
+                              label: AppStrings.getVerificationCode.tr,
+                              isLoading: controller.isLoading.value,
+                              onPressed: controller.sendOtpAndNavigate,
+                              showBottomInnerShadow: true,
+                            ),
                           ),
                         ),
 

@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/utils/phone_formatter.dart';
+import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../controllers/payment_methods_controller.dart';
@@ -96,27 +98,14 @@ class SelcomPesaPhoneInputBottomSheet
               padding: EdgeInsets.only(
                 bottom: controller.canContinueSelcomPhone.value ? 16.h : 0,
               ),
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 260),
-                switchInCurve: Curves.easeOutCubic,
-                switchOutCurve: Curves.easeInCubic,
-                transitionBuilder: (child, animation) => FadeTransition(
-                  opacity: animation,
-                  child: SizeTransition(
-                    sizeFactor: animation,
-                    axis: Axis.vertical,
-                    child: child,
-                  ),
+              child: AppAnimatedReveal(
+                show: controller.canContinueSelcomPhone.value,
+                visibleKey: const ValueKey('selcom-pesa-continue-visible'),
+                hiddenKey: const ValueKey('selcom-pesa-continue-hidden'),
+                child: AppPrimaryButton(
+                  label: AppStrings.continueLabel.tr,
+                  onPressed: controller.onPhoneContinue,
                 ),
-                child: controller.canContinueSelcomPhone.value
-                    ? AppPrimaryButton(
-                        key: const ValueKey('selcom-pesa-continue-visible'),
-                        label: AppStrings.continueLabel.tr,
-                        onPressed: controller.onPhoneContinue,
-                      )
-                    : const SizedBox.shrink(
-                        key: ValueKey('selcom-pesa-continue-hidden'),
-                      ),
               ),
             ),
           ),
