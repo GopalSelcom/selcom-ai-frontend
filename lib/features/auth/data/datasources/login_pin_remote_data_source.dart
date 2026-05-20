@@ -178,12 +178,16 @@ class LoginPinRemoteDataSourceImpl implements LoginPinRemoteDataSource {
     required String oldPin,
     required String newPin,
   }) async {
+    // Per AUTH-PIN-BIOMETRIC: change PIN uses current JWT only — do not run
+    // the global 401 → refresh_token → retry path (other APIs keep that behavior).
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.auth.pinChange,
         method: ApiMethod.put,
         body: {'old_pin': oldPin, 'new_pin': newPin},
+        skipAuthInterceptor: true,
         errorPresentationType: ErrorPresentationType.none,
+        shouldQueue: false,
       ),
     );
     _ensureSuccess(response);
