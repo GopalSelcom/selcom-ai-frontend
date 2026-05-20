@@ -1,18 +1,79 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
-import '../../core/constants/app_assets.dart';
 import '../../core/localization/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/services/storage_service.dart';
-import '../../core/widgets/svg_picture_asset.dart';
 import '../widgets/app_primary_button.dart';
 
 class AppDialogs {
   static bool _isErrorDialogVisible = false;
+
+  /// Standard animated popup function.
+  static Future<T?> showAnimatedDialog<T>({
+    required Widget child,
+    bool barrierDismissible = true,
+    Color? barrierColor,
+  }) {
+    return showGeneralDialog<T>(
+      context: Get.context!,
+      barrierDismissible: barrierDismissible,
+      barrierLabel: "AnimatedBlurDialog",
+      barrierColor: barrierColor ?? AppColors.overlayBlack12,
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return child;
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, childWidget) {
+        final curvedAnimation = CurvedAnimation(
+          parent: animation,
+          curve: const Cubic(0.15, 0.85, 0.2, 1.0),
+        );
+
+        final scaleAnimation = Tween<double>(
+          begin: 1.15,
+          end: 1.0,
+        ).animate(curvedAnimation);
+        final blurAnimation = Tween<double>(
+          begin: 0.0,
+          end: 5.0,
+        ).animate(curvedAnimation);
+
+        return AnimatedBuilder(
+          animation: curvedAnimation,
+          builder: (context, _) {
+            return BackdropFilter(
+              filter: ImageFilter.blur(
+                sigmaX: blurAnimation.value,
+                sigmaY: blurAnimation.value,
+              ),
+              child: FadeTransition(
+                opacity: curvedAnimation,
+                child: ScaleTransition(
+                  scale: scaleAnimation,
+                  child: childWidget,
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  static void _dismissActiveDialog() {
+    final context = Get.context;
+    if (context != null) {
+      final navigator = Navigator.of(context);
+      if (navigator.canPop()) {
+        navigator.pop();
+      }
+    }
+  }
 
   /// Shows a common error dialog with an OK button.
   static void showErrorDialog({
@@ -41,13 +102,11 @@ class AppDialogs {
         Get.offAllNamed(AppRoutes.phone);
         return;
       }
-      if (Get.isDialogOpen ?? false) {
-        Get.back();
-      }
+      _dismissActiveDialog();
     }
 
-    Get.dialog(
-      PopScope(
+    showAnimatedDialog(
+      child: PopScope(
         canPop: false,
         child: Dialog(
           backgroundColor: AppColors.cardBackground,
@@ -113,8 +172,8 @@ class AppDialogs {
     required String message,
     VoidCallback? onConfirm,
   }) {
-    Get.dialog(
-      Dialog(
+    showAnimatedDialog(
+      child: Dialog(
         backgroundColor: AppColors.cardBackground,
         surfaceTintColor: AppColors.transparent,
         shape: RoundedRectangleBorder(
@@ -144,7 +203,7 @@ class AppDialogs {
               AppPrimaryButton(
                 label: AppStrings.gotIt.tr,
                 onPressed: () {
-                  Get.back();
+                  _dismissActiveDialog();
                   if (onConfirm != null) onConfirm();
                 },
                 height: 50.h,
@@ -167,14 +226,12 @@ class AppDialogs {
     void handleAction() {
       if (didHandleAction) return;
       didHandleAction = true;
-      if (Get.isDialogOpen ?? false) {
-        Get.back();
-      }
+      _dismissActiveDialog();
       if (onConfirm != null) onConfirm();
     }
 
-    Get.dialog(
-      PopScope(
+    showAnimatedDialog(
+      child: PopScope(
         canPop: false,
         child: Dialog(
           backgroundColor: AppColors.cardBackground,
@@ -252,14 +309,12 @@ class AppDialogs {
     void handleCancel() {
       if (didHandleAction) return;
       didHandleAction = true;
-      if (Get.isDialogOpen ?? false) {
-        Get.back();
-      }
+      _dismissActiveDialog();
       if (onCancel != null) onCancel();
     }
 
-    Get.dialog(
-      PopScope(
+    showAnimatedDialog(
+      child: PopScope(
         canPop: false,
         child: Dialog(
           backgroundColor: AppColors.cardBackground,
@@ -338,7 +393,7 @@ class AppDialogs {
                       child: AppPrimaryButton(
                         label: confirmText.tr,
                         onPressed: () {
-                          Get.back();
+                          _dismissActiveDialog();
                           onConfirm();
                         },
                         height: 50.h,
@@ -368,8 +423,8 @@ class AppDialogs {
     IconData icon = Icons.notifications_off,
     IconData? secondaryIcon,
   }) {
-    Get.dialog(
-      Dialog(
+    showAnimatedDialog(
+      child: Dialog(
         backgroundColor: AppColors.cardBackground,
         surfaceTintColor: AppColors.transparent,
         insetPadding: const EdgeInsets.all(13.0),
@@ -449,7 +504,7 @@ class AppDialogs {
               AppPrimaryButton(
                 label: AppStrings.openSettings.tr,
                 onPressed: () {
-                  Get.back();
+                  _dismissActiveDialog();
                   onOpenSettings();
                 },
                 height: 56.h,
@@ -461,7 +516,7 @@ class AppDialogs {
               AppPrimaryButton(
                 label: AppStrings.maybeLater.tr,
                 onPressed: () {
-                  Get.back();
+                  _dismissActiveDialog();
                   if (onCancel != null) onCancel();
                 },
                 height: 56.h,
@@ -483,8 +538,8 @@ class AppDialogs {
 
   /// Shows a success dialog for verification completion.
   static void showVerificationSuccessDialog({VoidCallback? onConfirm}) {
-    Get.dialog(
-      Dialog(
+    showAnimatedDialog(
+      child: Dialog(
         backgroundColor: AppColors.cardBackground,
         surfaceTintColor: AppColors.transparent,
         elevation: 20,
@@ -571,7 +626,7 @@ class AppDialogs {
                   AppPrimaryButton(
                     label: AppStrings.gotIt.tr,
                     onPressed: () {
-                      Get.back();
+                      _dismissActiveDialog();
                       if (onConfirm != null) onConfirm();
                     },
                     height: 56.h,
@@ -598,8 +653,8 @@ class AppDialogs {
       'count': minutes.toString(),
     });
 
-    Get.dialog(
-      Dialog(
+    showAnimatedDialog(
+      child: Dialog(
         backgroundColor: AppColors.cardBackground,
         surfaceTintColor: AppColors.transparent,
         elevation: 20,
@@ -685,7 +740,7 @@ class AppDialogs {
                   AppPrimaryButton(
                     label: AppStrings.gotIt.tr,
                     onPressed: () {
-                      Get.back();
+                      _dismissActiveDialog();
                       if (onConfirm != null) onConfirm();
                     },
                     height: 56.h,
@@ -703,8 +758,8 @@ class AppDialogs {
 
   /// Shows a simple loading dialog.
   static void showLoadingDialog({String message = ""}) {
-    Get.dialog(
-      PopScope(
+    showAnimatedDialog(
+      child: PopScope(
         canPop: false,
         child: Center(
           child: Container(

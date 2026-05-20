@@ -187,8 +187,8 @@ class PromoCodeController extends GetxController {
               parameters: {'success': 'true', 'code': data.code},
             ),
           );
-          await Get.dialog<void>(
-            const PromoApplySuccessDialog(),
+          await AppDialogs.showAnimatedDialog<void>(
+            child: const PromoApplySuccessDialog(),
             barrierDismissible: false,
             barrierColor: Colors.black38,
           );

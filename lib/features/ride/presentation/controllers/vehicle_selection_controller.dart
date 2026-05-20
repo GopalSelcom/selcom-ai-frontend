@@ -1008,8 +1008,8 @@ class VehicleSelectionController extends GetxController {
 
     if (Get.isDialogOpen == true) return;
 
-    Get.dialog<void>(
-      Obx(
+    AppDialogs.showAnimatedDialog<void>(
+      child: Obx(
         () => PaymentStatusDialog(
           status: paymentStatus.value,
           secondsRemaining: paymentStatus.value == PaymentStatus.pending

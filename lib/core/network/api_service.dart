@@ -787,8 +787,8 @@ class ApiService {
     if (AuthInterceptor.isLoggingOutDueToAuthFailure) return;
     AuthInterceptor.isLoggingOutDueToAuthFailure = true;
 
-    Get.dialog(
-      Dialog(
+    AppDialogs.showAnimatedDialog(
+      child: Dialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24.r),
         ),

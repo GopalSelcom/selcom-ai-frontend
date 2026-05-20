@@ -12,6 +12,7 @@ import '../services/error_reporting/error_reporter.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import 'api_service.dart';
+import '../../shared/utils/app_dialogs.dart';
 import 'failed_request_queue.dart';
 import 'network_connectivity_service.dart';
 
@@ -87,8 +88,8 @@ class RetryManager {
       name: 'RetryManager',
     );
 
-    await Get.dialog(
-      Dialog(
+    await AppDialogs.showAnimatedDialog(
+      child: Dialog(
         backgroundColor: AppColors.cardBackground,
         surfaceTintColor: AppColors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),

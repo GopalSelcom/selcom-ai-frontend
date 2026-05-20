@@ -14,6 +14,7 @@ import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../shared/utils/favorite_location_chip_catalog.dart';
 import '../../../../shared/utils/saved_place_confirmation_copy.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/map_widgets.dart';
 import '../../../../core/routes/app_routes.dart';
@@ -345,8 +346,8 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
   }) {
     /// Same outer radius as [PaymentStatusDialog].
     final dialogRadius = 28.r;
-    Get.dialog(
-      Dialog(
+    AppDialogs.showAnimatedDialog(
+      child: Dialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(dialogRadius),
         ),

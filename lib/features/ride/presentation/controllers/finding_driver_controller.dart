@@ -768,11 +768,8 @@ class FindingDriverController extends GetxController {
   Future<void> confirmCancelRide() async {
     // 1. Initial Confirmation
     // final bool isAssigned = ridePhase.value == 'driver_assigned';
-    final dynamic confirmResult = await Get.dialog(
-      /*isAssigned
-          ? const CancelAssignmentWarningDialog()
-          : const */
-      const CancelConfirmationDialog(),
+    final dynamic confirmResult = await AppDialogs.showAnimatedDialog(
+      child: const CancelConfirmationDialog(),
       barrierDismissible: false,
       barrierColor: AppColors.overlayBlack12,
     );
@@ -784,8 +781,8 @@ class FindingDriverController extends GetxController {
     dynamic cancellationData;
     String selectedPolicyLabel = '';
 
-    await Get.dialog<void>(
-      CancelReasonSelectionDialog(
+    await AppDialogs.showAnimatedDialog<void>(
+      child: CancelReasonSelectionDialog(
         reasons: const [
           'Taking too long to confirm the ride',
           'Wait time too long',
@@ -833,8 +830,8 @@ class FindingDriverController extends GetxController {
     if (selectedReason == null || cancellationData == null) return;
 
     // 3. Charges dialog + Cancel API (loading on Cancel & Pay button)
-    await Get.dialog<bool>(
-      CancellationChargesDialog(
+    await AppDialogs.showAnimatedDialog<bool>(
+      child: CancellationChargesDialog(
         canCancel: cancellationData.canCancel,
         cancellationFee: cancellationData.cancellationFee,
         netRefund: cancellationData.netRefund,

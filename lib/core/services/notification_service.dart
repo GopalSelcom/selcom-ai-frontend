@@ -284,8 +284,8 @@ class NotificationService {
     try {
       _logger.i("Navigating to ride $rideId from notification");
 
-      Get.dialog(
-        const Center(child: CircularProgressIndicator()),
+      AppDialogs.showAnimatedDialog(
+        child: const Center(child: CircularProgressIndicator()),
         barrierDismissible: false,
       );
 
