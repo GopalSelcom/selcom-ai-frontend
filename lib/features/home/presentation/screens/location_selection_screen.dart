@@ -93,23 +93,29 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
               return AnimatedPadding(
                 duration: const Duration(milliseconds: 240),
                 curve: Curves.easeOutCubic,
-                padding: EdgeInsets.fromLTRB(
-                  16.w,
-                  60.h,
-                  16.w,
-                  shouldShowBookRideButton ? 92.h : 16.h,
+                padding: EdgeInsets.only(
+                  top: 60.h,
+                  bottom: shouldShowBookRideButton ? 92.h : 16.h,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Obx(() {
-                      locationController.syncPickupFromLiveAddress();
-                      return _pickupDestinationCard();
-                    }),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.w),
+                      child: Obx(() {
+                        locationController.syncPickupFromLiveAddress();
+                        return _pickupDestinationCard();
+                      }),
+                    ),
                     SizedBox(height: 8.79.h),
                     _chipsRow(),
                     SizedBox(height: 9.h),
-                    Expanded(child: _buildSearchContent()),
+                    Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.w),
+                        child: _buildSearchContent(),
+                      ),
+                    ),
                   ],
                 ),
               );
@@ -445,6 +451,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     return Obx(() {
       controller.savedPlaces.length;
       return FavoriteLocationChipsRow(
+        contentHorizontalPadding: 16.w,
         chipBackgroundColor: AppColors.white,
         chipBorderColor: AppColors.borderWalletCard,
         resolvePlace: controller.getSavedPlaceByLabel,

@@ -207,6 +207,8 @@ class HomeScreen extends GetView<HomeController> {
   }
   */
 
+  static const double _sheetHorizontalPadding = 24;
+
   Widget _buildFigmaDraggableSheet() {
     return Obx(() {
       final double maxContentSize = _calculateMaxSheetSize();
@@ -231,54 +233,64 @@ class HomeScreen extends GetView<HomeController> {
           return ListView(
             controller: scrollController,
             physics: const ClampingScrollPhysics(),
-            padding: EdgeInsets.symmetric(horizontal: 24.w),
+            clipBehavior: Clip.none,
+            padding: EdgeInsets.zero,
             children: [
-              SizedBox(height: 12.h),
-              Center(
-                child: Container(
-                  width: 48.w,
-                  height: 5.h,
-                  decoration: BoxDecoration(
-                    color: AppColors.skeletonBase,
-                    borderRadius: BorderRadius.circular(37.r),
-                  ),
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: _sheetHorizontalPadding.w,
                 ),
-              ),
-              SizedBox(height: 8.h),
-              GestureDetector(
-                onTap: () => controller.openLocationSelection(),
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 18.w,
-                    vertical: 16.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceSubtle,
-                    borderRadius: BorderRadius.circular(16.r),
-                    border: Border.all(
-                      color: AppColors.skeletonBase,
-                      width: 0.8,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      SvgPictureAsset(
-                        AppAssets.locationIcDestinationPin,
-                        color: AppColors.primary,
-                        width: 19.sp,
-                        height: 19.sp,
-                      ),
-                      SizedBox(width: 12.w),
-                      Text(
-                        AppStrings.whereAreYouGoing.tr,
-                        style: AppTextStyles.homeSubtitle.copyWith(
-                          color: AppColors.black,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 15.sp,
+                child: Column(
+                  children: [
+                    SizedBox(height: 12.h),
+                    Center(
+                      child: Container(
+                        width: 48.w,
+                        height: 5.h,
+                        decoration: BoxDecoration(
+                          color: AppColors.skeletonBase,
+                          borderRadius: BorderRadius.circular(37.r),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    SizedBox(height: 8.h),
+                    GestureDetector(
+                      onTap: () => controller.openLocationSelection(),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 18.w,
+                          vertical: 16.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceSubtle,
+                          borderRadius: BorderRadius.circular(16.r),
+                          border: Border.all(
+                            color: AppColors.skeletonBase,
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            SvgPictureAsset(
+                              AppAssets.locationIcDestinationPin,
+                              color: AppColors.primary,
+                              width: 19.sp,
+                              height: 19.sp,
+                            ),
+                            SizedBox(width: 12.w),
+                            Text(
+                              AppStrings.whereAreYouGoing.tr,
+                              style: AppTextStyles.homeSubtitle.copyWith(
+                                color: AppColors.black,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 15.sp,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               SizedBox(height: 8.h),
@@ -286,6 +298,7 @@ class HomeScreen extends GetView<HomeController> {
                 controller.savedPlaces.length;
                 final extras = controller.savedPlacesBeyondPresetSlots;
                 return FavoriteLocationChipsRow(
+                  contentHorizontalPadding: _sheetHorizontalPadding.w,
                   chipBackgroundColor: AppColors.surfaceSubtle,
                   chipBorderColor: AppColors.borderWalletCard,
                   resolvePlace: controller.getSavedPlaceByLabel,
@@ -317,48 +330,54 @@ class HomeScreen extends GetView<HomeController> {
                   },
                 );
               }),
-              Obx(
-                () {
-                  const sectionGap = 12.0;
-                  const titleContentGap = 10.0;
-                  const recentItemGap = 12.0;
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: _sheetHorizontalPadding.w,
+                ),
+                child: Obx(
+                  () {
+                    const sectionGap = 12.0;
+                    const titleContentGap = 10.0;
+                    const recentItemGap = 12.0;
 
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (controller.shouldShowRecentSection) ...[
-                        SizedBox(height: sectionGap.h),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                AppStrings.recentLocation.tr,
-                                style: _sectionTitleStyle,
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (controller.shouldShowRecentSection) ...[
+                          SizedBox(height: sectionGap.h),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  AppStrings.recentLocation.tr,
+                                  style: _sectionTitleStyle,
+                                ),
                               ),
-                            ),
-                            if (controller.canViewMoreRecentLocations)
-                              _viewMoreButton(
-                                onPressed: controller.openRecentLocationsScreen,
-                              ),
-                          ],
-                        ),
-                        SizedBox(height: titleContentGap.h),
-                        ..._buildRecentLocationListItems(
-                          itemGap: recentItemGap.h,
-                        ),
+                              if (controller.canViewMoreRecentLocations)
+                                _viewMoreButton(
+                                  onPressed:
+                                      controller.openRecentLocationsScreen,
+                                ),
+                            ],
+                          ),
+                          SizedBox(height: titleContentGap.h),
+                          ..._buildRecentLocationListItems(
+                            itemGap: recentItemGap.h,
+                          ),
+                        ],
+                        if (controller.shouldShowVehicleSection) ...[
+                          SizedBox(height: sectionGap.h),
+                          Text(
+                            AppStrings.exploreVehicle.tr,
+                            style: _sectionTitleStyle,
+                          ),
+                          SizedBox(height: titleContentGap.h),
+                          _buildVehicleHorizontalList(),
+                        ],
                       ],
-                      if (controller.shouldShowVehicleSection) ...[
-                        SizedBox(height: sectionGap.h),
-                        Text(
-                          AppStrings.exploreVehicle.tr,
-                          style: _sectionTitleStyle,
-                        ),
-                        SizedBox(height: titleContentGap.h),
-                        _buildVehicleHorizontalList(),
-                      ],
-                    ],
-                  );
-                },
+                    );
+                  },
+                ),
               ),
               SizedBox(height: 12.h),
             ],
