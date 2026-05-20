@@ -13,7 +13,6 @@ class LanguageEn extends Languages {
     'add_card': 'Add Card',
     'address_missing': 'Address missing',
     'an_unexpected_error_occurred': 'An unexpected error occurred',
-    'app_settings': 'App Settings',
     'app_title': 'Selcom Rides',
     'apply': 'APPLY',
     'are_you_sure_want_to_add_ndelete_this_card':
@@ -92,6 +91,7 @@ class LanguageEn extends Languages {
     'driver_is_heading_to_pickup': 'Driver is heading to pickup',
     'driver_assigned_description':
         'A driver has accepted your ride and is on the way.',
+    'driver_has_accepted_your_ride': 'Driver has accepted your ride',
     'driver_arrived_description':
         'Your driver has arrived at the pickup location.',
     'ride_started_description': 'You are on your way to the destination.',
@@ -665,9 +665,6 @@ class LanguageEn extends Languages {
       values['an_unexpected_error_occurred'] ?? '';
 
   @override
-  String get appSettings => values['app_settings'] ?? '';
-
-  @override
   String get appTitle => values['app_title'] ?? '';
 
   @override
@@ -872,6 +869,10 @@ class LanguageEn extends Languages {
   @override
   String get driverAssignedDescription =>
       values['driver_assigned_description'] ?? '';
+
+  @override
+  String get driverHasAcceptedYourRide =>
+      values['driver_has_accepted_your_ride'] ?? '';
 
   @override
   String get driverArrivedDescription =>

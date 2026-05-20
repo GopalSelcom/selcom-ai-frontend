@@ -13,7 +13,6 @@ class LanguageSw extends Languages {
     'add_card': '',
     'address_missing': '',
     'an_unexpected_error_occurred': '',
-    'app_settings': '',
     'app_title': '',
     'apply': '',
     'are_you_sure_want_to_add_ndelete_this_card': '',
@@ -83,6 +82,7 @@ class LanguageSw extends Languages {
     'driver_is_heading_to_your_location': '',
     'driver_is_heading_to_pickup': '',
     'driver_assigned_description': '',
+    'driver_has_accepted_your_ride': '',
     'driver_arrived_description': '',
     'ride_started_description': '',
     'finding_your_driver': '',
@@ -584,9 +584,6 @@ class LanguageSw extends Languages {
       values['an_unexpected_error_occurred'] ?? '';
 
   @override
-  String get appSettings => values['app_settings'] ?? '';
-
-  @override
   String get appTitle => values['app_title'] ?? '';
 
   @override
@@ -791,6 +788,10 @@ class LanguageSw extends Languages {
   @override
   String get driverAssignedDescription =>
       values['driver_assigned_description'] ?? '';
+
+  @override
+  String get driverHasAcceptedYourRide =>
+      values['driver_has_accepted_your_ride'] ?? '';
 
   @override
   String get driverArrivedDescription =>

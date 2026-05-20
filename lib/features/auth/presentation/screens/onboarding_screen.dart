@@ -10,6 +10,7 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/widgets/app_primary_button.dart';
 import '../controllers/onboarding_controller.dart';
 
 class OnboardingScreen extends GetView<OnboardingController> {
@@ -47,13 +48,13 @@ class OnboardingScreen extends GetView<OnboardingController> {
             Expanded(
               flex: 4,
               child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Dot Indicators
-                    SizedBox(height: 10.h),
+                    SizedBox(height: 18.h),
 
                     // Title
                     Obx(
@@ -85,9 +86,9 @@ class OnboardingScreen extends GetView<OnboardingController> {
                             duration: const Duration(milliseconds: 300),
                             margin: EdgeInsets.symmetric(horizontal: 4.w),
                             width: controller.currentIndex.value == index
-                                ? 24.w
-                                : 8.w,
-                            height: 8.h,
+                                ? 32.w
+                                : 10.w,
+                            height: 10.w,
                             decoration: BoxDecoration(
                               color: controller.currentIndex.value == index
                                   ? AppColors.primary
@@ -98,7 +99,7 @@ class OnboardingScreen extends GetView<OnboardingController> {
                                     : AppColors.primary,
                                 width: 1.5,
                               ),
-                              borderRadius: BorderRadius.circular(4.r),
+                              borderRadius: BorderRadius.circular(9.r),
                             ),
                           ),
                         ),
@@ -110,37 +111,15 @@ class OnboardingScreen extends GetView<OnboardingController> {
                     // Action Button
                     Padding(
                       padding: EdgeInsets.only(bottom: 16.h),
-                      child: InkWell(
-                        onTap: controller.onGetStarted,
-                        child: Container(
-                          height: 54.h,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(16.r),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.primary.withValues(alpha: 0.3),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                AppStrings.getStarted.tr,
-                                style: AppTextStyles.onboardingButton,
-                              ),
-                              SizedBox(width: 12.w),
-                              SvgPictureAsset(
-                                AppAssets.locationIcArrowRight,
-                                color: AppColors.white,
-                                height: 20.h,
-                              ),
-                            ],
-                          ),
-                        ),
+                      child: AppPrimaryButton(
+                        label: AppStrings.getStarted.tr,
+                        onPressed: controller.onGetStarted,
+                        height: 54.h,
+                        labelStyle: AppTextStyles.onboardingButton,
+                        iconAsset: AppAssets.locationIcArrowRight,
+                        iconColor: AppColors.white,
+                        alignIconToTrailingEnd: true,
+                        showBottomInnerShadow: true,
                       ),
                     ),
 

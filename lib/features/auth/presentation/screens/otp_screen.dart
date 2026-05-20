@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -41,25 +42,27 @@ class OtpScreen extends GetView<AuthController> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         SizedBox(height: 10.h),
-                        AppBackButton(
-                          color: AppColors.textHeading,
-                          showOnlyWhenCanPop: false,
-                          onPressed: () {
-                            if (Navigator.of(context).canPop()) {
-                              Get.back();
-                            }
-                          },
-                        ),
-                        SizedBox(height: 16.h),
-
-                        // Title
-                        Text(
-                          AppStrings.verifyPhoneNumber.tr,
-                          style: AppTextStyles.onboardingTitle.copyWith(
-                            fontSize: 28.sp,
-                            height: 34 / 28,
-                            letterSpacing: -0.4,
-                          ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            AppBackButton(
+                              alignToParent: false,
+                              alignIconToStart: true,
+                              color: AppColors.textHeading,
+                              showOnlyWhenCanPop: false,
+                              size: 30.w,
+                              onPressed: () {
+                                if (Navigator.of(context).canPop()) {
+                                  Get.back();
+                                }
+                              },
+                            ),
+                            SizedBox(height: 13.h),
+                            Text(
+                              AppStrings.verifyPhoneNumber.tr,
+                              style: AppTextStyles.onboardingTitle,
+                            ),
+                          ],
                         ),
                         SizedBox(height: 8.h),
 
@@ -74,26 +77,26 @@ class OtpScreen extends GetView<AuthController> {
                                       controller.mobileNumber.value,
                                     ),
                               }),
-                          style: AppTextStyles.homeSubtitle.copyWith(
-                            fontSize: 15.sp,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.textBody,
-                            height: 20 / 15,
-                          ),
+                          style: AppTextStyles.onboardingSubtitle,
                         ),
-                        SizedBox(height: 26.h),
+                        SizedBox(height: 24.h),
 
-                        // Edit Phone Number
-                        InkWell(
-                          onTap: () => Get.back(),
+                        // Edit Phone Number (Cupertino text button; 15sp per Figma subtitle scale)
+                        CupertinoButton(
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size.zero,
+                          alignment: Alignment.centerLeft,
+                          onPressed: () => Get.back(),
                           child: Text(
                             AppStrings.editYourPhoneNumber.tr,
-                            style: AppTextStyles.homeSubtitle.copyWith(
-                              fontSize: 17.sp,
+                            style: AppTextStyles.onboardingSubtitle.copyWith(
+                              fontSize: 16.sp,
                               color: AppColors.primary,
                               decoration: TextDecoration.underline,
-                              fontWeight: FontWeight.w500,
-                              height: 22 / 17,
+                              decorationColor: AppColors.primary,
+                              decorationThickness: 1,
+                              decorationStyle: TextDecorationStyle.solid,
+                              height: 22 / 16,
                             ),
                           ),
                         ),
@@ -112,7 +115,7 @@ class OtpScreen extends GetView<AuthController> {
                                 fontFamily: AppTextStyles.metropolisFont,
                                 fontSize: 34.sp,
                                 fontWeight: FontWeight.w400,
-                                color: AppColors.primary,
+                                color: AppColors.textHeading,
                                 height: 41 / 34,
                                 letterSpacing: -0.4,
                               ),
@@ -154,36 +157,38 @@ class OtpScreen extends GetView<AuthController> {
                                       ),
                                       child: Container(
                                         width: double.infinity,
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: 14.w,
-                                          vertical: 14.h,
-                                        ),
+                                        padding: EdgeInsets.all(12.w),
                                         decoration: BoxDecoration(
                                           color: AppColors.otpErrorBackground,
                                           borderRadius: BorderRadius.circular(
-                                            12.r,
+                                            8.r,
                                           ),
                                           border: Border.all(
                                             color: AppColors.otpErrorBorder,
                                           ),
                                         ),
                                         child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
                                           children: [
                                             SvgPictureAsset(
                                               AppAssets.icError,
-                                              width: 22.w,
-                                              height: 22.h,
+                                              width: 20.w,
+                                              height: 20.w,
                                               color: AppColors.otpErrorBorder,
                                             ),
-                                            SizedBox(width: 10.w),
+                                            SizedBox(width: 8.w),
                                             Expanded(
                                               child: Text(
                                                 controller.errorMessage.value,
-                                                style:
-                                                    AppTextStyles.body.copyWith(
-                                                      color: AppColors.textHeading,
-                                                      fontSize: 15.sp,
-                                                      fontWeight: FontWeight.w600,
+                                                style: AppTextStyles.body
+                                                    .copyWith(
+                                                      color:
+                                                          AppColors.textHeading,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      height: 1,
+                                                      letterSpacing: -0.14,
                                                     ),
                                               ),
                                             ),
