@@ -48,13 +48,13 @@ class OnboardingScreen extends GetView<OnboardingController> {
             Expanded(
               flex: 4,
               child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Dot Indicators
-                    SizedBox(height: 10.h),
+                    SizedBox(height: 18.h),
 
                     // Title
                     Obx(
@@ -86,9 +86,9 @@ class OnboardingScreen extends GetView<OnboardingController> {
                             duration: const Duration(milliseconds: 300),
                             margin: EdgeInsets.symmetric(horizontal: 4.w),
                             width: controller.currentIndex.value == index
-                                ? 24.w
-                                : 8.w,
-                            height: 8.h,
+                                ? 32.w
+                                : 10.w,
+                            height: 10.w,
                             decoration: BoxDecoration(
                               color: controller.currentIndex.value == index
                                   ? AppColors.primary
@@ -99,7 +99,7 @@ class OnboardingScreen extends GetView<OnboardingController> {
                                     : AppColors.primary,
                                 width: 1.5,
                               ),
-                              borderRadius: BorderRadius.circular(4.r),
+                              borderRadius: BorderRadius.circular(9.r),
                             ),
                           ),
                         ),

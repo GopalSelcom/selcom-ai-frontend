@@ -95,7 +95,7 @@ class AppTextStyles {
     fontWeight: FontWeight.w400,
     color: AppColors.textBody,
     fontFamily: metropolisFont,
-    height: 1.4,
+    height: 20 / 12,
   );
 
   static TextStyle onboardingButton = TextStyle(
