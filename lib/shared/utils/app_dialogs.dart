@@ -13,6 +13,7 @@ import '../widgets/app_primary_button.dart';
 
 class AppDialogs {
   static bool _isErrorDialogVisible = false;
+  static bool _isLoadingDialogVisible = false;
 
   /// Standard animated popup function.
   static Future<T?> showAnimatedDialog<T>({
@@ -79,7 +80,8 @@ class AppDialogs {
       barrierLabel: 'BottomSheet',
       barrierColor: Colors.transparent,
       transitionDuration: const Duration(milliseconds: 300),
-      pageBuilder: (context, animation, secondaryAnimation) => const SizedBox.shrink(),
+      pageBuilder: (context, animation, secondaryAnimation) =>
+          const SizedBox.shrink(),
       transitionBuilder: (context, animation, secondaryAnimation, _) {
         final curvedAnimation = CurvedAnimation(
           parent: animation,
@@ -143,6 +145,13 @@ class AppDialogs {
 
   static void closeActiveDialog() {
     _dismissActiveDialog();
+  }
+
+  /// Dismisses the loading overlay from [showLoadingDialog] when still visible.
+  static void dismissLoadingDialog() {
+    if (!_isLoadingDialogVisible) return;
+    _dismissActiveDialog();
+    _isLoadingDialogVisible = false;
   }
 
   static void _dismissActiveDialog() {
@@ -838,6 +847,8 @@ class AppDialogs {
 
   /// Shows a simple loading dialog.
   static void showLoadingDialog({String message = ""}) {
+    if (_isLoadingDialogVisible) return;
+    _isLoadingDialogVisible = true;
     showAnimatedDialog(
       child: PopScope(
         canPop: false,
@@ -869,7 +880,9 @@ class AppDialogs {
         ),
       ),
       barrierDismissible: false,
-    );
+    ).whenComplete(() {
+      _isLoadingDialogVisible = false;
+    });
   }
 }
 

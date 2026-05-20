@@ -752,10 +752,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
       final result = await homeRepository.estimateFare(req);
 
-      if (showHomeFareEstimateLoader && (Get.isDialogOpen ?? false)) {
-        Get.back();
-      }
-
       bool canProceed = false;
       result.fold((failure) {
         AppDialogs.showErrorDialog(
@@ -764,11 +760,12 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       }, (_) => canProceed = true);
       return canProceed;
     } catch (e, stackTrace) {
-      if (showHomeFareEstimateLoader && (Get.isDialogOpen ?? false)) {
-        Get.back();
-      }
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       rethrow;
+    } finally {
+      if (showHomeFareEstimateLoader) {
+        AppDialogs.dismissLoadingDialog();
+      }
     }
   }
 
