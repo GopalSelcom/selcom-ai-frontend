@@ -10,6 +10,7 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/widgets/app_primary_button.dart';
 import '../controllers/onboarding_controller.dart';
 
 class OnboardingScreen extends GetView<OnboardingController> {
@@ -110,37 +111,15 @@ class OnboardingScreen extends GetView<OnboardingController> {
                     // Action Button
                     Padding(
                       padding: EdgeInsets.only(bottom: 16.h),
-                      child: InkWell(
-                        onTap: controller.onGetStarted,
-                        child: Container(
-                          height: 54.h,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(16.r),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.primary.withValues(alpha: 0.3),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                AppStrings.getStarted.tr,
-                                style: AppTextStyles.onboardingButton,
-                              ),
-                              SizedBox(width: 12.w),
-                              SvgPictureAsset(
-                                AppAssets.locationIcArrowRight,
-                                color: AppColors.white,
-                                height: 24.h,
-                              ),
-                            ],
-                          ),
-                        ),
+                      child: AppPrimaryButton(
+                        label: AppStrings.getStarted.tr,
+                        onPressed: controller.onGetStarted,
+                        height: 54.h,
+                        labelStyle: AppTextStyles.onboardingButton,
+                        iconAsset: AppAssets.locationIcArrowRight,
+                        iconColor: AppColors.white,
+                        placeIconAfterLabel: true,
+                        showBottomInnerShadow: true,
                       ),
                     ),
 

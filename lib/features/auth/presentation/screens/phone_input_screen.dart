@@ -173,6 +173,7 @@ class PhoneInputScreen extends GetView<AuthController> {
                                     label: AppStrings.getVerificationCode.tr,
                                     isLoading: controller.isLoading.value,
                                     onPressed: controller.sendOtpAndNavigate,
+                                    showBottomInnerShadow: true,
                                   )
                                 : const SizedBox.shrink(
                                     key: ValueKey('otp-button-hidden'),

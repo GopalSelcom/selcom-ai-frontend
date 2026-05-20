@@ -57,10 +57,11 @@ class AppTextStyles {
 
   // Button text
   static TextStyle button = TextStyle(
-    fontSize: 16.sp,
+    fontSize: 17.sp,
     fontWeight: FontWeight.w600,
     color: AppColors.white,
     fontFamily: fontFamily,
+    height: 22 / 17,
   );
 
   // Price / fare amount (bold, larger)
@@ -77,15 +78,16 @@ class AppTextStyles {
     fontWeight: FontWeight.w600,
     color: AppColors.textHeading,
     fontFamily: metropolisFont,
-    // height: 1.2,
+    letterSpacing: -0.4,
+    height: 34 / 28,
   );
 
   static TextStyle onboardingSubtitle = TextStyle(
     fontSize: 15.sp,
-    fontWeight: FontWeight.w400,
+    fontWeight: FontWeight.w500,
     color: AppColors.textBody,
     fontFamily: metropolisFont,
-    // height: 1.5,
+    height: 20 / 15,
   );
 
   static TextStyle onboardingFooter = TextStyle(
