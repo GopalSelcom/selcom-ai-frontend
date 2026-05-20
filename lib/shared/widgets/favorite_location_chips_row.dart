@@ -13,6 +13,9 @@ import 'app_saved_place_chip.dart';
 /// saved, add icon when empty. Behavior is delegated via callbacks (Home vs Location Selection).
 ///
 /// Optional [extraSavedPlaces] appends one chip per non-preset saved address (Home screen only).
+///
+/// Place outside horizontal [Padding] on the parent. Pass [contentHorizontalPadding]
+/// so the first chip lines up with padded siblings while the list scrolls to screen edges.
 class FavoriteLocationChipsRow extends StatelessWidget {
   const FavoriteLocationChipsRow({
     super.key,
@@ -24,6 +27,7 @@ class FavoriteLocationChipsRow extends StatelessWidget {
     this.onExtraChipLongPress,
     this.chipBackgroundColor,
     this.chipBorderColor,
+    this.contentHorizontalPadding,
   });
 
   final SavedPlace? Function(String canonicalLabel) resolvePlace;
@@ -42,6 +46,9 @@ class FavoriteLocationChipsRow extends StatelessWidget {
 
   final Color? chipBackgroundColor;
   final Color? chipBorderColor;
+
+  /// Inset for the first/last chip inside the horizontal scroll (matches sheet padding).
+  final double? contentHorizontalPadding;
 
   String _displayTitle(FavoriteLocationSlotId id) {
     switch (id) {
@@ -65,9 +72,14 @@ class FavoriteLocationChipsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final extras = extraSavedPlaces ?? const <SavedPlace>[];
+    final inset = contentHorizontalPadding ?? 0;
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
+      padding: inset > 0
+          ? EdgeInsets.symmetric(horizontal: inset)
+          : EdgeInsets.zero,
+      clipBehavior: Clip.none,
       child: Row(
         children: [
           ...FavoriteLocationSlotId.values.map((id) {
