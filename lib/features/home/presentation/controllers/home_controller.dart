@@ -43,6 +43,7 @@ import '../../../../core/services/error_reporting/error_reporter.dart';
 
 class HomeController extends GetxController with WidgetsBindingObserver {
   static const String _currentLocationPlaceId = '__current_location__';
+  static const double homeSheetInitialSize = 0.32;
   static bool _didCheckPendingReviewOnHomeLaunch = false;
 
   final HomeRepository homeRepository;
@@ -85,6 +86,11 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   final isResolvingAddress = false.obs;
   final hasLocationPermission = false.obs;
 
+  /// Draggable home bottom sheet size (fraction of screen height).
+  final sheetSize = homeSheetInitialSize.obs;
+  final DraggableScrollableController homeSheetController =
+      DraggableScrollableController();
+
   /// Last device GPS fix — used for 1 km radius overlay (does not follow map pan).
   final Rxn<LatLng> deviceGpsLocation = Rxn<LatLng>();
 
@@ -109,6 +115,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   @override
   void onInit() {
     super.onInit();
+    homeSheetController.addListener(_onHomeSheetChanged);
     WidgetsBinding.instance.addObserver(this);
     analyticsService.logEvent('home_screen_viewed');
     _loadMapIcons();
@@ -450,8 +457,19 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     });
   }
 
+  void updateHomeSheetSize(double size) {
+    sheetSize.value = size;
+  }
+
+  void _onHomeSheetChanged() {
+    if (!homeSheetController.isAttached) return;
+    updateHomeSheetSize(homeSheetController.size);
+  }
+
   @override
   void onClose() {
+    homeSheetController.removeListener(_onHomeSheetChanged);
+    homeSheetController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     _activeRidePollingTimer?.cancel();
     _homeSocketConnectionSub?.cancel();
