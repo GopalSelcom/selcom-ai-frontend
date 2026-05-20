@@ -36,14 +36,6 @@ class SettingsScreen extends GetView<SettingsController> {
                   children: [
                     if (controller.shouldShowRidePinSetting) ...[
                       Text(
-                        AppStrings.appSettings.tr,
-                        style: AppTextStyles.sectionTitle.copyWith(
-                          color: AppColors.textBody,
-                          fontSize: 15.sp,
-                        ),
-                      ),
-                      SizedBox(height: 8.h),
-                      Text(
                         AppStrings
                             .securityAndPreferenceControlsMoreSettingsWillAppearHereAsTheyAreEnable
                             .tr,

@@ -13,7 +13,6 @@ class LanguageEn extends Languages {
     'add_card': 'Add Card',
     'address_missing': 'Address missing',
     'an_unexpected_error_occurred': 'An unexpected error occurred',
-    'app_settings': 'App Settings',
     'app_title': 'Selcom Rides',
     'apply': 'APPLY',
     'are_you_sure_want_to_add_ndelete_this_card':
@@ -664,9 +663,6 @@ class LanguageEn extends Languages {
   @override
   String get anUnexpectedErrorOccurred =>
       values['an_unexpected_error_occurred'] ?? '';
-
-  @override
-  String get appSettings => values['app_settings'] ?? '';
 
   @override
   String get appTitle => values['app_title'] ?? '';

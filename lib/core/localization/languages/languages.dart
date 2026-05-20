@@ -23,7 +23,6 @@ abstract class Languages {
   String get addCard;
   String get addressMissing;
   String get anUnexpectedErrorOccurred;
-  String get appSettings;
   String get appTitle;
   String get apply;
   String get areYouSureWantToAddNdeleteThisCard;

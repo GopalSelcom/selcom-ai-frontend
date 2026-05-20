@@ -57,18 +57,7 @@ class ProfileScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
-                        padding: EdgeInsets.fromLTRB(16.w, 18.h, 16.w, 8.h),
-                        child: Text(
-                          AppStrings.appSettings.tr,
-                          style: AppTextStyles.sectionTitle.copyWith(
-                            color: AppColors.textBody,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 15.sp,
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16.w),
+                        padding: EdgeInsets.fromLTRB(16.w, 18.h, 16.w, 0),
                         child: _buildSettingsList(context),
                       ),
                       SizedBox(height: 18.h),

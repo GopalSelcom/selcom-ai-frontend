@@ -15,7 +15,6 @@ class AppStrings {
   static const String addressMissing = 'address_missing';
   static const String anUnexpectedErrorOccurred =
       'an_unexpected_error_occurred';
-  static const String appSettings = 'app_settings';
   static const String appTitle = 'app_title';
   static const String apply = 'apply';
   static const String areYouSureWantToAddNdeleteThisCard =

@@ -13,7 +13,6 @@ class LanguageSw extends Languages {
     'add_card': '',
     'address_missing': '',
     'an_unexpected_error_occurred': '',
-    'app_settings': '',
     'app_title': '',
     'apply': '',
     'are_you_sure_want_to_add_ndelete_this_card': '',
@@ -583,9 +582,6 @@ class LanguageSw extends Languages {
   @override
   String get anUnexpectedErrorOccurred =>
       values['an_unexpected_error_occurred'] ?? '';
-
-  @override
-  String get appSettings => values['app_settings'] ?? '';
 
   @override
   String get appTitle => values['app_title'] ?? '';
