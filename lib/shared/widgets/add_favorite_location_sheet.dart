@@ -8,6 +8,7 @@ import '../../core/localization/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../utils/favorite_location_chip_catalog.dart';
+import 'app_animated_reveal.dart';
 import 'app_primary_button.dart';
 import 'app_saved_place_chip.dart';
 import 'app_text_field.dart';
@@ -176,34 +177,23 @@ class _AddFavoriteLocationSheetState extends State<AddFavoriteLocationSheet> {
                   enableEnhancedStyle: false,
                 ),
               ],
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 260),
-                switchInCurve: Curves.easeOutCubic,
-                switchOutCurve: Curves.easeInCubic,
-                transitionBuilder: (child, animation) => FadeTransition(
-                  opacity: animation,
-                  child: SizeTransition(
-                    sizeFactor: animation,
-                    axis: Axis.vertical,
-                    child: child,
+              AppAnimatedReveal(
+                show: _canSave,
+                visibleKey: const ValueKey('save-button-visible'),
+                hiddenKey: const ValueKey('save-button-hidden'),
+                child: Padding(
+                  padding: EdgeInsets.only(top: 22.h),
+                  child: AppPrimaryButton(
+                    label: AppStrings.saveAddress.tr,
+                    isLoading: widget.isSaving,
+                    onPressed: () async {
+                      final selected = _selectedLabel == 'add_new'
+                          ? _customLabelController.text.trim()
+                          : _canonicalLabelForPresetKey(_selectedLabel);
+                      await widget.onSave(selected);
+                    },
                   ),
                 ),
-                child: _canSave
-                    ? Padding(
-                        key: const ValueKey('save-button-visible'),
-                        padding: EdgeInsets.only(top: 22.h),
-                        child: AppPrimaryButton(
-                          label: AppStrings.saveAddress.tr,
-                          isLoading: widget.isSaving,
-                          onPressed: () async {
-                            final selected = _selectedLabel == 'add_new'
-                                ? _customLabelController.text.trim()
-                                : _canonicalLabelForPresetKey(_selectedLabel);
-                            await widget.onSave(selected);
-                          },
-                        ),
-                      )
-                    : const SizedBox.shrink(key: ValueKey('save-button-hidden')),
               ),
             ],
           ),

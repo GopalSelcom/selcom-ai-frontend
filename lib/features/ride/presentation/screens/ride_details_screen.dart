@@ -7,6 +7,7 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../ride_rating/presentation/widgets/ride_rating_input_section.dart';
@@ -368,38 +369,24 @@ class RideDetailsScreen extends StatelessWidget {
                     16.w,
                     shouldShowButton ? 16.h : 0,
                   ),
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 260),
-                    switchInCurve: Curves.easeOutCubic,
-                    switchOutCurve: Curves.easeInCubic,
-                    transitionBuilder: (child, animation) => FadeTransition(
-                      opacity: animation,
-                      child: SizeTransition(
-                        sizeFactor: animation,
-                        axis: Axis.vertical,
-                        child: child,
-                      ),
+                  child: AppAnimatedReveal(
+                    show: shouldShowButton,
+                    visibleKey: const ValueKey('ride-details-done-visible'),
+                    hiddenKey: const ValueKey('ride-details-done-hidden'),
+                    child: AppPrimaryButton(
+                      label: AppStrings.done.tr,
+                      isLoading: !isSimpleDoneFlow && isSubmitting,
+                      onPressed: isSimpleDoneFlow
+                          ? (controller.openedFromCompletionFlow
+                                ? handleCompletionExit
+                                : () => Navigator.pop(context))
+                          : () => rc.onSubmitTap(
+                                onSuccessConfirmed:
+                                    controller.openedFromCompletionFlow
+                                    ? handleCompletionExit
+                                    : () => Navigator.pop(context),
+                              ),
                     ),
-                    child: shouldShowButton
-                        ? AppPrimaryButton(
-                            key: const ValueKey('ride-details-done-visible'),
-                            label: AppStrings.done.tr,
-                            isLoading:
-                                !isSimpleDoneFlow && isSubmitting,
-                            onPressed: isSimpleDoneFlow
-                                ? (controller.openedFromCompletionFlow
-                                      ? handleCompletionExit
-                                      : () => Navigator.pop(context))
-                                : () => rc.onSubmitTap(
-                                      onSuccessConfirmed:
-                                          controller.openedFromCompletionFlow
-                                          ? handleCompletionExit
-                                          : () => Navigator.pop(context),
-                                    ),
-                          )
-                        : const SizedBox.shrink(
-                            key: ValueKey('ride-details-done-hidden'),
-                          ),
                   ),
                 );
               }),

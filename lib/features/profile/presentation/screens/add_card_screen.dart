@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../controllers/add_card_controller.dart';
 import '../../../../core/constants/app_assets.dart';
+import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/app_text_field.dart';
+import '../controllers/add_card_controller.dart';
 
 class AddCardScreen extends StatefulWidget {
   const AddCardScreen({super.key});
@@ -159,31 +161,18 @@ class _AddCardScreenState extends State<AddCardScreen> {
                       final shouldShow =
                           controller.isSubmitting.value ||
                           controller.canSubmitForm.value;
-                      return AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 260),
-                        switchInCurve: Curves.easeOutCubic,
-                        switchOutCurve: Curves.easeInCubic,
-                        transitionBuilder: (child, animation) => FadeTransition(
-                          opacity: animation,
-                          child: SizeTransition(
-                            sizeFactor: animation,
-                            axis: Axis.vertical,
-                            child: child,
-                          ),
+                      return AppAnimatedReveal(
+                        show: shouldShow,
+                        visibleKey: const ValueKey('add-card-button-visible'),
+                        hiddenKey: const ValueKey('add-card-button-hidden'),
+                        child: AppPrimaryButton(
+                          label: AppStrings.addCard.tr,
+                          iconAsset: AppAssets.locationIcArrowRight,
+                          isLoading: controller.isSubmitting.value,
+                          onPressed: controller.isSubmitting.value
+                              ? null
+                              : controller.submitCard,
                         ),
-                        child: shouldShow
-                            ? AppPrimaryButton(
-                                key: const ValueKey('add-card-button-visible'),
-                                label: AppStrings.addCard.tr,
-                                iconAsset: AppAssets.locationIcArrowRight,
-                                isLoading: controller.isSubmitting.value,
-                                onPressed: controller.isSubmitting.value
-                                    ? null
-                                    : controller.submitCard,
-                              )
-                            : const SizedBox.shrink(
-                                key: ValueKey('add-card-button-hidden'),
-                              ),
                       );
                     },
                   ),

@@ -10,6 +10,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/favorite_location_chips_row.dart';
@@ -147,27 +148,11 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                 left: 16.w,
                 right: 16.w,
                 bottom: 26.h,
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 360),
-                  switchInCurve: Curves.easeOutCubic,
-                  switchOutCurve: Curves.easeInCubic,
-                  transitionBuilder: (child, animation) {
-                    return FadeTransition(
-                      opacity: animation,
-                      child: SizeTransition(
-                        sizeFactor: animation,
-                        axis: Axis.vertical,
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: shouldShowBookRideButton
-                      ? _bookRideButton(
-                          key: const ValueKey('book-ride-visible'),
-                        )
-                      : const SizedBox.shrink(
-                          key: ValueKey('book-ride-hidden'),
-                        ),
+                child: AppAnimatedReveal(
+                  show: shouldShowBookRideButton,
+                  visibleKey: const ValueKey('book-ride-visible'),
+                  hiddenKey: const ValueKey('book-ride-hidden'),
+                  child: _bookRideButton(),
                 ),
               );
             }),
@@ -857,10 +842,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     );
   }
 
-  Widget _bookRideButton({Key? key}) {
+  Widget _bookRideButton() {
     return Obx(() {
       return AppPrimaryButton(
-        key: key,
         label: AppStrings.bookRide.tr,
         height: 56.h,
         borderRadius: 16.r,

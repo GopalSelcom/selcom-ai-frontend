@@ -12,6 +12,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
@@ -482,40 +483,17 @@ class _PassengerDetailsBottomSheetState extends State<_PassengerDetailsBottomShe
                   errorText: _phoneError,
                   onChanged: (_) {},
                 ),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 320),
-                  switchInCurve: Curves.easeOutCubic,
-                  switchOutCurve: Curves.easeInCubic,
-                  transitionBuilder: (child, animation) {
-                    return FadeTransition(
-                      opacity: animation,
-                      child: SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(0, 0.15),
-                          end: Offset.zero,
-                        ).animate(
-                          CurvedAnimation(
-                            parent: animation,
-                            curve: Curves.easeOutCubic,
-                          ),
-                        ),
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: _canConfirm
-                      ? Padding(
-                          key: const ValueKey('passenger_details_confirm_on'),
-                          padding: EdgeInsets.only(top: 24.h),
-                          child: AppPrimaryButton(
-                            label: AppStrings.confirm.tr,
-                            onPressed: _onConfirmPressed,
-                          ),
-                        )
-                      : SizedBox(
-                          key: const ValueKey('passenger_details_confirm_off'),
-                          height: 8.h,
-                        ),
+                AppAnimatedReveal(
+                  show: _canConfirm,
+                  visibleKey: const ValueKey('passenger_details_confirm_on'),
+                  hiddenKey: const ValueKey('passenger_details_confirm_off'),
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 24.h),
+                    child: AppPrimaryButton(
+                      label: AppStrings.confirm.tr,
+                      onPressed: _onConfirmPressed,
+                    ),
+                  ),
                 ),
               ],
             ),
