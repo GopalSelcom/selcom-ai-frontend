@@ -592,9 +592,10 @@ class LoginPinController extends GetxController {
     Get.offAllNamed(AppRoutes.phone);
   }
 
+  /// Clears stored session and starts OTP sign-in (not onboarding carousel).
   Future<void> useDifferentAccount() async {
     await StorageService().deleteAll();
-    Get.offAllNamed(AppRoutes.onboarding);
+    Get.offAllNamed(AppRoutes.phone);
   }
 
   void goBackOnSetup() {
