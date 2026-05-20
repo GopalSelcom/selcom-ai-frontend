@@ -157,28 +157,27 @@ class OtpScreen extends GetView<AuthController> {
                                       ),
                                       child: Container(
                                         width: double.infinity,
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: 14.w,
-                                          vertical: 14.h,
-                                        ),
+                                        padding: EdgeInsets.all(12.w),
                                         decoration: BoxDecoration(
                                           color: AppColors.otpErrorBackground,
                                           borderRadius: BorderRadius.circular(
-                                            12.r,
+                                            8.r,
                                           ),
                                           border: Border.all(
                                             color: AppColors.otpErrorBorder,
                                           ),
                                         ),
                                         child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
                                           children: [
                                             SvgPictureAsset(
                                               AppAssets.icError,
-                                              width: 22.w,
-                                              height: 22.h,
+                                              width: 20.w,
+                                              height: 20.w,
                                               color: AppColors.otpErrorBorder,
                                             ),
-                                            SizedBox(width: 10.w),
+                                            SizedBox(width: 8.w),
                                             Expanded(
                                               child: Text(
                                                 controller.errorMessage.value,
@@ -186,9 +185,10 @@ class OtpScreen extends GetView<AuthController> {
                                                     .copyWith(
                                                       color:
                                                           AppColors.textHeading,
-                                                      fontSize: 15.sp,
                                                       fontWeight:
                                                           FontWeight.w600,
+                                                      height: 1,
+                                                      letterSpacing: -0.14,
                                                     ),
                                               ),
                                             ),
