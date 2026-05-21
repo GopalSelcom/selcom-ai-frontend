@@ -802,6 +802,11 @@ class _HomeSheetScrollContentState extends State<_HomeSheetScrollContent> {
 
   @override
   Widget build(BuildContext context) {
+    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
+    final double computedBottomPadding = bottomPadding > 0
+        ? (GetPlatform.isIOS ? 0.0 : 8.h)
+        : 16.h;
+
     return SingleChildScrollView(
       controller: widget.scrollController,
       physics: widget.physics,
@@ -817,7 +822,14 @@ class _HomeSheetScrollContentState extends State<_HomeSheetScrollContent> {
             key: _contentKey,
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: widget.children,
+            children: [
+              ...widget.children,
+              SafeArea(
+                top: false,
+                bottom: true,
+                child: SizedBox(height: computedBottomPadding),
+              ),
+            ],
           ),
         ),
       ),

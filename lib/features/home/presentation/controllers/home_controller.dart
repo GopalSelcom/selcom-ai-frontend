@@ -639,6 +639,15 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     return 80.h + 68.h + 12.h + 16.h;
   }
 
+  double get _estimatedBottomPadding {
+    final context = Get.context;
+    if (context == null) return 16.h;
+    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
+    return bottomPadding > 0
+        ? (GetPlatform.isIOS ? 0.0 : 8.h) + bottomPadding
+        : 16.h;
+  }
+
   double _homeSheetContentHeight({required bool includeRecent}) {
     // Handle + search field block.
     double contentHeight = 78.h;
@@ -660,7 +669,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       contentHeight += 72.h; // Vehicle row (fixed height in sheet).
     }
 
-    contentHeight += 4.h; // Bottom padding.
+    contentHeight += _estimatedBottomPadding;
     return contentHeight;
   }
 
