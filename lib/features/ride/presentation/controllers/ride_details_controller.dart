@@ -301,7 +301,15 @@ class _ReceiptOptionsBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bottomPadding = MediaQuery.paddingOf(context).bottom;
+    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
+    final double computedBottomPadding = bottomPadding > 0
+        ? (GetPlatform.isIOS
+            ? (bottomPadding - 12.h).clamp(
+                10.h > bottomPadding ? bottomPadding : 10.h,
+                bottomPadding,
+              )
+            : bottomPadding + 12.h)
+        : 12.h;
     return Container(
       padding: EdgeInsets.only(
         left: 24.w,
@@ -322,6 +330,7 @@ class _ReceiptOptionsBottomSheet extends StatelessWidget {
       ),
       child: SafeArea(
         top: false,
+        bottom: false,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -364,7 +373,7 @@ class _ReceiptOptionsBottomSheet extends StatelessWidget {
                 onShare();
               },
             ),
-            SizedBox(height: bottomPadding > 0 ? 12.h : 24.h),
+            SizedBox(height: computedBottomPadding),
           ],
         ),
       ),

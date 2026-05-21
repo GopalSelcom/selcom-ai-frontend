@@ -37,7 +37,15 @@ class PaymentCardActionBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bottomPadding = MediaQuery.paddingOf(context).bottom;
+    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
+    final double computedBottomPadding = bottomPadding > 0
+        ? (GetPlatform.isIOS
+            ? (bottomPadding - 12.h).clamp(
+                10.h > bottomPadding ? bottomPadding : 10.h,
+                bottomPadding,
+              )
+            : bottomPadding + 12.h)
+        : 12.h;
     return Container(
       decoration: BoxDecoration(
         color: AppColors.white,
@@ -51,6 +59,7 @@ class PaymentCardActionBottomSheet extends StatelessWidget {
       ),
       child: SafeArea(
         top: false,
+        bottom: false,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -160,7 +169,7 @@ class PaymentCardActionBottomSheet extends StatelessWidget {
                 ],
               ),
             ],
-            SizedBox(height: bottomPadding > 0 ? 12.h : 24.h),
+            SizedBox(height: computedBottomPadding),
           ],
         ),
       ),

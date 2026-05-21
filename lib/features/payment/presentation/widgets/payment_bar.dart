@@ -31,11 +31,14 @@ class PaymentBar extends StatelessWidget {
       final loading = isLoading?.value ?? false;
 
       final double bottomPadding = MediaQuery.paddingOf(context).bottom;
-      final double computedBottomPadding = GetPlatform.isIOS
-          ? (bottomPadding > 0
-              ? (bottomPadding - 10.h).clamp(12.h, bottomPadding)
-              : 18.h)
-          : (bottomPadding > 0 ? bottomPadding + 8.h : 18.h);
+      final double computedBottomPadding = bottomPadding > 0
+          ? (GetPlatform.isIOS
+              ? (bottomPadding - 12.h).clamp(
+                  10.h > bottomPadding ? bottomPadding : 10.h,
+                  bottomPadding,
+                )
+              : bottomPadding + 12.h)
+          : 12.h;
 
       return Container(
         width: double.infinity,

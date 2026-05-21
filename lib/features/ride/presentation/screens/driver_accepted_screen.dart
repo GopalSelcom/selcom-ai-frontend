@@ -283,7 +283,16 @@ class DriverAcceptedScreen extends StatelessWidget {
     DriverAcceptedController c,
     RideShareController shareController,
   ) {
-    final bottomPadding = MediaQuery.paddingOf(context).bottom;
+    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
+    final double computedBottomPadding = bottomPadding > 0
+        ? (GetPlatform.isIOS
+            ? (bottomPadding - 12.h).clamp(
+                10.h > bottomPadding ? bottomPadding : 10.h,
+                bottomPadding,
+              )
+            : bottomPadding + 12.h)
+        : 12.h;
+
     AppDialogs.showAnimatedBottomSheet(
       barrierDismissible: true,
       child: Container(
@@ -293,12 +302,13 @@ class DriverAcceptedScreen extends StatelessWidget {
         ),
         child: SafeArea(
           top: false,
+          bottom: false,
           child: Padding(
             padding: EdgeInsets.only(
               left: 16.w,
               right: 16.w,
               top: 12.h,
-              bottom: bottomPadding > 0 ? 12.h : 24.h,
+              bottom: computedBottomPadding,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
