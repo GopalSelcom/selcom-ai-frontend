@@ -68,7 +68,8 @@ class AppDialogs {
     );
   }
 
-  /// Shows a common animated bottom sheet with a blurred barrier and iOS cubic transition.
+  /// Low-level bottom sheet overlay (blur + slide). Prefer [showStandardBottomSheet]
+  /// for shared title/subtitle/content sheets.
   static Future<T?> showAnimatedBottomSheet<T>({
     required Widget child,
     bool barrierDismissible = true,
@@ -144,30 +145,63 @@ class AppDialogs {
     );
   }
 
-  /// Standard app bottom sheet with optional [title], [subtitle], and [content].
+  /// Single entry point for app bottom sheets (blur, slide, safe area).
+  ///
+  /// **Body only** — pass [content] with [title] / [subtitle]; shell is built for you:
+  /// ```dart
+  /// AppDialogs.showStandardBottomSheet(
+  ///   title: 'Title',
+  ///   subtitle: 'Subtitle',
+  ///   content: MySheetBody(),
+  ///   headerTextAlign: TextAlign.start,
+  /// );
+  /// ```
+  ///
+  /// **Full sheet widget** — pass [sheet] when the widget already returns
+  /// [AppStandardBottomSheet] (multi-step flows, dynamic headers):
+  /// ```dart
+  /// AppDialogs.showStandardBottomSheet(
+  ///   sheet: const BookingForSomeoneElseFlowBottomSheet(),
+  /// );
+  /// ```
+  ///
+  /// Do not pass both [content] and [sheet]. For one-off custom UIs without
+  /// [AppStandardBottomSheet], use [showAnimatedBottomSheet].
   static Future<T?> showStandardBottomSheet<T>({
     String? title,
     String? subtitle,
-    required Widget content,
+    Widget? content,
+    Widget? sheet,
     Widget? footer,
     bool barrierDismissible = true,
     bool showDragHandle = true,
     bool showHeaderDivider = true,
     EdgeInsetsGeometry? contentPadding,
     double maxHeightFactor = 0.75,
+    TextAlign headerTextAlign = TextAlign.start,
   }) {
+    assert(
+      (sheet != null) != (content != null),
+      'showStandardBottomSheet: provide exactly one of `content` (body only) '
+      'or `sheet` (widget that already wraps AppStandardBottomSheet).',
+    );
+
+    final Widget child = sheet ??
+        AppStandardBottomSheet(
+          title: title,
+          subtitle: subtitle,
+          content: content!,
+          footer: footer,
+          showDragHandle: showDragHandle,
+          showHeaderDivider: showHeaderDivider,
+          contentPadding: contentPadding,
+          maxHeightFactor: maxHeightFactor,
+          headerTextAlign: headerTextAlign,
+        );
+
     return showAnimatedBottomSheet<T>(
       barrierDismissible: barrierDismissible,
-      child: AppStandardBottomSheet(
-        title: title,
-        subtitle: subtitle,
-        content: content,
-        footer: footer,
-        showDragHandle: showDragHandle,
-        showHeaderDivider: showHeaderDivider,
-        contentPadding: contentPadding,
-        maxHeightFactor: maxHeightFactor,
-      ),
+      child: child,
     );
   }
 

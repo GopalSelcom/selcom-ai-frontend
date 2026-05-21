@@ -1,13 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+
+import '../../../../core/data/models/user_profile_models.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/data/models/user_profile_models.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 import '../controllers/payment_method_controller.dart';
 
+/// Payment method picker body for [AppDialogs.showStandardBottomSheet].
 class PaymentMethodBottomSheet extends StatelessWidget {
   const PaymentMethodBottomSheet({super.key});
+
+  /// Opens the sheet via [AppDialogs.showStandardBottomSheet] (centered title).
+  static Future<void> show() {
+    return AppDialogs.showStandardBottomSheet<void>(
+      title: AppStrings.selectAPaymentMethod.tr,
+      content: const PaymentMethodBottomSheet(),
+      barrierDismissible: true,
+      headerTextAlign: TextAlign.center,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
