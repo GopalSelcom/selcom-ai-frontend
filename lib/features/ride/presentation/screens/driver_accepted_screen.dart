@@ -308,91 +308,44 @@ class DriverAcceptedScreen extends StatelessWidget {
     DriverAcceptedController c,
     RideShareController shareController,
   ) {
-    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
-    final double computedBottomPadding = bottomPadding > 0
-        ? (GetPlatform.isIOS
-              ? (bottomPadding - 12.h).clamp(
-                  10.h > bottomPadding ? bottomPadding : 10.h,
-                  bottomPadding,
-                )
-              : bottomPadding + 12.h)
-        : 12.h;
-
-    AppDialogs.showAnimatedBottomSheet(
-      barrierDismissible: true,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-        ),
-        child: SafeArea(
-          top: false,
-          bottom: false,
-          child: Padding(
-            padding: EdgeInsets.only(
-              left: 16.w,
-              right: 16.w,
-              top: 12.h,
-              bottom: computedBottomPadding,
-            ),
-            child: Column(
+    AppDialogs.showStandardBottomSheet(
+      title: AppStrings.safetyOptions.tr,
+      subtitle: AppStrings.safetyOptionsSubtitle.tr,
+      headerTextAlign: TextAlign.start,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _safetyOptionTile(
+            title: AppStrings.shareLiveLocation.tr,
+            icon: Icons.share_location_outlined,
+            onTap: () {
+              AppDialogs.closeActiveDialog();
+              shareController.shareRide(c.rideId);
+            },
+          ),
+          Obx(() {
+            final contacts = c.emergencyContacts;
+            if (contacts.isEmpty) {
+              return const SizedBox.shrink();
+            }
+            return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  width: 48.w,
-                  height: 4.h,
-                  decoration: BoxDecoration(
-                    color: AppColors.skeletonBase,
-                    borderRadius: BorderRadius.circular(2.r),
+                for (final contact in contacts) ...[
+                  SizedBox(height: 10.h),
+                  _safetyOptionTile(
+                    title: contact.label,
+                    icon: c.emergencyContactIconFor(contact.id),
+                    onTap: () {
+                      AppDialogs.closeActiveDialog();
+                      unawaited(c.dialEmergencyContact(contact));
+                    },
                   ),
-                ),
-                SizedBox(height: 16.h),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    AppStrings.safetyOptions.tr,
-                    style: AppTextStyles.homeTitle.copyWith(
-                      fontSize: 18.sp,
-                      color: AppColors.textHeading,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 12.h),
-                _safetyOptionTile(
-                  title: AppStrings.shareLiveLocation.tr,
-                  icon: Icons.share_location_outlined,
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    shareController.shareRide(c.rideId);
-                  },
-                ),
-                Obx(() {
-                  final contacts = c.emergencyContacts;
-                  if (contacts.isEmpty) {
-                    return const SizedBox.shrink();
-                  }
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      for (final contact in contacts) ...[
-                        SizedBox(height: 10.h),
-                        _safetyOptionTile(
-                          title: contact.label,
-                          icon: c.emergencyContactIconFor(contact.id),
-                          onTap: () {
-                            Navigator.of(context).pop();
-                            unawaited(c.dialEmergencyContact(contact));
-                          },
-                        ),
-                      ],
-                    ],
-                  );
-                }),
+                ],
               ],
-            ),
-          ),
-        ),
+            );
+          }),
+        ],
       ),
     );
   }

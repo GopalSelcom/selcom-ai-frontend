@@ -331,6 +331,8 @@ abstract class Languages {
   String get couldNotShareSlipPleaseTryAgainLater;
   String get ridePinProtection;
   String get safetyAndPrivacy;
+  String get safetyOptions;
+  String get safetyOptionsSubtitle;
   String get saveThisAddressFirstThenYouCanBookFromHere;
   String get savingChanges;
   String get searchDestination;
