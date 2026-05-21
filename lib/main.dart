@@ -247,7 +247,10 @@ class _MyAppState extends State<MyApp> {
               return GestureDetector(
                 onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
                 behavior: HitTestBehavior.translucent,
-                child: child ?? const SizedBox.shrink(),
+                child: SafeArea(
+                  top: false,
+                  child: child ?? const SizedBox.shrink(),
+                ),
               );
             },
             translations: GetxLanguagesTranslations(),
