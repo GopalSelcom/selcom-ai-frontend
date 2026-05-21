@@ -15,15 +15,23 @@ class SelcomPesaLinkedBottomSheet extends GetView<PaymentMethodsController> {
 
   @override
   Widget build(BuildContext context) {
+    final bottomPadding = MediaQuery.paddingOf(context).bottom;
     return Container(
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(36.r)),
       ),
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
+      padding: EdgeInsets.only(
+        left: 24.w,
+        right: 24.w,
+        top: 20.h,
+        bottom: 0,
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
           // Drag handle
           Center(
             child: Container(
@@ -96,8 +104,9 @@ class SelcomPesaLinkedBottomSheet extends GetView<PaymentMethodsController> {
               outlinedBorderWidth: 1,
             ),
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: bottomPadding > 0 ? 12.h : 24.h),
         ],
+      ),
       ),
     );
   }

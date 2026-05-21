@@ -156,9 +156,11 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
           clipBehavior: Clip.antiAlias,
           child: SizedBox(
             height: sheetH,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+            child: SafeArea(
+              top: false,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
                 Padding(
                   padding: EdgeInsets.fromLTRB(16.w, 12.h, 8.w, 8.h),
                   child: Row(
@@ -278,6 +280,7 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
                 ),
               ],
             ),
+          ),
           ),
         ),
       ),

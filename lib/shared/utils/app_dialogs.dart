@@ -9,7 +9,6 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/services/storage_service.dart';
-import '../widgets/app_bottom_sheet_safe_area.dart';
 import '../widgets/app_primary_button.dart';
 import '../widgets/app_standard_bottom_sheet.dart';
 
@@ -134,7 +133,7 @@ class AppDialogs {
                     padding: EdgeInsets.only(
                       bottom: MediaQuery.of(context).viewInsets.bottom,
                     ),
-                    child: AppBottomSheetSafeArea(child: child),
+                    child: child,
                   ),
                 ),
               ),

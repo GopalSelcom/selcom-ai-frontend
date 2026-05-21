@@ -106,7 +106,7 @@ class HomeScreen extends GetView<HomeController> {
                   child: _activeRideCard(activeRide),
                 );
               }
-              return _buildFigmaDraggableSheet();
+              return _buildFigmaDraggableSheet(context);
             }),
           ],
         ),
@@ -209,7 +209,7 @@ class HomeScreen extends GetView<HomeController> {
 
   static const double _sheetHorizontalPadding = 24;
 
-  Widget _buildFigmaDraggableSheet() {
+  Widget _buildFigmaDraggableSheet(BuildContext context) {
     return Obx(() {
       controller.recentDestinations.length;
       controller.vehicleTypes.length;
@@ -254,9 +254,7 @@ class HomeScreen extends GetView<HomeController> {
   List<Widget> _buildHomeSheetContentChildren() {
     return [
       Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: _sheetHorizontalPadding.w,
-        ),
+        padding: EdgeInsets.symmetric(horizontal: _sheetHorizontalPadding.w),
         child: Column(
           children: [
             SizedBox(height: 12.h),
@@ -274,17 +272,11 @@ class HomeScreen extends GetView<HomeController> {
             GestureDetector(
               onTap: () => controller.openLocationSelection(),
               child: Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: 18.w,
-                  vertical: 16.h,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 16.h),
                 decoration: BoxDecoration(
                   color: AppColors.surfaceSubtle,
                   borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(
-                    color: AppColors.skeletonBase,
-                    width: 0.8,
-                  ),
+                  border: Border.all(color: AppColors.skeletonBase, width: 0.8),
                 ),
                 child: Row(
                   children: [
@@ -322,20 +314,13 @@ class HomeScreen extends GetView<HomeController> {
           extraSavedPlaces: extras,
           onChipTap: (canonical, place) {
             if (place == null) {
-              Get.toNamed(
-                AppRoutes.selectSavedLocation,
-                arguments: canonical,
-              );
+              Get.toNamed(AppRoutes.selectSavedLocation, arguments: canonical);
             } else {
-              controller.navigateToVehicleSelectionForSavedLabel(
-                canonical,
-              );
+              controller.navigateToVehicleSelectionForSavedLabel(canonical);
             }
           },
-          onSavedChipLongPress: (canonical) => Get.toNamed(
-            AppRoutes.selectSavedLocation,
-            arguments: canonical,
-          ),
+          onSavedChipLongPress: (canonical) =>
+              Get.toNamed(AppRoutes.selectSavedLocation, arguments: canonical),
           onExtraChipTap: (place) =>
               controller.navigateToVehicleSelectionForSavedPlace(place),
           onExtraChipLongPress: (place) {
@@ -348,9 +333,7 @@ class HomeScreen extends GetView<HomeController> {
         );
       }),
       Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: _sheetHorizontalPadding.w,
-        ),
+        padding: EdgeInsets.symmetric(horizontal: _sheetHorizontalPadding.w),
         child: Obx(() {
           const sectionGap = 12.0;
           const titleContentGap = 10.0;
@@ -376,16 +359,11 @@ class HomeScreen extends GetView<HomeController> {
                   ],
                 ),
                 SizedBox(height: titleContentGap.h),
-                ..._buildRecentLocationListItems(
-                  itemGap: recentItemGap.h,
-                ),
+                ..._buildRecentLocationListItems(itemGap: recentItemGap.h),
               ],
               if (controller.shouldShowVehicleSection) ...[
                 SizedBox(height: sectionGap.h),
-                Text(
-                  AppStrings.exploreVehicle.tr,
-                  style: _sectionTitleStyle,
-                ),
+                Text(AppStrings.exploreVehicle.tr, style: _sectionTitleStyle),
                 SizedBox(height: titleContentGap.h),
                 _buildVehicleHorizontalList(),
               ],
@@ -774,11 +752,13 @@ class _HomeSheetScrollContent extends StatefulWidget {
   final void Function({
     required double contentHeightPx,
     required double layoutHeightPx,
-  }) onContentMeasured;
+  })
+  onContentMeasured;
   final List<Widget> children;
 
   @override
-  State<_HomeSheetScrollContent> createState() => _HomeSheetScrollContentState();
+  State<_HomeSheetScrollContent> createState() =>
+      _HomeSheetScrollContentState();
 }
 
 class _HomeSheetScrollContentState extends State<_HomeSheetScrollContent> {

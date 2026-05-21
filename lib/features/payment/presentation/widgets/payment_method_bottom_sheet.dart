@@ -14,6 +14,7 @@ class PaymentMethodBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<PaymentMethodController>();
+    final bottomPadding = MediaQuery.paddingOf(context).bottom;
 
     return Obx(() {
       if (controller.isLoading.value && controller.paymentMethods.isEmpty) {
@@ -42,6 +43,7 @@ class PaymentMethodBottomSheet extends StatelessWidget {
               enabled: methods[i].isAvailable,
             ),
           ],
+          SizedBox(height: bottomPadding > 0 ? 4.h : 16.h),
         ],
       );
     });

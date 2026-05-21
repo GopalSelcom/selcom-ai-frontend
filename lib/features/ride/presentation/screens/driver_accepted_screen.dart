@@ -283,18 +283,23 @@ class DriverAcceptedScreen extends StatelessWidget {
     DriverAcceptedController c,
     RideShareController shareController,
   ) {
+    final bottomPadding = MediaQuery.paddingOf(context).bottom;
     AppDialogs.showAnimatedBottomSheet(
       barrierDismissible: true,
-      child: SafeArea(
-        top: false,
-        bottom: false,
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-          ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+        ),
+        child: SafeArea(
+          top: false,
           child: Padding(
-            padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 22.h),
+            padding: EdgeInsets.only(
+              left: 16.w,
+              right: 16.w,
+              top: 12.h,
+              bottom: bottomPadding > 0 ? 12.h : 24.h,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -589,35 +594,36 @@ class DriverAcceptedScreen extends StatelessWidget {
     DriverAcceptedController c,
     ScrollController scrollController,
   ) {
-    return Obx(() {
-      if (c.isLoadingRide.value) {
-        return ListView(
-          controller: scrollController,
-          padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 0),
-          children: [
-            Center(
-              child: Container(
-                width: 64.w,
-                height: 5.h,
-                decoration: BoxDecoration(
-                  color: AppColors.skeletonBase,
-                  borderRadius: BorderRadius.circular(37.r),
+    return Builder(
+      builder: (context) {
+        final double bottomPadding = MediaQuery.paddingOf(context).bottom;
+        return Obx(() {
+          if (c.isLoadingRide.value) {
+            return ListView(
+              controller: scrollController,
+              padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 16.h + bottomPadding),
+              children: [
+                Center(
+                  child: Container(
+                    width: 64.w,
+                    height: 5.h,
+                    decoration: BoxDecoration(
+                      color: AppColors.skeletonBase,
+                      borderRadius: BorderRadius.circular(37.r),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            SizedBox(height: 20.h),
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 24.h),
-              child: const Center(child: CircularProgressIndicator()),
-            ),
-          ],
-        );
-      }
+                SizedBox(height: 20.h),
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24.h),
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
+              ],
+            );
+          }
 
-      final state = c.rideBottomSheetState.value;
-      if (state == RideBottomSheetState.driverAssigned) {
-        return Builder(
-          builder: (context) {
+          final state = c.rideBottomSheetState.value;
+          if (state == RideBottomSheetState.driverAssigned) {
             return ScrollConfiguration(
               behavior: ScrollConfiguration.of(context).copyWith(
                 overscroll: false,
@@ -626,7 +632,7 @@ class DriverAcceptedScreen extends StatelessWidget {
               child: ListView(
                 controller: scrollController,
                 physics: const ClampingScrollPhysics(),
-                padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 0),
+                padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 16.h + bottomPadding),
                 children: [
                   Center(
                     child: Container(
@@ -643,33 +649,33 @@ class DriverAcceptedScreen extends StatelessWidget {
                 ],
               ),
             );
-          },
-        );
-      }
+          }
 
-      if (state == RideBottomSheetState.rideStarted) {
-        return _rideStartedSheetWithFixedHeader(c, scrollController);
-      }
+          if (state == RideBottomSheetState.rideStarted) {
+            return _rideStartedSheetWithFixedHeader(c, scrollController);
+          }
 
-      return ListView(
-        controller: scrollController,
-        padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 0),
-        children: [
-          Center(
-            child: Container(
-              width: 64.w,
-              height: 5.h,
-              decoration: BoxDecoration(
-                color: AppColors.skeletonBase,
-                borderRadius: BorderRadius.circular(37.r),
+          return ListView(
+            controller: scrollController,
+            padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 16.h + bottomPadding),
+            children: [
+              Center(
+                child: Container(
+                  width: 64.w,
+                  height: 5.h,
+                  decoration: BoxDecoration(
+                    color: AppColors.skeletonBase,
+                    borderRadius: BorderRadius.circular(37.r),
+                  ),
+                ),
               ),
-            ),
-          ),
-          SizedBox(height: 20.h),
-          _rideProgressSheet(c),
-        ],
-      );
-    });
+              SizedBox(height: 20.h),
+              _rideProgressSheet(c),
+            ],
+          );
+        });
+      },
+    );
   }
 
   Widget _rideStartedSheetWithFixedHeader(
@@ -719,7 +725,9 @@ class DriverAcceptedScreen extends StatelessWidget {
                   child: ListView(
                     controller: scrollController,
                     physics: const ClampingScrollPhysics(),
-                    padding: EdgeInsets.zero,
+                    padding: EdgeInsets.only(
+                      bottom: 16.h + MediaQuery.paddingOf(context).bottom,
+                    ),
                     children: [
                       _rideProgressBody(c, showChangeDropLink: true),
                     ],

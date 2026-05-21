@@ -30,9 +30,21 @@ class PaymentBar extends StatelessWidget {
       final pay = controller.selectedPayment.value;
       final loading = isLoading?.value ?? false;
 
+      final double bottomPadding = MediaQuery.paddingOf(context).bottom;
+      final double computedBottomPadding = GetPlatform.isIOS
+          ? (bottomPadding > 0
+              ? (bottomPadding - 10.h).clamp(12.h, bottomPadding)
+              : 18.h)
+          : (bottomPadding > 0 ? bottomPadding + 8.h : 18.h);
+
       return Container(
         width: double.infinity,
-        padding: EdgeInsets.fromLTRB(25.w, 18.h, 25.w, 18.h),
+        padding: EdgeInsets.fromLTRB(
+          25.w,
+          18.h,
+          25.w,
+          computedBottomPadding,
+        ),
         decoration: const BoxDecoration(color: AppColors.primary),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -97,14 +109,16 @@ class PaymentBar extends StatelessWidget {
             SizedBox(width: 12.w),
             Material(
               color: AppColors.white,
-              borderRadius: BorderRadius.circular(24.r),
+              borderRadius: BorderRadius.circular(15.r),
               child: InkWell(
-                borderRadius: BorderRadius.circular(24.r),
+                borderRadius: BorderRadius.circular(15.r),
                 onTap: loading ? null : onActionButtonPressed,
                 child: Container(
+                  width: 180.w,
+                  height: 56.h,
+                  alignment: Alignment.center,
                   padding: EdgeInsets.symmetric(
-                    horizontal: 24.w,
-                    vertical: 22.h,
+                    horizontal: 12.w,
                   ),
                   child: loading
                       ? SizedBox(
@@ -115,13 +129,19 @@ class PaymentBar extends StatelessWidget {
                             color: AppColors.primary,
                           ),
                         )
-                      : Text(
-                          buttonLabel,
-                          style: AppTextStyles.button.copyWith(
-                            color: AppColors.primary,
-                            fontSize: 15.sp,
-                            fontFamily: AppTextStyles.metropolisFont,
-                            fontWeight: FontWeight.w600,
+                      : FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            buttonLabel,
+                            maxLines: 1,
+                            style: AppTextStyles.button.copyWith(
+                              color: AppColors.primary,
+                              fontSize: 15.sp,
+                              fontFamily: AppTextStyles.metropolisFont,
+                              fontWeight: FontWeight.w700,
+                              height: 1.3,
+                              fontFeatures: const [FontFeature.tabularFigures()],
+                            ),
                           ),
                         ),
                 ),

@@ -37,122 +37,132 @@ class PaymentCardActionBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bottomPadding = MediaQuery.paddingOf(context).bottom;
     return Container(
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(36.r)),
       ),
-      padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 28.h),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 64.w,
-              height: 5.h,
-              decoration: BoxDecoration(
-                color: AppColors.dividerHandle,
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-            ),
-          ),
-          SizedBox(height: 24.h),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: AppTextStyles.sectionTitle.copyWith(
-                    color: AppColors.textHeading,
-                    fontSize: 20.h,
-                    fontWeight: FontWeight.w600,
-                    height: 1.25,
-                  ),
+      padding: EdgeInsets.only(
+        left: 24.w,
+        right: 24.w,
+        top: 16.h,
+        bottom: 0,
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 64.w,
+                height: 5.h,
+                decoration: BoxDecoration(
+                  color: AppColors.dividerHandle,
+                  borderRadius: BorderRadius.circular(12.r),
                 ),
               ),
-              SizedBox(width: 12.w),
-              SizedBox(
-                width: 86.w,
-                height: 86.w,
-                child: Image.asset(imageAssetPath, fit: BoxFit.contain),
-              ),
-            ],
-          ),
-          SizedBox(height: 8.h),
-          RichText(
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: AppStrings.visa.tr,
-                  style: AppTextStyles.sectionTitle.copyWith(
-                    color: AppColors.textBrandVisaPrimary,
-                    fontWeight: FontWeight.w500,
-                    fontStyle: FontStyle.italic,
-                    fontSize: 16.sp,
-                  ),
-                ),
-                TextSpan(
-                  text: ' $cardNumber',
-                  style: AppTextStyles.body.copyWith(
-                    color: AppColors.textHeading,
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
             ),
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            description,
-            style: AppTextStyles.body.copyWith(
-              color: AppColors.textBody,
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w400,
-              height: 1.5,
-            ),
-          ),
-          SizedBox(height: 28.h),
-          if (secondaryButtonLabel == null) ...[
-            AppPrimaryButton(
-              label: primaryButtonLabel,
-              iconAsset: AppAssets.locationIcArrowRight,
-              isLoading: isPrimaryLoading,
-              onPressed: onPrimaryPressed,
-            ),
-          ] else ...[
+            SizedBox(height: 24.h),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Expanded(
-                  child: AppPrimaryButton(
-                    label: secondaryButtonLabel!,
-                    onPressed: isSecondaryLoading ? null : onSecondaryPressed,
-                    isLoading: isSecondaryLoading,
-                    height: 56.h,
-                    borderRadius: 16.r,
-                    outlined: true,
-                    backgroundColor: AppColors.white,
-                    textColor: AppColors.primary,
-                    outlinedTextColor: AppColors.primary,
-                    outlinedBorderColor: AppColors.primary,
-                    outlinedBorderWidth: 1,
+                  child: Text(
+                    title,
+                    style: AppTextStyles.sectionTitle.copyWith(
+                      color: AppColors.textHeading,
+                      fontSize: 20.h,
+                      fontWeight: FontWeight.w600,
+                      height: 1.25,
+                    ),
                   ),
                 ),
                 SizedBox(width: 12.w),
-                Expanded(
-                  child: AppPrimaryButton(
-                    label: primaryButtonLabel,
-                    isLoading: isPrimaryLoading,
-                    onPressed: onPrimaryPressed,
-                    iconAsset: iconAsset,
-                  ),
+                SizedBox(
+                  width: 86.w,
+                  height: 86.w,
+                  child: Image.asset(imageAssetPath, fit: BoxFit.contain),
                 ),
               ],
             ),
+            SizedBox(height: 8.h),
+            RichText(
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: AppStrings.visa.tr,
+                    style: AppTextStyles.sectionTitle.copyWith(
+                      color: AppColors.textBrandVisaPrimary,
+                      fontWeight: FontWeight.w500,
+                      fontStyle: FontStyle.italic,
+                      fontSize: 16.sp,
+                    ),
+                  ),
+                  TextSpan(
+                    text: ' $cardNumber',
+                    style: AppTextStyles.body.copyWith(
+                      color: AppColors.textHeading,
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              description,
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.textBody,
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w400,
+                height: 1.5,
+              ),
+            ),
+            SizedBox(height: 28.h),
+            if (secondaryButtonLabel == null) ...[
+              AppPrimaryButton(
+                label: primaryButtonLabel,
+                iconAsset: AppAssets.locationIcArrowRight,
+                isLoading: isPrimaryLoading,
+                onPressed: onPrimaryPressed,
+              ),
+            ] else ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: AppPrimaryButton(
+                      label: secondaryButtonLabel!,
+                      onPressed: isSecondaryLoading ? null : onSecondaryPressed,
+                      isLoading: isSecondaryLoading,
+                      height: 56.h,
+                      borderRadius: 16.r,
+                      outlined: true,
+                      backgroundColor: AppColors.white,
+                      textColor: AppColors.primary,
+                      outlinedTextColor: AppColors.primary,
+                      outlinedBorderColor: AppColors.primary,
+                      outlinedBorderWidth: 1,
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: AppPrimaryButton(
+                      label: primaryButtonLabel,
+                      isLoading: isPrimaryLoading,
+                      onPressed: onPrimaryPressed,
+                      iconAsset: iconAsset,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            SizedBox(height: bottomPadding > 0 ? 12.h : 24.h),
           ],
-        ],
+        ),
       ),
     );
   }
