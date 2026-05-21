@@ -604,6 +604,8 @@ class LanguageEn extends Languages {
     'phone_number': 'Phone number',
     'add_new': 'Add New',
     'add_to_favourites': 'Add to Favourites',
+    'add_to_favourites_subtitle':
+        'Choose a label for this address or add your own.',
     'confirm': 'Confirm',
     'confirmation': 'Confirmation',
     'home': 'Home',
@@ -2310,6 +2312,10 @@ class LanguageEn extends Languages {
 
   @override
   String get addToFavourites => values['add_to_favourites'] ?? '';
+
+  @override
+  String get addToFavouritesSubtitle =>
+      values['add_to_favourites_subtitle'] ?? '';
 
   @override
   String get confirm => values['confirm'] ?? '';

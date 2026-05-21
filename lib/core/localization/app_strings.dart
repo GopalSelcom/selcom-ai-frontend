@@ -7,6 +7,7 @@ class AppStrings {
   static const String add = 'add';
   static const String addNew = 'add_new';
   static const String addToFavourites = 'add_to_favourites';
+  static const String addToFavouritesSubtitle = 'add_to_favourites_subtitle';
   static const String addStops = 'add_stops';
   static const String addASavedPlace = 'add_asaved_place';
   static const String addDebitCreditCard = 'add_debit_credit_card';

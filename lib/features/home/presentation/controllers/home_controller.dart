@@ -506,7 +506,13 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
   void _onHomeSheetChanged() {
     if (!homeSheetController.isAttached) return;
-    updateHomeSheetSize(homeSheetController.size);
+    final size = homeSheetController.size;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!homeSheetController.isAttached) return;
+      // Avoid map/sheet relayout fighting with modal sheets (e.g. add favourite).
+      if (Get.isDialogOpen ?? false) return;
+      updateHomeSheetSize(size);
+    });
   }
 
   bool get hasRecentLocationsForSheet =>
@@ -1838,27 +1844,20 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       AppDialogs.showErrorDialog(message: AppStrings.noLocationsFound.tr);
       return;
     }
-    if (Get.isBottomSheetOpen ?? false) return;
 
     await AppDialogs.ensureKeyboardClosed();
 
-    await Get.bottomSheet<void>(
-      Obx(() {
-        savedPlaces.length;
-        return AddFavoriteLocationSheet(
-          address: detailedAddress,
-          isSaving: isSavingPlace.value,
-          resolveSavedPlace: getSavedPlaceByLabel,
-          onSave: (label) async {
-            await onSave(label);
-            if ((Get.isBottomSheetOpen ?? false) && !isSavingPlace.value) {
-              Get.back<void>();
-            }
-          },
-        );
-      }),
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+    await AddFavoriteLocationSheet.show(
+      address: detailedAddress,
+      resolveSavedPlace: getSavedPlaceByLabel,
+      isSaving: isSavingPlace,
+      savedPlaces: savedPlaces,
+      onSave: (label) async {
+        await onSave(label);
+        if (!isSavingPlace.value) {
+          Get.back<void>();
+        }
+      },
     );
   }
 

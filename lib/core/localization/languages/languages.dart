@@ -516,6 +516,7 @@ abstract class Languages {
   String get phoneNumber;
   String get addNew;
   String get addToFavourites;
+  String get addToFavouritesSubtitle;
   String get confirm;
   String get confirmation;
   String get home;

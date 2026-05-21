@@ -522,6 +522,7 @@ class LanguageSw extends Languages {
     'phone_number': '',
     'add_new': '',
     'add_to_favourites': '',
+    'add_to_favourites_subtitle': '',
     'confirm': '',
     'confirmation': '',
     'home': '',
@@ -2224,6 +2225,10 @@ class LanguageSw extends Languages {
 
   @override
   String get addToFavourites => values['add_to_favourites'] ?? '';
+
+  @override
+  String get addToFavouritesSubtitle =>
+      values['add_to_favourites_subtitle'] ?? '';
 
   @override
   String get confirm => values['confirm'] ?? '';
