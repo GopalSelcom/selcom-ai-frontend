@@ -46,6 +46,8 @@ class AppStrings {
   byContinuingYouAgreeThatYouHaveReadAndAcceptOurTAndCsAndPrivacyPolicy =
       'by_continuing_you_agree_that_you_have_read_and_accept_our_tand_cs_and_privacy_policy';
   static const String call = 'call';
+  static const String callDriver = 'call_driver';
+  static const String callDriverSheetSubtitle = 'call_driver_sheet_subtitle';
   static const String callingDriver = 'calling_driver';
   static const String cameraPermission = 'camera_permission';
   static const String cancelUpdate = 'cancel_update';
@@ -449,7 +451,9 @@ class AppStrings {
   static const String searchStop = 'search_stop';
   static const String searchStopLocation = 'search_stop_location';
   static const String inAppCalling = 'in_app_calling';
+  static const String inAppCallingSubtitle = 'in_app_calling_subtitle';
   static const String normalCall = 'normal_call';
+  static const String normalCallSubtitle = 'normal_call_subtitle';
   static const String inAppCallingWillBeAvailableSoon =
       'in_app_calling_will_be_available_soon';
   static const String updateFailed = 'update_failed';

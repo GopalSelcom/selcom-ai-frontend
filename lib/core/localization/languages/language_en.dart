@@ -41,6 +41,9 @@ class LanguageEn extends Languages {
     'by_continuing_you_agree_that_you_have_read_and_accept_our_tand_cs_and_privacy_policy':
         'By continuing, you agree that you have read and accept our T&Cs and Privacy Policy',
     'call': 'Call',
+    'call_driver': 'Call driver',
+    'call_driver_sheet_subtitle':
+        'Choose how you want to reach your driver during this ride.',
     'coming_soon': 'Coming soon',
     'calling_driver': 'Calling Driver',
     'camera_permission': 'Camera Permission',
@@ -375,8 +378,11 @@ class LanguageEn extends Languages {
     'search_pickup_location': 'Search pickup location',
     'search_stop': 'Search stop location',
     'search_stop_location': 'Search stop location',
-    'in_app_calling': 'In app calling',
-    'normal_call': 'Normal call',
+    'in_app_calling': 'In-app call',
+    'in_app_calling_subtitle':
+        'Voice call through the app using your active ride connection.',
+    'normal_call': 'Phone call',
+    'normal_call_subtitle': 'Use your device dialer to call the driver directly.',
     'in_app_calling_will_be_available_soon':
         'In app calling will available soon',
     'update_failed': 'Update Failed',
@@ -726,6 +732,13 @@ class LanguageEn extends Languages {
 
   @override
   String get call => values['call'] ?? '';
+
+  @override
+  String get callDriver => values['call_driver'] ?? '';
+
+  @override
+  String get callDriverSheetSubtitle =>
+      values['call_driver_sheet_subtitle'] ?? '';
 
   @override
   String get comingSoon => values['coming_soon'] ?? '';
@@ -1724,7 +1737,14 @@ class LanguageEn extends Languages {
   String get inAppCalling => values['in_app_calling'] ?? '';
 
   @override
+  String get inAppCallingSubtitle =>
+      values['in_app_calling_subtitle'] ?? '';
+
+  @override
   String get normalCall => values['normal_call'] ?? '';
+
+  @override
+  String get normalCallSubtitle => values['normal_call_subtitle'] ?? '';
 
   @override
   String get inAppCallingWillBeAvailableSoon =>

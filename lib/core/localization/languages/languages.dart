@@ -39,6 +39,8 @@ abstract class Languages {
   String
   get byContinuingYouAgreeThatYouHaveReadAndAcceptOurTAndCsAndPrivacyPolicy;
   String get call;
+  String get callDriver;
+  String get callDriverSheetSubtitle;
   String get comingSoon;
   String get callingDriver;
   String get cameraPermission;
@@ -345,7 +347,9 @@ abstract class Languages {
   String get searchPickupLocation;
   String get searchStopLocation;
   String get inAppCalling;
+  String get inAppCallingSubtitle;
   String get normalCall;
+  String get normalCallSubtitle;
   String get inAppCallingWillBeAvailableSoon;
   String get updateFailed;
   String get updateInProgress;

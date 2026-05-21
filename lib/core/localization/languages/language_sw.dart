@@ -36,6 +36,8 @@ class LanguageSw extends Languages {
     'by_continuing_you_agree_that_you_have_read_and_accept_our_tand_cs_and_privacy_policy':
         '',
     'call': '',
+    'call_driver': '',
+    'call_driver_sheet_subtitle': '',
     'coming_soon': '',
     'calling_driver': '',
     'camera_permission': '',
@@ -334,7 +336,9 @@ class LanguageSw extends Languages {
     'search_stop': '',
     'search_stop_location': '',
     'in_app_calling': '',
+    'in_app_calling_subtitle': '',
     'normal_call': '',
+    'normal_call_subtitle': '',
     'in_app_calling_will_be_available_soon': '',
     'update_failed': '',
     'update_in_progress': '',
@@ -643,6 +647,13 @@ class LanguageSw extends Languages {
 
   @override
   String get call => values['call'] ?? '';
+
+  @override
+  String get callDriver => values['call_driver'] ?? '';
+
+  @override
+  String get callDriverSheetSubtitle =>
+      values['call_driver_sheet_subtitle'] ?? '';
 
   @override
   String get comingSoon => values['coming_soon'] ?? '';
@@ -1643,7 +1654,14 @@ class LanguageSw extends Languages {
   String get inAppCalling => values['in_app_calling'] ?? '';
 
   @override
+  String get inAppCallingSubtitle =>
+      values['in_app_calling_subtitle'] ?? '';
+
+  @override
   String get normalCall => values['normal_call'] ?? '';
+
+  @override
+  String get normalCallSubtitle => values['normal_call_subtitle'] ?? '';
 
   @override
   String get inAppCallingWillBeAvailableSoon =>
