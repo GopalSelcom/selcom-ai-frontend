@@ -364,6 +364,9 @@ abstract class Languages {
   String get selcomPesa;
   String get selectANearbyPointForEasierPickup;
   String get selectCountry;
+  String get selectCountrySubtitle;
+  String get searchCountry;
+  String get noCountriesFound;
   String get selectAPaymentMethod;
   String get selectAReason;
   String get selectAReasonSubtitle;

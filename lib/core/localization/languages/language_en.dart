@@ -404,6 +404,10 @@ class LanguageEn extends Languages {
         'Select a nearby point for easier pickup',
     'select_apayment_method': 'Select a payment method',
     'select_country': 'Select country',
+    'select_country_subtitle':
+        'Search and choose your country dialling code for your phone number.',
+    'search_country': 'Search country',
+    'no_countries_found': 'No countries found',
     'select_areason': 'Select a reason',
     'select_a_reason_subtitle':
         'Choose the topic that best describes what you need help with.',
@@ -1799,6 +1803,16 @@ class LanguageEn extends Languages {
 
   @override
   String get selectCountry => values['select_country'] ?? '';
+
+  @override
+  String get selectCountrySubtitle =>
+      values['select_country_subtitle'] ?? '';
+
+  @override
+  String get searchCountry => values['search_country'] ?? '';
+
+  @override
+  String get noCountriesFound => values['no_countries_found'] ?? '';
 
   @override
   String get selectAReason => values['select_areason'] ?? '';
