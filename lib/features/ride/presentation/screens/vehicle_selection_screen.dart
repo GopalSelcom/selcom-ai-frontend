@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:selcom_rides_frontend/shared/widgets/map_widgets.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
@@ -12,6 +11,8 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
+import '../../../../shared/widgets/app_google_map.dart';
+import '../../../../shared/widgets/app_map_route_one_line_bar.dart';
 import '../../../../shared/widgets/vehicle_selection_promo_chip.dart';
 import '../../../payment/presentation/widgets/payment_bar.dart';
 import '../controllers/vehicle_selection_controller.dart';
@@ -91,78 +92,11 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
               // Targeted rebuild for header labels/actions via update(['route_header']).
               child: GetBuilder<VehicleSelectionController>(
                 id: 'route_header',
-                builder: (controller) => Container(
-                  height: 44.h,
-                  padding: EdgeInsets.symmetric(horizontal: 4.w),
-                  decoration: BoxDecoration(
-                    color: AppColors.white,
-                    borderRadius: BorderRadius.circular(14.r),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: AppColors.shadowSoft,
-                        blurRadius: 8,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        onPressed: controller.closeVehicleSelection,
-                        icon: Icon(
-                          Icons.close,
-                          color: AppColors.textHeading,
-                          size: 20.sp,
-                        ),
-                      ),
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                controller.pickupMapLabel,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: AppTextStyles.homeSubtitle.copyWith(
-                                  color: AppColors.textHeading,
-                                  fontSize: 16.sp,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 4.w),
-                              child: Icon(
-                                Icons.arrow_right_alt,
-                                color: AppColors.textHeading,
-                                size: 18.sp,
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                controller.destinationMapLabel,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: AppTextStyles.homeSubtitle.copyWith(
-                                  color: AppColors.primary,
-                                  fontSize: 16.sp,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: controller.editRouteHeader,
-                        icon: Icon(
-                          Icons.edit_outlined,
-                          color: AppColors.textHeading,
-                          size: 20.sp,
-                        ),
-                      ),
-                    ],
-                  ),
+                builder: (controller) => AppMapRouteOneLineBar(
+                  pickupLabel: controller.pickupMapLabel,
+                  destinationLabel: controller.destinationMapLabel,
+                  onClose: controller.closeVehicleSelection,
+                  onEdit: controller.editRouteHeader,
                 ),
               ),
             ),

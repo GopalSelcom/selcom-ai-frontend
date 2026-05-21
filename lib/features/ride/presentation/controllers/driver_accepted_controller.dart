@@ -33,6 +33,7 @@ import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/map_marker_utils.dart';
+import '../../../../shared/utils/address_display_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
@@ -490,6 +491,7 @@ class DriverAcceptedController extends GetxController
     }
     _setDropRouteFallback();
     _hydrateSocketSeedPayloads(args);
+    _refreshMapRouteHeader();
   }
 
   void _setDropRouteFallback() {
@@ -557,8 +559,9 @@ class DriverAcceptedController extends GetxController
       destinationLatLng = LatLng(d.lat, d.lng);
     }
     final addr = d.address.trim();
-    if (addr.isNotEmpty) {
+    if (addr.isNotEmpty && addr != destinationAddress) {
       destinationAddress = addr;
+      _refreshMapRouteHeader();
     }
     final stops = r.stops;
     if (stops.isEmpty) {
@@ -1803,6 +1806,26 @@ class DriverAcceptedController extends GetxController
         return RideStatus.rideStarted;
     }
   }
+
+  static const String mapRouteHeaderId = 'map_route_header';
+
+  String get mapRoutePickupLabel {
+    if (pickupAddress.trim().isEmpty) {
+      return AppStrings.currentLocation.tr;
+    }
+    final line = compactAddressLine(pickupAddress);
+    return line.isEmpty ? AppStrings.currentLocation.tr : line;
+  }
+
+  String get mapRouteDestinationLabel {
+    if (destinationAddress.trim().isEmpty) {
+      return AppStrings.destination.tr;
+    }
+    final line = compactAddressLine(destinationAddress);
+    return line.isEmpty ? AppStrings.destination.tr : line;
+  }
+
+  void _refreshMapRouteHeader() => update([mapRouteHeaderId]);
 
   String get pickupTitle => _firstAddressLine(pickupAddress);
 

@@ -21,6 +21,7 @@ import '../../../../core/services/live_activity/live_activity_manager.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/map_marker_utils.dart';
+import '../../../../shared/utils/address_display_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/driver_search_timeout_from_cancel_time.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
@@ -51,6 +52,22 @@ class FindingDriverController extends GetxController {
   late final Map<String, dynamic>? fareBreakdown;
   final intermediateStops = <String>[].obs;
   final destinations = <LocationEntity>[].obs;
+
+  String get mapRoutePickupLabel {
+    if (pickupAddress.trim().isEmpty) {
+      return AppStrings.currentLocation.tr;
+    }
+    final line = compactAddressLine(pickupAddress);
+    return line.isEmpty ? AppStrings.currentLocation.tr : line;
+  }
+
+  String get mapRouteDestinationLabel {
+    if (destinationAddress.trim().isEmpty) {
+      return AppStrings.destination.tr;
+    }
+    final line = compactAddressLine(destinationAddress);
+    return line.isEmpty ? AppStrings.destination.tr : line;
+  }
 
   final nearbyDriverCount = 0.obs;
   final driverMarkerPoints = <LatLng>[].obs;
