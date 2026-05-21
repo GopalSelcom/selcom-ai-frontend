@@ -74,10 +74,7 @@ class PaymentMethodsController extends GetxController {
   void linkSelcomPesa() {
     selcomPhoneController.clear();
     selcomPesaStep.value = SelcomPesaStep.connect;
-    AppDialogs.showStandardBottomSheet(
-      sheet: const SelcomPesaFlowBottomSheet(),
-      barrierDismissible: true,
-    );
+    SelcomPesaFlowBottomSheet.show();
   }
 
   void openPhoneInput() {
@@ -87,10 +84,7 @@ class PaymentMethodsController extends GetxController {
   }
 
   void openLinkedAccountSheet() {
-    AppDialogs.showStandardBottomSheet(
-      sheet: const SelcomPesaLinkedBottomSheet(),
-      barrierDismissible: true,
-    );
+    SelcomPesaLinkedBottomSheet.show();
   }
 
   void unlinkAccount() {
