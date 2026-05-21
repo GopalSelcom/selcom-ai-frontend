@@ -21,11 +21,11 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
     final double bottomPadding = MediaQuery.paddingOf(context).bottom;
     final double computedBottomPadding = bottomPadding > 0
         ? (GetPlatform.isIOS
-            ? (bottomPadding - 12.h).clamp(
-                10.h > bottomPadding ? bottomPadding : 10.h,
-                bottomPadding,
-              )
-            : bottomPadding + 12.h)
+              ? (bottomPadding - 12.h).clamp(
+                  10.h > bottomPadding ? bottomPadding : 10.h,
+                  bottomPadding,
+                )
+              : bottomPadding + 12.h)
         : 12.h;
 
     return Container(
@@ -33,12 +33,7 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
         color: AppColors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(36.r)),
       ),
-      padding: EdgeInsets.only(
-        left: 16.w,
-        right: 16.w,
-        top: 20.h,
-        bottom: 0,
-      ),
+      padding: EdgeInsets.only(left: 16.w, right: 16.w, top: 20.h, bottom: 0),
       child: SafeArea(
         top: false,
         bottom: false,
@@ -153,6 +148,7 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
         AppPrimaryButton(
           label: AppStrings.continueLabel.tr,
           onPressed: controller.openPhoneInput,
+          showBottomInnerShadow: true,
         ),
       ],
     );
@@ -262,6 +258,7 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
                     key: const ValueKey('selcom-pesa-continue-visible'),
                     label: AppStrings.continueLabel.tr,
                     onPressed: controller.onPhoneContinue,
+                    showBottomInnerShadow: true,
                   )
                 : const SizedBox.shrink(
                     key: ValueKey('selcom-pesa-continue-hidden'),
@@ -458,6 +455,7 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
         AppPrimaryButton(
           label: AppStrings.takeSelfie.tr,
           onPressed: controller.takeSelfie,
+          showBottomInnerShadow: true,
         ),
       ],
     );

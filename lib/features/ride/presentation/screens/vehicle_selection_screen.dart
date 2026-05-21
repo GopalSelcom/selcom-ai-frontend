@@ -57,11 +57,12 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
     }
 
     // PaymentBar: top padding (18.h) + button (~56.h) + bottom padding
-    final double paymentBarHeight = 76.h +
+    final double paymentBarHeight =
+        76.h +
         (GetPlatform.isIOS
             ? (bottomPadding > 0
-                ? (bottomPadding - 10.h).clamp(12.h, bottomPadding)
-                : 18.h)
+                  ? (bottomPadding - 10.h).clamp(12.h, bottomPadding)
+                  : 18.h)
             : (bottomPadding > 0 ? bottomPadding + 8.h : 18.h));
 
     // Safety margin is zero since list is non-scrollable when <= 3 items are present
@@ -229,8 +230,11 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
       final double factor = _calculateInitialSheetSize(context);
       final int estimatesCount = controller.estimates.length;
       final bool hasMoreThan3 = estimatesCount > 3;
-      final double initialFactor = hasMoreThan3 ? factor.clamp(0.0, 0.6) : factor;
-      final double mapBottomPadding = MediaQuery.sizeOf(context).height * initialFactor;
+      final double initialFactor = hasMoreThan3
+          ? factor.clamp(0.0, 0.6)
+          : factor;
+      final double mapBottomPadding =
+          MediaQuery.sizeOf(context).height * initialFactor;
 
       final points = controller.routePoints.toList();
       final pickup = LatLng(
@@ -522,12 +526,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                 Expanded(
                   child: Text(
                     AppStrings.chooseRide.tr,
-                    style: AppTextStyles.homeTitle.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.black,
-                      letterSpacing: -0.4,
-                      height: 34 / 20,
-                    ),
+                    style: AppTextStyles.homeTitle,
                   ),
                 ),
                 VehicleSelectionPromoChip(controller: controller),

@@ -87,11 +87,11 @@ class AppStandardBottomSheet extends StatelessWidget {
                       style: AppTextStyles.homeTitle,
                     ),
                   if (subtitle != null && subtitle!.trim().isNotEmpty) ...[
-                    SizedBox(height: 6.h),
+                    SizedBox(height: 4.h),
                     Text(
                       subtitle!.trim(),
                       textAlign: TextAlign.center,
-                      style: AppTextStyles.homeSubtitle
+                      style: AppTextStyles.homeSubtitle,
                     ),
                   ],
                 ],
