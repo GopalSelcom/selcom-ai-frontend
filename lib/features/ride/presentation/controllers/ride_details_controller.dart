@@ -1,11 +1,15 @@
+import 'package:gal/gal.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/services/analytics_service.dart';
+import '../../../../core/services/error_reporting/error_reporter.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../ride_rating/domain/entities/ride_rating_ride_entity.dart';
@@ -15,16 +19,9 @@ import '../../../ride_rating/domain/usecases/skip_ride_rating_usecase.dart';
 import '../../../ride_rating/domain/usecases/submit_ride_rating_usecase.dart';
 import '../../../ride_rating/presentation/controllers/ride_rating_controller.dart';
 import '../../domain/repositories/ride_repository.dart';
-import 'package:gal/gal.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../shared/utils/app_dialogs.dart';
-import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../domain/utils/receipt_image_generator.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
 import '../../domain/utils/receipt_pdf_generator.dart';
+import '../widgets/receipt_options_bottom_sheet.dart';
 
 class RideDetailsController extends GetxController {
   RideDetailsController({
@@ -125,12 +122,9 @@ class RideDetailsController extends GetxController {
       openedFromCompletionFlow && canShowReviewInput && !hasExistingRating;
 
   void downloadSlip() {
-    AppDialogs.showAnimatedBottomSheet(
-      child: _ReceiptOptionsBottomSheet(
-        onDownload: _executeDownload,
-        onShare: _executeShare,
-      ),
-      barrierDismissible: true,
+    ReceiptOptionsBottomSheet.show(
+      onDownload: _executeDownload,
+      onShare: _executeShare,
     );
   }
 
@@ -286,161 +280,6 @@ class RideDetailsController extends GetxController {
         analyticsService: di.sl<AnalyticsService>(),
       ),
       permanent: true,
-    );
-  }
-}
-
-class _ReceiptOptionsBottomSheet extends StatelessWidget {
-  final VoidCallback onDownload;
-  final VoidCallback onShare;
-
-  const _ReceiptOptionsBottomSheet({
-    required this.onDownload,
-    required this.onShare,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
-    final double computedBottomPadding = bottomPadding > 0
-        ? (GetPlatform.isIOS
-            ? (bottomPadding - 12.h).clamp(
-                10.h > bottomPadding ? bottomPadding : 10.h,
-                bottomPadding,
-              )
-            : bottomPadding + 12.h)
-        : 12.h;
-    return Container(
-      padding: EdgeInsets.only(
-        left: 24.w,
-        right: 24.w,
-        top: 24.w,
-        bottom: 0,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        bottom: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40.w,
-              height: 4.h,
-              margin: EdgeInsets.fromLTRB(0,0,0,24.h),
-              decoration: BoxDecoration(
-                color: AppColors.dividerHandle,
-                borderRadius: BorderRadius.circular(2.r),
-              ),
-            ),
-            Text(
-              'Receipt Options',
-              style: AppTextStyles.sectionTitle.copyWith(fontSize: 20.sp),
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              'Choose how you would like to receive your receipt',
-              style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 32.h),
-            _OptionTile(
-              icon: Icons.download_rounded,
-              title: 'Download Slip',
-              subtitle: 'Save a copy to your gallery',
-              onTap: () {
-                Navigator.of(context).pop();
-                onDownload();
-              },
-            ),
-            SizedBox(height: 16.h),
-            _OptionTile(
-              icon: Icons.share_rounded,
-              title: 'Share Slip',
-              subtitle: 'Send receipt link to others',
-              onTap: () {
-                Navigator.of(context).pop();
-                onShare();
-              },
-            ),
-            SizedBox(height: computedBottomPadding),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _OptionTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  const _OptionTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16.r),
-      child: Container(
-        padding: EdgeInsets.all(16.w),
-        decoration: BoxDecoration(
-          border: Border.all(color: AppColors.borderLight),
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(12.w),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: AppColors.primary, size: 24.sp),
-            ),
-            SizedBox(width: 16.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: AppTextStyles.cardTitle.copyWith(fontSize: 16.sp),
-                  ),
-                  Text(
-                    subtitle,
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.arrow_forward_ios_rounded,
-              color: AppColors.textMuted,
-              size: 16.sp,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

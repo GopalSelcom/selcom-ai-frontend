@@ -95,6 +95,13 @@ class AppStrings {
       'do_not_share_your_personal_details_with_rider_be_safe_and_always_check_your_luggage';
   static const String done = 'done';
   static const String downloadSlip = 'download_slip';
+  static const String downloadSlipGallerySubtitle =
+      'download_slip_gallery_subtitle';
+  static const String chooseHowToReceiveReceipt =
+      'choose_how_to_receive_receipt';
+  static const String receiptOptions = 'receipt_options';
+  static const String shareSlip = 'share_slip';
+  static const String shareSlipSubtitle = 'share_slip_subtitle';
   static const String driverArrivedMapBadge = 'driver_arrived_map_badge';
   static const String driverArrivedPickupPrimary =
       'driver_arrived_pickup_primary';
