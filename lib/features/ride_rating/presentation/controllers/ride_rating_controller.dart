@@ -58,9 +58,6 @@ class RideRatingController extends GetxController {
     if (!hasSelectedRating || isSubmitting.value) {
       return false;
     }
-    if (selectedTags.isEmpty) {
-      return false;
-    }
     if (requiresComment) {
       return commentText.value.trim().isNotEmpty;
     }
@@ -71,7 +68,6 @@ class RideRatingController extends GetxController {
   bool get isRatingFormComplete {
     final r = selectedRating.value;
     if (r < 1) return false;
-    if (selectedTags.isEmpty) return false;
     if (r <= 2 && commentText.value.trim().isEmpty) return false;
     return true;
   }
@@ -195,15 +191,8 @@ class RideRatingController extends GetxController {
     }
     if (selectedRating.value == 0) {
       AppDialogs.showErrorDialog(
-        title:  AppStrings.ratingRequired.tr,
+        title: AppStrings.ratingRequired.tr,
         message: AppStrings.pleaseRateYourRideBeforeSubmitting.tr,
-      );
-      return;
-    }
-    if (selectedTags.isEmpty) {
-      AppDialogs.showErrorDialog(
-        title: AppStrings.tagRequired.tr,
-        message: AppStrings.pleaseSelectAtLeastOneTagBeforeSubmitting.tr,
       );
       return;
     }
@@ -231,7 +220,7 @@ class RideRatingController extends GetxController {
       if (!ok) {
         AppDialogs.showErrorDialog(
           title: AppStrings.submitFailed.tr,
-          message:AppStrings.unableToSubmitRatingNow.tr
+          message: AppStrings.unableToSubmitRatingNow.tr,
         );
         return;
       }
@@ -246,8 +235,8 @@ class RideRatingController extends GetxController {
       _resetSheetState(clearPendingRide: true);
       closeBottomSheet();
       AppDialogs.showSuccessDialog(
-        title:    AppStrings.thankYou.tr,
-        message:  AppStrings.yourRatingHasBeenSubmitted.tr,
+        title: AppStrings.thankYou.tr,
+        message: AppStrings.yourRatingHasBeenSubmitted.tr,
         onConfirm: onSuccessConfirmed,
       );
     });
@@ -372,7 +361,9 @@ class RideRatingController extends GetxController {
     }
 
     AppDialogs.showErrorDialog(
-      message: message.isEmpty ? AppStrings.anUnexpectedErrorOccurred.tr : message,
+      message: message.isEmpty
+          ? AppStrings.anUnexpectedErrorOccurred.tr
+          : message,
     );
   }
 
