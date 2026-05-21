@@ -121,11 +121,14 @@ class _AppTextFieldState extends State<AppTextField> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (widget.label != null) ...[
-          Text(widget.label!, style: AppTextStyles.cardTitle.copyWith(
-            color: AppColors.textMutedStrong,
-            fontWeight: FontWeight.w500,
-            fontSize: 15.h
-          ),),
+          Text(
+            widget.label!,
+            style: AppTextStyles.cardTitle.copyWith(
+              color: AppColors.textMutedStrong,
+              fontWeight: FontWeight.w500,
+              fontSize: 15.h,
+            ),
+          ),
           SizedBox(height: 8.h),
         ],
         ValueListenableBuilder<bool>(
@@ -181,11 +184,15 @@ class _AppTextFieldState extends State<AppTextField> {
                   counterText: "",
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.input),
-                    borderSide: const BorderSide(color: AppColors.inputBorderDefault),
+                    borderSide: const BorderSide(
+                      color: AppColors.inputBorderDefault,
+                    ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.input),
-                    borderSide: const BorderSide(color: AppColors.inputBorderDefault),
+                    borderSide: const BorderSide(
+                      color: AppColors.inputBorderDefault,
+                    ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.input),
@@ -197,11 +204,15 @@ class _AppTextFieldState extends State<AppTextField> {
                   ),
                   errorBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.input),
-                    borderSide: const BorderSide(color: AppColors.inputBorderError),
+                    borderSide: const BorderSide(
+                      color: AppColors.inputBorderError,
+                    ),
                   ),
                   focusedErrorBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.input),
-                    borderSide: const BorderSide(color: AppColors.inputBorderError),
+                    borderSide: const BorderSide(
+                      color: AppColors.inputBorderError,
+                    ),
                   ),
                 ),
               ),

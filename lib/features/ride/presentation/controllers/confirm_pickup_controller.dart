@@ -6,7 +6,6 @@ import 'package:flutter/scheduler.dart';
 
 import '../../../home/domain/repositories/home_repository.dart';
 import '../../domain/repositories/ride_repository.dart';
-import '../../../../shared/utils/app_dialogs.dart';
 import '../widgets/booking_for_someone_else_flow_bottom_sheet.dart';
 
 enum BookingMode { self, other }
@@ -151,10 +150,8 @@ class ConfirmPickupController extends GetxController {
         pickupLng: selectedLatLng.value.longitude,
       );
 
-      final result = await AppDialogs.showAnimatedBottomSheet<Map<String, dynamic>>(
-        child: const BookingForSomeoneElseFlowBottomSheet(),
-        barrierDismissible: true,
-      );
+      final result =
+          await BookingForSomeoneElseFlowBottomSheet.show();
 
       if (result == null) {
         return;

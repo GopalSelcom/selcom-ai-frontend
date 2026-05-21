@@ -7,8 +7,9 @@ import '../../core/theme/app_text_styles.dart';
 
 /// App-wide modal bottom sheet shell: drag handle, title, subtitle, and body.
 ///
-/// Open via [AppDialogs.showStandardBottomSheet] so presentation matches other
-/// overlays (blur barrier, slide animation, safe area).
+/// Use via [AppDialogs.showStandardBottomSheet]:
+/// - pass this widget as `sheet:` when title/subtitle change inside the flow, or
+/// - pass only the body as `content:` and set title/subtitle on [AppDialogs].
 class AppStandardBottomSheet extends StatelessWidget {
   const AppStandardBottomSheet({
     super.key,
@@ -20,6 +21,7 @@ class AppStandardBottomSheet extends StatelessWidget {
     this.showHeaderDivider = true,
     this.contentPadding,
     this.maxHeightFactor = 0.75,
+    this.headerTextAlign = TextAlign.start,
   });
 
   final String? title;
@@ -37,6 +39,9 @@ class AppStandardBottomSheet extends StatelessWidget {
 
   /// Max height of the scrollable body as a fraction of screen height.
   final double maxHeightFactor;
+
+  /// Title and subtitle alignment ([TextAlign.start] or [TextAlign.center]).
+  final TextAlign headerTextAlign;
 
   bool get _hasHeader =>
       (title != null && title!.trim().isNotEmpty) ||
@@ -78,19 +83,19 @@ class AppStandardBottomSheet extends StatelessWidget {
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 24.w),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment: _columnAlignFor(headerTextAlign),
                 children: [
                   if (title != null && title!.trim().isNotEmpty)
                     Text(
                       title!.trim(),
-                      textAlign: TextAlign.center,
+                      textAlign: headerTextAlign,
                       style: AppTextStyles.homeTitle,
                     ),
                   if (subtitle != null && subtitle!.trim().isNotEmpty) ...[
                     SizedBox(height: 4.h),
                     Text(
                       subtitle!.trim(),
-                      textAlign: TextAlign.center,
+                      textAlign: headerTextAlign,
                       style: AppTextStyles.homeSubtitle,
                     ),
                   ],
@@ -122,5 +127,17 @@ class AppStandardBottomSheet extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  static CrossAxisAlignment _columnAlignFor(TextAlign align) {
+    switch (align) {
+      case TextAlign.center:
+        return CrossAxisAlignment.stretch;
+      case TextAlign.end:
+      case TextAlign.right:
+        return CrossAxisAlignment.end;
+      default:
+        return CrossAxisAlignment.start;
+    }
   }
 }

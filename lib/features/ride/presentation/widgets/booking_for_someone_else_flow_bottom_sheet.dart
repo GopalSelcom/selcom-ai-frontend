@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
+
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
-import '../../../../shared/widgets/app_animated_reveal.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
+import '../../../../shared/widgets/app_standard_bottom_sheet.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
 import '../../../../shared/utils/tanzania_phone_validation.dart';
@@ -18,6 +20,14 @@ enum BookingFlowStep { choice, details }
 
 class BookingForSomeoneElseFlowBottomSheet extends StatefulWidget {
   const BookingForSomeoneElseFlowBottomSheet({super.key});
+
+  /// Opens the multi-step booking sheet via [AppDialogs.showStandardBottomSheet].
+  static Future<Map<String, dynamic>?> show() {
+    return AppDialogs.showStandardBottomSheet<Map<String, dynamic>>(
+      sheet: const BookingForSomeoneElseFlowBottomSheet(),
+      barrierDismissible: true,
+    );
+  }
 
   @override
   State<BookingForSomeoneElseFlowBottomSheet> createState() =>
@@ -70,54 +80,55 @@ class _BookingForSomeoneElseFlowBottomSheetState
     }
   }
 
+  String? get _sheetTitle {
+    switch (_currentStep) {
+      case BookingFlowStep.choice:
+        return AppStrings.bookingForSomeoneElsePrompt.tr;
+      case BookingFlowStep.details:
+        return AppStrings.passengerDetailsTitle.tr;
+    }
+  }
+
+  String? get _sheetSubtitle {
+    switch (_currentStep) {
+      case BookingFlowStep.choice:
+        return AppStrings.bookingForSomeoneElseSubtitle.tr;
+      case BookingFlowStep.details:
+        return AppStrings.notificationPhoneSubtitle.tr;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final mq = MediaQuery.of(context);
-    final keyboardOpen = mq.viewInsets.bottom > 0;
-    // Keyboard lift is applied by [AppDialogs.showAnimatedBottomSheet].
-    final bottomPadding = 24.h + (keyboardOpen ? 0 : mq.padding.bottom);
-    final maxSheetHeight = mq.size.height * 0.92 - mq.viewInsets.bottom;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(40.r)),
+    return AppStandardBottomSheet(
+      title: _sheetTitle,
+      subtitle: _sheetSubtitle,
+      headerTextAlign: TextAlign.start,
+      maxHeightFactor: 0.92,
+      content: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        switchInCurve: Curves.easeInOutCubic,
+        switchOutCurve: Curves.easeInOutCubic,
+        transitionBuilder: (child, animation) {
+          final offsetAnimation = Tween<Offset>(
+            begin: const Offset(0.1, 0.0),
+            end: Offset.zero,
+          ).animate(animation);
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(position: offsetAnimation, child: child),
+          );
+        },
+        child: _currentStep == BookingFlowStep.choice
+            ? _buildChoiceStep()
+            : _buildDetailsStep(),
       ),
-      constraints: BoxConstraints(maxHeight: maxSheetHeight),
-      child: SafeArea(
-        top: false,
-        bottom: false,
-        child: SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, bottomPadding),
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          child: AnimatedSize(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOutCubic,
-            alignment: Alignment.topCenter,
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              switchInCurve: Curves.easeInOutCubic,
-              switchOutCurve: Curves.easeInOutCubic,
-              transitionBuilder: (child, animation) {
-                final offsetAnimation = Tween<Offset>(
-                  begin: const Offset(0.1, 0.0),
-                  end: Offset.zero,
-                ).animate(animation);
-                return FadeTransition(
-                  opacity: animation,
-                  child: SlideTransition(
-                    position: offsetAnimation,
-                    child: child,
-                  ),
-                );
-              },
-              child: _currentStep == BookingFlowStep.choice
-                  ? _buildChoiceStep()
-                  : _buildDetailsStep(),
-            ),
-          ),
-        ),
-      ),
+      footer: _currentStep == BookingFlowStep.details && _canConfirm
+          ? AppPrimaryButton(
+              label: AppStrings.confirm.tr,
+              onPressed: _onConfirmPressed,
+            )
+          : null,
     );
   }
 
@@ -127,35 +138,11 @@ class _BookingForSomeoneElseFlowBottomSheetState
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          AppStrings.bookingForSomeoneElsePrompt.tr,
-          textAlign: TextAlign.start,
-          style: AppTextStyles.homeTitle.copyWith(
-            fontWeight: FontWeight.w700,
-            fontSize: 18.sp,
-            color: AppColors.textHeading,
-            height: 20 / 18,
-            letterSpacing: -0.4,
-          ),
-        ),
-        SizedBox(height: 10.h),
-        Text(
-          AppStrings.bookingForSomeoneElseSubtitle.tr,
-          textAlign: TextAlign.start,
-          style: AppTextStyles.homeCaption.copyWith(
-            color: AppColors.textBody,
-            fontSize: 12.sp,
-            height: 20 / 12,
-          ),
-        ),
-        SizedBox(height: 20.h),
         _bookingChoiceRow(
           icon: Iconsax.user,
           title: AppStrings.bookingRideOptionForMe.tr,
           onTap: () {
-            Navigator.of(context).pop({
-              'mode': BookingMode.self,
-            });
+            Navigator.of(context).pop({'mode': BookingMode.self});
           },
         ),
         SizedBox(height: 12.h),
@@ -179,39 +166,6 @@ class _BookingForSomeoneElseFlowBottomSheetState
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            IconButton(
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-              icon: const Icon(Icons.arrow_back, color: AppColors.textHeading),
-              onPressed: _goBack,
-            ),
-            SizedBox(width: 8.w),
-            Expanded(
-              child: Text(
-                AppStrings.passengerDetailsTitle.tr,
-                textAlign: TextAlign.start,
-                style: AppTextStyles.homeTitle.copyWith(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 18.sp,
-                  color: AppColors.textHeading,
-                ),
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: 8.h),
-        Text(
-          AppStrings.notificationPhoneSubtitle.tr,
-          textAlign: TextAlign.start,
-          style: AppTextStyles.homeCaption.copyWith(
-            color: AppColors.textBody,
-            fontSize: 14.sp,
-            height: 1.35,
-          ),
-        ),
-        SizedBox(height: 20.h),
         AppTextField(
           controller: _name,
           label: AppStrings.passengerNameLabel.tr,
@@ -224,9 +178,7 @@ class _BookingForSomeoneElseFlowBottomSheetState
         AppTextField(
           controller: _phone,
           label: AppStrings.passengerPhoneLabel.tr,
-          hintText: PhoneNationalRules.hintForIso(
-            TanzaniaPhoneValidation.iso2,
-          ),
+          hintText: PhoneNationalRules.hintForIso(TanzaniaPhoneValidation.iso2),
           keyboardType: TextInputType.phone,
           inputFormatters: PhoneNationalRules.inputFormattersForIso(
             TanzaniaPhoneValidation.iso2,
@@ -261,18 +213,6 @@ class _BookingForSomeoneElseFlowBottomSheetState
           errorText: _phoneError,
           onChanged: (_) {},
         ),
-        AppAnimatedReveal(
-          show: _canConfirm,
-          visibleKey: const ValueKey('passenger_details_confirm_on'),
-          hiddenKey: const ValueKey('passenger_details_confirm_off'),
-          child: Padding(
-            padding: EdgeInsets.only(top: 24.h),
-            child: AppPrimaryButton(
-              label: AppStrings.confirm.tr,
-              onPressed: _onConfirmPressed,
-            ),
-          ),
-        ),
       ],
     );
   }
@@ -296,11 +236,9 @@ class _BookingForSomeoneElseFlowBottomSheetState
       return;
     }
 
-    Navigator.of(context).pop({
-      'mode': BookingMode.other,
-      'name': trimmedName,
-      'phone': e164,
-    });
+    Navigator.of(
+      context,
+    ).pop({'mode': BookingMode.other, 'name': trimmedName, 'phone': e164});
   }
 
   Widget _bookingChoiceRow({
