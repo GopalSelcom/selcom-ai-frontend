@@ -18,6 +18,11 @@ class ContactUsScreen extends GetView<ContactUsController> {
 
   @override
   Widget build(BuildContext context) {
+    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
+    final double computedBottomPadding = bottomPadding > 0
+        ? (GetPlatform.isIOS ? 0 : 8.h)
+        : 16.h;
+
     return Scaffold(
       backgroundColor: AppColors.white,
       body: Column(
@@ -72,7 +77,7 @@ class ContactUsScreen extends GetView<ContactUsController> {
             child: Obx(
               () => Padding(
                 padding: EdgeInsets.only(
-                  bottom: controller.canSubmit.value ? 16.h : 0,
+                  bottom: controller.canSubmit.value ? computedBottomPadding : 0,
                   left: 24.w,
                   right: 24.w,
                 ),
@@ -130,12 +135,7 @@ class ContactUsScreen extends GetView<ContactUsController> {
   void _showReasonPicker(BuildContext context) {
     final double bottomPadding = MediaQuery.paddingOf(context).bottom;
     final double computedBottomPadding = bottomPadding > 0
-        ? (GetPlatform.isIOS
-            ? (bottomPadding - 12.h).clamp(
-                10.h > bottomPadding ? bottomPadding : 10.h,
-                bottomPadding,
-              )
-            : bottomPadding + 12.h)
+        ? (GetPlatform.isIOS ? 0.0 : 8.h)
         : 12.h;
     AppDialogs.showAnimatedBottomSheet(
       barrierDismissible: true,
@@ -150,7 +150,7 @@ class ContactUsScreen extends GetView<ContactUsController> {
         ),
         child: SafeArea(
           top: false,
-          bottom: false,
+          bottom: true,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

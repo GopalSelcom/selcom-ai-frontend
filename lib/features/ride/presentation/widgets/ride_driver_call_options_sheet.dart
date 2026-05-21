@@ -27,12 +27,7 @@ class RideDriverCallOptionsSheet {
     final context = Get.context;
     final double bottomPadding = context != null ? MediaQuery.paddingOf(context).bottom : 0.0;
     final double computedBottomPadding = bottomPadding > 0
-        ? (GetPlatform.isIOS
-            ? (bottomPadding - 12.h).clamp(
-                10.h > bottomPadding ? bottomPadding : 10.h,
-                bottomPadding,
-              )
-            : bottomPadding + 12.h)
+        ? (GetPlatform.isIOS ? 0.0 : 8.h)
         : 12.h;
 
     AppDialogs.showAnimatedBottomSheet(
@@ -44,7 +39,7 @@ class RideDriverCallOptionsSheet {
         ),
         child: SafeArea(
           top: false,
-          bottom: false,
+          bottom: true,
           child: Padding(
             padding: EdgeInsets.only(
               left: 16.w,

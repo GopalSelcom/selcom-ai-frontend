@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -52,6 +53,10 @@ class AppStandardBottomSheet extends StatelessWidget {
     final maxBodyHeight = MediaQuery.sizeOf(context).height * maxHeightFactor;
     final bodyPadding =
         contentPadding ?? EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 8.h);
+    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
+    final double computedBottomPadding = bottomPadding > 0
+        ? (GetPlatform.isIOS ? 0.0 : 8.h)
+        : 16.h;
 
     return Container(
       clipBehavior: Clip.antiAlias,
@@ -118,12 +123,20 @@ class AppStandardBottomSheet extends StatelessWidget {
             child: SingleChildScrollView(padding: bodyPadding, child: content),
           ),
           if (footer != null) ...[
-            Padding(
-              padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 16.h),
-              child: footer!,
+            SafeArea(
+              top: false,
+              bottom: true,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, computedBottomPadding),
+                child: footer!,
+              ),
             ),
           ] else
-            SizedBox(height: 16.h),
+            SafeArea(
+              top: false,
+              bottom: true,
+              child: SizedBox(height: computedBottomPadding),
+            ),
         ],
       ),
     );
