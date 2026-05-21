@@ -420,6 +420,7 @@ class LanguageSw extends Languages {
     'share': 'Shiriki',
     'safety': 'Usalama',
     'safety_options': 'Chaguo za Usalama',
+    'safety_options_subtitle': '',
     'share_live_location': 'Shiriki eneo la moja kwa moja',
     'selcom_go_sos_helpline': 'Namba ya dharura ya Selcom Go',
     'call_police': 'Piga polisi',
@@ -1590,6 +1591,12 @@ class LanguageSw extends Languages {
 
   @override
   String get safetyAndPrivacy => values['safety_and_privacy'] ?? '';
+
+  @override
+  String get safetyOptions => values['safety_options'] ?? '';
+
+  @override
+  String get safetyOptionsSubtitle => values['safety_options_subtitle'] ?? '';
 
   @override
   String get saveThisAddressFirstThenYouCanBookFromHere =>

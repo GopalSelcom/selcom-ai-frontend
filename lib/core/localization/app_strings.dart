@@ -556,6 +556,7 @@ class AppStrings {
   static const String share = 'share';
   static const String safety = 'safety';
   static const String safetyOptions = 'safety_options';
+  static const String safetyOptionsSubtitle = 'safety_options_subtitle';
   static const String shareLiveLocation = 'share_live_location';
   static const String selcomGoSosHelpline = 'selcom_go_sos_helpline';
   static const String callPolice = 'call_police';

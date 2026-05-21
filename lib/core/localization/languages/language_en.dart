@@ -478,6 +478,8 @@ class LanguageEn extends Languages {
     'share': 'Share',
     'safety': 'Safety',
     'safety_options': 'Safety Options',
+    'safety_options_subtitle':
+        'Share your live location or reach emergency contacts if you need help.',
     'share_live_location': 'Share Live Location',
     'selcom_go_sos_helpline': 'Selcom Go SOS helpline',
     'call_police': 'Call police',
@@ -1674,6 +1676,12 @@ class LanguageEn extends Languages {
 
   @override
   String get safetyAndPrivacy => values['safety_and_privacy'] ?? '';
+
+  @override
+  String get safetyOptions => values['safety_options'] ?? '';
+
+  @override
+  String get safetyOptionsSubtitle => values['safety_options_subtitle'] ?? '';
 
   @override
   String get saveThisAddressFirstThenYouCanBookFromHere =>
