@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 
+import '../../core/localization/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../data/countries_phone_data.dart';
-import '../../shared/utils/app_dialogs.dart';
+import '../utils/app_dialogs.dart';
 
 /// Duka-style: emoji flag + dial code, full list from [Countries.all] in a sheet.
 class PhoneCountryPickerChip extends StatelessWidget {
@@ -22,7 +24,7 @@ class PhoneCountryPickerChip extends StatelessWidget {
     return Material(
       color: AppColors.transparent,
       child: InkWell(
-        onTap: () => _openSheet(context),
+        onTap: () => _openSheet(),
         borderRadius: BorderRadius.circular(16.r),
         child: Container(
           height: 54.h,
@@ -65,25 +67,27 @@ class PhoneCountryPickerChip extends StatelessWidget {
     );
   }
 
-  Future<void> _openSheet(BuildContext context) async {
-    await AppDialogs.showAnimatedBottomSheet<void>(
+  Future<void> _openSheet() {
+    return AppDialogs.showStandardBottomSheet<void>(
+      title: AppStrings.selectCountry.tr,
+      subtitle: AppStrings.selectCountrySubtitle.tr,
+      headerTextAlign: TextAlign.start,
+      maxHeightFactor: 0.85,
       barrierDismissible: true,
-      child: _CountryPickerSheet(
+      content: _CountryPickerSheet(
         selected: selected,
-        onSelect: (c) {
-          Navigator.of(context).pop();
-          onChanged(c);
+        onSelect: (country) {
+          Get.back<void>();
+          onChanged(country);
         },
       ),
     );
   }
 }
 
+/// Country list body for [AppDialogs.showStandardBottomSheet].
 class _CountryPickerSheet extends StatefulWidget {
-  const _CountryPickerSheet({
-    required this.selected,
-    required this.onSelect,
-  });
+  const _CountryPickerSheet({required this.selected, required this.onSelect});
 
   final CountryData selected;
   final ValueChanged<CountryData> onSelect;
@@ -127,12 +131,28 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
     });
   }
 
+  /// Space used by [AppStandardBottomSheet] above the scrollable body.
+  static double _standardSheetHeaderHeight(BuildContext context) {
+    return 10.h + 5.h + 13.h + 56.h + 14.h + 1.h + 16.h + 8.h;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final mq = MediaQuery.of(context);
-    final bottom = mq.viewInsets.bottom;
-    final maxSheetH = mq.size.height * 0.72;
-    final sheetH = maxSheetH.clamp(320.0, 560.0);
+    final media = MediaQuery.of(context);
+    final screenH = media.size.height;
+    final keyboard = media.viewInsets.bottom;
+    final safeBottom = media.padding.bottom;
+
+    // Match [AppStandardBottomSheet] max body (0.85) minus chrome and keyboard.
+    final bodyMaxHeight = (screenH * 0.85 -
+            keyboard -
+            _standardSheetHeaderHeight(context) -
+            safeBottom)
+        .clamp(160.0, screenH * 0.55);
+
+    final searchBlockHeight = 56.h;
+    final listHeight = (bodyMaxHeight - searchBlockHeight - 12.h)
+        .clamp(80.0, bodyMaxHeight - searchBlockHeight);
 
     // Sheet uses light surfaces; force dark input/list text when app theme is dark.
     final lightOnSheet = ThemeData(
@@ -148,86 +168,67 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
 
     return Theme(
       data: lightOnSheet,
-      child: Padding(
-        padding: EdgeInsets.only(bottom: bottom),
-        child: Material(
-          color: AppColors.cardBackground,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-          clipBehavior: Clip.antiAlias,
-          child: SizedBox(
-            height: sheetH,
-            child: SafeArea(
-              top: false,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                Padding(
-                  padding: EdgeInsets.fromLTRB(16.w, 12.h, 8.w, 8.h),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Select country',
-                          style: AppTextStyles.homeTitle.copyWith(
-                            fontSize: 17.sp,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textHeading,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.close, color: AppColors.textBody, size: 22.sp),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ],
+      child: SizedBox(
+        height: bodyMaxHeight,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              controller: _search,
+              keyboardType: TextInputType.text,
+              style: AppTextStyles.body.copyWith(
+                fontSize: 16.sp,
+                color: AppColors.textHeading,
+              ),
+              cursorColor: AppColors.primary,
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: AppColors.surfaceSubtle,
+                hintText: AppStrings.searchCountry.tr,
+                hintStyle: AppTextStyles.hint.copyWith(
+                  fontSize: 14.sp,
+                  color: AppColors.textHint,
+                ),
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: AppColors.textBody,
+                  size: 22.sp,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: const BorderSide(color: AppColors.borderDefault),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: const BorderSide(color: AppColors.borderDefault),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: const BorderSide(
+                    color: AppColors.primary,
+                    width: 1.5,
                   ),
                 ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w),
-                  child: TextField(
-                    controller: _search,
-                    keyboardType: TextInputType.text,
-                    style: AppTextStyles.body.copyWith(
-                      fontSize: 16.sp,
-                      color: AppColors.textHeading,
-                    ),
-                    cursorColor: AppColors.primary,
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: AppColors.surfaceSubtle,
-                      hintText: 'Search country…',
-                      hintStyle: AppTextStyles.hint.copyWith(
-                        fontSize: 14.sp,
-                        color: AppColors.textHint,
-                      ),
-                      prefixIcon: Icon(Icons.search, color: AppColors.textBody, size: 22.sp),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: const BorderSide(color: AppColors.borderDefault),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: const BorderSide(color: AppColors.borderDefault),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-                      ),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
-                    ),
-                  ),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12.w,
+                  vertical: 12.h,
                 ),
-                SizedBox(height: 12.h),
-                Expanded(
-                  child: _filtered.isEmpty
+              ),
+            ),
+            SizedBox(height: 12.h),
+            SizedBox(
+              height: listHeight,
+              child: _filtered.isEmpty
                   ? Center(
                       child: Text(
-                        'No countries found',
-                        style: AppTextStyles.homeSubtitle.copyWith(color: AppColors.textBody),
+                        AppStrings.noCountriesFound.tr,
+                        style: AppTextStyles.homeSubtitle.copyWith(
+                          color: AppColors.textBody,
+                        ),
                       ),
                     )
                   : ListView.separated(
-                      padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 24.h),
+                      padding: EdgeInsets.only(bottom: 8.h),
                       itemCount: _filtered.length,
                       separatorBuilder: (_, __) => SizedBox(height: 8.h),
                       itemBuilder: (context, i) {
@@ -269,7 +270,11 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
                                 ),
                                 if (isSel) ...[
                                   SizedBox(width: 8.w),
-                                  Icon(Icons.check_circle, color: AppColors.primary, size: 20.sp),
+                                  Icon(
+                                    Icons.check_circle,
+                                    color: AppColors.primary,
+                                    size: 20.sp,
+                                  ),
                                 ],
                               ],
                             ),
@@ -277,11 +282,8 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
                         );
                       },
                     ),
-                ),
-              ],
             ),
-          ),
-          ),
+          ],
         ),
       ),
     );

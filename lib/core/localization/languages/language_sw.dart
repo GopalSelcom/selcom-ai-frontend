@@ -354,6 +354,9 @@ class LanguageSw extends Languages {
     'select_anearby_point_for_easier_pickup': '',
     'select_apayment_method': '',
     'select_country': '',
+    'select_country_subtitle': '',
+    'search_country': '',
+    'no_countries_found': '',
     'select_areason': '',
     'select_a_reason_subtitle': '',
     'select_avehicle_and_payment_method': '',
@@ -1715,6 +1718,16 @@ class LanguageSw extends Languages {
 
   @override
   String get selectCountry => values['select_country'] ?? '';
+
+  @override
+  String get selectCountrySubtitle =>
+      values['select_country_subtitle'] ?? '';
+
+  @override
+  String get searchCountry => values['search_country'] ?? '';
+
+  @override
+  String get noCountriesFound => values['no_countries_found'] ?? '';
 
   @override
   String get selectAReason => values['select_areason'] ?? '';
