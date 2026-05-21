@@ -19,7 +19,7 @@ class MyRidesScreen extends StatelessWidget {
     final MyRidesController controller = Get.put(sl<MyRidesController>());
 
     return Scaffold(
-      backgroundColor: AppColors.pageBackground,
+      backgroundColor: AppColors.white,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

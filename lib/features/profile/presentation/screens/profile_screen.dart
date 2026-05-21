@@ -241,7 +241,6 @@ class ProfileScreen extends StatelessWidget {
                                 color: AppColors.white,
                                 fontWeight: FontWeight.w800,
                                 fontSize: 30.sp,
-                                height: 1.6,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -257,7 +256,7 @@ class ProfileScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      SizedBox(height: 4.h),
+                      // SizedBox(height: 4.h),
                       Text(
                         mobile,
                         style: AppTextStyles.body.copyWith(
