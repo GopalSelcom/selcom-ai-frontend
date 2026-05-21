@@ -233,7 +233,7 @@ class HomeScreen extends GetView<HomeController> {
           return ListView(
             controller: scrollController,
             physics: const ClampingScrollPhysics(),
-            clipBehavior: Clip.none,
+            clipBehavior: Clip.hardEdge,
             padding: EdgeInsets.zero,
             children: [
               Padding(
