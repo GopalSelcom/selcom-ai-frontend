@@ -86,7 +86,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
         FocusManager.instance.primaryFocus?.unfocus();
-        Future.delayed(const Duration(milliseconds: 250), () {
+        Future.delayed(const Duration(milliseconds: 150), () {
           if (context.mounted) {
             Navigator.of(context).pop();
           }
