@@ -216,6 +216,8 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
             controller: controller.selcomPhoneController,
             keyboardType: TextInputType.phone,
             autofocus: true,
+            textFieldBackgroundColor: AppColors.pageBackground,
+            borderColor: AppColors.borderWalletCard,
             errorText: controller.phoneError.value.isEmpty
                 ? null
                 : controller.phoneError.value,
@@ -394,7 +396,7 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
                 child: Text(
                   AppStrings.changePhoneNumber.tr,
                   style: AppTextStyles.body.copyWith(
-                    color: AppColors.textBody,
+                    color: AppColors.primary,
                     fontWeight: FontWeight.w500,
                     fontSize: 15.sp,
                     height: 20 / 15,
