@@ -232,12 +232,14 @@ class RideRatingController extends GetxController {
           'tags_count': selectedTags.length,
         },
       );
-      _resetSheetState(clearPendingRide: true);
       closeBottomSheet();
       AppDialogs.showSuccessDialog(
         title: AppStrings.thankYou.tr,
         message: AppStrings.yourRatingHasBeenSubmitted.tr,
-        onConfirm: onSuccessConfirmed,
+        onConfirm: () {
+          _resetSheetState(clearPendingRide: true);
+          onSuccessConfirmed?.call();
+        },
       );
     });
   }
