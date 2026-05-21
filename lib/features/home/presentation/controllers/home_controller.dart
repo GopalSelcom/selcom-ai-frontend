@@ -1163,7 +1163,10 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }
 
   void closeLocationSelection() {
-    Get.back();
+    FocusManager.instance.primaryFocus?.unfocus();
+    Future.delayed(const Duration(milliseconds: 150), () {
+      Get.back();
+    });
   }
 
   Future<void> proceedToBookingFromLocationSelection({

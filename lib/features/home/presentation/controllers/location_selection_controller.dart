@@ -7,6 +7,8 @@ import '../controllers/home_controller.dart';
 class LocationSelectionController extends GetxController {
   LocationSelectionController();
 
+  bool _isDisposed = false;
+
   late final TextEditingController pickupController;
   late final TextEditingController destinationController;
   late final FocusNode pickupFocusNode;
@@ -183,30 +185,55 @@ class LocationSelectionController extends GetxController {
       });
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      focusActiveSegment();
+      Future.delayed(const Duration(milliseconds: 350), () {
+        if (!_isDisposed) {
+          focusActiveSegment(immediate: true);
+        }
+      });
     });
   }
 
-  /// One segment field should own focus. Clears others first to avoid multiple cursors.
-  void focusActiveSegment() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      pickupFocusNode.unfocus();
-      destinationFocusNode.unfocus();
-      for (final n in extraDestinationFocusNodes.toList()) {
-        n.unfocus();
-      }
+  /// One segment field should own focus. Clears other focus nodes to avoid multiple cursors.
+  void focusActiveSegment({bool immediate = false}) {
+    if (_isDisposed) return;
+
+    void doFocus() {
+      if (_isDisposed) return;
       final seg = activeSegmentIndex.value;
       if (seg == 0) {
+        destinationFocusNode.unfocus();
+        for (final n in extraDestinationFocusNodes.toList()) {
+          n.unfocus();
+        }
         pickupFocusNode.requestFocus();
       } else if (seg == 1) {
+        pickupFocusNode.unfocus();
+        for (final n in extraDestinationFocusNodes.toList()) {
+          n.unfocus();
+        }
         destinationFocusNode.requestFocus();
       } else {
-        final i = seg - 2;
-        if (i >= 0 && i < extraDestinationFocusNodes.length) {
-          extraDestinationFocusNodes[i].requestFocus();
+        pickupFocusNode.unfocus();
+        destinationFocusNode.unfocus();
+        final targetIdx = seg - 2;
+        for (var idx = 0; idx < extraDestinationFocusNodes.length; idx++) {
+          if (idx != targetIdx) {
+            extraDestinationFocusNodes[idx].unfocus();
+          }
+        }
+        if (targetIdx >= 0 && targetIdx < extraDestinationFocusNodes.length) {
+          extraDestinationFocusNodes[targetIdx].requestFocus();
         }
       }
-    });
+    }
+
+    if (immediate) {
+      doFocus();
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        doFocus();
+      });
+    }
   }
 
   void syncPickupFromLiveAddress() {
@@ -294,6 +321,7 @@ class LocationSelectionController extends GetxController {
 
   @override
   void onClose() {
+    _isDisposed = true;
     pickupController.dispose();
     destinationController.dispose();
     for (final c in extraDestinationControllers) {
