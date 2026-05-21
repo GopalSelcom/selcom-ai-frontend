@@ -3,9 +3,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' hide Marker;
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
@@ -297,8 +297,8 @@ class ConfirmPickupScreen extends StatelessWidget {
                           Obx(() {
                             c.noteChipRevision.value;
                             final expanded = c.isPickupNoteExpanded.value;
-                            final noteText =
-                                c.noteForDriverController.text.trim();
+                            final noteText = c.noteForDriverController.text
+                                .trim();
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
@@ -321,8 +321,9 @@ class ConfirmPickupScreen extends StatelessWidget {
                                         ),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: AppColors.primary
-                                                .withValues(alpha: 0.15),
+                                            color: AppColors.primary.withValues(
+                                              alpha: 0.15,
+                                            ),
                                             blurRadius: 8,
                                             offset: const Offset(0, 2),
                                           ),
@@ -340,10 +341,10 @@ class ConfirmPickupScreen extends StatelessWidget {
                                                 .tr,
                                             style: AppTextStyles.homeSubtitle
                                                 .copyWith(
-                                              color: AppColors.primary,
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 15.sp,
-                                            ),
+                                                  color: AppColors.primary,
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 15.sp,
+                                                ),
                                           ),
                                           SizedBox(width: 10.w),
                                           Expanded(
@@ -357,24 +358,23 @@ class ConfirmPickupScreen extends StatelessWidget {
                                                     child: Text(
                                                       noteText,
                                                       maxLines: 1,
-                                                      overflow: TextOverflow
-                                                          .ellipsis,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
                                                       textAlign: TextAlign.end,
                                                       style: AppTextStyles
                                                           .homeCaption
                                                           .copyWith(
-                                                        color: AppColors
-                                                            .textBody,
-                                                        fontSize: 13.sp,
-                                                      ),
+                                                            color: AppColors
+                                                                .textBody,
+                                                            fontSize: 13.sp,
+                                                          ),
                                                     ),
                                                   ),
                                                 if (noteText.isNotEmpty &&
                                                     !expanded)
                                                   SizedBox(width: 6.w),
                                                 AnimatedRotation(
-                                                  turns:
-                                                      expanded ? 0.5 : 0.0,
+                                                  turns: expanded ? 0.5 : 0.0,
                                                   duration: const Duration(
                                                     milliseconds: 220,
                                                   ),
@@ -415,14 +415,16 @@ class ConfirmPickupScreen extends StatelessWidget {
                                                   TextInputType.multiline,
                                               maxLines: 2,
                                               textInputAction:
-                                                  TextInputAction.newline,
+                                                  TextInputAction.done,
                                               scrollPadding:
                                                   EdgeInsets.fromLTRB(
-                                                20,
-                                                mq.padding.top + 56,
-                                                20,
-                                                mq.viewInsets.bottom + 120,
-                                              ),
+                                                    20,
+                                                    mq.padding.top + 56,
+                                                    20,
+                                                    mq.viewInsets.bottom + 120,
+                                                  ),
+                                              textFieldBackgroundColor:
+                                                  AppColors.surfaceSubtle,
                                               onChanged: (_) {},
                                             ),
                                           ],

@@ -12,7 +12,6 @@ import '../../../../shared/widgets/app_focus_input_field.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/phone_country_picker_chip.dart';
 import '../controllers/auth_controller.dart';
-import '../../../../shared/utils/app_dialogs.dart';
 
 class PhoneInputScreen extends GetView<AuthController> {
   const PhoneInputScreen({super.key});
