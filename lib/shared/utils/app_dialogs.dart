@@ -9,6 +9,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/services/storage_service.dart';
+import '../widgets/app_cancel_flow_dialog.dart';
 import '../widgets/app_primary_button.dart';
 import '../widgets/app_standard_bottom_sheet.dart';
 
@@ -82,6 +83,34 @@ class AppDialogs {
           },
         );
       },
+    );
+  }
+
+  /// Ride cancel flow modal (title, optional subtitle, custom body/actions).
+  static Future<T?> showCancelFlowDialog<T>({
+    required String title,
+    String? subtitle,
+    required Widget content,
+    bool canPop = true,
+    bool barrierDismissible = false,
+    EdgeInsetsGeometry? padding,
+    double? spacingAfterHeader,
+    double spacingBetweenTitleAndSubtitle = 0,
+    bool showDividerAfterSubtitle = true,
+    double? spacingBeforeDivider,
+    double? spacingAfterDivider,
+  }) {
+    return showAnimatedDialog<T>(
+      child: AppCancelFlowDialog(
+        title: title,
+        subtitle: subtitle,
+        content: content,
+        canPop: canPop,
+        padding: padding,
+        showDivider: showDividerAfterSubtitle,
+      ),
+      barrierDismissible: barrierDismissible,
+      barrierColor: AppColors.overlayBlack12,
     );
   }
 

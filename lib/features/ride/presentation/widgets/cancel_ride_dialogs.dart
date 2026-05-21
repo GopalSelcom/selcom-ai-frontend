@@ -7,6 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/widgets/app_cancel_flow_dialog.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 
 class CancelConfirmationDialog extends StatelessWidget {
@@ -14,42 +15,27 @@ class CancelConfirmationDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
-      backgroundColor: AppColors.cardBackground,
-      insetPadding: EdgeInsets.symmetric(horizontal: 13.w),
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 28.h, horizontal: 24.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              AppStrings.areYouSureYouWantToCancel.tr,
-              textAlign: TextAlign.center,
-              style: AppTextStyles.homeTitle.copyWith(
-                fontWeight: FontWeight.w600,
-                height: 34 / 20,
-                letterSpacing: -0.4,
-              ),
-            ),
-            SizedBox(height: 24.h),
-            _ActionButton(
-              title: AppStrings.yesCancel.tr,
-              color: AppColors.primary,
-              textColor: AppColors.white,
-              onTap: () => Get.back(result: true),
-            ),
-            SizedBox(height: 16.h),
-            _ActionButton(
-              title: AppStrings.no.tr,
-              color: AppColors.white,
-              textColor: AppColors.textNeutralButton,
-              outlined: true,
-              outlinedBorderColor: AppColors.textNeutralButton,
-              onTap: () => Get.back(result: false),
-            ),
-          ],
-        ),
+    return AppCancelFlowDialog(
+      title: AppStrings.areYouSureYouWantToCancel.tr,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _ActionButton(
+            title: AppStrings.yesCancel.tr,
+            color: AppColors.primary,
+            textColor: AppColors.white,
+            onTap: () => Get.back(result: true),
+          ),
+          SizedBox(height: 16.h),
+          _ActionButton(
+            title: AppStrings.no.tr,
+            color: AppColors.white,
+            textColor: AppColors.textNeutralButton,
+            outlined: true,
+            outlinedBorderColor: AppColors.textNeutralButton,
+            onTap: () => Get.back(result: false),
+          ),
+        ],
       ),
     );
   }
@@ -60,73 +46,50 @@ class CancelAssignmentWarningDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
-      backgroundColor: AppColors.cardBackground,
-      insetPadding: EdgeInsets.symmetric(horizontal: 13.w),
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 32.h, horizontal: 24.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              AppStrings.areYouSureYouWantToCancel.tr,
-              textAlign: TextAlign.center,
+    return AppCancelFlowDialog(
+      title:
+          "${AppStrings.areYouSureYouWantToCancel.tr}\n${AppStrings.yourDriverIsAlreadyOnTheWay.tr}",
+      padding: EdgeInsets.symmetric(vertical: 32.h, horizontal: 24.w),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          RichText(
+            textAlign: TextAlign.center,
+            text: TextSpan(
               style: TextStyle(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textSlateStrong,
+                fontSize: 15.sp,
+                color: AppColors.textSlate,
+                height: 1.5,
+                fontWeight: FontWeight.w400,
               ),
-            ),
-            Text(
-              AppStrings.yourDriverIsAlreadyOnTheWay.tr,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textSlateStrong,
-                height: 1.2,
-              ),
-            ),
-            SizedBox(height: 16.h),
-            RichText(
-              textAlign: TextAlign.center,
-              text: TextSpan(
-                style: TextStyle(
-                  fontSize: 15.sp,
-                  color: AppColors.textSlate,
-                  height: 1.5,
-                  fontWeight: FontWeight.w400,
-                ),
-                children: [
-                  TextSpan(text: AppStrings.cancellationFeeOf.tr),
-                  TextSpan(
-                    text: '${CurrencyFormatter.displaySymbol} 150',
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
+              children: [
+                TextSpan(text: AppStrings.cancellationFeeOf.tr),
+                TextSpan(
+                  text: '${CurrencyFormatter.displaySymbol} 150',
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
                   ),
-                  TextSpan(text: AppStrings.willBeChargedSinceDriverOnWay.tr),
-                ],
-              ),
+                ),
+                TextSpan(text: AppStrings.willBeChargedSinceDriverOnWay.tr),
+              ],
             ),
-            SizedBox(height: 32.h),
-            _ActionButton(
-              title: AppStrings.keepRide.tr,
-              color: AppColors.primary,
-              textColor: AppColors.white,
-              onTap: () => Get.back(result: false),
-            ),
-            SizedBox(height: 12.h),
-            _ActionButton(
-              title: AppStrings.cancelAndPay.tr,
-              color: AppColors.bgSoftCircle,
-              textColor: AppColors.textSlateSoft,
-              onTap: () => Get.back(result: true),
-            ),
-          ],
-        ),
+          ),
+          SizedBox(height: 32.h),
+          _ActionButton(
+            title: AppStrings.keepRide.tr,
+            color: AppColors.primary,
+            textColor: AppColors.white,
+            onTap: () => Get.back(result: false),
+          ),
+          SizedBox(height: 12.h),
+          _ActionButton(
+            title: AppStrings.cancelAndPay.tr,
+            color: AppColors.bgSoftCircle,
+            textColor: AppColors.textSlateSoft,
+            onTap: () => Get.back(result: true),
+          ),
+        ],
       ),
     );
   }
@@ -174,125 +137,110 @@ class _CancelReasonSelectionDialogState
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
+    return AppCancelFlowDialog(
       canPop: false,
-      child: Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(28.r),
-        ),
-        backgroundColor: AppColors.cardBackground,
-        insetPadding: EdgeInsets.symmetric(horizontal: 13.w),
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 32.h, horizontal: 24.w),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                AppStrings.whyDoYouWantToCancel.tr,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.homeTitle.copyWith(
-                  fontWeight: FontWeight.w600,
-                  height: 34 / 20,
-                  letterSpacing: -0.4,
-                ),
-              ),
-              SizedBox(height: 24.h),
-              Flexible(
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  padding: EdgeInsets.zero,
-                  itemCount: _reasons.length,
-                  separatorBuilder: (_, __) =>
-                      Divider(height: 1.h, color: AppColors.bgSoftCircle),
-                  itemBuilder: (context, index) {
-                    final reason = _reasons[index];
-                    final isSelected = _selectedReason == reason;
-                    return InkWell(
-                      onTap: () {
-                        setState(() {
-                          _selectedReason = reason;
-                        });
-                      },
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 14.h),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                reason,
-                                style: AppTextStyles.homeSubtitle.copyWith(
-                                  color: AppColors.black,
-                                  fontWeight: isSelected
-                                      ? FontWeight.w600
-                                      : FontWeight.w500,
-                                  height: 20 / 15,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              width: 20.w,
-                              height: 20.w,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(6.r),
-                                border: Border.all(
-                                  color: isSelected
-                                      ? AppColors.primary
-                                      : AppColors.iconHeartOutline,
-                                  width: 1.5,
-                                ),
-                                color: isSelected
-                                    ? AppColors.primary
-                                    : AppColors.transparent,
-                              ),
-                              child: isSelected
-                                  ? Icon(
-                                      Icons.check,
-                                      size: 14.sp,
-                                      color: AppColors.white,
-                                    )
-                                  : null,
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
+      title: AppStrings.whyDoYouWantToCancel.tr,
+      padding: EdgeInsets.symmetric(vertical: 32.h, horizontal: 24.w),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Flexible(
+            child: ListView.separated(
+              shrinkWrap: true,
+              padding: EdgeInsets.zero,
+              itemCount: _reasons.length,
+              separatorBuilder: (_, __) =>
+                  Divider(height: 1.h, color: AppColors.bgSoftCircle),
+              itemBuilder: (context, index) {
+                final reason = _reasons[index];
+                final isSelected = _selectedReason == reason;
+                return InkWell(
+                  onTap: () {
+                    setState(() {
+                      _selectedReason = reason;
+                    });
                   },
-                ),
-              ),
-              SizedBox(height: 32.h),
-              Obx(() {
-                final loading = widget.isProcessing?.value ?? false;
-                return _ActionButton(
-                  title: AppStrings.continueLabel.tr,
-                  color: isSelected
-                      ? AppColors.primary
-                      : AppColors.primary.withValues(alpha: 0.5),
-                  textColor: AppColors.white,
-                  isLoading: loading,
-                  onTap: _selectedReason == null || loading
-                      ? null
-                      : () async {
-                          if (widget.onContinueTap != null) {
-                            await widget.onContinueTap!.call(_selectedReason!);
-                          } else {
-                            Get.back(result: _selectedReason);
-                          }
-                        },
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      top: index == 0 ? 0 : 14.h,
+                      bottom: index == _reasons.length - 1 ? 0 : 14.h,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            reason,
+                            style: AppTextStyles.homeSubtitle.copyWith(
+                              color: AppColors.black,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
+                              height: 20 / 15,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          width: 20.w,
+                          height: 20.w,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(6.r),
+                            border: Border.all(
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : AppColors.iconHeartOutline,
+                              width: 1.5,
+                            ),
+                            color: isSelected
+                                ? AppColors.primary
+                                : AppColors.transparent,
+                          ),
+                          child: isSelected
+                              ? Icon(
+                                  Icons.check,
+                                  size: 14.sp,
+                                  color: AppColors.white,
+                                )
+                              : null,
+                        ),
+                      ],
+                    ),
+                  ),
                 );
-              }),
-              SizedBox(height: 12.h),
-              _ActionButton(
-                title: AppStrings.no.tr,
-                color: AppColors.white,
-                textColor: AppColors.textNeutralButton,
-                outlined: true,
-                outlinedBorderColor: AppColors.textNeutralButton,
-                onTap: () => Get.back(),
-              ),
-            ],
+              },
+            ),
           ),
-        ),
+          SizedBox(height: 32.h),
+          Obx(() {
+            final loading = widget.isProcessing?.value ?? false;
+            return _ActionButton(
+              title: AppStrings.continueLabel.tr,
+              color: isSelected
+                  ? AppColors.primary
+                  : AppColors.primary.withValues(alpha: 0.5),
+              textColor: AppColors.white,
+              isLoading: loading,
+              onTap: _selectedReason == null || loading
+                  ? null
+                  : () async {
+                      if (widget.onContinueTap != null) {
+                        await widget.onContinueTap!.call(_selectedReason!);
+                      } else {
+                        Get.back(result: _selectedReason);
+                      }
+                    },
+            );
+          }),
+          SizedBox(height: 12.h),
+          _ActionButton(
+            title: AppStrings.no.tr,
+            color: AppColors.white,
+            textColor: AppColors.textNeutralButton,
+            outlined: true,
+            outlinedBorderColor: AppColors.textNeutralButton,
+            onTap: () => Get.back(),
+          ),
+        ],
       ),
     );
   }
@@ -323,129 +271,102 @@ class CancellationChargesDialog extends StatelessWidget {
     final feeLabel = '${CurrencyFormatter.displaySymbol} $cancellationFee';
     final refundLabel = '${CurrencyFormatter.displaySymbol} $netRefund';
 
-    return PopScope(
+    return AppCancelFlowDialog(
       canPop: false,
-      child: Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(28.r),
-        ),
-        backgroundColor: AppColors.cardBackground,
-        insetPadding: EdgeInsets.symmetric(horizontal: 13.w),
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 28.h, horizontal: 24.w),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                AppStrings.areYouSureYouWantToCancel.tr,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.homeTitle.copyWith(
-                  fontWeight: FontWeight.w600,
-                  height: 26 / 20,
-                  letterSpacing: -0.4,
-                ),
+      title:
+          "${AppStrings.areYouSureYouWantToCancel.tr}\n${AppStrings.yourDriverIsAlreadyOnTheWay.tr}",
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          RichText(
+            textAlign: TextAlign.center,
+            text: TextSpan(
+              style: AppTextStyles.homeSubtitle.copyWith(
+                color: AppColors.textSlate,
+                fontWeight: FontWeight.w500,
+                height: 1.4,
               ),
-              Text(
-                AppStrings.yourDriverIsAlreadyOnTheWay.tr,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.homeTitle.copyWith(
-                  fontWeight: FontWeight.w600,
-                  height: 26 / 20,
-                  letterSpacing: -0.4,
+              children: [
+                TextSpan(text: AppStrings.cancellationFeeOf.tr),
+                TextSpan(
+                  text: feeLabel,
+                  style: AppTextStyles.price.copyWith(
+                    fontSize: 15.sp,
+                    height: 1.4,
+                    color: AppColors.error,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
-              SizedBox(height: 14.h),
-              RichText(
-                textAlign: TextAlign.center,
-                text: TextSpan(
+                TextSpan(text: AppStrings.willBeChargedSinceDriverOnWay.tr),
+                const TextSpan(text: '\n'),
+                TextSpan(
+                  text: AppStrings.netAmountRefunded.tr,
                   style: AppTextStyles.homeSubtitle.copyWith(
                     color: AppColors.textSlate,
                     fontWeight: FontWeight.w500,
                     height: 1.4,
                   ),
-                  children: [
-                    TextSpan(text: AppStrings.cancellationFeeOf.tr),
-                    TextSpan(
-                      text: feeLabel,
-                      style: AppTextStyles.price.copyWith(
-                        fontSize: 15.sp,
-                        height: 1.4,
-                        color: AppColors.error,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    TextSpan(text: AppStrings.willBeChargedSinceDriverOnWay.tr),
-                    const TextSpan(text: '\n'),
-                    TextSpan(
-                      text: AppStrings.netAmountRefunded.tr,
-                      style: AppTextStyles.homeSubtitle.copyWith(
-                        color: AppColors.textSlate,
-                        fontWeight: FontWeight.w500,
-                        height: 1.4,
-                      ),
-                    ),
-                    TextSpan(
-                      text: refundLabel,
-                      style: AppTextStyles.price.copyWith(
-                        fontSize: 15.sp,
-                        height: 1.4,
-                        color: AppColors.success,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    if (policyLabel.trim().isNotEmpty)
-                      TextSpan(
-                        text: '\n$policyLabel',
-                        style: AppTextStyles.homeCaption.copyWith(
-                          color: AppColors.textSlate,
-                          fontWeight: FontWeight.w400,
-                          height: 1.4,
-                        ),
-                      ),
-                  ],
                 ),
-              ),
-              SizedBox(height: 20.h),
-              Divider(height: 1.h, color: AppColors.bgSoftCircle),
-              SizedBox(height: 20.h),
-              _ActionButton(
-                title: AppStrings.keepRide.tr,
-                color: AppColors.primary,
-                textColor: AppColors.white,
-                onTap: () => Get.back(result: false),
-              ),
-              SizedBox(height: 10.h),
-              Obx(() {
-                final loading = isProcessing?.value ?? false;
-                return _ActionButton(
-                  title: AppStrings.cancelAndPay.tr,
-                  color: AppColors.white,
-                  textColor: AppColors.textNeutralButton,
-                  outlined: true,
-                  outlinedBorderColor: AppColors.textNeutralButton,
-                  isLoading: loading,
-                  onTap: loading
-                      ? null
-                      : () async {
-                          if (!canCancel) {
-                            AppDialogs.showErrorDialog(
-                              title: AppStrings.cancelFailed.tr,
-                              message: AppStrings.couldNotCancelTryAgain.tr,
-                            );
-                            return;
-                          }
-                          if (onConfirmTap != null) {
-                            await onConfirmTap!.call();
-                          } else {
-                            Get.back(result: true);
-                          }
-                        },
-                );
-              }),
-            ],
+                TextSpan(
+                  text: refundLabel,
+                  style: AppTextStyles.price.copyWith(
+                    fontSize: 15.sp,
+                    height: 1.4,
+                    color: AppColors.success,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (policyLabel.trim().isNotEmpty)
+                  TextSpan(
+                    text: '\n$policyLabel',
+                    style: AppTextStyles.homeCaption.copyWith(
+                      color: AppColors.textSlate,
+                      fontWeight: FontWeight.w400,
+                      height: 1.4,
+                    ),
+                  ),
+              ],
+            ),
           ),
-        ),
+          SizedBox(height: 20.h),
+          Divider(height: 1.h, color: AppColors.bgSoftCircle),
+          SizedBox(height: 20.h),
+          _ActionButton(
+            title: AppStrings.keepRide.tr,
+            color: AppColors.primary,
+            textColor: AppColors.white,
+            onTap: () => Get.back(result: false),
+          ),
+          SizedBox(height: 10.h),
+          Obx(() {
+            final loading = isProcessing?.value ?? false;
+            return _ActionButton(
+              title: AppStrings.cancelAndPay.tr,
+              color: AppColors.white,
+              textColor: AppColors.textNeutralButton,
+              outlined: true,
+              outlinedBorderColor: AppColors.textNeutralButton,
+              isLoading: loading,
+              onTap: loading
+                  ? null
+                  : () async {
+                      if (!canCancel) {
+                        AppDialogs.showErrorDialog(
+                          title: AppStrings.cancelFailed.tr,
+                          message: AppStrings.couldNotCancelTryAgain.tr,
+                        );
+                        return;
+                      }
+                      if (onConfirmTap != null) {
+                        await onConfirmTap!.call();
+                      } else {
+                        Get.back(result: true);
+                      }
+                    },
+            );
+          }),
+        ],
       ),
     );
   }
