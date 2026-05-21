@@ -31,9 +31,18 @@ class DriverAcceptedScreen extends StatelessWidget {
 
   void _minimizeSheet(DriverAcceptedController c) {
     if (c.sheetController.isAttached) {
+      final status = c.currentRideStatus.value;
+      final double targetMin;
+      if (status == 'near_destination') {
+        targetMin = 0.35;
+      } else if (status == 'ride_in_progress' || status == 'ride_started') {
+        targetMin = 0.40;
+      } else {
+        targetMin = _sheetMin;
+      }
       Future.microtask(() {
         c.sheetController.animateTo(
-          _sheetMin,
+          targetMin,
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
         );
@@ -143,7 +152,23 @@ class DriverAcceptedScreen extends StatelessWidget {
             }),
             Obx(() {
               final state = c.rideBottomSheetState.value;
+              final status = c.currentRideStatus.value;
               final double maxSheetSize;
+              final double initialSize;
+              final double minSize;
+
+              if (status == 'near_destination') {
+                initialSize = 0.35;
+                minSize = 0.35;
+              } else if (status == 'ride_in_progress' ||
+                  status == 'ride_started') {
+                initialSize = 0.40;
+                minSize = 0.40;
+              } else {
+                initialSize = _sheetInitial;
+                minSize = _sheetMin;
+              }
+
               switch (state) {
                 case RideBottomSheetState.driverAssigned:
                   maxSheetSize = _sheetMaxDriverAssigned;
@@ -154,8 +179,8 @@ class DriverAcceptedScreen extends StatelessWidget {
               }
               return AppDraggableBottomSheet(
                 controller: sheetController,
-                initialChildSize: _sheetInitial,
-                minChildSize: _sheetMin,
+                initialChildSize: initialSize,
+                minChildSize: minSize,
                 maxChildSize: maxSheetSize,
                 childBuilder: (scrollController) =>
                     _bottomSheet(c, scrollController),
@@ -406,7 +431,16 @@ class DriverAcceptedScreen extends StatelessWidget {
     return Obx(() {
       // Use a stable padding instead of tracking the sheet's pixel-by-pixel size.
       // This prevents the "!_dirty" assertion error and keeps the map stable.
-      final stableBottomPad = screenHeight * _sheetMin;
+      final status = c.currentRideStatus.value;
+      final double currentMin;
+      if (status == 'near_destination') {
+        currentMin = 0.35;
+      } else if (status == 'ride_in_progress' || status == 'ride_started') {
+        currentMin = 0.40;
+      } else {
+        currentMin = _sheetMin;
+      }
+      final stableBottomPad = screenHeight * currentMin;
 
       final pickup = c.pickupLatLng;
       final destination = c.destinationLatLng;
@@ -679,10 +713,9 @@ class DriverAcceptedScreen extends StatelessWidget {
     return Builder(
       builder: (context) {
         return ScrollConfiguration(
-          behavior: ScrollConfiguration.of(context).copyWith(
-            overscroll: false,
-            physics: const ClampingScrollPhysics(),
-          ),
+          behavior: ScrollConfiguration.of(
+            context,
+          ).copyWith(overscroll: false, physics: const ClampingScrollPhysics()),
           child: Padding(
             padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 0),
             child: Column(
@@ -720,9 +753,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                     controller: scrollController,
                     physics: const ClampingScrollPhysics(),
                     padding: EdgeInsets.zero,
-                    children: [
-                      _rideProgressBody(c, showChangeDropLink: true),
-                    ],
+                    children: [_rideProgressBody(c, showChangeDropLink: true)],
                   ),
                 ),
               ],
@@ -876,47 +907,47 @@ class DriverAcceptedScreen extends StatelessWidget {
                             ),
                           ],
                         ),
-                      SizedBox(height: 6.h),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            c.vehicleSubtitle.value,
-                            style: AppTextStyles.homeCaption.copyWith(
-                              fontSize: 15.sp,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.black,
-                              height: 1.33,
-                            ),
-                          ),
-                          if (c.formattedSpeedLabel.isNotEmpty) ...[
+                        SizedBox(height: 6.h),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
                             Text(
-                              " • ",
+                              c.vehicleSubtitle.value,
                               style: AppTextStyles.homeCaption.copyWith(
                                 fontSize: 15.sp,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.textMapHint,
-                              ),
-                            ),
-                            Text(
-                              c.formattedSpeedLabel,
-                              style: AppTextStyles.homeCaption.copyWith(
-                                fontSize: 15.sp,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.primary,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.black,
                                 height: 1.33,
                               ),
                             ),
+                            if (c.formattedSpeedLabel.isNotEmpty) ...[
+                              Text(
+                                " • ",
+                                style: AppTextStyles.homeCaption.copyWith(
+                                  fontSize: 15.sp,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.textMapHint,
+                                ),
+                              ),
+                              Text(
+                                c.formattedSpeedLabel,
+                                style: AppTextStyles.homeCaption.copyWith(
+                                  fontSize: 15.sp,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.primary,
+                                  height: 1.33,
+                                ),
+                              ),
+                            ],
                           ],
-                        ],
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
-        );
+            ],
+          );
         }),
         SizedBox(height: 17.h),
         const Divider(color: AppColors.borderWalletCard, height: 1),
