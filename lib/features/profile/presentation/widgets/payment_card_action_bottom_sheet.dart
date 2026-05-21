@@ -20,6 +20,8 @@ class PaymentCardActionBottomSheet extends StatelessWidget {
   final bool isSecondaryLoading;
   final String? iconAsset;
 
+  final bool isSecondaryDanger;
+
   const PaymentCardActionBottomSheet({
     super.key,
     required this.title,
@@ -33,6 +35,7 @@ class PaymentCardActionBottomSheet extends StatelessWidget {
     this.onSecondaryPressed,
     this.isSecondaryLoading = false,
     this.iconAsset,
+    this.isSecondaryDanger = false,
   });
 
   @override
@@ -151,9 +154,9 @@ class PaymentCardActionBottomSheet extends StatelessWidget {
                       borderRadius: 16.r,
                       outlined: true,
                       backgroundColor: AppColors.white,
-                      textColor: AppColors.primary,
-                      outlinedTextColor: AppColors.primary,
-                      outlinedBorderColor: AppColors.primary,
+                      textColor: isSecondaryDanger ? AppColors.error : AppColors.primary,
+                      outlinedTextColor: isSecondaryDanger ? AppColors.error : AppColors.primary,
+                      outlinedBorderColor: isSecondaryDanger ? AppColors.error : AppColors.primary,
                       outlinedBorderWidth: 1,
                     ),
                   ),

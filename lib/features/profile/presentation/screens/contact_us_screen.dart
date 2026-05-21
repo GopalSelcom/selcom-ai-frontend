@@ -65,23 +65,26 @@ class ContactUsScreen extends GetView<ContactUsController> {
               );
             }),
           ),
-
           // Submit Button (Footer)
-          Obx(
-            () => Padding(
-              padding: EdgeInsets.only(
-                bottom: controller.canSubmit.value ? 16.h : 0,
-                left: 24.w,
-                right: 24.w,
-              ),
-              child: AppAnimatedReveal(
-                show: controller.canSubmit.value,
-                visibleKey: const ValueKey('contact-submit-visible'),
-                hiddenKey: const ValueKey('contact-submit-hidden'),
-                child: AppPrimaryButton(
-                  label: AppStrings.submit.tr,
-                  onPressed: controller.sendMessage,
-                  isLoading: controller.isLoading.value,
+          SafeArea(
+            top: false,
+            bottom: true,
+            child: Obx(
+              () => Padding(
+                padding: EdgeInsets.only(
+                  bottom: controller.canSubmit.value ? 16.h : 0,
+                  left: 24.w,
+                  right: 24.w,
+                ),
+                child: AppAnimatedReveal(
+                  show: controller.canSubmit.value,
+                  visibleKey: const ValueKey('contact-submit-visible'),
+                  hiddenKey: const ValueKey('contact-submit-hidden'),
+                  child: AppPrimaryButton(
+                    label: AppStrings.submit.tr,
+                    onPressed: controller.sendMessage,
+                    isLoading: controller.isLoading.value,
+                  ),
                 ),
               ),
             ),
