@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:selcom_rides_frontend/shared/widgets/map_widgets.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
+import '../../../../shared/widgets/app_google_map.dart';
+import '../../../../shared/widgets/app_map_route_one_line_bar.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../controllers/finding_driver_controller.dart';
 
@@ -81,24 +82,13 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
               ),
             ),
           ),
-          AppMapTopHeader(
+          Positioned(
             top: topPad + 8.h,
-            left: 16,
-            right: 16,
-            isProfileIconVisible: false,
-            onProfileTap: c.openProfile,
-            addressWidget: Expanded(
-              child: Obx(
-                () => RideLocationSummaryCard(
-                  pickupAddress: c.pickupAddress.isEmpty
-                      ? AppStrings.currentLocation.tr
-                      : c.pickupAddress,
-                  destinationAddress: c.destinationAddress.isEmpty
-                      ? AppStrings.destination.tr
-                      : c.destinationAddress,
-                  intermediateStops: c.intermediateStops.toList(),
-                ),
-              ),
+            left: 16.w,
+            right: 16.w,
+            child: AppMapRouteOneLineBar(
+              pickupLabel: c.mapRoutePickupLabel,
+              destinationLabel: c.mapRouteDestinationLabel,
             ),
           ),
           Obx(() {
@@ -270,7 +260,12 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
   ) {
     return ListView(
       controller: scrollController,
-      padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 24.h),
+      padding: EdgeInsets.fromLTRB(
+        20.w,
+        10.h,
+        20.w,
+        24.h + MediaQuery.paddingOf(context).bottom,
+      ),
       children: [
         Center(
           child: Container(
@@ -292,24 +287,13 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
               Text(
                 c.currentStatusLabel.value,
                 textAlign: TextAlign.center,
-                style: AppTextStyles.homeTitle.copyWith(
-                  fontSize: 20.sp,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textHeading,
-                ),
+                style: AppTextStyles.homeTitle,
               ),
-              SizedBox(height: 8.h),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12.w),
-                child: Text(
-                  c.currentDescriptionLabel.value,
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.homeCaption.copyWith(
-                    fontSize: 14.sp,
-                    color: AppColors.textBody,
-                    height: 1.4,
-                  ),
-                ),
+              SizedBox(height: 4.h),
+              Text(
+                c.currentDescriptionLabel.value,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.homeSubtitle,
               ),
 
               // Countdown + progress only while status is still `searching`.
@@ -343,16 +327,12 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
                     Icon(
                       Icons.access_time_rounded,
                       color: AppColors.textHeading,
-                      size: 20.sp,
+                      size: 18.sp,
                     ),
-                    SizedBox(width: 4.w),
+                    SizedBox(width: 4.5.w),
                     Text(
                       c.findingDriverMinutesRemainLabel(),
-                      style: AppTextStyles.homeCaption.copyWith(
-                        fontSize: 15.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textHeading,
-                      ),
+                      style: AppTextStyles.homeSubtitle,
                     ),
                   ],
                 ),

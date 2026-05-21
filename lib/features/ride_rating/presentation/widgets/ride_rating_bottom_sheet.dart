@@ -182,6 +182,7 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
                             () => AppPrimaryButton(
                               label: AppStrings.done.tr,
                               isLoading: controller.isSubmitting.value,
+                              showBottomInnerShadow: true,
                               onPressed: controller.canSubmit
                                   ? controller.onSubmitTap
                                   : null,

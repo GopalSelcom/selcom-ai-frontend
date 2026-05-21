@@ -10,15 +10,14 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
-import '../../../../shared/widgets/app_map_top_header.dart';
+import '../../../../shared/widgets/app_map_route_one_line_bar.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
-import '../../../../shared/widgets/ride_location_summary_card.dart';
 import '../controllers/driver_accepted_controller.dart';
 import '../controllers/ride_share_controller.dart';
 import '../widgets/ride_common_widgets.dart';
-import '../../../../shared/utils/app_dialogs.dart';
 
 /// SCR-11 — Driver accepted (heading to pickup). See `.agent/context/frontend/SCREENS.md`.
 class DriverAcceptedScreen extends StatelessWidget {
@@ -26,14 +25,23 @@ class DriverAcceptedScreen extends StatelessWidget {
 
   static const double _sheetInitial = 0.3;
   static const double _sheetMin = 0.3;
-  static const double _sheetMaxDriverAssigned = 0.54;
+  static const double _sheetMaxDriverAssigned = 0.52;
   static const double _sheetMaxRideStarted = 0.68;
 
   void _minimizeSheet(DriverAcceptedController c) {
     if (c.sheetController.isAttached) {
+      final status = c.currentRideStatus.value;
+      final double targetMin;
+      if (status == 'near_destination') {
+        targetMin = 0.35;
+      } else if (status == 'ride_in_progress' || status == 'ride_started') {
+        targetMin = 0.40;
+      } else {
+        targetMin = _sheetMin;
+      }
       Future.microtask(() {
         c.sheetController.animateTo(
-          _sheetMin,
+          targetMin,
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
         );
@@ -75,23 +83,15 @@ class DriverAcceptedScreen extends StatelessWidget {
                 ),
               ),
             ),
-            AppMapTopHeader(
+            Positioned(
               top: topPad + 8.h,
-              left: 16,
-              right: 16,
-              onProfileTap: c.openProfile,
-              addressWidget: Expanded(
-                child: Obx(
-                  () => RideLocationSummaryCard(
-                    pickupAddress: c.pickupAddress.isEmpty
-                        ? AppStrings.currentLocation.tr
-                        : c.pickupAddress,
-                    destinationAddress: c.destinationAddress.isEmpty
-                        ? AppStrings.destination.tr
-                        : c.destinationAddress,
-                    // Controller already normalizes this as: all stops except final destination.
-                    intermediateStops: c.summaryIntermediateStops.toList(),
-                  ),
+              left: 16.w,
+              right: 16.w,
+              child: GetBuilder<DriverAcceptedController>(
+                id: DriverAcceptedController.mapRouteHeaderId,
+                builder: (controller) => AppMapRouteOneLineBar(
+                  pickupLabel: controller.mapRoutePickupLabel,
+                  destinationLabel: controller.mapRouteDestinationLabel,
                 ),
               ),
             ),
@@ -99,7 +99,7 @@ class DriverAcceptedScreen extends StatelessWidget {
               final eta = c.etaLabel.value;
 
               return Positioned(
-                top: topPad + 82.h,
+                top: topPad + 60.h,
                 left: 0,
                 right: 0,
                 child: Center(
@@ -143,7 +143,23 @@ class DriverAcceptedScreen extends StatelessWidget {
             }),
             Obx(() {
               final state = c.rideBottomSheetState.value;
+              final status = c.currentRideStatus.value;
               final double maxSheetSize;
+              final double initialSize;
+              final double minSize;
+
+              if (status == 'near_destination') {
+                initialSize = 0.35;
+                minSize = 0.35;
+              } else if (status == 'ride_in_progress' ||
+                  status == 'ride_started') {
+                initialSize = 0.40;
+                minSize = 0.40;
+              } else {
+                initialSize = _sheetInitial;
+                minSize = _sheetMin;
+              }
+
               switch (state) {
                 case RideBottomSheetState.driverAssigned:
                   maxSheetSize = _sheetMaxDriverAssigned;
@@ -154,8 +170,8 @@ class DriverAcceptedScreen extends StatelessWidget {
               }
               return AppDraggableBottomSheet(
                 controller: sheetController,
-                initialChildSize: _sheetInitial,
-                minChildSize: _sheetMin,
+                initialChildSize: initialSize,
+                minChildSize: minSize,
                 maxChildSize: maxSheetSize,
                 childBuilder: (scrollController) =>
                     _bottomSheet(c, scrollController),
@@ -283,76 +299,44 @@ class DriverAcceptedScreen extends StatelessWidget {
     DriverAcceptedController c,
     RideShareController shareController,
   ) {
-    AppDialogs.showAnimatedBottomSheet(
-      barrierDismissible: true,
-      child: SafeArea(
-        top: false,
-        bottom: false,
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+    AppDialogs.showStandardBottomSheet(
+      title: AppStrings.safetyOptions.tr,
+      subtitle: AppStrings.safetyOptionsSubtitle.tr,
+      headerTextAlign: TextAlign.start,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _safetyOptionTile(
+            title: AppStrings.shareLiveLocation.tr,
+            icon: Icons.share_location_outlined,
+            onTap: () {
+              AppDialogs.closeActiveDialog();
+              shareController.shareRide(c.rideId);
+            },
           ),
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 22.h),
-            child: Column(
+          Obx(() {
+            final contacts = c.emergencyContacts;
+            if (contacts.isEmpty) {
+              return const SizedBox.shrink();
+            }
+            return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  width: 48.w,
-                  height: 4.h,
-                  decoration: BoxDecoration(
-                    color: AppColors.skeletonBase,
-                    borderRadius: BorderRadius.circular(2.r),
+                for (final contact in contacts) ...[
+                  SizedBox(height: 10.h),
+                  _safetyOptionTile(
+                    title: contact.label,
+                    icon: c.emergencyContactIconFor(contact.id),
+                    onTap: () {
+                      AppDialogs.closeActiveDialog();
+                      unawaited(c.dialEmergencyContact(contact));
+                    },
                   ),
-                ),
-                SizedBox(height: 16.h),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    AppStrings.safetyOptions.tr,
-                    style: AppTextStyles.homeTitle.copyWith(
-                      fontSize: 18.sp,
-                      color: AppColors.textHeading,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 12.h),
-                _safetyOptionTile(
-                  title: AppStrings.shareLiveLocation.tr,
-                  icon: Icons.share_location_outlined,
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    shareController.shareRide(c.rideId);
-                  },
-                ),
-                Obx(() {
-                  final contacts = c.emergencyContacts;
-                  if (contacts.isEmpty) {
-                    return const SizedBox.shrink();
-                  }
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      for (final contact in contacts) ...[
-                        SizedBox(height: 10.h),
-                        _safetyOptionTile(
-                          title: contact.label,
-                          icon: c.emergencyContactIconFor(contact.id),
-                          onTap: () {
-                            Navigator.of(context).pop();
-                            unawaited(c.dialEmergencyContact(contact));
-                          },
-                        ),
-                      ],
-                    ],
-                  );
-                }),
+                ],
               ],
-            ),
-          ),
-        ),
+            );
+          }),
+        ],
       ),
     );
   }
@@ -406,7 +390,16 @@ class DriverAcceptedScreen extends StatelessWidget {
     return Obx(() {
       // Use a stable padding instead of tracking the sheet's pixel-by-pixel size.
       // This prevents the "!_dirty" assertion error and keeps the map stable.
-      final stableBottomPad = screenHeight * _sheetMin;
+      final status = c.currentRideStatus.value;
+      final double currentMin;
+      if (status == 'near_destination') {
+        currentMin = 0.35;
+      } else if (status == 'ride_in_progress' || status == 'ride_started') {
+        currentMin = 0.40;
+      } else {
+        currentMin = _sheetMin;
+      }
+      final stableBottomPad = screenHeight * currentMin;
 
       final pickup = c.pickupLatLng;
       final destination = c.destinationLatLng;
@@ -589,35 +582,41 @@ class DriverAcceptedScreen extends StatelessWidget {
     DriverAcceptedController c,
     ScrollController scrollController,
   ) {
-    return Obx(() {
-      if (c.isLoadingRide.value) {
-        return ListView(
-          controller: scrollController,
-          padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 0),
-          children: [
-            Center(
-              child: Container(
-                width: 64.w,
-                height: 5.h,
-                decoration: BoxDecoration(
-                  color: AppColors.skeletonBase,
-                  borderRadius: BorderRadius.circular(37.r),
-                ),
+    return Builder(
+      builder: (context) {
+        final double bottomPadding = MediaQuery.paddingOf(context).bottom;
+        return Obx(() {
+          if (c.isLoadingRide.value) {
+            return ListView(
+              controller: scrollController,
+              padding: EdgeInsets.fromLTRB(
+                16.w,
+                10.h,
+                16.w,
+                16.h + bottomPadding,
               ),
-            ),
-            SizedBox(height: 20.h),
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 24.h),
-              child: const Center(child: CircularProgressIndicator()),
-            ),
-          ],
-        );
-      }
+              children: [
+                Center(
+                  child: Container(
+                    width: 64.w,
+                    height: 5.h,
+                    decoration: BoxDecoration(
+                      color: AppColors.skeletonBase,
+                      borderRadius: BorderRadius.circular(37.r),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20.h),
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24.h),
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
+              ],
+            );
+          }
 
-      final state = c.rideBottomSheetState.value;
-      if (state == RideBottomSheetState.driverAssigned) {
-        return Builder(
-          builder: (context) {
+          final state = c.rideBottomSheetState.value;
+          if (state == RideBottomSheetState.driverAssigned) {
             return ScrollConfiguration(
               behavior: ScrollConfiguration.of(context).copyWith(
                 overscroll: false,
@@ -625,8 +624,11 @@ class DriverAcceptedScreen extends StatelessWidget {
               ),
               child: ListView(
                 controller: scrollController,
-                physics: const ClampingScrollPhysics(),
-                padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 0),
+                shrinkWrap: true,
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: ClampingScrollPhysics(),
+                ),
+                padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, bottomPadding),
                 children: [
                   Center(
                     child: Container(
@@ -643,33 +645,38 @@ class DriverAcceptedScreen extends StatelessWidget {
                 ],
               ),
             );
-          },
-        );
-      }
+          }
 
-      if (state == RideBottomSheetState.rideStarted) {
-        return _rideStartedSheetWithFixedHeader(c, scrollController);
-      }
+          if (state == RideBottomSheetState.rideStarted) {
+            return _rideStartedSheetWithFixedHeader(c, scrollController);
+          }
 
-      return ListView(
-        controller: scrollController,
-        padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 0),
-        children: [
-          Center(
-            child: Container(
-              width: 64.w,
-              height: 5.h,
-              decoration: BoxDecoration(
-                color: AppColors.skeletonBase,
-                borderRadius: BorderRadius.circular(37.r),
-              ),
+          return ListView(
+            controller: scrollController,
+            padding: EdgeInsets.fromLTRB(
+              16.w,
+              10.h,
+              16.w,
+              16.h + bottomPadding,
             ),
-          ),
-          SizedBox(height: 20.h),
-          _rideProgressSheet(c),
-        ],
-      );
-    });
+            children: [
+              Center(
+                child: Container(
+                  width: 64.w,
+                  height: 5.h,
+                  decoration: BoxDecoration(
+                    color: AppColors.skeletonBase,
+                    borderRadius: BorderRadius.circular(37.r),
+                  ),
+                ),
+              ),
+              SizedBox(height: 20.h),
+              _rideProgressSheet(c),
+            ],
+          );
+        });
+      },
+    );
   }
 
   Widget _rideStartedSheetWithFixedHeader(
@@ -679,10 +686,9 @@ class DriverAcceptedScreen extends StatelessWidget {
     return Builder(
       builder: (context) {
         return ScrollConfiguration(
-          behavior: ScrollConfiguration.of(context).copyWith(
-            overscroll: false,
-            physics: const ClampingScrollPhysics(),
-          ),
+          behavior: ScrollConfiguration.of(
+            context,
+          ).copyWith(overscroll: false, physics: const ClampingScrollPhysics()),
           child: Padding(
             padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 0),
             child: Column(
@@ -704,12 +710,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                   () => Text(
                     c.rideProgressTitle,
                     textAlign: TextAlign.center,
-                    style: AppTextStyles.homeTitle.copyWith(
-                      color: AppColors.textHeading,
-                      fontWeight: FontWeight.w700,
-                      height: 34 / 20,
-                      letterSpacing: -0.4,
-                    ),
+                    style: AppTextStyles.homeTitle,
                   ),
                 ),
                 SizedBox(height: 8.h),
@@ -719,10 +720,10 @@ class DriverAcceptedScreen extends StatelessWidget {
                   child: ListView(
                     controller: scrollController,
                     physics: const ClampingScrollPhysics(),
-                    padding: EdgeInsets.zero,
-                    children: [
-                      _rideProgressBody(c, showChangeDropLink: true),
-                    ],
+                    padding: EdgeInsets.only(
+                      bottom: 16.h + MediaQuery.paddingOf(context).bottom,
+                    ),
+                    children: [_rideProgressBody(c, showChangeDropLink: true)],
                   ),
                 ),
               ],
@@ -735,6 +736,7 @@ class DriverAcceptedScreen extends StatelessWidget {
 
   Widget _driverAssignedSheet(DriverAcceptedController c) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -757,12 +759,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                 () => Text(
                   c.driverAssignedSheetArrivalEtaLine,
                   textAlign: TextAlign.center,
-                  style: AppTextStyles.homeCaption.copyWith(
-                    fontSize: 15.sp,
-                    color: AppColors.textBody,
-                    fontWeight: FontWeight.w500,
-                    height: 20 / 15,
-                  ),
+                  style: AppTextStyles.homeSubtitle,
                 ),
               ),
             ),
@@ -773,13 +770,7 @@ class DriverAcceptedScreen extends StatelessWidget {
           () => Text(
             c.driverPickupPhaseHeadline,
             textAlign: TextAlign.center,
-            style: AppTextStyles.homeTitle.copyWith(
-              fontSize: 20.sp,
-              color: AppColors.textHeading,
-              fontWeight: FontWeight.w600,
-              height: 34 / 20,
-              letterSpacing: -0.4,
-            ),
+            style: AppTextStyles.homeTitle,
           ),
         ),
         SizedBox(height: 17.h),
@@ -789,11 +780,8 @@ class DriverAcceptedScreen extends StatelessWidget {
             children: [
               Text(
                 AppStrings.pin.tr,
-                style: AppTextStyles.homeCaption.copyWith(
+                style: AppTextStyles.homeSubtitle.copyWith(
                   fontWeight: FontWeight.w700,
-                  fontSize: 15.sp,
-                  color: AppColors.textBody,
-                  height: 20 / 15,
                 ),
               ),
               SizedBox(width: 8.w),
@@ -824,7 +812,7 @@ class DriverAcceptedScreen extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 17.h),
+          SizedBox(height: 22.h),
         ],
         Obx(() {
           final plateText = c.plateDisplayFormatted.value.trim();
@@ -876,47 +864,42 @@ class DriverAcceptedScreen extends StatelessWidget {
                             ),
                           ],
                         ),
-                      SizedBox(height: 6.h),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            c.vehicleSubtitle.value,
-                            style: AppTextStyles.homeCaption.copyWith(
-                              fontSize: 15.sp,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.black,
-                              height: 1.33,
-                            ),
-                          ),
-                          if (c.formattedSpeedLabel.isNotEmpty) ...[
+                        SizedBox(height: 6.h),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
                             Text(
-                              " • ",
-                              style: AppTextStyles.homeCaption.copyWith(
-                                fontSize: 15.sp,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.textMapHint,
+                              c.vehicleSubtitle.value,
+                              style: AppTextStyles.homeSubtitle.copyWith(
+                                color: AppColors.black,
                               ),
                             ),
-                            Text(
-                              c.formattedSpeedLabel,
-                              style: AppTextStyles.homeCaption.copyWith(
-                                fontSize: 15.sp,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.primary,
-                                height: 1.33,
+                            if (c.formattedSpeedLabel.isNotEmpty) ...[
+                              Text(
+                                " • ",
+                                style: AppTextStyles.homeCaption.copyWith(
+                                  fontSize: 15.sp,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.textMapHint,
+                                ),
                               ),
-                            ),
+                              Text(
+                                c.formattedSpeedLabel,
+                                style: AppTextStyles.homeSubtitle.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ],
                           ],
-                        ],
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
-        );
+            ],
+          );
         }),
         SizedBox(height: 17.h),
         const Divider(color: AppColors.borderWalletCard, height: 1),
@@ -1071,26 +1054,13 @@ class DriverAcceptedScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    c.rideVehicleLabel,
-                    style: AppTextStyles.homeTitle.copyWith(
-                      color: AppColors.textHeading,
-                      fontWeight: FontWeight.w600,
-                      height: 34 / 20,
-                      letterSpacing: -0.4,
-                    ),
-                  ),
+                  Text(c.rideVehicleLabel, style: AppTextStyles.homeTitle),
                   c.shouldShowRideEtaBadge
                       ? Row(
                           children: [
                             Text(
                               AppStrings.arrivedIn.tr,
-                              style: AppTextStyles.homeCaption.copyWith(
-                                fontSize: 15.sp,
-                                color: AppColors.textBody,
-                                fontWeight: FontWeight.w500,
-                                height: 20 / 15,
-                              ),
+                              style: AppTextStyles.homeSubtitle,
                             ),
                             SizedBox(width: 5.w),
                             Container(
@@ -1106,11 +1076,9 @@ class DriverAcceptedScreen extends StatelessWidget {
                                 AppStrings.minutesShortCount.trParams({
                                   'count': c.rideEtaMinutes.toString(),
                                 }),
-                                style: AppTextStyles.homeCaption.copyWith(
-                                  fontSize: 15.sp,
+                                style: AppTextStyles.homeSubtitle.copyWith(
                                   color: AppColors.textEtaBlue,
                                   fontWeight: FontWeight.w700,
-                                  height: 20 / 15,
                                 ),
                               ),
                             ),
@@ -1118,12 +1086,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                         )
                       : Text(
                           c.rideProgressSubtitle,
-                          style: AppTextStyles.homeCaption.copyWith(
-                            fontSize: 15.sp,
-                            color: AppColors.textBody,
-                            fontWeight: FontWeight.w500,
-                            height: 20 / 15,
-                          ),
+                          style: AppTextStyles.homeSubtitle,
                         ),
                 ],
               ),
@@ -1190,12 +1153,7 @@ class DriverAcceptedScreen extends StatelessWidget {
               children: [
                 Text(
                   AppStrings.totalFare.tr,
-                  style: AppTextStyles.homeTitle.copyWith(
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textHeading,
-                    height: 20 / 15,
-                  ),
+                  style: AppTextStyles.homeSubtitle,
                 ),
                 SizedBox(height: 6.h),
                 FareBreakdownRow(

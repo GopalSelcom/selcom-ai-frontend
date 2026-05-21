@@ -41,6 +41,9 @@ class LanguageEn extends Languages {
     'by_continuing_you_agree_that_you_have_read_and_accept_our_tand_cs_and_privacy_policy':
         'By continuing, you agree that you have read and accept our T&Cs and Privacy Policy',
     'call': 'Call',
+    'call_driver': 'Call driver',
+    'call_driver_sheet_subtitle':
+        'Choose how you want to reach your driver during this ride.',
     'coming_soon': 'Coming soon',
     'calling_driver': 'Calling Driver',
     'camera_permission': 'Camera Permission',
@@ -84,6 +87,12 @@ class LanguageEn extends Languages {
         'Do not share your personal Details with rider Be safe and always check your luggage',
     'done': 'Done',
     'download_slip': 'Download Slip',
+    'download_slip_gallery_subtitle': 'Save a copy to your gallery',
+    'choose_how_to_receive_receipt':
+        'Choose how you would like to receive your receipt',
+    'receipt_options': 'Receipt Options',
+    'share_slip': 'Share Slip',
+    'share_slip_subtitle': 'Send receipt link to others',
     'driver_arrived_map_badge': 'Driver arrived',
     'driver_arrived_pickup_primary': 'Driver arrived at pickup',
     'driver_arrived_pickup_secondary': 'Meet your driver at pickup',
@@ -369,8 +378,11 @@ class LanguageEn extends Languages {
     'search_pickup_location': 'Search pickup location',
     'search_stop': 'Search stop location',
     'search_stop_location': 'Search stop location',
-    'in_app_calling': 'In app calling',
-    'normal_call': 'Normal call',
+    'in_app_calling': 'In-app call',
+    'in_app_calling_subtitle':
+        'Voice call through the app using your active ride connection.',
+    'normal_call': 'Phone call',
+    'normal_call_subtitle': 'Use your device dialer to call the driver directly.',
     'in_app_calling_will_be_available_soon':
         'In app calling will available soon',
     'update_failed': 'Update Failed',
@@ -392,7 +404,13 @@ class LanguageEn extends Languages {
         'Select a nearby point for easier pickup',
     'select_apayment_method': 'Select a payment method',
     'select_country': 'Select country',
-    'select_areason': 'Select a Reason',
+    'select_country_subtitle':
+        'Search and choose your country dialling code for your phone number.',
+    'search_country': 'Search country',
+    'no_countries_found': 'No countries found',
+    'select_areason': 'Select a reason',
+    'select_a_reason_subtitle':
+        'Choose the topic that best describes what you need help with.',
     'select_avehicle_and_payment_method':
         'Select a vehicle and payment method.',
     'select_payment': 'Select payment',
@@ -478,6 +496,8 @@ class LanguageEn extends Languages {
     'share': 'Share',
     'safety': 'Safety',
     'safety_options': 'Safety Options',
+    'safety_options_subtitle':
+        'Share your live location or reach emergency contacts if you need help.',
     'share_live_location': 'Share Live Location',
     'selcom_go_sos_helpline': 'Selcom Go SOS helpline',
     'call_police': 'Call police',
@@ -584,6 +604,8 @@ class LanguageEn extends Languages {
     'phone_number': 'Phone number',
     'add_new': 'Add New',
     'add_to_favourites': 'Add to Favourites',
+    'add_to_favourites_subtitle':
+        'Choose a label for this address or add your own.',
     'confirm': 'Confirm',
     'confirmation': 'Confirmation',
     'home': 'Home',
@@ -720,6 +742,13 @@ class LanguageEn extends Languages {
   String get call => values['call'] ?? '';
 
   @override
+  String get callDriver => values['call_driver'] ?? '';
+
+  @override
+  String get callDriverSheetSubtitle =>
+      values['call_driver_sheet_subtitle'] ?? '';
+
+  @override
   String get comingSoon => values['coming_soon'] ?? '';
 
   @override
@@ -846,6 +875,18 @@ class LanguageEn extends Languages {
 
   @override
   String get downloadSlip => values['download_slip'] ?? '';
+  @override
+  String get downloadSlipGallerySubtitle =>
+      values['download_slip_gallery_subtitle'] ?? '';
+  @override
+  String get chooseHowToReceiveReceipt =>
+      values['choose_how_to_receive_receipt'] ?? '';
+  @override
+  String get receiptOptions => values['receipt_options'] ?? '';
+  @override
+  String get shareSlip => values['share_slip'] ?? '';
+  @override
+  String get shareSlipSubtitle => values['share_slip_subtitle'] ?? '';
 
   @override
   String get driverArrivedMapBadge => values['driver_arrived_map_badge'] ?? '';
@@ -1676,6 +1717,12 @@ class LanguageEn extends Languages {
   String get safetyAndPrivacy => values['safety_and_privacy'] ?? '';
 
   @override
+  String get safetyOptions => values['safety_options'] ?? '';
+
+  @override
+  String get safetyOptionsSubtitle => values['safety_options_subtitle'] ?? '';
+
+  @override
   String get saveThisAddressFirstThenYouCanBookFromHere =>
       values['save_this_address_first_then_you_can_book_from_here'] ?? '';
 
@@ -1698,7 +1745,14 @@ class LanguageEn extends Languages {
   String get inAppCalling => values['in_app_calling'] ?? '';
 
   @override
+  String get inAppCallingSubtitle =>
+      values['in_app_calling_subtitle'] ?? '';
+
+  @override
   String get normalCall => values['normal_call'] ?? '';
+
+  @override
+  String get normalCallSubtitle => values['normal_call_subtitle'] ?? '';
 
   @override
   String get inAppCallingWillBeAvailableSoon =>
@@ -1753,7 +1807,21 @@ class LanguageEn extends Languages {
   String get selectCountry => values['select_country'] ?? '';
 
   @override
+  String get selectCountrySubtitle =>
+      values['select_country_subtitle'] ?? '';
+
+  @override
+  String get searchCountry => values['search_country'] ?? '';
+
+  @override
+  String get noCountriesFound => values['no_countries_found'] ?? '';
+
+  @override
   String get selectAReason => values['select_areason'] ?? '';
+
+  @override
+  String get selectAReasonSubtitle =>
+      values['select_a_reason_subtitle'] ?? '';
 
   @override
   String get selectAVehicleAndPaymentMethod =>
@@ -2244,6 +2312,10 @@ class LanguageEn extends Languages {
 
   @override
   String get addToFavourites => values['add_to_favourites'] ?? '';
+
+  @override
+  String get addToFavouritesSubtitle =>
+      values['add_to_favourites_subtitle'] ?? '';
 
   @override
   String get confirm => values['confirm'] ?? '';

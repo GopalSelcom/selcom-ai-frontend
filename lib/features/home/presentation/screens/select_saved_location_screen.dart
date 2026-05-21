@@ -60,49 +60,62 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
   Widget build(BuildContext context) {
     final canGoBack = Navigator.of(context).canPop();
 
-    return Scaffold(
-      backgroundColor: AppColors.pageBackground,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        leading: canGoBack
-            ? const AppBackButton(
-                color: AppColors.textHeading,
-                alignment: Alignment.center,
-              )
-            : null,
-        title: Text(label),
-      ),
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 16.h),
-            _buildSearchBar(),
-            SizedBox(height: 16.h),
-            Expanded(
-              child: Stack(
-                children: [
-                  Obx(() {
-                    if (controller.isSearching.value) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
+    return GestureDetector(
+      onTap:
+          () {}, // Prevents global unfocus handler from intercepting taps on this screen
+      behavior: HitTestBehavior.translucent,
+      child: Scaffold(
+        backgroundColor: AppColors.pageBackground,
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          leading: canGoBack
+              ? const AppBackButton(
+                  color: AppColors.textHeading,
+                  alignment: Alignment.center,
+                )
+              : null,
+          title: Text(label),
+        ),
+        body: GestureDetector(
+          onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+          behavior: HitTestBehavior.translucent,
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 16.h),
+                _buildSearchBar(),
+                SizedBox(height: 16.h),
+                Expanded(
+                  child: Stack(
+                    children: [
+                      Obx(() {
+                        if (controller.isSearching.value) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
 
-                    if (controller.searchQuery.value.trim().isNotEmpty) {
-                      return _buildSuggestionsList();
-                    }
+                        if (controller.searchQuery.value.trim().isNotEmpty) {
+                          return _buildSuggestionsList();
+                        }
 
-                    return _buildRecentList();
-                  }),
-                  if (_isGeocoding)
-                    Container(
-                      color: AppColors.white.withValues(alpha: 0.5),
-                      child: const Center(child: CircularProgressIndicator()),
-                    ),
-                ],
-              ),
+                        return _buildRecentList();
+                      }),
+                      if (_isGeocoding)
+                        Container(
+                          color: AppColors.white.withValues(alpha: 0.5),
+                          child: const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -180,6 +193,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
     }
 
     return ListView.separated(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       itemCount: controller.suggestions.length,
       separatorBuilder: (_, __) => SizedBox(height: 12.h),
       itemBuilder: (context, index) {
@@ -210,23 +224,22 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
     final recentItems = controller.recentDestinations;
 
     return ListView.separated(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       itemCount: recentItems.length,
       separatorBuilder: (_, __) => SizedBox(height: 12.h),
       itemBuilder: (context, index) {
         final loc = recentItems[index];
-        return Obx(
-          () {
-            final savedPlace = controller.getSavedPlaceFor(loc.address, null);
-            final isFavorite = savedPlace?.isFavourite ?? false;
-            return _locationTile(
-              title: loc.address.split(',').first,
-              subtitle: loc.address,
-              onTap: () => _handleRecentSelection(loc),
-              onFavorite: () => controller.toggleFavoriteForRecent(loc),
-              isFavorite: isFavorite,
-            );
-          },
-        );
+        return Obx(() {
+          final savedPlace = controller.getSavedPlaceFor(loc.address, null);
+          final isFavorite = savedPlace?.isFavourite ?? false;
+          return _locationTile(
+            title: loc.address.split(',').first,
+            subtitle: loc.address,
+            onTap: () => _handleRecentSelection(loc),
+            onFavorite: () => controller.toggleFavoriteForRecent(loc),
+            isFavorite: isFavorite,
+          );
+        });
       },
     );
   }
@@ -306,10 +319,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
               ),
             ),
             if (onFavorite != null)
-              FavoriteIconButton(
-                isFavorite: isFavorite,
-                onPressed: onFavorite,
-              ),
+              FavoriteIconButton(isFavorite: isFavorite, onPressed: onFavorite),
           ],
         ),
       ),

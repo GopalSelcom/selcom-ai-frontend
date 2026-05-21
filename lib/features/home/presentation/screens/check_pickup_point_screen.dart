@@ -229,18 +229,12 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                         children: [
                           Text(
                             AppStrings.checkYourPickupPoint.tr,
-                            style: AppTextStyles.homeTitle.copyWith(
-                              fontSize: 18.sp,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: AppTextStyles.homeTitle,
                           ),
                           SizedBox(height: 4.h),
                           Text(
                             AppStrings.selectANearbyPointForEasierPickup.tr,
-                            style: AppTextStyles.homeCaption.copyWith(
-                              color: AppColors.textBody,
-                              fontSize: 13.sp,
-                            ),
+                            style: AppTextStyles.homeSubtitle,
                           ),
                         ],
                       ),
@@ -306,6 +300,7 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                     height: 56.h,
                     iconAsset: AppAssets.locationIcArrowRight,
                     iconColor: AppColors.white,
+                    showBottomInnerShadow: true,
                     onPressed: () {
                       _showConfirmationDialog(
                         title: _title.value,

@@ -108,9 +108,11 @@ class AppTextStyles {
   // Home Screen Styles (Metropolis)
   static TextStyle homeTitle = TextStyle(
     fontSize: 20.sp,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w600,
     color: AppColors.textHeading,
     fontFamily: metropolisFont,
+    height: 34 / 20,
+    letterSpacing: -0.4,
   );
 
   static TextStyle homeSubtitle = TextStyle(
@@ -118,6 +120,7 @@ class AppTextStyles {
     fontWeight: FontWeight.w500,
     color: AppColors.textBody,
     fontFamily: metropolisFont,
+    height: 20 / 15,
   );
 
   static TextStyle homeChip = TextStyle(

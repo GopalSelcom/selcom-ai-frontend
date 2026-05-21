@@ -74,10 +74,7 @@ class PaymentMethodsController extends GetxController {
   void linkSelcomPesa() {
     selcomPhoneController.clear();
     selcomPesaStep.value = SelcomPesaStep.connect;
-    AppDialogs.showAnimatedBottomSheet(
-      child: const SelcomPesaFlowBottomSheet(),
-      barrierDismissible: true,
-    );
+    SelcomPesaFlowBottomSheet.show();
   }
 
   void openPhoneInput() {
@@ -87,10 +84,7 @@ class PaymentMethodsController extends GetxController {
   }
 
   void openLinkedAccountSheet() {
-    AppDialogs.showAnimatedBottomSheet(
-      child: const SelcomPesaLinkedBottomSheet(),
-      barrierDismissible: true,
-    );
+    SelcomPesaLinkedBottomSheet.show();
   }
 
   void unlinkAccount() {
@@ -179,8 +173,7 @@ class PaymentMethodsController extends GetxController {
     if (!status.isGranted) {
       AppDialogs.showPermissionDialog(
         title: AppStrings.cameraPermission.tr,
-        message:
-            AppStrings.cameraAccessNeededForSelfieVerification.tr,
+        message: AppStrings.cameraAccessNeededForSelfieVerification.tr,
         onOpenSettings: () => openAppSettings(),
         icon: Icons.camera_alt_outlined,
         secondaryIcon: Icons.camera_alt,
@@ -258,8 +251,7 @@ class PaymentMethodsController extends GetxController {
       AppDialogs.showAnimatedBottomSheet(
         child: PaymentCardActionBottomSheet(
           title: AppStrings.yourCardHasBeenNaddedSuccessfully.tr,
-          description:
-              AppStrings.cardReadyToUseYouCanManageOrRemoveAnytime.tr,
+          description: AppStrings.cardReadyToUseYouCanManageOrRemoveAnytime.tr,
           cardNumber: result.fullNumber,
           imageAssetPath: AppAssets.imgPaymentAddCardSuccess,
           primaryButtonLabel: AppStrings.ok.tr,

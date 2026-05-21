@@ -39,6 +39,8 @@ abstract class Languages {
   String
   get byContinuingYouAgreeThatYouHaveReadAndAcceptOurTAndCsAndPrivacyPolicy;
   String get call;
+  String get callDriver;
+  String get callDriverSheetSubtitle;
   String get comingSoon;
   String get callingDriver;
   String get cameraPermission;
@@ -78,6 +80,11 @@ abstract class Languages {
   get doNotShareYourPersonalDetailsWithRiderBeSafeAndAlwaysCheckYourLuggage;
   String get done;
   String get downloadSlip;
+  String get downloadSlipGallerySubtitle;
+  String get chooseHowToReceiveReceipt;
+  String get receiptOptions;
+  String get shareSlip;
+  String get shareSlipSubtitle;
   String get driverArrivedMapBadge;
   String get driverArrivedPickupPrimary;
   String get driverArrivedPickupSecondary;
@@ -331,6 +338,8 @@ abstract class Languages {
   String get couldNotShareSlipPleaseTryAgainLater;
   String get ridePinProtection;
   String get safetyAndPrivacy;
+  String get safetyOptions;
+  String get safetyOptionsSubtitle;
   String get saveThisAddressFirstThenYouCanBookFromHere;
   String get savingChanges;
   String get searchDestination;
@@ -338,7 +347,9 @@ abstract class Languages {
   String get searchPickupLocation;
   String get searchStopLocation;
   String get inAppCalling;
+  String get inAppCallingSubtitle;
   String get normalCall;
+  String get normalCallSubtitle;
   String get inAppCallingWillBeAvailableSoon;
   String get updateFailed;
   String get updateInProgress;
@@ -353,8 +364,12 @@ abstract class Languages {
   String get selcomPesa;
   String get selectANearbyPointForEasierPickup;
   String get selectCountry;
+  String get selectCountrySubtitle;
+  String get searchCountry;
+  String get noCountriesFound;
   String get selectAPaymentMethod;
   String get selectAReason;
+  String get selectAReasonSubtitle;
   String get selectAVehicleAndPaymentMethod;
   String get selectPayment;
   String get selfieCaptureFailed;
@@ -501,6 +516,7 @@ abstract class Languages {
   String get phoneNumber;
   String get addNew;
   String get addToFavourites;
+  String get addToFavouritesSubtitle;
   String get confirm;
   String get confirmation;
   String get home;

@@ -26,6 +26,7 @@ import '../../../home/domain/repositories/home_repository.dart';
 import '../../../home/presentation/controllers/location_selection_controller.dart';
 import '../../../payment/presentation/controllers/payment_method_controller.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
+import '../../../../shared/utils/address_display_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../domain/repositories/ride_repository.dart';
@@ -1189,10 +1190,9 @@ class VehicleSelectionController extends GetxController {
   }
 
   String compactAddress(String value) {
-    final trimmed = value.trim();
-    if (trimmed.isEmpty) return 'Selected location';
-    final first = trimmed.split(',').first.trim();
-    return first.isEmpty ? trimmed : first;
+    final line = compactAddressLine(value);
+    if (line.isEmpty) return 'Selected location';
+    return line;
   }
 
   String get pickupMapLabel => compactAddress(pickupEntity.address);

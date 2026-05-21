@@ -233,6 +233,7 @@ class _MyAppState extends State<MyApp> {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: ThemeMode.system,
+            scrollBehavior: const BouncingScrollBehavior(),
             locale: _locale,
             fallbackLocale: const Locale('en'),
             supportedLocales: const [Locale('en'), Locale('sw')],
@@ -246,7 +247,11 @@ class _MyAppState extends State<MyApp> {
               return GestureDetector(
                 onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
                 behavior: HitTestBehavior.translucent,
-                child: child ?? const SizedBox.shrink(),
+                child: SafeArea(
+                  top: false,
+                  bottom: false,
+                  child: child ?? const SizedBox.shrink(),
+                ),
               );
             },
             translations: GetxLanguagesTranslations(),

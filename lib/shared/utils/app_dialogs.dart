@@ -9,18 +9,37 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/services/storage_service.dart';
+import '../widgets/app_cancel_flow_dialog.dart';
 import '../widgets/app_primary_button.dart';
+import '../widgets/app_standard_bottom_sheet.dart';
 
 class AppDialogs {
   static bool _isErrorDialogVisible = false;
   static bool _isLoadingDialogVisible = false;
+
+  /// Utility to ensure keyboard is closed before showing dialogs/bottom sheets
+  static Future<void> ensureKeyboardClosed() async {
+    final context = Get.context;
+    if (context == null) return;
+
+    final primaryFocus = FocusManager.instance.primaryFocus;
+    final hasKeyboard = (primaryFocus != null && primaryFocus.hasFocus) ||
+        MediaQuery.viewInsetsOf(context).bottom > 0;
+
+    if (hasKeyboard) {
+      primaryFocus?.unfocus();
+      // Wait for keyboard closing animation to finish to prevent UI glitches/jumping
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+    }
+  }
 
   /// Standard animated popup function.
   static Future<T?> showAnimatedDialog<T>({
     required Widget child,
     bool barrierDismissible = true,
     Color? barrierColor,
-  }) {
+  }) async {
+    await ensureKeyboardClosed();
     return showGeneralDialog<T>(
       context: Get.context!,
       barrierDismissible: barrierDismissible,
@@ -67,11 +86,41 @@ class AppDialogs {
     );
   }
 
-  /// Shows a common animated bottom sheet with a blurred barrier and iOS cubic transition.
+  /// Ride cancel flow modal (title, optional subtitle, custom body/actions).
+  static Future<T?> showCancelFlowDialog<T>({
+    required String title,
+    String? subtitle,
+    required Widget content,
+    bool canPop = true,
+    bool barrierDismissible = false,
+    EdgeInsetsGeometry? padding,
+    double? spacingAfterHeader,
+    double spacingBetweenTitleAndSubtitle = 0,
+    bool showDividerAfterSubtitle = true,
+    double? spacingBeforeDivider,
+    double? spacingAfterDivider,
+  }) {
+    return showAnimatedDialog<T>(
+      child: AppCancelFlowDialog(
+        title: title,
+        subtitle: subtitle,
+        content: content,
+        canPop: canPop,
+        padding: padding,
+        showDivider: showDividerAfterSubtitle,
+      ),
+      barrierDismissible: barrierDismissible,
+      barrierColor: AppColors.overlayBlack12,
+    );
+  }
+
+  /// Low-level bottom sheet overlay (blur + slide). Prefer [showStandardBottomSheet]
+  /// for shared title/subtitle/content sheets.
   static Future<T?> showAnimatedBottomSheet<T>({
     required Widget child,
     bool barrierDismissible = true,
-  }) {
+  }) async {
+    await ensureKeyboardClosed();
     bool hapticTriggered = false;
 
     return showGeneralDialog<T>(
@@ -140,6 +189,66 @@ class AppDialogs {
           ],
         );
       },
+    );
+  }
+
+  /// Single entry point for app bottom sheets (blur, slide, safe area).
+  ///
+  /// **Body only** — pass [content] with [title] / [subtitle]; shell is built for you:
+  /// ```dart
+  /// AppDialogs.showStandardBottomSheet(
+  ///   title: 'Title',
+  ///   subtitle: 'Subtitle',
+  ///   content: MySheetBody(),
+  ///   headerTextAlign: TextAlign.start,
+  /// );
+  /// ```
+  ///
+  /// **Full sheet widget** — pass [sheet] when the widget already returns
+  /// [AppStandardBottomSheet] (multi-step flows, dynamic headers):
+  /// ```dart
+  /// AppDialogs.showStandardBottomSheet(
+  ///   sheet: const BookingForSomeoneElseFlowBottomSheet(),
+  /// );
+  /// ```
+  ///
+  /// Do not pass both [content] and [sheet]. For one-off custom UIs without
+  /// [AppStandardBottomSheet], use [showAnimatedBottomSheet].
+  static Future<T?> showStandardBottomSheet<T>({
+    String? title,
+    String? subtitle,
+    Widget? content,
+    Widget? sheet,
+    Widget? footer,
+    bool barrierDismissible = true,
+    bool showDragHandle = true,
+    bool showHeaderDivider = true,
+    EdgeInsetsGeometry? contentPadding,
+    double maxHeightFactor = 0.75,
+    TextAlign headerTextAlign = TextAlign.start,
+  }) {
+    assert(
+      (sheet != null) != (content != null),
+      'showStandardBottomSheet: provide exactly one of `content` (body only) '
+      'or `sheet` (widget that already wraps AppStandardBottomSheet).',
+    );
+
+    final Widget child = sheet ??
+        AppStandardBottomSheet(
+          title: title,
+          subtitle: subtitle,
+          content: content!,
+          footer: footer,
+          showDragHandle: showDragHandle,
+          showHeaderDivider: showHeaderDivider,
+          contentPadding: contentPadding,
+          maxHeightFactor: maxHeightFactor,
+          headerTextAlign: headerTextAlign,
+        );
+
+    return showAnimatedBottomSheet<T>(
+      barrierDismissible: barrierDismissible,
+      child: child,
     );
   }
 

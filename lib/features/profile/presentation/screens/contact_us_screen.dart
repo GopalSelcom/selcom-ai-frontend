@@ -11,13 +11,18 @@ import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../controllers/contact_us_controller.dart';
-import '../../../../shared/utils/app_dialogs.dart';
+import '../widgets/contact_us_reason_picker_bottom_sheet.dart';
 
 class ContactUsScreen extends GetView<ContactUsController> {
   const ContactUsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
+    final double computedBottomPadding = bottomPadding > 0
+        ? (GetPlatform.isIOS ? 0 : 8.h)
+        : 16.h;
+
     return Scaffold(
       backgroundColor: AppColors.white,
       body: Column(
@@ -44,7 +49,7 @@ class ContactUsScreen extends GetView<ContactUsController> {
                         style: AppTextStyles.homeSubtitle,
                       ),
                       SizedBox(height: 8.h),
-                      _buildReasonDropdown(context),
+                      _buildReasonDropdown(),
                       SizedBox(height: 8.h),
                       Text(
                         AppStrings.message.tr,
@@ -65,23 +70,29 @@ class ContactUsScreen extends GetView<ContactUsController> {
               );
             }),
           ),
-
           // Submit Button (Footer)
-          Obx(
-            () => Padding(
-              padding: EdgeInsets.only(
-                bottom: controller.canSubmit.value ? 16.h : 0,
-                left: 24.w,
-                right: 24.w,
-              ),
-              child: AppAnimatedReveal(
-                show: controller.canSubmit.value,
-                visibleKey: const ValueKey('contact-submit-visible'),
-                hiddenKey: const ValueKey('contact-submit-hidden'),
-                child: AppPrimaryButton(
-                  label: AppStrings.submit.tr,
-                  onPressed: controller.sendMessage,
-                  isLoading: controller.isLoading.value,
+          SafeArea(
+            top: false,
+            bottom: true,
+            child: Obx(
+              () => Padding(
+                padding: EdgeInsets.only(
+                  bottom: controller.canSubmit.value
+                      ? computedBottomPadding
+                      : 0,
+                  left: 24.w,
+                  right: 24.w,
+                ),
+                child: AppAnimatedReveal(
+                  show: controller.canSubmit.value,
+                  visibleKey: const ValueKey('contact-submit-visible'),
+                  hiddenKey: const ValueKey('contact-submit-hidden'),
+                  child: AppPrimaryButton(
+                    label: AppStrings.submit.tr,
+                    onPressed: controller.sendMessage,
+                    isLoading: controller.isLoading.value,
+                    showBottomInnerShadow: true,
+                  ),
                 ),
               ),
             ),
@@ -91,16 +102,15 @@ class ContactUsScreen extends GetView<ContactUsController> {
     );
   }
 
-  Widget _buildReasonDropdown(BuildContext context) {
+  Widget _buildReasonDropdown() {
     return GestureDetector(
-      onTap: () => _showReasonPicker(context),
+      onTap: () => ContactUsReasonPickerBottomSheet.show(),
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         decoration: BoxDecoration(
           color: AppColors.surfaceSubtle,
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(color: AppColors.divider),
-
         ),
         child: Row(
           children: [
@@ -109,7 +119,8 @@ class ContactUsScreen extends GetView<ContactUsController> {
                 () => Text(
                   controller.selectedReason.value,
                   style: AppTextStyles.body.copyWith(
-                    color: controller.selectedReason.value ==
+                    color:
+                        controller.selectedReason.value ==
                             AppStrings.selectAReason.tr
                         ? AppColors.textBody
                         : AppColors.textHeading,
@@ -117,55 +128,10 @@ class ContactUsScreen extends GetView<ContactUsController> {
                 ),
               ),
             ),
-            const Icon(Iconsax.arrow_down_1, color: AppColors.textHeading, size: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showReasonPicker(BuildContext context) {
-    AppDialogs.showAnimatedBottomSheet(
-      barrierDismissible: true,
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 20.h),
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              AppStrings.selectAReason.tr,
-              style: AppTextStyles.sectionTitle,
-            ),
-            SizedBox(height: 16.h),
-            Flexible(
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: controller.subjects.length,
-                itemBuilder: (context, index) {
-                  final reason = controller.subjects[index];
-                  return ListTile(
-                    title: Text(reason, style: AppTextStyles.body.copyWith(
-                      color: AppColors.textHeading))
-                    ,
-                    onTap: () {
-                      controller.setSelectedReason(reason);
-                      Navigator.of(context).pop();
-                    },
-                    trailing: Obx(
-                      () => controller.selectedReason.value == reason
-                          ? const Icon(
-                              Iconsax.tick_circle,
-                              color: AppColors.primary,
-                            )
-                          : const SizedBox.shrink(),
-                    ),
-                  );
-                },
-              ),
+            const Icon(
+              Iconsax.arrow_down_1,
+              color: AppColors.textHeading,
+              size: 20,
             ),
           ],
         ),

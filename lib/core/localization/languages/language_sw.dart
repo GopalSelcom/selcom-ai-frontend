@@ -36,6 +36,8 @@ class LanguageSw extends Languages {
     'by_continuing_you_agree_that_you_have_read_and_accept_our_tand_cs_and_privacy_policy':
         '',
     'call': '',
+    'call_driver': '',
+    'call_driver_sheet_subtitle': '',
     'coming_soon': '',
     'calling_driver': '',
     'camera_permission': '',
@@ -76,6 +78,11 @@ class LanguageSw extends Languages {
         '',
     'done': '',
     'download_slip': '',
+    'download_slip_gallery_subtitle': '',
+    'choose_how_to_receive_receipt': '',
+    'receipt_options': '',
+    'share_slip': '',
+    'share_slip_subtitle': '',
     'driver_arrived_map_badge': '',
     'driver_arrived_pickup_primary': '',
     'driver_arrived_pickup_secondary': '',
@@ -329,7 +336,9 @@ class LanguageSw extends Languages {
     'search_stop': '',
     'search_stop_location': '',
     'in_app_calling': '',
+    'in_app_calling_subtitle': '',
     'normal_call': '',
+    'normal_call_subtitle': '',
     'in_app_calling_will_be_available_soon': '',
     'update_failed': '',
     'update_in_progress': '',
@@ -345,7 +354,11 @@ class LanguageSw extends Languages {
     'select_anearby_point_for_easier_pickup': '',
     'select_apayment_method': '',
     'select_country': '',
+    'select_country_subtitle': '',
+    'search_country': '',
+    'no_countries_found': '',
     'select_areason': '',
+    'select_a_reason_subtitle': '',
     'select_avehicle_and_payment_method': '',
     'select_payment': '',
     'selfie_capture_failed': '',
@@ -420,6 +433,7 @@ class LanguageSw extends Languages {
     'share': 'Shiriki',
     'safety': 'Usalama',
     'safety_options': 'Chaguo za Usalama',
+    'safety_options_subtitle': '',
     'share_live_location': 'Shiriki eneo la moja kwa moja',
     'selcom_go_sos_helpline': 'Namba ya dharura ya Selcom Go',
     'call_police': 'Piga polisi',
@@ -508,6 +522,7 @@ class LanguageSw extends Languages {
     'phone_number': '',
     'add_new': '',
     'add_to_favourites': '',
+    'add_to_favourites_subtitle': '',
     'confirm': '',
     'confirmation': '',
     'home': '',
@@ -639,6 +654,13 @@ class LanguageSw extends Languages {
   String get call => values['call'] ?? '';
 
   @override
+  String get callDriver => values['call_driver'] ?? '';
+
+  @override
+  String get callDriverSheetSubtitle =>
+      values['call_driver_sheet_subtitle'] ?? '';
+
+  @override
   String get comingSoon => values['coming_soon'] ?? '';
 
   @override
@@ -765,6 +787,23 @@ class LanguageSw extends Languages {
 
   @override
   String get downloadSlip => values['download_slip'] ?? '';
+
+  @override
+  String get downloadSlipGallerySubtitle =>
+      values['download_slip_gallery_subtitle'] ?? '';
+
+  @override
+  String get chooseHowToReceiveReceipt =>
+      values['choose_how_to_receive_receipt'] ?? '';
+
+  @override
+  String get receiptOptions => values['receipt_options'] ?? '';
+
+  @override
+  String get shareSlip => values['share_slip'] ?? '';
+
+  @override
+  String get shareSlipSubtitle => values['share_slip_subtitle'] ?? '';
 
   @override
   String get driverArrivedMapBadge => values['driver_arrived_map_badge'] ?? '';
@@ -1592,6 +1631,12 @@ class LanguageSw extends Languages {
   String get safetyAndPrivacy => values['safety_and_privacy'] ?? '';
 
   @override
+  String get safetyOptions => values['safety_options'] ?? '';
+
+  @override
+  String get safetyOptionsSubtitle => values['safety_options_subtitle'] ?? '';
+
+  @override
   String get saveThisAddressFirstThenYouCanBookFromHere =>
       values['save_this_address_first_then_you_can_book_from_here'] ?? '';
 
@@ -1614,7 +1659,14 @@ class LanguageSw extends Languages {
   String get inAppCalling => values['in_app_calling'] ?? '';
 
   @override
+  String get inAppCallingSubtitle =>
+      values['in_app_calling_subtitle'] ?? '';
+
+  @override
   String get normalCall => values['normal_call'] ?? '';
+
+  @override
+  String get normalCallSubtitle => values['normal_call_subtitle'] ?? '';
 
   @override
   String get inAppCallingWillBeAvailableSoon =>
@@ -1669,7 +1721,21 @@ class LanguageSw extends Languages {
   String get selectCountry => values['select_country'] ?? '';
 
   @override
+  String get selectCountrySubtitle =>
+      values['select_country_subtitle'] ?? '';
+
+  @override
+  String get searchCountry => values['search_country'] ?? '';
+
+  @override
+  String get noCountriesFound => values['no_countries_found'] ?? '';
+
+  @override
   String get selectAReason => values['select_areason'] ?? '';
+
+  @override
+  String get selectAReasonSubtitle =>
+      values['select_a_reason_subtitle'] ?? '';
 
   @override
   String get selectAVehicleAndPaymentMethod =>
@@ -2159,6 +2225,10 @@ class LanguageSw extends Languages {
 
   @override
   String get addToFavourites => values['add_to_favourites'] ?? '';
+
+  @override
+  String get addToFavouritesSubtitle =>
+      values['add_to_favourites_subtitle'] ?? '';
 
   @override
   String get confirm => values['confirm'] ?? '';

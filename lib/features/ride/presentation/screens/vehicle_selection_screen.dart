@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:selcom_rides_frontend/shared/widgets/map_widgets.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
@@ -12,6 +11,8 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
+import '../../../../shared/widgets/app_google_map.dart';
+import '../../../../shared/widgets/app_map_route_one_line_bar.dart';
 import '../../../../shared/widgets/vehicle_selection_promo_chip.dart';
 import '../../../payment/presentation/widgets/payment_bar.dart';
 import '../controllers/vehicle_selection_controller.dart';
@@ -27,12 +28,51 @@ class VehicleSelectionScreen extends StatefulWidget {
 class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
   late final VehicleSelectionController controller;
 
-  static const double _sheetHeightFactor = 0.50;
-
   @override
   void initState() {
     super.initState();
     controller = Get.find<VehicleSelectionController>();
+  }
+
+  double _calculateInitialSheetSize(BuildContext context) {
+    final double screenHeight = MediaQuery.sizeOf(context).height;
+    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
+
+    if (screenHeight <= 0) return 0.55;
+
+    // Header: top handle space (10.h) + handle (4.h) + space (16.h) + text (~34.h) + space (12.h) = 76.h
+    final double headerHeight = 76.h;
+
+    // Estimates list: up to 3 visible items
+    final int estimatesCount = controller.estimates.length;
+    final int visibleItems = estimatesCount.clamp(0, 3);
+
+    double listHeight;
+    if (controller.isLoadingEstimates.value || estimatesCount == 0) {
+      listHeight = 120.h; // Loading spinner height
+    } else {
+      listHeight =
+          (visibleItems * 73.h) +
+          ((visibleItems - 1).clamp(0, 2) * 10.h) +
+          10.h;
+    }
+
+    // PaymentBar: top padding (18.h) + button (~56.h) + bottom padding
+    final double paymentBarHeight =
+        76.h +
+        (GetPlatform.isIOS
+            ? (bottomPadding > 0
+                  ? (bottomPadding - 10.h).clamp(12.h, bottomPadding)
+                  : 18.h)
+            : (bottomPadding > 0 ? bottomPadding + 8.h : 18.h));
+
+    // Safety margin is zero since list is non-scrollable when <= 3 items are present
+    const double safetyMargin = 0;
+
+    final double totalHeight =
+        headerHeight + listHeight + paymentBarHeight + safetyMargin;
+
+    return (totalHeight / screenHeight).clamp(0.35, 0.85);
   }
 
   @override
@@ -52,78 +92,11 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
               // Targeted rebuild for header labels/actions via update(['route_header']).
               child: GetBuilder<VehicleSelectionController>(
                 id: 'route_header',
-                builder: (controller) => Container(
-                  height: 44.h,
-                  padding: EdgeInsets.symmetric(horizontal: 4.w),
-                  decoration: BoxDecoration(
-                    color: AppColors.white,
-                    borderRadius: BorderRadius.circular(14.r),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: AppColors.shadowSoft,
-                        blurRadius: 8,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        onPressed: controller.closeVehicleSelection,
-                        icon: Icon(
-                          Icons.close,
-                          color: AppColors.textHeading,
-                          size: 20.sp,
-                        ),
-                      ),
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                controller.pickupMapLabel,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: AppTextStyles.homeSubtitle.copyWith(
-                                  color: AppColors.textHeading,
-                                  fontSize: 16.sp,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 4.w),
-                              child: Icon(
-                                Icons.arrow_right_alt,
-                                color: AppColors.textHeading,
-                                size: 18.sp,
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                controller.destinationMapLabel,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: AppTextStyles.homeSubtitle.copyWith(
-                                  color: AppColors.primary,
-                                  fontSize: 16.sp,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: controller.editRouteHeader,
-                        icon: Icon(
-                          Icons.edit_outlined,
-                          color: AppColors.textHeading,
-                          size: 20.sp,
-                        ),
-                      ),
-                    ],
-                  ),
+                builder: (controller) => AppMapRouteOneLineBar(
+                  pickupLabel: controller.pickupMapLabel,
+                  destinationLabel: controller.destinationMapLabel,
+                  onClose: controller.closeVehicleSelection,
+                  onEdit: controller.editRouteHeader,
                 ),
               ),
             ),
@@ -148,14 +121,26 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
               ),
             ),
           ),
-          AppDraggableBottomSheet(
-            initialChildSize: _sheetHeightFactor,
-            minChildSize: _sheetHeightFactor,
-            maxChildSize: 0.9,
-            snap: true,
-            snapSizes: const [_sheetHeightFactor, 0.9],
-            childBuilder: (_) => _bottomSheet(context),
-          ),
+          Obx(() {
+            final double factor = _calculateInitialSheetSize(context);
+            final int estimatesCount = controller.estimates.length;
+            final bool hasMoreThan3 = estimatesCount > 3;
+            final double initialFactor = hasMoreThan3
+                ? factor.clamp(0.0, 0.6)
+                : factor;
+            final double maxFactor = hasMoreThan3 ? 0.6 : factor;
+            final bool canSnap = hasMoreThan3 && (maxFactor > initialFactor);
+            return AppDraggableBottomSheet(
+              key: ValueKey('vehicle_selection_sheet_$estimatesCount'),
+              initialChildSize: initialFactor,
+              minChildSize: initialFactor,
+              maxChildSize: maxFactor,
+              snap: canSnap,
+              snapSizes: canSnap ? [initialFactor, maxFactor] : null,
+              childBuilder: (scrollController) =>
+                  _bottomSheet(context, scrollController),
+            );
+          }),
         ],
       ),
     );
@@ -175,6 +160,15 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
           child: SizedBox.expand(),
         );
       }
+
+      final double factor = _calculateInitialSheetSize(context);
+      final int estimatesCount = controller.estimates.length;
+      final bool hasMoreThan3 = estimatesCount > 3;
+      final double initialFactor = hasMoreThan3
+          ? factor.clamp(0.0, 0.6)
+          : factor;
+      final double mapBottomPadding =
+          MediaQuery.sizeOf(context).height * initialFactor;
 
       final points = controller.routePoints.toList();
       final pickup = LatLng(
@@ -256,7 +250,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
             padding: EdgeInsets.only(
               // Reserve space for the custom top route header.
               top: MediaQuery.paddingOf(context).top + 52.h,
-              bottom: MediaQuery.of(context).size.height * _sheetHeightFactor,
+              bottom: mapBottomPadding,
             ),
             onMapCreated: (c) async {
               controller.onMapCreated(c);
@@ -442,97 +436,79 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
     );
   }
 
-  Widget _bottomSheet(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.black.withValues(alpha: 0.08),
-            blurRadius: 16,
-            offset: const Offset(0, -4),
+  Widget _bottomSheet(BuildContext context, ScrollController scrollController) {
+    return SafeArea(
+      top: false,
+      bottom: false,
+      child: Column(
+        children: [
+          SizedBox(height: 10.h),
+          Container(
+            width: 48.w,
+            height: 4.h,
+            decoration: BoxDecoration(
+              color: AppColors.skeletonBase,
+              borderRadius: BorderRadius.circular(2.r),
+            ),
           ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        bottom: false,
-        child: Column(
-          children: [
-            SizedBox(height: 10.h),
-            Container(
-              width: 48.w,
-              height: 4.h,
-              decoration: BoxDecoration(
-                color: AppColors.skeletonBase,
-                borderRadius: BorderRadius.circular(2.r),
-              ),
-            ),
-            SizedBox(height: 16.h),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Text(
-                      AppStrings.chooseRide.tr,
-                      style: AppTextStyles.homeTitle.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.black,
-                        letterSpacing: -0.4,
-                        height: 34 / 20,
-                      ),
-                    ),
+          SizedBox(height: 16.h),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Text(
+                    AppStrings.chooseRide.tr,
+                    style: AppTextStyles.homeTitle,
                   ),
-                  VehicleSelectionPromoChip(controller: controller),
-                ],
-              ),
+                ),
+                VehicleSelectionPromoChip(controller: controller),
+              ],
             ),
-            SizedBox(height: 12.h),
-            Expanded(
-              child: Obx(() {
-                if (controller.isLoadingEstimates.value) {
-                  return const Padding(
-                    padding: EdgeInsets.all(20),
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
-                return ListView.separated(
-                  padding: EdgeInsets.only(
-                    left: 16.w,
-                    right: 16.w,
-                    bottom: 16.w,
-                  ),
-                  itemCount: controller.estimates.length,
-                  separatorBuilder: (_, __) => SizedBox(height: 10.h),
-                  itemBuilder: (_, index) {
-                    final item = controller.estimates[index];
-                    return Obx(() {
-                      final selected =
-                          controller.selectedVehicleIndex.value == index;
-                      final _ = controller.appliedPromoCode.value;
-                      return _vehicleCard(
-                        index: index,
-                        item: item,
-                        selected: selected,
-                      );
-                    });
-                  },
+          ),
+          SizedBox(height: 12.h),
+          Expanded(
+            child: Obx(() {
+              if (controller.isLoadingEstimates.value) {
+                return const Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Center(child: CircularProgressIndicator()),
                 );
-              }),
-            ),
-            Obx(() {
-              return PaymentBar(
-                buttonLabel:
-                    '${AppStrings.bookRide.tr} ${CurrencyFormatter.formatPayableOrFree(controller.selectedPayableFareAmount, controller.currency, freeLabel: AppStrings.rideFreeLabel.tr)}',
-                isLoading: controller.isBooking,
-                onActionButtonPressed: controller.bookRide,
+              }
+              return ListView.separated(
+                controller: scrollController,
+                physics: controller.estimates.length <= 3
+                    ? const NeverScrollableScrollPhysics()
+                    : null,
+                padding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 10.h),
+                itemCount: controller.estimates.length,
+                separatorBuilder: (_, __) => SizedBox(height: 10.h),
+                itemBuilder: (_, index) {
+                  final item = controller.estimates[index];
+                  return Obx(() {
+                    final selected =
+                        controller.selectedVehicleIndex.value == index;
+                    final _ = controller.appliedPromoCode.value;
+                    return _vehicleCard(
+                      index: index,
+                      item: item,
+                      selected: selected,
+                    );
+                  });
+                },
               );
             }),
-          ],
-        ),
+          ),
+          Obx(() {
+            return PaymentBar(
+              buttonLabel:
+                  '${AppStrings.bookRide.tr} ${CurrencyFormatter.formatPayableOrFree(controller.selectedPayableFareAmount, controller.currency, freeLabel: AppStrings.rideFreeLabel.tr)}',
+              isLoading: controller.isBooking,
+              onActionButtonPressed: controller.bookRide,
+            );
+          }),
+        ],
       ),
     );
   }

@@ -29,6 +29,7 @@ class AppTextField extends StatefulWidget {
   final FontWeight? fontWeight;
   final Color? textFieldBackgroundColor;
   final Color? textColor;
+  final Color? borderColor;
   final bool enableEnhancedStyle;
   final EdgeInsets? scrollPadding;
 
@@ -57,6 +58,7 @@ class AppTextField extends StatefulWidget {
     this.fontWeight,
     this.textFieldBackgroundColor,
     this.textColor,
+    this.borderColor,
     this.enableEnhancedStyle = false,
     this.scrollPadding,
   });
@@ -121,11 +123,14 @@ class _AppTextFieldState extends State<AppTextField> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (widget.label != null) ...[
-          Text(widget.label!, style: AppTextStyles.cardTitle.copyWith(
-            color: AppColors.textMutedStrong,
-            fontWeight: FontWeight.w500,
-            fontSize: 15.h
-          ),),
+          Text(
+            widget.label!,
+            style: AppTextStyles.cardTitle.copyWith(
+              color: AppColors.textMutedStrong,
+              fontWeight: FontWeight.w500,
+              fontSize: 15.h,
+            ),
+          ),
           SizedBox(height: 8.h),
         ],
         ValueListenableBuilder<bool>(
@@ -181,27 +186,37 @@ class _AppTextFieldState extends State<AppTextField> {
                   counterText: "",
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.input),
-                    borderSide: const BorderSide(color: AppColors.inputBorderDefault),
+                    borderSide: BorderSide(
+                      color: widget.borderColor ?? AppColors.inputBorderDefault,
+                    ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.input),
-                    borderSide: const BorderSide(color: AppColors.inputBorderDefault),
+                    borderSide: BorderSide(
+                      color: widget.borderColor ?? AppColors.inputBorderDefault,
+                    ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.input),
                     borderSide: BorderSide(
-                      color: widget.enableEnhancedStyle
-                          ? AppColors.inputBorderActive
-                          : AppColors.inputBorderDefault,
+                      color:
+                          widget.borderColor ??
+                          (widget.enableEnhancedStyle
+                              ? AppColors.inputBorderActive
+                              : AppColors.inputBorderDefault),
                     ),
                   ),
                   errorBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.input),
-                    borderSide: const BorderSide(color: AppColors.inputBorderError),
+                    borderSide: const BorderSide(
+                      color: AppColors.inputBorderError,
+                    ),
                   ),
                   focusedErrorBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.input),
-                    borderSide: const BorderSide(color: AppColors.inputBorderError),
+                    borderSide: const BorderSide(
+                      color: AppColors.inputBorderError,
+                    ),
                   ),
                 ),
               ),

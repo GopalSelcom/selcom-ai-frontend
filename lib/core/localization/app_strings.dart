@@ -7,6 +7,7 @@ class AppStrings {
   static const String add = 'add';
   static const String addNew = 'add_new';
   static const String addToFavourites = 'add_to_favourites';
+  static const String addToFavouritesSubtitle = 'add_to_favourites_subtitle';
   static const String addStops = 'add_stops';
   static const String addASavedPlace = 'add_asaved_place';
   static const String addDebitCreditCard = 'add_debit_credit_card';
@@ -46,6 +47,8 @@ class AppStrings {
   byContinuingYouAgreeThatYouHaveReadAndAcceptOurTAndCsAndPrivacyPolicy =
       'by_continuing_you_agree_that_you_have_read_and_accept_our_tand_cs_and_privacy_policy';
   static const String call = 'call';
+  static const String callDriver = 'call_driver';
+  static const String callDriverSheetSubtitle = 'call_driver_sheet_subtitle';
   static const String callingDriver = 'calling_driver';
   static const String cameraPermission = 'camera_permission';
   static const String cancelUpdate = 'cancel_update';
@@ -95,6 +98,13 @@ class AppStrings {
       'do_not_share_your_personal_details_with_rider_be_safe_and_always_check_your_luggage';
   static const String done = 'done';
   static const String downloadSlip = 'download_slip';
+  static const String downloadSlipGallerySubtitle =
+      'download_slip_gallery_subtitle';
+  static const String chooseHowToReceiveReceipt =
+      'choose_how_to_receive_receipt';
+  static const String receiptOptions = 'receipt_options';
+  static const String shareSlip = 'share_slip';
+  static const String shareSlipSubtitle = 'share_slip_subtitle';
   static const String driverArrivedMapBadge = 'driver_arrived_map_badge';
   static const String driverArrivedPickupPrimary =
       'driver_arrived_pickup_primary';
@@ -442,7 +452,9 @@ class AppStrings {
   static const String searchStop = 'search_stop';
   static const String searchStopLocation = 'search_stop_location';
   static const String inAppCalling = 'in_app_calling';
+  static const String inAppCallingSubtitle = 'in_app_calling_subtitle';
   static const String normalCall = 'normal_call';
+  static const String normalCallSubtitle = 'normal_call_subtitle';
   static const String inAppCallingWillBeAvailableSoon =
       'in_app_calling_will_be_available_soon';
   static const String updateFailed = 'update_failed';
@@ -464,8 +476,12 @@ class AppStrings {
   static const String selectANearbyPointForEasierPickup =
       'select_anearby_point_for_easier_pickup';
   static const String selectCountry = 'select_country';
+  static const String selectCountrySubtitle = 'select_country_subtitle';
+  static const String searchCountry = 'search_country';
+  static const String noCountriesFound = 'no_countries_found';
   static const String selectAPaymentMethod = 'select_apayment_method';
   static const String selectAReason = 'select_areason';
+  static const String selectAReasonSubtitle = 'select_a_reason_subtitle';
   static const String selectAVehicleAndPaymentMethod =
       'select_avehicle_and_payment_method';
   static const String selectPayment = 'select_payment';
@@ -556,6 +572,7 @@ class AppStrings {
   static const String share = 'share';
   static const String safety = 'safety';
   static const String safetyOptions = 'safety_options';
+  static const String safetyOptionsSubtitle = 'safety_options_subtitle';
   static const String shareLiveLocation = 'share_live_location';
   static const String selcomGoSosHelpline = 'selcom_go_sos_helpline';
   static const String callPolice = 'call_police';
