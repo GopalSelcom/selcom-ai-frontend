@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'dart:developer' as developer;
 
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
 import 'package:app_settings/app_settings.dart';
@@ -43,7 +44,16 @@ import '../../../../core/services/error_reporting/error_reporter.dart';
 
 class HomeController extends GetxController with WidgetsBindingObserver {
   static const String _currentLocationPlaceId = '__current_location__';
-  static const double homeSheetInitialSize = 0.32;
+
+  /// Maximum draggable height (fraction of screen).
+  static const double homeSheetMaxSize = 0.9;
+
+  /// Default height when recent destinations are available.
+  static const double homeSheetWithRecentDefaultSize = 0.7;
+
+  /// Floor for collapsed sheet peek.
+  static const double homeSheetCollapsedPeekMin = 0.28;
+
   static bool _didCheckPendingReviewOnHomeLaunch = false;
 
   final HomeRepository homeRepository;
@@ -87,9 +97,15 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   final hasLocationPermission = false.obs;
 
   /// Draggable home bottom sheet size (fraction of screen height).
-  final sheetSize = homeSheetInitialSize.obs;
+  final sheetSize = homeSheetCollapsedPeekMin.obs;
   final DraggableScrollableController homeSheetController =
       DraggableScrollableController();
+
+  /// Measured sheet content height in px (from layout); drives max/initial sizes.
+  final measuredSheetContentHeightPx = RxnDouble();
+
+  /// Screen height used with [measuredSheetContentHeightPx] for sheet fractions.
+  final measuredSheetLayoutHeightPx = RxnDouble();
 
   /// Last device GPS fix — used for 1 km radius overlay (does not follow map pan).
   final Rxn<LatLng> deviceGpsLocation = Rxn<LatLng>();
@@ -211,7 +227,9 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         position: pos,
         anchor: const Offset(0.5, 1),
         infoWindow: InfoWindow(
-          title: savedPlaces.isEmpty ? AppStrings.location.tr : AppStrings.pickup.tr,
+          title: savedPlaces.isEmpty
+              ? AppStrings.location.tr
+              : AppStrings.pickup.tr,
           snippet: snippet.isEmpty ? AppStrings.selectedAddress.tr : snippet,
         ),
         icon:
@@ -282,6 +300,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       });
     } finally {
       isLoadingHomeData.value = false;
+      invalidateHomeSheetMeasurement();
     }
   }
 
@@ -300,6 +319,29 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     final result = await rideRepository.getRecentDestinations();
     result.fold((_) => null, (destinations) {
       recentDestinations.assignAll(destinations);
+      invalidateHomeSheetMeasurement();
+    });
+  }
+
+  void invalidateHomeSheetMeasurement() {
+    measuredSheetContentHeightPx.value = null;
+    measuredSheetLayoutHeightPx.value = null;
+  }
+
+  void reportHomeSheetContentHeight({
+    required double contentHeightPx,
+    required double layoutHeightPx,
+  }) {
+    if (contentHeightPx <= 0 || layoutHeightPx <= 0) return;
+    final previous = measuredSheetContentHeightPx.value;
+    if (previous != null && (previous - contentHeightPx).abs() < 1) return;
+
+    final isFirstMeasure = previous == null;
+    measuredSheetContentHeightPx.value = contentHeightPx;
+    measuredSheetLayoutHeightPx.value = layoutHeightPx;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      syncHomeSheetToDefault(animated: !isFirstMeasure);
     });
   }
 
@@ -371,7 +413,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       await LiveActivityManager().startActivity(
         orderId: ride.id,
         status: status.toUpperCase(),
-        driverName: ride.driverSnapshot?.name ?? AppStrings.searchingForDriver.tr,
+        driverName:
+            ride.driverSnapshot?.name ?? AppStrings.searchingForDriver.tr,
         vehicleName:
             '${ride.vehicleSnapshot?.vehicleMake ?? ''} ${ride.vehicleSnapshot?.vehicleModel ?? ''}'
                 .trim(),
@@ -464,6 +507,173 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   void _onHomeSheetChanged() {
     if (!homeSheetController.isAttached) return;
     updateHomeSheetSize(homeSheetController.size);
+  }
+
+  bool get hasRecentLocationsForSheet =>
+      !isLoadingHomeData.value && recentDestinations.isNotEmpty;
+
+  /// Smallest drag height: handle + search + chips only (recents/vehicles collapse).
+  double get homeSheetMinSize {
+    final fraction =
+        _homeSheetCollapsedPeekHeight() / _homeSheetScreenHeight;
+    final max = homeSheetMaxChildSize;
+    if (max <= homeSheetCollapsedPeekMin + 0.02) {
+      return (max - 0.02).clamp(0.15, max);
+    }
+    return fraction.clamp(homeSheetCollapsedPeekMin, max - 0.02);
+  }
+
+  double get _sheetLayoutScreenHeight =>
+      measuredSheetLayoutHeightPx.value ?? _homeSheetScreenHeight;
+
+  /// Uncapped content height as a fraction of the screen (measured when available).
+  double get homeSheetRawContentFraction {
+    final measured = measuredSheetContentHeightPx.value;
+    if (measured != null) {
+      return measured / _sheetLayoutScreenHeight;
+    }
+    return _homeSheetContentHeight(
+          includeRecent: hasRecentLocationsForSheet,
+        ) /
+        _homeSheetScreenHeight;
+  }
+
+  bool get homeSheetHasMeasuredContent => measuredSheetContentHeightPx.value != null;
+
+  /// True when content exceeds 90% — inner list scrolls; sheet max stays at 90%.
+  bool get homeSheetNeedsInnerScroll =>
+      homeSheetRawContentFraction > homeSheetMaxSize + 0.01;
+
+  /// Natural content height including optional recent block (capped at 90%).
+  double get homeSheetContentSizeFraction {
+    return homeSheetRawContentFraction.clamp(
+      homeSheetCollapsedPeekMin,
+      homeSheetMaxSize,
+    );
+  }
+
+  /// Max drag: content height when it fits; otherwise 90% with inner scroll.
+  double get homeSheetMaxChildSize {
+    if (homeSheetNeedsInnerScroll) return homeSheetMaxSize;
+    return homeSheetContentSizeFraction;
+  }
+
+  /// Keeps sheet draggable up/down; inner list scrolls only when content overflows.
+  ScrollPhysics get homeSheetScrollPhysics =>
+      const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics());
+
+  /// True when recents need at least the 70% default (enough measured content).
+  bool get homeSheetShouldUseExpandedDefault =>
+      hasRecentLocationsForSheet &&
+      homeSheetHasMeasuredContent &&
+      homeSheetContentSizeFraction >= homeSheetWithRecentDefaultSize - 0.02;
+
+  /// Resting height: content-sized when small; 70% only after measure proves it fits.
+  double get homeSheetInitialSize {
+    final content = homeSheetContentSizeFraction;
+    final clamped = content.clamp(homeSheetMinSize, homeSheetMaxChildSize);
+
+    if (!hasRecentLocationsForSheet) return clamped;
+
+    // Until layout is measured, never force 70% — use content/estimate height.
+    if (!homeSheetHasMeasuredContent) return clamped;
+
+    if (!homeSheetShouldUseExpandedDefault) return clamped;
+
+    return homeSheetWithRecentDefaultSize.clamp(
+      homeSheetMinSize,
+      homeSheetMaxChildSize,
+    );
+  }
+
+  List<double> get homeSheetSnapSizes {
+    final max = homeSheetMaxChildSize;
+    final snaps = <double>[homeSheetMinSize];
+    if (homeSheetShouldUseExpandedDefault) {
+      final expandedSnap = homeSheetWithRecentDefaultSize.clamp(
+        homeSheetMinSize,
+        max,
+      );
+      if (expandedSnap > snaps.last + 0.05) {
+        snaps.add(expandedSnap);
+      }
+    }
+    if (max > snaps.last + 0.05) {
+      snaps.add(max);
+    }
+    return _dedupeAscendingSnapSizes(snaps);
+  }
+
+  bool get homeSheetShouldSnap => homeSheetSnapSizes.length > 1;
+
+  void syncHomeSheetToDefault({bool animated = false}) {
+    final max = homeSheetMaxChildSize;
+    var target = homeSheetInitialSize;
+    if (homeSheetController.isAttached) {
+      final current = homeSheetController.size;
+      if (current > max) {
+        target = max;
+      }
+    }
+    sheetSize.value = target;
+    if (!homeSheetController.isAttached) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        syncHomeSheetToDefault(animated: animated);
+      });
+      return;
+    }
+    if (animated) {
+      homeSheetController.animateTo(
+        target,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutCubic,
+      );
+    } else {
+      homeSheetController.jumpTo(target);
+    }
+  }
+
+  double get _homeSheetScreenHeight => 1.sh > 0 ? 1.sh : 812;
+
+  double _homeSheetCollapsedPeekHeight() {
+    return 80.h + 68.h + 12.h + 16.h;
+  }
+
+  double _homeSheetContentHeight({required bool includeRecent}) {
+    // Handle + search field block.
+    double contentHeight = 78.h;
+    // Favorite chips row.
+    contentHeight += 64.h;
+
+    if (includeRecent && shouldShowRecentSection) {
+      contentHeight += 28.h; // Section title + gap.
+      final count = recentDestinationsPreview.length;
+      contentHeight += count * 64.h;
+      if (count > 1) {
+        contentHeight += (count - 1) * 25.h; // Dividers between rows.
+      }
+    }
+
+    if (shouldShowVehicleSection) {
+      contentHeight += 12.h;
+      contentHeight += 28.h; // Title + gap.
+      contentHeight += 72.h; // Vehicle row (fixed height in sheet).
+    }
+
+    contentHeight += 4.h; // Bottom padding.
+    return contentHeight;
+  }
+
+  List<double> _dedupeAscendingSnapSizes(List<double> sizes) {
+    final sorted = sizes.toList()..sort();
+    final out = <double>[];
+    for (final size in sorted) {
+      final clamped = size.clamp(homeSheetMinSize, homeSheetMaxChildSize);
+      if (out.isEmpty || clamped > out.last + 0.05) {
+        out.add(clamped);
+      }
+    }
+    return out;
   }
 
   @override
@@ -871,8 +1081,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       return;
     }
 
-    final destAddr =
-        (place.address ?? place.name ?? AppStrings.savedPlace.tr).trim();
+    final destAddr = (place.address ?? place.name ?? AppStrings.savedPlace.tr)
+        .trim();
     if (destAddr.isEmpty) {
       AppDialogs.showErrorDialog(
         title: AppStrings.addressMissing.tr,
@@ -1163,26 +1373,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }
 
   void closeLocationSelection() {
-    final context = Get.context;
-    bool hasKeyboard = false;
-    if (context != null) {
-      try {
-        hasKeyboard = MediaQuery.viewInsetsOf(context).bottom > 0;
-      } catch (_) {
-        hasKeyboard = FocusManager.instance.primaryFocus != null;
-      }
-    } else {
-      hasKeyboard = FocusManager.instance.primaryFocus != null;
-    }
-
-    if (hasKeyboard) {
-      FocusManager.instance.primaryFocus?.unfocus();
-      Future.delayed(const Duration(milliseconds: 300), () {
-        Get.back();
-      });
-    } else {
-      Get.back();
-    }
+    Get.back();
   }
 
   Future<void> proceedToBookingFromLocationSelection({
@@ -1641,22 +1832,20 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     if (Get.isBottomSheetOpen ?? false) return;
 
     await Get.bottomSheet<void>(
-      Obx(
-        () {
-          savedPlaces.length;
-          return AddFavoriteLocationSheet(
-            address: detailedAddress,
-            isSaving: isSavingPlace.value,
-            resolveSavedPlace: getSavedPlaceByLabel,
-            onSave: (label) async {
-              await onSave(label);
-              if ((Get.isBottomSheetOpen ?? false) && !isSavingPlace.value) {
-                Get.back<void>();
-              }
-            },
-          );
-        },
-      ),
+      Obx(() {
+        savedPlaces.length;
+        return AddFavoriteLocationSheet(
+          address: detailedAddress,
+          isSaving: isSavingPlace.value,
+          resolveSavedPlace: getSavedPlaceByLabel,
+          onSave: (label) async {
+            await onSave(label);
+            if ((Get.isBottomSheetOpen ?? false) && !isSavingPlace.value) {
+              Get.back<void>();
+            }
+          },
+        );
+      }),
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
     );

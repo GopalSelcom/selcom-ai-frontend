@@ -7,7 +7,6 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../ride_rating/presentation/widgets/ride_rating_input_section.dart';
@@ -56,17 +55,22 @@ class RideDetailsScreen extends StatelessWidget {
       Get.offAllNamed(AppRoutes.home);
     }
 
-    Future<void> handleSkipToHome() async {
-      // Skip still calls backend first; then we enforce Home navigation.
+    Future<void> handleSkipFlow() async {
       await controller.ratingController.onSkipTap();
-      await handleCompletionExit();
+      if (controller.openedFromCompletionFlow) {
+        await handleCompletionExit();
+      } else {
+        if (context.mounted) {
+          Navigator.pop(context);
+        }
+      }
     }
 
     final reviewSection = controller.hasExistingRating
         ? Container(
             padding: EdgeInsets.all(14.w),
             decoration: BoxDecoration(
-              color: AppColors.surfaceSubtle,
+              color: AppColors.pageBackground,
               border: Border.all(
                 color: AppColors.borderWalletCard,
                 width: 0.78,
@@ -110,7 +114,7 @@ class RideDetailsScreen extends StatelessWidget {
         }
       },
       child: Scaffold(
-        backgroundColor: AppColors.pageBackground,
+        backgroundColor: AppColors.white,
         body: Column(
           children: [
             AppProfileHeader(
@@ -119,33 +123,6 @@ class RideDetailsScreen extends StatelessWidget {
                   : AppStrings.yourRides.tr,
               onBack: controller.openedFromCompletionFlow
                   ? handleCompletionExit
-                  : null,
-              child:
-                  controller.openedFromCompletionFlow &&
-                      controller.canShowReviewInput &&
-                      !controller.hasExistingRating
-                  ? Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: handleSkipToHome,
-                        style: TextButton.styleFrom(
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 24.w,
-                            vertical: 0,
-                          ),
-                        ),
-                        child: Text(
-                          AppStrings.skip.tr,
-                          style: AppTextStyles.homeSubtitle.copyWith(
-                            color: AppColors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13.sp,
-                          ),
-                        ),
-                      ),
-                    )
                   : null,
             ),
             Expanded(
@@ -191,16 +168,16 @@ class RideDetailsScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    SizedBox(height: 14.h),
+                    SizedBox(height: 10.h),
                     if (controller.shouldPrioritizeReviewSection) ...[
                       // Completion entry: keep rating above route/fare cards.
                       reviewSection,
-                      SizedBox(height: 16.h),
+                      SizedBox(height: 10.h),
                     ],
                     Container(
                       padding: EdgeInsets.all(16.w),
                       decoration: BoxDecoration(
-                        color: AppColors.surfaceSubtle,
+                        color: AppColors.pageBackground,
                         border: Border.all(
                           color: AppColors.borderWalletCard,
                           width: 0.78,
@@ -216,11 +193,11 @@ class RideDetailsScreen extends StatelessWidget {
                       ),
                     ),
                     if (ride.isBookedForOther) ...[
-                      SizedBox(height: 16.h),
+                      SizedBox(height: 10.h),
                       Container(
                         padding: EdgeInsets.all(16.w),
                         decoration: BoxDecoration(
-                          color: AppColors.surfaceSubtle,
+                          color: AppColors.pageBackground,
                           border: Border.all(
                             color: AppColors.borderWalletCard,
                             width: 0.78,
@@ -285,11 +262,11 @@ class RideDetailsScreen extends StatelessWidget {
                         ),
                       ),
                     ],
-                    SizedBox(height: 8.h),
+                    SizedBox(height: 10.h),
                     Container(
                       padding: EdgeInsets.fromLTRB(14.w, 14.h, 11.w, 14.h),
                       decoration: BoxDecoration(
-                        color: AppColors.surfaceSubtle,
+                        color: AppColors.pageBackground,
                         border: Border.all(
                           color: AppColors.borderWalletCard,
                           width: 0.78,
@@ -350,43 +327,34 @@ class RideDetailsScreen extends StatelessWidget {
                 final rc = controller.ratingController;
                 final bool isSimpleDoneFlow =
                     controller.hasExistingRating ||
-                        !controller.canShowReviewInput;
-                final bool needsReviewForm =
-                    controller.canShowReviewInput &&
-                        !controller.hasExistingRating;
+                    !controller.canShowReviewInput;
                 final bool isSubmitting = rc.isSubmitting.value;
-                final bool canSubmit = rc.canSubmit;
-                final bool formComplete = rc.isRatingFormComplete;
-                final bool shouldShowButton = isSimpleDoneFlow ||
-                    (needsReviewForm &&
-                        formComplete &&
-                        (isSubmitting || canSubmit));
+
+                final String buttonLabel = isSimpleDoneFlow
+                    ? AppStrings.done.tr
+                    : (rc.hasSelectedRating
+                          ? AppStrings.done.tr
+                          : AppStrings.skip.tr);
+
+                final onPressed = isSimpleDoneFlow
+                    ? (controller.openedFromCompletionFlow
+                          ? handleCompletionExit
+                          : () => Navigator.pop(context))
+                    : (rc.hasSelectedRating
+                          ? () => rc.onSubmitTap(
+                              onSuccessConfirmed:
+                                  controller.openedFromCompletionFlow
+                                  ? handleCompletionExit
+                                  : () => Navigator.pop(context),
+                            )
+                          : handleSkipFlow);
 
                 return Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    16.w,
-                    0,
-                    16.w,
-                    shouldShowButton ? 16.h : 0,
-                  ),
-                  child: AppAnimatedReveal(
-                    show: shouldShowButton,
-                    visibleKey: const ValueKey('ride-details-done-visible'),
-                    hiddenKey: const ValueKey('ride-details-done-hidden'),
-                    child: AppPrimaryButton(
-                      label: AppStrings.done.tr,
-                      isLoading: !isSimpleDoneFlow && isSubmitting,
-                      onPressed: isSimpleDoneFlow
-                          ? (controller.openedFromCompletionFlow
-                                ? handleCompletionExit
-                                : () => Navigator.pop(context))
-                          : () => rc.onSubmitTap(
-                                onSuccessConfirmed:
-                                    controller.openedFromCompletionFlow
-                                    ? handleCompletionExit
-                                    : () => Navigator.pop(context),
-                              ),
-                    ),
+                  padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
+                  child: AppPrimaryButton(
+                    label: buttonLabel,
+                    isLoading: !isSimpleDoneFlow && isSubmitting,
+                    onPressed: onPressed,
                   ),
                 );
               }),

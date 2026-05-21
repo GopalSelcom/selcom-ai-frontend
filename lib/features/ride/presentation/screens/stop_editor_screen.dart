@@ -247,8 +247,11 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                         child: Container(
                           padding: EdgeInsets.all(12.w),
                           decoration: BoxDecoration(
-                            color: AppColors.cardBackground,
-                            borderRadius: BorderRadius.circular(AppRadius.card),
+                            color: AppColors.pageBackground,
+                            borderRadius: BorderRadius.circular(12.r),
+                            border: Border.all(
+                              color: AppColors.shade5.withValues(alpha: 0.5),
+                            ),
                           ),
                           child: Row(
                             children: [

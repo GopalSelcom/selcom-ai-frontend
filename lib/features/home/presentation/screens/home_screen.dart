@@ -38,7 +38,6 @@ class HomeScreen extends GetView<HomeController> {
         _showExitDialog(context);
       },
       child: Scaffold(
-        resizeToAvoidBottomInset: false,
         backgroundColor: AppColors.pageBackground,
         body: Stack(
           children: [
@@ -212,179 +211,167 @@ class HomeScreen extends GetView<HomeController> {
 
   Widget _buildFigmaDraggableSheet(BuildContext context) {
     return Obx(() {
-      final double maxContentSize = _calculateMaxSheetSize();
+      controller.recentDestinations.length;
+      controller.vehicleTypes.length;
+      controller.savedPlaces.length;
+      controller.isLoadingHomeData.value;
+      controller.measuredSheetContentHeightPx.value;
 
-      // Ensure snapSizes are in strictly ascending order to avoid assertion errors.
-      // We only add the maxContentSize as a snap point if it's meaningfully larger than the initial size.
-      final List<double> snaps = [HomeController.homeSheetInitialSize];
-      if (maxContentSize > HomeController.homeSheetInitialSize + 0.05) {
-        snaps.add(maxContentSize);
-      }
+      final minSize = controller.homeSheetMinSize;
+      final initialSize = controller.homeSheetInitialSize;
+      final maxSize = controller.homeSheetMaxChildSize;
+      final snapSizes = controller.homeSheetSnapSizes;
+      final scrollPhysics = controller.homeSheetScrollPhysics;
+      final contentSignature = Object.hash(
+        controller.recentDestinations.length,
+        controller.vehicleTypes.length,
+        controller.savedPlaces.length,
+        controller.shouldShowRecentSection,
+        controller.shouldShowVehicleSection,
+      );
 
       return AppDraggableBottomSheet(
         controller: controller.homeSheetController,
-        initialChildSize: HomeController.homeSheetInitialSize,
-        minChildSize: HomeController.homeSheetInitialSize,
-        maxChildSize: maxContentSize > HomeController.homeSheetInitialSize
-            ? maxContentSize
-            : HomeController.homeSheetInitialSize + 0.01,
-        snap: snaps.length > 1,
-        snapSizes: snaps,
+        initialChildSize: initialSize,
+        minChildSize: minSize,
+        maxChildSize: maxSize > minSize ? maxSize : minSize + 0.01,
+        snap: controller.homeSheetShouldSnap,
+        snapSizes: snapSizes,
         childBuilder: (scrollController) {
-          return ListView(
-            controller: scrollController,
-            physics: const ClampingScrollPhysics(),
-            clipBehavior: Clip.hardEdge,
-            padding: EdgeInsets.only(
-              bottom: 12.h + MediaQuery.paddingOf(context).bottom,
-            ),
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: _sheetHorizontalPadding.w,
+          return _HomeSheetScrollContent(
+            key: ValueKey<int>(contentSignature),
+            scrollController: scrollController,
+            physics: scrollPhysics,
+            contentSignature: contentSignature,
+            onContentMeasured: controller.reportHomeSheetContentHeight,
+            children: _buildHomeSheetContentChildren(),
+          );
+        },
+      );
+    });
+  }
+
+  List<Widget> _buildHomeSheetContentChildren() {
+    return [
+      Padding(
+        padding: EdgeInsets.symmetric(horizontal: _sheetHorizontalPadding.w),
+        child: Column(
+          children: [
+            SizedBox(height: 12.h),
+            Center(
+              child: Container(
+                width: 48.w,
+                height: 5.h,
+                decoration: BoxDecoration(
+                  color: AppColors.skeletonBase,
+                  borderRadius: BorderRadius.circular(37.r),
                 ),
-                child: Column(
+              ),
+            ),
+            SizedBox(height: 8.h),
+            GestureDetector(
+              onTap: () => controller.openLocationSelection(),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 16.h),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceSubtle,
+                  borderRadius: BorderRadius.circular(16.r),
+                  border: Border.all(color: AppColors.skeletonBase, width: 0.8),
+                ),
+                child: Row(
                   children: [
-                    SizedBox(height: 12.h),
-                    Center(
-                      child: Container(
-                        width: 48.w,
-                        height: 5.h,
-                        decoration: BoxDecoration(
-                          color: AppColors.skeletonBase,
-                          borderRadius: BorderRadius.circular(37.r),
-                        ),
-                      ),
+                    SvgPictureAsset(
+                      AppAssets.locationIcDestinationPin,
+                      color: AppColors.primary,
+                      width: 19.sp,
+                      height: 19.sp,
                     ),
-                    SizedBox(height: 8.h),
-                    GestureDetector(
-                      onTap: () => controller.openLocationSelection(),
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 18.w,
-                          vertical: 16.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.surfaceSubtle,
-                          borderRadius: BorderRadius.circular(16.r),
-                          border: Border.all(
-                            color: AppColors.skeletonBase,
-                            width: 0.8,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            SvgPictureAsset(
-                              AppAssets.locationIcDestinationPin,
-                              color: AppColors.primary,
-                              width: 19.sp,
-                              height: 19.sp,
-                            ),
-                            SizedBox(width: 12.w),
-                            Text(
-                              AppStrings.whereAreYouGoing.tr,
-                              style: AppTextStyles.homeSubtitle.copyWith(
-                                color: AppColors.black,
-                                fontWeight: FontWeight.w500,
-                                fontSize: 15.sp,
-                              ),
-                            ),
-                          ],
-                        ),
+                    SizedBox(width: 12.w),
+                    Text(
+                      AppStrings.whereAreYouGoing.tr,
+                      style: AppTextStyles.homeSubtitle.copyWith(
+                        color: AppColors.black,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 15.sp,
                       ),
                     ),
                   ],
                 ),
               ),
-              SizedBox(height: 8.h),
-              Obx(() {
-                controller.savedPlaces.length;
-                final extras = controller.savedPlacesBeyondPresetSlots;
-                return FavoriteLocationChipsRow(
-                  contentHorizontalPadding: _sheetHorizontalPadding.w,
-                  chipBackgroundColor: AppColors.surfaceSubtle,
-                  chipBorderColor: AppColors.borderWalletCard,
-                  resolvePlace: controller.getSavedPlaceByLabel,
-                  extraSavedPlaces: extras,
-                  onChipTap: (canonical, place) {
-                    if (place == null) {
-                      Get.toNamed(
-                        AppRoutes.selectSavedLocation,
-                        arguments: canonical,
-                      );
-                    } else {
-                      controller.navigateToVehicleSelectionForSavedLabel(
-                        canonical,
-                      );
-                    }
-                  },
-                  onSavedChipLongPress: (canonical) => Get.toNamed(
-                    AppRoutes.selectSavedLocation,
-                    arguments: canonical,
-                  ),
-                  onExtraChipTap: (place) =>
-                      controller.navigateToVehicleSelectionForSavedPlace(place),
-                  onExtraChipLongPress: (place) {
-                    final raw = (place.label ?? place.name ?? '').trim();
-                    Get.toNamed(
-                      AppRoutes.selectSavedLocation,
-                      arguments: raw.isEmpty ? AppStrings.saved.tr : raw,
-                    );
-                  },
-                );
-              }),
-              Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: _sheetHorizontalPadding.w,
-                ),
-                child: Obx(() {
-                  const sectionGap = 12.0;
-                  const titleContentGap = 10.0;
-                  const recentItemGap = 12.0;
+            ),
+          ],
+        ),
+      ),
+      SizedBox(height: 8.h),
+      Obx(() {
+        controller.savedPlaces.length;
+        final extras = controller.savedPlacesBeyondPresetSlots;
+        return FavoriteLocationChipsRow(
+          contentHorizontalPadding: _sheetHorizontalPadding.w,
+          chipBackgroundColor: AppColors.surfaceSubtle,
+          chipBorderColor: AppColors.borderWalletCard,
+          resolvePlace: controller.getSavedPlaceByLabel,
+          extraSavedPlaces: extras,
+          onChipTap: (canonical, place) {
+            if (place == null) {
+              Get.toNamed(AppRoutes.selectSavedLocation, arguments: canonical);
+            } else {
+              controller.navigateToVehicleSelectionForSavedLabel(canonical);
+            }
+          },
+          onSavedChipLongPress: (canonical) =>
+              Get.toNamed(AppRoutes.selectSavedLocation, arguments: canonical),
+          onExtraChipTap: (place) =>
+              controller.navigateToVehicleSelectionForSavedPlace(place),
+          onExtraChipLongPress: (place) {
+            final raw = (place.label ?? place.name ?? '').trim();
+            Get.toNamed(
+              AppRoutes.selectSavedLocation,
+              arguments: raw.isEmpty ? AppStrings.saved.tr : raw,
+            );
+          },
+        );
+      }),
+      Padding(
+        padding: EdgeInsets.symmetric(horizontal: _sheetHorizontalPadding.w),
+        child: Obx(() {
+          const sectionGap = 12.0;
+          const titleContentGap = 10.0;
+          const recentItemGap = 12.0;
 
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (controller.shouldShowRecentSection) ...[
-                        SizedBox(height: sectionGap.h),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                AppStrings.recentLocation.tr,
-                                style: _sectionTitleStyle,
-                              ),
-                            ),
-                            if (controller.canViewMoreRecentLocations)
-                              _viewMoreButton(
-                                onPressed: controller.openRecentLocationsScreen,
-                              ),
-                          ],
-                        ),
-                        SizedBox(height: titleContentGap.h),
-                        ..._buildRecentLocationListItems(
-                          itemGap: recentItemGap.h,
-                        ),
-                      ],
-                      if (controller.shouldShowVehicleSection) ...[
-                        SizedBox(height: sectionGap.h),
-                        Text(
-                          AppStrings.exploreVehicle.tr,
-                          style: _sectionTitleStyle,
-                        ),
-                        SizedBox(height: titleContentGap.h),
-                        _buildVehicleHorizontalList(),
-                      ],
-                    ],
-                  );
-                }),
-              ),
-              SizedBox(height: 12.h),
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (controller.shouldShowRecentSection) ...[
+                SizedBox(height: sectionGap.h),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        AppStrings.recentLocation.tr,
+                        style: _sectionTitleStyle,
+                      ),
+                    ),
+                    if (controller.canViewMoreRecentLocations)
+                      _viewMoreButton(
+                        onPressed: controller.openRecentLocationsScreen,
+                      ),
+                  ],
+                ),
+                SizedBox(height: titleContentGap.h),
+                ..._buildRecentLocationListItems(itemGap: recentItemGap.h),
+              ],
+              if (controller.shouldShowVehicleSection) ...[
+                SizedBox(height: sectionGap.h),
+                Text(AppStrings.exploreVehicle.tr, style: _sectionTitleStyle),
+                SizedBox(height: titleContentGap.h),
+                _buildVehicleHorizontalList(),
+              ],
             ],
           );
-        },
-      );
-    });
+        }),
+      ),
+    ];
   }
 
   TextStyle get _sectionTitleStyle => AppTextStyles.homeSubtitle.copyWith(
@@ -508,16 +495,24 @@ class HomeScreen extends GetView<HomeController> {
     );
   }
 
+  /// Image (42) + gap (4) + label + descender padding — fixed row height for the sheet.
+  static const double _vehicleRowHeight = 72;
+
   Widget _buildVehicleHorizontalList() {
     return Obx(
-      () => SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: controller.isLoadingHomeData.value
-              ? List.generate(3, (_) => _buildVehicleSkeleton())
-              : controller.vehicleTypes
-                    .map((vehicle) => _buildVehicleCard(vehicle))
-                    .toList(),
+      () => SizedBox(
+        height: _vehicleRowHeight.h,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          clipBehavior: Clip.none,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: controller.isLoadingHomeData.value
+                ? List.generate(3, (_) => _buildVehicleSkeleton())
+                : controller.vehicleTypes
+                      .map((vehicle) => _buildVehicleCard(vehicle))
+                      .toList(),
+          ),
         ),
       ),
     );
@@ -532,6 +527,7 @@ class HomeScreen extends GetView<HomeController> {
       child: Container(
         margin: EdgeInsets.only(right: 29.w),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
               width: 62.w,
@@ -547,13 +543,18 @@ class HomeScreen extends GetView<HomeController> {
               ),
             ),
             SizedBox(height: 4.h),
-            Text(
-              vehicle.displayName,
-              style: AppTextStyles.homeCaption.copyWith(
-                fontSize: 12,
-                color: AppColors.textHeading,
-                fontWeight: FontWeight.w400,
-                height: 20 / 12,
+            Padding(
+              padding: EdgeInsets.only(bottom: 2.h),
+              child: Text(
+                vehicle.displayName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.homeCaption.copyWith(
+                  fontSize: 12.sp,
+                  color: AppColors.textHeading,
+                  fontWeight: FontWeight.w400,
+                  height: 1.25,
+                ),
               ),
             ),
           ],
@@ -566,10 +567,11 @@ class HomeScreen extends GetView<HomeController> {
     return Container(
       margin: EdgeInsets.only(right: 16.w),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 72.w,
-            height: 49.h,
+            width: 62.w,
+            height: 42.h,
             padding: EdgeInsets.all(6.w),
             decoration: BoxDecoration(
               color: AppColors.white,
@@ -582,7 +584,7 @@ class HomeScreen extends GetView<HomeController> {
               ),
             ),
           ),
-          SizedBox(height: 8.h),
+          SizedBox(height: 4.h),
           Container(
             width: 52.w,
             height: 10.h,
@@ -731,38 +733,93 @@ class HomeScreen extends GetView<HomeController> {
       },
     );
   }
+}
 
-  double _calculateMaxSheetSize() {
-    // 1. Base content height (handle + search bar + padding)
-    double contentHeight = 50.h;
+/// Measures real content height and reports it so the sheet max matches layout.
+class _HomeSheetScrollContent extends StatefulWidget {
+  const _HomeSheetScrollContent({
+    super.key,
+    required this.scrollController,
+    required this.physics,
+    required this.contentSignature,
+    required this.onContentMeasured,
+    required this.children,
+  });
 
-    // 2. Favorite preset chips row (always shown)
-    contentHeight += 60.h;
+  final ScrollController scrollController;
+  final ScrollPhysics physics;
+  final int contentSignature;
+  final void Function({
+    required double contentHeightPx,
+    required double layoutHeightPx,
+  })
+  onContentMeasured;
+  final List<Widget> children;
 
-    // 3. Recent Locations Section
-    if (controller.shouldShowRecentSection) {
-      contentHeight += 30.h; // Title + title gap
-      contentHeight += controller.recentDestinationsPreview.length * 58.h;
+  @override
+  State<_HomeSheetScrollContent> createState() =>
+      _HomeSheetScrollContentState();
+}
+
+class _HomeSheetScrollContentState extends State<_HomeSheetScrollContent> {
+  final GlobalKey _contentKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    _scheduleMeasure();
+  }
+
+  @override
+  void didUpdateWidget(covariant _HomeSheetScrollContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.contentSignature != widget.contentSignature) {
+      _scheduleMeasure();
     }
+  }
 
-    // 4. Vehicle Section
-    if (controller.shouldShowVehicleSection) {
-      contentHeight += 12.h; // Section gap
-      contentHeight += 30.h; // Title + title gap
-      contentHeight += 130.h; // Horizontal list + caption
+  void _scheduleMeasure() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _measureNow();
+      // Nested Obx sections may lay out on a later frame.
+      WidgetsBinding.instance.addPostFrameCallback((_) => _measureNow());
+    });
+  }
+
+  void _measureNow() {
+    final contentContext = _contentKey.currentContext;
+    final renderBox = contentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null || !renderBox.hasSize || contentContext == null) {
+      return;
     }
+    final layoutHeight = MediaQuery.sizeOf(contentContext).height;
+    widget.onContentMeasured(
+      contentHeightPx: renderBox.size.height,
+      layoutHeightPx: layoutHeight,
+    );
+  }
 
-    // 5. Bottom spacing
-    contentHeight += 12.h;
-
-    // Convert to fraction of screen height
-    final double screenHeight = 1.sh > 0
-        ? 1.sh
-        : 812; // Fallback to standard iPhone height
-    double size = contentHeight / screenHeight;
-
-    // Clamp values to ensure usability. Minimum is the peek height,
-    // maximum is 0.9 to avoid overlapping with top status bar too much.
-    return size.clamp(HomeController.homeSheetInitialSize, 0.9);
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      controller: widget.scrollController,
+      physics: widget.physics,
+      primary: false,
+      clipBehavior: Clip.hardEdge,
+      child: NotificationListener<SizeChangedLayoutNotification>(
+        onNotification: (_) {
+          WidgetsBinding.instance.addPostFrameCallback((_) => _measureNow());
+          return false;
+        },
+        child: SizeChangedLayoutNotifier(
+          child: Column(
+            key: _contentKey,
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: widget.children,
+          ),
+        ),
+      ),
+    );
   }
 }
