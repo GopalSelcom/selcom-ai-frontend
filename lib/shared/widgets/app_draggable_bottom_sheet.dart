@@ -3,6 +3,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/theme/app_colors.dart';
 
 /// Reusable draggable bottom sheet shell for map-style screens.
+///
+/// Sits inside the app-level [SafeArea] ([main.dart]); do not add another
+/// bottom [viewPadding] lift here or the sheet sits too high.
 class AppDraggableBottomSheet extends StatelessWidget {
   const AppDraggableBottomSheet({
     super.key,

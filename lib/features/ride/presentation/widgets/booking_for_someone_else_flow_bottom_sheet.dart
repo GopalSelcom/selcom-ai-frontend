@@ -73,42 +73,48 @@ class _BookingForSomeoneElseFlowBottomSheetState
   @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
-    final bottomReserve = mq.viewInsets.bottom > 0
-        ? mq.viewInsets.bottom
-        : mq.padding.bottom;
+    final keyboardOpen = mq.viewInsets.bottom > 0;
+    // Keyboard lift is applied by [AppDialogs.showAnimatedBottomSheet].
+    final bottomPadding = 24.h + (keyboardOpen ? 0 : mq.padding.bottom);
+    final maxSheetHeight = mq.size.height * 0.92 - mq.viewInsets.bottom;
 
     return Container(
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(40.r)),
       ),
-      padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, bottomReserve + 24.h),
+      constraints: BoxConstraints(maxHeight: maxSheetHeight),
       child: SafeArea(
         top: false,
-        child: AnimatedSize(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOutCubic,
-          alignment: Alignment.topCenter,
-          child: AnimatedSwitcher(
+        bottom: false,
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, bottomPadding),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          child: AnimatedSize(
             duration: const Duration(milliseconds: 300),
-            switchInCurve: Curves.easeInOutCubic,
-            switchOutCurve: Curves.easeInOutCubic,
-            transitionBuilder: (child, animation) {
-              final offsetAnimation = Tween<Offset>(
-                begin: const Offset(0.1, 0.0),
-                end: Offset.zero,
-              ).animate(animation);
-              return FadeTransition(
-                opacity: animation,
-                child: SlideTransition(
-                  position: offsetAnimation,
-                  child: child,
-                ),
-              );
-            },
-            child: _currentStep == BookingFlowStep.choice
-                ? _buildChoiceStep()
-                : _buildDetailsStep(),
+            curve: Curves.easeInOutCubic,
+            alignment: Alignment.topCenter,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              switchInCurve: Curves.easeInOutCubic,
+              switchOutCurve: Curves.easeInOutCubic,
+              transitionBuilder: (child, animation) {
+                final offsetAnimation = Tween<Offset>(
+                  begin: const Offset(0.1, 0.0),
+                  end: Offset.zero,
+                ).animate(animation);
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: offsetAnimation,
+                    child: child,
+                  ),
+                );
+              },
+              child: _currentStep == BookingFlowStep.choice
+                  ? _buildChoiceStep()
+                  : _buildDetailsStep(),
+            ),
           ),
         ),
       ),
