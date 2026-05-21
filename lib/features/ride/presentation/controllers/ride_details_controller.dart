@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:gal/gal.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -128,16 +129,42 @@ class RideDetailsController extends GetxController {
     );
   }
 
+  /// Waits until [AppDialogs.showLoadingDialog] route is mounted before dismiss.
+  Future<void> _showReceiptSlipLoading() async {
+    AppDialogs.showLoadingDialog();
+    await Future<void>.delayed(Duration.zero);
+    await WidgetsBinding.instance.endOfFrame;
+  }
+
+  /// Pops the loading overlay via root navigator (receipt slip flows only).
+  Future<void> _dismissReceiptSlipLoading() async {
+    for (var attempt = 0; attempt < 4; attempt++) {
+      final context = Get.overlayContext ?? Get.context;
+      if (context != null) {
+        final navigator = Navigator.of(context, rootNavigator: true);
+        if (navigator.canPop()) {
+          navigator.pop();
+          return;
+        }
+      }
+      await Future<void>.delayed(Duration.zero);
+      await WidgetsBinding.instance.endOfFrame;
+    }
+    AppDialogs.dismissLoadingDialog();
+  }
+
   Future<void> _executeDownload() async {
+    await _showReceiptSlipLoading();
     try {
-      AppDialogs.showLoadingDialog();
       final rideRepository = di.sl<RideRepository>();
       final response = await rideRepository.getReceipt(ride.id);
       final receiptModel = response.fold((l) => null, (r) => r);
 
       if (receiptModel == null) {
-        if (Get.isDialogOpen ?? false) Get.back();
-        AppDialogs.showErrorDialog(message: 'Could not fetch receipt details.');
+        await _dismissReceiptSlipLoading();
+        AppDialogs.showErrorDialog(
+          message: AppStrings.couldNotFetchReceiptDetails.tr,
+        );
         return;
       }
 
@@ -145,30 +172,28 @@ class RideDetailsController extends GetxController {
         receipt: receiptModel,
       );
 
-      if (Get.isDialogOpen ?? false) Get.back();
-
       final hasAccess = await Gal.hasAccess(toAlbum: true);
       if (!hasAccess) {
         await Gal.requestAccess(toAlbum: true);
       }
 
       await Gal.putImage(file.path);
+      await _dismissReceiptSlipLoading();
       AppDialogs.showSuccessDialog(
         message: 'Receipt saved to your photos gallery.',
       );
     } catch (e, stackTrace) {
-      if (Get.isDialogOpen ?? false) Get.back();
+      await _dismissReceiptSlipLoading();
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       AppDialogs.showErrorDialog(
-        message: 'Could not download slip. Please try again later.',
+        message: AppStrings.couldNotDownloadSlipPleaseTryAgainLater.tr,
       );
     }
   }
 
   Future<void> _executeShare() async {
+    var loadingShown = false;
     try {
-      AppDialogs.showLoadingDialog();
-
       // 1. Check if we already have a PDF link in the ride object
       String? shareUrl;
       if (ride.pdfLinks != null && ride.pdfLinks!.isNotEmpty) {
@@ -184,13 +209,17 @@ class RideDetailsController extends GetxController {
       }
 
       if (shareUrl == null) {
+        await _showReceiptSlipLoading();
+        loadingShown = true;
+
         // 2. No link exists, generate PDF and upload it
         final rideRepository = di.sl<RideRepository>();
         final response = await rideRepository.getReceipt(ride.id);
         final receiptModel = response.fold((l) => null, (r) => r);
 
         if (receiptModel == null) {
-          if (Get.isDialogOpen ?? false) Get.back();
+          await _dismissReceiptSlipLoading();
+          loadingShown = false;
           AppDialogs.showErrorDialog(
             message: AppStrings.couldNotFetchReceiptDetails.tr,
           );
@@ -208,8 +237,9 @@ class RideDetailsController extends GetxController {
         );
 
         if (uploadResult.isLeft()) {
-          if (Get.isDialogOpen ?? false) Get.back();
           final failure = uploadResult.fold((l) => l, (r) => null)!;
+          await _dismissReceiptSlipLoading();
+          loadingShown = false;
           AppDialogs.showErrorDialog(message: failure.message);
           return;
         }
@@ -222,7 +252,10 @@ class RideDetailsController extends GetxController {
         shareUrl = newLink.url;
       }
 
-      if (Get.isDialogOpen ?? false) Get.back(); // Hide loading
+      if (loadingShown) {
+        await _dismissReceiptSlipLoading();
+        loadingShown = false;
+      }
 
       await SharePlus.instance.share(
         ShareParams(
@@ -233,7 +266,9 @@ class RideDetailsController extends GetxController {
         ),
       );
     } catch (e, stackTrace) {
-      if (Get.isDialogOpen ?? false) Get.back();
+      if (loadingShown) {
+        await _dismissReceiptSlipLoading();
+      }
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       AppDialogs.showErrorDialog(
         message: AppStrings.couldNotShareSlipPleaseTryAgainLater.tr,
