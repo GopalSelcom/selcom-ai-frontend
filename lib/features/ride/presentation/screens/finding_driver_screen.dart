@@ -297,24 +297,13 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
               Text(
                 c.currentStatusLabel.value,
                 textAlign: TextAlign.center,
-                style: AppTextStyles.homeTitle.copyWith(
-                  fontSize: 20.sp,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textHeading,
-                ),
+                style: AppTextStyles.homeTitle,
               ),
-              SizedBox(height: 8.h),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12.w),
-                child: Text(
-                  c.currentDescriptionLabel.value,
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.homeCaption.copyWith(
-                    fontSize: 14.sp,
-                    color: AppColors.textBody,
-                    height: 1.4,
-                  ),
-                ),
+              SizedBox(height: 4.h),
+              Text(
+                c.currentDescriptionLabel.value,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.homeSubtitle,
               ),
 
               // Countdown + progress only while status is still `searching`.
@@ -348,16 +337,12 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
                     Icon(
                       Icons.access_time_rounded,
                       color: AppColors.textHeading,
-                      size: 20.sp,
+                      size: 18.sp,
                     ),
-                    SizedBox(width: 4.w),
+                    SizedBox(width: 4.5.w),
                     Text(
                       c.findingDriverMinutesRemainLabel(),
-                      style: AppTextStyles.homeCaption.copyWith(
-                        fontSize: 15.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textHeading,
-                      ),
+                      style: AppTextStyles.homeSubtitle,
                     ),
                   ],
                 ),
