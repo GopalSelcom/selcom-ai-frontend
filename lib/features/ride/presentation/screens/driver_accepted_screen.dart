@@ -766,12 +766,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                   () => Text(
                     c.rideProgressTitle,
                     textAlign: TextAlign.center,
-                    style: AppTextStyles.homeTitle.copyWith(
-                      color: AppColors.textHeading,
-                      fontWeight: FontWeight.w700,
-                      height: 34 / 20,
-                      letterSpacing: -0.4,
-                    ),
+                    style: AppTextStyles.homeTitle,
                   ),
                 ),
                 SizedBox(height: 8.h),
@@ -1115,26 +1110,13 @@ class DriverAcceptedScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    c.rideVehicleLabel,
-                    style: AppTextStyles.homeTitle.copyWith(
-                      color: AppColors.textHeading,
-                      fontWeight: FontWeight.w600,
-                      height: 34 / 20,
-                      letterSpacing: -0.4,
-                    ),
-                  ),
+                  Text(c.rideVehicleLabel, style: AppTextStyles.homeTitle),
                   c.shouldShowRideEtaBadge
                       ? Row(
                           children: [
                             Text(
                               AppStrings.arrivedIn.tr,
-                              style: AppTextStyles.homeCaption.copyWith(
-                                fontSize: 15.sp,
-                                color: AppColors.textBody,
-                                fontWeight: FontWeight.w500,
-                                height: 20 / 15,
-                              ),
+                              style: AppTextStyles.homeSubtitle,
                             ),
                             SizedBox(width: 5.w),
                             Container(
@@ -1150,11 +1132,9 @@ class DriverAcceptedScreen extends StatelessWidget {
                                 AppStrings.minutesShortCount.trParams({
                                   'count': c.rideEtaMinutes.toString(),
                                 }),
-                                style: AppTextStyles.homeCaption.copyWith(
-                                  fontSize: 15.sp,
+                                style: AppTextStyles.homeSubtitle.copyWith(
                                   color: AppColors.textEtaBlue,
                                   fontWeight: FontWeight.w700,
-                                  height: 20 / 15,
                                 ),
                               ),
                             ),
@@ -1162,12 +1142,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                         )
                       : Text(
                           c.rideProgressSubtitle,
-                          style: AppTextStyles.homeCaption.copyWith(
-                            fontSize: 15.sp,
-                            color: AppColors.textBody,
-                            fontWeight: FontWeight.w500,
-                            height: 20 / 15,
-                          ),
+                          style: AppTextStyles.homeSubtitle,
                         ),
                 ],
               ),
@@ -1234,12 +1209,7 @@ class DriverAcceptedScreen extends StatelessWidget {
               children: [
                 Text(
                   AppStrings.totalFare.tr,
-                  style: AppTextStyles.homeTitle.copyWith(
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textHeading,
-                    height: 20 / 15,
-                  ),
+                  style: AppTextStyles.homeSubtitle,
                 ),
                 SizedBox(height: 6.h),
                 FareBreakdownRow(
