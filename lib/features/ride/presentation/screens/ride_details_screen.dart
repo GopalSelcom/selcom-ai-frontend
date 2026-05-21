@@ -96,7 +96,6 @@ class RideDetailsScreen extends StatelessWidget {
         ? Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SizedBox(height: 12.h),
               RideRatingInputSection(
                 controller: controller.ratingController,
                 starSize: 37.w,
@@ -309,6 +308,7 @@ class RideDetailsScreen extends StatelessWidget {
                         ],
                       ),
                     ),
+                    SizedBox(height: 10.h),
                     if (!controller.shouldPrioritizeReviewSection)
                       reviewSection,
                     SizedBox(height: 13.h),
