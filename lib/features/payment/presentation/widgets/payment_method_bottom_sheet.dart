@@ -13,6 +13,7 @@ class PaymentMethodBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<PaymentMethodController>();
+    final bottomPadding = MediaQuery.paddingOf(context).bottom;
 
     return Container(
       decoration: BoxDecoration(
@@ -101,7 +102,7 @@ class PaymentMethodBottomSheet extends StatelessWidget {
                 },
               );
             }),
-            SizedBox(height: 18.h),
+            SizedBox(height: bottomPadding > 0 ? 4.h : 16.h),
           ],
         ),
       ),

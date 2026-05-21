@@ -270,7 +270,12 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
   ) {
     return ListView(
       controller: scrollController,
-      padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 24.h),
+      padding: EdgeInsets.fromLTRB(
+        20.w,
+        10.h,
+        20.w,
+        24.h + MediaQuery.paddingOf(context).bottom,
+      ),
       children: [
         Center(
           child: Container(

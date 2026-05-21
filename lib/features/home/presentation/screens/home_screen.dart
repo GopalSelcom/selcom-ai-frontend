@@ -107,7 +107,7 @@ class HomeScreen extends GetView<HomeController> {
                   child: _activeRideCard(activeRide),
                 );
               }
-              return _buildFigmaDraggableSheet();
+              return _buildFigmaDraggableSheet(context);
             }),
           ],
         ),
@@ -210,7 +210,7 @@ class HomeScreen extends GetView<HomeController> {
 
   static const double _sheetHorizontalPadding = 24;
 
-  Widget _buildFigmaDraggableSheet() {
+  Widget _buildFigmaDraggableSheet(BuildContext context) {
     return Obx(() {
       final double maxContentSize = _calculateMaxSheetSize();
 
@@ -235,7 +235,9 @@ class HomeScreen extends GetView<HomeController> {
             controller: scrollController,
             physics: const ClampingScrollPhysics(),
             clipBehavior: Clip.hardEdge,
-            padding: EdgeInsets.zero,
+            padding: EdgeInsets.only(
+              bottom: 12.h + MediaQuery.paddingOf(context).bottom,
+            ),
             children: [
               Padding(
                 padding: EdgeInsets.symmetric(

@@ -11,56 +11,65 @@ class StopUpdateProgressModal extends GetView<DriverAcceptedController> {
 
   @override
   Widget build(BuildContext context) {
+    final bottomPadding = MediaQuery.paddingOf(context).bottom;
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(24.w),
+      padding: EdgeInsets.only(
+        left: 24.w,
+        right: 24.w,
+        top: 24.h,
+        bottom: 0,
+      ),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
       ),
-      child: Obx(() {
-        final step = controller.stopUpdateProgressStep.value;
-        final destFlow = controller.isDestinationUpdateFlow.value;
+      child: SafeArea(
+        top: false,
+        child: Obx(() {
+          final step = controller.stopUpdateProgressStep.value;
+          final destFlow = controller.isDestinationUpdateFlow.value;
 
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (step < 3) ...[
-              const CircularProgressIndicator(color: AppColors.primary),
-              SizedBox(height: 24.h),
-            ] else ...[
-              Icon(Icons.check_circle, color: AppColors.success, size: 64.sp),
-              SizedBox(height: 16.h),
-            ],
-            Text(
-              _getTitle(step, destFlow),
-              style: AppTextStyles.onboardingTitle.copyWith(fontSize: 20.sp),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 12.h),
-            SizedBox(height: 12.h),
-            Text(
-              _getMessage(step, destFlow),
-              style: AppTextStyles.onboardingSubtitle.copyWith(fontSize: 14.sp),
-              textAlign: TextAlign.center,
-            ),
-            if (step == 1 || step == 2) ...[
-              SizedBox(height: 24.h),
-              TextButton(
-                onPressed: () => controller.cancelRouteOrStopsUpdate(),
-                child: Text(
-                  AppStrings.cancelUpdate.tr,
-                  style: AppTextStyles.onboardingSubtitle.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.bold,
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (step < 3) ...[
+                const CircularProgressIndicator(color: AppColors.primary),
+                SizedBox(height: 24.h),
+              ] else ...[
+                Icon(Icons.check_circle, color: AppColors.success, size: 64.sp),
+                SizedBox(height: 16.h),
+              ],
+              Text(
+                _getTitle(step, destFlow),
+                style: AppTextStyles.onboardingTitle.copyWith(fontSize: 20.sp),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 12.h),
+              SizedBox(height: 12.h),
+              Text(
+                _getMessage(step, destFlow),
+                style: AppTextStyles.onboardingSubtitle.copyWith(fontSize: 14.sp),
+                textAlign: TextAlign.center,
+              ),
+              if (step == 1 || step == 2) ...[
+                SizedBox(height: 24.h),
+                TextButton(
+                  onPressed: () => controller.cancelRouteOrStopsUpdate(),
+                  child: Text(
+                    AppStrings.cancelUpdate.tr,
+                    style: AppTextStyles.onboardingSubtitle.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-              ),
+              ],
+              SizedBox(height: bottomPadding > 0 ? 12.h : 24.h),
             ],
-            SizedBox(height: 24.h),
-          ],
-        );
-      }),
+          );
+        }),
+      ),
     );
   }
 

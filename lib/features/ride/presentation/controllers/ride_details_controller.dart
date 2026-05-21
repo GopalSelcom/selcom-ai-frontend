@@ -301,8 +301,14 @@ class _ReceiptOptionsBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bottomPadding = MediaQuery.paddingOf(context).bottom;
     return Container(
-      padding: EdgeInsets.all(24.w),
+      padding: EdgeInsets.only(
+        left: 24.w,
+        right: 24.w,
+        top: 24.w,
+        bottom: 0,
+      ),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
@@ -314,50 +320,53 @@ class _ReceiptOptionsBottomSheet extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 40.w,
-            height: 4.h,
-            margin: EdgeInsets.fromLTRB(0,0,0,24.h),
-            decoration: BoxDecoration(
-              color: AppColors.dividerHandle,
-              borderRadius: BorderRadius.circular(2.r),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40.w,
+              height: 4.h,
+              margin: EdgeInsets.fromLTRB(0,0,0,24.h),
+              decoration: BoxDecoration(
+                color: AppColors.dividerHandle,
+                borderRadius: BorderRadius.circular(2.r),
+              ),
             ),
-          ),
-          Text(
-            'Receipt Options',
-            style: AppTextStyles.sectionTitle.copyWith(fontSize: 20.sp),
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            'Choose how you would like to receive your receipt',
-            style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 32.h),
-          _OptionTile(
-            icon: Icons.download_rounded,
-            title: 'Download Slip',
-            subtitle: 'Save a copy to your gallery',
-            onTap: () {
-              Navigator.of(context).pop();
-              onDownload();
-            },
-          ),
-          SizedBox(height: 16.h),
-          _OptionTile(
-            icon: Icons.share_rounded,
-            title: 'Share Slip',
-            subtitle: 'Send receipt link to others',
-            onTap: () {
-              Navigator.of(context).pop();
-              onShare();
-            },
-          ),
-          SizedBox(height: 32.h),
-        ],
+            Text(
+              'Receipt Options',
+              style: AppTextStyles.sectionTitle.copyWith(fontSize: 20.sp),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              'Choose how you would like to receive your receipt',
+              style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 32.h),
+            _OptionTile(
+              icon: Icons.download_rounded,
+              title: 'Download Slip',
+              subtitle: 'Save a copy to your gallery',
+              onTap: () {
+                Navigator.of(context).pop();
+                onDownload();
+              },
+            ),
+            SizedBox(height: 16.h),
+            _OptionTile(
+              icon: Icons.share_rounded,
+              title: 'Share Slip',
+              subtitle: 'Send receipt link to others',
+              onTap: () {
+                Navigator.of(context).pop();
+                onShare();
+              },
+            ),
+            SizedBox(height: bottomPadding > 0 ? 12.h : 24.h),
+          ],
+        ),
       ),
     );
   }

@@ -125,49 +125,58 @@ class ContactUsScreen extends GetView<ContactUsController> {
   }
 
   void _showReasonPicker(BuildContext context) {
+    final bottomPadding = MediaQuery.paddingOf(context).bottom;
     AppDialogs.showAnimatedBottomSheet(
       barrierDismissible: true,
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: 20.h),
+        padding: EdgeInsets.only(
+          top: 20.h,
+          bottom: 0,
+        ),
         decoration: BoxDecoration(
           color: AppColors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              AppStrings.selectAReason.tr,
-              style: AppTextStyles.sectionTitle,
-            ),
-            SizedBox(height: 16.h),
-            Flexible(
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: controller.subjects.length,
-                itemBuilder: (context, index) {
-                  final reason = controller.subjects[index];
-                  return ListTile(
-                    title: Text(reason, style: AppTextStyles.body.copyWith(
-                      color: AppColors.textHeading))
-                    ,
-                    onTap: () {
-                      controller.setSelectedReason(reason);
-                      Navigator.of(context).pop();
-                    },
-                    trailing: Obx(
-                      () => controller.selectedReason.value == reason
-                          ? const Icon(
-                              Iconsax.tick_circle,
-                              color: AppColors.primary,
-                            )
-                          : const SizedBox.shrink(),
-                    ),
-                  );
-                },
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                AppStrings.selectAReason.tr,
+                style: AppTextStyles.sectionTitle,
               ),
-            ),
-          ],
+              SizedBox(height: 16.h),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  padding: EdgeInsets.zero,
+                  itemCount: controller.subjects.length,
+                  itemBuilder: (context, index) {
+                    final reason = controller.subjects[index];
+                    return ListTile(
+                      title: Text(reason, style: AppTextStyles.body.copyWith(
+                        color: AppColors.textHeading))
+                      ,
+                      onTap: () {
+                        controller.setSelectedReason(reason);
+                        Navigator.of(context).pop();
+                      },
+                      trailing: Obx(
+                        () => controller.selectedReason.value == reason
+                            ? const Icon(
+                                Iconsax.tick_circle,
+                                color: AppColors.primary,
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              SizedBox(height: bottomPadding > 0 ? 12.h : 24.h),
+            ],
+          ),
         ),
       ),
     );
