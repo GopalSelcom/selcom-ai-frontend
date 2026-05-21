@@ -156,25 +156,30 @@ class _AddCardScreenState extends State<AddCardScreen> {
                       ),
                     ),
                   ),
-                  Obx(
-                    () {
-                      final shouldShow =
-                          controller.isSubmitting.value ||
-                          controller.canSubmitForm.value;
-                      return AppAnimatedReveal(
-                        show: shouldShow,
-                        visibleKey: const ValueKey('add-card-button-visible'),
-                        hiddenKey: const ValueKey('add-card-button-hidden'),
-                        child: AppPrimaryButton(
-                          label: AppStrings.addCard.tr,
-                          iconAsset: AppAssets.locationIcArrowRight,
-                          isLoading: controller.isSubmitting.value,
-                          onPressed: controller.isSubmitting.value
-                              ? null
-                              : controller.submitCard,
-                        ),
-                      );
-                    },
+
+                  SafeArea(
+                    top: false,
+                    bottom: true,
+                    child: Obx(
+                      () {
+                        final shouldShow =
+                            controller.isSubmitting.value ||
+                            controller.canSubmitForm.value;
+                        return AppAnimatedReveal(
+                          show: shouldShow,
+                          visibleKey: const ValueKey('add-card-button-visible'),
+                          hiddenKey: const ValueKey('add-card-button-hidden'),
+                          child: AppPrimaryButton(
+                            label: AppStrings.addCard.tr,
+                            iconAsset: AppAssets.locationIcArrowRight,
+                            isLoading: controller.isSubmitting.value,
+                            onPressed: controller.isSubmitting.value
+                                ? null
+                                : controller.submitCard,
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ],
               ),

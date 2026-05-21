@@ -65,23 +65,26 @@ class ContactUsScreen extends GetView<ContactUsController> {
               );
             }),
           ),
-
           // Submit Button (Footer)
-          Obx(
-            () => Padding(
-              padding: EdgeInsets.only(
-                bottom: controller.canSubmit.value ? 16.h : 0,
-                left: 24.w,
-                right: 24.w,
-              ),
-              child: AppAnimatedReveal(
-                show: controller.canSubmit.value,
-                visibleKey: const ValueKey('contact-submit-visible'),
-                hiddenKey: const ValueKey('contact-submit-hidden'),
-                child: AppPrimaryButton(
-                  label: AppStrings.submit.tr,
-                  onPressed: controller.sendMessage,
-                  isLoading: controller.isLoading.value,
+          SafeArea(
+            top: false,
+            bottom: true,
+            child: Obx(
+              () => Padding(
+                padding: EdgeInsets.only(
+                  bottom: controller.canSubmit.value ? 16.h : 0,
+                  left: 24.w,
+                  right: 24.w,
+                ),
+                child: AppAnimatedReveal(
+                  show: controller.canSubmit.value,
+                  visibleKey: const ValueKey('contact-submit-visible'),
+                  hiddenKey: const ValueKey('contact-submit-hidden'),
+                  child: AppPrimaryButton(
+                    label: AppStrings.submit.tr,
+                    onPressed: controller.sendMessage,
+                    isLoading: controller.isLoading.value,
+                  ),
                 ),
               ),
             ),
@@ -125,49 +128,67 @@ class ContactUsScreen extends GetView<ContactUsController> {
   }
 
   void _showReasonPicker(BuildContext context) {
+    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
+    final double computedBottomPadding = bottomPadding > 0
+        ? (GetPlatform.isIOS
+            ? (bottomPadding - 12.h).clamp(
+                10.h > bottomPadding ? bottomPadding : 10.h,
+                bottomPadding,
+              )
+            : bottomPadding + 12.h)
+        : 12.h;
     AppDialogs.showAnimatedBottomSheet(
       barrierDismissible: true,
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: 20.h),
+        padding: EdgeInsets.only(
+          top: 20.h,
+          bottom: 0,
+        ),
         decoration: BoxDecoration(
           color: AppColors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              AppStrings.selectAReason.tr,
-              style: AppTextStyles.sectionTitle,
-            ),
-            SizedBox(height: 16.h),
-            Flexible(
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: controller.subjects.length,
-                itemBuilder: (context, index) {
-                  final reason = controller.subjects[index];
-                  return ListTile(
-                    title: Text(reason, style: AppTextStyles.body.copyWith(
-                      color: AppColors.textHeading))
-                    ,
-                    onTap: () {
-                      controller.setSelectedReason(reason);
-                      Navigator.of(context).pop();
-                    },
-                    trailing: Obx(
-                      () => controller.selectedReason.value == reason
-                          ? const Icon(
-                              Iconsax.tick_circle,
-                              color: AppColors.primary,
-                            )
-                          : const SizedBox.shrink(),
-                    ),
-                  );
-                },
+        child: SafeArea(
+          top: false,
+          bottom: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                AppStrings.selectAReason.tr,
+                style: AppTextStyles.sectionTitle,
               ),
-            ),
-          ],
+              SizedBox(height: 16.h),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  padding: EdgeInsets.zero,
+                  itemCount: controller.subjects.length,
+                  itemBuilder: (context, index) {
+                    final reason = controller.subjects[index];
+                    return ListTile(
+                      title: Text(reason, style: AppTextStyles.body.copyWith(
+                        color: AppColors.textHeading))
+                      ,
+                      onTap: () {
+                        controller.setSelectedReason(reason);
+                        Navigator.of(context).pop();
+                      },
+                      trailing: Obx(
+                        () => controller.selectedReason.value == reason
+                            ? const Icon(
+                                Iconsax.tick_circle,
+                                color: AppColors.primary,
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              SizedBox(height: computedBottomPadding),
+            ],
+          ),
         ),
       ),
     );

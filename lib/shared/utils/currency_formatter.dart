@@ -120,6 +120,10 @@ class CurrencyFormatter {
     final formatter = NumberFormat.decimalPattern(config.locale)
       ..minimumFractionDigits = config.decimalDigits
       ..maximumFractionDigits = config.decimalDigits;
-    return '${config.symbol} ${formatter.format(amount)}';
+    final result = '${config.symbol} ${formatter.format(amount)}';
+    if (result.endsWith('.00')) {
+      return result.substring(0, result.length - 3);
+    }
+    return result;
   }
 }

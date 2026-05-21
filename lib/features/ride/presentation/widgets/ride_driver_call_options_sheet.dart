@@ -24,17 +24,34 @@ class RideDriverCallOptionsSheet {
   }) {
     if (rideId.isEmpty) return;
 
+    final context = Get.context;
+    final double bottomPadding = context != null ? MediaQuery.paddingOf(context).bottom : 0.0;
+    final double computedBottomPadding = bottomPadding > 0
+        ? (GetPlatform.isIOS
+            ? (bottomPadding - 12.h).clamp(
+                10.h > bottomPadding ? bottomPadding : 10.h,
+                bottomPadding,
+              )
+            : bottomPadding + 12.h)
+        : 12.h;
+
     AppDialogs.showAnimatedBottomSheet(
       barrierDismissible: true,
-      child: SafeArea(
-        top: false,
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-          ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+        ),
+        child: SafeArea(
+          top: false,
+          bottom: false,
           child: Padding(
-            padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 20.h),
+            padding: EdgeInsets.only(
+              left: 16.w,
+              right: 16.w,
+              top: 12.h,
+              bottom: computedBottomPadding,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [

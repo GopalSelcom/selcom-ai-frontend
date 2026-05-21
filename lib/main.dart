@@ -249,6 +249,7 @@ class _MyAppState extends State<MyApp> {
                 behavior: HitTestBehavior.translucent,
                 child: SafeArea(
                   top: false,
+                  bottom: false,
                   child: child ?? const SizedBox.shrink(),
                 ),
               );
