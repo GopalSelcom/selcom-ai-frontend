@@ -1831,6 +1831,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     }
     if (Get.isBottomSheetOpen ?? false) return;
 
+    await AppDialogs.ensureKeyboardClosed();
+
     await Get.bottomSheet<void>(
       Obx(() {
         savedPlaces.length;

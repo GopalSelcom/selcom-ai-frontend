@@ -16,12 +16,29 @@ class AppDialogs {
   static bool _isErrorDialogVisible = false;
   static bool _isLoadingDialogVisible = false;
 
+  /// Utility to ensure keyboard is closed before showing dialogs/bottom sheets
+  static Future<void> ensureKeyboardClosed() async {
+    final context = Get.context;
+    if (context == null) return;
+
+    final primaryFocus = FocusManager.instance.primaryFocus;
+    final hasKeyboard = (primaryFocus != null && primaryFocus.hasFocus) ||
+        MediaQuery.viewInsetsOf(context).bottom > 0;
+
+    if (hasKeyboard) {
+      primaryFocus?.unfocus();
+      // Wait for keyboard closing animation to finish to prevent UI glitches/jumping
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+    }
+  }
+
   /// Standard animated popup function.
   static Future<T?> showAnimatedDialog<T>({
     required Widget child,
     bool barrierDismissible = true,
     Color? barrierColor,
-  }) {
+  }) async {
+    await ensureKeyboardClosed();
     return showGeneralDialog<T>(
       context: Get.context!,
       barrierDismissible: barrierDismissible,
@@ -72,7 +89,8 @@ class AppDialogs {
   static Future<T?> showAnimatedBottomSheet<T>({
     required Widget child,
     bool barrierDismissible = true,
-  }) {
+  }) async {
+    await ensureKeyboardClosed();
     bool hapticTriggered = false;
 
     return showGeneralDialog<T>(
