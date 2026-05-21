@@ -1163,7 +1163,26 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }
 
   void closeLocationSelection() {
-    Get.back();
+    final context = Get.context;
+    bool hasKeyboard = false;
+    if (context != null) {
+      try {
+        hasKeyboard = MediaQuery.viewInsetsOf(context).bottom > 0;
+      } catch (_) {
+        hasKeyboard = FocusManager.instance.primaryFocus != null;
+      }
+    } else {
+      hasKeyboard = FocusManager.instance.primaryFocus != null;
+    }
+
+    if (hasKeyboard) {
+      FocusManager.instance.primaryFocus?.unfocus();
+      Future.delayed(const Duration(milliseconds: 300), () {
+        Get.back();
+      });
+    } else {
+      Get.back();
+    }
   }
 
   Future<void> proceedToBookingFromLocationSelection({
