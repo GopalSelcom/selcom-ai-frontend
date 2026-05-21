@@ -17,7 +17,7 @@ class RideMessageScreen extends GetView<RideMessageController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cardBackground,
+      backgroundColor: AppColors.white,
       body: SafeArea(
         child: Column(
           children: [
@@ -132,52 +132,64 @@ class RideMessageScreen extends GetView<RideMessageController> {
   }
 
   Widget _safetyBanner() {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16.w),
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-      decoration: BoxDecoration(
-        color: AppColors.safetyBannerBg,
-        borderRadius: BorderRadius.circular(16.r),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 22.w,
-            height: 22.w,
-            padding: EdgeInsets.all(6.w),
-            decoration: const BoxDecoration(
-              color: AppColors.info,
-              shape: BoxShape.circle,
-            ),
-            child: SvgPictureAsset(
-              AppAssets.icInfo,
-              width: 14.w,
-              height: 14.h,
-              color: AppColors.white,
-              placeholderBuilder: (_) => const Icon(
-                Icons.info_outline,
-                color: AppColors.white,
-                size: 14,
-              ),
-            ),
+    return Obx(() {
+      return AnimatedCrossFade(
+        firstChild: Container(
+          margin: EdgeInsets.symmetric(horizontal: 16.w),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+          decoration: BoxDecoration(
+            color: AppColors.safetyBannerBg,
+            borderRadius: BorderRadius.circular(16.r),
           ),
-          SizedBox(width: 14.w),
-          Expanded(
-            child: Text(
-              AppStrings
-                  .doNotShareYourPersonalDetailsWithRiderBeSafeAndAlwaysCheckYourLuggage
-                  .tr,
-              style: AppTextStyles.body.copyWith(
-                color: AppColors.textSafetyNotice,
-                fontSize: 12.sp,
-                fontWeight: FontWeight.w600,
-                height: 20 / 12,
+          child: Row(
+            children: [
+              Container(
+                width: 22.w,
+                height: 22.w,
+                padding: EdgeInsets.all(6.w),
+                decoration: const BoxDecoration(
+                  color: AppColors.info,
+                  shape: BoxShape.circle,
+                ),
+                child: SvgPictureAsset(
+                  AppAssets.icInfo,
+                  width: 14.w,
+                  height: 14.h,
+                  color: AppColors.white,
+                  placeholderBuilder: (_) => const Icon(
+                    Icons.info_outline,
+                    color: AppColors.white,
+                    size: 14,
+                  ),
+                ),
               ),
-            ),
+              SizedBox(width: 14.w),
+              Expanded(
+                child: Text(
+                  AppStrings
+                      .doNotShareYourPersonalDetailsWithRiderBeSafeAndAlwaysCheckYourLuggage
+                      .tr,
+                  style: AppTextStyles.body.copyWith(
+                    color: AppColors.textSafetyNotice,
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w600,
+                    height: 20 / 12,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
+        ),
+        secondChild: const SizedBox(width: double.infinity, height: 0),
+        crossFadeState: controller.showSafetyBanner.value
+            ? CrossFadeState.showFirst
+            : CrossFadeState.showSecond,
+        duration: const Duration(milliseconds: 350),
+        firstCurve: Curves.easeInOut,
+        secondCurve: Curves.easeInOut,
+        sizeCurve: Curves.easeInOut,
+      );
+    });
   }
 
   Widget _messageList() {

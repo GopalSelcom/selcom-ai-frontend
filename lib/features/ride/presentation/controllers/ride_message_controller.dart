@@ -33,6 +33,8 @@ class RideMessageController extends GetxController {
   final isSending = false.obs;
   final quickReplies = <String>[].obs;
   final hideQuickRepliesBecauseTyping = false.obs;
+  final showSafetyBanner = true.obs;
+  Timer? _safetyBannerTimer;
 
   late final String rideId;
   String driverName = 'John Anthany deo';
@@ -59,6 +61,9 @@ class RideMessageController extends GetxController {
   void onInit() {
     super.onInit();
     messageController.addListener(_onComposerTextChanged);
+    _safetyBannerTimer = Timer(const Duration(seconds: 5), () {
+      showSafetyBanner.value = false;
+    });
     _parseArgs();
     if (rideId.isEmpty) {
       Future.microtask(() {
@@ -76,6 +81,7 @@ class RideMessageController extends GetxController {
   @override
   void onClose() {
     messageController.removeListener(_onComposerTextChanged);
+    _safetyBannerTimer?.cancel();
     _chatSub?.cancel();
     _connectionSub?.cancel();
     _rideStatusSub?.cancel();
