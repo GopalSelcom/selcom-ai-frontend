@@ -197,6 +197,29 @@ class DriverAcceptedController extends GetxController
     });
     ever(isUpdatingStops, (_) => _handleRouteUpdateProgress());
     ever(isUpdatingDestination, (_) => _handleRouteUpdateProgress());
+    ever(currentRideStatus, (status) {
+      if (sheetController.isAttached) {
+        final double target;
+        if (status == 'near_destination') {
+          target = 0.35;
+        } else if (status == 'ride_in_progress' || status == 'ride_started') {
+          target = 0.40;
+        } else {
+          target = 0.3;
+        }
+        if ((sheetController.size - target).abs() > 0.01) {
+          Future.microtask(() {
+            if (sheetController.isAttached) {
+              sheetController.animateTo(
+                target,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+              );
+            }
+          });
+        }
+      }
+    });
     _loadPersistedIdempotencyKey();
     arrivalLabel.value = AppStrings.driverWillArrivingInMinutes.trParams({
       'minutes': '1',
