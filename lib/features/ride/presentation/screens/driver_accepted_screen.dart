@@ -26,7 +26,7 @@ class DriverAcceptedScreen extends StatelessWidget {
 
   static const double _sheetInitial = 0.3;
   static const double _sheetMin = 0.3;
-  static const double _sheetMaxDriverAssigned = 0.54;
+  static const double _sheetMaxDriverAssigned = 0.52;
   static const double _sheetMaxRideStarted = 0.68;
 
   void _minimizeSheet(DriverAcceptedController c) {
@@ -311,11 +311,11 @@ class DriverAcceptedScreen extends StatelessWidget {
     final double bottomPadding = MediaQuery.paddingOf(context).bottom;
     final double computedBottomPadding = bottomPadding > 0
         ? (GetPlatform.isIOS
-            ? (bottomPadding - 12.h).clamp(
-                10.h > bottomPadding ? bottomPadding : 10.h,
-                bottomPadding,
-              )
-            : bottomPadding + 12.h)
+              ? (bottomPadding - 12.h).clamp(
+                  10.h > bottomPadding ? bottomPadding : 10.h,
+                  bottomPadding,
+                )
+              : bottomPadding + 12.h)
         : 12.h;
 
     AppDialogs.showAnimatedBottomSheet(
@@ -645,7 +645,12 @@ class DriverAcceptedScreen extends StatelessWidget {
           if (c.isLoadingRide.value) {
             return ListView(
               controller: scrollController,
-              padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 16.h + bottomPadding),
+              padding: EdgeInsets.fromLTRB(
+                16.w,
+                10.h,
+                16.w,
+                16.h + bottomPadding,
+              ),
               children: [
                 Center(
                   child: Container(
@@ -675,8 +680,11 @@ class DriverAcceptedScreen extends StatelessWidget {
               ),
               child: ListView(
                 controller: scrollController,
-                physics: const ClampingScrollPhysics(),
-                padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 16.h + bottomPadding),
+                shrinkWrap: true,
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: ClampingScrollPhysics(),
+                ),
+                padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, bottomPadding),
                 children: [
                   Center(
                     child: Container(
@@ -701,7 +709,12 @@ class DriverAcceptedScreen extends StatelessWidget {
 
           return ListView(
             controller: scrollController,
-            padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 16.h + bottomPadding),
+            padding: EdgeInsets.fromLTRB(
+              16.w,
+              10.h,
+              16.w,
+              16.h + bottomPadding,
+            ),
             children: [
               Center(
                 child: Container(
@@ -753,12 +766,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                   () => Text(
                     c.rideProgressTitle,
                     textAlign: TextAlign.center,
-                    style: AppTextStyles.homeTitle.copyWith(
-                      color: AppColors.textHeading,
-                      fontWeight: FontWeight.w700,
-                      height: 34 / 20,
-                      letterSpacing: -0.4,
-                    ),
+                    style: AppTextStyles.homeTitle,
                   ),
                 ),
                 SizedBox(height: 8.h),
@@ -771,9 +779,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                     padding: EdgeInsets.only(
                       bottom: 16.h + MediaQuery.paddingOf(context).bottom,
                     ),
-                    children: [
-                      _rideProgressBody(c, showChangeDropLink: true),
-                    ],
+                    children: [_rideProgressBody(c, showChangeDropLink: true)],
                   ),
                 ),
               ],
@@ -786,6 +792,7 @@ class DriverAcceptedScreen extends StatelessWidget {
 
   Widget _driverAssignedSheet(DriverAcceptedController c) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -808,12 +815,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                 () => Text(
                   c.driverAssignedSheetArrivalEtaLine,
                   textAlign: TextAlign.center,
-                  style: AppTextStyles.homeCaption.copyWith(
-                    fontSize: 15.sp,
-                    color: AppColors.textBody,
-                    fontWeight: FontWeight.w500,
-                    height: 20 / 15,
-                  ),
+                  style: AppTextStyles.homeSubtitle,
                 ),
               ),
             ),
@@ -824,13 +826,7 @@ class DriverAcceptedScreen extends StatelessWidget {
           () => Text(
             c.driverPickupPhaseHeadline,
             textAlign: TextAlign.center,
-            style: AppTextStyles.homeTitle.copyWith(
-              fontSize: 20.sp,
-              color: AppColors.textHeading,
-              fontWeight: FontWeight.w600,
-              height: 34 / 20,
-              letterSpacing: -0.4,
-            ),
+            style: AppTextStyles.homeTitle,
           ),
         ),
         SizedBox(height: 17.h),
@@ -840,11 +836,8 @@ class DriverAcceptedScreen extends StatelessWidget {
             children: [
               Text(
                 AppStrings.pin.tr,
-                style: AppTextStyles.homeCaption.copyWith(
+                style: AppTextStyles.homeSubtitle.copyWith(
                   fontWeight: FontWeight.w700,
-                  fontSize: 15.sp,
-                  color: AppColors.textBody,
-                  height: 20 / 15,
                 ),
               ),
               SizedBox(width: 8.w),
@@ -875,7 +868,7 @@ class DriverAcceptedScreen extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 17.h),
+          SizedBox(height: 22.h),
         ],
         Obx(() {
           final plateText = c.plateDisplayFormatted.value.trim();
@@ -933,11 +926,8 @@ class DriverAcceptedScreen extends StatelessWidget {
                           children: [
                             Text(
                               c.vehicleSubtitle.value,
-                              style: AppTextStyles.homeCaption.copyWith(
-                                fontSize: 15.sp,
-                                fontWeight: FontWeight.w500,
+                              style: AppTextStyles.homeSubtitle.copyWith(
                                 color: AppColors.black,
-                                height: 1.33,
                               ),
                             ),
                             if (c.formattedSpeedLabel.isNotEmpty) ...[
@@ -951,11 +941,9 @@ class DriverAcceptedScreen extends StatelessWidget {
                               ),
                               Text(
                                 c.formattedSpeedLabel,
-                                style: AppTextStyles.homeCaption.copyWith(
-                                  fontSize: 15.sp,
+                                style: AppTextStyles.homeSubtitle.copyWith(
                                   fontWeight: FontWeight.w800,
                                   color: AppColors.primary,
-                                  height: 1.33,
                                 ),
                               ),
                             ],
@@ -1122,26 +1110,13 @@ class DriverAcceptedScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    c.rideVehicleLabel,
-                    style: AppTextStyles.homeTitle.copyWith(
-                      color: AppColors.textHeading,
-                      fontWeight: FontWeight.w600,
-                      height: 34 / 20,
-                      letterSpacing: -0.4,
-                    ),
-                  ),
+                  Text(c.rideVehicleLabel, style: AppTextStyles.homeTitle),
                   c.shouldShowRideEtaBadge
                       ? Row(
                           children: [
                             Text(
                               AppStrings.arrivedIn.tr,
-                              style: AppTextStyles.homeCaption.copyWith(
-                                fontSize: 15.sp,
-                                color: AppColors.textBody,
-                                fontWeight: FontWeight.w500,
-                                height: 20 / 15,
-                              ),
+                              style: AppTextStyles.homeSubtitle,
                             ),
                             SizedBox(width: 5.w),
                             Container(
@@ -1157,11 +1132,9 @@ class DriverAcceptedScreen extends StatelessWidget {
                                 AppStrings.minutesShortCount.trParams({
                                   'count': c.rideEtaMinutes.toString(),
                                 }),
-                                style: AppTextStyles.homeCaption.copyWith(
-                                  fontSize: 15.sp,
+                                style: AppTextStyles.homeSubtitle.copyWith(
                                   color: AppColors.textEtaBlue,
                                   fontWeight: FontWeight.w700,
-                                  height: 20 / 15,
                                 ),
                               ),
                             ),
@@ -1169,12 +1142,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                         )
                       : Text(
                           c.rideProgressSubtitle,
-                          style: AppTextStyles.homeCaption.copyWith(
-                            fontSize: 15.sp,
-                            color: AppColors.textBody,
-                            fontWeight: FontWeight.w500,
-                            height: 20 / 15,
-                          ),
+                          style: AppTextStyles.homeSubtitle,
                         ),
                 ],
               ),
@@ -1241,12 +1209,7 @@ class DriverAcceptedScreen extends StatelessWidget {
               children: [
                 Text(
                   AppStrings.totalFare.tr,
-                  style: AppTextStyles.homeTitle.copyWith(
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textHeading,
-                    height: 20 / 15,
-                  ),
+                  style: AppTextStyles.homeSubtitle,
                 ),
                 SizedBox(height: 6.h),
                 FareBreakdownRow(

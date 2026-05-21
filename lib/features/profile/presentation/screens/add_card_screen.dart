@@ -30,6 +30,11 @@ class _AddCardScreenState extends State<AddCardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
+    final double computedBottomPadding = bottomPadding > 0
+        ? (GetPlatform.isIOS ? 0 : 8.h)
+        : 24.h;
+
     return Scaffold(
       backgroundColor: AppColors.white,
       body: Column(
@@ -37,7 +42,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
           AppProfileHeader(title: AppStrings.addNewCard.tr, onBack: Get.back),
           Expanded(
             child: Padding(
-              padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 24.h),
+              padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 0),
               child: Column(
                 children: [
                   Expanded(
@@ -169,13 +174,16 @@ class _AddCardScreenState extends State<AddCardScreen> {
                           show: shouldShow,
                           visibleKey: const ValueKey('add-card-button-visible'),
                           hiddenKey: const ValueKey('add-card-button-hidden'),
-                          child: AppPrimaryButton(
-                            label: AppStrings.addCard.tr,
-                            iconAsset: AppAssets.locationIcArrowRight,
-                            isLoading: controller.isSubmitting.value,
-                            onPressed: controller.isSubmitting.value
-                                ? null
-                                : controller.submitCard,
+                          child: Padding(
+                            padding: EdgeInsets.only(bottom: computedBottomPadding),
+                            child: AppPrimaryButton(
+                              label: AppStrings.addCard.tr,
+                              iconAsset: AppAssets.locationIcArrowRight,
+                              isLoading: controller.isSubmitting.value,
+                              onPressed: controller.isSubmitting.value
+                                  ? null
+                                  : controller.submitCard,
+                            ),
                           ),
                         );
                       },

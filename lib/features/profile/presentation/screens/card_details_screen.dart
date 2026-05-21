@@ -78,7 +78,7 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
   Widget build(BuildContext context) {
     final double bottomPadding = MediaQuery.paddingOf(context).bottom;
     final double computedBottomPadding = bottomPadding > 0
-        ? (GetPlatform.isIOS ? 8.h : 12.h)
+        ? (GetPlatform.isIOS ? 0 : 8.h)
         : 24.h;
 
     return Scaffold(
