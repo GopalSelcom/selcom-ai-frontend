@@ -186,163 +186,171 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.pageBackground,
-      appBar: AppBar(
-        title: Text(
-          _isDestinationEditor
-              ? AppStrings.changeDropLocation.tr
-              : AppStrings.addStops.tr,
+    return GestureDetector(
+      onTap:
+          () {}, // Prevents global unfocus handler from intercepting taps on this screen
+      behavior: HitTestBehavior.translucent,
+      child: Scaffold(
+        backgroundColor: AppColors.pageBackground,
+        appBar: AppBar(
+          title: Text(
+            _isDestinationEditor
+                ? AppStrings.changeDropLocation.tr
+                : AppStrings.addStops.tr,
+          ),
+          leading: const AppBackButton(
+            color: AppColors.textHeading,
+            alignment: Alignment.center,
+          ),
         ),
-        leading: const AppBackButton(
-          color: AppColors.textHeading,
-          alignment: Alignment.center,
-        ),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
-              children: [
-                if (_isDestinationEditor) ...[
-                  _buildStaticPoint(
-                    'Current Destination',
-                    controller.destinationAddress,
-                    AppColors.mapDropMarkerGreen,
-                  ),
-                  if ((_selectedDestination?['address']?.toString() ?? '')
-                      .trim()
-                      .isNotEmpty)
+        body: Column(
+          children: [
+            Expanded(
+              child: ListView(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
+                children: [
+                  if (_isDestinationEditor) ...[
                     _buildStaticPoint(
-                      'New Destination',
-                      _selectedDestination?['address']?.toString() ?? '',
-                      AppColors.primary,
+                      'Current Destination',
+                      controller.destinationAddress,
+                      AppColors.mapDropMarkerGreen,
                     ),
-                  _buildChangeDropLocationButton(),
-                ] else ...[
-                  _buildStaticPoint(
-                    'Pickup Point',
-                    controller.pickupAddress,
-                    AppColors.mapPickupMarkerBlue,
-                    isPickup: true,
-                  ),
-                  ReorderableListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _stops.length,
-                    proxyDecorator: (widget, index, animation) {
-                      return Material(
-                        color: AppColors.transparent,
-                        child: widget,
-                      );
-                    },
-                    itemBuilder: (context, index) {
-                      final stop = _stops[index];
-                      final canRemoveDraftStop = _stopLocalKeys[index]
-                          .startsWith('new_');
-                      return Padding(
-                        key: ValueKey('stop_${stop.index}_$index'),
-                        padding: EdgeInsets.only(bottom: 12.h),
-                        child: Container(
-                          padding: EdgeInsets.all(12.w),
-                          decoration: BoxDecoration(
-                            color: AppColors.pageBackground,
-                            borderRadius: BorderRadius.circular(12.r),
-                            border: Border.all(
-                              color: AppColors.shade5.withValues(alpha: 0.5),
+                    if ((_selectedDestination?['address']?.toString() ?? '')
+                        .trim()
+                        .isNotEmpty)
+                      _buildStaticPoint(
+                        'New Destination',
+                        _selectedDestination?['address']?.toString() ?? '',
+                        AppColors.primary,
+                      ),
+                    _buildChangeDropLocationButton(),
+                  ] else ...[
+                    _buildStaticPoint(
+                      'Pickup Point',
+                      controller.pickupAddress,
+                      AppColors.mapPickupMarkerBlue,
+                      isPickup: true,
+                    ),
+                    ReorderableListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _stops.length,
+                      proxyDecorator: (widget, index, animation) {
+                        return Material(
+                          color: AppColors.transparent,
+                          child: widget,
+                        );
+                      },
+                      itemBuilder: (context, index) {
+                        final stop = _stops[index];
+                        final canRemoveDraftStop = _stopLocalKeys[index]
+                            .startsWith('new_');
+                        return Padding(
+                          key: ValueKey('stop_${stop.index}_$index'),
+                          padding: EdgeInsets.only(bottom: 12.h),
+                          child: Container(
+                            padding: EdgeInsets.all(12.w),
+                            decoration: BoxDecoration(
+                              color: AppColors.pageBackground,
+                              borderRadius: BorderRadius.circular(12.r),
+                              border: Border.all(
+                                color: AppColors.shade5.withValues(alpha: 0.5),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                ReorderableDragStartListener(
+                                  index: index,
+                                  child: Icon(
+                                    Icons.drag_indicator,
+                                    color: AppColors.shade5,
+                                    size: 22.sp,
+                                  ),
+                                ),
+                                SizedBox(width: 12.w),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Stop ${index + 1}',
+                                        style: AppTextStyles.caption.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                      SizedBox(height: 2.h),
+                                      Text(
+                                        stop.address,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: AppTextStyles.body.copyWith(
+                                          color: AppColors.textBody,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (canRemoveDraftStop)
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.remove_circle,
+                                      color: AppColors.primary,
+                                      size: 20.sp,
+                                    ),
+                                    onPressed: () => _removeStop(index),
+                                  ),
+                              ],
                             ),
                           ),
-                          child: Row(
-                            children: [
-                              ReorderableDragStartListener(
-                                index: index,
-                                child: Icon(
-                                  Icons.drag_indicator,
-                                  color: AppColors.shade5,
-                                  size: 22.sp,
-                                ),
-                              ),
-                              SizedBox(width: 12.w),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Stop ${index + 1}',
-                                      style: AppTextStyles.caption.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.primary,
-                                      ),
-                                    ),
-                                    SizedBox(height: 2.h),
-                                    Text(
-                                      stop.address,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: AppTextStyles.body.copyWith(
-                                        color: AppColors.textBody,
-                                        fontWeight: FontWeight.w400,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              if (canRemoveDraftStop)
-                                IconButton(
-                                  icon: Icon(
-                                    Icons.remove_circle,
-                                    color: AppColors.primary,
-                                    size: 20.sp,
-                                  ),
-                                  onPressed: () => _removeStop(index),
-                                ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                    onReorder: _reorderStops,
-                  ),
-                  _buildAddStopButton(),
-                  _buildStaticPoint(
-                    'Destination',
-                    controller.destinationAddress,
-                    AppColors.mapDropMarkerGreen,
-                  ),
+                        );
+                      },
+                      onReorder: _reorderStops,
+                    ),
+                    _buildAddStopButton(),
+                    _buildStaticPoint(
+                      'Destination',
+                      controller.destinationAddress,
+                      AppColors.mapDropMarkerGreen,
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-          _isDestinationEditor
-              ? _buildDestinationPreviewPanel()
-              : _buildPreviewPanel(),
-          SafeArea(
-            child: Padding(
-              padding: EdgeInsets.all(16.w),
-              child: Obx(() {
-                final showButton = _isDestinationEditor
-                    ? (_selectedDestination != null ||
-                          controller.destinationUpdatePreview.value != null)
-                    : (_hasChanges() ||
-                          controller.stopUpdatePreview.value != null);
-                if (!showButton) return const SizedBox.shrink();
+            _isDestinationEditor
+                ? _buildDestinationPreviewPanel()
+                : _buildPreviewPanel(),
+            SafeArea(
+              child: Padding(
+                padding: EdgeInsets.all(16.w),
+                child: Obx(() {
+                  final showButton = _isDestinationEditor
+                      ? (_selectedDestination != null ||
+                            controller.destinationUpdatePreview.value != null)
+                      : (_hasChanges() ||
+                            controller.stopUpdatePreview.value != null);
+                  if (!showButton) return const SizedBox.shrink();
 
-                return AppPrimaryButton(
-                  label: _isDestinationEditor
-                      ? (controller.destinationUpdatePreview.value == null
-                            ? 'Update Destination'
-                            : 'Confirm & Update')
-                      : (controller.stopUpdatePreview.value == null
-                            ? 'Update Ride'
-                            : 'Confirm & Update'),
-                  onPressed: _isSaving ? null : _onSave,
-                  isLoading: _isSaving,
-                );
-              }),
+                  return AppPrimaryButton(
+                    label: _isDestinationEditor
+                        ? (controller.destinationUpdatePreview.value == null
+                              ? 'Update Destination'
+                              : 'Confirm & Update')
+                        : (controller.stopUpdatePreview.value == null
+                              ? 'Update Ride'
+                              : 'Confirm & Update'),
+                    onPressed: _isSaving ? null : _onSave,
+                    isLoading: _isSaving,
+                  );
+                }),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

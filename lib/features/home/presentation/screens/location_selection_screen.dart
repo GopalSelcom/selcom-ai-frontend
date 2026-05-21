@@ -97,88 +97,93 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           Navigator.of(context).pop();
         }
       },
-      child: Scaffold(
-        backgroundColor: AppColors.pageBackground,
-        body: SafeArea(
-          child: Stack(
-            children: [
-              Obx(() {
-                final bool shouldShowBookRideButton =
-                    locationController.areAllSegmentsReadyForBooking ||
-                    controller.isProceedingToBooking.value;
-                return AnimatedPadding(
-                  duration: const Duration(milliseconds: 240),
-                  curve: Curves.easeOutCubic,
-                  padding: EdgeInsets.only(
-                    top: 60.h,
-                    bottom: shouldShowBookRideButton ? 92.h : 16.h,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16.w),
-                        child: Obx(() {
-                          locationController.syncPickupFromLiveAddress();
-                          return _pickupDestinationCard();
-                        }),
-                      ),
-                      SizedBox(height: 8.79.h),
-                      _chipsRow(),
-                      SizedBox(height: 9.h),
-                      Expanded(
-                        child: Padding(
+      child: GestureDetector(
+        onTap:
+            () {}, // Prevents global unfocus handler from intercepting taps on this screen
+        behavior: HitTestBehavior.translucent,
+        child: Scaffold(
+          backgroundColor: AppColors.pageBackground,
+          body: SafeArea(
+            child: Stack(
+              children: [
+                Obx(() {
+                  final bool shouldShowBookRideButton =
+                      locationController.areAllSegmentsReadyForBooking ||
+                      controller.isProceedingToBooking.value;
+                  return AnimatedPadding(
+                    duration: const Duration(milliseconds: 240),
+                    curve: Curves.easeOutCubic,
+                    padding: EdgeInsets.only(
+                      top: 60.h,
+                      bottom: shouldShowBookRideButton ? 92.h : 16.h,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
                           padding: EdgeInsets.symmetric(horizontal: 16.w),
-                          child: _buildSearchContent(),
+                          child: Obx(() {
+                            locationController.syncPickupFromLiveAddress();
+                            return _pickupDestinationCard();
+                          }),
                         ),
+                        SizedBox(height: 8.79.h),
+                        _chipsRow(),
+                        SizedBox(height: 9.h),
+                        Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16.w),
+                            child: _buildSearchContent(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+                Positioned(
+                  top: 12.h,
+                  left: 16.w,
+                  child: Navigator.of(context).canPop()
+                      ? AppBackButton(
+                          color: AppColors.textHeading,
+                          onPressed: controller.closeLocationSelection,
+                        )
+                      : const SizedBox.shrink(),
+                ),
+                Positioned(
+                  top: 12.h,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Text(
+                      AppStrings.locationSelection.tr,
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.homeTitle.copyWith(
+                        fontWeight: FontWeight.w600,
+                        height: 34 / 20,
+                        letterSpacing: -0.4,
                       ),
-                    ],
-                  ),
-                );
-              }),
-              Positioned(
-                top: 12.h,
-                left: 16.w,
-                child: Navigator.of(context).canPop()
-                    ? AppBackButton(
-                        color: AppColors.textHeading,
-                        onPressed: controller.closeLocationSelection,
-                      )
-                    : const SizedBox.shrink(),
-              ),
-              Positioned(
-                top: 12.h,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: Text(
-                    AppStrings.locationSelection.tr,
-                    textAlign: TextAlign.center,
-                    style: AppTextStyles.homeTitle.copyWith(
-                      fontWeight: FontWeight.w600,
-                      height: 34 / 20,
-                      letterSpacing: -0.4,
                     ),
                   ),
                 ),
-              ),
-              Obx(() {
-                final bool shouldShowBookRideButton =
-                    locationController.areAllSegmentsReadyForBooking ||
-                    controller.isProceedingToBooking.value;
-                return Positioned(
-                  left: 16.w,
-                  right: 16.w,
-                  bottom: 26.h,
-                  child: AppAnimatedReveal(
-                    show: shouldShowBookRideButton,
-                    visibleKey: const ValueKey('book-ride-visible'),
-                    hiddenKey: const ValueKey('book-ride-hidden'),
-                    child: _bookRideButton(),
-                  ),
-                );
-              }),
-            ],
+                Obx(() {
+                  final bool shouldShowBookRideButton =
+                      locationController.areAllSegmentsReadyForBooking ||
+                      controller.isProceedingToBooking.value;
+                  return Positioned(
+                    left: 16.w,
+                    right: 16.w,
+                    bottom: 26.h,
+                    child: AppAnimatedReveal(
+                      show: shouldShowBookRideButton,
+                      visibleKey: const ValueKey('book-ride-visible'),
+                      hiddenKey: const ValueKey('book-ride-hidden'),
+                      child: _bookRideButton(),
+                    ),
+                  );
+                }),
+              ],
+            ),
           ),
         ),
       ),
@@ -512,6 +517,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       );
     }
     return ListView.separated(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       itemCount: controller.suggestions.length,
       separatorBuilder: (_, __) => SizedBox(height: 8.h),
       itemBuilder: (_, index) {
@@ -558,6 +564,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       }
 
       return ListView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         shrinkWrap: true,
         children: [
           if (controller.savedPlaces.isNotEmpty) ...[
@@ -636,6 +643,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     }
 
     return ListView.separated(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       itemCount: controller.recentSearches.length,
       separatorBuilder: (_, __) => SizedBox(height: 8.h),
       itemBuilder: (_, index) {
@@ -1022,14 +1030,18 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
   }
 
   Widget _buildSearchContent() {
-    return Obx(() {
-      if (controller.isSearching.value) {
-        return const Center(child: CircularProgressIndicator());
-      }
-      if (controller.searchQuery.value.trim().isNotEmpty) {
-        return _suggestionsList(controller);
-      }
-      return _recentList(controller);
-    });
+    return GestureDetector(
+      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+      behavior: HitTestBehavior.translucent,
+      child: Obx(() {
+        if (controller.isSearching.value) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (controller.searchQuery.value.trim().isNotEmpty) {
+          return _suggestionsList(controller);
+        }
+        return _recentList(controller);
+      }),
+    );
   }
 }

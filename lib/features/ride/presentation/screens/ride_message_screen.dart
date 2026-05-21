@@ -16,59 +16,64 @@ class RideMessageScreen extends GetView<RideMessageController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.surfaceSubtle,
-      body: Stack(
-        children: [
-          // Map Header (Faded static image) - extends to top edge under status bar
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 140.h,
-            child: Opacity(
-              opacity: 0.6,
-              child: Image.asset(
-                AppAssets.mapBackground,
-                fit: BoxFit.cover,
-                alignment: Alignment.center,
-              ),
-            ),
-          ),
-          // Content Column
-          Column(
-            children: [
-              SizedBox(height: 90.h),
-              Expanded(
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: AppColors.white,
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(40.r),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.black.withValues(alpha: 0.08),
-                        blurRadius: 20,
-                        offset: const Offset(0, -4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      _grabber(),
-                      _header(),
-                      _safetyBanner(),
-                      Expanded(child: _messageList()),
-                      _composer(),
-                    ],
-                  ),
+    return GestureDetector(
+      onTap:
+          () {}, // Prevents global unfocus handler from intercepting taps on this screen
+      behavior: HitTestBehavior.translucent,
+      child: Scaffold(
+        backgroundColor: AppColors.surfaceSubtle,
+        body: Stack(
+          children: [
+            // Map Header (Faded static image) - extends to top edge under status bar
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 140.h,
+              child: Opacity(
+                opacity: 0.6,
+                child: Image.asset(
+                  AppAssets.mapBackground,
+                  fit: BoxFit.cover,
+                  alignment: Alignment.center,
                 ),
               ),
-            ],
-          ),
-        ],
+            ),
+            // Content Column
+            Column(
+              children: [
+                SizedBox(height: 90.h),
+                Expanded(
+                  child: Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: AppColors.white,
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(40.r),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.black.withValues(alpha: 0.08),
+                          blurRadius: 20,
+                          offset: const Offset(0, -4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        _grabber(),
+                        _header(),
+                        _safetyBanner(),
+                        Expanded(child: _messageList()),
+                        _composer(),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -200,14 +205,19 @@ class RideMessageScreen extends GetView<RideMessageController> {
 
   Widget _messageList() {
     return Obx(() {
-      return ListView.builder(
-        controller: controller.scrollController,
-        padding: EdgeInsets.all(16.w),
-        itemCount: controller.messages.length,
-        itemBuilder: (context, index) {
-          final m = controller.messages[index];
-          return m.isFromRider ? _riderRow(m) : _driverRow(m);
-        },
+      return GestureDetector(
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        behavior: HitTestBehavior.translucent,
+        child: ListView.builder(
+          controller: controller.scrollController,
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: EdgeInsets.all(16.w),
+          itemCount: controller.messages.length,
+          itemBuilder: (context, index) {
+            final m = controller.messages[index];
+            return m.isFromRider ? _riderRow(m) : _driverRow(m);
+          },
+        ),
       );
     });
   }
@@ -399,7 +409,9 @@ class RideMessageScreen extends GetView<RideMessageController> {
                           shape: BoxShape.circle,
                         ),
                         child: IconButton(
-                          onPressed: sending ? null : controller.sendCurrentMessage,
+                          onPressed: sending
+                              ? null
+                              : controller.sendCurrentMessage,
                           icon: SvgPictureAsset(
                             AppAssets.icSend,
                             width: 18.w,
