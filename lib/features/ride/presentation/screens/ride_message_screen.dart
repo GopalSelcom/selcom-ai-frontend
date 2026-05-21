@@ -17,52 +17,58 @@ class RideMessageScreen extends GetView<RideMessageController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Map Header (Faded static image)
-            SizedBox(
-              height: 100.h,
-              width: double.infinity,
-              child: Opacity(
-                opacity: 0.6,
-                child: Image.asset(
-                  AppAssets.mapBackground,
-                  fit: BoxFit.cover,
-                  alignment: Alignment.center,
-                ),
+      backgroundColor: AppColors.surfaceSubtle,
+      body: Stack(
+        children: [
+          // Map Header (Faded static image) - extends to top edge under status bar
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 140.h,
+            child: Opacity(
+              opacity: 0.6,
+              child: Image.asset(
+                AppAssets.mapBackground,
+                fit: BoxFit.cover,
+                alignment: Alignment.center,
               ),
             ),
-            Expanded(
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(40.r),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.black.withValues(alpha: 0.08),
-                      blurRadius: 20,
-                      offset: const Offset(0, -4),
+          ),
+          // Content Column
+          Column(
+            children: [
+              SizedBox(height: 90.h),
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(40.r),
                     ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    _grabber(),
-                    _header(),
-                    _safetyBanner(),
-                    Expanded(child: _messageList()),
-                    _composer(),
-                  ],
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.black.withValues(alpha: 0.08),
+                        blurRadius: 20,
+                        offset: const Offset(0, -4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      _grabber(),
+                      _header(),
+                      _safetyBanner(),
+                      Expanded(child: _messageList()),
+                      _composer(),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -338,7 +344,7 @@ class RideMessageScreen extends GetView<RideMessageController> {
       final bool allowed = controller.canChat;
       final bool sending = controller.isSending.value;
       return Container(
-        padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 16.h),
+        padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 12.h),
         decoration: BoxDecoration(
           color: AppColors.surfaceSubtle,
           borderRadius: BorderRadius.vertical(top: Radius.circular(26.r)),
@@ -346,68 +352,71 @@ class RideMessageScreen extends GetView<RideMessageController> {
             top: BorderSide(color: AppColors.borderWalletCard),
           ),
         ),
-        child: Opacity(
-          opacity: allowed ? 1.0 : 0.5,
-          child: AbsorbPointer(
-            absorbing: !allowed,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _quickReplyChips(allowed: allowed, sending: sending),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: controller.messageController,
-                        enabled: allowed,
-                        keyboardType: TextInputType.multiline,
-                        textInputAction: TextInputAction.newline,
-                        minLines: 1,
-                        maxLines: 5,
-                        style: AppTextStyles.body.copyWith(
-                          color: AppColors.textHeading,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: allowed
-                              ? 'Write a message...'
-                              : 'Chat unavailable',
-                          hintStyle: AppTextStyles.hint.copyWith(
-                            color: AppColors.textMessageHint,
+        child: SafeArea(
+          top: false,
+          child: Opacity(
+            opacity: allowed ? 1.0 : 0.5,
+            child: AbsorbPointer(
+              absorbing: !allowed,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _quickReplyChips(allowed: allowed, sending: sending),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: controller.messageController,
+                          enabled: allowed,
+                          keyboardType: TextInputType.multiline,
+                          textInputAction: TextInputAction.newline,
+                          minLines: 1,
+                          maxLines: 5,
+                          style: AppTextStyles.body.copyWith(
+                            color: AppColors.textHeading,
                           ),
-                          border: InputBorder.none,
+                          decoration: InputDecoration(
+                            hintText: allowed
+                                ? 'Write a message...'
+                                : 'Chat unavailable',
+                            hintStyle: AppTextStyles.hint.copyWith(
+                              color: AppColors.textMessageHint,
+                            ),
+                            border: InputBorder.none,
+                          ),
                         ),
                       ),
-                    ),
-                    SizedBox(width: 12.w),
-                    Container(
-                      width: 42.w,
-                      height: 42.w,
-                      decoration: BoxDecoration(
-                        color: allowed && !sending
-                            ? AppColors.primary
-                            : AppColors.skeletonBase,
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        onPressed: sending ? null : controller.sendCurrentMessage,
-                        icon: SvgPictureAsset(
-                          AppAssets.icSend,
-                          width: 18.w,
-                          height: 18.w,
-                          color: AppColors.white,
-                          placeholderBuilder: (_) => const Icon(
-                            Icons.send_rounded,
+                      SizedBox(width: 12.w),
+                      Container(
+                        width: 42.w,
+                        height: 42.w,
+                        decoration: BoxDecoration(
+                          color: allowed && !sending
+                              ? AppColors.primary
+                              : AppColors.skeletonBase,
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          onPressed: sending ? null : controller.sendCurrentMessage,
+                          icon: SvgPictureAsset(
+                            AppAssets.icSend,
+                            width: 18.w,
+                            height: 18.w,
                             color: AppColors.white,
-                            size: 24,
+                            placeholderBuilder: (_) => const Icon(
+                              Icons.send_rounded,
+                              color: AppColors.white,
+                              size: 24,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -426,7 +435,7 @@ class RideMessageScreen extends GetView<RideMessageController> {
       final labels = controller.quickReplies;
 
       return Padding(
-        padding: EdgeInsets.only(bottom: 10.h),
+        padding: EdgeInsets.only(bottom: 5.h),
         child: Opacity(
           opacity: sending ? 0.45 : 1,
           child: IgnorePointer(
