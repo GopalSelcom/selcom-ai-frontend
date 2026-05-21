@@ -154,8 +154,9 @@ class PaymentBar extends StatelessWidget {
   }
 
   void _openPaymentSheet(BuildContext context) {
-    AppDialogs.showAnimatedBottomSheet(
-      child: const PaymentMethodBottomSheet(),
+    AppDialogs.showStandardBottomSheet(
+      title: AppStrings.selectAPaymentMethod.tr,
+      content: const PaymentMethodBottomSheet(),
       barrierDismissible: true,
     );
   }

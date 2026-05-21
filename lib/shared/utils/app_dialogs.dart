@@ -10,6 +10,7 @@ import '../../core/theme/app_text_styles.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/services/storage_service.dart';
 import '../widgets/app_primary_button.dart';
+import '../widgets/app_standard_bottom_sheet.dart';
 
 class AppDialogs {
   static bool _isErrorDialogVisible = false;
@@ -140,6 +141,33 @@ class AppDialogs {
           ],
         );
       },
+    );
+  }
+
+  /// Standard app bottom sheet with optional [title], [subtitle], and [content].
+  static Future<T?> showStandardBottomSheet<T>({
+    String? title,
+    String? subtitle,
+    required Widget content,
+    Widget? footer,
+    bool barrierDismissible = true,
+    bool showDragHandle = true,
+    bool showHeaderDivider = true,
+    EdgeInsetsGeometry? contentPadding,
+    double maxHeightFactor = 0.75,
+  }) {
+    return showAnimatedBottomSheet<T>(
+      barrierDismissible: barrierDismissible,
+      child: AppStandardBottomSheet(
+        title: title,
+        subtitle: subtitle,
+        content: content,
+        footer: footer,
+        showDragHandle: showDragHandle,
+        showHeaderDivider: showHeaderDivider,
+        contentPadding: contentPadding,
+        maxHeightFactor: maxHeightFactor,
+      ),
     );
   }
 
