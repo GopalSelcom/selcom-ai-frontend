@@ -70,15 +70,7 @@ class _BookingForSomeoneElseFlowBottomSheetState
     super.dispose();
   }
 
-  void _goBack() {
-    if (_currentStep == BookingFlowStep.details) {
-      setState(() {
-        _currentStep = BookingFlowStep.choice;
-      });
-    } else {
-      Navigator.of(context).pop();
-    }
-  }
+
 
   String? get _sheetTitle {
     switch (_currentStep) {
@@ -126,6 +118,9 @@ class _BookingForSomeoneElseFlowBottomSheetState
       footer: _currentStep == BookingFlowStep.details && _canConfirm
           ? AppPrimaryButton(
               label: AppStrings.confirm.tr,
+              iconAsset: AppAssets.locationIcArrowRight,
+              alignIconToTrailingEnd: true,
+              showBottomInnerShadow: true,
               onPressed: _onConfirmPressed,
             )
           : null,
