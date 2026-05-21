@@ -355,6 +355,7 @@ class LanguageSw extends Languages {
     'select_apayment_method': '',
     'select_country': '',
     'select_areason': '',
+    'select_a_reason_subtitle': '',
     'select_avehicle_and_payment_method': '',
     'select_payment': '',
     'selfie_capture_failed': '',
@@ -1717,6 +1718,10 @@ class LanguageSw extends Languages {
 
   @override
   String get selectAReason => values['select_areason'] ?? '';
+
+  @override
+  String get selectAReasonSubtitle =>
+      values['select_a_reason_subtitle'] ?? '';
 
   @override
   String get selectAVehicleAndPaymentMethod =>

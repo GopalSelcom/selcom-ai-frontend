@@ -477,6 +477,7 @@ class AppStrings {
   static const String selectCountry = 'select_country';
   static const String selectAPaymentMethod = 'select_apayment_method';
   static const String selectAReason = 'select_areason';
+  static const String selectAReasonSubtitle = 'select_a_reason_subtitle';
   static const String selectAVehicleAndPaymentMethod =
       'select_avehicle_and_payment_method';
   static const String selectPayment = 'select_payment';

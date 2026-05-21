@@ -366,6 +366,7 @@ abstract class Languages {
   String get selectCountry;
   String get selectAPaymentMethod;
   String get selectAReason;
+  String get selectAReasonSubtitle;
   String get selectAVehicleAndPaymentMethod;
   String get selectPayment;
   String get selfieCaptureFailed;
