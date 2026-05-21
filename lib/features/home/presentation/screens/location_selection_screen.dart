@@ -85,12 +85,17 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
-        FocusManager.instance.primaryFocus?.unfocus();
-        Future.delayed(const Duration(milliseconds: 150), () {
-          if (context.mounted) {
-            Navigator.of(context).pop();
-          }
-        });
+        final hasKeyboard = MediaQuery.viewInsetsOf(context).bottom > 0;
+        if (hasKeyboard) {
+          FocusManager.instance.primaryFocus?.unfocus();
+          Future.delayed(const Duration(milliseconds: 300), () {
+            if (context.mounted) {
+              Navigator.of(context).pop();
+            }
+          });
+        } else {
+          Navigator.of(context).pop();
+        }
       },
       child: Scaffold(
         backgroundColor: AppColors.pageBackground,

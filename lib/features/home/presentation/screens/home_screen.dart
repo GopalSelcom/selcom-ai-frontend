@@ -38,6 +38,7 @@ class HomeScreen extends GetView<HomeController> {
         _showExitDialog(context);
       },
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         backgroundColor: AppColors.pageBackground,
         body: Stack(
           children: [
@@ -334,50 +335,47 @@ class HomeScreen extends GetView<HomeController> {
                 padding: EdgeInsets.symmetric(
                   horizontal: _sheetHorizontalPadding.w,
                 ),
-                child: Obx(
-                  () {
-                    const sectionGap = 12.0;
-                    const titleContentGap = 10.0;
-                    const recentItemGap = 12.0;
+                child: Obx(() {
+                  const sectionGap = 12.0;
+                  const titleContentGap = 10.0;
+                  const recentItemGap = 12.0;
 
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (controller.shouldShowRecentSection) ...[
-                          SizedBox(height: sectionGap.h),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  AppStrings.recentLocation.tr,
-                                  style: _sectionTitleStyle,
-                                ),
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (controller.shouldShowRecentSection) ...[
+                        SizedBox(height: sectionGap.h),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                AppStrings.recentLocation.tr,
+                                style: _sectionTitleStyle,
                               ),
-                              if (controller.canViewMoreRecentLocations)
-                                _viewMoreButton(
-                                  onPressed:
-                                      controller.openRecentLocationsScreen,
-                                ),
-                            ],
-                          ),
-                          SizedBox(height: titleContentGap.h),
-                          ..._buildRecentLocationListItems(
-                            itemGap: recentItemGap.h,
-                          ),
-                        ],
-                        if (controller.shouldShowVehicleSection) ...[
-                          SizedBox(height: sectionGap.h),
-                          Text(
-                            AppStrings.exploreVehicle.tr,
-                            style: _sectionTitleStyle,
-                          ),
-                          SizedBox(height: titleContentGap.h),
-                          _buildVehicleHorizontalList(),
-                        ],
+                            ),
+                            if (controller.canViewMoreRecentLocations)
+                              _viewMoreButton(
+                                onPressed: controller.openRecentLocationsScreen,
+                              ),
+                          ],
+                        ),
+                        SizedBox(height: titleContentGap.h),
+                        ..._buildRecentLocationListItems(
+                          itemGap: recentItemGap.h,
+                        ),
                       ],
-                    );
-                  },
-                ),
+                      if (controller.shouldShowVehicleSection) ...[
+                        SizedBox(height: sectionGap.h),
+                        Text(
+                          AppStrings.exploreVehicle.tr,
+                          style: _sectionTitleStyle,
+                        ),
+                        SizedBox(height: titleContentGap.h),
+                        _buildVehicleHorizontalList(),
+                      ],
+                    ],
+                  );
+                }),
               ),
               SizedBox(height: 12.h),
             ],
@@ -388,11 +386,11 @@ class HomeScreen extends GetView<HomeController> {
   }
 
   TextStyle get _sectionTitleStyle => AppTextStyles.homeSubtitle.copyWith(
-        fontSize: 16.sp,
-        fontWeight: FontWeight.w600,
-        letterSpacing: -0.4,
-        color: AppColors.textHeading,
-      );
+    fontSize: 16.sp,
+    fontWeight: FontWeight.w600,
+    letterSpacing: -0.4,
+    color: AppColors.textHeading,
+  );
 
   Widget _viewMoreButton({required VoidCallback onPressed}) {
     return TextButton(
