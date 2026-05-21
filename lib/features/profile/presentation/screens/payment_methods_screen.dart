@@ -52,6 +52,7 @@ class PaymentMethodsScreen extends StatelessWidget {
                   ),
                 ),
               ),
+              bottomPadding: 16.h,
             ),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
