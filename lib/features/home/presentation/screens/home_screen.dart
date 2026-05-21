@@ -39,6 +39,7 @@ class HomeScreen extends GetView<HomeController> {
       },
       child: Scaffold(
         backgroundColor: AppColors.pageBackground,
+        resizeToAvoidBottomInset: false,
         body: Stack(
           children: [
             // 1. Map Layer (Static Image from Figma)
