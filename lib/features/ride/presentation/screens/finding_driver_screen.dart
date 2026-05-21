@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:selcom_rides_frontend/shared/widgets/map_widgets.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
+import '../../../../shared/widgets/app_google_map.dart';
+import '../../../../shared/widgets/app_map_route_one_line_bar.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../controllers/finding_driver_controller.dart';
 
@@ -81,24 +82,13 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
               ),
             ),
           ),
-          AppMapTopHeader(
+          Positioned(
             top: topPad + 8.h,
-            left: 16,
-            right: 16,
-            isProfileIconVisible: false,
-            onProfileTap: c.openProfile,
-            addressWidget: Expanded(
-              child: Obx(
-                () => RideLocationSummaryCard(
-                  pickupAddress: c.pickupAddress.isEmpty
-                      ? AppStrings.currentLocation.tr
-                      : c.pickupAddress,
-                  destinationAddress: c.destinationAddress.isEmpty
-                      ? AppStrings.destination.tr
-                      : c.destinationAddress,
-                  intermediateStops: c.intermediateStops.toList(),
-                ),
-              ),
+            left: 16.w,
+            right: 16.w,
+            child: AppMapRouteOneLineBar(
+              pickupLabel: c.mapRoutePickupLabel,
+              destinationLabel: c.mapRouteDestinationLabel,
             ),
           ),
           Obx(() {

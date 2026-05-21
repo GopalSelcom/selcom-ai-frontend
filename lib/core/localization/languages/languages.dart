@@ -78,6 +78,11 @@ abstract class Languages {
   get doNotShareYourPersonalDetailsWithRiderBeSafeAndAlwaysCheckYourLuggage;
   String get done;
   String get downloadSlip;
+  String get downloadSlipGallerySubtitle;
+  String get chooseHowToReceiveReceipt;
+  String get receiptOptions;
+  String get shareSlip;
+  String get shareSlipSubtitle;
   String get driverArrivedMapBadge;
   String get driverArrivedPickupPrimary;
   String get driverArrivedPickupSecondary;

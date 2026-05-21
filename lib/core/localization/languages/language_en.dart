@@ -84,6 +84,12 @@ class LanguageEn extends Languages {
         'Do not share your personal Details with rider Be safe and always check your luggage',
     'done': 'Done',
     'download_slip': 'Download Slip',
+    'download_slip_gallery_subtitle': 'Save a copy to your gallery',
+    'choose_how_to_receive_receipt':
+        'Choose how you would like to receive your receipt',
+    'receipt_options': 'Receipt Options',
+    'share_slip': 'Share Slip',
+    'share_slip_subtitle': 'Send receipt link to others',
     'driver_arrived_map_badge': 'Driver arrived',
     'driver_arrived_pickup_primary': 'Driver arrived at pickup',
     'driver_arrived_pickup_secondary': 'Meet your driver at pickup',
@@ -848,6 +854,18 @@ class LanguageEn extends Languages {
 
   @override
   String get downloadSlip => values['download_slip'] ?? '';
+  @override
+  String get downloadSlipGallerySubtitle =>
+      values['download_slip_gallery_subtitle'] ?? '';
+  @override
+  String get chooseHowToReceiveReceipt =>
+      values['choose_how_to_receive_receipt'] ?? '';
+  @override
+  String get receiptOptions => values['receipt_options'] ?? '';
+  @override
+  String get shareSlip => values['share_slip'] ?? '';
+  @override
+  String get shareSlipSubtitle => values['share_slip_subtitle'] ?? '';
 
   @override
   String get driverArrivedMapBadge => values['driver_arrived_map_badge'] ?? '';

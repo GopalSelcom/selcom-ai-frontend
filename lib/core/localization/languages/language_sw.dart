@@ -76,6 +76,11 @@ class LanguageSw extends Languages {
         '',
     'done': '',
     'download_slip': '',
+    'download_slip_gallery_subtitle': '',
+    'choose_how_to_receive_receipt': '',
+    'receipt_options': '',
+    'share_slip': '',
+    'share_slip_subtitle': '',
     'driver_arrived_map_badge': '',
     'driver_arrived_pickup_primary': '',
     'driver_arrived_pickup_secondary': '',
@@ -766,6 +771,23 @@ class LanguageSw extends Languages {
 
   @override
   String get downloadSlip => values['download_slip'] ?? '';
+
+  @override
+  String get downloadSlipGallerySubtitle =>
+      values['download_slip_gallery_subtitle'] ?? '';
+
+  @override
+  String get chooseHowToReceiveReceipt =>
+      values['choose_how_to_receive_receipt'] ?? '';
+
+  @override
+  String get receiptOptions => values['receipt_options'] ?? '';
+
+  @override
+  String get shareSlip => values['share_slip'] ?? '';
+
+  @override
+  String get shareSlipSubtitle => values['share_slip_subtitle'] ?? '';
 
   @override
   String get driverArrivedMapBadge => values['driver_arrived_map_badge'] ?? '';

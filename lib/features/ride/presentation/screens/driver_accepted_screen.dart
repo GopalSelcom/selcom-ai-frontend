@@ -10,15 +10,14 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
-import '../../../../shared/widgets/app_map_top_header.dart';
+import '../../../../shared/widgets/app_map_route_one_line_bar.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
-import '../../../../shared/widgets/ride_location_summary_card.dart';
 import '../controllers/driver_accepted_controller.dart';
 import '../controllers/ride_share_controller.dart';
 import '../widgets/ride_common_widgets.dart';
-import '../../../../shared/utils/app_dialogs.dart';
 
 /// SCR-11 — Driver accepted (heading to pickup). See `.agent/context/frontend/SCREENS.md`.
 class DriverAcceptedScreen extends StatelessWidget {
@@ -84,23 +83,15 @@ class DriverAcceptedScreen extends StatelessWidget {
                 ),
               ),
             ),
-            AppMapTopHeader(
+            Positioned(
               top: topPad + 8.h,
-              left: 16,
-              right: 16,
-              onProfileTap: c.openProfile,
-              addressWidget: Expanded(
-                child: Obx(
-                  () => RideLocationSummaryCard(
-                    pickupAddress: c.pickupAddress.isEmpty
-                        ? AppStrings.currentLocation.tr
-                        : c.pickupAddress,
-                    destinationAddress: c.destinationAddress.isEmpty
-                        ? AppStrings.destination.tr
-                        : c.destinationAddress,
-                    // Controller already normalizes this as: all stops except final destination.
-                    intermediateStops: c.summaryIntermediateStops.toList(),
-                  ),
+              left: 16.w,
+              right: 16.w,
+              child: GetBuilder<DriverAcceptedController>(
+                id: DriverAcceptedController.mapRouteHeaderId,
+                builder: (controller) => AppMapRouteOneLineBar(
+                  pickupLabel: controller.mapRoutePickupLabel,
+                  destinationLabel: controller.mapRouteDestinationLabel,
                 ),
               ),
             ),
@@ -108,7 +99,7 @@ class DriverAcceptedScreen extends StatelessWidget {
               final eta = c.etaLabel.value;
 
               return Positioned(
-                top: topPad + 82.h,
+                top: topPad + 60.h,
                 left: 0,
                 right: 0,
                 child: Center(
