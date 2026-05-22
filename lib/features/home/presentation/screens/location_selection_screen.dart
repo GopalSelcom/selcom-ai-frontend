@@ -98,8 +98,8 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         }
       },
       child: GestureDetector(
-        onTap:
-            () {}, // Prevents global unfocus handler from intercepting taps on this screen
+        onTap: () {},
+        // Prevents global unfocus handler from intercepting taps on this screen
         behavior: HitTestBehavior.translucent,
         child: Scaffold(
           backgroundColor: AppColors.pageBackground,
@@ -335,7 +335,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             isDense: true,
             border: InputBorder.none,
             contentPadding: EdgeInsets.zero,
-            hintText: AppStrings.searchPickupLocation.tr,
+            hintText: AppStrings.searchPickup.tr,
             hintStyle: hintStyle,
           ),
         ),
@@ -553,9 +553,12 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     if (controller.searchQuery.value.trim().isEmpty) {
       if (controller.savedPlaces.isEmpty &&
           controller.recentDestinations.isEmpty) {
+        final emptyHint = _activeSegmentIndex.value == 0
+            ? AppStrings.startTypingPickup.tr
+            : AppStrings.startTypingDestination.tr;
         return Center(
           child: Text(
-            AppStrings.startTypingDestination.tr,
+            emptyHint,
             style: AppTextStyles.homeCaption.copyWith(
               color: AppColors.textBody,
             ),

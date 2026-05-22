@@ -375,14 +375,15 @@ class LanguageEn extends Languages {
     'saving_changes': 'Saving changes...',
     'search_destination': 'Search destination',
     'search_location': 'Search location...',
-    'search_pickup_location': 'Search pickup location',
+    'search_pickup': 'Search pickup',
     'search_stop': 'Search stop location',
     'search_stop_location': 'Search stop location',
     'in_app_calling': 'In-app call',
     'in_app_calling_subtitle':
         'Voice call through the app using your active ride connection.',
     'normal_call': 'Phone call',
-    'normal_call_subtitle': 'Use your device dialer to call the driver directly.',
+    'normal_call_subtitle':
+        'Use your device dialer to call the driver directly.',
     'in_app_calling_will_be_available_soon':
         'In app calling will available soon',
     'update_failed': 'Update Failed',
@@ -424,6 +425,7 @@ class LanguageEn extends Languages {
     'socket_off': 'Socket OFF',
     'socket_off_error': 'Socket OFF • @error',
     'socket_on_drivers': 'Socket ON • @count drivers',
+    'start_typing_pickup': 'Start typing pickup',
     'start_typing_destination': 'Start typing destination',
     'stay_notified': 'Stay Notified!',
     'enable_notifications_for_ride_updates':
@@ -875,16 +877,21 @@ class LanguageEn extends Languages {
 
   @override
   String get downloadSlip => values['download_slip'] ?? '';
+
   @override
   String get downloadSlipGallerySubtitle =>
       values['download_slip_gallery_subtitle'] ?? '';
+
   @override
   String get chooseHowToReceiveReceipt =>
       values['choose_how_to_receive_receipt'] ?? '';
+
   @override
   String get receiptOptions => values['receipt_options'] ?? '';
+
   @override
   String get shareSlip => values['share_slip'] ?? '';
+
   @override
   String get shareSlipSubtitle => values['share_slip_subtitle'] ?? '';
 
@@ -1736,7 +1743,7 @@ class LanguageEn extends Languages {
   String get searchLocation => values['search_location'] ?? '';
 
   @override
-  String get searchPickupLocation => values['search_pickup_location'] ?? '';
+  String get searchPickup => values['search_pickup'] ?? '';
 
   @override
   String get searchStopLocation => values['search_stop_location'] ?? '';
@@ -1745,8 +1752,7 @@ class LanguageEn extends Languages {
   String get inAppCalling => values['in_app_calling'] ?? '';
 
   @override
-  String get inAppCallingSubtitle =>
-      values['in_app_calling_subtitle'] ?? '';
+  String get inAppCallingSubtitle => values['in_app_calling_subtitle'] ?? '';
 
   @override
   String get normalCall => values['normal_call'] ?? '';
@@ -1807,8 +1813,7 @@ class LanguageEn extends Languages {
   String get selectCountry => values['select_country'] ?? '';
 
   @override
-  String get selectCountrySubtitle =>
-      values['select_country_subtitle'] ?? '';
+  String get selectCountrySubtitle => values['select_country_subtitle'] ?? '';
 
   @override
   String get searchCountry => values['search_country'] ?? '';
@@ -1820,8 +1825,7 @@ class LanguageEn extends Languages {
   String get selectAReason => values['select_areason'] ?? '';
 
   @override
-  String get selectAReasonSubtitle =>
-      values['select_a_reason_subtitle'] ?? '';
+  String get selectAReasonSubtitle => values['select_a_reason_subtitle'] ?? '';
 
   @override
   String get selectAVehicleAndPaymentMethod =>
@@ -1859,6 +1863,9 @@ class LanguageEn extends Languages {
 
   @override
   String get socketOnDrivers => values['socket_on_drivers'] ?? '';
+
+  @override
+  String get startTypingPickup => values['start_typing_pickup'] ?? '';
 
   @override
   String get startTypingDestination => values['start_typing_destination'] ?? '';

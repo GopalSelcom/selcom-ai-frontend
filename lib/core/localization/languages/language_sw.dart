@@ -270,8 +270,7 @@ class LanguageSw extends Languages {
     'have_promo_code': 'Una msimbo wa promosi?',
     'promo_apply_success_message': 'Msimbo wa promosi umetumika kwa mafanikio.',
     'promo_removed_title': 'Promosi imeondolewa',
-    'promo_removed_destination_changed':
-        'Njia imebadilika — promosi imefutwa.',
+    'promo_removed_destination_changed': 'Njia imebadilika — promosi imefutwa.',
     'promo_error_invalid': 'Msimbo si sahihi',
     'promo_error_expired': 'Msimbo huu umeisha muda',
     'promo_error_not_applicable': 'Msimbo huu hautumiki kwa safari hii',
@@ -332,7 +331,7 @@ class LanguageSw extends Languages {
     'saving_changes': '',
     'search_destination': '',
     'search_location': '',
-    'search_pickup_location': '',
+    'search_pickup': '',
     'search_stop': '',
     'search_stop_location': '',
     'in_app_calling': '',
@@ -371,6 +370,7 @@ class LanguageSw extends Languages {
     'socket_off': '',
     'socket_off_error': '',
     'socket_on_drivers': '',
+    'start_typing_pickup': '',
     'start_typing_destination': '',
     'stay_notified': '',
     'enable_notifications_for_ride_updates': '',
@@ -442,7 +442,8 @@ class LanguageSw extends Languages {
     'whatsapp': 'WhatsApp',
     'text_message': 'Ujumbe wa maandishi',
     'copy_link': 'Nakili kiungo',
-    'share_feature_coming_soon': 'Huduma ya kushiriki itaunganishwa hivi karibuni.',
+    'share_feature_coming_soon':
+        'Huduma ya kushiriki itaunganishwa hivi karibuni.',
     'vehicle_type': '',
     'verification_successful': '',
     'otp_label': '',
@@ -1162,7 +1163,8 @@ class LanguageSw extends Languages {
   String get noPastRidesFound => values['no_past_rides_found'] ?? '';
 
   @override
-  String get noRecentLocationsFound => values['no_recent_locations_found'] ?? '';
+  String get noRecentLocationsFound =>
+      values['no_recent_locations_found'] ?? '';
 
   @override
   String get noRecentLocations => values['no_recent_locations'] ?? '';
@@ -1182,16 +1184,14 @@ class LanguageSw extends Languages {
       values['notification_phone_subtitle'] ?? '';
 
   @override
-  String get notificationPhoneTitle =>
-      values['notification_phone_title'] ?? '';
+  String get notificationPhoneTitle => values['notification_phone_title'] ?? '';
 
   @override
   String get enterPassengerFullName =>
       values['enter_passenger_full_name'] ?? '';
 
   @override
-  String get passengerDetailsTitle =>
-      values['passenger_details_title'] ?? '';
+  String get passengerDetailsTitle => values['passenger_details_title'] ?? '';
 
   @override
   String get passengerNameLabel => values['passenger_name_label'] ?? '';
@@ -1257,7 +1257,8 @@ class LanguageSw extends Languages {
       values['driver_received_new_drop_off_location'] ?? '';
 
   @override
-  String get driverReceivedNewStops => values['driver_received_new_stops'] ?? '';
+  String get driverReceivedNewStops =>
+      values['driver_received_new_stops'] ?? '';
 
   @override
   String get pleaseWaitWhileWeProcessYourRequest =>
@@ -1319,7 +1320,8 @@ class LanguageSw extends Languages {
   String get pleaseEnterAPromoCode => values['please_enter_apromo_code'] ?? '';
 
   @override
-  String get pleaseEnterAValidEmail => values['please_enter_a_valid_email'] ?? '';
+  String get pleaseEnterAValidEmail =>
+      values['please_enter_a_valid_email'] ?? '';
 
   @override
   String get pleaseEnterAValidName => values['please_enter_a_valid_name'] ?? '';
@@ -1485,7 +1487,8 @@ class LanguageSw extends Languages {
   String get noAvailablePromoCodes => values['no_available_promo_codes'] ?? '';
 
   @override
-  String get failedToLoadPromoCodes => values['failed_to_load_promo_codes'] ?? '';
+  String get failedToLoadPromoCodes =>
+      values['failed_to_load_promo_codes'] ?? '';
 
   @override
   String get rating => values['rating'] ?? '';
@@ -1534,7 +1537,8 @@ class LanguageSw extends Languages {
   String get rideCompleted => values['ride_completed'] ?? '';
 
   @override
-  String get theRideHasBeenCancelled => values['the_ride_has_been_cancelled'] ?? '';
+  String get theRideHasBeenCancelled =>
+      values['the_ride_has_been_cancelled'] ?? '';
 
   @override
   String get youHaveReachedYourDestination =>
@@ -1650,7 +1654,7 @@ class LanguageSw extends Languages {
   String get searchLocation => values['search_location'] ?? '';
 
   @override
-  String get searchPickupLocation => values['search_pickup_location'] ?? '';
+  String get searchPickup => values['search_pickup'] ?? '';
 
   @override
   String get searchStopLocation => values['search_stop_location'] ?? '';
@@ -1659,8 +1663,7 @@ class LanguageSw extends Languages {
   String get inAppCalling => values['in_app_calling'] ?? '';
 
   @override
-  String get inAppCallingSubtitle =>
-      values['in_app_calling_subtitle'] ?? '';
+  String get inAppCallingSubtitle => values['in_app_calling_subtitle'] ?? '';
 
   @override
   String get normalCall => values['normal_call'] ?? '';
@@ -1721,8 +1724,7 @@ class LanguageSw extends Languages {
   String get selectCountry => values['select_country'] ?? '';
 
   @override
-  String get selectCountrySubtitle =>
-      values['select_country_subtitle'] ?? '';
+  String get selectCountrySubtitle => values['select_country_subtitle'] ?? '';
 
   @override
   String get searchCountry => values['search_country'] ?? '';
@@ -1734,8 +1736,7 @@ class LanguageSw extends Languages {
   String get selectAReason => values['select_areason'] ?? '';
 
   @override
-  String get selectAReasonSubtitle =>
-      values['select_a_reason_subtitle'] ?? '';
+  String get selectAReasonSubtitle => values['select_a_reason_subtitle'] ?? '';
 
   @override
   String get selectAVehicleAndPaymentMethod =>
@@ -1773,6 +1774,9 @@ class LanguageSw extends Languages {
 
   @override
   String get socketOnDrivers => values['socket_on_drivers'] ?? '';
+
+  @override
+  String get startTypingPickup => values['start_typing_pickup'] ?? '';
 
   @override
   String get startTypingDestination => values['start_typing_destination'] ?? '';
@@ -2081,7 +2085,8 @@ class LanguageSw extends Languages {
   String get email => values['email'] ?? '';
 
   @override
-  String get enterYourEmailOptional => values['enter_your_email_optional'] ?? '';
+  String get enterYourEmailOptional =>
+      values['enter_your_email_optional'] ?? '';
 
   @override
   String get iAgreeToTheTermsAndConditions =>

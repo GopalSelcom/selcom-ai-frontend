@@ -344,7 +344,7 @@ abstract class Languages {
   String get savingChanges;
   String get searchDestination;
   String get searchLocation;
-  String get searchPickupLocation;
+  String get searchPickup;
   String get searchStopLocation;
   String get inAppCalling;
   String get inAppCallingSubtitle;
@@ -382,6 +382,7 @@ abstract class Languages {
   String get socketOff;
   String get socketOffError;
   String get socketOnDrivers;
+  String get startTypingPickup;
   String get startTypingDestination;
   String get stayNotified;
   String get enableNotificationsForRideUpdates;

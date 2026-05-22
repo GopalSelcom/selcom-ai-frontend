@@ -161,6 +161,10 @@ class LocationSelectionController extends GetxController {
       destinationPlaceId.value = null;
     }
 
+    if (homeController.isNonSelectableMapAddress(initialPickup)) {
+      initialPickup = '';
+    }
+
     pickupController = TextEditingController(text: initialPickup);
     destinationController = TextEditingController(text: initialDestination);
     pickupFocusNode = FocusNode();
@@ -237,8 +241,15 @@ class LocationSelectionController extends GetxController {
   }
 
   void syncPickupFromLiveAddress() {
+    if (pickupEditedByUser.value) return;
     final liveAddress = homeController.currentMapAddress.value.trim();
-    if (!pickupEditedByUser.value && liveAddress.isNotEmpty) {
+    if (homeController.isNonSelectableMapAddress(liveAddress)) {
+      if (homeController.isNonSelectableMapAddress(pickupController.text)) {
+        pickupController.clear();
+      }
+      return;
+    }
+    if (liveAddress.isNotEmpty) {
       pickupController.text = liveAddress;
     }
   }
@@ -264,6 +275,15 @@ class LocationSelectionController extends GetxController {
 
   void onPickupFieldTapped() {
     final pickupText = pickupController.text.trim();
+    if (homeController.isNonSelectableMapAddress(pickupText)) {
+      pickupEditedByUser.value = true;
+      pickupController.clear();
+      routePickupLat.value = null;
+      routePickupLng.value = null;
+      homeController.isPickupSelected.value = false;
+      homeController.searchQuery.value = '';
+      return;
+    }
     if (!pickupEditedByUser.value && pickupText.isNotEmpty) {
       pickupEditedByUser.value = true;
       pickupController.clear();

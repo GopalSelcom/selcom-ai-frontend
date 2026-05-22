@@ -1274,13 +1274,35 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     return mapCenter.value;
   }
 
+  /// GPS / permission / geocode placeholders — not real addresses for text fields.
+  bool isNonSelectableMapAddress(String address) {
+    final t = address.trim();
+    if (t.isEmpty) return true;
+    return t == AppStrings.locating.tr ||
+        t == AppStrings.enableLocationService.tr ||
+        t == AppStrings.locationPermissionDenied.tr ||
+        t == AppStrings.currentLocation.tr;
+  }
+
+  /// Short hint for location selection when GPS is off or denied (not shown in pickup field).
+  String? get mapAddressSetupHint {
+    final t = currentMapAddress.value.trim();
+    if (t == AppStrings.enableLocationService.tr ||
+        t == AppStrings.locationPermissionDenied.tr) {
+      return t;
+    }
+    return null;
+  }
+
   String get activePickupAddress {
     final p = activePickupSavedPlace;
     if (p != null) {
       final a = (p.address ?? p.name ?? '').trim();
       if (a.isNotEmpty) return a;
     }
-    return currentMapAddress.value;
+    final live = currentMapAddress.value;
+    if (isNonSelectableMapAddress(live)) return '';
+    return live;
   }
 
   Future<void> selectSavedPlaceAsPickup(SavedPlace place) async {
