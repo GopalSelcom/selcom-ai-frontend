@@ -8,6 +8,7 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/widgets/app_cupertino_text_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/app_skeleton_loader.dart';
 import '../controllers/promo_code_controller.dart';
@@ -67,10 +68,11 @@ class PromoCodeScreen extends StatelessWidget {
       return Column(
         children: List.generate(
           3,
-          (i) => Padding(
-            padding: EdgeInsets.only(bottom: i < 2 ? 12.h : 0),
-            child: AppSkeletonLoader(height: 120.h, borderRadius: 16),
-          ),
+              (i) =>
+              Padding(
+                padding: EdgeInsets.only(bottom: i < 2 ? 12.h : 0),
+                child: AppSkeletonLoader(height: 120.h, borderRadius: 16),
+              ),
         ),
       );
     }
@@ -124,15 +126,9 @@ class PromoCodeScreen extends StatelessWidget {
           ),
           if (showRetry) ...[
             SizedBox(height: 12.h),
-            TextButton(
+            AppCupertinoTextButton.retry(
+              label: AppStrings.retry.tr,
               onPressed: onRetry,
-              child: Text(
-                AppStrings.retry.tr,
-                style: AppTextStyles.button.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
             ),
           ],
         ],
@@ -165,19 +161,20 @@ class PromoCodeScreen extends StatelessWidget {
                   AppAssets.icPromoCode,
                   width: 24.w,
                   height: 24.w,
-                  placeholderBuilder: (_) => Container(
-                    width: 24.w,
-                    height: 24.w,
-                    decoration: const BoxDecoration(
-                      color: AppColors.promotionBlue,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.percent,
-                      color: AppColors.white,
-                      size: 14.sp,
-                    ),
-                  ),
+                  placeholderBuilder: (_) =>
+                      Container(
+                        width: 24.w,
+                        height: 24.w,
+                        decoration: const BoxDecoration(
+                          color: AppColors.promotionBlue,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.percent,
+                          color: AppColors.white,
+                          size: 14.sp,
+                        ),
+                      ),
                 ),
                 const SizedBox(width: 4),
                 Expanded(
@@ -209,18 +206,10 @@ class PromoCodeScreen extends StatelessWidget {
                   thickness: 1,
                 ),
                 SizedBox(width: 10.w),
-                TextButton(
+                AppCupertinoTextButton.promoFieldApply(
+                  label: AppStrings.apply.tr,
                   onPressed: applying ? null : controller.applyPromoCode,
-                  child: Text(
-                    AppStrings.apply.tr,
-                    style: AppTextStyles.button.copyWith(
-                      color: applying
-                          ? AppColors.textMutedStrong
-                          : AppColors.primary,
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                  enabled: !applying,
                 ),
               ],
             ),
@@ -320,23 +309,24 @@ class PromoCodeScreen extends StatelessWidget {
                           : AppAssets.icPromoCodeDisabled,
                       width: 46.w,
                       height: 46.w,
-                      placeholderBuilder: (_) => Container(
-                        width: 46.w,
-                        height: 46.w,
-                        decoration: BoxDecoration(
-                          color: promo.isApplicable
-                              ? AppColors.promotionBlue
-                              : AppColors.promoBadgeStarDisabled,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.percent,
-                          color: promo.isApplicable
-                              ? AppColors.white
-                              : AppColors.promoBadgeAccentDisabled,
-                          size: 18.sp,
-                        ),
-                      ),
+                      placeholderBuilder: (_) =>
+                          Container(
+                            width: 46.w,
+                            height: 46.w,
+                            decoration: BoxDecoration(
+                              color: promo.isApplicable
+                                  ? AppColors.promotionBlue
+                                  : AppColors.promoBadgeStarDisabled,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.percent,
+                              color: promo.isApplicable
+                                  ? AppColors.white
+                                  : AppColors.promoBadgeAccentDisabled,
+                              size: 18.sp,
+                            ),
+                          ),
                     ),
                   ],
                 ),
@@ -358,26 +348,12 @@ class PromoCodeScreen extends StatelessWidget {
                           ),
                         ),
                       ),
-                      TextButton(
+                      AppCupertinoTextButton.promoListApply(
+                        label: AppStrings.apply.tr,
                         onPressed: enabled
                             ? () => controller.applyPromo(promo)
                             : null,
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: Text(
-                          AppStrings.apply.tr,
-                          style: AppTextStyles.button.copyWith(
-                            color: enabled
-                                ? AppColors.primary
-                                : AppColors.textMutedStrong,
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: -0.4,
-                          ),
-                        ),
+                        enabled: enabled,
                       ),
                     ],
                   ),

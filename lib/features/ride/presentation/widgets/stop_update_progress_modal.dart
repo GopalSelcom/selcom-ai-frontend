@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_cupertino_text_button.dart';
 import '../controllers/driver_accepted_controller.dart';
 
 class StopUpdateProgressModal extends GetView<DriverAcceptedController> {
@@ -11,14 +13,16 @@ class StopUpdateProgressModal extends GetView<DriverAcceptedController> {
 
   @override
   Widget build(BuildContext context) {
-    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
+    final double bottomPadding = MediaQuery
+        .paddingOf(context)
+        .bottom;
     final double computedBottomPadding = bottomPadding > 0
         ? (GetPlatform.isIOS
-            ? (bottomPadding - 12.h).clamp(
-                10.h > bottomPadding ? bottomPadding : 10.h,
-                bottomPadding,
-              )
-            : bottomPadding + 12.h)
+        ? (bottomPadding - 12.h).clamp(
+      10.h > bottomPadding ? bottomPadding : 10.h,
+      bottomPadding,
+    )
+        : bottomPadding + 12.h)
         : 12.h;
     return Container(
       width: double.infinity,
@@ -45,10 +49,12 @@ class StopUpdateProgressModal extends GetView<DriverAcceptedController> {
               if (step < 3) ...[
                 const CircularProgressIndicator(color: AppColors.primary),
                 SizedBox(height: 24.h),
-              ] else ...[
-                Icon(Icons.check_circle, color: AppColors.success, size: 64.sp),
-                SizedBox(height: 16.h),
-              ],
+              ] else
+                ...[
+                  Icon(Icons.check_circle, color: AppColors.success,
+                      size: 64.sp),
+                  SizedBox(height: 16.h),
+                ],
               Text(
                 _getTitle(step, destFlow),
                 style: AppTextStyles.onboardingTitle.copyWith(fontSize: 20.sp),
@@ -58,20 +64,15 @@ class StopUpdateProgressModal extends GetView<DriverAcceptedController> {
               SizedBox(height: 12.h),
               Text(
                 _getMessage(step, destFlow),
-                style: AppTextStyles.onboardingSubtitle.copyWith(fontSize: 14.sp),
+                style: AppTextStyles.onboardingSubtitle.copyWith(
+                    fontSize: 14.sp),
                 textAlign: TextAlign.center,
               ),
               if (step == 1 || step == 2) ...[
                 SizedBox(height: 24.h),
-                TextButton(
-                  onPressed: () => controller.cancelRouteOrStopsUpdate(),
-                  child: Text(
-                    AppStrings.cancelUpdate.tr,
-                    style: AppTextStyles.onboardingSubtitle.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                AppCupertinoTextButton.cancelRouteUpdate(
+                  label: AppStrings.cancelUpdate.tr,
+                  onPressed: controller.cancelRouteOrStopsUpdate,
                 ),
               ],
               SizedBox(height: computedBottomPadding),

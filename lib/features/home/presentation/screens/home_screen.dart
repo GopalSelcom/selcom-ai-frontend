@@ -15,6 +15,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/currency_formatter.dart';
+import '../../../../shared/widgets/app_cupertino_text_button.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
 import '../../../../shared/widgets/app_map_gps_button.dart';
@@ -30,7 +31,9 @@ class HomeScreen extends GetView<HomeController> {
   @override
   Widget build(BuildContext context) {
     controller.onHomeVisible();
-    final screenHeight = MediaQuery.sizeOf(context).height;
+    final screenHeight = MediaQuery
+        .sizeOf(context)
+        .height;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -45,36 +48,41 @@ class HomeScreen extends GetView<HomeController> {
             // 1. Map Layer (Static Image from Figma)
             Positioned.fill(
               child: Obx(
-                () => AppGoogleMap(
-                  initialCameraPosition: CameraPosition(
-                    target: controller.mapCenter.value,
-                    zoom: 16,
-                  ),
-                  // Keep map focal content above the draggable sheet peek area.
-                  padding: EdgeInsets.only(
-                    bottom: screenHeight * controller.sheetSize.value,
-                  ),
-                  myLocationEnabled: controller.hasLocationPermission.value,
-                  circles: controller.nearbyPickupRadiusCircles,
-                  // markers: controller.selectedPickupMarkers,
-                  onMapCreated: controller.onMapCreated,
-                  // onCameraMove: controller.onCameraMove,
-                  // onCameraIdle: controller.onCameraIdle,
-                ),
+                    () =>
+                    AppGoogleMap(
+                      initialCameraPosition: CameraPosition(
+                        target: controller.mapCenter.value,
+                        zoom: 16,
+                      ),
+                      // Keep map focal content above the draggable sheet peek area.
+                      padding: EdgeInsets.only(
+                        bottom: screenHeight * controller.sheetSize.value,
+                      ),
+                      myLocationEnabled: controller.hasLocationPermission.value,
+                      circles: controller.nearbyPickupRadiusCircles,
+                      // markers: controller.selectedPickupMarkers,
+                      onMapCreated: controller.onMapCreated,
+                      // onCameraMove: controller.onCameraMove,
+                      // onCameraIdle: controller.onCameraIdle,
+                    ),
               ),
             ),
 
             // 2. Top Header (Address + Profile)
             Obx(
-              () => AppMapTopHeader(
-                top: MediaQuery.of(context).padding.top + 10.h,
-                addressWidget: _buildModernAddressBox(),
-                onProfileTap: controller.openProfile,
-                profileIcon: Icons.person,
-                profileIconColor: AppColors.black,
-                isLoading: controller.isLoadingHomeData.value,
-                isExpanded: controller.isSavedPlacesExpanded.value,
-              ),
+                  () =>
+                  AppMapTopHeader(
+                    top: MediaQuery
+                        .of(context)
+                        .padding
+                        .top + 10.h,
+                    addressWidget: _buildModernAddressBox(),
+                    onProfileTap: controller.openProfile,
+                    profileIcon: Icons.person,
+                    profileIconColor: AppColors.black,
+                    isLoading: controller.isLoadingHomeData.value,
+                    isExpanded: controller.isSavedPlacesExpanded.value,
+                  ),
             ),
 
             // 3. GPS button — lifts with the draggable bottom sheet.
@@ -84,7 +92,9 @@ class HomeScreen extends GetView<HomeController> {
               }
               final activeRide = controller.activeRide.value;
               final bottomOffset = activeRide != null
-                  ? MediaQuery.paddingOf(context).bottom + 12.h + 120.h
+                  ? MediaQuery
+                  .paddingOf(context)
+                  .bottom + 12.h + 120.h
                   : screenHeight * controller.sheetSize.value;
               return Positioned(
                 bottom: bottomOffset,
@@ -103,7 +113,10 @@ class HomeScreen extends GetView<HomeController> {
                 return Positioned(
                   left: 16.w,
                   right: 16.w,
-                  bottom: MediaQuery.of(context).padding.bottom + 12.h,
+                  bottom: MediaQuery
+                      .of(context)
+                      .padding
+                      .bottom + 12.h,
                   child: _activeRideCard(activeRide),
                 );
               }
@@ -139,58 +152,58 @@ class HomeScreen extends GetView<HomeController> {
           ),
           child: isLoading
               ? Shimmer.fromColors(
-                  baseColor: AppColors.skeletonBase,
-                  highlightColor: AppColors.skeletonHighlight,
-                  child: Center(
-                    child: Container(
-                      width: 200.w,
-                      height: 16.h,
-                      decoration: BoxDecoration(
-                        color: AppColors.white,
-                        borderRadius: BorderRadius.circular(4.r),
-                      ),
-                    ),
-                  ),
-                )
+            baseColor: AppColors.skeletonBase,
+            highlightColor: AppColors.skeletonHighlight,
+            child: Center(
+              child: Container(
+                width: 200.w,
+                height: 16.h,
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(4.r),
+                ),
+              ),
+            ),
+          )
               : Row(
+            children: [
+              SizedBox(
+                width: 28.w,
+                height: 28.w,
+                child: SvgPictureAsset(
+                  AppAssets.locationIcPickupPin,
+                  width: 21.sp,
+                  height: 24.5.sp,
+                  color: AppColors.figmaIconGreen,
+                ),
+              ),
+              SizedBox(width: 4.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    SizedBox(
-                      width: 28.w,
-                      height: 28.w,
-                      child: SvgPictureAsset(
-                        AppAssets.locationIcPickupPin,
-                        width: 21.sp,
-                        height: 24.5.sp,
-                        color: AppColors.figmaIconGreen,
+                    Text(
+                      AppStrings.currentLocation.tr,
+                      style: AppTextStyles.homeSubtitle.copyWith(
+                        color: AppColors.figmaTextPrimary,
+                        height: 20 / 15,
                       ),
                     ),
-                    SizedBox(width: 4.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            AppStrings.currentLocation.tr,
-                            style: AppTextStyles.homeSubtitle.copyWith(
-                              color: AppColors.figmaTextPrimary,
-                              height: 20 / 15,
-                            ),
-                          ),
-                          Text(
-                            address,
-                            style: AppTextStyles.homeSubtitle.copyWith(
-                              color: AppColors.figmaTextSecondary,
-                              height: 20 / 15,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+                    Text(
+                      address,
+                      style: AppTextStyles.homeSubtitle.copyWith(
+                        color: AppColors.figmaTextSecondary,
+                        height: 20 / 15,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
+              ),
+            ],
+          ),
         );
       }),
     );
@@ -375,33 +388,18 @@ class HomeScreen extends GetView<HomeController> {
     ];
   }
 
-  TextStyle get _sectionTitleStyle => AppTextStyles.homeSubtitle.copyWith(
-    fontSize: 16.sp,
-    fontWeight: FontWeight.w600,
-    letterSpacing: -0.4,
-    color: AppColors.textHeading,
-  );
+  TextStyle get _sectionTitleStyle =>
+      AppTextStyles.homeSubtitle.copyWith(
+        fontSize: 16.sp,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.4,
+        color: AppColors.textHeading,
+      );
 
   Widget _viewMoreButton({required VoidCallback onPressed}) {
-    return TextButton(
+    return AppCupertinoTextButton.viewMore(
+      label: AppStrings.viewMore.tr,
       onPressed: onPressed,
-      style: TextButton.styleFrom(
-        padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
-        minimumSize: Size.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      ),
-      child: Text(
-        AppStrings.viewMore.tr,
-        style: AppTextStyles.homeSubtitle.copyWith(
-          fontSize: 14.sp,
-          fontWeight: FontWeight.w600,
-          color: AppColors.primary,
-          decoration: TextDecoration.underline,
-          decorationColor: AppColors.primary,
-          decorationThickness: 1,
-          height: 18 / 14,
-        ),
-      ),
     );
   }
 
@@ -447,10 +445,11 @@ class HomeScreen extends GetView<HomeController> {
         address: loc.address,
         distance: distance,
         isFavorite: isFavorite,
-        onTap: () => controller.navigateToVehicleSelectionForRecentDestination(
-          loc,
-          showHomeFareEstimateLoader: true,
-        ),
+        onTap: () =>
+            controller.navigateToVehicleSelectionForRecentDestination(
+              loc,
+              showHomeFareEstimateLoader: true,
+            ),
         onFavoriteTap: () => controller.toggleFavoriteForRecent(loc),
       );
     });
@@ -501,21 +500,22 @@ class HomeScreen extends GetView<HomeController> {
 
   Widget _buildVehicleHorizontalList() {
     return Obx(
-      () => SizedBox(
-        height: _vehicleRowHeight.h,
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          clipBehavior: Clip.none,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: controller.isLoadingHomeData.value
-                ? List.generate(3, (_) => _buildVehicleSkeleton())
-                : controller.vehicleTypes
-                      .map((vehicle) => _buildVehicleCard(vehicle))
-                      .toList(),
+          () =>
+          SizedBox(
+            height: _vehicleRowHeight.h,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              clipBehavior: Clip.none,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: controller.isLoadingHomeData.value
+                    ? List.generate(3, (_) => _buildVehicleSkeleton())
+                    : controller.vehicleTypes
+                    .map((vehicle) => _buildVehicleCard(vehicle))
+                    .toList(),
+              ),
+            ),
           ),
-        ),
-      ),
     );
   }
 
@@ -536,11 +536,12 @@ class HomeScreen extends GetView<HomeController> {
               child: Image.asset(
                 imagePath,
                 fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => Icon(
-                  Icons.directions_car,
-                  color: AppColors.textBody,
-                  size: 28.sp,
-                ),
+                errorBuilder: (_, __, ___) =>
+                    Icon(
+                      Icons.directions_car,
+                      color: AppColors.textBody,
+                      size: 28.sp,
+                    ),
               ),
             ),
             SizedBox(height: 4.h),
@@ -643,7 +644,9 @@ class HomeScreen extends GetView<HomeController> {
                   ),
                   SizedBox(width: 4.w),
                   Text(
-                    (ride.vehicleDisplayName ?? '').trim().isNotEmpty
+                    (ride.vehicleDisplayName ?? '')
+                        .trim()
+                        .isNotEmpty
                         ? (ride.vehicleDisplayName ?? '').trim()
                         : AppStrings.fallbackRideName.tr,
                     style: AppTextStyles.homeCaption.copyWith(
@@ -751,8 +754,8 @@ class _HomeSheetScrollContent extends StatefulWidget {
   final ScrollPhysics physics;
   final int contentSignature;
   final void Function({
-    required double contentHeightPx,
-    required double layoutHeightPx,
+  required double contentHeightPx,
+  required double layoutHeightPx,
   })
   onContentMeasured;
   final List<Widget> children;
@@ -793,7 +796,9 @@ class _HomeSheetScrollContentState extends State<_HomeSheetScrollContent> {
     if (renderBox == null || !renderBox.hasSize || contentContext == null) {
       return;
     }
-    final layoutHeight = MediaQuery.sizeOf(contentContext).height;
+    final layoutHeight = MediaQuery
+        .sizeOf(contentContext)
+        .height;
     widget.onContentMeasured(
       contentHeightPx: renderBox.size.height,
       layoutHeightPx: layoutHeight,
@@ -802,7 +807,9 @@ class _HomeSheetScrollContentState extends State<_HomeSheetScrollContent> {
 
   @override
   Widget build(BuildContext context) {
-    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
+    final double bottomPadding = MediaQuery
+        .paddingOf(context)
+        .bottom;
     final double computedBottomPadding = bottomPadding > 0
         ? (GetPlatform.isIOS ? 0.0 : 8.h)
         : 16.h;
