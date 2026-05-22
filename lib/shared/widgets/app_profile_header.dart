@@ -42,7 +42,7 @@ class AppProfileHeader extends StatelessWidget {
           if (canGoBack)
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 8.w),
-              child: AppBackButton(onPressed: onBack),
+              child: AppBackButton(onPressed: onBack, size: 30.w),
             ),
 
           if (title != null) ...[
@@ -56,16 +56,14 @@ class AppProfileHeader extends StatelessWidget {
                   color: AppColors.white,
                   fontWeight: FontWeight.w800,
                   height: 38 / 30,
+                  letterSpacing: -0.3,
                 ),
               ),
             ),
             SizedBox(height: 12.h),
           ],
 
-          if (child != null) ...[
-            // if (title == null) SizedBox(height: 12.h),
-            child!,
-          ],
+          if (child != null) ...[child!],
         ],
       ),
     );

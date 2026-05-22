@@ -309,9 +309,7 @@ class ConfirmPickupScreen extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(12.r),
                                     child: Ink(
                                       decoration: BoxDecoration(
-                                        color: AppColors.primary.withValues(
-                                          alpha: 0.10,
-                                        ),
+                                        color: AppColors.primaryLight,
                                         borderRadius: BorderRadius.circular(
                                           12.r,
                                         ),
