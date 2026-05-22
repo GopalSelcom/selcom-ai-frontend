@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
 class AppTextStyles {
   static const String metropolisFont = 'Metropolis';
-  static final String? fontFamily = GoogleFonts.poppins().fontFamily;
 
   // Screen titles
   static TextStyle screenTitle = TextStyle(
@@ -28,7 +26,7 @@ class AppTextStyles {
     fontSize: 16.sp,
     fontWeight: FontWeight.w600,
     color: AppColors.textHeading,
-    fontFamily: fontFamily,
+    fontFamily: metropolisFont,
   );
 
   // Body text
@@ -44,7 +42,7 @@ class AppTextStyles {
     fontSize: 14.sp,
     fontWeight: FontWeight.w400,
     color: AppColors.textBody,
-    fontFamily: fontFamily,
+    fontFamily: metropolisFont,
   );
 
   // Small labels, timestamps
@@ -52,7 +50,7 @@ class AppTextStyles {
     fontSize: 12.sp,
     fontWeight: FontWeight.w400,
     color: AppColors.textBody,
-    fontFamily: fontFamily,
+    fontFamily: metropolisFont,
   );
 
   // Button text
@@ -60,7 +58,7 @@ class AppTextStyles {
     fontSize: 17.sp,
     fontWeight: FontWeight.w600,
     color: AppColors.white,
-    fontFamily: fontFamily,
+    fontFamily: metropolisFont,
     height: 22 / 17,
   );
 
@@ -69,7 +67,7 @@ class AppTextStyles {
     fontSize: 20.sp,
     fontWeight: FontWeight.w700,
     color: AppColors.textHeading,
-    fontFamily: fontFamily,
+    fontFamily: metropolisFont,
   );
 
   // Onboarding Styles (Metropolis)
