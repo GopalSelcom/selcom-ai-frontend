@@ -28,6 +28,24 @@ class DriverAcceptedScreen extends StatelessWidget {
   static const double _sheetMaxDriverAssigned = 0.52;
   static const double _sheetMaxRideStarted = 0.68;
 
+  static double _systemBottomInsetPx(BuildContext context) {
+    final mq = MediaQuery.of(context);
+    final p = mq.padding.bottom;
+    final v = mq.viewPadding.bottom;
+    return p > v ? p : v;
+  }
+
+  static double _sheetSizeWithNavInset(BuildContext context, double base) {
+    final inset = _systemBottomInsetPx(context);
+    final h = MediaQuery.sizeOf(context).height;
+    if (inset <= 0 || h <= 0) return base;
+    return base + (inset / h) * 0.55;
+  }
+
+  static double _scrollBottomPad(BuildContext context) {
+    return _systemBottomInsetPx(context) > 0 ? 2.h : 0;
+  }
+
   void _minimizeSheet(DriverAcceptedController c) {
     if (c.sheetController.isAttached) {
       final status = c.currentRideStatus.value;
@@ -145,20 +163,24 @@ class DriverAcceptedScreen extends StatelessWidget {
               final state = c.rideBottomSheetState.value;
               final status = c.currentRideStatus.value;
               final double maxSheetSize;
-              final double initialSize;
-              final double minSize;
+              final double baseInitial;
+              final double baseMin;
 
               if (status == 'near_destination') {
-                initialSize = 0.35;
-                minSize = 0.35;
+                baseInitial = 0.35;
+                baseMin = 0.35;
               } else if (status == 'ride_in_progress' ||
                   status == 'ride_started') {
-                initialSize = 0.40;
-                minSize = 0.40;
+                baseInitial = 0.40;
+                baseMin = 0.40;
               } else {
-                initialSize = _sheetInitial;
-                minSize = _sheetMin;
+                baseInitial = _sheetInitial;
+                baseMin = _sheetMin;
               }
+
+              final initialSize =
+                  _sheetSizeWithNavInset(context, baseInitial);
+              final minSize = _sheetSizeWithNavInset(context, baseMin);
 
               switch (state) {
                 case RideBottomSheetState.driverAssigned:
@@ -170,9 +192,10 @@ class DriverAcceptedScreen extends StatelessWidget {
               }
               return AppDraggableBottomSheet(
                 controller: sheetController,
+                reserveSystemBottomInset: true,
                 initialChildSize: initialSize,
                 minChildSize: minSize,
-                maxChildSize: maxSheetSize,
+                maxChildSize: _sheetSizeWithNavInset(context, maxSheetSize),
                 childBuilder: (scrollController) =>
                     _bottomSheet(c, scrollController),
               );
@@ -578,23 +601,43 @@ class DriverAcceptedScreen extends StatelessWidget {
     });
   }
 
+  Widget _sheetScroll({
+    required BuildContext context,
+    required ScrollController scrollController,
+    required List<Widget> children,
+  }) {
+    return SingleChildScrollView(
+      controller: scrollController,
+      primary: false,
+      clipBehavior: Clip.hardEdge,
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: ClampingScrollPhysics(),
+      ),
+      padding: EdgeInsets.fromLTRB(
+        16.w,
+        10.h,
+        16.w,
+        _scrollBottomPad(context),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      ),
+    );
+  }
+
   Widget _bottomSheet(
     DriverAcceptedController c,
     ScrollController scrollController,
   ) {
     return Builder(
       builder: (context) {
-        final double bottomPadding = MediaQuery.paddingOf(context).bottom;
         return Obx(() {
           if (c.isLoadingRide.value) {
-            return ListView(
-              controller: scrollController,
-              padding: EdgeInsets.fromLTRB(
-                16.w,
-                10.h,
-                16.w,
-                16.h + bottomPadding,
-              ),
+            return _sheetScroll(
+              context: context,
+              scrollController: scrollController,
               children: [
                 Center(
                   child: Container(
@@ -622,13 +665,9 @@ class DriverAcceptedScreen extends StatelessWidget {
                 overscroll: false,
                 physics: const ClampingScrollPhysics(),
               ),
-              child: ListView(
-                controller: scrollController,
-                shrinkWrap: true,
-                physics: const AlwaysScrollableScrollPhysics(
-                  parent: ClampingScrollPhysics(),
-                ),
-                padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, bottomPadding),
+              child: _sheetScroll(
+                context: context,
+                scrollController: scrollController,
                 children: [
                   Center(
                     child: Container(
@@ -651,14 +690,9 @@ class DriverAcceptedScreen extends StatelessWidget {
             return _rideStartedSheetWithFixedHeader(c, scrollController);
           }
 
-          return ListView(
-            controller: scrollController,
-            padding: EdgeInsets.fromLTRB(
-              16.w,
-              10.h,
-              16.w,
-              16.h + bottomPadding,
-            ),
+          return _sheetScroll(
+            context: context,
+            scrollController: scrollController,
             children: [
               Center(
                 child: Container(
@@ -717,13 +751,15 @@ class DriverAcceptedScreen extends StatelessWidget {
                 const Divider(color: AppColors.borderWalletCard, height: 1),
                 SizedBox(height: 14.h),
                 Expanded(
-                  child: ListView(
+                  child: SingleChildScrollView(
                     controller: scrollController,
+                    primary: false,
+                    clipBehavior: Clip.hardEdge,
                     physics: const ClampingScrollPhysics(),
                     padding: EdgeInsets.only(
-                      bottom: 16.h + MediaQuery.paddingOf(context).bottom,
+                      bottom: 16.h + _scrollBottomPad(context),
                     ),
-                    children: [_rideProgressBody(c, showChangeDropLink: true)],
+                    child: _rideProgressBody(c, showChangeDropLink: true),
                   ),
                 ),
               ],

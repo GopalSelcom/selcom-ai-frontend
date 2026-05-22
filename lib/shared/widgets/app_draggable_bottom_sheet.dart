@@ -16,6 +16,7 @@ class AppDraggableBottomSheet extends StatelessWidget {
     this.snapSizes,
     this.controller,
     this.expand = true,
+    this.reserveSystemBottomInset = false,
     required this.childBuilder,
   });
 
@@ -26,6 +27,8 @@ class AppDraggableBottomSheet extends StatelessWidget {
   final double maxChildSize;
   final bool snap;
   final bool expand;
+  /// Lifts sheet content above Android 3-button nav / iOS home indicator.
+  final bool reserveSystemBottomInset;
   final List<double>? snapSizes;
   final Widget Function(ScrollController scrollController) childBuilder;
 
@@ -52,9 +55,23 @@ class AppDraggableBottomSheet extends StatelessWidget {
               ),
             ],
           ),
-          child: childBuilder(scrollController),
+          child: reserveSystemBottomInset
+              ? Padding(
+                  padding: EdgeInsets.only(
+                    bottom: _systemBottomInset(context),
+                  ),
+                  child: childBuilder(scrollController),
+                )
+              : childBuilder(scrollController),
         );
       },
     );
+  }
+
+  static double _systemBottomInset(BuildContext context) {
+    final mq = MediaQuery.of(context);
+    final paddingBottom = mq.padding.bottom;
+    final viewBottom = mq.viewPadding.bottom;
+    return paddingBottom > viewBottom ? paddingBottom : viewBottom;
   }
 }

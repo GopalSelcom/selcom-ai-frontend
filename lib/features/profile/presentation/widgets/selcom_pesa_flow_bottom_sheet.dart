@@ -41,15 +41,6 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
 
   @override
   Widget build(BuildContext context) {
-    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
-    final double computedBottomPadding = bottomPadding > 0
-        ? (GetPlatform.isIOS
-              ? (bottomPadding - 12.h).clamp(
-                  10.h > bottomPadding ? bottomPadding : 10.h,
-                  bottomPadding,
-                )
-              : bottomPadding + 12.h)
-        : 12.h;
     return Obx(
       () => AppStandardBottomSheet(
         title: _titleForStep(controller.selcomPesaStep.value),
@@ -74,12 +65,7 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
                 child: SlideTransition(position: offsetAnimation, child: child),
               );
             },
-            child: Column(
-              children: [
-                _buildStepContent(context, controller.selcomPesaStep.value),
-                SizedBox(height: computedBottomPadding),
-              ],
-            ),
+            child: _buildStepContent(context, controller.selcomPesaStep.value),
           ),
         ),
       ),
