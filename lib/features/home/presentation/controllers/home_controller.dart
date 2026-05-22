@@ -1161,7 +1161,35 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     );
   }
 
+  /// Opens location selection with [loc] as destination; pickup empty (GPS off).
+  Future<void> openLocationSelectionForRecentDestination(
+    RecentDestinationModel loc,
+  ) async {
+    final destAddr = loc.address.trim();
+    if (destAddr.isEmpty) return;
+
+    await analyticsService.logEvent(
+      'home_recent_item_location_selection',
+      parameters: {'address': destAddr},
+    );
+
+    final args = <String, dynamic>{
+      'destination': destAddr,
+      'destinationLat': loc.lat,
+      'destinationLng': loc.lng,
+      'activeSegmentIndex': 0,
+      'clearPickupOnOpen': true,
+    };
+    if (Get.isRegistered<LocationSelectionController>()) {
+      Get.delete<LocationSelectionController>();
+    }
+    Get.toNamed(AppRoutes.locationSelection, arguments: args);
+  }
+
   /// Pickup = current map center; destination = [RecentDestinationModel].
+  ///
+  /// When GPS/location is unavailable, opens location selection so the user can
+  /// pick pickup; [loc] is pre-filled as destination.
   ///
   /// Set [showHomeFareEstimateLoader] when the tap originates from the home
   /// sheet so the home overlay can run during fare estimate.
@@ -1171,6 +1199,11 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }) async {
     final destAddr = loc.address.trim();
     if (destAddr.isEmpty) return;
+
+    if (!hasLocationPermission.value) {
+      await openLocationSelectionForRecentDestination(loc);
+      return;
+    }
 
     await analyticsService.logEvent(
       'home_recent_item_vehicle_selection',
