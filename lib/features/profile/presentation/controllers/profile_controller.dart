@@ -7,6 +7,7 @@ import '../../../../core/config/app_config.dart';
 import '../../../../core/network/urls.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/app_settings_service.dart';
+import '../../../../core/services/session_expiry_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../shared/utils/phone_formatter.dart';
 import '../../../../shared/widgets/web_view_screen.dart';
@@ -262,6 +263,7 @@ class ProfileController extends GetxController {
       message: AppStrings.areYouSureYouWantToLogoutFromTheApp.tr,
       confirmText: AppStrings.logout.tr,
       onConfirm: () async {
+        SessionExpiryService.teardownOnLogout();
         await StorageService().deleteAll();
         Get.offAllNamed(AppRoutes.phone);
       },

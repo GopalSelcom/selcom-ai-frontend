@@ -93,6 +93,7 @@ class ApiRequest {
   final bool skipAuthInterceptor;
   final List<LocalMultipartFile>? multipartFiles;
   final bool shouldQueue;
+
   /// Optional per-request retry policy.
   ///
   /// Keep null by default so existing behavior is unchanged for all endpoints.
@@ -830,11 +831,10 @@ class ApiService {
               // Login Button
               InkWell(
                 onTap: () async {
-                  // Clear tokens
+                  SessionExpiryService.teardownOnLogout();
                   await StorageService().deleteAll();
-                  AuthInterceptor.isLoggingOutDueToAuthFailure = false;
+                  SessionExpiryService.resetOnLogin();
                   Get.back();
-                  // Navigate to phone input screen
                   Get.offAllNamed(AppRoutes.phone);
                 },
                 child: Container(

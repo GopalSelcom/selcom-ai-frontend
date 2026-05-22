@@ -8,14 +8,25 @@ class SessionExpiryService {
   SessionExpiryService._();
 
   static bool _isHandling = false;
+  static bool _userLoggedOut = false;
 
+  /// True when authenticated background work (e.g. active-ride poll) must stop.
   static bool get isHandling =>
-      _isHandling || AuthInterceptor.isLoggingOutDueToAuthFailure;
+      _userLoggedOut ||
+      _isHandling ||
+      AuthInterceptor.isLoggingOutDueToAuthFailure;
 
   /// Resets coordinator state after a successful login (new session).
   static void resetOnLogin() {
     _isHandling = false;
+    _userLoggedOut = false;
     AuthInterceptor.isLoggingOutDueToAuthFailure = false;
+  }
+
+  /// Manual logout from profile/settings — stop polling, no session dialog.
+  static void teardownOnLogout() {
+    _userLoggedOut = true;
+    _stopActiveRidePolling();
   }
 
   static bool isSessionExpired({
@@ -58,10 +69,9 @@ class SessionExpiryService {
 
   /// Stops background work and shows the session-expired login prompt once.
   static Future<void> handleSessionExpired() async {
-    if (_isHandling || AuthInterceptor.isLoggingOutDueToAuthFailure) {
-      return;
-    }
+    if (isHandling) return;
     _isHandling = true;
+    _userLoggedOut = true;
 
     _stopActiveRidePolling();
 

@@ -110,10 +110,7 @@ class RetryManager {
               const SizedBox(height: 16),
               Text(
                 AppStrings.connectionError.tr,
-                style: AppTextStyles.onboardingTitle.copyWith(
-                  fontSize: 20.sp,
-                  letterSpacing: -0.4,
-                ),
+                style: AppTextStyles.homeTitle,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
@@ -121,6 +118,7 @@ class RetryManager {
                 "We couldn't complete your request. Please try again.",
                 style: AppTextStyles.onboardingSubtitle.copyWith(
                   fontSize: 14.sp,
+                  height: 20 / 14,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -129,6 +127,7 @@ class RetryManager {
                 width: double.infinity,
                 child: AppPrimaryButton(
                   label: AppStrings.retry.tr,
+                  showBottomInnerShadow: true,
                   onPressed: () {
                     Get.back();
                     retryAll();
