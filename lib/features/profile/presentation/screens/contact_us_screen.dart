@@ -91,7 +91,6 @@ class ContactUsScreen extends GetView<ContactUsController> {
                     label: AppStrings.submit.tr,
                     onPressed: controller.sendMessage,
                     isLoading: controller.isLoading.value,
-                    showBottomInnerShadow: true,
                   ),
                 ),
               ),

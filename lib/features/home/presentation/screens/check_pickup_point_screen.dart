@@ -300,7 +300,6 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                     height: 56.h,
                     iconAsset: AppAssets.locationIcArrowRight,
                     iconColor: AppColors.white,
-                    showBottomInnerShadow: true,
                     onPressed: () {
                       _showConfirmationDialog(
                         title: _title.value,

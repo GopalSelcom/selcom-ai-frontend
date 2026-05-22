@@ -886,7 +886,6 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         iconAsset: AppAssets.locationIcArrowRight,
         iconColor: AppColors.white,
         isLoading: controller.isProceedingToBooking.value,
-        showBottomInnerShadow: true,
         onPressed: () async {
           final destinations = <String>[];
           for (final c in _extraDestinationControllers) {

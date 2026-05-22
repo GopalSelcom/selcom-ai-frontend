@@ -446,7 +446,6 @@ class ConfirmPickupScreen extends StatelessWidget {
                                 iconAsset: AppAssets.locationIcArrowRight,
                                 iconColor: AppColors.white,
                                 height: 54.h,
-                                showBottomInnerShadow: true,
                               ),
                             ),
                           ),

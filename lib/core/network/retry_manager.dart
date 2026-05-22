@@ -127,7 +127,6 @@ class RetryManager {
                 width: double.infinity,
                 child: AppPrimaryButton(
                   label: AppStrings.retry.tr,
-                  showBottomInnerShadow: true,
                   onPressed: () {
                     Get.back();
                     retryAll();

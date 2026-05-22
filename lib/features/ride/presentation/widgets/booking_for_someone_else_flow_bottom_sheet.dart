@@ -120,7 +120,6 @@ class _BookingForSomeoneElseFlowBottomSheetState
               label: AppStrings.confirm.tr,
               iconAsset: AppAssets.locationIcArrowRight,
               alignIconToTrailingEnd: true,
-              showBottomInnerShadow: true,
               onPressed: _onConfirmPressed,
             )
           : null,

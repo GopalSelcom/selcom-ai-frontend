@@ -395,6 +395,7 @@ class _ActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppPrimaryButton(
       label: title,
+      showBottomInnerShadow: false,
       onPressed: onTap,
       isLoading: isLoading,
       height: 54.h,

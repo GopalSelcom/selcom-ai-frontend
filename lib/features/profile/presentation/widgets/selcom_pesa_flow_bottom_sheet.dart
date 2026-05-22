@@ -132,7 +132,6 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
         AppPrimaryButton(
           label: AppStrings.continueLabel.tr,
           onPressed: controller.openPhoneInput,
-          showBottomInnerShadow: true,
         ),
       ],
     );
@@ -231,7 +230,6 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
                     key: const ValueKey('selcom-pesa-continue-visible'),
                     label: AppStrings.continueLabel.tr,
                     onPressed: controller.onPhoneContinue,
-                    showBottomInnerShadow: true,
                   )
                 : const SizedBox.shrink(
                     key: ValueKey('selcom-pesa-continue-hidden'),
@@ -399,7 +397,6 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
         AppPrimaryButton(
           label: AppStrings.takeSelfie.tr,
           onPressed: controller.takeSelfie,
-          showBottomInnerShadow: true,
         ),
       ],
     );

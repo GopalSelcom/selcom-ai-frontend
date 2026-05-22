@@ -355,7 +355,6 @@ class RideDetailsScreen extends StatelessWidget {
                     label: buttonLabel,
                     isLoading: !isSimpleDoneFlow && isSubmitting,
                     onPressed: onPressed,
-                    showBottomInnerShadow: true,
                   ),
                 );
               }),

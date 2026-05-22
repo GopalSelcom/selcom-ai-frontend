@@ -26,8 +26,9 @@ class AppPrimaryButton extends StatelessWidget {
   /// When true (and an icon is shown), label stays centered and the icon is pinned to the **right**
   /// inside the horizontal padding — typical onboarding CTA. Ignored when [isLoading] or [outlined].
   final bool alignIconToTrailingEnd;
-  /// Inner shadow along the **bottom** of the fill only (onboarding CTA).
-  /// Ignored when [outlined] is true.
+  /// Inner shadow along the **bottom** of the fill only (onboarding-style CTA).
+  /// Defaults to true; set false for standard elevated / full-rounded buttons.
+  /// Always ignored when [outlined] is true.
   final bool showBottomInnerShadow;
   /// When set (e.g. onboarding CTA), overrides default button typography.
   final TextStyle? labelStyle;
@@ -50,7 +51,7 @@ class AppPrimaryButton extends StatelessWidget {
     this.outlinedBorderWidth,
     this.placeIconAfterLabel = false,
     this.alignIconToTrailingEnd = false,
-    this.showBottomInnerShadow = false,
+    this.showBottomInnerShadow = true,
     this.labelStyle,
   });
 
