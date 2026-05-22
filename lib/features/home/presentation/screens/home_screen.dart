@@ -208,7 +208,7 @@ class HomeScreen extends GetView<HomeController> {
   }
   */
 
-  static const double _sheetHorizontalPadding = 24;
+  static const double _sheetHorizontalPadding = 16;
 
   Widget _buildFigmaDraggableSheet(BuildContext context) {
     return Obx(() {
