@@ -20,6 +20,7 @@ import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/data/models/requests/create_saved_place_request.dart';
 import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
 import '../../../../core/utils/map_marker_utils.dart';
+import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../domain/repositories/home_repository.dart';
 import '../../data/models/home_models.dart';
 import '../../../ride/domain/repositories/ride_repository.dart';
@@ -34,13 +35,13 @@ import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../../shared/widgets/add_favorite_location_sheet.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
+import '../../../../core/services/session_expiry_service.dart';
 import '../../../../core/data/models/responses/rides/active_ride_response.dart';
 import '../../../../core/domain/entities/location_entity.dart';
-import '../../../profile/presentation/screens/profile_screen.dart';
-import '../screens/recent_locations_screen.dart';
-import './location_selection_controller.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
+import '../screens/recent_locations_screen.dart';
+import 'location_selection_controller.dart';
 
 class HomeController extends GetxController with WidgetsBindingObserver {
   static const String _currentLocationPlaceId = '__current_location__';
@@ -346,6 +347,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }
 
   void onHomeVisible() {
+    if (SessionExpiryService.isHandling) return;
     if (_skipNextVisibleRefresh) {
       _skipNextVisibleRefresh = false;
       return;
@@ -358,7 +360,23 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     });
   }
 
+  /// Stops periodic active-ride polling (e.g. after session revoked on another device).
+  void stopActiveRidePolling() {
+    _activeRidePollingTimer?.cancel();
+    _activeRidePollingTimer = null;
+  }
+
+  /// Clears active-ride UI/state when the session is no longer valid.
+  void onSessionExpired() {
+    stopActiveRidePolling();
+    activeRide.value = null;
+    _didHandleActiveRideFlow = false;
+    _homeSocketConnectionSub?.cancel();
+    _homeSocketConnectionSub = null;
+  }
+
   Future<void> refreshActiveRide({bool force = false}) async {
+    if (SessionExpiryService.isHandling) return;
     if (_isRefreshingActiveRide) return;
     if (!force &&
         _lastActiveRideRefreshAt != null &&
@@ -375,8 +393,12 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }
 
   void _startActiveRidePolling() {
-    _activeRidePollingTimer?.cancel();
+    stopActiveRidePolling();
     _activeRidePollingTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (SessionExpiryService.isHandling) {
+        stopActiveRidePolling();
+        return;
+      }
       refreshActiveRide(force: true);
     });
   }
@@ -491,6 +513,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) return;
+    if (SessionExpiryService.isHandling) return;
     Future.microtask(() async {
       await refreshActiveRide(force: true);
       final active = activeRide.value;
@@ -696,7 +719,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     homeSheetController.removeListener(_onHomeSheetChanged);
     homeSheetController.dispose();
     WidgetsBinding.instance.removeObserver(this);
-    _activeRidePollingTimer?.cancel();
+    stopActiveRidePolling();
     _homeSocketConnectionSub?.cancel();
     _socketService.dispose();
     super.onClose();

@@ -9,6 +9,7 @@ import '../../../../core/data/models/requests/verify_otp_request.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/app_region_service.dart';
+import '../../../../core/services/session_expiry_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/services/voip_callkit_bridge_service.dart';
 import '../../../../shared/data/countries_phone_data.dart';
@@ -225,6 +226,7 @@ class AuthController extends GetxController {
           );
 
           await VoipCallkitBridgeService.instance.syncCachedTokenToBackend();
+          SessionExpiryService.resetOnLogin();
 
           if (isUserAlreadyRegistered) {
             // Existing flow for already-registered users.

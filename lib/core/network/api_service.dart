@@ -15,6 +15,7 @@ import '../constants/app_assets.dart';
 import '../routes/app_routes.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import '../services/session_expiry_service.dart';
 import '../services/storage_service.dart';
 import '../widgets/svg_picture_asset.dart';
 import 'failed_request_queue.dart';
@@ -926,7 +927,7 @@ class AuthInterceptor extends Interceptor {
         "❌ Auth error_code detected ($errorCode) - logging out",
         name: 'AuthInterceptor',
       );
-      apiService.showLogoutPopup();
+      unawaited(SessionExpiryService.handleSessionExpired());
       return handler.resolve(
         Response(
           requestOptions: err.requestOptions,
@@ -956,7 +957,7 @@ class AuthInterceptor extends Interceptor {
         "❌ Request already retried after refresh, logging out",
         name: 'AuthInterceptor',
       );
-      apiService.showLogoutPopup();
+      unawaited(SessionExpiryService.handleSessionExpired());
       return handler.next(err);
     }
 
@@ -1043,7 +1044,7 @@ class AuthInterceptor extends Interceptor {
               name: 'AuthInterceptor',
             );
 
-            apiService.showLogoutPopup();
+            unawaited(SessionExpiryService.handleSessionExpired());
 
             return handler.resolve(
               Response(

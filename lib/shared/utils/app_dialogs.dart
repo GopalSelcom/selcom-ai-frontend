@@ -7,8 +7,7 @@ import 'package:get/get.dart';
 import '../../core/localization/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
-import '../../core/routes/app_routes.dart';
-import '../../core/services/storage_service.dart';
+import '../../core/services/session_expiry_service.dart';
 import '../widgets/animated_blur_dialog.dart';
 import '../widgets/app_cancel_flow_dialog.dart';
 import '../widgets/app_primary_button.dart';
@@ -279,8 +278,7 @@ class AppDialogs {
         onConfirm();
       }
       if (isSessionExpiredError) {
-        await StorageService().deleteAll();
-        Get.offAllNamed(AppRoutes.phone);
+        await SessionExpiryService.handleSessionExpired();
         return;
       }
       _dismissActiveDialog();

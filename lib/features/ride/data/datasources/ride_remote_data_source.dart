@@ -1,17 +1,20 @@
+import 'dart:developer' as developer;
+
+import 'package:dio/dio.dart';
+
 import '../../../../core/data/models/responses/rides/active_ride_response.dart';
 import '../../../../core/data/models/responses/chat_quick_replies_response.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
-import '../models/ride_management_models.dart';
-import '../models/emergency_contacts_response.dart';
-import '../models/stop_update_models.dart';
-import '../models/destination_update_models.dart';
+import '../../../../core/services/session_expiry_service.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
-import 'dart:developer' as developer;
-import 'package:dio/dio.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
+import '../models/destination_update_models.dart';
+import '../models/emergency_contacts_response.dart';
+import '../models/ride_management_models.dart';
+import '../models/stop_update_models.dart';
 
 abstract class RideRemoteDataSource {
   Future<ActiveRideResponseModel?> getActiveRide();
@@ -99,6 +102,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       request: ApiRequest(
         endpoint: URLS.ride.activeRide,
         method: ApiMethod.get,
+        errorPresentationType: ErrorPresentationType.none,
         // Context:
         // - This endpoint is polled continuously during active-trip screens.
         // - We observed intermittent 502/503/504 responses from backend/gateway.
@@ -119,10 +123,25 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       ),
     );
 
-    if (response.statusCode == 200 && response.data != null) {
-      return ActiveRideResponseModel.fromJson(
-        Map<String, dynamic>.from(response.data),
-      );
+    final raw = response.data;
+    Map<String, dynamic>? bodyMap;
+    if (raw is Map<String, dynamic>) {
+      bodyMap = raw;
+    } else if (raw is Map) {
+      bodyMap = Map<String, dynamic>.from(raw);
+    }
+
+    if (bodyMap != null &&
+        SessionExpiryService.isSessionExpired(
+          httpStatus: response.statusCode,
+          body: bodyMap,
+        )) {
+      await SessionExpiryService.handleSessionExpired();
+      return null;
+    }
+
+    if (response.statusCode == 200 && bodyMap != null) {
+      return ActiveRideResponseModel.fromJson(bodyMap);
     }
     return null;
   }
