@@ -1400,12 +1400,9 @@ class VehicleSelectionController extends GetxController {
       ).toMap(),
     );
 
-    // Promo screen commits via [commitPromoApplyResult] before pop; this is fallback only.
-    if (appliedPromoCode.value.trim().isNotEmpty) return;
     final applyResult = PromoCodeApplyResult.tryFrom(result);
-    if (applyResult != null) {
-      await commitPromoApplyResult(applyResult);
-    }
+    if (applyResult == null) return;
+    await commitPromoApplyResult(applyResult);
   }
 
   void closeVehicleSelection() {

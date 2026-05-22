@@ -9,6 +9,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/services/storage_service.dart';
+import '../widgets/animated_blur_dialog.dart';
 import '../widgets/app_cancel_flow_dialog.dart';
 import '../widgets/app_primary_button.dart';
 import '../widgets/app_standard_bottom_sheet.dart';
@@ -45,42 +46,14 @@ class AppDialogs {
       barrierDismissible: barrierDismissible,
       barrierLabel: "AnimatedBlurDialog",
       barrierColor: barrierColor ?? AppColors.overlayBlack12,
-      transitionDuration: const Duration(milliseconds: 300),
+      transitionDuration: AppModalBlurTokens.duration,
       pageBuilder: (context, animation, secondaryAnimation) {
         return child;
       },
       transitionBuilder: (context, animation, secondaryAnimation, childWidget) {
-        final curvedAnimation = CurvedAnimation(
-          parent: animation,
-          curve: const Cubic(0.15, 0.85, 0.2, 1.0),
-        );
-
-        final scaleAnimation = Tween<double>(
-          begin: 1.15,
-          end: 1.0,
-        ).animate(curvedAnimation);
-        final blurAnimation = Tween<double>(
-          begin: 0.0,
-          end: 5.0,
-        ).animate(curvedAnimation);
-
-        return AnimatedBuilder(
-          animation: curvedAnimation,
-          builder: (context, _) {
-            return BackdropFilter(
-              filter: ImageFilter.blur(
-                sigmaX: blurAnimation.value,
-                sigmaY: blurAnimation.value,
-              ),
-              child: FadeTransition(
-                opacity: curvedAnimation,
-                child: ScaleTransition(
-                  scale: scaleAnimation,
-                  child: childWidget,
-                ),
-              ),
-            );
-          },
+        return AppModalBlurTransition(
+          animation: animation,
+          child: childWidget,
         );
       },
     );
@@ -259,8 +232,18 @@ class AppDialogs {
   /// Dismisses the loading overlay from [showLoadingDialog] when still visible.
   static void dismissLoadingDialog() {
     if (!_isLoadingDialogVisible) return;
-    _dismissActiveDialog();
+    _popLoadingOverlayRoute();
     _isLoadingDialogVisible = false;
+  }
+
+  /// Loading uses [showGeneralDialog] on the root navigator — never [Navigator.of] without root.
+  static void _popLoadingOverlayRoute() {
+    final context = Get.overlayContext ?? Get.context;
+    if (context == null) return;
+    final navigator = Navigator.of(context, rootNavigator: true);
+    if (navigator.canPop()) {
+      navigator.pop();
+    }
   }
 
   static void _dismissActiveDialog() {

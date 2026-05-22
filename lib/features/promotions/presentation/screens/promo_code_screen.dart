@@ -10,7 +10,9 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_cupertino_text_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
+import '../../../../shared/widgets/animated_blur_dialog.dart';
 import '../../../../shared/widgets/app_skeleton_loader.dart';
+import '../../../../shared/widgets/promo_apply_success_dialog.dart';
 import '../controllers/promo_code_controller.dart';
 
 class PromoCodeScreen extends StatelessWidget {
@@ -20,45 +22,84 @@ class PromoCodeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final PromoCodeController controller = Get.find<PromoCodeController>();
 
-    return Scaffold(
-      backgroundColor: AppColors.white,
-      body: Column(
-        children: [
-          AppProfileHeader(title: AppStrings.havePromoCode.tr),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 13.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    return Obx(() {
+      final applying = controller.isApplying.value;
+      final showSuccess = controller.showApplySuccess.value;
+      return PopScope(
+        canPop: !applying && !showSuccess,
+        child: Scaffold(
+          backgroundColor: AppColors.white,
+          body: Stack(
+            children: [
+              Column(
                 children: [
-                  Text(
-                    AppStrings.enterPromocode.tr,
-                    style: AppTextStyles.bodySecondary.copyWith(
-                      fontSize: 15.sp,
-                      color: AppColors.textMutedStrong,
-                      fontWeight: FontWeight.w500,
-                      height: 20 / 15,
+                  AppProfileHeader(title: AppStrings.havePromoCode.tr),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 13.h,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            AppStrings.enterPromocode.tr,
+                            style: AppTextStyles.bodySecondary.copyWith(
+                              fontSize: 15.sp,
+                              color: AppColors.textMutedStrong,
+                              fontWeight: FontWeight.w500,
+                              height: 20 / 15,
+                            ),
+                          ),
+                          SizedBox(height: 4.h),
+                          Obx(() => _buildPromoInputField(controller)),
+                          SizedBox(height: 18.h),
+                          Text(
+                            AppStrings.promocodeList.tr,
+                            style: AppTextStyles.bodySecondary.copyWith(
+                              fontSize: 15.sp,
+                              color: AppColors.textBody,
+                              fontWeight: FontWeight.w500,
+                              height: 20 / 15,
+                            ),
+                          ),
+                          SizedBox(height: 5.h),
+                          Obx(() => _buildPromoListSection(controller)),
+                        ],
+                      ),
                     ),
                   ),
-                  SizedBox(height: 4.h),
-                  Obx(() => _buildPromoInputField(controller)),
-                  SizedBox(height: 18.h),
-                  Text(
-                    AppStrings.promocodeList.tr,
-                    style: AppTextStyles.bodySecondary.copyWith(
-                      fontSize: 15.sp,
-                      color: AppColors.textBody,
-                      fontWeight: FontWeight.w500,
-                      height: 20 / 15,
-                    ),
-                  ),
-                  SizedBox(height: 5.h),
-                  Obx(() => _buildPromoListSection(controller)),
                 ],
               ),
-            ),
+              if (applying) _buildApplyLoadingOverlay(),
+              if (showSuccess) _buildApplySuccessOverlay(),
+            ],
           ),
-        ],
+        ),
+      );
+    });
+  }
+
+  Widget _buildApplySuccessOverlay() {
+    return const Positioned.fill(
+      child: AppBlurModalOverlay(
+        child: PromoApplySuccessPanel(),
+      ),
+    );
+  }
+
+  Widget _buildApplyLoadingOverlay() {
+    return Positioned.fill(
+      child: AppBlurModalOverlay(
+        child: SizedBox(
+          width: 36.w,
+          height: 36.w,
+          child: const CircularProgressIndicator(
+            color: AppColors.primary,
+            strokeWidth: 3,
+          ),
+        ),
       ),
     );
   }

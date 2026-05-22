@@ -9,11 +9,8 @@ import '../../../../core/errors/failures.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/di/injection_container.dart' as di;
-import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/currency_formatter.dart';
-import '../../../../shared/widgets/promo_apply_success_dialog.dart';
 import '../../../home/domain/repositories/home_repository.dart';
-import '../../../ride/presentation/controllers/vehicle_selection_controller.dart';
 import '../promo_code_route_args.dart';
 
 class PromoCodeController extends GetxController {
@@ -25,6 +22,7 @@ class PromoCodeController extends GetxController {
   final TextEditingController promoCodeTextController = TextEditingController();
   final isLoading = true.obs;
   final isApplying = false.obs;
+  final showApplySuccess = false.obs;
   final loadError = RxnString();
   final applyInlineError = RxnString();
 
@@ -147,6 +145,22 @@ class PromoCodeController extends GetxController {
     await _applyCode(code);
   }
 
+  static const Duration _successDisplayDuration = Duration(seconds: 2);
+  static const Duration _successDismissSettleDuration = Duration(milliseconds: 320);
+
+  /// Shows success on promo screen, waits for dismiss, then pops with [applyResult].
+  Future<void> _showSuccessThenReturn(PromoCodeApplyResult applyResult) async {
+    showApplySuccess.value = true;
+    await Future<void>.delayed(_successDisplayDuration);
+    showApplySuccess.value = false;
+    await Future<void>.delayed(_successDismissSettleDuration);
+    await SchedulerBinding.instance.endOfFrame;
+    final navigator = Get.key.currentState;
+    if (navigator != null && navigator.canPop()) {
+      Get.back(result: applyResult.toMap());
+    }
+  }
+
   Future<void> applyPromo(PromoCodeModel promo) async {
     if (!promo.isApplicable) return;
     final code = promo.code.trim().toUpperCase();
@@ -162,9 +176,6 @@ class PromoCodeController extends GetxController {
 
     final args = _rideArgs!;
     isApplying.value = true;
-    var loadingVisible = true;
-    AppDialogs.showLoadingDialog();
-    await SchedulerBinding.instance.endOfFrame;
     try {
       final result = await homeRepository.validatePromo(
         code: code,
@@ -184,8 +195,6 @@ class PromoCodeController extends GetxController {
           );
         },
         (data) async {
-          AppDialogs.dismissLoadingDialog();
-          loadingVisible = false;
           final applyResult = PromoCodeApplyResult(
             code: data.code,
             vehicleTypeId: args.vehicleTypeId,
@@ -198,26 +207,19 @@ class PromoCodeController extends GetxController {
               parameters: {'success': 'true', 'code': data.code},
             ),
           );
-          if (Get.isRegistered<VehicleSelectionController>()) {
-            await Get.find<VehicleSelectionController>().commitPromoApplyResult(
-              applyResult,
-            );
-          }
-          await AppDialogs.showAnimatedDialog<void>(
-            child: const PromoApplySuccessDialog(),
-            barrierDismissible: false,
-            barrierColor: Colors.black38,
-          );
-          Get.back(
-            result: applyResult.toMap(),
-          );
+          isApplying.value = false;
+          await _showSuccessThenReturn(applyResult);
         },
       );
+    } catch (_) {
+      applyInlineError.value = AppStrings.promoErrorNetwork.tr;
     } finally {
-      if (loadingVisible) {
-        AppDialogs.dismissLoadingDialog();
+      if (isApplying.value) {
+        isApplying.value = false;
       }
-      isApplying.value = false;
+      if (showApplySuccess.value) {
+        showApplySuccess.value = false;
+      }
     }
   }
 
