@@ -187,11 +187,11 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap:
-          () {}, // Prevents global unfocus handler from intercepting taps on this screen
+      onTap: () {},
+      // Prevents global unfocus handler from intercepting taps on this screen
       behavior: HitTestBehavior.translucent,
       child: Scaffold(
-        backgroundColor: AppColors.pageBackground,
+        backgroundColor: AppColors.cardBackground,
         appBar: AppBar(
           title: Text(
             _isDestinationEditor
@@ -640,9 +640,9 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
       child: Container(
         padding: EdgeInsets.all(12.w),
         decoration: BoxDecoration(
-          color: AppColors.pageBackground,
+          color: AppColors.surfaceSubtle,
           borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: AppColors.shade5.withValues(alpha: 0.5)),
+          border: Border.all(color: AppColors.borderWalletCard),
         ),
         child: Row(
           children: [
