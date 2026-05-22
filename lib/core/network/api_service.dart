@@ -801,7 +801,7 @@ class ApiService {
             mainAxisSize: MainAxisSize.min,
             children: [
               // App Logo
-              SvgPictureAsset(AppAssets.selcomGoLogo, height: 48.h),
+              SvgPictureAsset(AppAssets.selcomGoLogoPrimaryColor, height: 48.h),
               SizedBox(height: 24.h),
 
               // Title

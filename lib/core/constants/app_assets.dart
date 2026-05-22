@@ -35,6 +35,8 @@ class AppAssets {
   // Branding
   static const String splashBgVector = '$_imagePath/splash_bg_vector.svg';
   static const String selcomGoLogo = '$_imagePath/selcom_go_logo.svg';
+  static const String selcomGoLogoPrimaryColor =
+      '$_imagePath/selcom_go_logo_primary_color.svg';
 
   /// PNG variant (e.g. PDF / non-SVG pipelines).
   static const String selcomGoLogoPng = '$_imagePath/selcom_go_logo.png';
@@ -46,7 +48,8 @@ class AppAssets {
   static const String mapVehicleRickshawSvg = '$_imagePath/rickshaw.svg';
   static const String icPromotions = '$_imagePath/ic_promotions.svg';
   static const String icPromoCode = '$_imagePath/ic_promo_code.svg';
-  static const String icPromoCodeDisabled = '$_imagePath/ic_promo_code_disabled.svg';
+  static const String icPromoCodeDisabled =
+      '$_imagePath/ic_promo_code_disabled.svg';
 
   // Profile
   static const String icFaceScan = '$_imagePath/ic_face_scan.svg';
@@ -79,6 +82,5 @@ class AppAssets {
       '$_paymentPath/delete_card_confirm.png';
 
   ///animations:-
-  static const String carAnimation =
-      '$_jsonPath/car_animation.json';
+  static const String carAnimation = '$_jsonPath/car_animation.json';
 }
