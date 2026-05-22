@@ -564,6 +564,55 @@ class LanguageSw extends Languages {
     'something_went_wrong_please_try_again': '',
     'unexpected_error_occurred_with_error': '',
     'invalid_otp': '',
+    'add_stop': '',
+    'back_to_home': '',
+    'booking': '',
+    'booking_failed': '',
+    'cancel_reason_booked_by_mistake': '',
+    'cancel_reason_changed_my_mind': '',
+    'cancel_reason_driver_asked_cancel': '',
+    'cancel_reason_driver_pay_offline': '',
+    'cancel_reason_others': '',
+    'cancel_reason_taking_too_long_arrive': '',
+    'cancel_reason_taking_too_long_confirm_ride': '',
+    'cancel_reason_wait_time_too_long': '',
+    'cancel_reason_wrong_drop_location': '',
+    'cancel_reason_wrong_pickup_location': '',
+    'card_expired': '',
+    'cards': '',
+    'chat_unavailable': '',
+    'confirm_and_update': '',
+    'confirm_stop': '',
+    'connect_selcom_pesa_ride_charges_subtitle': '',
+    'connecting_drivers': '',
+    'connecting_socket': '',
+    'could_not_refresh_fare_after_pickup': '',
+    'current_destination': '',
+    'display_name_ride': '',
+    'drivers_online_count': '',
+    'no_drivers_nearby_badge': '',
+    'eta_badge': '',
+    'fare_difference': '',
+    'fare_increase_payment_authorization': '',
+    'mastercard_visa': '',
+    'max_stops_only': '',
+    'microphone_permission_denied_open_settings': '',
+    'microphone_permission_required': '',
+    'new_destination': '',
+    'new_estimated_fare': '',
+    'payment_methods_title': '',
+    'receipt_saved_to_gallery': '',
+    'ride_created_missing_id': '',
+    'search_again': '',
+    'selected_location': '',
+    'selected_pickup_point': '',
+    'selcom_pesa_linked_number': '',
+    'socket_disconnected': '',
+    'stop_number': '',
+    'update_destination': '',
+    'update_ride': '',
+    'write_a_message': '',
+    'your_driver': '',
     'incorrect_pin': '',
   };
 
@@ -2370,6 +2419,167 @@ class LanguageSw extends Languages {
 
   @override
   String get incorrectPin => values['incorrect_pin'] ?? '';
+
+  @override
+  String get addStop => values['add_stop'] ?? '';
+
+  @override
+  String get backToHome => values['back_to_home'] ?? '';
+
+  @override
+  String get booking => values['booking'] ?? '';
+
+  @override
+  String get bookingFailed => values['booking_failed'] ?? '';
+
+  @override
+  String get cancelReasonBookedByMistake =>
+      values['cancel_reason_booked_by_mistake'] ?? '';
+
+  @override
+  String get cancelReasonChangedMyMind =>
+      values['cancel_reason_changed_my_mind'] ?? '';
+
+  @override
+  String get cancelReasonDriverAskedCancel =>
+      values['cancel_reason_driver_asked_cancel'] ?? '';
+
+  @override
+  String get cancelReasonDriverPayOffline =>
+      values['cancel_reason_driver_pay_offline'] ?? '';
+
+  @override
+  String get cancelReasonOthers => values['cancel_reason_others'] ?? '';
+
+  @override
+  String get cancelReasonTakingTooLongArrive =>
+      values['cancel_reason_taking_too_long_arrive'] ?? '';
+
+  @override
+  String get cancelReasonTakingTooLongConfirmRide =>
+      values['cancel_reason_taking_too_long_confirm_ride'] ?? '';
+
+  @override
+  String get cancelReasonWaitTimeTooLong =>
+      values['cancel_reason_wait_time_too_long'] ?? '';
+
+  @override
+  String get cancelReasonWrongDropLocation =>
+      values['cancel_reason_wrong_drop_location'] ?? '';
+
+  @override
+  String get cancelReasonWrongPickupLocation =>
+      values['cancel_reason_wrong_pickup_location'] ?? '';
+
+  @override
+  String get cardExpired => values['card_expired'] ?? '';
+
+  @override
+  String get cards => values['cards'] ?? '';
+
+  @override
+  String get chatUnavailable => values['chat_unavailable'] ?? '';
+
+  @override
+  String get confirmAndUpdate => values['confirm_and_update'] ?? '';
+
+  @override
+  String get confirmStop => values['confirm_stop'] ?? '';
+
+  @override
+  String get connectSelcomPesaRideChargesSubtitle =>
+      values['connect_selcom_pesa_ride_charges_subtitle'] ?? '';
+
+  @override
+  String get connectingDrivers => values['connecting_drivers'] ?? '';
+
+  @override
+  String get connectingSocket => values['connecting_socket'] ?? '';
+
+  @override
+  String get couldNotRefreshFareAfterPickup =>
+      values['could_not_refresh_fare_after_pickup'] ?? '';
+
+  @override
+  String get currentDestination => values['current_destination'] ?? '';
+
+  @override
+  String get displayNameRide => values['display_name_ride'] ?? '';
+
+  @override
+  String get driversOnlineCount => values['drivers_online_count'] ?? '';
+
+  @override
+  String get noDriversNearbyBadge => values['no_drivers_nearby_badge'] ?? '';
+
+  @override
+  String get etaBadge => values['eta_badge'] ?? '';
+
+  @override
+  String get fareDifference => values['fare_difference'] ?? '';
+
+  @override
+  String get fareIncreasePaymentAuthorization =>
+      values['fare_increase_payment_authorization'] ?? '';
+
+  @override
+  String get mastercardVisa => values['mastercard_visa'] ?? '';
+
+  @override
+  String get maxStopsOnly => values['max_stops_only'] ?? '';
+
+  @override
+  String get microphonePermissionDeniedOpenSettings =>
+      values['microphone_permission_denied_open_settings'] ?? '';
+
+  @override
+  String get microphonePermissionRequired =>
+      values['microphone_permission_required'] ?? '';
+
+  @override
+  String get newDestination => values['new_destination'] ?? '';
+
+  @override
+  String get newEstimatedFare => values['new_estimated_fare'] ?? '';
+
+  @override
+  String get paymentMethodsTitle => values['payment_methods_title'] ?? '';
+
+  @override
+  String get receiptSavedToGallery => values['receipt_saved_to_gallery'] ?? '';
+
+  @override
+  String get rideCreatedMissingId => values['ride_created_missing_id'] ?? '';
+
+  @override
+  String get searchAgain => values['search_again'] ?? '';
+
+  @override
+  String get selectedLocation => values['selected_location'] ?? '';
+
+  @override
+  String get selectedPickupPoint => values['selected_pickup_point'] ?? '';
+
+  @override
+  String get selcomPesaLinkedNumber => values['selcom_pesa_linked_number'] ?? '';
+
+  @override
+  String get socketDisconnected => values['socket_disconnected'] ?? '';
+
+  @override
+  String get stopNumber => values['stop_number'] ?? '';
+
+  @override
+  String get updateDestination => values['update_destination'] ?? '';
+
+  @override
+  String get updateRide => values['update_ride'] ?? '';
+
+  @override
+  String get writeAMessage => values['write_a_message'] ?? '';
+
+  @override
+  String get yourDriver => values['your_driver'] ?? '';
 
   @override
   // TODO: implement savedLocations

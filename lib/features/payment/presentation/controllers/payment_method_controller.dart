@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/data/models/user_profile_models.dart';
 import '../../../../features/profile/domain/repositories/profile_repository.dart';
 
@@ -105,9 +106,21 @@ class PaymentMethodController extends GetxController {
 
   List<PaymentMethodModel> _dummyPayments() {
     return [
-      PaymentMethodModel(id: 'wallet', label: 'Wallet', type: 'wallet'),
-      PaymentMethodModel(id: 'card', label: 'Mastercard / Visa', type: 'card'),
-      PaymentMethodModel(id: 'selcom_pesa', label: 'Selcom Pesa', type: 'selcom_pesa'),
+      PaymentMethodModel(
+        id: 'wallet',
+        label: AppStrings.wallet.tr,
+        type: 'wallet',
+      ),
+      PaymentMethodModel(
+        id: 'card',
+        label: AppStrings.mastercardVisa.tr,
+        type: 'card',
+      ),
+      PaymentMethodModel(
+        id: 'selcom_pesa',
+        label: AppStrings.selcomPesa.tr,
+        type: 'selcom_pesa',
+      ),
     ];
   }
 }

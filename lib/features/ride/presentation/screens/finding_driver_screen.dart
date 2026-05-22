@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -393,7 +394,7 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
                   SizedBox(
                     width: double.infinity,
                     child: AppPrimaryButton(
-                      label: 'Search Again',
+                      label: AppStrings.searchAgain.tr,
                       onPressed: c.searchAgain,
                       height: 56.h,
                     ),
@@ -402,7 +403,7 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
                   SizedBox(
                     width: double.infinity,
                     child: AppPrimaryButton(
-                      label: 'Back to Home',
+                      label: AppStrings.backToHome.tr,
                       onPressed: () => Get.offAllNamed(AppRoutes.home),
                       outlined: true,
                       height: 56.h,
@@ -415,7 +416,7 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
           return Padding(
             padding: EdgeInsets.symmetric(horizontal: 10.w),
             child: AppPrimaryButton(
-              label: 'Cancel Ride',
+              label: AppStrings.cancelRide.tr,
               onPressed: c.confirmCancelRide,
               outlined: true,
               height: 56.h,

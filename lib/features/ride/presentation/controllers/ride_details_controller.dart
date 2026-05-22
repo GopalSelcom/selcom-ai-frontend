@@ -180,7 +180,7 @@ class RideDetailsController extends GetxController {
       await Gal.putImage(file.path);
       await _dismissReceiptSlipLoading();
       AppDialogs.showSuccessDialog(
-        message: 'Receipt saved to your photos gallery.',
+        message: AppStrings.receiptSavedToGallery.tr,
       );
     } catch (e, stackTrace) {
       await _dismissReceiptSlipLoading();

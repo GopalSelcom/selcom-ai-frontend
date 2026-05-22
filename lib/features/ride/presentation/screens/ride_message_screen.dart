@@ -389,8 +389,8 @@ class RideMessageScreen extends GetView<RideMessageController> {
                           ),
                           decoration: InputDecoration(
                             hintText: allowed
-                                ? 'Write a message...'
-                                : 'Chat unavailable',
+                                ? AppStrings.writeAMessage.tr
+                                : AppStrings.chatUnavailable.tr,
                             hintStyle: AppTextStyles.hint.copyWith(
                               color: AppColors.textMessageHint,
                             ),

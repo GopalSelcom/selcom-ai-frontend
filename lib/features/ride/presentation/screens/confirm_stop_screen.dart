@@ -208,7 +208,7 @@ class _ConfirmStopScreenState extends State<ConfirmStopScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: AppPrimaryButton(
-                      label: 'Confirm Stop',
+                      label: AppStrings.confirmStop.tr,
                       onPressed: () {
                         Get.back(
                           result: {

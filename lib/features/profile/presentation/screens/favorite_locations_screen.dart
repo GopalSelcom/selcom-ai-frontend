@@ -108,7 +108,8 @@ class FavoriteLocationsScreen extends GetView<FavoriteLocationsController> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    (place.label ?? 'Location').capitalizeFirst ?? 'Location',
+                    (place.label ?? AppStrings.location.tr).capitalizeFirst ??
+                        AppStrings.location.tr,
                     style: AppTextStyles.body.copyWith(
                       fontWeight: FontWeight.bold,
                       color: AppColors.textHeading,

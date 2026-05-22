@@ -800,14 +800,14 @@ class FindingDriverController extends GetxController {
 
     await AppDialogs.showAnimatedDialog<void>(
       child: CancelReasonSelectionDialog(
-        reasons: const [
-          'Taking too long to confirm the ride',
-          'Wait time too long',
-          'Selected wrong pickup location',
-          'Selected wrong drop location',
-          'Booked by mistake',
-          'Changed my mind',
-          'Others',
+        reasons: [
+          AppStrings.cancelReasonTakingTooLongConfirmRide.tr,
+          AppStrings.cancelReasonWaitTimeTooLong.tr,
+          AppStrings.cancelReasonWrongPickupLocation.tr,
+          AppStrings.cancelReasonWrongDropLocation.tr,
+          AppStrings.cancelReasonBookedByMistake.tr,
+          AppStrings.cancelReasonChangedMyMind.tr,
+          AppStrings.cancelReasonOthers.tr,
         ],
         isProcessing: isReasonProcessing,
         onContinueTap: (reason) async {

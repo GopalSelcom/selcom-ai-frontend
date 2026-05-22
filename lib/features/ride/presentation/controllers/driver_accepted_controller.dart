@@ -1577,7 +1577,8 @@ class DriverAcceptedController extends GetxController
     if (etaSeconds <= 0) return;
     currentEtaSeconds.value = etaSeconds;
     final minutes = (etaSeconds / 60).ceil();
-    etaLabel.value = '$minutes ${minutes == 1 ? 'Min' : 'Mins'}';
+    etaLabel.value =
+        AppStrings.minutesShortCount.trParams({'count': '$minutes'});
     final rideStatus = normalizeRideStatusString(currentRideStatus.value);
     if (_isDriverHeadingToPickupForEta(rideStatus)) {
       arrivalLabel.value = AppStrings.driverWillArrivingInMinutes.trParams({
@@ -1872,13 +1873,13 @@ class DriverAcceptedController extends GetxController
     final method = ride.value?.paymentMethod.name ?? 'wallet';
     switch (method) {
       case 'mobileMoney':
-        return 'Mobile Money';
+        return AppStrings.mobileMoney.tr;
       case 'selcomPesa':
-        return 'Selcom Pesa';
+        return AppStrings.selcomPesa.tr;
       case 'card':
-        return 'Card';
+        return AppStrings.card.tr;
       default:
-        return 'Wallet';
+        return AppStrings.wallet.tr;
     }
   }
 
@@ -1905,13 +1906,13 @@ class DriverAcceptedController extends GetxController
 
     await AppDialogs.showAnimatedDialog<void>(
       child: CancelReasonSelectionDialog(
-        reasons: const [
-          'Driver asked to cancel',
-          'Driver asked to pay offline',
-          'Taking too long to arrive',
-          'Selected wrong pickup location',
-          'Booked by mistake',
-          'Others',
+        reasons: [
+          AppStrings.cancelReasonDriverAskedCancel.tr,
+          AppStrings.cancelReasonDriverPayOffline.tr,
+          AppStrings.cancelReasonTakingTooLongArrive.tr,
+          AppStrings.cancelReasonWrongPickupLocation.tr,
+          AppStrings.cancelReasonBookedByMistake.tr,
+          AppStrings.cancelReasonOthers.tr,
         ],
         isProcessing: isReasonProcessing,
         onContinueTap: (reason) async {

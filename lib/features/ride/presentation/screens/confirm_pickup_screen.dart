@@ -224,7 +224,7 @@ class ConfirmPickupScreen extends StatelessWidget {
                           SizedBox(height: 12.h),
                           Obx(() {
                             final fullAddress = c.address.value.trim().isEmpty
-                                ? 'Selected pickup point'
+                                ? AppStrings.selectedPickupPoint.tr
                                 : c.address.value.trim();
                             final title = fullAddress.split(',').first.trim();
                             return Container(
@@ -246,7 +246,9 @@ class ConfirmPickupScreen extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    title.isEmpty ? 'Pickup point' : title,
+                                    title.isEmpty
+                                        ? AppStrings.pickupPoint.tr
+                                        : title,
                                     style: AppTextStyles.homeSubtitle.copyWith(
                                       color: AppColors.black,
                                       fontWeight: FontWeight.w500,

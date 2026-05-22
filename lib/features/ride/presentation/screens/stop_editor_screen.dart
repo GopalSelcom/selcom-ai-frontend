@@ -99,8 +99,9 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
     if (_stops.length >= RideStopLimits.maxIntermediateStops) {
       AppDialogs.showErrorDialog(
         title: AppStrings.error.tr,
-        message:
-            'You can add up to ${RideStopLimits.maxIntermediateStops} stops only.',
+        message: AppStrings.maxStopsOnly.trParams({
+          'count': '${RideStopLimits.maxIntermediateStops}',
+        }),
       );
       return;
     }
@@ -117,7 +118,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
             index: _stops.length,
             lat: (result['lat'] ?? 0.0).toDouble(),
             lng: (result['lng'] ?? 0.0).toDouble(),
-            address: result['address'] ?? 'Selected Location',
+            address: result['address'] ?? AppStrings.selectedLocation.tr,
             status: 'pending',
           ),
         );
@@ -213,7 +214,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                 children: [
                   if (_isDestinationEditor) ...[
                     _buildStaticPoint(
-                      'Current Destination',
+                      AppStrings.currentDestination.tr,
                       controller.destinationAddress,
                       AppColors.mapDropMarkerGreen,
                     ),
@@ -221,14 +222,14 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                         .trim()
                         .isNotEmpty)
                       _buildStaticPoint(
-                        'New Destination',
+                        AppStrings.newDestination.tr,
                         _selectedDestination?['address']?.toString() ?? '',
                         AppColors.primary,
                       ),
                     _buildChangeDropLocationButton(),
                   ] else ...[
                     _buildStaticPoint(
-                      'Pickup Point',
+                      AppStrings.pickupPoint.tr,
                       controller.pickupAddress,
                       AppColors.mapPickupMarkerBlue,
                       isPickup: true,
@@ -276,7 +277,9 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Stop ${index + 1}',
+                                        AppStrings.stopNumber.trParams({
+                                          'number': '${index + 1}',
+                                        }),
                                         style: AppTextStyles.caption.copyWith(
                                           fontWeight: FontWeight.w600,
                                           color: AppColors.primary,
@@ -313,7 +316,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                     ),
                     _buildAddStopButton(),
                     _buildStaticPoint(
-                      'Destination',
+                      AppStrings.destination.tr,
                       controller.destinationAddress,
                       AppColors.mapDropMarkerGreen,
                     ),
@@ -338,11 +341,11 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                   return AppPrimaryButton(
                     label: _isDestinationEditor
                         ? (controller.destinationUpdatePreview.value == null
-                              ? 'Update Destination'
-                              : 'Confirm & Update')
+                              ? AppStrings.updateDestination.tr
+                              : AppStrings.confirmAndUpdate.tr)
                         : (controller.stopUpdatePreview.value == null
-                              ? 'Update Ride'
-                              : 'Confirm & Update'),
+                              ? AppStrings.updateRide.tr
+                              : AppStrings.confirmAndUpdate.tr),
                     onPressed: _isSaving ? null : _onSave,
                     isLoading: _isSaving,
                   );
@@ -439,7 +442,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'New Estimated Fare:',
+                  AppStrings.newEstimatedFare.tr,
                   style: AppTextStyles.homeSubtitle.copyWith(fontSize: 14.sp),
                 ),
                 Text(
@@ -453,7 +456,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Fare Difference:',
+                  AppStrings.fareDifference.tr,
                   style: AppTextStyles.homeCaption.copyWith(fontSize: 12.sp),
                 ),
                 Container(
@@ -507,7 +510,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
               ),
               SizedBox(width: 8.w),
               Text(
-                'Add Stop',
+                AppStrings.addStop.tr,
                 style: AppTextStyles.button.copyWith(
                   color: AppColors.primary,
                   fontSize: 14.sp,
@@ -553,7 +556,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'New Estimated Fare:',
+                  AppStrings.newEstimatedFare.tr,
                   style: AppTextStyles.homeSubtitle.copyWith(fontSize: 14.sp),
                 ),
                 Text(
@@ -567,7 +570,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Fare Difference:',
+                  AppStrings.fareDifference.tr,
                   style: AppTextStyles.homeCaption.copyWith(fontSize: 12.sp),
                 ),
                 Container(
@@ -614,7 +617,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                   SizedBox(width: 6.w),
                   Expanded(
                     child: Text(
-                      'Fare increase will require a payment authorization.',
+                      AppStrings.fareIncreasePaymentAuthorization.tr,
                       style: AppTextStyles.caption.copyWith(
                         color: AppColors.warning,
                       ),

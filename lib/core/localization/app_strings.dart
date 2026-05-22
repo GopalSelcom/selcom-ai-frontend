@@ -696,4 +696,66 @@ class AppStrings {
   static const String other = 'other';
   static const String info = 'info';
   static const String enterCustomLabel = 'enter_custom_label';
+  static const String addStop = 'add_stop';
+  static const String backToHome = 'back_to_home';
+  static const String booking = 'booking';
+  static const String bookingFailed = 'booking_failed';
+  static const String cancelReasonBookedByMistake =
+      'cancel_reason_booked_by_mistake';
+  static const String cancelReasonChangedMyMind = 'cancel_reason_changed_my_mind';
+  static const String cancelReasonDriverAskedCancel =
+      'cancel_reason_driver_asked_cancel';
+  static const String cancelReasonDriverPayOffline =
+      'cancel_reason_driver_pay_offline';
+  static const String cancelReasonOthers = 'cancel_reason_others';
+  static const String cancelReasonTakingTooLongArrive =
+      'cancel_reason_taking_too_long_arrive';
+  static const String cancelReasonTakingTooLongConfirmRide =
+      'cancel_reason_taking_too_long_confirm_ride';
+  static const String cancelReasonWaitTimeTooLong =
+      'cancel_reason_wait_time_too_long';
+  static const String cancelReasonWrongDropLocation =
+      'cancel_reason_wrong_drop_location';
+  static const String cancelReasonWrongPickupLocation =
+      'cancel_reason_wrong_pickup_location';
+  static const String cardExpired = 'card_expired';
+  static const String cards = 'cards';
+  static const String chatUnavailable = 'chat_unavailable';
+  static const String confirmAndUpdate = 'confirm_and_update';
+  static const String confirmStop = 'confirm_stop';
+  static const String connectSelcomPesaRideChargesSubtitle =
+      'connect_selcom_pesa_ride_charges_subtitle';
+  static const String connectingDrivers = 'connecting_drivers';
+  static const String connectingSocket = 'connecting_socket';
+  static const String couldNotRefreshFareAfterPickup =
+      'could_not_refresh_fare_after_pickup';
+  static const String currentDestination = 'current_destination';
+  static const String displayNameRide = 'display_name_ride';
+  static const String driversOnlineCount = 'drivers_online_count';
+  static const String noDriversNearbyBadge = 'no_drivers_nearby_badge';
+  static const String etaBadge = 'eta_badge';
+  static const String fareDifference = 'fare_difference';
+  static const String fareIncreasePaymentAuthorization =
+      'fare_increase_payment_authorization';
+  static const String mastercardVisa = 'mastercard_visa';
+  static const String maxStopsOnly = 'max_stops_only';
+  static const String microphonePermissionDeniedOpenSettings =
+      'microphone_permission_denied_open_settings';
+  static const String microphonePermissionRequired =
+      'microphone_permission_required';
+  static const String newDestination = 'new_destination';
+  static const String newEstimatedFare = 'new_estimated_fare';
+  static const String paymentMethodsTitle = 'payment_methods_title';
+  static const String receiptSavedToGallery = 'receipt_saved_to_gallery';
+  static const String rideCreatedMissingId = 'ride_created_missing_id';
+  static const String searchAgain = 'search_again';
+  static const String selectedLocation = 'selected_location';
+  static const String selectedPickupPoint = 'selected_pickup_point';
+  static const String selcomPesaLinkedNumber = 'selcom_pesa_linked_number';
+  static const String socketDisconnected = 'socket_disconnected';
+  static const String stopNumber = 'stop_number';
+  static const String updateDestination = 'update_destination';
+  static const String updateRide = 'update_ride';
+  static const String writeAMessage = 'write_a_message';
+  static const String yourDriver = 'your_driver';
 }

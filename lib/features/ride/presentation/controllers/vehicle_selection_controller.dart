@@ -61,7 +61,8 @@ class VehicleSelectionController extends GetxController {
   final isBooking = false.obs;
   final isLoadingNearbyDrivers = false.obs;
   final isSocketConnected = false.obs;
-  final lastSocketError = ''.obs;
+  /// User-visible nearby-drivers badge failed (never show raw socket errors).
+  final nearbyDriversUnavailable = false.obs;
   final nearbyDriverCount = 0.obs;
   final paymentStatus = PaymentStatus.pending.obs;
 
@@ -582,7 +583,7 @@ class VehicleSelectionController extends GetxController {
         FareEstimateItem(
           vehicleTypeId: '',
           vehicleName: 'ride',
-          displayName: 'Ride',
+          displayName: AppStrings.displayNameRide.tr,
           fareEstimate: 500,
           distanceKm: 4.2,
           durationMinutes: 10,
@@ -722,9 +723,9 @@ class VehicleSelectionController extends GetxController {
             msg = msg.replaceFirst('Exception: ', '');
           }
           AppDialogs.showErrorDialog(
-            title: 'Estimate failed',
+            title: AppStrings.estimateFailed.tr,
             message: msg.isEmpty
-                ? 'Could not refresh fare after pickup confirmation.'
+                ? AppStrings.couldNotRefreshFareAfterPickup.tr
                 : msg,
           );
           return false;
@@ -933,7 +934,7 @@ class VehicleSelectionController extends GetxController {
                     msg = msg.replaceFirst('Exception: ', '');
                   }
                   AppDialogs.showErrorDialog(
-                    title: 'Booking failed',
+                    title: AppStrings.bookingFailed.tr,
                     message: msg,
                   );
                 },
@@ -942,10 +943,8 @@ class VehicleSelectionController extends GetxController {
                   final rideId = ride?.id;
                   if (rideId == null || rideId.isEmpty || ride == null) {
                     AppDialogs.showErrorDialog(
-                      title: 'Booking',
-                      message:
-                          data.message ??
-                          'Ride was created but ride id is missing from the response.',
+                      title: AppStrings.booking.tr,
+                      message: data.message ?? AppStrings.rideCreatedMissingId.tr,
                     );
                     return;
                   }
@@ -1139,18 +1138,21 @@ class VehicleSelectionController extends GetxController {
         );
       }
       nearbyDriverCount.value = drivers.length;
-      lastSocketError.value = '';
+      nearbyDriversUnavailable.value = false;
       isLoadingNearbyDrivers.value = false;
     });
 
-    _nearbyDriversErrorSub = _socketService.errorStream.listen((msg) {
-      lastSocketError.value = msg;
+    _nearbyDriversErrorSub = _socketService.errorStream.listen((_) {
+      nearbyDriversUnavailable.value = true;
       isLoadingNearbyDrivers.value = false;
     });
     _nearbyDriversConnectionSub = _socketService.connectionStream.listen((ok) {
       isSocketConnected.value = ok;
       if (!ok) {
+        nearbyDriversUnavailable.value = true;
         isLoadingNearbyDrivers.value = false;
+      } else {
+        nearbyDriversUnavailable.value = false;
       }
     });
 
@@ -1161,9 +1163,7 @@ class VehicleSelectionController extends GetxController {
   void _requestNearbyDriversForCurrentSelection() {
     if (pickupEntity.lat == 0 || pickupEntity.lng == 0) return;
     isLoadingNearbyDrivers.value = true;
-    if (!isSocketConnected.value) {
-      lastSocketError.value = 'Connecting socket...';
-    }
+    nearbyDriversUnavailable.value = false;
     final vehicleType = _socketVehicleTypeForEstimate(selectedEstimate);
     _socketService.requestNearbyDrivers(
       lat: pickupEntity.lat,
@@ -1269,7 +1269,7 @@ class VehicleSelectionController extends GetxController {
 
   String compactAddress(String value) {
     final line = compactAddressLine(value);
-    if (line.isEmpty) return 'Selected location';
+    if (line.isEmpty) return AppStrings.selectedLocation.tr;
     return line;
   }
 
@@ -1284,17 +1284,27 @@ class VehicleSelectionController extends GetxController {
 
   String get destinationEtaBadgeText {
     final minutes = selectedEstimate?.durationMinutes ?? 0;
-    return minutes > 0 ? '$minutes Mins' : 'ETA';
+    return minutes > 0
+        ? AppStrings.minutesShortCount.trParams({'count': '$minutes'})
+        : AppStrings.etaBadge.tr;
   }
 
   String get socketDriverStatusText {
     if (isSocketConnected.value) {
-      return '$nearbyDriverCount drivers online';
+      if (nearbyDriverCount.value > 0) {
+        return AppStrings.driversOnlineCount.trParams({
+          'count': '${nearbyDriverCount.value}',
+        });
+      }
+      return AppStrings.noDriversNearbyBadge.tr;
     }
-    if (lastSocketError.value.isNotEmpty) {
-      return 'Socket disconnected';
+    if (isLoadingNearbyDrivers.value) {
+      return AppStrings.connectingDrivers.tr;
     }
-    return 'Connecting drivers...';
+    if (nearbyDriversUnavailable.value) {
+      return AppStrings.socketDisconnected.tr;
+    }
+    return AppStrings.connectingDrivers.tr;
   }
 
   Color get socketDriverStatusColor =>
