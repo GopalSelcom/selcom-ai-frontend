@@ -229,7 +229,7 @@ class PromoCodeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPromoCard(PromocodeModel promo, PromoCodeController controller) {
+  Widget _buildPromoCard(PromoCodeModel promo, PromoCodeController controller) {
     return Obx(() {
       final applying = controller.isApplying.value;
       final enabled = promo.isApplicable && !applying;

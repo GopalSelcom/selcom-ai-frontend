@@ -26,7 +26,9 @@ class PromoCodeRouteArgs {
         .trim();
     if (vid == null || vid.isEmpty) return null;
     final fareRaw = arguments['fare_estimate'] ?? arguments['fareEstimate'];
-    final fare = fareRaw is num ? fareRaw.toInt() : int.tryParse('$fareRaw') ?? 0;
+    final fare = fareRaw is num
+        ? fareRaw.toInt()
+        : int.tryParse('$fareRaw') ?? 0;
     final applied =
         (arguments['applied_code'] ?? arguments['appliedCode'])?.toString() ??
         '';
@@ -39,10 +41,51 @@ class PromoCodeRouteArgs {
 }
 
 /// Result when a promo was validated and applied from the ride flow.
-class PromocodeApplyResult {
-  const PromocodeApplyResult({required this.code});
+class PromoCodeApplyResult {
+  const PromoCodeApplyResult({
+    required this.code,
+    required this.vehicleTypeId,
+    required this.discountedFare,
+    required this.discountAmount,
+  });
 
   final String code;
+  final String vehicleTypeId;
+  final int discountedFare;
+  final int discountAmount;
 
-  Map<String, dynamic> toMap() => {'code': code};
+  Map<String, dynamic> toMap() => {
+    'code': code,
+    'vehicle_type_id': vehicleTypeId,
+    'discounted_fare': discountedFare,
+    'discount_amount': discountAmount,
+  };
+
+  static PromoCodeApplyResult? tryFrom(dynamic result) {
+    if (result is! Map) return null;
+    final map = result is Map<String, dynamic>
+        ? result
+        : Map<String, dynamic>.from(result);
+    final code = map['code']?.toString().trim().toUpperCase();
+    if (code == null || code.isEmpty) return null;
+    final vehicleTypeId =
+        (map['vehicle_type_id'] ?? map['vehicleTypeId'])?.toString().trim() ??
+        '';
+    if (vehicleTypeId.isEmpty) return null;
+    final discountedRaw = map['discounted_fare'] ?? map['discountedFare'];
+    final discountRaw = map['discount_amount'] ?? map['discountAmount'];
+    final discountedFare = discountedRaw is num
+        ? discountedRaw.toInt()
+        : int.tryParse('$discountedRaw');
+    final discountAmount = discountRaw is num
+        ? discountRaw.toInt()
+        : int.tryParse('$discountRaw');
+    if (discountedFare == null || discountAmount == null) return null;
+    return PromoCodeApplyResult(
+      code: code,
+      vehicleTypeId: vehicleTypeId,
+      discountedFare: discountedFare,
+      discountAmount: discountAmount,
+    );
+  }
 }

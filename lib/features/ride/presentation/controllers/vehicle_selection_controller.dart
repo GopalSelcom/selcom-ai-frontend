@@ -69,6 +69,7 @@ class VehicleSelectionController extends GetxController {
   final paymentTimerSeconds = 300.obs;
   final appliedPromoCode = ''.obs;
   final promoValidatedAt = Rxn<DateTime>();
+  PromoCodeApplyResult? _pendingPromoApplyResult;
   Timer? _promoEstimateDebounce;
   final isRouteReady = false.obs;
   final isLocationIconsReady = false.obs;
@@ -226,13 +227,18 @@ class VehicleSelectionController extends GetxController {
     );
   }
 
-  Future<void> _loadEstimates({bool silent = false}) async {
+  Future<void> _loadEstimates({
+    bool silent = false,
+    bool preserveRoute = false,
+  }) async {
     if (!silent) {
       isLoadingEstimates.value = true;
     }
-    isRouteReady.value = false;
-    routePoints.clear();
-    driverMarkerPoints.clear();
+    if (!preserveRoute) {
+      isRouteReady.value = false;
+      routePoints.clear();
+      driverMarkerPoints.clear();
+    }
     final req = _fareEstimateRequest();
 
     final vehicleTypesResult = await homeRepository.getVehicleTypes();
@@ -267,6 +273,10 @@ class VehicleSelectionController extends GetxController {
               .map((e) => _withResolvedVehicleTypeId(e, vehicleTypes))
               .toList();
           estimates.assignAll(normalized);
+          final pending = _pendingPromoApplyResult;
+          if (pending != null) {
+            _applyPromoValidationToEstimates(pending);
+          }
           if (appliedPromoCode.value.trim().isNotEmpty) {
             promoValidatedAt.value = DateTime.now();
           }
@@ -308,9 +318,7 @@ class VehicleSelectionController extends GetxController {
         }
       },
     );
-    if (!silent) {
-      isLoadingEstimates.value = false;
-    }
+    isLoadingEstimates.value = false;
     _applyPreferredVehicleSelection();
 
     if (estimates.isNotEmpty) {
@@ -430,6 +438,76 @@ class VehicleSelectionController extends GetxController {
       if (dn.isNotEmpty && vt.displayName.toLowerCase() == dn) return vt;
     }
     return null;
+  }
+
+  FareEstimateItem _copyFareEstimateItem(
+    FareEstimateItem e, {
+    bool? promoApplied,
+    int? promoDiscount,
+    int? discountedFare,
+    String? promoError,
+  }) {
+    return FareEstimateItem(
+      vehicleTypeId: e.vehicleTypeId,
+      vehicleName: e.vehicleName,
+      displayName: e.displayName,
+      fareEstimate: e.fareEstimate,
+      distanceKm: e.distanceKm,
+      durationMinutes: e.durationMinutes,
+      baseFare: e.baseFare,
+      perKmCharge: e.perKmCharge,
+      perMinCharge: e.perMinCharge,
+      minimumFare: e.minimumFare,
+      waypointCharge: e.waypointCharge,
+      maxPassengers: e.maxPassengers,
+      currency: e.currency,
+      promoApplied: promoApplied ?? e.promoApplied,
+      promoDiscount: promoDiscount ?? e.promoDiscount,
+      discountedFare: discountedFare ?? e.discountedFare,
+      promoError: promoError,
+    );
+  }
+
+  bool _estimateMatchesVehicleType(FareEstimateItem e, String vehicleTypeId) {
+    final target = vehicleTypeId.trim().toLowerCase();
+    if (target.isEmpty) return false;
+    final id = (e.vehicleTypeId ?? '').trim().toLowerCase();
+    if (id == target) return true;
+    final name = (e.vehicleName ?? '').trim().toLowerCase();
+    return name == target;
+  }
+
+  /// Called from promo screen after validate succeeds (and from [openPromotions] fallback).
+  Future<void> commitPromoApplyResult(PromoCodeApplyResult validation) async {
+    _pendingPromoApplyResult = validation;
+    appliedPromoCode.value = validation.code;
+    promoValidatedAt.value = DateTime.now();
+    _applyPromoValidationToEstimates(validation);
+    await _loadEstimates(silent: true, preserveRoute: true);
+    _applyPromoValidationToEstimates(validation);
+    _pendingPromoApplyResult = null;
+  }
+
+  /// Applies [PromoCodeApplyResult] pricing to the matching vehicle row (e.g. after validate API).
+  void _applyPromoValidationToEstimates(PromoCodeApplyResult validation) {
+    final vid = validation.vehicleTypeId.trim();
+    if (vid.isEmpty || estimates.isEmpty) return;
+
+    final discounted = validation.discountedFare;
+    final updated = estimates.map((e) {
+      if (!_estimateMatchesVehicleType(e, vid)) return e;
+      final original = e.originalFare;
+      if (original <= 0 || discounted < 0 || discounted >= original) return e;
+      return _copyFareEstimateItem(
+        e,
+        promoApplied: true,
+        promoDiscount: validation.discountAmount,
+        discountedFare: discounted,
+        promoError: null,
+      );
+    }).toList();
+    estimates.assignAll(updated);
+    estimates.refresh();
   }
 
   FareEstimateItem _withResolvedVehicleTypeId(
@@ -1230,6 +1308,7 @@ class VehicleSelectionController extends GetxController {
     if (appliedPromoCode.value.trim().isEmpty) return;
     appliedPromoCode.value = '';
     promoValidatedAt.value = null;
+    _pendingPromoApplyResult = null;
     Get.snackbar(
       AppStrings.promoRemovedTitle.tr,
       AppStrings.promoRemovedDestinationChanged.tr,
@@ -1321,13 +1400,12 @@ class VehicleSelectionController extends GetxController {
       ).toMap(),
     );
 
-    if (result is! Map) return;
-    final code = result['code']?.toString().trim().toUpperCase();
-    if (code == null || code.isEmpty) return;
-
-    appliedPromoCode.value = code;
-    promoValidatedAt.value = DateTime.now();
-    await _loadEstimates();
+    // Promo screen commits via [commitPromoApplyResult] before pop; this is fallback only.
+    if (appliedPromoCode.value.trim().isNotEmpty) return;
+    final applyResult = PromoCodeApplyResult.tryFrom(result);
+    if (applyResult != null) {
+      await commitPromoApplyResult(applyResult);
+    }
   }
 
   void closeVehicleSelection() {

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/data/models/responses/rides/promo_available_response.dart';
@@ -12,6 +13,7 @@ import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/widgets/promo_apply_success_dialog.dart';
 import '../../../home/domain/repositories/home_repository.dart';
+import '../../../ride/presentation/controllers/vehicle_selection_controller.dart';
 import '../promo_code_route_args.dart';
 
 class PromoCodeController extends GetxController {
@@ -19,7 +21,7 @@ class PromoCodeController extends GetxController {
 
   final HomeRepository homeRepository;
 
-  final RxList<PromocodeModel> promoCodes = <PromocodeModel>[].obs;
+  final RxList<PromoCodeModel> promoCodes = <PromoCodeModel>[].obs;
   final TextEditingController promoCodeTextController = TextEditingController();
   final isLoading = true.obs;
   final isApplying = false.obs;
@@ -95,10 +97,10 @@ class PromoCodeController extends GetxController {
     return AppStrings.promoErrorNotApplicable.tr;
   }
 
-  PromocodeModel _mapToDisplayModel(AvailablePromoItem item) {
+  PromoCodeModel _mapToDisplayModel(AvailablePromoItem item) {
     final title = item.description.isNotEmpty ? item.description : item.code;
     final applicable = _isPromoApplicable(item);
-    return PromocodeModel(
+    return PromoCodeModel(
       code: item.code,
       title: title,
       subtitle: _subtitleFor(item),
@@ -145,7 +147,7 @@ class PromoCodeController extends GetxController {
     await _applyCode(code);
   }
 
-  Future<void> applyPromo(PromocodeModel promo) async {
+  Future<void> applyPromo(PromoCodeModel promo) async {
     if (!promo.isApplicable) return;
     final code = promo.code.trim().toUpperCase();
     if (code.isEmpty) return;
@@ -160,14 +162,15 @@ class PromoCodeController extends GetxController {
 
     final args = _rideArgs!;
     isApplying.value = true;
+    var loadingVisible = true;
     AppDialogs.showLoadingDialog();
+    await SchedulerBinding.instance.endOfFrame;
     try {
       final result = await homeRepository.validatePromo(
         code: code,
         vehicleTypeId: args.vehicleTypeId,
         fareEstimate: args.fareEstimate,
       );
-      _dismissLoadingDialogIfOpen();
 
       await result.fold<Future<void>>(
         (f) async {
@@ -181,28 +184,40 @@ class PromoCodeController extends GetxController {
           );
         },
         (data) async {
+          AppDialogs.dismissLoadingDialog();
+          loadingVisible = false;
+          final applyResult = PromoCodeApplyResult(
+            code: data.code,
+            vehicleTypeId: args.vehicleTypeId,
+            discountedFare: data.discountedFare,
+            discountAmount: data.discountAmount,
+          );
           unawaited(
             di.sl<AnalyticsService>().logEvent(
               'promo_validated',
               parameters: {'success': 'true', 'code': data.code},
             ),
           );
+          if (Get.isRegistered<VehicleSelectionController>()) {
+            await Get.find<VehicleSelectionController>().commitPromoApplyResult(
+              applyResult,
+            );
+          }
           await AppDialogs.showAnimatedDialog<void>(
             child: const PromoApplySuccessDialog(),
             barrierDismissible: false,
             barrierColor: Colors.black38,
           );
-          Get.back(result: PromocodeApplyResult(code: data.code).toMap());
+          Get.back(
+            result: applyResult.toMap(),
+          );
         },
       );
     } finally {
+      if (loadingVisible) {
+        AppDialogs.dismissLoadingDialog();
+      }
       isApplying.value = false;
-    }
-  }
-
-  void _dismissLoadingDialogIfOpen() {
-    if (Get.isDialogOpen ?? false) {
-      Get.back<void>();
     }
   }
 
@@ -221,7 +236,7 @@ class PromoCodeController extends GetxController {
   }
 }
 
-class PromocodeModel {
+class PromoCodeModel {
   final String code;
   final String title;
   final String subtitle;
@@ -229,7 +244,7 @@ class PromocodeModel {
   final bool isApplicable;
   final String? inapplicableHint;
 
-  PromocodeModel({
+  PromoCodeModel({
     required this.code,
     required this.title,
     required this.subtitle,

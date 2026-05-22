@@ -30,8 +30,9 @@ class _PromoApplySuccessDialogState extends State<PromoApplySuccessDialog> {
     super.initState();
     _autoClose = Timer(widget.displayDuration, () {
       if (!mounted) return;
-      if (Get.isDialogOpen ?? false) {
-        Get.back<void>();
+      final navigator = Navigator.of(context, rootNavigator: true);
+      if (navigator.canPop()) {
+        navigator.pop<void>();
       }
     });
   }

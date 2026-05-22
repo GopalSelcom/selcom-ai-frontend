@@ -485,11 +485,13 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                 itemCount: controller.estimates.length,
                 separatorBuilder: (_, __) => SizedBox(height: 10.h),
                 itemBuilder: (_, index) {
-                  final item = controller.estimates[index];
                   return Obx(() {
+                    if (index >= controller.estimates.length) {
+                      return const SizedBox.shrink();
+                    }
+                    final item = controller.estimates[index];
                     final selected =
                         controller.selectedVehicleIndex.value == index;
-                    final _ = controller.appliedPromoCode.value;
                     return _vehicleCard(
                       index: index,
                       item: item,
@@ -501,6 +503,12 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
             }),
           ),
           Obx(() {
+            final _fareDeps = (
+              controller.estimates.length,
+              controller.selectedVehicleIndex.value,
+              controller.appliedPromoCode.value,
+            );
+            assert(_fareDeps.$1 >= 0);
             return PaymentBar(
               buttonLabel:
                   '${AppStrings.bookRide.tr} ${CurrencyFormatter.formatPayableOrFree(controller.selectedPayableFareAmount, controller.currency, freeLabel: AppStrings.rideFreeLabel.tr)}',
