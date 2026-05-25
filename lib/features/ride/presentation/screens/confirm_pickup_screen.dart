@@ -185,12 +185,12 @@ class ConfirmPickupScreen extends StatelessWidget {
                           Row(
                             children: [
                               SvgPictureAsset(
-                                AppAssets.locationIcDestinationPin,
+                                AppAssets.locationIcPickupPin,
                                 width: 36.w,
                                 height: 36.w,
                                 color: AppColors.mapDropMarkerGreen,
                                 placeholderBuilder: (_) => Icon(
-                                  Icons.push_pin,
+                                  Icons.location_on,
                                   color: AppColors.mapDropMarkerGreen,
                                   size: 18.sp,
                                 ),

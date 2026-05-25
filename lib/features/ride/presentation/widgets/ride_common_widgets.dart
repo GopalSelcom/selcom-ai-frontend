@@ -118,7 +118,7 @@ class RideLocationsTimeline extends StatelessWidget {
             color: AppColors.mapPickupMarkerBlue,
           ),
           bottomSpacingWhenLine:
-          showAddStopBeforeDestination && filteredStops.isEmpty ? 0 : null,
+              showAddStopBeforeDestination && filteredStops.isEmpty ? 0 : null,
           showBottomLine: true,
         ),
 
@@ -126,8 +126,7 @@ class RideLocationsTimeline extends StatelessWidget {
         if (showStopsAsSummary && filteredStops.isNotEmpty)
           _buildLocationRow(
             title:
-            '${filteredStops.length} ${AppStrings.stop.tr}${filteredStops
-                .length > 1 ? 's' : ''}',
+                '${filteredStops.length} ${AppStrings.stop.tr}${filteredStops.length > 1 ? 's' : ''}',
             address: null,
             icon: _buildStopCountIcon(filteredStops.length),
             bottomSpacingWhenLine: showAddStopBeforeDestination ? 0 : null,
@@ -136,16 +135,14 @@ class RideLocationsTimeline extends StatelessWidget {
         else
           for (int i = 0; i < filteredStops.length; i++)
             _buildLocationRow(
-              title: filteredStops[i].address
-                  .split(',')
-                  .first,
+              title: filteredStops[i].address.split(',').first,
               address: filteredStops[i].address,
               icon: _buildLetterIcon(
                 letters[i + 1],
                 color: AppColors.mapStopMarkerRed,
               ),
               bottomSpacingWhenLine:
-              showAddStopBeforeDestination && i == filteredStops.length - 1
+                  showAddStopBeforeDestination && i == filteredStops.length - 1
                   ? 0
                   : null,
               showBottomLine: true,
@@ -164,9 +161,9 @@ class RideLocationsTimeline extends StatelessWidget {
           showBottomLine: false,
           footer: showChangeDropLocationLink && onChangeDropLocationTap != null
               ? AppCupertinoTextButton.changeDropLocation(
-            label: AppStrings.changeDropLocation.tr,
-            onPressed: onChangeDropLocationTap,
-          )
+                  label: AppStrings.changeDropLocation.tr,
+                  onPressed: onChangeDropLocationTap,
+                )
               : null,
         ),
       ],
@@ -259,9 +256,7 @@ class RideLocationsTimeline extends StatelessWidget {
                       height: 20 / 15,
                     ),
                   ),
-                  if (address != null && address
-                      .trim()
-                      .isNotEmpty) ...[
+                  if (address != null && address.trim().isNotEmpty) ...[
                     SizedBox(height: 1.h),
                     Text(
                       address,
@@ -301,7 +296,7 @@ class RideLocationsTimeline extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.white,
           borderRadius: BorderRadius.circular(100.r),
-          border: Border.all(color: AppColors.borderWalletCard),
+          border: Border.all(color: AppColors.secondary),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -311,17 +306,16 @@ class RideLocationsTimeline extends StatelessWidget {
               width: 16.w,
               height: 16.w,
               color: AppColors.primary,
-              placeholderBuilder: (_) =>
-                  Container(
-                    width: 16.w,
-                    height: 16.w,
-                    decoration: const BoxDecoration(
-                      color: AppColors.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(Icons.add, color: AppColors.white, size: 12.sp),
-                  ),
+              placeholderBuilder: (_) => Container(
+                width: 16.w,
+                height: 16.w,
+                decoration: const BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Icon(Icons.add, color: AppColors.white, size: 12.sp),
+              ),
             ),
             SizedBox(width: 4.80.w),
             Text(
@@ -364,10 +358,7 @@ class RideLocationsTimeline extends StatelessWidget {
               children: [
                 Align(
                   alignment: Alignment.center,
-                  child: Container(
-                    height: 1.h,
-                    color: AppColors.borderWalletCard,
-                  ),
+                  child: Container(height: 0.8.h, color: AppColors.secondary),
                 ),
                 _buildAddStopPill(),
               ],
@@ -468,12 +459,11 @@ class NeedHelpRow extends StatelessWidget {
           width: 18.w,
           height: 18.w,
           color: AppColors.textBody,
-          placeholderBuilder: (_) =>
-              Icon(
-                Icons.headset_mic_outlined,
-                color: AppColors.textBody,
-                size: 18.sp,
-              ),
+          placeholderBuilder: (_) => Icon(
+            Icons.headset_mic_outlined,
+            color: AppColors.textBody,
+            size: 18.sp,
+          ),
         ),
         SizedBox(width: 8.w),
         AppCupertinoTextButton.inlineHelpLink(
@@ -492,12 +482,11 @@ class NeedHelpRow extends StatelessWidget {
                   width: 19.w,
                   height: 19.w,
                   color: AppColors.textBody,
-                  placeholderBuilder: (_) =>
-                      Icon(
-                        Icons.download_rounded,
-                        color: AppColors.textBody,
-                        size: 19.sp,
-                      ),
+                  placeholderBuilder: (_) => Icon(
+                    Icons.download_rounded,
+                    color: AppColors.textBody,
+                    size: 19.sp,
+                  ),
                 ),
                 SizedBox(width: 6.w),
                 Text(

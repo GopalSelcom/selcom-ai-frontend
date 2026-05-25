@@ -178,8 +178,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                 baseMin = _sheetMin;
               }
 
-              final initialSize =
-                  _sheetSizeWithNavInset(context, baseInitial);
+              final initialSize = _sheetSizeWithNavInset(context, baseInitial);
               final minSize = _sheetSizeWithNavInset(context, baseMin);
 
               switch (state) {
@@ -613,12 +612,7 @@ class DriverAcceptedScreen extends StatelessWidget {
       physics: const AlwaysScrollableScrollPhysics(
         parent: ClampingScrollPhysics(),
       ),
-      padding: EdgeInsets.fromLTRB(
-        16.w,
-        10.h,
-        16.w,
-        _scrollBottomPad(context),
-      ),
+      padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, _scrollBottomPad(context)),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1147,7 +1141,7 @@ class DriverAcceptedScreen extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 15.h),
           decoration: BoxDecoration(
             color: AppColors.surfaceSubtle,
-            border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
+            border: Border.all(color: AppColors.secondary, width: 0.8),
             borderRadius: BorderRadius.circular(16.r),
           ),
           child: Column(
@@ -1181,7 +1175,7 @@ class DriverAcceptedScreen extends StatelessWidget {
             padding: EdgeInsets.fromLTRB(14.w, 14.h, 11.w, 24.h),
             decoration: BoxDecoration(
               color: AppColors.surfaceSubtle,
-              border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
+              border: Border.all(color: AppColors.secondary, width: 0.8),
               borderRadius: BorderRadius.circular(16.r),
             ),
             child: Column(

@@ -71,10 +71,7 @@ class RideDetailsScreen extends StatelessWidget {
             padding: EdgeInsets.all(14.w),
             decoration: BoxDecoration(
               color: AppColors.pageBackground,
-              border: Border.all(
-                color: AppColors.borderWalletCard,
-                width: 0.78,
-              ),
+              border: Border.all(color: AppColors.secondary, width: 0.78),
               borderRadius: BorderRadius.circular(16.r),
             ),
             child: Column(
@@ -178,7 +175,7 @@ class RideDetailsScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: AppColors.pageBackground,
                         border: Border.all(
-                          color: AppColors.borderWalletCard,
+                          color: AppColors.secondary,
                           width: 0.78,
                         ),
                         borderRadius: BorderRadius.circular(16.r),
@@ -198,7 +195,7 @@ class RideDetailsScreen extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: AppColors.pageBackground,
                           border: Border.all(
-                            color: AppColors.borderWalletCard,
+                            color: AppColors.secondary,
                             width: 0.78,
                           ),
                           borderRadius: BorderRadius.circular(16.r),
@@ -267,7 +264,7 @@ class RideDetailsScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: AppColors.pageBackground,
                         border: Border.all(
-                          color: AppColors.borderWalletCard,
+                          color: AppColors.secondary,
                           width: 0.78,
                         ),
                         borderRadius: BorderRadius.circular(16.r),

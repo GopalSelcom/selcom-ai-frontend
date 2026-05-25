@@ -224,7 +224,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                       _buildStaticPoint(
                         AppStrings.newDestination.tr,
                         _selectedDestination?['address']?.toString() ?? '',
-                        AppColors.primary,
+                        AppColors.secondary,
                       ),
                     _buildChangeDropLocationButton(),
                   ] else ...[
@@ -645,7 +645,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
         decoration: BoxDecoration(
           color: AppColors.surfaceSubtle,
           borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: AppColors.borderWalletCard),
+          border: Border.all(color: AppColors.secondary),
         ),
         child: Row(
           children: [

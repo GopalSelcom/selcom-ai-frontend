@@ -70,7 +70,7 @@ class RideHistoryCard extends StatelessWidget {
         margin: EdgeInsets.only(bottom: 12.h),
         decoration: BoxDecoration(
           color: AppColors.pageBackground,
-          border: Border.all(color: AppColors.borderWalletCard, width: 0.79),
+          border: Border.all(color: AppColors.secondary, width: 0.79),
           borderRadius: BorderRadius.circular(16.r),
         ),
         child: Column(
