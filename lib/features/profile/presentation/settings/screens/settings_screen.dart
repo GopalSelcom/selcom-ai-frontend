@@ -5,11 +5,9 @@ import 'package:iconsax/iconsax.dart';
 
 import '../../../../../core/localization/app_strings.dart';
 import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_text_styles.dart';
 import '../../../../../shared/widgets/app_profile_header.dart';
 import '../controllers/settings_controller.dart';
 import '../../widgets/menu_item_widget.dart';
-import '../widgets/settings_toggle_tile.dart';
 
 class SettingsScreen extends GetView<SettingsController> {
   const SettingsScreen({super.key});
@@ -34,35 +32,6 @@ class SettingsScreen extends GetView<SettingsController> {
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 16.h),
                   children: [
-                    if (controller.shouldShowRidePinSetting) ...[
-                      Text(
-                        AppStrings
-                            .securityAndPreferenceControlsMoreSettingsWillAppearHereAsTheyAreEnable
-                            .tr,
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.textBody,
-                        ),
-                      ),
-                      SizedBox(height: 14.h),
-                      Obx(
-                        () => SettingsToggleTile(
-                          icon: Iconsax.shield_security,
-                          title: AppStrings.ridePinProtection.tr,
-                          subtitle: controller.canToggleRidePin
-                              ? AppStrings.requireVerificationPinBeforeStartingRide.tr
-                              : AppStrings.ridePinRequiredByAdminCannotBeTurnedOff.tr,
-                          statusText:
-                              controller.effectiveRequiredRidePin.value
-                              ? AppStrings.currentStatusRequired.tr
-                              : AppStrings.currentStatusOptional.tr,
-                          value: controller.ridePinSwitchValue,
-                          enabled: controller.canToggleRidePin,
-                          isSaving: controller.isSaving.value,
-                          onChanged: controller.onToggleRidePin,
-                        ),
-                      ),
-                      SizedBox(height: 14.h),
-                    ],
                     Container(
                       padding: EdgeInsets.fromLTRB(10.w, 19.h, 10.w, 10.h),
                       decoration: BoxDecoration(

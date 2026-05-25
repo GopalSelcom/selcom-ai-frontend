@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -30,6 +31,7 @@ class ProfileController extends GetxController {
   final RxBool isEditing = false.obs;
   final RxBool isLoading = false.obs;
   final RxBool showSettingsOption = false.obs;
+  final RxBool showSafetyOption = false.obs;
 
   // User Data
   final Rxn<UserModel> userModel = Rxn<UserModel>();
@@ -56,14 +58,21 @@ class ProfileController extends GetxController {
 
     fetchProfile();
     fetchWalletBalance();
-    syncSettingsVisibility();
+    unawaited(_syncProfileMenuVisibility());
     ever<Map<String, bool>>(appSettingsService.features, (_) {
       syncSettingsVisibility();
     });
   }
 
+  Future<void> _syncProfileMenuVisibility() async {
+    await appSettingsService.preload();
+    syncSettingsVisibility();
+  }
+
   void syncSettingsVisibility() {
     showSettingsOption.value = appSettingsService.hasAnyFeatureEnabled;
+    showSafetyOption.value =
+        !appSettingsService.featureEnabled('ride_pin_admin_required');
   }
 
   Future<void> fetchProfile() async {
@@ -247,6 +256,10 @@ class ProfileController extends GetxController {
         url: "${AppConfig.baseUrl}/${URLS.common.privacy}",
       ),
     );
+  }
+
+  void openSafety() {
+    Get.toNamed(AppRoutes.safety);
   }
 
   void openNotifications() {

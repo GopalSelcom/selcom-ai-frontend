@@ -32,7 +32,9 @@ import '../../features/profile/presentation/bindings/favorite_locations_binding.
 import '../../features/ride/presentation/bindings/ride_message_binding.dart';
 import '../../features/ride/presentation/screens/ride_message_screen.dart';
 import '../../features/profile/presentation/screens/payment_methods_screen.dart';
+import '../../features/profile/presentation/settings/bindings/safety_binding.dart';
 import '../../features/profile/presentation/settings/bindings/settings_binding.dart';
+import '../../features/profile/presentation/settings/screens/safety_screen.dart';
 import '../../features/profile/presentation/settings/screens/settings_screen.dart';
 
 class AppRoutes {
@@ -57,6 +59,7 @@ class AppRoutes {
   static const String rideMessage = '/ride/message';
   static const String paymentMethods = '/payment-methods';
   static const String settings = '/settings';
+  static const String safety = '/safety';
   static const String selectSavedLocation = '/select-saved-location';
   static const String checkPickupPoint = '/check-pickup-point';
   static const String stopEditor = '/stop-editor';
@@ -135,6 +138,11 @@ class AppRoutes {
       name: settings,
       page: () => const SettingsScreen(),
       binding: SettingsBinding(),
+    ),
+    GetPage(
+      name: safety,
+      page: () => const SafetyScreen(),
+      binding: SafetyBinding(),
     ),
     GetPage(
       name: selectSavedLocation,

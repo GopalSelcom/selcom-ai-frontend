@@ -474,9 +474,15 @@ class ProfileScreen extends StatelessWidget {
               title: AppStrings.help.tr,
               onTap: controller.openContactUs,
             ),
+            if (controller.showSafetyOption.value)
+              MenuItemWidget(
+                icon: Iconsax.security_user4,
+                title: AppStrings.safety.tr,
+                onTap: controller.openSafety,
+              ),
             MenuItemWidget(
               icon: Iconsax.shield_tick,
-              title: AppStrings.safetyAndPrivacy.tr,
+              title: AppStrings.privacyPolicy.tr,
               onTap: controller.openPrivacyPolicy,
             ),
             MenuItemWidget(
