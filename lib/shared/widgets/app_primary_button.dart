@@ -58,11 +58,11 @@ class AppPrimaryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color effectiveBackgroundColor =
-        backgroundColor ?? (outlined ? AppColors.white : AppColors.primary);
+        backgroundColor ?? (outlined ? AppColors.white : AppColors.primaryButton);
     final Color effectiveOutlinedBorderColor =
-        outlinedBorderColor ?? AppColors.primary;
+        outlinedBorderColor ?? AppColors.primaryButton;
     final Color effectiveTextColor =
-        textColor ?? (outlined ? AppColors.primary : AppColors.white);
+        textColor ?? (outlined ? AppColors.primaryButton : AppColors.white);
     final Color effectiveOutlinedTextColor =
         outlinedTextColor ?? effectiveTextColor;
     final double effectiveBorderRadius = borderRadius ?? AppRadius.button;

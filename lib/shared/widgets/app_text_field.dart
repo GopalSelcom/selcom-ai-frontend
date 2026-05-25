@@ -143,7 +143,7 @@ class _AppTextFieldState extends State<AppTextField> {
                 boxShadow: widget.enableEnhancedStyle && focused && !hasError
                     ? const [
                         BoxShadow(
-                          color: Color(0x400F67FE),
+                          color: AppColors.inputFocusShadow,
                           blurRadius: 0,
                           spreadRadius: 4,
                         ),

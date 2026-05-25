@@ -1,18 +1,17 @@
 import 'dart:ui';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 
 import '../../../../core/di/injection_container.dart';
-import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/phone_formatter.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
+import '../../../../shared/widgets/app_profile_user_avatar.dart';
+import '../../../../shared/widgets/app_profile_user_summary.dart';
 import '../controllers/profile_controller.dart';
 import '../widgets/menu_item_widget.dart';
 import '../widgets/wallet_summary_card.dart';
@@ -190,112 +189,12 @@ class ProfileScreen extends StatelessWidget {
         key: const ValueKey('normal_mode'),
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // User Info
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
-            child: Row(
-              children: [
-                // Profile Image
-                Container(
-                  width: 60.w,
-                  height: 60.w,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.white, width: 2),
-                    color: AppColors.white.withValues(alpha: 0.1),
-                  ),
-                  child: ClipOval(
-                    child: user?.image != null && user!.image!.isNotEmpty
-                        ? CachedNetworkImage(
-                            imageUrl: user.image!,
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) => const Center(
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                            errorWidget: (context, url, error) => Icon(
-                              Iconsax.user,
-                              color: AppColors.white,
-                              size: 30.w,
-                            ),
-                          )
-                        : Icon(
-                            Iconsax.user,
-                            color: AppColors.white,
-                            size: 30.w,
-                          ),
-                  ),
-                ),
-                SizedBox(width: 16.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              name,
-                              style: AppTextStyles.screenTitle.copyWith(
-                                color: AppColors.white,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 30.sp,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          SizedBox(width: 8.w),
-                          GestureDetector(
-                            onTap: controller.toggleEditMode,
-                            child: Icon(
-                              Iconsax.user_edit,
-                              color: AppColors.white,
-                              size: 24.w,
-                            ),
-                          ),
-                        ],
-                      ),
-                      // SizedBox(height: 4.h),
-                      Text(
-                        mobile,
-                        style: AppTextStyles.body.copyWith(
-                          color: AppColors.white.withValues(alpha: 0.8),
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 16 * (-1 / 100),
-                        ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Row(
-                        children: [
-                          SvgPictureAsset(
-                            AppAssets.icRatingStar,
-                            width: 14.w,
-                            height: 14.w,
-                            color: AppColors.ratingStarActive,
-                            placeholderBuilder: (_) => Icon(
-                              Icons.star,
-                              color: AppColors.ratingStarActive,
-                              size: 14.sp,
-                            ),
-                          ),
-                          SizedBox(width: 4.w),
-                          Text(
-                            avgRating.toStringAsFixed(1),
-                            style: AppTextStyles.homeCaption.copyWith(
-                              color: AppColors.white.withValues(alpha: 0.92),
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+          AppProfileUserSummary(
+            name: name,
+            phone: mobile,
+            rating: avgRating,
+            imageUrl: user?.image,
+            onEditTap: controller.toggleEditMode,
           ),
 
           // Wallet Card
@@ -315,60 +214,12 @@ class ProfileScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Centered Profile Image with Edit Option
-          Stack(
-            children: [
-              Container(
-                width: 100.w,
-                height: 100.w,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.white, width: 3),
-                  color: AppColors.white.withValues(alpha: 0.2),
-                ),
-                child: ClipOval(
-                  child: controller.pickedImage.value != null
-                      ? Image.file(
-                          controller.pickedImage.value!,
-                          fit: BoxFit.cover,
-                        )
-                      : controller.userModel.value?.image != null &&
-                            controller.userModel.value!.image!.isNotEmpty
-                      ? CachedNetworkImage(
-                          imageUrl: controller.userModel.value!.image!,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => const Center(
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                          errorWidget: (context, url, error) => Icon(
-                            Iconsax.user,
-                            color: AppColors.white,
-                            size: 50.w,
-                          ),
-                        )
-                      : Icon(Iconsax.user, color: AppColors.white, size: 50.w),
-                ),
-              ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: GestureDetector(
-                  onTap: controller.pickProfileImage,
-                  child: Container(
-                    padding: EdgeInsets.all(6.w),
-                    decoration: const BoxDecoration(
-                      color: AppColors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Iconsax.camera,
-                      color: AppColors.primary,
-                      size: 18.w,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+          AppProfileUserAvatar(
+            size: 100.w,
+            imageUrl: controller.userModel.value?.image,
+            imageFile: controller.pickedImage.value,
+            showCameraBadge: true,
+            onCameraTap: controller.pickProfileImage,
           ),
           SizedBox(height: 32.h),
 

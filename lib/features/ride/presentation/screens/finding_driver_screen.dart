@@ -339,11 +339,11 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
                     borderRadius: BorderRadius.circular(4.r),
                     child: LinearProgressIndicator(
                       minHeight: 6.h,
-                      backgroundColor: AppColors.primary.withValues(
+                      backgroundColor: AppColors.primaryButton.withValues(
                         alpha: 0.15,
                       ),
                       valueColor: const AlwaysStoppedAnimation<Color>(
-                        AppColors.primary,
+                        AppColors.primaryButton,
                       ),
                     ),
                   ),

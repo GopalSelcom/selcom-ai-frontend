@@ -26,6 +26,13 @@ class AppTheme {
         iconTheme: const IconThemeData(color: AppColors.textHeading),
       ),
       useMaterial3: true,
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primaryButton,
+          foregroundColor: AppColors.white,
+          disabledBackgroundColor: AppColors.primaryButton.withValues(alpha: 0.5),
+        ),
+      ),
       cardTheme: CardThemeData(
         color: AppColors.cardBackground,
         elevation: 1,

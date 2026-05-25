@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // Brand
-  static const Color primary        = Color(0xFF5CB75E);  // Green — buttons, highlights
-  static const Color primaryLight   = Color(0xFFE8FDE8);  // Light geen bg
+  // Brand (GO UI UX-2): yellow accent + green CTAs
+  static const Color primary        = Color(0xFFFDCC08);  // Brand accent — pins, links, field focus
+  static const Color secondary = Color(0xFF1CB674);
+  static const Color primaryButton  = Color(0xFF5CB75E);  // Buttons & solid actions (unchanged green)
+  static const Color primaryLight   = Color(0xFFFFF6D6);  // Light yellow selection/highlight surfaces
 
   // Backgrounds
   static const Color pageBackground = Color(0xFFF8FAFC);  // Gray/Shade 7
@@ -70,7 +72,7 @@ class AppColors {
   static const Color danger = Color(0xFFEF4444);
 
   // Input
-  static const Color inputBorderActive   = Color(0xFF378ADD);  // Blue on focus
+  static const Color inputBorderActive   = primary;  // Brand yellow on focus (entry/auth fields)
   static const Color inputBorderDefault  = Color(0xFFDDDDDD);
   static const Color inputBorderError    = Color(0xFFE24B4A);
 
@@ -88,6 +90,7 @@ class AppColors {
   static const Color borderNeutralStrong = Color(0xFFCBD5E1);
   static const Color borderGray = Color(0xFFD9D9D9);
 
+
   // Base colors
   static const Color white = Color(0xFFFFFFFF);
   static const Color black = Color(0xFF000000);
@@ -99,7 +102,7 @@ class AppColors {
   static const Color shadowStrong = Color(0x66000000);
   static const Color shadowCard = Color(0x0F000000);
   static const Color shadowMapCard = Color(0x1A000000);
-  static const Color inputFocusShadow = Color(0x335CB75E); // 20% primary
+  static const Color inputFocusShadow = Color(0x33FDCC08); // 20% primary
   static const Color overlayGray43 = Color(0x6D808080);
 
   // Skeleton

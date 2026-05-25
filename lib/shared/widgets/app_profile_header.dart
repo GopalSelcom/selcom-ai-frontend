@@ -42,7 +42,11 @@ class AppProfileHeader extends StatelessWidget {
           if (canGoBack)
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 8.w),
-              child: AppBackButton(onPressed: onBack, size: 30.w),
+              child: AppBackButton(
+                onPressed: onBack,
+                size: 30.w,
+                color: AppColors.black,
+              ),
             ),
 
           if (title != null) ...[
@@ -53,7 +57,7 @@ class AppProfileHeader extends StatelessWidget {
                 title!,
                 style: AppTextStyles.screenTitle.copyWith(
                   fontSize: 30,
-                  color: AppColors.white,
+                  color: AppColors.black,
                   fontWeight: FontWeight.w800,
                   height: 38 / 30,
                   letterSpacing: -0.3,

@@ -139,7 +139,6 @@ class PaymentBar extends StatelessWidget {
                             style: AppTextStyles.button.copyWith(
                               color: AppColors.primary,
                               fontSize: 15.sp,
-                              fontFamily: AppTextStyles.metropolisFont,
                               fontWeight: FontWeight.w700,
                               height: 1.3,
                               fontFeatures: const [FontFeature.tabularFigures()],

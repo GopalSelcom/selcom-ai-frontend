@@ -196,7 +196,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.cardBackground,
-          border: Border.all(color: AppColors.borderDefault),
+          border: Border.all(color: AppColors.secondary),
           borderRadius: BorderRadius.all(Radius.circular(16.r)),
         ),
         child: Padding(
@@ -223,7 +223,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                         color: AppColors.bgNeutralSoft,
                         borderRadius: BorderRadius.circular(20.r),
                         border: Border.all(
-                          color: AppColors.borderNeutral,
+                          color: AppColors.secondary,
                           width: 1.2,
                         ),
                       ),
@@ -235,11 +235,11 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                             AppAssets.locationIcAdd,
                             width: 16.74.w,
                             height: 16.74.w,
-                            color: AppColors.iconMutedLight,
+                            color: AppColors.primary,
                             placeholderBuilder: (_) => const Icon(
                               Icons.add_circle,
                               size: 16,
-                              color: AppColors.iconMutedLight,
+                              color: AppColors.primary,
                             ),
                           ),
                           SizedBox(width: 4.72.w),
@@ -285,11 +285,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           ],
         ),
         if (showDivider)
-          const Divider(
-            color: AppColors.borderNeutral,
-            height: 26,
-            endIndent: 0,
-          ),
+          const Divider(color: AppColors.secondary, height: 26, endIndent: 0),
       ],
     );
   }
@@ -312,8 +308,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           AppAssets.locationIcPickupPin,
           width: 12.6.w,
           height: 16.4.h,
+          color: AppColors.primary,
           placeholderBuilder: (_) =>
-              const Icon(Icons.location_on, color: AppColors.pinRed, size: 16),
+              const Icon(Icons.location_on, color: AppColors.primary, size: 16),
         ),
         field: TextField(
           controller: pickupController,
@@ -352,12 +349,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             AppAssets.locationIcDestinationPin,
             width: 12.6.w,
             height: 16.4.h,
-            color: AppColors.mapDropMarkerGreen,
-            placeholderBuilder: (_) => Icon(
-              Icons.push_pin,
-              color: AppColors.mapDropMarkerGreen,
-              size: 16.w,
-            ),
+            color: AppColors.secondary,
+            placeholderBuilder: (_) =>
+                Icon(Icons.push_pin, color: AppColors.secondary, size: 16.w),
           ),
           trailing: Material(
             color: AppColors.transparent,
@@ -411,7 +405,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           AppAssets.locationIcDestinationPin,
           width: 12.6.w,
           height: 16.4.h,
-          color: AppColors.mapDropMarkerGreen,
+          color: AppColors.secondary,
           placeholderBuilder: (_) => Icon(
             Icons.push_pin,
             color: AppColors.mapDropMarkerGreen,
@@ -474,8 +468,6 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       controller.savedPlaces.length;
       return FavoriteLocationChipsRow(
         contentHorizontalPadding: 16.w,
-        chipBackgroundColor: AppColors.white,
-        chipBorderColor: AppColors.borderWalletCard,
         resolvePlace: controller.getSavedPlaceByLabel,
         onChipTap: (canonical, place) {
           if (place == null) {

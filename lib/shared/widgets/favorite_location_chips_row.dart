@@ -25,8 +25,8 @@ class FavoriteLocationChipsRow extends StatelessWidget {
     this.extraSavedPlaces,
     this.onExtraChipTap,
     this.onExtraChipLongPress,
-    this.chipBackgroundColor,
-    this.chipBorderColor,
+    this.chipBackgroundColor = AppColors.white,
+    this.chipBorderColor = AppColors.secondary,
     this.contentHorizontalPadding,
   });
 

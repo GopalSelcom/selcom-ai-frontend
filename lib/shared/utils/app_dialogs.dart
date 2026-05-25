@@ -514,14 +514,14 @@ class AppDialogs {
                 Container(
                   padding: EdgeInsets.all(16.w),
                   decoration: BoxDecoration(
-                    color: (confirmColor ?? AppColors.primary).withValues(
+                    color: (confirmColor ?? AppColors.primaryButton).withValues(
                       alpha: 0.1,
                     ),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.help_outline,
-                    color: confirmColor ?? AppColors.primary,
+                    color: confirmColor ?? AppColors.primaryButton,
                     size: 32.sp,
                   ),
                 ),
@@ -576,7 +576,7 @@ class AppDialogs {
                           onConfirm();
                         },
                         height: 50.h,
-                        backgroundColor: confirmColor ?? AppColors.primary,
+                        backgroundColor: confirmColor ?? AppColors.primaryButton,
                         textColor: AppColors.white,
                         borderRadius: 12.r,
                       ),

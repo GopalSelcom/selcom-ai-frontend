@@ -21,6 +21,7 @@ import '../../../../shared/widgets/app_google_map.dart';
 import '../../../../shared/widgets/app_map_gps_button.dart';
 import '../../../../shared/widgets/app_map_top_header.dart';
 import '../../../../shared/widgets/favorite_location_chips_row.dart';
+import '../../../../shared/widgets/vehicle_type_image.dart';
 import '../../../ride/data/models/ride_management_models.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/recent_location_tile.dart';
@@ -31,9 +32,7 @@ class HomeScreen extends GetView<HomeController> {
   @override
   Widget build(BuildContext context) {
     controller.onHomeVisible();
-    final screenHeight = MediaQuery
-        .sizeOf(context)
-        .height;
+    final screenHeight = MediaQuery.sizeOf(context).height;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -48,41 +47,34 @@ class HomeScreen extends GetView<HomeController> {
             // 1. Map Layer (Static Image from Figma)
             Positioned.fill(
               child: Obx(
-                    () =>
-                    AppGoogleMap(
-                      initialCameraPosition: CameraPosition(
-                        target: controller.mapCenter.value,
-                        zoom: 16,
-                      ),
-                      // Keep map focal content above the draggable sheet peek area.
-                      padding: EdgeInsets.only(
-                        bottom: screenHeight * controller.sheetSize.value,
-                      ),
-                      myLocationEnabled: controller.hasLocationPermission.value,
-                      circles: controller.nearbyPickupRadiusCircles,
-                      // markers: controller.selectedPickupMarkers,
-                      onMapCreated: controller.onMapCreated,
-                      // onCameraMove: controller.onCameraMove,
-                      // onCameraIdle: controller.onCameraIdle,
-                    ),
+                () => AppGoogleMap(
+                  initialCameraPosition: CameraPosition(
+                    target: controller.mapCenter.value,
+                    zoom: 16,
+                  ),
+                  // Keep map focal content above the draggable sheet peek area.
+                  padding: EdgeInsets.only(
+                    bottom: screenHeight * controller.sheetSize.value,
+                  ),
+                  myLocationEnabled: controller.hasLocationPermission.value,
+                  circles: controller.nearbyPickupRadiusCircles,
+                  // markers: controller.selectedPickupMarkers,
+                  onMapCreated: controller.onMapCreated,
+                  // onCameraMove: controller.onCameraMove,
+                  // onCameraIdle: controller.onCameraIdle,
+                ),
               ),
             ),
 
             // 2. Top Header (Address + Profile)
             Obx(
-                  () =>
-                  AppMapTopHeader(
-                    top: MediaQuery
-                        .of(context)
-                        .padding
-                        .top + 10.h,
-                    addressWidget: _buildModernAddressBox(),
-                    onProfileTap: controller.openProfile,
-                    profileIcon: Icons.person,
-                    profileIconColor: AppColors.black,
-                    isLoading: controller.isLoadingHomeData.value,
-                    isExpanded: controller.isSavedPlacesExpanded.value,
-                  ),
+              () => AppMapTopHeader(
+                top: MediaQuery.of(context).padding.top + 10.h,
+                addressWidget: _buildModernAddressBox(),
+                onProfileTap: controller.openProfile,
+                isLoading: controller.isLoadingHomeData.value,
+                isExpanded: controller.isSavedPlacesExpanded.value,
+              ),
             ),
 
             // 3. GPS button — lifts with the draggable bottom sheet.
@@ -92,9 +84,7 @@ class HomeScreen extends GetView<HomeController> {
               }
               final activeRide = controller.activeRide.value;
               final bottomOffset = activeRide != null
-                  ? MediaQuery
-                  .paddingOf(context)
-                  .bottom + 12.h + 120.h
+                  ? MediaQuery.paddingOf(context).bottom + 12.h + 120.h
                   : screenHeight * controller.sheetSize.value;
               return Positioned(
                 bottom: bottomOffset,
@@ -113,10 +103,7 @@ class HomeScreen extends GetView<HomeController> {
                 return Positioned(
                   left: 16.w,
                   right: 16.w,
-                  bottom: MediaQuery
-                      .of(context)
-                      .padding
-                      .bottom + 12.h,
+                  bottom: MediaQuery.of(context).padding.bottom + 12.h,
                   child: _activeRideCard(activeRide),
                 );
               }
@@ -141,7 +128,6 @@ class HomeScreen extends GetView<HomeController> {
           decoration: BoxDecoration(
             color: AppColors.white,
             borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: AppColors.borderDefault),
             boxShadow: [
               BoxShadow(
                 color: AppColors.black.withValues(alpha: 0.06),
@@ -152,58 +138,58 @@ class HomeScreen extends GetView<HomeController> {
           ),
           child: isLoading
               ? Shimmer.fromColors(
-            baseColor: AppColors.skeletonBase,
-            highlightColor: AppColors.skeletonHighlight,
-            child: Center(
-              child: Container(
-                width: 200.w,
-                height: 16.h,
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.circular(4.r),
-                ),
-              ),
-            ),
-          )
-              : Row(
-            children: [
-              SizedBox(
-                width: 28.w,
-                height: 28.w,
-                child: SvgPictureAsset(
-                  AppAssets.locationIcPickupPin,
-                  width: 21.sp,
-                  height: 24.5.sp,
-                  color: AppColors.figmaIconGreen,
-                ),
-              ),
-              SizedBox(width: 4.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      AppStrings.currentLocation.tr,
-                      style: AppTextStyles.homeSubtitle.copyWith(
-                        color: AppColors.figmaTextPrimary,
-                        height: 20 / 15,
+                  baseColor: AppColors.skeletonBase,
+                  highlightColor: AppColors.skeletonHighlight,
+                  child: Center(
+                    child: Container(
+                      width: 200.w,
+                      height: 16.h,
+                      decoration: BoxDecoration(
+                        color: AppColors.white,
+                        borderRadius: BorderRadius.circular(4.r),
                       ),
                     ),
-                    Text(
-                      address,
-                      style: AppTextStyles.homeSubtitle.copyWith(
-                        color: AppColors.figmaTextSecondary,
-                        height: 20 / 15,
+                  ),
+                )
+              : Row(
+                  children: [
+                    SizedBox(
+                      width: 28.w,
+                      height: 28.w,
+                      child: SvgPictureAsset(
+                        AppAssets.locationIcPickupPin,
+                        width: 21.sp,
+                        height: 24.5.sp,
+                        color: AppColors.primary,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(width: 4.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            AppStrings.currentLocation.tr,
+                            style: AppTextStyles.homeSubtitle.copyWith(
+                              color: AppColors.figmaTextPrimary,
+                              height: 20 / 15,
+                            ),
+                          ),
+                          Text(
+                            address,
+                            style: AppTextStyles.homeSubtitle.copyWith(
+                              color: AppColors.figmaTextSecondary,
+                              height: 20 / 15,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
-              ),
-            ],
-          ),
         );
       }),
     );
@@ -288,15 +274,15 @@ class HomeScreen extends GetView<HomeController> {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 16.h),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceSubtle,
+                  color: AppColors.cardBackground,
                   borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(color: AppColors.skeletonBase, width: 0.8),
+                  border: Border.all(color: AppColors.secondary, width: 1),
                 ),
                 child: Row(
                   children: [
                     SvgPictureAsset(
                       AppAssets.locationIcDestinationPin,
-                      color: AppColors.primary,
+                      color: AppColors.secondary,
                       width: 19.sp,
                       height: 19.sp,
                     ),
@@ -304,7 +290,7 @@ class HomeScreen extends GetView<HomeController> {
                     Text(
                       AppStrings.whereAreYouGoing.tr,
                       style: AppTextStyles.homeSubtitle.copyWith(
-                        color: AppColors.black,
+                        color: AppColors.figmaTextPrimary,
                         fontWeight: FontWeight.w500,
                         fontSize: 15.sp,
                       ),
@@ -323,7 +309,6 @@ class HomeScreen extends GetView<HomeController> {
         return FavoriteLocationChipsRow(
           contentHorizontalPadding: _sheetHorizontalPadding.w,
           chipBackgroundColor: AppColors.surfaceSubtle,
-          chipBorderColor: AppColors.borderWalletCard,
           resolvePlace: controller.getSavedPlaceByLabel,
           extraSavedPlaces: extras,
           onChipTap: (canonical, place) {
@@ -388,13 +373,12 @@ class HomeScreen extends GetView<HomeController> {
     ];
   }
 
-  TextStyle get _sectionTitleStyle =>
-      AppTextStyles.homeSubtitle.copyWith(
-        fontSize: 16.sp,
-        fontWeight: FontWeight.w600,
-        letterSpacing: -0.4,
-        color: AppColors.textHeading,
-      );
+  TextStyle get _sectionTitleStyle => AppTextStyles.homeSubtitle.copyWith(
+    fontSize: 16.sp,
+    fontWeight: FontWeight.w600,
+    letterSpacing: -0.4,
+    color: AppColors.figmaTextPrimary,
+  );
 
   Widget _viewMoreButton({required VoidCallback onPressed}) {
     return AppCupertinoTextButton.viewMore(
@@ -445,11 +429,10 @@ class HomeScreen extends GetView<HomeController> {
         address: loc.address,
         distance: distance,
         isFavorite: isFavorite,
-        onTap: () =>
-            controller.navigateToVehicleSelectionForRecentDestination(
-              loc,
-              showHomeFareEstimateLoader: true,
-            ),
+        onTap: () => controller.navigateToVehicleSelectionForRecentDestination(
+          loc,
+          showHomeFareEstimateLoader: true,
+        ),
         onFavoriteTap: () => controller.toggleFavoriteForRecent(loc),
       );
     });
@@ -500,22 +483,21 @@ class HomeScreen extends GetView<HomeController> {
 
   Widget _buildVehicleHorizontalList() {
     return Obx(
-          () =>
-          SizedBox(
-            height: _vehicleRowHeight.h,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              clipBehavior: Clip.none,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: controller.isLoadingHomeData.value
-                    ? List.generate(3, (_) => _buildVehicleSkeleton())
-                    : controller.vehicleTypes
-                    .map((vehicle) => _buildVehicleCard(vehicle))
-                    .toList(),
-              ),
-            ),
+      () => SizedBox(
+        height: _vehicleRowHeight.h,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          clipBehavior: Clip.none,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: controller.isLoadingHomeData.value
+                ? List.generate(3, (_) => _buildVehicleSkeleton())
+                : controller.vehicleTypes
+                      .map((vehicle) => _buildVehicleCard(vehicle))
+                      .toList(),
           ),
+        ),
+      ),
     );
   }
 
@@ -533,15 +515,11 @@ class HomeScreen extends GetView<HomeController> {
             SizedBox(
               width: 62.w,
               height: 42.h,
-              child: Image.asset(
-                imagePath,
-                fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) =>
-                    Icon(
-                      Icons.directions_car,
-                      color: AppColors.textBody,
-                      size: 28.sp,
-                    ),
+              child: VehicleTypeImage(
+                assetPath: imagePath,
+                width: 62.w,
+                height: 42.h,
+                fallbackIconColor: AppColors.textBody,
               ),
             ),
             SizedBox(height: 4.h),
@@ -644,9 +622,7 @@ class HomeScreen extends GetView<HomeController> {
                   ),
                   SizedBox(width: 4.w),
                   Text(
-                    (ride.vehicleDisplayName ?? '')
-                        .trim()
-                        .isNotEmpty
+                    (ride.vehicleDisplayName ?? '').trim().isNotEmpty
                         ? (ride.vehicleDisplayName ?? '').trim()
                         : AppStrings.fallbackRideName.tr,
                     style: AppTextStyles.homeCaption.copyWith(
@@ -754,8 +730,8 @@ class _HomeSheetScrollContent extends StatefulWidget {
   final ScrollPhysics physics;
   final int contentSignature;
   final void Function({
-  required double contentHeightPx,
-  required double layoutHeightPx,
+    required double contentHeightPx,
+    required double layoutHeightPx,
   })
   onContentMeasured;
   final List<Widget> children;
@@ -796,9 +772,7 @@ class _HomeSheetScrollContentState extends State<_HomeSheetScrollContent> {
     if (renderBox == null || !renderBox.hasSize || contentContext == null) {
       return;
     }
-    final layoutHeight = MediaQuery
-        .sizeOf(contentContext)
-        .height;
+    final layoutHeight = MediaQuery.sizeOf(contentContext).height;
     widget.onContentMeasured(
       contentHeightPx: renderBox.size.height,
       layoutHeightPx: layoutHeight,
@@ -807,9 +781,7 @@ class _HomeSheetScrollContentState extends State<_HomeSheetScrollContent> {
 
   @override
   Widget build(BuildContext context) {
-    final double bottomPadding = MediaQuery
-        .paddingOf(context)
-        .bottom;
+    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
     final double computedBottomPadding = bottomPadding > 0
         ? (GetPlatform.isIOS ? 0.0 : 8.h)
         : 16.h;

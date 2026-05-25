@@ -19,7 +19,7 @@ class ReceiptImageGenerator {
   /// Allow vector assets (logo + route pins) to finish rasterizing before capture.
   static const Duration _captureDelay = Duration(milliseconds: 500);
 
-  static const Color _primary = AppColors.primary;
+  static const Color _primary = AppColors.primaryButton;
   static const Color _textDark = Color(0xFF1A1A2E);
   static const Color _textMid = Color(0xFF555566);
   static const Color _textLight = Color(0xFF999AAB);
