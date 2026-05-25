@@ -43,13 +43,13 @@ abstract final class RidePickupStatusLabels {
       case 'driver_arriving':
       case 'driver_en_route':
       case 'en_route':
-        return AppStrings.driverIsHeadingToPickup.tr;
+        return AppStrings.driverHeadingTowardsYou.tr;
       case 'driver_arrived':
         return AppStrings.driverArrivedDescription.tr;
       default:
         return isRideSearchingStatus(normalizedStatus)
             ? AppStrings.findingDriverDefaultDescription.tr
-            : AppStrings.driverIsHeadingToPickup.tr;
+            : AppStrings.driverHeadingTowardsYou.tr;
     }
   }
 }

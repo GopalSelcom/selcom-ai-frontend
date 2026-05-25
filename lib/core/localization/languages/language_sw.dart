@@ -85,9 +85,9 @@ class LanguageSw extends Languages {
     'share_slip_subtitle': '',
     'driver_arrived_map_badge': '',
     'driver_arrived_pickup_primary': '',
-    'driver_arrived_pickup_secondary': '',
+    'your_driver_has_arrived': '',
     'driver_is_heading_to_your_location': '',
-    'driver_is_heading_to_pickup': '',
+    'driver_heading_towards_you': '',
     'driver_assigned_description': '',
     'driver_has_accepted_your_ride': '',
     'driver_arrived_description': '',
@@ -296,13 +296,13 @@ class LanguageSw extends Languages {
     'resend_otp': '',
     'retry': '',
     'ride_cancelled': '',
-    'ride_started': '',
+    'driver_started_your_ride': '',
     'ride_completed': '',
     'the_ride_has_been_cancelled': '',
     'you_have_reached_your_destination': '',
     'you_have_arrived': '',
-    'almost_there': '',
-    'on_your_way': '',
+    'you_are_almost_there': '',
+    'on_your_way_with_driver': '',
     'arrived_in_minutes': '',
     'approaching_your_destination': '',
     'heading_to_your_destination': '',
@@ -474,7 +474,7 @@ class LanguageSw extends Languages {
     'your_linked_account': '',
     'your_rating_has_been_submitted': '',
     'your_ride_was_cancelled': '',
-    'your_ride_is_completed': '',
+    'thanks_for_using_go': '',
     'your_rides': '',
     'welcome_to_selcom_go': '',
     'full_name': '',
@@ -863,16 +863,15 @@ class LanguageSw extends Languages {
       values['driver_arrived_pickup_primary'] ?? '';
 
   @override
-  String get driverArrivedPickupSecondary =>
-      values['driver_arrived_pickup_secondary'] ?? '';
+  String get yourDriverHasArrived => values['your_driver_has_arrived'] ?? '';
 
   @override
   String get driverIsHeadingToYourLocation =>
       values['driver_is_heading_to_your_location'] ?? '';
 
   @override
-  String get driverIsHeadingToPickup =>
-      values['driver_is_heading_to_pickup'] ?? '';
+  String get driverHeadingTowardsYou =>
+      values['driver_heading_towards_you'] ?? '';
 
   @override
   String get driverAssignedDescription =>
@@ -1580,7 +1579,8 @@ class LanguageSw extends Languages {
   String get rideCancelled => values['ride_cancelled'] ?? '';
 
   @override
-  String get rideStarted => values['ride_started'] ?? '';
+  String get driverStartedYourRide =>
+      values['driver_started_your_ride'] ?? '';
 
   @override
   String get rideCompleted => values['ride_completed'] ?? '';
@@ -1597,10 +1597,11 @@ class LanguageSw extends Languages {
   String get youHaveArrived => values['you_have_arrived'] ?? '';
 
   @override
-  String get almostThere => values['almost_there'] ?? '';
+  String get youAreAlmostThere => values['you_are_almost_there'] ?? '';
 
   @override
-  String get onYourWay => values['on_your_way'] ?? '';
+  String get onYourWayWithDriver =>
+      values['on_your_way_with_driver'] ?? '';
 
   @override
   String get arrivedInMinutes => values['arrived_in_minutes'] ?? '';
@@ -2116,7 +2117,7 @@ class LanguageSw extends Languages {
   String get yourRideWasCancelled => values['your_ride_was_cancelled'] ?? '';
 
   @override
-  String get yourRideIsCompleted => values['your_ride_is_completed'] ?? '';
+  String get thanksForUsingGo => values['thanks_for_using_go'] ?? '';
 
   @override
   String get yourRides => values['your_rides'] ?? '';

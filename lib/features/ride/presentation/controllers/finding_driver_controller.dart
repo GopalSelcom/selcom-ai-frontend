@@ -141,6 +141,11 @@ class FindingDriverController extends GetxController {
     );
   }
 
+  String _driverNameFromPayload(EventRiderStatusUpdateResponse payload) {
+    final name = payload.driverSnapshot?.name?.trim() ?? '';
+    return name.isNotEmpty ? name : AppStrings.driver.tr;
+  }
+
   /// Stops search UI and opens driver-accepted (once per ride).
   void _onDriverAssignedPhase(String normalized, EventRiderStatusUpdateResponse payload) {
     _countdownTimer?.cancel();
@@ -179,7 +184,10 @@ class FindingDriverController extends GetxController {
         break;
       case 'ride_started':
       case 'ride_in_progress':
-        currentStatusLabel.value = AppStrings.rideStarted.tr;
+        final driver = _driverNameFromPayload(payload);
+        currentStatusLabel.value = AppStrings.driverStartedYourRide.trParams({
+          'driverName': driver,
+        });
         currentDescriptionLabel.value =
             AppStrings.rideStartedDescription.tr;
         _onDriverAssignedPhase(normalized, payload);

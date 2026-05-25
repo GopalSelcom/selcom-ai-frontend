@@ -118,7 +118,7 @@ class RideDetailsScreen extends StatelessWidget {
           children: [
             AppProfileHeader(
               title: controller.openedFromCompletionFlow
-                  ? AppStrings.yourRideIsCompleted.tr
+                  ? AppStrings.thanksForUsingGo.tr
                   : AppStrings.yourRides.tr,
               onBack: controller.openedFromCompletionFlow
                   ? handleCompletionExit

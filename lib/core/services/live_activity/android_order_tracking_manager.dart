@@ -150,15 +150,15 @@ class AndroidOrderTrackingManager {
         progress = 100;
       } else if (normalizedStatus.contains('near_destination') ||
           normalizedStatus.contains('neardestination')) {
-        displayStatus = 'Almost There';
+        displayStatus = "You're almost there";
         progress = 95;
       } else if (normalizedStatus.contains('ride_in_progress') ||
           normalizedStatus.contains('rideinprogress')) {
-        displayStatus = 'On Your Way';
+        displayStatus = "You're on your way with $effectiveDriverName";
         progress = 80;
       } else if (normalizedStatus.contains('ride_started') ||
           normalizedStatus.contains('ridestarted')) {
-        displayStatus = 'Ride Started';
+        displayStatus = '$effectiveDriverName has started your ride';
         progress = 70;
       } else if (normalizedStatus.contains('driver_arrived') ||
           normalizedStatus.contains('driverarrived')) {

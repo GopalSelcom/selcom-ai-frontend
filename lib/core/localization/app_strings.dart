@@ -108,11 +108,10 @@ class AppStrings {
   static const String driverArrivedMapBadge = 'driver_arrived_map_badge';
   static const String driverArrivedPickupPrimary =
       'driver_arrived_pickup_primary';
-  static const String driverArrivedPickupSecondary =
-      'driver_arrived_pickup_secondary';
+  static const String yourDriverHasArrived = 'your_driver_has_arrived';
   static const String driverIsHeadingToYourLocation =
       'driver_is_heading_to_your_location';
-  static const String driverIsHeadingToPickup = 'driver_is_heading_to_pickup';
+  static const String driverHeadingTowardsYou = 'driver_heading_towards_you';
   static const String driverAssignedDescription = 'driver_assigned_description';
   static const String driverHasAcceptedYourRide =
       'driver_has_accepted_your_ride';
@@ -408,14 +407,14 @@ class AppStrings {
   static const String resendOtp = 'resend_otp';
   static const String retry = 'retry';
   static const String rideCancelled = 'ride_cancelled';
-  static const String rideStarted = 'ride_started';
+  static const String driverStartedYourRide = 'driver_started_your_ride';
   static const String rideCompleted = 'ride_completed';
   static const String theRideHasBeenCancelled = 'the_ride_has_been_cancelled';
   static const String youHaveReachedYourDestination =
       'you_have_reached_your_destination';
   static const String youHaveArrived = 'you_have_arrived';
-  static const String almostThere = 'almost_there';
-  static const String onYourWay = 'on_your_way';
+  static const String youAreAlmostThere = 'you_are_almost_there';
+  static const String onYourWayWithDriver = 'on_your_way_with_driver';
   static const String arrivedInMinutes = 'arrived_in_minutes';
   static const String approachingYourDestination =
       'approaching_your_destination';
@@ -629,7 +628,7 @@ class AppStrings {
   static const String yourRatingHasBeenSubmitted =
       'your_rating_has_been_submitted';
   static const String yourRideWasCancelled = 'your_ride_was_cancelled';
-  static const String yourRideIsCompleted = 'your_ride_is_completed';
+  static const String thanksForUsingGo = 'thanks_for_using_go';
   static const String yourRides = 'your_rides';
   static const String welcomeToSelcomGo = 'welcome_to_selcom_go';
   static const String fullName = 'full_name';

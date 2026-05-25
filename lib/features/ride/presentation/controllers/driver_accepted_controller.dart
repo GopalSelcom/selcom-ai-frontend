@@ -1361,6 +1361,12 @@ class DriverAcceptedController extends GetxController
     }
   }
 
+  /// Driver name for localized ride-status copy; falls back to generic "Driver".
+  String get localizedDriverNameForCopy {
+    final name = driverName.value.trim();
+    return name.isNotEmpty ? name : AppStrings.driver.tr;
+  }
+
   /// Pickup sheet + map chip copy when the driver is at pickup ([driver_arrived]).
   void _syncDriverArrivedPickupMessages() {
     arrivalLabel.value = AppStrings.driverArrivedPickupPrimary.tr;
@@ -1373,9 +1379,9 @@ class DriverAcceptedController extends GetxController
   String get driverPickupPhaseHeadline {
     switch (currentRideStatus.value) {
       case 'driver_arrived':
-        return AppStrings.driverArrivedPickupSecondary.tr;
+        return AppStrings.yourDriverHasArrived.tr;
       case 'driver_arriving':
-        return AppStrings.driverIsHeadingToPickup.tr;
+        return AppStrings.driverHeadingTowardsYou.tr;
       case 'driver_assigned':
       case 'accepted':
         return AppStrings.driverHasAcceptedYourRide.tr;
@@ -1496,11 +1502,15 @@ class DriverAcceptedController extends GetxController
       case 'completed':
         return AppStrings.youHaveArrived.tr;
       case 'near_destination':
-        return AppStrings.almostThere.tr;
+        return AppStrings.youAreAlmostThere.tr;
       case 'ride_in_progress':
-        return AppStrings.onYourWay.tr;
+        return AppStrings.onYourWayWithDriver.trParams({
+          'driverName': localizedDriverNameForCopy,
+        });
       case 'ride_started':
-        return AppStrings.rideStarted.tr;
+        return AppStrings.driverStartedYourRide.trParams({
+          'driverName': localizedDriverNameForCopy,
+        });
       default:
         return RidePickupStatusLabels.titleFor(currentRideStatus.value);
     }
@@ -1533,7 +1543,7 @@ class DriverAcceptedController extends GetxController
       case 'driver_arrived':
         return AppStrings.driverArrivedPickupPrimary.tr;
       case 'driver_arriving':
-        return AppStrings.driverIsHeadingToPickup.tr;
+        return AppStrings.driverHeadingTowardsYou.tr;
       case 'driver_assigned':
         return AppStrings.driverAssignedDescription.tr;
       case 'ride_completed':
@@ -1655,7 +1665,7 @@ class DriverAcceptedController extends GetxController
             statusForEta.contains('started');
         etaLabel.value = inRide ? AppStrings.nearby.tr : AppStrings.arriving.tr;
         arrivalLabel.value = inRide
-            ? AppStrings.almostThere.tr
+            ? AppStrings.youAreAlmostThere.tr
             : AppStrings.driverIsArriving.tr;
       }
     }

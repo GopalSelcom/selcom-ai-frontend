@@ -87,9 +87,9 @@ abstract class Languages {
   String get shareSlipSubtitle;
   String get driverArrivedMapBadge;
   String get driverArrivedPickupPrimary;
-  String get driverArrivedPickupSecondary;
+  String get yourDriverHasArrived;
   String get driverIsHeadingToYourLocation;
-  String get driverIsHeadingToPickup;
+  String get driverHeadingTowardsYou;
   String get driverAssignedDescription;
   String get driverHasAcceptedYourRide;
   String get driverArrivedDescription;
@@ -307,13 +307,13 @@ abstract class Languages {
   String get resendOtp;
   String get retry;
   String get rideCancelled;
-  String get rideStarted;
+  String get driverStartedYourRide;
   String get rideCompleted;
   String get theRideHasBeenCancelled;
   String get youHaveReachedYourDestination;
   String get youHaveArrived;
-  String get almostThere;
-  String get onYourWay;
+  String get youAreAlmostThere;
+  String get onYourWayWithDriver;
   String get arrivedInMinutes;
   String get approachingYourDestination;
   String get headingToYourDestination;
@@ -468,7 +468,7 @@ abstract class Languages {
   String get yourLinkedAccount;
   String get yourRatingHasBeenSubmitted;
   String get yourRideWasCancelled;
-  String get yourRideIsCompleted;
+  String get thanksForUsingGo;
   String get yourRides;
   String get welcomeToSelcomGo;
   String get fullName;

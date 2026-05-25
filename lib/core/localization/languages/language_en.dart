@@ -95,9 +95,9 @@ class LanguageEn extends Languages {
     'share_slip_subtitle': 'Send receipt link to others',
     'driver_arrived_map_badge': 'Driver arrived',
     'driver_arrived_pickup_primary': 'Driver arrived at pickup',
-    'driver_arrived_pickup_secondary': 'Meet your driver at pickup',
+    'your_driver_has_arrived': 'Your driver has arrived!',
     'driver_is_heading_to_your_location': 'Driver is heading to your location',
-    'driver_is_heading_to_pickup': 'Driver is heading to pickup',
+    'driver_heading_towards_you': 'Your driver is heading towards you',
     'driver_assigned_description':
         'A driver has accepted your ride and is on the way.',
     'driver_has_accepted_your_ride': 'Driver has accepted your ride',
@@ -337,13 +337,13 @@ class LanguageEn extends Languages {
     'resend_otp': 'Resend OTP',
     'retry': 'Retry',
     'ride_cancelled': 'Ride Cancelled',
-    'ride_started': 'Ride Started',
+    'driver_started_your_ride': '@driverName has started your ride',
     'ride_completed': 'Ride Completed',
     'the_ride_has_been_cancelled': 'The ride has been cancelled.',
     'you_have_reached_your_destination': 'You have reached your destination.',
     'you_have_arrived': 'You have arrived!',
-    'almost_there': 'Almost There',
-    'on_your_way': 'On Your Way',
+    'you_are_almost_there': "You're almost there",
+    'on_your_way_with_driver': "You're on your way with @driverName",
     'arrived_in_minutes': 'Arrived in @minutes mins',
     'approaching_your_destination': 'Approaching your destination',
     'heading_to_your_destination': 'Heading to your destination',
@@ -544,7 +544,7 @@ class LanguageEn extends Languages {
     'your_linked_account': 'Your Linked Account',
     'your_rating_has_been_submitted': 'Your rating has been submitted.',
     'your_ride_was_cancelled': 'Your ride was cancelled.',
-    'your_ride_is_completed': 'Your Ride is Completed',
+    'thanks_for_using_go': 'Thanks for using Go!',
     'your_rides': 'Your Rides',
     'welcome_to_selcom_go': 'Welcome to Selcom Go',
     'full_name': 'Full name',
@@ -959,16 +959,15 @@ class LanguageEn extends Languages {
       values['driver_arrived_pickup_primary'] ?? '';
 
   @override
-  String get driverArrivedPickupSecondary =>
-      values['driver_arrived_pickup_secondary'] ?? '';
+  String get yourDriverHasArrived => values['your_driver_has_arrived'] ?? '';
 
   @override
   String get driverIsHeadingToYourLocation =>
       values['driver_is_heading_to_your_location'] ?? '';
 
   @override
-  String get driverIsHeadingToPickup =>
-      values['driver_is_heading_to_pickup'] ?? '';
+  String get driverHeadingTowardsYou =>
+      values['driver_heading_towards_you'] ?? '';
 
   @override
   String get driverAssignedDescription =>
@@ -1676,7 +1675,7 @@ class LanguageEn extends Languages {
   String get rideCancelled => values['ride_cancelled'] ?? '';
 
   @override
-  String get rideStarted => values['ride_started'] ?? '';
+  String get driverStartedYourRide => values['driver_started_your_ride'] ?? '';
 
   @override
   String get rideCompleted => values['ride_completed'] ?? '';
@@ -1693,10 +1692,10 @@ class LanguageEn extends Languages {
   String get youHaveArrived => values['you_have_arrived'] ?? '';
 
   @override
-  String get almostThere => values['almost_there'] ?? '';
+  String get youAreAlmostThere => values['you_are_almost_there'] ?? '';
 
   @override
-  String get onYourWay => values['on_your_way'] ?? '';
+  String get onYourWayWithDriver => values['on_your_way_with_driver'] ?? '';
 
   @override
   String get arrivedInMinutes => values['arrived_in_minutes'] ?? '';
@@ -2212,7 +2211,7 @@ class LanguageEn extends Languages {
   String get yourRideWasCancelled => values['your_ride_was_cancelled'] ?? '';
 
   @override
-  String get yourRideIsCompleted => values['your_ride_is_completed'] ?? '';
+  String get thanksForUsingGo => values['thanks_for_using_go'] ?? '';
 
   @override
   String get yourRides => values['your_rides'] ?? '';
@@ -2657,7 +2656,8 @@ class LanguageEn extends Languages {
   String get selectedPickupPoint => values['selected_pickup_point'] ?? '';
 
   @override
-  String get selcomPesaLinkedNumber => values['selcom_pesa_linked_number'] ?? '';
+  String get selcomPesaLinkedNumber =>
+      values['selcom_pesa_linked_number'] ?? '';
 
   @override
   String get socketDisconnected => values['socket_disconnected'] ?? '';
