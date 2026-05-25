@@ -51,7 +51,7 @@ class AppPrimaryButton extends StatelessWidget {
     this.outlinedBorderWidth,
     this.placeIconAfterLabel = false,
     this.alignIconToTrailingEnd = false,
-    this.showBottomInnerShadow = true,
+    this.showBottomInnerShadow = false,
     this.labelStyle,
   });
 

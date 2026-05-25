@@ -514,14 +514,14 @@ class AppDialogs {
                 Container(
                   padding: EdgeInsets.all(16.w),
                   decoration: BoxDecoration(
-                    color: (confirmColor ?? AppColors.primaryButton).withValues(
+                    color: (confirmColor ?? AppColors.primary).withValues(
                       alpha: 0.1,
                     ),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.help_outline,
-                    color: confirmColor ?? AppColors.primaryButton,
+                    color: confirmColor ?? AppColors.primary,
                     size: 32.sp,
                   ),
                 ),
