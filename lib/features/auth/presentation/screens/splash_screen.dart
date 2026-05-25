@@ -38,8 +38,9 @@ class _SplashScreenState extends State<SplashScreen> {
 
     // Check for existing valid session token
     final token = await StorageService().read(StorageKeys.authorizationToken);
-    final signupCompleted =
-        await StorageService().read(StorageKeys.signupCompleted);
+    final signupCompleted = await StorageService().read(
+      StorageKeys.signupCompleted,
+    );
 
     if (!mounted) return;
 
@@ -60,31 +61,13 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.splashBackground,
-      body: Stack(
-        children: [
-          // Background Vector Decoration
-          Positioned(
-            bottom: -175.h,
-            right: -225.w,
-            child: SvgPictureAsset(
-              AppAssets.splashBgVector,
-              width: 574.w,
-              height: 576.h,
-            ),
-          ),
-          // Centered Logo
-          Positioned(
-            left: 0,
-            right: 0,
-            top: 300.h,
-            child: SvgPictureAsset(
-              AppAssets.selcomGoLogo,
-              width: 180.w,
-              fit: BoxFit.contain,
-            ),
-          ),
-        ],
+      backgroundColor: AppColors.primary,
+      body: Center(
+        child: SvgPictureAsset(
+          AppAssets.selcomGoLogo,
+          width: 180.w,
+          fit: BoxFit.contain,
+        ),
       ),
     );
   }
