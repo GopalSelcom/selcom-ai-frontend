@@ -478,8 +478,16 @@ class HomeScreen extends GetView<HomeController> {
     );
   }
 
-  /// Image (42) + gap (4) + label + descender padding — fixed row height for the sheet.
-  static const double _vehicleRowHeight = 72;
+  /// Tile (72) + gap (4) + label + descender padding — fixed row height for the sheet.
+  static const double _vehicleTileSize = 72;
+  static const double _vehicleImageSideOverflow = 16;
+  static const double _vehicleRowHeight = 96;
+
+  BoxDecoration get _vehicleTileDecoration => BoxDecoration(
+    color: AppColors.bgSoftCircle,
+    borderRadius: BorderRadius.circular(16.r),
+    border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
+  );
 
   Widget _buildVehicleHorizontalList() {
     return Obx(
@@ -512,16 +520,7 @@ class HomeScreen extends GetView<HomeController> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(
-              width: 62.w,
-              height: 42.h,
-              child: VehicleTypeImage(
-                assetPath: imagePath,
-                width: 62.w,
-                height: 42.h,
-                fallbackIconColor: AppColors.textBody,
-              ),
-            ),
+            _vehicleExploreTile(imagePath),
             SizedBox(height: 4.h),
             Padding(
               padding: EdgeInsets.only(bottom: 2.h),
@@ -543,24 +542,58 @@ class HomeScreen extends GetView<HomeController> {
     );
   }
 
+  /// Rounded tile with vehicle art overflowing left/right and flush to the bottom.
+  Widget _vehicleExploreTile(String imagePath) {
+    return SizedBox(
+      width: _vehicleTileSize.w,
+      height: _vehicleTileSize.h,
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.bottomCenter,
+        children: [
+          Positioned.fill(
+            child: DecoratedBox(decoration: _vehicleTileDecoration),
+          ),
+          Positioned(
+            left: 0.8,
+            right: -_vehicleImageSideOverflow.w,
+            bottom: 0,
+            height: _vehicleTileSize.h,
+            child: VehicleTypeImage(
+              assetPath: imagePath,
+              fit: BoxFit.contain,
+              alignment: Alignment.bottomCenter,
+              fallbackIconColor: AppColors.textBody,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildVehicleSkeleton() {
     return Container(
       margin: EdgeInsets.only(right: 16.w),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 62.w,
-            height: 42.h,
-            padding: EdgeInsets.all(6.w),
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(16.r),
-            ),
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.skeletonBase,
-                borderRadius: BorderRadius.circular(10.r),
+          SizedBox(
+            width: _vehicleTileSize.w,
+            height: _vehicleTileSize.h,
+            child: DecoratedBox(
+              decoration: _vehicleTileDecoration,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(6.w, 10.h, 6.w, 0),
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Container(
+                    height: 46.h,
+                    decoration: BoxDecoration(
+                      color: AppColors.skeletonBase,
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),

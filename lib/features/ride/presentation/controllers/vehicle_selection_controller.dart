@@ -345,7 +345,7 @@ class VehicleSelectionController extends GetxController {
   }
 
   Future<void> loadDriverIcon() async {
-    driverIcon = await MapMarkerUtils.getResizedMarker(
+    driverIcon = await MapMarkerUtils.markerFromAsset(
       vehicleImage(estimates[selectedVehicleIndex.value]),
       150,
     );

@@ -317,16 +317,15 @@ class FindingDriverController extends GetxController {
   Future<void> _loadDriverMarkerIcon({String? vehicleType}) async {
     try {
       final asset = VehicleImageUtils.imageAssetForVehicleType(vehicleType);
-      assignedDriverMarkerIcon.value = await MapMarkerUtils.getResizedMarker(
+      assignedDriverMarkerIcon.value = await MapMarkerUtils.markerFromAsset(
         asset,
         150,
       );
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      // Fallback
-      assignedDriverMarkerIcon.value = await BitmapDescriptor.asset(
-        const ImageConfiguration(size: Size(36, 36)),
-        AppAssets.gariPlus,
+      assignedDriverMarkerIcon.value = await MapMarkerUtils.markerFromAsset(
+        AppAssets.imgCab,
+        150,
       );
     }
   }

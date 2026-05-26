@@ -15,6 +15,7 @@ import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
 import '../../../../shared/widgets/app_map_route_one_line_bar.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
+import '../../../../shared/widgets/vehicle_type_image.dart';
 import '../controllers/driver_accepted_controller.dart';
 import '../controllers/ride_share_controller.dart';
 import '../widgets/ride_common_widgets.dart';
@@ -950,10 +951,17 @@ class DriverAcceptedScreen extends StatelessWidget {
                       ? Image.network(
                           avatarUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
-                              Image.asset(AppAssets.imgBoda, fit: BoxFit.cover),
+                          errorBuilder: (_, __, ___) => Icon(
+                            Icons.person,
+                            size: 28.w,
+                            color: AppColors.textBody,
+                          ),
                         )
-                      : Image.asset(AppAssets.imgBoda, fit: BoxFit.cover),
+                      : Icon(
+                          Icons.person,
+                          size: 28.w,
+                          color: AppColors.textBody,
+                        ),
                 ),
               );
             }),
@@ -1122,16 +1130,13 @@ class DriverAcceptedScreen extends StatelessWidget {
               ),
             ),
             Obx(
-              () => Image.asset(
-                c.bottomSheetVehicleImageAsset.value,
+              () => VehicleTypeImage(
+                assetPath: c.bottomSheetVehicleImageAsset.value,
                 width: 76.w,
                 height: 60.67.h,
                 fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => Icon(
-                  Icons.two_wheeler,
-                  size: 40.w,
-                  color: AppColors.textBody,
-                ),
+                fallbackIcon: Icons.two_wheeler,
+                fallbackIconColor: AppColors.textBody,
               ),
             ),
           ],

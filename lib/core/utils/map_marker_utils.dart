@@ -6,7 +6,18 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../theme/app_colors.dart';
 
 class MapMarkerUtils {
-  /// Resizes an image asset to be used as a Google Maps marker.
+  /// Builds a map marker from a PNG or SVG asset path.
+  static Future<BitmapDescriptor> markerFromAsset(
+    String path,
+    int width,
+  ) {
+    if (path.toLowerCase().endsWith('.svg')) {
+      return getSvgMarker(path, width);
+    }
+    return getResizedMarker(path, width);
+  }
+
+  /// Resizes a raster image asset to be used as a Google Maps marker.
   static Future<BitmapDescriptor> getResizedMarker(
     String path,
     int width,

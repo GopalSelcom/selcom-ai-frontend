@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
+import '../../../../shared/widgets/vehicle_type_image.dart';
 import '../../../ride_rating/presentation/widgets/ride_rating_input_section.dart';
 import '../controllers/ride_details_controller.dart';
 import '../widgets/ride_common_widgets.dart';
@@ -151,16 +152,13 @@ class RideDetailsScreen extends StatelessWidget {
                             ),
                           ],
                         ),
-                        Image.asset(
-                          controller.vehicleImageAsset,
+                        VehicleTypeImage(
+                          assetPath: controller.vehicleImageAsset,
                           width: 76.w,
                           height: 50.67.h,
                           fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => Icon(
-                            Icons.two_wheeler,
-                            size: 50.w,
-                            color: AppColors.textBody,
-                          ),
+                          fallbackIcon: Icons.two_wheeler,
+                          fallbackIconColor: AppColors.textBody,
                         ),
                       ],
                     ),

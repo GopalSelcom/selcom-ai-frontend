@@ -14,6 +14,7 @@ import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
 import '../../../../shared/widgets/app_map_route_one_line_bar.dart';
 import '../../../../shared/widgets/vehicle_selection_promo_chip.dart';
+import '../../../../shared/widgets/vehicle_type_image.dart';
 import '../../../payment/presentation/widgets/payment_bar.dart';
 import '../controllers/vehicle_selection_controller.dart';
 
@@ -705,17 +706,12 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
   Widget _vehicleThumb(String asset) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(8.r),
-      child: Image.asset(
-        asset,
+      child: VehicleTypeImage(
+        assetPath: asset,
         width: 72.w,
         height: 52.h,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Container(
-          width: 72.w,
-          height: 52.h,
-          color: AppColors.bgSoftCircle,
-          child: const Icon(Icons.directions_car, color: AppColors.textBody),
-        ),
+        fallbackIconColor: AppColors.textBody,
       ),
     );
   }

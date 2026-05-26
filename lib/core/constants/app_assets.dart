@@ -18,12 +18,13 @@ class AppAssets {
   static const String icWorkChip = '$_imagePath/ic_work_chip.svg';
   static const String icOtherChip = '$_imagePath/ic_other_chip.svg';
 
-  // Models
-  static const String gariPlus = '$_imagePath/img_cab.png';
+  static const String _vehicleImagePath = 'assets/images/vehicle';
+  static const String imgBoda = '$_vehicleImagePath/img_boda.svg';
+  static const String imgBajaji = '$_vehicleImagePath/img_bajaji.svg';
+  static const String imgCab = '$_vehicleImagePath/img_cab.svg';
 
-  static const String imgBoda = '$_imagePath/img_boda.png';
-  static const String imgBajaji = '$_imagePath/img_bajaji.png';
-  static const String imgCab = '$_imagePath/img_cab.png';
+  /// Legacy alias for cab vehicle art (SVG).
+  static const String gariPlus = imgCab;
 
   // Auth / Onboarding
   static const String onboarding1 = '$_imagePath/onboarding_1.svg';

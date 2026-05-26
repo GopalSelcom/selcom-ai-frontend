@@ -988,9 +988,8 @@ class DriverAcceptedController extends GetxController
         error: e,
         stackTrace: stackTrace,
       );
-      // Robust fallback to existing PNG assets
       final asset = VehicleImageUtils.imageAssetForVehicleType(vehicleType);
-      assignedDriverMarkerIcon.value = await MapMarkerUtils.getResizedMarker(
+      assignedDriverMarkerIcon.value = await MapMarkerUtils.markerFromAsset(
         asset,
         150,
       );

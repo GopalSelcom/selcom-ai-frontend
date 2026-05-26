@@ -85,6 +85,7 @@ flutter:
     - assets/images/
     - assets/images/payment/
     - assets/images/location/
+    - assets/images/vehicle/
     - assets/json/
     - assets/sound/
 
