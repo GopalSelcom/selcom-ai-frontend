@@ -296,7 +296,7 @@ class RideLocationsTimeline extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.white,
           borderRadius: BorderRadius.circular(100.r),
-          border: Border.all(color: AppColors.secondary),
+          border: Border.all(color: AppColors.borderWalletCard),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -358,7 +358,10 @@ class RideLocationsTimeline extends StatelessWidget {
               children: [
                 Align(
                   alignment: Alignment.center,
-                  child: Container(height: 0.8.h, color: AppColors.secondary),
+                  child: Container(
+                    height: 0.8.h,
+                    color: AppColors.borderWalletCard,
+                  ),
                 ),
                 _buildAddStopPill(),
               ],

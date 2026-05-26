@@ -33,7 +33,7 @@ class RideRatingInputSection extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.pageBackground,
           borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: AppColors.secondary, width: 0.8),
+          border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

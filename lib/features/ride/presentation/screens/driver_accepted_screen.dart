@@ -1146,7 +1146,7 @@ class DriverAcceptedScreen extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 15.h),
           decoration: BoxDecoration(
             color: AppColors.surfaceSubtle,
-            border: Border.all(color: AppColors.secondary, width: 0.8),
+            border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
             borderRadius: BorderRadius.circular(16.r),
           ),
           child: Column(
@@ -1180,7 +1180,7 @@ class DriverAcceptedScreen extends StatelessWidget {
             padding: EdgeInsets.fromLTRB(14.w, 14.h, 11.w, 24.h),
             decoration: BoxDecoration(
               color: AppColors.surfaceSubtle,
-              border: Border.all(color: AppColors.secondary, width: 0.8),
+              border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
               borderRadius: BorderRadius.circular(16.r),
             ),
             child: Column(

@@ -645,7 +645,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
         decoration: BoxDecoration(
           color: AppColors.surfaceSubtle,
           borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: AppColors.secondary),
+          border: Border.all(color: AppColors.borderWalletCard),
         ),
         child: Row(
           children: [

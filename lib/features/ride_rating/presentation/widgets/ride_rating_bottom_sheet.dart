@@ -157,10 +157,10 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
                                           ),
                                         ),
                                         VehicleTypeImage(
-                                          assetPath:
-                                              controller.vehicleImageAssetForType(
-                                            ride.vehicleType,
-                                          ),
+                                          assetPath: controller
+                                              .vehicleImageAssetForType(
+                                                ride.vehicleType,
+                                              ),
                                           height: 52.h,
                                           fit: BoxFit.contain,
                                           fallbackIconColor: AppColors.textBody,
@@ -210,7 +210,7 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
       decoration: BoxDecoration(
         color: AppColors.surfaceSubtle,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: AppColors.secondary, width: 0.8),
+        border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
