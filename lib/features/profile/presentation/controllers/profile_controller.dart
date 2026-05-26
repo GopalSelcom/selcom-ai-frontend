@@ -31,6 +31,7 @@ class ProfileController extends GetxController {
   // Observables for state
   final RxBool isEditing = false.obs;
   final RxBool isLoading = false.obs;
+  final RxBool isLoadingProfile = true.obs;
   final RxBool showSettingsOption = false.obs;
   final RxBool showSafetyOption = false.obs;
 
@@ -57,12 +58,29 @@ class ProfileController extends GetxController {
     nameFocusNode = FocusNode();
     phoneFocusNode = FocusNode();
 
-    fetchProfile();
     fetchWalletBalance();
-    unawaited(_syncProfileMenuVisibility());
+    unawaited(_loadInitialContent());
     ever<Map<String, bool>>(appSettingsService.features, (_) {
       syncSettingsVisibility();
     });
+  }
+
+  /// Menu rows shown when not loading (must match [_buildSettingsList]).
+  int get visibleMenuItemCount {
+    var count = 5;
+    if (showSafetyOption.value) count++;
+    if (showSettingsOption.value) count++;
+    return count;
+  }
+
+  Future<void> _loadInitialContent() async {
+    isLoadingProfile.value = true;
+    try {
+      await _syncProfileMenuVisibility();
+      await _fetchProfileData();
+    } finally {
+      isLoadingProfile.value = false;
+    }
   }
 
   Future<void> _syncProfileMenuVisibility() async {
@@ -77,6 +95,10 @@ class ProfileController extends GetxController {
   }
 
   Future<void> fetchProfile() async {
+    await _fetchProfileData();
+  }
+
+  Future<void> _fetchProfileData() async {
     final result = await profileUseCase.getProfile();
     result.fold(
       (failure) {

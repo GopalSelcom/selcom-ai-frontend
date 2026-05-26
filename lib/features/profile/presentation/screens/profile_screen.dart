@@ -15,6 +15,8 @@ import '../../../../shared/utils/phone_formatter.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../controllers/profile_controller.dart';
 import '../widgets/menu_item_widget.dart';
+import '../widgets/profile_screen_layout.dart';
+import '../widgets/profile_screen_shimmer.dart';
 import '../widgets/wallet_summary_card.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -60,40 +62,13 @@ class ProfileScreen extends StatelessWidget {
                         padding: EdgeInsets.fromLTRB(16.w, 18.h, 16.w, 0),
                         child: _buildSettingsList(context),
                       ),
-                      SizedBox(height: 18.h),
+                      SizedBox(height: ProfileScreenLayout.logoutGapAfterSettings),
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.w),
-                        child: InkWell(
-                          onTap: controller.logout,
-                          borderRadius: BorderRadius.circular(16.r),
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              vertical: 16.h,
-                              horizontal: 16.w,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.white,
-                              border: Border.all(color: AppColors.divider),
-                              borderRadius: BorderRadius.circular(16.r),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Iconsax.logout,
-                                  size: 24.w,
-                                  color: AppColors.error,
-                                ),
-                                SizedBox(width: 7.w),
-                                Text(
-                                  AppStrings.logout.tr,
-                                  style: AppTextStyles.body.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.error,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                        child: Obx(
+                          () => controller.isLoadingProfile.value
+                              ? ProfileScreenShimmer.logoutButton()
+                              : _buildLogoutButton(),
                         ),
                       ),
                       SizedBox(height: 40.h),
@@ -163,6 +138,9 @@ class ProfileScreen extends StatelessWidget {
 
   Widget _buildNormalModeContent() {
     return Obx(() {
+      if (controller.isLoadingProfile.value) {
+        return ProfileScreenShimmer.headerContent();
+      }
       final user = controller.userModel.value;
       final name = (user?.name ?? '').trim().isNotEmpty
           ? (user?.name ?? '')
@@ -182,13 +160,16 @@ class ProfileScreen extends StatelessWidget {
         children: [
           // User Info
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
-            child: Row(
-              children: [
+            padding: ProfileScreenLayout.userInfoPadding,
+            child: SizedBox(
+              height: ProfileScreenLayout.userRowHeight,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
                 // Profile Image
                 Container(
-                  width: 60.w,
-                  height: 60.w,
+                  width: ProfileScreenLayout.avatarSize,
+                  height: ProfileScreenLayout.avatarSize,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(color: AppColors.white, width: 2),
@@ -217,81 +198,106 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 SizedBox(width: 16.w),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              name,
-                              style: AppTextStyles.screenTitle.copyWith(
-                                color: AppColors.white,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 30.sp,
+                  child: SizedBox(
+                    height: ProfileScreenLayout.userTextBlockHeight,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          height: ProfileScreenLayout.nameRowHeight,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  name,
+                                  style: AppTextStyles.screenTitle.copyWith(
+                                    color: AppColors.white,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 30.sp,
+                                    height: 38 / 30,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                              SizedBox(width: 8.w),
+                              GestureDetector(
+                                onTap: controller.toggleEditMode,
+                                child: Icon(
+                                  Iconsax.user_edit,
+                                  color: AppColors.white,
+                                  size: 24.w,
+                                ),
+                              ),
+                            ],
                           ),
-                          SizedBox(width: 8.w),
-                          GestureDetector(
-                            onTap: controller.toggleEditMode,
-                            child: Icon(
-                              Iconsax.user_edit,
-                              color: AppColors.white,
-                              size: 24.w,
-                            ),
-                          ),
-                        ],
-                      ),
-                      // SizedBox(height: 4.h),
-                      Text(
-                        mobile,
-                        style: AppTextStyles.body.copyWith(
-                          color: AppColors.white.withValues(alpha: 0.8),
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 16 * (-1 / 100),
                         ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Row(
-                        children: [
-                          SvgPictureAsset(
-                            AppAssets.icRatingStar,
-                            width: 14.w,
-                            height: 14.w,
-                            color: AppColors.ratingStarActive,
-                            placeholderBuilder: (_) => Icon(
-                              Icons.star,
-                              color: AppColors.ratingStarActive,
-                              size: 14.sp,
+                        SizedBox(
+                          height: ProfileScreenLayout.phoneLineHeight,
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              mobile,
+                              style: AppTextStyles.body.copyWith(
+                                color: AppColors.white.withValues(alpha: 0.8),
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.w500,
+                                height: 20 / 16,
+                                letterSpacing: 16 * (-1 / 100),
+                              ),
                             ),
                           ),
-                          SizedBox(width: 4.w),
-                          Text(
-                            avgRating.toStringAsFixed(1),
-                            style: AppTextStyles.homeCaption.copyWith(
-                              color: AppColors.white.withValues(alpha: 0.92),
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.w600,
-                            ),
+                        ),
+                        SizedBox(height: ProfileScreenLayout.ratingGap),
+                        SizedBox(
+                          height: ProfileScreenLayout.ratingRowHeight,
+                          child: Row(
+                            children: [
+                              SvgPictureAsset(
+                                AppAssets.icRatingStar,
+                                width: 14.w,
+                                height: 14.w,
+                                color: AppColors.ratingStarActive,
+                                placeholderBuilder: (_) => Icon(
+                                  Icons.star,
+                                  color: AppColors.ratingStarActive,
+                                  size: 14.sp,
+                                ),
+                              ),
+                              SizedBox(width: 4.w),
+                              Text(
+                                avgRating.toStringAsFixed(1),
+                                style: AppTextStyles.homeCaption.copyWith(
+                                  color: AppColors.white.withValues(
+                                    alpha: 0.92,
+                                  ),
+                                  fontSize: 12.sp,
+                                  fontWeight: FontWeight.w600,
+                                  height: 1.0,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
+            ),
             ),
           ),
 
           // Wallet Card
           Padding(
-            padding: EdgeInsets.fromLTRB(17.w, 16.h, 14.w, 12.h),
-            child: WalletSummaryCard(balance: balance, walletNumber: walletNum),
+            padding: ProfileScreenLayout.walletPadding,
+            child: SizedBox(
+              height: ProfileScreenLayout.walletCardHeight,
+              child: WalletSummaryCard(
+                balance: balance,
+                walletNumber: walletNum,
+              ),
+            ),
           ),
         ],
       );
@@ -438,22 +444,68 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildLogoutButton() {
+    return InkWell(
+      onTap: controller.logout,
+      borderRadius: BorderRadius.circular(ProfileScreenLayout.logoutBorderRadius),
+      child: Container(
+        height: ProfileScreenLayout.logoutButtonHeight,
+        padding: EdgeInsets.symmetric(
+          vertical: ProfileScreenLayout.logoutVerticalPadding,
+          horizontal: ProfileScreenLayout.logoutHorizontalPadding,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          border: Border.all(color: AppColors.divider),
+          borderRadius: BorderRadius.circular(
+            ProfileScreenLayout.logoutBorderRadius,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Iconsax.logout,
+              size: 24.w,
+              color: AppColors.error,
+            ),
+            SizedBox(width: 7.w),
+            Text(
+              AppStrings.logout.tr,
+              style: AppTextStyles.body.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.error,
+                height: 20 / 15,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildSettingsList(BuildContext context) {
     return Container(
-      padding: EdgeInsets.fromLTRB(10.w, 19.h, 10.w, 10.h),
+      padding: ProfileScreenLayout.settingsContainerPadding,
       decoration: BoxDecoration(
         color: AppColors.pageBackground,
         border: Border.all(color: AppColors.divider),
         borderRadius: BorderRadius.circular(16.r),
       ),
       child: Obx(
-        () => Column(
-          children: [
-            MenuItemWidget(
-              icon: Iconsax.clock,
-              title: AppStrings.myRides.tr,
-              onTap: controller.openMyRides,
-            ),
+        () {
+          final menuCount = controller.visibleMenuItemCount;
+          if (controller.isLoadingProfile.value) {
+            return ProfileScreenShimmer.settingsMenu(itemCount: menuCount);
+          }
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              MenuItemWidget(
+                icon: Iconsax.clock,
+                title: AppStrings.myRides.tr,
+                onTap: controller.openMyRides,
+              ),
             MenuItemWidget(
               icon: Iconsax.card,
               title: AppStrings.payment.tr,
@@ -488,8 +540,9 @@ class ProfileScreen extends StatelessWidget {
                 onTap: controller.openSettings,
                 showDivider: false,
               ),
-          ],
-        ),
+            ],
+          );
+        },
       ),
     );
   }
