@@ -9,10 +9,10 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
-import '../../../../shared/widgets/custom_loader.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../controllers/contact_us_controller.dart';
 import '../widgets/contact_us_reason_picker_bottom_sheet.dart';
+import '../widgets/contact_us_screen_shimmer.dart';
 
 class ContactUsScreen extends GetView<ContactUsController> {
   const ContactUsScreen({super.key});
@@ -36,7 +36,10 @@ class ContactUsScreen extends GetView<ContactUsController> {
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value && controller.subjects.isEmpty) {
-                return const CustomLoader();
+                return Align(
+                  alignment: Alignment.topCenter,
+                  child: ContactUsScreenShimmer.formContent(),
+                );
               }
 
               return SingleChildScrollView(

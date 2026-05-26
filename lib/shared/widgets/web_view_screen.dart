@@ -5,6 +5,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import '../../core/network/api_constants.dart';
 import '../../core/theme/app_colors.dart';
 import 'app_profile_header.dart';
+import 'web_view_content_shimmer.dart';
 
 class WebViewScreen extends StatefulWidget {
   final String? title;
@@ -110,9 +111,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
                     child: WebViewWidget(controller: webController),
                   ),
 
-                  /// Loader
-                  if (isLoading)
-                    const Center(child: CircularProgressIndicator()),
+                  if (isLoading) WebViewContentShimmer.content(),
                 ],
               ),
             ),
