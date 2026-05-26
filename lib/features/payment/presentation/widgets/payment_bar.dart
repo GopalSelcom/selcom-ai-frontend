@@ -32,22 +32,17 @@ class PaymentBar extends StatelessWidget {
       final double bottomPadding = MediaQuery.paddingOf(context).bottom;
       final double computedBottomPadding = bottomPadding > 0
           ? (GetPlatform.isIOS
-              ? (bottomPadding - 12.h).clamp(
-                  10.h > bottomPadding ? bottomPadding : 10.h,
-                  bottomPadding,
-                )
-              : bottomPadding + 12.h)
+                ? (bottomPadding - 12.h).clamp(
+                    10.h > bottomPadding ? bottomPadding : 10.h,
+                    bottomPadding,
+                  )
+                : bottomPadding + 12.h)
           : 12.h;
 
       return Container(
         width: double.infinity,
-        padding: EdgeInsets.fromLTRB(
-          25.w,
-          18.h,
-          25.w,
-          computedBottomPadding,
-        ),
-        decoration: const BoxDecoration(color: AppColors.primary),
+        padding: EdgeInsets.fromLTRB(25.w, 18.h, 25.w, computedBottomPadding),
+        decoration: const BoxDecoration(color: AppColors.primaryButton),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -119,9 +114,7 @@ class PaymentBar extends StatelessWidget {
                   width: 180.w,
                   height: 56.h,
                   alignment: Alignment.center,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 12.w,
-                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 12.w),
                   child: loading
                       ? SizedBox(
                           width: 20.w,
@@ -137,11 +130,13 @@ class PaymentBar extends StatelessWidget {
                             buttonLabel,
                             maxLines: 1,
                             style: AppTextStyles.button.copyWith(
-                              color: AppColors.primary,
+                              color: AppColors.black,
                               fontSize: 15.sp,
                               fontWeight: FontWeight.w700,
                               height: 1.3,
-                              fontFeatures: const [FontFeature.tabularFigures()],
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
                             ),
                           ),
                         ),
