@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // Brand (GO UI UX-2): yellow accent + green CTAs
-  static const Color primary        = Color(0xFFFDCC08);  // Brand accent — pins, links, field focus
-  static const Color secondary = Color(0xFF1CB674);
+  static const Color primary        = Color(0xFFFFCC00);  // Brand accent — pins, links, field focus
+  static const Color secondary = Color(0xFF22B573);
   static const Color primaryButton  = Color(0xFF5CB75E);  // Buttons & solid actions (unchanged green)
   static const Color primaryLight   = Color(0xFFFFF6D6);  // Light yellow selection/highlight surfaces
 
@@ -102,7 +102,7 @@ class AppColors {
   static const Color shadowStrong = Color(0x66000000);
   static const Color shadowCard = Color(0x0F000000);
   static const Color shadowMapCard = Color(0x1A000000);
-  static const Color inputFocusShadow = Color(0x33FDCC08); // 20% primary
+  static const Color inputFocusShadow = Color(0x33FFCC00); // 20% primary
   static const Color overlayGray43 = Color(0x6D808080);
 
   // Skeleton
@@ -118,8 +118,7 @@ class AppColors {
   static const Color figmaTextPrimary = Color(0xFF2A3143);
   static const Color figmaTextSecondary = Color(0xFF586377);
   static const Color figmaIconGreen = Color(0xFF269441);
-  static const Color splashVectorTint = Color(0xFF9CF17B);
-  static const Color splashBackground = Color(0xFF51D71C);
+  static const Color splashBackground = Color(0xFFFFCC00);
   /// Map markers: pickup = brand primary, destination = brand secondary.
   static const Color mapPickupMarkerBlue = primary;
   static const Color mapDropMarkerGreen = secondary;

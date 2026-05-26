@@ -33,7 +33,7 @@ class AppAssets {
   static const String icError = '$_imagePath/ic_error.svg';
 
   // Branding
-  static const String splashBgVector = '$_imagePath/splash_bg_vector.svg';
+  static const String splashScreenBg = '$_imagePath/splash_screen_bg.svg';
   static const String selcomGoLogo = '$_imagePath/selcom_go_logo.svg';
   static const String selcomGoLogoPrimaryColor =
       '$_imagePath/selcom_go_logo_primary_color.svg';
