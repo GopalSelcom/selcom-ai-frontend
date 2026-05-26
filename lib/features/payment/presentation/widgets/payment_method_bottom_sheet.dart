@@ -7,6 +7,7 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/widgets/custom_loader.dart';
 import '../controllers/payment_method_controller.dart';
 
 /// Payment method picker body for [AppDialogs.showStandardBottomSheet].
@@ -41,7 +42,7 @@ class PaymentMethodBottomSheet extends StatelessWidget {
           controller.paymentMethods.isEmpty) {
         return const Padding(
           padding: EdgeInsets.all(40),
-          child: Center(child: CircularProgressIndicator()),
+          child: CustomLoader(bgColor: AppColors.transparent),
         );
       }
 

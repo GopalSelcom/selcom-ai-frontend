@@ -5,6 +5,7 @@ import 'dart:convert';
 import '../../../../core/data/models/requests/save_user_additional_details_request.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../domain/usecases/save_user_additional_details_use_case.dart';
 
@@ -68,27 +69,33 @@ class SignUpController extends GetxController {
     markSubmitted();
     if (!canSubmit) return false;
 
-    isLoading.value = true;
+    if (isLoading.value) return false;
     errorMessage.value = '';
-    final result = await saveUserAdditionalDetailsUseCase.call(
-      request: SaveUserAdditionalDetailsRequest(
-        name: nameController.text.trim(),
-        emailId: emailController.text.trim(),
-      ),
-    );
-    isLoading.value = false;
 
-    return await result.fold((failure) async {
-      errorMessage.value = failure.message;
-      return false;
-    }, (user) async {
-      await StorageService().write(
-        StorageKeys.user,
-        jsonEncode(user.toJson()),
+    final saved = await Loader.withFlag(isLoading, () async {
+      final result = await saveUserAdditionalDetailsUseCase.call(
+        request: SaveUserAdditionalDetailsRequest(
+          name: nameController.text.trim(),
+          emailId: emailController.text.trim(),
+        ),
       );
-      await StorageService().write(StorageKeys.signupCompleted, 'true');
-      Get.offAllNamed(AppRoutes.home);
-      return true;
+
+      return await result.fold((failure) async {
+        errorMessage.value = failure.message;
+        return false;
+      }, (user) async {
+        await StorageService().write(
+          StorageKeys.user,
+          jsonEncode(user.toJson()),
+        );
+        await StorageService().write(StorageKeys.signupCompleted, 'true');
+        return true;
+      });
     });
+
+    if (saved) {
+      Get.offAllNamed(AppRoutes.home);
+    }
+    return saved;
   }
 }

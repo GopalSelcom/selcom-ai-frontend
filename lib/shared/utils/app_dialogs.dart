@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import '../../core/localization/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/services/progress_indicator/loader.dart';
 import '../../core/services/session_expiry_service.dart';
 import '../widgets/animated_blur_dialog.dart';
 import '../widgets/app_cancel_flow_dialog.dart';
@@ -15,7 +16,6 @@ import '../widgets/app_standard_bottom_sheet.dart';
 
 class AppDialogs {
   static bool _isErrorDialogVisible = false;
-  static bool _isLoadingDialogVisible = false;
 
   /// Utility to ensure keyboard is closed before showing dialogs/bottom sheets
   static Future<void> ensureKeyboardClosed() async {
@@ -228,21 +228,9 @@ class AppDialogs {
     _dismissActiveDialog();
   }
 
-  /// Dismisses the loading overlay from [showLoadingDialog] when still visible.
+  /// Dismisses the global [Loader] overlay from [showLoadingDialog].
   static void dismissLoadingDialog() {
-    if (!_isLoadingDialogVisible) return;
-    _popLoadingOverlayRoute();
-    _isLoadingDialogVisible = false;
-  }
-
-  /// Loading uses [showGeneralDialog] on the root navigator — never [Navigator.of] without root.
-  static void _popLoadingOverlayRoute() {
-    final context = Get.overlayContext ?? Get.context;
-    if (context == null) return;
-    final navigator = Navigator.of(context, rootNavigator: true);
-    if (navigator.canPop()) {
-      navigator.pop();
-    }
+    Loader.instance.hide();
   }
 
   static void _dismissActiveDialog() {
@@ -935,44 +923,9 @@ class AppDialogs {
     );
   }
 
-  /// Shows a simple loading dialog.
+  /// Shows Duka Direct global loader (Lottie + blur). [message] is ignored (Duka parity).
   static void showLoadingDialog({String message = ""}) {
-    if (_isLoadingDialogVisible) return;
-    _isLoadingDialogVisible = true;
-    showAnimatedDialog(
-      child: PopScope(
-        canPop: false,
-        child: Center(
-          child: Container(
-            padding: EdgeInsets.all(24.w),
-            decoration: BoxDecoration(
-              color: AppColors.transparent,
-              borderRadius: BorderRadius.circular(16.r),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CircularProgressIndicator(color: AppColors.primary),
-                if (message.isNotEmpty) ...[
-                  SizedBox(height: 16.h),
-                  Text(
-                    message.tr,
-                    style: AppTextStyles.body.copyWith(
-                      color: AppColors.textHeading,
-                      fontSize: 14.sp,
-                      decoration: TextDecoration.none,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
-      barrierDismissible: false,
-    ).whenComplete(() {
-      _isLoadingDialogVisible = false;
-    });
+    Loader.instance.show();
   }
 }
 

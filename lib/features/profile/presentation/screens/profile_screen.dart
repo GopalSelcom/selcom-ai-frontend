@@ -156,16 +156,6 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
           ),
-
-          // Loading Overlay
-          Obx(
-            () => controller.isLoading.value
-                ? Container(
-                    color: AppColors.black.withValues(alpha: 0.26),
-                    child: const Center(child: CircularProgressIndicator()),
-                  )
-                : const SizedBox.shrink(),
-          ),
         ],
       ),
     );

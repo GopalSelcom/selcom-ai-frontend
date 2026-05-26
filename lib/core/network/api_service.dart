@@ -15,6 +15,7 @@ import '../constants/app_assets.dart';
 import '../routes/app_routes.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import '../services/progress_indicator/loader.dart';
 import '../services/session_expiry_service.dart';
 import '../services/storage_service.dart';
 import '../widgets/svg_picture_asset.dart';
@@ -277,6 +278,10 @@ class ApiService {
 
     if (kDebugMode) _logRequest(fullUrl, request, finalHeaders, finalBody);
 
+    if (request.showLoader) {
+      Loader.instance.show();
+    }
+
     try {
       // Skip auth interceptor flag
       if (request.skipAuthInterceptor) {
@@ -364,6 +369,10 @@ class ApiService {
           }),
         },
       );
+    } finally {
+      if (request.showLoader) {
+        Loader.instance.hide();
+      }
     }
   }
 

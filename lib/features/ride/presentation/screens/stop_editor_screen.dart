@@ -10,6 +10,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/currency_formatter.dart';
+import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_back_button.dart';
@@ -154,34 +155,40 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
       final selected = _selectedDestination;
       if (selected == null) return;
       setState(() => _isSaving = true);
-      if (controller.destinationUpdatePreview.value == null) {
-        await controller.previewDropLocationUpdate(selected);
-      } else {
-        final ok = await controller.applyDropLocationUpdate(selected);
-        if (ok) {
-          // Close any progress sheet first, then close editor screen.
-          if (Get.isBottomSheetOpen ?? false) {
-            Get.back();
+      try {
+        await Loader.run(() async {
+          if (controller.destinationUpdatePreview.value == null) {
+            await controller.previewDropLocationUpdate(selected);
+          } else {
+            final ok = await controller.applyDropLocationUpdate(selected);
+            if (ok) {
+              if (Get.isBottomSheetOpen ?? false) {
+                Get.back();
+              }
+              Get.back();
+            }
           }
-          Get.back();
-          return;
-        }
+        });
+      } finally {
+        if (mounted) setState(() => _isSaving = false);
       }
-      setState(() => _isSaving = false);
       return;
     }
 
-    if (controller.stopUpdatePreview.value == null) {
-      setState(() => _isSaving = true);
-      await controller.previewStopsUpdate(_stops);
-      setState(() => _isSaving = false);
-    } else {
-      setState(() => _isSaving = true);
-      await controller.applyStopsUpdate(_stops);
-      setState(() => _isSaving = false);
-      if (controller.stopUpdateApplied.value != null) {
-        Get.back(); // Return only on success
-      }
+    setState(() => _isSaving = true);
+    try {
+      await Loader.run(() async {
+        if (controller.stopUpdatePreview.value == null) {
+          await controller.previewStopsUpdate(_stops);
+        } else {
+          await controller.applyStopsUpdate(_stops);
+          if (controller.stopUpdateApplied.value != null) {
+            Get.back();
+          }
+        }
+      });
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 

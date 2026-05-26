@@ -26,6 +26,7 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/app_map_service.dart';
+import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
 import '../../../../core/services/notification_service.dart';
@@ -1933,9 +1934,8 @@ class DriverAcceptedController extends GetxController
             );
             return;
           }
-          isReasonProcessing.value = true;
+          await Loader.withFlag(isReasonProcessing, () async {
           final charges = await rideRepository.getCancellationCharges(rideId);
-          isReasonProcessing.value = false;
           await charges.fold(
             (_) async {
               AppDialogs.showErrorDialog(
@@ -1954,6 +1954,7 @@ class DriverAcceptedController extends GetxController
               Get.back();
             },
           );
+          });
         },
       ),
       barrierDismissible: false,
@@ -1971,12 +1972,11 @@ class DriverAcceptedController extends GetxController
         isProcessing: isCancelPayProcessing,
         onConfirmTap: () async {
           _navigatedAway = true;
-          isCancelPayProcessing.value = true;
+          await Loader.withFlag(isCancelPayProcessing, () async {
           final result = await rideRepository.cancelRide(
             rideId,
             selectedReason!,
           );
-          isCancelPayProcessing.value = false;
           result.fold(
             (_) {
               _navigatedAway = false;
@@ -1998,6 +1998,7 @@ class DriverAcceptedController extends GetxController
               }
             },
           );
+          });
         },
       ),
       barrierDismissible: false,

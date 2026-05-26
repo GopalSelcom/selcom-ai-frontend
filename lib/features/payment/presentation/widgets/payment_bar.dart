@@ -122,30 +122,21 @@ class PaymentBar extends StatelessWidget {
                   padding: EdgeInsets.symmetric(
                     horizontal: 12.w,
                   ),
-                  child: loading
-                      ? SizedBox(
-                          width: 20.w,
-                          height: 20.w,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.w,
-                            color: AppColors.primary,
-                          ),
-                        )
-                      : FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            buttonLabel,
-                            maxLines: 1,
-                            style: AppTextStyles.button.copyWith(
-                              color: AppColors.primary,
-                              fontSize: 15.sp,
-                              fontFamily: AppTextStyles.metropolisFont,
-                              fontWeight: FontWeight.w700,
-                              height: 1.3,
-                              fontFeatures: const [FontFeature.tabularFigures()],
-                            ),
-                          ),
-                        ),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      buttonLabel,
+                      maxLines: 1,
+                      style: AppTextStyles.button.copyWith(
+                        color: AppColors.primary,
+                        fontSize: 15.sp,
+                        fontFamily: AppTextStyles.metropolisFont,
+                        fontWeight: FontWeight.w700,
+                        height: 1.3,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),

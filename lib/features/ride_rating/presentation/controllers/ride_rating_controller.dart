@@ -6,6 +6,7 @@ import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import '../../../../core/data/models/requests/submit_ride_rating_request.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/services/analytics_service.dart';
+import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
@@ -205,18 +206,17 @@ class RideRatingController extends GetxController {
       return;
     }
 
-    isSubmitting.value = true;
-    final result = await submitRideRatingUseCase(
-      SubmitRideRatingRequest(
-        rideId: ride.rideId,
-        rating: selectedRating.value,
-        tags: selectedTags.toList(),
-        comment: comment,
-      ),
-    );
-    isSubmitting.value = false;
+    await Loader.withFlag(isSubmitting, () async {
+      final result = await submitRideRatingUseCase(
+        SubmitRideRatingRequest(
+          rideId: ride.rideId,
+          rating: selectedRating.value,
+          tags: selectedTags.toList(),
+          comment: comment,
+        ),
+      );
 
-    result.fold((failure) => _handleFailure(failure), (ok) async {
+      result.fold((failure) => _handleFailure(failure), (ok) async {
       if (!ok) {
         AppDialogs.showErrorDialog(
           title: AppStrings.submitFailed.tr,
@@ -242,6 +242,7 @@ class RideRatingController extends GetxController {
         },
       );
     });
+    });
   }
 
   Future<void> onSkipTap() async {
@@ -251,24 +252,24 @@ class RideRatingController extends GetxController {
       return;
     }
 
-    isSubmitting.value = true;
-    final result = await skipRideRatingUseCase(rideId: ride.rideId);
-    isSubmitting.value = false;
+    await Loader.withFlag(isSubmitting, () async {
+      final result = await skipRideRatingUseCase(rideId: ride.rideId);
 
-    result.fold((failure) => _handleFailure(failure), (ok) async {
-      if (!ok) {
-        AppDialogs.showErrorDialog(
-          title: AppStrings.skipFailed.tr,
-          message: AppStrings.unableToSkipRatingNow.tr,
+      result.fold((failure) => _handleFailure(failure), (ok) async {
+        if (!ok) {
+          AppDialogs.showErrorDialog(
+            title: AppStrings.skipFailed.tr,
+            message: AppStrings.unableToSkipRatingNow.tr,
+          );
+          return;
+        }
+        await analyticsService.logEvent(
+          'ride_rating_skipped',
+          parameters: {'ride_id': ride.rideId},
         );
-        return;
-      }
-      await analyticsService.logEvent(
-        'ride_rating_skipped',
-        parameters: {'ride_id': ride.rideId},
-      );
-      _resetSheetState(clearPendingRide: true);
-      closeBottomSheet();
+        _resetSheetState(clearPendingRide: true);
+        closeBottomSheet();
+      });
     });
   }
 

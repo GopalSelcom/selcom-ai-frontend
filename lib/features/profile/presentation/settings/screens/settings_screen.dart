@@ -6,6 +6,7 @@ import 'package:iconsax/iconsax.dart';
 import '../../../../../core/localization/app_strings.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../shared/widgets/app_profile_header.dart';
+import '../../../../../shared/widgets/custom_loader.dart';
 import '../controllers/settings_controller.dart';
 import '../../widgets/menu_item_widget.dart';
 
@@ -22,7 +23,7 @@ class SettingsScreen extends GetView<SettingsController> {
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value) {
-                return const Center(child: CircularProgressIndicator());
+                return const CustomLoader();
               }
 
               return RefreshIndicator(

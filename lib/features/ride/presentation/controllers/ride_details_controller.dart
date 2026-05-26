@@ -136,20 +136,7 @@ class RideDetailsController extends GetxController {
     await WidgetsBinding.instance.endOfFrame;
   }
 
-  /// Pops the loading overlay via root navigator (receipt slip flows only).
   Future<void> _dismissReceiptSlipLoading() async {
-    for (var attempt = 0; attempt < 4; attempt++) {
-      final context = Get.overlayContext ?? Get.context;
-      if (context != null) {
-        final navigator = Navigator.of(context, rootNavigator: true);
-        if (navigator.canPop()) {
-          navigator.pop();
-          return;
-        }
-      }
-      await Future<void>.delayed(Duration.zero);
-      await WidgetsBinding.instance.endOfFrame;
-    }
     AppDialogs.dismissLoadingDialog();
   }
 

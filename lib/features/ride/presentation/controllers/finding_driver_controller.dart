@@ -17,6 +17,7 @@ import '../../../../core/domain/entities/location_entity.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
+import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -826,9 +827,8 @@ class FindingDriverController extends GetxController {
             );
             return;
           }
-          isReasonProcessing.value = true;
+          await Loader.withFlag(isReasonProcessing, () async {
           final charges = await rideRepository.getCancellationCharges(rideId);
-          isReasonProcessing.value = false;
           await charges.fold(
             (_) async {
               AppDialogs.showErrorDialog(
@@ -847,6 +847,7 @@ class FindingDriverController extends GetxController {
               Get.back();
             },
           );
+          });
         },
       ),
       barrierDismissible: false,
@@ -864,12 +865,11 @@ class FindingDriverController extends GetxController {
         isProcessing: isCancelPayProcessing,
         onConfirmTap: () async {
           _isUserInitiatedCancellation = true;
-          isCancelPayProcessing.value = true;
+          await Loader.withFlag(isCancelPayProcessing, () async {
           final result = await rideRepository.cancelRide(
             rideId,
             selectedReason!,
           );
-          isCancelPayProcessing.value = false;
           result.fold(
             (_) {
               _isUserInitiatedCancellation = false;
@@ -893,6 +893,7 @@ class FindingDriverController extends GetxController {
               }
             },
           );
+          });
         },
       ),
       barrierDismissible: false,

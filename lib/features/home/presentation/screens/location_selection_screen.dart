@@ -17,6 +17,7 @@ import '../../../../shared/widgets/favorite_location_chips_row.dart';
 import '../../data/models/places_models.dart';
 import '../controllers/home_controller.dart';
 import '../controllers/location_selection_controller.dart';
+import '../../../../shared/widgets/custom_loader.dart';
 import '../widgets/favorite_icon_button.dart';
 
 class LocationSelectionScreen extends StatefulWidget {
@@ -673,7 +674,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
               final result = await controller.homeRepository.getGeocode(
                 address: recentText,
               );
-              Get.back(); // close loading
+              AppDialogs.dismissLoadingDialog();
 
               result.fold(
                 (failure) =>
@@ -993,7 +994,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       final result = await controller.homeRepository.getGeocode(
         address: description,
       );
-      Get.back(); // close loading
+      AppDialogs.dismissLoadingDialog();
 
       result.fold(
         (failure) => AppDialogs.showErrorDialog(message: failure.message),
@@ -1037,7 +1038,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       behavior: HitTestBehavior.translucent,
       child: Obx(() {
         if (controller.isSearching.value) {
-          return const Center(child: CircularProgressIndicator());
+          return const CustomLoader();
         }
         if (controller.searchQuery.value.trim().isNotEmpty) {
           return _suggestionsList(controller);

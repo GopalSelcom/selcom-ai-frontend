@@ -9,6 +9,7 @@ import '../../../../core/data/models/requests/verify_otp_request.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/app_region_service.dart';
+import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/session_expiry_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/services/voip_callkit_bridge_service.dart';
@@ -70,19 +71,18 @@ class AuthController extends GetxController {
   }
 
   Future<bool> sendOtp() async {
-    isLoading.value = true;
+    if (isLoading.value) return false;
     errorMessage.value = '';
 
-    final result = await sendOtpUseCase(
-      SendOtpRequest(
-        mobileNumber: mobileNumber.value.replaceAll(RegExp(r'\D'), ''),
-        countryCode: countryCode.value.replaceAll('+', ''),
-      ),
-    );
+    return Loader.withFlag(isLoading, () async {
+      final result = await sendOtpUseCase(
+        SendOtpRequest(
+          mobileNumber: mobileNumber.value.replaceAll(RegExp(r'\D'), ''),
+          countryCode: countryCode.value.replaceAll('+', ''),
+        ),
+      );
 
-    isLoading.value = false;
-
-    return result.fold(
+      return result.fold(
       (failure) {
         errorMessage.value = failure.message;
         generatedOtp.value = '';
@@ -100,6 +100,7 @@ class AuthController extends GetxController {
         }
       },
     );
+    });
   }
 
   Future<void> sendOtpAndNavigate() async {
@@ -134,22 +135,21 @@ class AuthController extends GetxController {
       AppConfig.environment == Environment.staging;
 
   Future<bool> resendOtp() async {
-    isLoading.value = true;
+    if (isLoading.value) return false;
     errorMessage.value = '';
-    
+
     // Start timer immediately for better user feedback
     startResendTimer();
 
-    final result = await resendOtpUseCase(
-      SendOtpRequest(
-        mobileNumber: mobileNumber.value.replaceAll(RegExp(r'\D'), ''),
-        countryCode: countryCode.value.replaceAll('+', ''),
-      ),
-    );
+    return Loader.withFlag(isLoading, () async {
+      final result = await resendOtpUseCase(
+        SendOtpRequest(
+          mobileNumber: mobileNumber.value.replaceAll(RegExp(r'\D'), ''),
+          countryCode: countryCode.value.replaceAll('+', ''),
+        ),
+      );
 
-    isLoading.value = false;
-
-    return result.fold(
+      return result.fold(
       (failure) {
         errorMessage.value = failure.message;
         generatedOtp.value = '';
@@ -171,78 +171,85 @@ class AuthController extends GetxController {
         }
       },
     );
+    });
   }
 
   Future<bool> verifyOtp() async {
-    isLoading.value = true;
+    if (isLoading.value) return false;
     errorMessage.value = '';
 
-    final result = await verifyOtpUseCase(
-      VerifyOtpRequest(
-        mobileNumber: mobileNumber.value.replaceAll(RegExp(r'\D'), ''),
-        countryCode: countryCode.value.replaceAll('+', ''),
-        otp: otp.value,
-      ),
-    );
+    String? postVerifyRoute;
 
-    isLoading.value = false;
+    final verified = await Loader.withFlag(isLoading, () async {
+      final result = await verifyOtpUseCase(
+        VerifyOtpRequest(
+          mobileNumber: mobileNumber.value.replaceAll(RegExp(r'\D'), ''),
+          countryCode: countryCode.value.replaceAll('+', ''),
+          otp: otp.value,
+        ),
+      );
 
-    return await result.fold(
-      (failure) async {
-        errorMessage.value = failure.message;
-        return false;
-      },
-      (response) async {
-        if (response?.isSuccess == true && response?.response != null) {
-          final verifyData = response!.response!;
+      return await result.fold(
+        (failure) async {
+          errorMessage.value = failure.message;
+          return false;
+        },
+        (response) async {
+          if (response?.isSuccess == true && response?.response != null) {
+            final verifyData = response!.response!;
 
-          if (verifyData.accessToken != null) {
+            if (verifyData.accessToken != null) {
+              await StorageService().write(
+                StorageKeys.authorizationToken,
+                verifyData.accessToken!,
+              );
+              await StorageService().write(
+                StorageKeys.accessToken,
+                verifyData.accessToken!,
+              );
+            }
+            if (verifyData.refreshToken != null) {
+              await StorageService().write(
+                StorageKeys.refreshToken,
+                verifyData.refreshToken!,
+              );
+            }
+
             await StorageService().write(
-              StorageKeys.authorizationToken,
-              verifyData.accessToken!,
+              StorageKeys.user,
+              jsonEncode(verifyData.user!.toJson()),
             );
+
+            final isUserAlreadyRegistered =
+                verifyData.isUserAlreadyRegistered == true;
             await StorageService().write(
-              StorageKeys.accessToken,
-              verifyData.accessToken!,
+              StorageKeys.signupCompleted,
+              isUserAlreadyRegistered ? 'true' : 'false',
             );
+
+            await VoipCallkitBridgeService.instance.syncCachedTokenToBackend();
+            SessionExpiryService.resetOnLogin();
+
+            postVerifyRoute = isUserAlreadyRegistered
+                ? AppRoutes.profileLoading
+                : AppRoutes.signUp;
+            return true;
           }
-          if (verifyData.refreshToken != null) {
-            await StorageService().write(
-              StorageKeys.refreshToken,
-              verifyData.refreshToken!,
-            );
-          }
-
-          await StorageService().write(
-            StorageKeys.user,
-            jsonEncode(verifyData.user!.toJson()),
-          );
-
-          final isUserAlreadyRegistered =
-              verifyData.isUserAlreadyRegistered == true;
-          await StorageService().write(
-            StorageKeys.signupCompleted,
-            isUserAlreadyRegistered ? 'true' : 'false',
-          );
-
-          await VoipCallkitBridgeService.instance.syncCachedTokenToBackend();
-          SessionExpiryService.resetOnLogin();
-
-          if (isUserAlreadyRegistered) {
-            // Existing flow for already-registered users.
-            Get.offAllNamed(AppRoutes.profileLoading);
-          } else {
-            // New users continue to signup details screen.
-            Get.offNamed(AppRoutes.signUp);
-          }
-          return true;
-        } else {
           errorMessage.value =
               response?.message ?? AppStrings.otpVerificationFailed.tr;
           return false;
-        }
-      },
-    );
+        },
+      );
+    });
+
+    if (!verified || postVerifyRoute == null) return false;
+
+    if (postVerifyRoute == AppRoutes.profileLoading) {
+      Get.offAllNamed(AppRoutes.profileLoading);
+    } else {
+      Get.offNamed(postVerifyRoute!);
+    }
+    return true;
   }
 
   void onOtpChanged(String value) {

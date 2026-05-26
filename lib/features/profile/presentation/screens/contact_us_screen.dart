@@ -9,6 +9,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
+import '../../../../shared/widgets/custom_loader.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../controllers/contact_us_controller.dart';
 import '../widgets/contact_us_reason_picker_bottom_sheet.dart';
@@ -35,7 +36,7 @@ class ContactUsScreen extends GetView<ContactUsController> {
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value && controller.subjects.isEmpty) {
-                return const Center(child: CircularProgressIndicator());
+                return const CustomLoader();
               }
 
               return SingleChildScrollView(
@@ -90,7 +91,7 @@ class ContactUsScreen extends GetView<ContactUsController> {
                   child: AppPrimaryButton(
                     label: AppStrings.submit.tr,
                     onPressed: controller.sendMessage,
-                    isLoading: controller.isLoading.value,
+                    isLoading: controller.isSubmitting.value,
                   ),
                 ),
               ),

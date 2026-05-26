@@ -15,6 +15,7 @@ import '../../shared/utils/app_dialogs.dart';
 import '../data/models/notification_model.dart';
 import 'live_activity/android_order_tracking_manager.dart';
 import '../services/error_reporting/error_reporter.dart';
+import 'progress_indicator/loader.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -284,28 +285,26 @@ class NotificationService {
     try {
       _logger.i("Navigating to ride $rideId from notification");
 
-      AppDialogs.showAnimatedDialog(
-        child: const Center(child: CircularProgressIndicator()),
-        barrierDismissible: false,
-      );
+      Loader.instance.show();
+      try {
+        final rideRepo = sl<RideRepository>();
+        final result = await rideRepo.getRideDetails(rideId);
 
-      final rideRepo = sl<RideRepository>();
-      final result = await rideRepo.getRideDetails(rideId);
-
-      if (Get.isDialogOpen ?? false) Get.back();
-
-      result.fold(
-        (failure) {
-          _logger.e("Error fetching ride details: ${failure.message}");
-          AppDialogs.showErrorDialog(
-            message: AppStrings.unableToOpenRideDetails.tr,
-          );
-        },
-        (ride) => navigateToDriverAcceptedForRide(ride),
-      );
+        result.fold(
+          (failure) {
+            _logger.e("Error fetching ride details: ${failure.message}");
+            AppDialogs.showErrorDialog(
+              message: AppStrings.unableToOpenRideDetails.tr,
+            );
+          },
+          (ride) => navigateToDriverAcceptedForRide(ride),
+        );
+      } finally {
+        Loader.instance.hide();
+      }
     } catch (e, stackTrace) {
+      Loader.instance.hide();
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      if (Get.isDialogOpen ?? false) Get.back();
       _logger.e("Exception in _handleNotificationNavigationRaw: $e");
     }
   }

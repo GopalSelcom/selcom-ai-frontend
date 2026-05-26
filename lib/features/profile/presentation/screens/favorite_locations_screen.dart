@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
+import '../../../../shared/widgets/custom_loader.dart';
 import '../controllers/favorite_locations_controller.dart';
 
 class FavoriteLocationsScreen extends GetView<FavoriteLocationsController> {
@@ -24,7 +25,7 @@ class FavoriteLocationsScreen extends GetView<FavoriteLocationsController> {
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value) {
-                return const Center(child: CircularProgressIndicator());
+                return const CustomLoader();
               }
 
               if (controller.favorites.isEmpty) {

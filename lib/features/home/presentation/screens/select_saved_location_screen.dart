@@ -10,6 +10,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_back_button.dart';
+import '../../../../shared/widgets/custom_loader.dart';
 import '../../../ride/data/models/ride_management_models.dart';
 import '../../data/models/places_models.dart';
 import '../controllers/home_controller.dart';
@@ -91,9 +92,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
                     children: [
                       Obx(() {
                         if (controller.isSearching.value) {
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
+                          return const CustomLoader();
                         }
 
                         if (controller.searchQuery.value.trim().isNotEmpty) {
