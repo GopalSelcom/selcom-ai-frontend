@@ -312,7 +312,6 @@ class ApiService {
         ),
       );
 
-      await Future.delayed(Duration(seconds: 3));
       stopwatch.stop();
 
       if (kDebugMode) {
