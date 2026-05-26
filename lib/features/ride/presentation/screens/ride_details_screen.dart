@@ -12,6 +12,8 @@ import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../ride_rating/presentation/widgets/ride_rating_input_section.dart';
 import '../controllers/ride_details_controller.dart';
 import '../widgets/ride_common_widgets.dart';
+import '../widgets/ride_details_screen_layout.dart';
+import '../widgets/ride_details_screen_shimmer.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../../shared/utils/phone_formatter.dart';
 
@@ -88,7 +90,9 @@ class RideDetailsScreen extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 6.h),
-                RideRatingStars(rating: (ride.riderRating?.toDouble() ?? 0)),
+                RideRatingStars(
+                  rating: (controller.ride.riderRating?.toDouble() ?? 0),
+                ),
               ],
             ),
           )
@@ -125,74 +129,82 @@ class RideDetailsScreen extends StatelessWidget {
                   : null,
             ),
             Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              controller.vehicleDisplayName,
-                              style: AppTextStyles.homeTitle.copyWith(
-                                fontWeight: FontWeight.w600,
-                                height: 34 / 20,
-                                letterSpacing: -0.4,
+              child: Obx(() {
+                final scrollPadding = EdgeInsets.symmetric(
+                  horizontal: RideDetailsScreenLayout.scrollHorizontalPadding,
+                  vertical: RideDetailsScreenLayout.scrollVerticalPadding,
+                );
+                if (controller.isLoadingRideDetails.value) {
+                  final showReviewAtTop =
+                      controller.shouldPrioritizeReviewSection;
+                  final showReviewAtBottom =
+                      !showReviewAtTop &&
+                      (controller.hasExistingRating ||
+                          controller.canShowReviewInput);
+                  final ride = controller.ride;
+                  return SingleChildScrollView(
+                    padding: scrollPadding,
+                    child: RideDetailsScreenShimmer.content(
+                      showReviewAtTop: showReviewAtTop,
+                      showReviewAtBottom: showReviewAtBottom,
+                      showBookedForOther: ride.isBookedForOther,
+                      showPassengerPhone: ride.passengerPhone != null,
+                      showPromoLine: controller.showPromoFareLine,
+                      showDownloadSlip: controller.isCompleted,
+                      locationRowCount:
+                          RideDetailsScreenShimmer.locationRowCountFor(ride),
+                    ),
+                  );
+                }
+                final ride = controller.ride;
+                return SingleChildScrollView(
+                  padding: scrollPadding,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                controller.vehicleDisplayName,
+                                style: AppTextStyles.homeTitle.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  height: 34 / 20,
+                                  letterSpacing: -0.4,
+                                ),
                               ),
-                            ),
-                            Text(
-                              RideDateFormatter.formatDate(
-                                controller.formattedDate,
+                              Text(
+                                RideDateFormatter.formatDate(
+                                  controller.formattedDate,
+                                ),
+                                style: AppTextStyles.homeSubtitle.copyWith(
+                                  height: 20 / 15,
+                                ),
                               ),
-                              style: AppTextStyles.homeSubtitle.copyWith(
-                                height: 20 / 15,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Image.asset(
-                          controller.vehicleImageAsset,
-                          width: 76.w,
-                          height: 50.67.h,
-                          fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => Icon(
-                            Icons.two_wheeler,
-                            size: 50.w,
-                            color: AppColors.textBody,
+                            ],
                           ),
-                        ),
+                          Image.asset(
+                            controller.vehicleImageAsset,
+                            width: RideDetailsScreenLayout.headerVehicleImageWidth,
+                            height:
+                                RideDetailsScreenLayout.headerVehicleImageHeight,
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, __, ___) => Icon(
+                              Icons.two_wheeler,
+                              size: 50.w,
+                              color: AppColors.textBody,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: RideDetailsScreenLayout.sectionGap),
+                      if (controller.shouldPrioritizeReviewSection) ...[
+                        reviewSection,
+                        SizedBox(height: RideDetailsScreenLayout.sectionGap),
                       ],
-                    ),
-                    SizedBox(height: 10.h),
-                    if (controller.shouldPrioritizeReviewSection) ...[
-                      // Completion entry: keep rating above route/fare cards.
-                      reviewSection,
-                      SizedBox(height: 10.h),
-                    ],
-                    Container(
-                      padding: EdgeInsets.all(16.w),
-                      decoration: BoxDecoration(
-                        color: AppColors.pageBackground,
-                        border: Border.all(
-                          color: AppColors.borderWalletCard,
-                          width: 0.78,
-                        ),
-                        borderRadius: BorderRadius.circular(16.r),
-                      ),
-                      child: RideLocationsTimeline(
-                        startLocation: controller.pickupTitle,
-                        startAddress: ride.pickup.address,
-                        endLocation: controller.destinationTitle,
-                        endAddress: ride.destination.address,
-                        stops: ride.stops,
-                      ),
-                    ),
-                    if (ride.isBookedForOther) ...[
-                      SizedBox(height: 10.h),
                       Container(
                         padding: EdgeInsets.all(16.w),
                         decoration: BoxDecoration(
@@ -203,127 +215,161 @@ class RideDetailsScreen extends StatelessWidget {
                           ),
                           borderRadius: BorderRadius.circular(16.r),
                         ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(8.w),
-                              decoration: const BoxDecoration(
-                                color: AppColors.white,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Iconsax.user,
-                                size: 20.sp,
-                                color: AppColors.primary,
-                              ),
+                        child: RideLocationsTimeline(
+                          startLocation: controller.pickupTitle,
+                          startAddress: ride.pickup.address,
+                          endLocation: controller.destinationTitle,
+                          endAddress: ride.destination.address,
+                          stops: ride.stops,
+                        ),
+                      ),
+                      if (ride.isBookedForOther) ...[
+                        SizedBox(height: RideDetailsScreenLayout.sectionGap),
+                        Container(
+                          padding: EdgeInsets.all(16.w),
+                          decoration: BoxDecoration(
+                            color: AppColors.pageBackground,
+                            border: Border.all(
+                              color: AppColors.borderWalletCard,
+                              width: 0.78,
                             ),
-                            SizedBox(width: 12.w),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    AppStrings.bookingForName.trParams({
-                                      'name':
-                                          (ride.passengerName ?? '')
-                                              .trim()
-                                              .isEmpty
-                                          ? AppStrings.someone.tr
-                                          : ride.passengerName!,
-                                    }),
-                                    style: TextStyle(
-                                      fontFamily: AppTextStyles.metropolisFont,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.textHeading,
-                                      fontSize: 15.sp,
-                                    ),
-                                  ),
-                                  if (ride.passengerPhone != null)
+                            borderRadius: BorderRadius.circular(16.r),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(8.w),
+                                decoration: const BoxDecoration(
+                                  color: AppColors.white,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Iconsax.user,
+                                  size: 20.sp,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                              SizedBox(width: 12.w),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
                                     Text(
-                                      AppStrings.phoneWithNumber.trParams({
-                                        'phone':
-                                            TanzaniaPhoneFormatter.formatInternational(
-                                              ride.passengerPhone ?? '',
-                                            ),
+                                      AppStrings.bookingForName.trParams({
+                                        'name':
+                                            (ride.passengerName ?? '')
+                                                .trim()
+                                                .isEmpty
+                                            ? AppStrings.someone.tr
+                                            : ride.passengerName!,
                                       }),
                                       style: TextStyle(
                                         fontFamily:
                                             AppTextStyles.metropolisFont,
-                                        fontWeight: FontWeight.w500,
-                                        color: AppColors.textBody,
-                                        fontSize: 13.sp,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.textHeading,
+                                        fontSize: 15.sp,
                                       ),
                                     ),
-                                ],
+                                    if (ride.passengerPhone != null)
+                                      Text(
+                                        AppStrings.phoneWithNumber.trParams({
+                                          'phone':
+                                              TanzaniaPhoneFormatter.formatInternational(
+                                                ride.passengerPhone ?? '',
+                                              ),
+                                        }),
+                                        style: TextStyle(
+                                          fontFamily:
+                                              AppTextStyles.metropolisFont,
+                                          fontWeight: FontWeight.w500,
+                                          color: AppColors.textBody,
+                                          fontSize: 13.sp,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      SizedBox(height: RideDetailsScreenLayout.sectionGap),
+                      Container(
+                        padding: EdgeInsets.fromLTRB(14.w, 14.h, 11.w, 14.h),
+                        decoration: BoxDecoration(
+                          color: AppColors.pageBackground,
+                          border: Border.all(
+                            color: AppColors.borderWalletCard,
+                            width: 0.78,
+                          ),
+                          borderRadius: BorderRadius.circular(16.r),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              AppStrings.totalFare.tr,
+                              style: AppTextStyles.homeSubtitle.copyWith(
+                                color: AppColors.black,
+                                height: 20 / 15,
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                    ],
-                    SizedBox(height: 10.h),
-                    Container(
-                      padding: EdgeInsets.fromLTRB(14.w, 14.h, 11.w, 14.h),
-                      decoration: BoxDecoration(
-                        color: AppColors.pageBackground,
-                        border: Border.all(
-                          color: AppColors.borderWalletCard,
-                          width: 0.78,
-                        ),
-                        borderRadius: BorderRadius.circular(16.r),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            AppStrings.totalFare.tr,
-                            style: AppTextStyles.homeSubtitle.copyWith(
-                              color: AppColors.black,
-                              height: 20 / 15,
+                            SizedBox(height: 6.h),
+                            FareBreakdownRow(
+                              title: AppStrings.rideCharge.tr,
+                              amount: controller.rideChargeLabel,
                             ),
-                          ),
-                          SizedBox(height: 6.h),
-                          FareBreakdownRow(
-                            title: AppStrings.rideCharge.tr,
-                            amount: controller.rideChargeLabel,
-                          ),
-                          SizedBox(height: 4.h),
-                          FareBreakdownRow(
-                            title:
-                                AppStrings.bookingFeesAndConvenienceCharges.tr,
-                            amount: controller.bookingFeeLabel,
-                          ),
-                          if (controller.showPromoFareLine) ...[
                             SizedBox(height: 4.h),
                             FareBreakdownRow(
-                              title: controller.promoFareLineTitle,
-                              amount: controller.promoFareLineAmountLabel,
+                              title: AppStrings
+                                  .bookingFeesAndConvenienceCharges
+                                  .tr,
+                              amount: controller.bookingFeeLabel,
+                            ),
+                            if (controller.showPromoFareLine) ...[
+                              SizedBox(height: 4.h),
+                              FareBreakdownRow(
+                                title: controller.promoFareLineTitle,
+                                amount: controller.promoFareLineAmountLabel,
+                              ),
+                            ],
+                            SizedBox(height: 4.h),
+                            FareBreakdownRow(
+                              title: AppStrings.totalAmount.tr,
+                              amount: controller.totalAmountLabel,
                             ),
                           ],
-                          SizedBox(height: 4.h),
-                          FareBreakdownRow(
-                            title: AppStrings.totalAmount.tr,
-                            amount: controller.totalAmountLabel,
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 10.h),
-                    if (!controller.shouldPrioritizeReviewSection)
-                      reviewSection,
-                    SizedBox(height: 13.h),
-                    NeedHelpRow(
-                      showDownloadSlip: controller.isCompleted,
-                      onDownloadTap: controller.downloadSlip,
-                    ),
-                    SizedBox(height: 8.h),
-                  ],
-                ),
-              ),
+                      SizedBox(height: RideDetailsScreenLayout.sectionGap),
+                      if (!controller.shouldPrioritizeReviewSection)
+                        reviewSection,
+                      SizedBox(height: RideDetailsScreenLayout.needHelpTopGap),
+                      NeedHelpRow(
+                        showDownloadSlip: controller.isCompleted,
+                        onDownloadTap: controller.downloadSlip,
+                      ),
+                      SizedBox(height: RideDetailsScreenLayout.scrollBottomGap),
+                    ],
+                  ),
+                );
+              }),
             ),
             SafeArea(
               top: false,
               child: Obx(() {
+                if (controller.isLoadingRideDetails.value) {
+                  return Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      RideDetailsScreenLayout.primaryButtonHorizontalPadding,
+                      0,
+                      RideDetailsScreenLayout.primaryButtonHorizontalPadding,
+                      RideDetailsScreenLayout.primaryButtonBottomPadding,
+                    ),
+                    child: RideDetailsScreenShimmer.primaryButton(),
+                  );
+                }
                 final rc = controller.ratingController;
                 final bool isSimpleDoneFlow =
                     controller.hasExistingRating ||
