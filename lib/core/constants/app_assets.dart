@@ -43,10 +43,11 @@ class AppAssets {
   static const String selcomGoLogoPng = '$_imagePath/selcom_go_logo.png';
   static const String selcomGoLogoRedSvg = '$_imagePath/Selcom Go logo-red.svg';
 
-  /// Map marker silhouettes (SVG → bitmap via [MapMarkerUtils]).
-  static const String mapVehicleRiderSvg = '$_imagePath/rider.svg';
-  static const String mapVehicleCarSvg = '$_imagePath/car.svg';
-  static const String mapVehicleRickshawSvg = '$_imagePath/rickshaw.svg';
+  /// Map driver markers (top-down silhouettes; SVG → bitmap via [MapMarkerUtils]).
+  static const String _mapMarkerPath = '$_imagePath/map';
+  static const String mapMarkerBoda = '$_mapMarkerPath/map_marker_boda.svg';
+  static const String mapMarkerCab = '$_mapMarkerPath/map_marker_cab.svg';
+  static const String mapMarkerBajaji = '$_mapMarkerPath/map_marker_bajaji.svg';
   static const String icPromotions = '$_imagePath/ic_promotions.svg';
   static const String icPromoCode = '$_imagePath/ic_promo_code.svg';
   static const String icPromoCodeDisabled =

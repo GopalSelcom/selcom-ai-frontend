@@ -28,6 +28,7 @@ import '../../../payment/presentation/controllers/payment_method_controller.dart
 import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../../shared/utils/address_display_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/map_vehicle_marker_utils.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../../../../core/di/injection_container.dart' as di;
@@ -345,9 +346,12 @@ class VehicleSelectionController extends GetxController {
   }
 
   Future<void> loadDriverIcon() async {
-    driverIcon = await MapMarkerUtils.markerFromAsset(
-      vehicleImage(estimates[selectedVehicleIndex.value]),
-      150,
+    final vehicleType =
+        estimates[selectedVehicleIndex.value].vehicleName;
+    final asset = MapVehicleMarkerUtils.markerAssetForVehicleType(vehicleType);
+    driverIcon = await MapMarkerUtils.getSvgMarker(
+      asset,
+      MapVehicleMarkerUtils.defaultMarkerWidth,
     );
   }
 
