@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shimmer/shimmer.dart';
-import '../../core/theme/app_colors.dart';
+
+import 'app_shimmer.dart';
 
 class AppSkeletonLoader extends StatelessWidget {
   final double? width;
@@ -16,16 +16,11 @@ class AppSkeletonLoader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Shimmer.fromColors(
-      baseColor: AppColors.divider,
-      highlightColor: AppColors.pageBackground,
-      child: Container(
-        width: width ?? double.infinity,
+    return AppShimmer(
+      child: AppShimmerBox(
+        width: width,
         height: height ?? 20,
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(borderRadius ?? 8),
-        ),
+        borderRadius: borderRadius,
       ),
     );
   }

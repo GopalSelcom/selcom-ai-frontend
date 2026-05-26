@@ -334,6 +334,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     required double contentHeightPx,
     required double layoutHeightPx,
   }) {
+    // Shimmer layout must not drive sheet size; real content measures after load.
+    if (isLoadingHomeData.value) return;
     if (contentHeightPx <= 0 || layoutHeightPx <= 0) return;
     final previous = measuredSheetContentHeightPx.value;
     if (previous != null && (previous - contentHeightPx).abs() < 1) return;
@@ -563,7 +565,9 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       return measured / _sheetLayoutScreenHeight;
     }
     return _homeSheetContentHeight(
-          includeRecent: hasRecentLocationsForSheet,
+          includeRecent: isLoadingHomeData.value
+              ? shouldShowRecentSection
+              : hasRecentLocationsForSheet,
         ) /
         _homeSheetScreenHeight;
   }
@@ -605,7 +609,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
     if (!hasRecentLocationsForSheet) return clamped;
 
-    // Until layout is measured, never force 70% — use content/estimate height.
     if (!homeSheetHasMeasuredContent) return clamped;
 
     if (!homeSheetShouldUseExpandedDefault) return clamped;
@@ -679,24 +682,24 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }
 
   double _homeSheetContentHeight({required bool includeRecent}) {
-    // Handle + search field block.
     double contentHeight = 78.h;
-    // Favorite chips row.
     contentHeight += 64.h;
 
     if (includeRecent && shouldShowRecentSection) {
-      contentHeight += 28.h; // Section title + gap.
-      final count = recentDestinationsPreview.length;
+      contentHeight += 28.h;
+      final count = isLoadingHomeData.value
+          ? 3
+          : recentDestinationsPreview.length;
       contentHeight += count * 64.h;
       if (count > 1) {
-        contentHeight += (count - 1) * 25.h; // Dividers between rows.
+        contentHeight += (count - 1) * 25.h;
       }
     }
 
     if (shouldShowVehicleSection) {
       contentHeight += 12.h;
-      contentHeight += 28.h; // Title + gap.
-      contentHeight += 72.h; // Vehicle row (fixed height in sheet).
+      contentHeight += 28.h;
+      contentHeight += 72.h;
     }
 
     contentHeight += _estimatedBottomPadding;
