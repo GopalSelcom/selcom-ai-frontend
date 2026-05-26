@@ -54,6 +54,8 @@ class AppAssets {
       '$_imagePath/ic_promo_code_disabled.svg';
 
   // Profile
+  static const String icProfile = '$_imagePath/ic_profile.svg';
+  static const String icProfileEdit = '$_imagePath/ic_profile_edit.svg';
   static const String icFaceScan = '$_imagePath/ic_face_scan.svg';
   static const String icAccountVerified = '$_imagePath/ic_account_verified.svg';
   static const String icWallet = '$_imagePath/ic_wallet.svg';

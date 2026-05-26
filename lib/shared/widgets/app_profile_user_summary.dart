@@ -71,17 +71,19 @@ class AppProfileUserSummary extends StatelessWidget {
                       SizedBox(width: 8.w),
                       GestureDetector(
                         onTap: onEditTap,
-                        child: Icon(
-                          Iconsax.user_edit,
-                          color: AppColors.black,
-                          size: 22.w,
+                        child: SvgPictureAsset(
+                          AppAssets.icProfileEdit,
+                          width: 22.w,
+                          height: 24.75.h,
+                          placeholderBuilder: (_) => Icon(
+                            Iconsax.user_edit,
+                            color: AppColors.black,
+                            size: 22.w,
+                          ),
                         ),
                       ),
                     ],
-                    if (trailing != null) ...[
-                      SizedBox(width: 8.w),
-                      trailing!,
-                    ],
+                    if (trailing != null) ...[SizedBox(width: 8.w), trailing!],
                   ],
                 ),
                 if (phone.isNotEmpty) ...[
@@ -105,11 +107,8 @@ class AppProfileUserSummary extends StatelessWidget {
                       width: 14.w,
                       height: 14.w,
                       color: AppColors.white,
-                      placeholderBuilder: (_) => Icon(
-                        Icons.star,
-                        color: AppColors.white,
-                        size: 14.sp,
-                      ),
+                      placeholderBuilder: (_) =>
+                          Icon(Icons.star, color: AppColors.white, size: 14.sp),
                     ),
                     SizedBox(width: 4.w),
                     Text(
