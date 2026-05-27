@@ -85,6 +85,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   // Home Data
   final vehicleTypes = <VehicleTypeModel>[].obs;
   final recentDestinations = <RecentDestinationModel>[].obs;
+  final recentDestinationsScreen = <RecentDestinationModel>[].obs;
   final savedPlaces = <SavedPlace>[].obs;
   final activeRide = Rxn<RideModel>();
 
@@ -92,6 +93,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   final selectedPickupSavedPlaceId = Rxn<String>(_currentLocationPlaceId);
   final isSavedPlacesExpanded = false.obs;
   final isLoadingHomeData = false.obs;
+  final isLoadingRecentLocationsScreen = false.obs;
   final mapCenter = const LatLng(-6.7924, 39.2083).obs;
   final currentMapAddress = AppStrings.locating.tr.obs;
   final isMapReady = false.obs;
@@ -314,15 +316,55 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   bool get canViewMoreRecentLocations => recentDestinations.length > 3;
 
   Future<void> openRecentLocationsScreen() async {
-    await Get.to<void>(() => const RecentLocationsScreen());
+    // Show shimmer immediately (screen builds from the same controller).
+    isLoadingRecentLocationsScreen.value = true;
+    recentDestinationsScreen.clear();
+    Get.to<void>(() => const RecentLocationsScreen());
+
+    // Avoid 2nd API call when Home already fetched recent destinations.
+    unawaited(() async {
+      // If Home already has data, reuse it (still shows shimmer briefly).
+      if (recentDestinations.isNotEmpty) {
+        await Future<void>.delayed(const Duration(milliseconds: 250));
+        recentDestinationsScreen.assignAll(recentDestinations);
+        isLoadingRecentLocationsScreen.value = false;
+      } else {
+        // If Home is still loading, wait a bit for its request to finish.
+        if (isLoadingHomeData.value) {
+          final start = DateTime.now();
+          while (recentDestinations.isEmpty &&
+              DateTime.now().difference(start) <
+                  const Duration(seconds: 5)) {
+            await Future<void>.delayed(const Duration(milliseconds: 100));
+          }
+        }
+
+        // Reuse if Home populated; otherwise fallback to fetch (only then).
+        if (recentDestinations.isNotEmpty) {
+          recentDestinationsScreen.assignAll(recentDestinations);
+          isLoadingRecentLocationsScreen.value = false;
+        } else {
+          await loadRecentLocationsScreen();
+        }
+      }
+    }());
+  }
+
+  Future<void> loadRecentLocationsScreen() async {
+    try {
+      isLoadingRecentLocationsScreen.value = true;
+      final result = await rideRepository.getRecentDestinations();
+      result.fold((_) => null, (destinations) {
+        recentDestinationsScreen.assignAll(destinations);
+        invalidateHomeSheetMeasurement();
+      });
+    } finally {
+      isLoadingRecentLocationsScreen.value = false;
+    }
   }
 
   Future<void> refreshRecentDestinations() async {
-    final result = await rideRepository.getRecentDestinations();
-    result.fold((_) => null, (destinations) {
-      recentDestinations.assignAll(destinations);
-      invalidateHomeSheetMeasurement();
-    });
+    await loadRecentLocationsScreen();
   }
 
   void invalidateHomeSheetMeasurement() {

@@ -8,6 +8,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../ride/data/models/ride_management_models.dart';
 import '../controllers/home_controller.dart';
+import '../widgets/recent_locations_screen_shimmer.dart';
 import '../widgets/recent_location_tile.dart';
 
 class RecentLocationsScreen extends GetView<HomeController> {
@@ -24,12 +25,20 @@ class RecentLocationsScreen extends GetView<HomeController> {
             child: RefreshIndicator(
               onRefresh: controller.refreshRecentDestinations,
               child: Obx(() {
-                final items = controller.recentDestinations;
+                final items = controller.recentDestinationsScreen;
+                if (controller.isLoadingRecentLocationsScreen.value &&
+                    items.isEmpty) {
+                  return RecentLocationsScreenShimmer.listContent();
+                }
+
                 if (items.isEmpty) {
                   return ListView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding:
-                        EdgeInsets.symmetric(horizontal: 24.w, vertical: 28.h),
+                        EdgeInsets.symmetric(
+                          horizontal: 24.w,
+                          vertical: 28.h,
+                        ),
                     children: [
                       Text(
                         AppStrings.noRecentLocationsFound.tr,
