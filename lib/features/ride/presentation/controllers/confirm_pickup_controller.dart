@@ -4,6 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../home/domain/repositories/home_repository.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../widgets/booking_for_someone_else_flow_bottom_sheet.dart';
@@ -118,40 +119,42 @@ class ConfirmPickupController extends GetxController {
   }
 
   Future<void> confirmPickup() async {
+    if (isSubmitting.value) return;
     isSubmitting.value = true;
 
     try {
-      final position =
-          await Geolocator.getCurrentPosition(
-            locationSettings: const LocationSettings(
-              accuracy: LocationAccuracy.high,
-            ),
-          ).timeout(
-            const Duration(seconds: 5),
-            onTimeout: () => Position(
-              latitude: selectedLatLng.value.latitude,
-              longitude: selectedLatLng.value.longitude,
-              timestamp: DateTime.now(),
-              accuracy: 0,
-              altitude: 0,
-              heading: 0,
-              speed: 0,
-              speedAccuracy: 0,
-              altitudeAccuracy: 0,
-              headingAccuracy: 0,
-            ),
-          );
-
-      // Server may use this for analytics / policy; UI always asks locally.
-      await rideRepository.checkBookMode(
-        riderLat: position.latitude,
-        riderLng: position.longitude,
-        pickupLat: selectedLatLng.value.latitude,
-        pickupLng: selectedLatLng.value.longitude,
+      final position = await Loader.run(
+        () => Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+          ),
+        ).timeout(
+          const Duration(seconds: 5),
+          onTimeout: () => Position(
+            latitude: selectedLatLng.value.latitude,
+            longitude: selectedLatLng.value.longitude,
+            timestamp: DateTime.now(),
+            accuracy: 0,
+            altitude: 0,
+            heading: 0,
+            speed: 0,
+            speedAccuracy: 0,
+            altitudeAccuracy: 0,
+            headingAccuracy: 0,
+          ),
+        ),
       );
 
-      final result =
-          await BookingForSomeoneElseFlowBottomSheet.show();
+      await Loader.run(
+        () => rideRepository.checkBookMode(
+          riderLat: position.latitude,
+          riderLng: position.longitude,
+          pickupLat: selectedLatLng.value.latitude,
+          pickupLng: selectedLatLng.value.longitude,
+        ),
+      );
+
+      final result = await BookingForSomeoneElseFlowBottomSheet.show();
 
       if (result == null) {
         return;

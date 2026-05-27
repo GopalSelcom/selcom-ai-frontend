@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import '../../../../core/data/models/responses/rides/promo_available_response.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../../../../shared/utils/currency_formatter.dart';
@@ -175,51 +176,52 @@ class PromoCodeController extends GetxController {
     if (isApplying.value) return;
 
     final args = _rideArgs!;
-    isApplying.value = true;
-    try {
-      final result = await homeRepository.validatePromo(
-        code: code,
-        vehicleTypeId: args.vehicleTypeId,
-        fareEstimate: args.fareEstimate,
-      );
 
-      await result.fold<Future<void>>(
-        (f) async {
-          final err = f is PromoValidationFailure ? f.errorCode : null;
-          applyInlineError.value = _messageForPromoError(err, f.message);
-          unawaited(
-            di.sl<AnalyticsService>().logEvent(
-              'promo_validated',
-              parameters: {'success': 'false', 'error_code': err ?? 'unknown'},
-            ),
-          );
-        },
-        (data) async {
-          final applyResult = PromoCodeApplyResult(
-            code: data.code,
-            vehicleTypeId: args.vehicleTypeId,
-            discountedFare: data.discountedFare,
-            discountAmount: data.discountAmount,
-          );
-          unawaited(
-            di.sl<AnalyticsService>().logEvent(
-              'promo_validated',
-              parameters: {'success': 'true', 'code': data.code},
-            ),
-          );
-          isApplying.value = false;
-          await _showSuccessThenReturn(applyResult);
-        },
-      );
+    PromoCodeApplyResult? applyResult;
+    try {
+      await Loader.withFlag(isApplying, () async {
+        final result = await homeRepository.validatePromo(
+          code: code,
+          vehicleTypeId: args.vehicleTypeId,
+          fareEstimate: args.fareEstimate,
+        );
+
+        await result.fold<Future<void>>(
+          (f) async {
+            final err = f is PromoValidationFailure ? f.errorCode : null;
+            applyInlineError.value = _messageForPromoError(err, f.message);
+            unawaited(
+              di.sl<AnalyticsService>().logEvent(
+                'promo_validated',
+                parameters: {
+                  'success': 'false',
+                  'error_code': err ?? 'unknown',
+                },
+              ),
+            );
+          },
+          (data) async {
+            applyResult = PromoCodeApplyResult(
+              code: data.code,
+              vehicleTypeId: args.vehicleTypeId,
+              discountedFare: data.discountedFare,
+              discountAmount: data.discountAmount,
+            );
+            unawaited(
+              di.sl<AnalyticsService>().logEvent(
+                'promo_validated',
+                parameters: {'success': 'true', 'code': data.code},
+              ),
+            );
+          },
+        );
+      });
     } catch (_) {
       applyInlineError.value = AppStrings.promoErrorNetwork.tr;
-    } finally {
-      if (isApplying.value) {
-        isApplying.value = false;
-      }
-      if (showApplySuccess.value) {
-        showApplySuccess.value = false;
-      }
+    }
+
+    if (applyResult != null) {
+      await _showSuccessThenReturn(applyResult!);
     }
   }
 

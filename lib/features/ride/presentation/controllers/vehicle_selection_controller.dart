@@ -20,6 +20,7 @@ import '../../../payment/presentation/widgets/payment_status_dialog.dart';
 import '../../../../core/domain/entities/location_entity.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/app_map_service.dart';
+import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../home/domain/repositories/home_repository.dart';
@@ -304,12 +305,6 @@ class VehicleSelectionController extends GetxController {
                   'last=${mapped.last.latitude},${mapped.last.longitude}',
                 );
               }
-              final n = mapped.length;
-              driverMarkerPoints.assignAll([
-                mapped[(n * 0.25).floor().clamp(0, n - 1)],
-                mapped[(n * 0.55).floor().clamp(0, n - 1)],
-                mapped[(n * 0.78).floor().clamp(0, n - 1)],
-              ]);
             } else {
               _useStraightLineFallback();
             }
@@ -667,6 +662,7 @@ class VehicleSelectionController extends GetxController {
     }
 
     isBooking.value = true;
+    Loader.instance.show();
     try {
       var resolvedVehicleTypeId = (est.vehicleTypeId ?? '').trim();
       if (resolvedVehicleTypeId.isEmpty ||
@@ -678,6 +674,7 @@ class VehicleSelectionController extends GetxController {
         return;
       }
 
+      Loader.instance.hide();
       final confirmResult = await Get.toNamed(
         AppRoutes.confirmPickup,
         arguments: {
@@ -686,6 +683,7 @@ class VehicleSelectionController extends GetxController {
           'pickupAddress': pickupEntity.address,
         },
       );
+      Loader.instance.show();
 
       if (confirmResult is! Map) {
         return;
@@ -850,6 +848,7 @@ class VehicleSelectionController extends GetxController {
                 ),
               );
             });
+            Loader.instance.hide();
             _showPaymentStatusDialog();
 
             final blockOk = await _waitForPaymentBlockStatus(
@@ -864,12 +863,15 @@ class VehicleSelectionController extends GetxController {
             }
 
             _closePaymentStatusDialogIfOpen();
+            Loader.instance.show();
 
             if (blockOk) {
               break;
             }
 
+            Loader.instance.hide();
             final shouldRetry = await _offerPaymentBlockRetry();
+            Loader.instance.show();
             if (!shouldRetry) {
               return;
             }
@@ -973,6 +975,7 @@ class VehicleSelectionController extends GetxController {
                     return;
                   }
 
+                  Loader.instance.hide();
                   Get.offNamed(
                     AppRoutes.findingDriver,
                     arguments: {
@@ -1003,8 +1006,7 @@ class VehicleSelectionController extends GetxController {
         },
       );
     } finally {
-      // Small delay to ensure snackbars or navigation have time to settle if needed,
-      // but primarily just reset the booking state.
+      Loader.instance.hide();
       isBooking.value = false;
     }
   }

@@ -9,6 +9,7 @@ import '../../../../core/domain/entities/ride_entity.dart';
 import 'package:app_settings/app_settings.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/services/notification_service.dart';
@@ -84,6 +85,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   // Home Data
   final vehicleTypes = <VehicleTypeModel>[].obs;
   final recentDestinations = <RecentDestinationModel>[].obs;
+  final recentDestinationsScreen = <RecentDestinationModel>[].obs;
   final savedPlaces = <SavedPlace>[].obs;
   final activeRide = Rxn<RideModel>();
 
@@ -91,6 +93,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   final selectedPickupSavedPlaceId = Rxn<String>(_currentLocationPlaceId);
   final isSavedPlacesExpanded = false.obs;
   final isLoadingHomeData = false.obs;
+  final isLoadingRecentLocationsScreen = false.obs;
   final mapCenter = const LatLng(-6.7924, 39.2083).obs;
   final currentMapAddress = AppStrings.locating.tr.obs;
   final isMapReady = false.obs;
@@ -313,15 +316,55 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   bool get canViewMoreRecentLocations => recentDestinations.length > 3;
 
   Future<void> openRecentLocationsScreen() async {
-    await Get.to<void>(() => const RecentLocationsScreen());
+    // Show shimmer immediately (screen builds from the same controller).
+    isLoadingRecentLocationsScreen.value = true;
+    recentDestinationsScreen.clear();
+    Get.to<void>(() => const RecentLocationsScreen());
+
+    // Avoid 2nd API call when Home already fetched recent destinations.
+    unawaited(() async {
+      // If Home already has data, reuse it (still shows shimmer briefly).
+      if (recentDestinations.isNotEmpty) {
+        await Future<void>.delayed(const Duration(milliseconds: 250));
+        recentDestinationsScreen.assignAll(recentDestinations);
+        isLoadingRecentLocationsScreen.value = false;
+      } else {
+        // If Home is still loading, wait a bit for its request to finish.
+        if (isLoadingHomeData.value) {
+          final start = DateTime.now();
+          while (recentDestinations.isEmpty &&
+              DateTime.now().difference(start) <
+                  const Duration(seconds: 5)) {
+            await Future<void>.delayed(const Duration(milliseconds: 100));
+          }
+        }
+
+        // Reuse if Home populated; otherwise fallback to fetch (only then).
+        if (recentDestinations.isNotEmpty) {
+          recentDestinationsScreen.assignAll(recentDestinations);
+          isLoadingRecentLocationsScreen.value = false;
+        } else {
+          await loadRecentLocationsScreen();
+        }
+      }
+    }());
+  }
+
+  Future<void> loadRecentLocationsScreen() async {
+    try {
+      isLoadingRecentLocationsScreen.value = true;
+      final result = await rideRepository.getRecentDestinations();
+      result.fold((_) => null, (destinations) {
+        recentDestinationsScreen.assignAll(destinations);
+        invalidateHomeSheetMeasurement();
+      });
+    } finally {
+      isLoadingRecentLocationsScreen.value = false;
+    }
   }
 
   Future<void> refreshRecentDestinations() async {
-    final result = await rideRepository.getRecentDestinations();
-    result.fold((_) => null, (destinations) {
-      recentDestinations.assignAll(destinations);
-      invalidateHomeSheetMeasurement();
-    });
+    await loadRecentLocationsScreen();
   }
 
   void invalidateHomeSheetMeasurement() {
@@ -333,6 +376,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     required double contentHeightPx,
     required double layoutHeightPx,
   }) {
+    // Shimmer layout must not drive sheet size; real content measures after load.
+    if (isLoadingHomeData.value) return;
     if (contentHeightPx <= 0 || layoutHeightPx <= 0) return;
     final previous = measuredSheetContentHeightPx.value;
     if (previous != null && (previous - contentHeightPx).abs() < 1) return;
@@ -562,7 +607,9 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       return measured / _sheetLayoutScreenHeight;
     }
     return _homeSheetContentHeight(
-          includeRecent: hasRecentLocationsForSheet,
+          includeRecent: isLoadingHomeData.value
+              ? shouldShowRecentSection
+              : hasRecentLocationsForSheet,
         ) /
         _homeSheetScreenHeight;
   }
@@ -604,7 +651,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
     if (!hasRecentLocationsForSheet) return clamped;
 
-    // Until layout is measured, never force 70% — use content/estimate height.
     if (!homeSheetHasMeasuredContent) return clamped;
 
     if (!homeSheetShouldUseExpandedDefault) return clamped;
@@ -678,24 +724,24 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }
 
   double _homeSheetContentHeight({required bool includeRecent}) {
-    // Handle + search field block.
     double contentHeight = 78.h;
-    // Favorite chips row.
     contentHeight += 64.h;
 
     if (includeRecent && shouldShowRecentSection) {
-      contentHeight += 28.h; // Section title + gap.
-      final count = recentDestinationsPreview.length;
+      contentHeight += 28.h;
+      final count = isLoadingHomeData.value
+          ? 3
+          : recentDestinationsPreview.length;
       contentHeight += count * 64.h;
       if (count > 1) {
-        contentHeight += (count - 1) * 25.h; // Dividers between rows.
+        contentHeight += (count - 1) * 25.h;
       }
     }
 
     if (shouldShowVehicleSection) {
       contentHeight += 12.h;
-      contentHeight += 28.h; // Title + gap.
-      contentHeight += 72.h; // Vehicle row (fixed height in sheet).
+      contentHeight += 28.h;
+      contentHeight += 72.h;
     }
 
     contentHeight += _estimatedBottomPadding;
@@ -755,21 +801,26 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }) async {
     if (isSavingPlace.value) return;
     isSavingPlace.value = true;
-    final request = CreateSavedPlaceRequest(
-      label: label,
-      name: name,
-      placeId: placeId,
-      lat: lat ?? mapCenter.value.latitude,
-      lng: lng ?? mapCenter.value.longitude,
-    );
+    try {
+      await Loader.run(() async {
+        final request = CreateSavedPlaceRequest(
+          label: label,
+          name: name,
+          placeId: placeId,
+          lat: lat ?? mapCenter.value.latitude,
+          lng: lng ?? mapCenter.value.longitude,
+        );
 
-    final result = await profileRepository.addSavedPlace(request);
-    result.fold((_) => null, (ok) async {
-      if (ok) {
-        await loadSavedPlaces();
-      }
-    });
-    isSavingPlace.value = false;
+        final result = await profileRepository.addSavedPlace(request);
+        await result.fold((_) => null, (ok) async {
+          if (ok) {
+            await loadSavedPlaces();
+          }
+        });
+      });
+    } finally {
+      isSavingPlace.value = false;
+    }
   }
 
   Future<void> saveRecentAsFavorite({
@@ -778,22 +829,26 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }) async {
     if (isSavingPlace.value) return;
     isSavingPlace.value = true;
+    try {
+      await Loader.run(() async {
+        final request = SaveRecentAsFavoriteRequest(
+          label: label.toLowerCase(),
+          name: loc.address.split(',').first,
+          address: loc.address,
+          lat: loc.lat,
+          lng: loc.lng,
+        );
 
-    final request = SaveRecentAsFavoriteRequest(
-      label: label.toLowerCase(),
-      name: loc.address.split(',').first,
-      address: loc.address,
-      lat: loc.lat,
-      lng: loc.lng,
-    );
-
-    final result = await profileRepository.saveRecentAsFavorite(request);
-    result.fold((failure) => null, (success) async {
-      if (success) {
-        await loadSavedPlaces();
-      }
-    });
-    isSavingPlace.value = false;
+        final result = await profileRepository.saveRecentAsFavorite(request);
+        await result.fold((failure) => null, (success) async {
+          if (success) {
+            await loadSavedPlaces();
+          }
+        });
+      });
+    } finally {
+      isSavingPlace.value = false;
+    }
   }
 
   Future<void> toggleFavoriteForRecent(RecentDestinationModel loc) async {
@@ -1504,78 +1559,76 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     if (isProceedingToBooking.value) return;
     isProceedingToBooking.value = true;
 
+    Map<String, dynamic>? bookingArguments;
     try {
-      double? pLat = routePickupLat;
-      double? pLng = routePickupLng;
+      bookingArguments = await Loader.run(() async {
+        double? pLat = routePickupLat;
+        double? pLng = routePickupLng;
 
-      // Resolve pickup if missing
-      if ((pLat == null || pLng == null) && pickup.trim().isNotEmpty) {
-        final resolvedPickup = await getLatLngFromAddress(pickup.trim());
-        if (resolvedPickup != null) {
-          pLat = resolvedPickup.latitude;
-          pLng = resolvedPickup.longitude;
-        }
-      }
-      pLat ??= mapCenter.value.latitude;
-      pLng ??= mapCenter.value.longitude;
-
-      final List<LocationEntity> resolvedDestinations = [];
-      for (int i = 0; i < items.length; i++) {
-        final addr = items[i];
-        double? dLat;
-        double? dLng;
-
-        // Final destination is expected to be last in the list.
-        if (i == items.length - 1) {
-          dLat = routeDestinationLat;
-          dLng = routeDestinationLng;
-        }
-
-        if (dLat == null || dLng == null) {
-          final resolved = await getLatLngFromAddress(addr);
-          if (resolved != null) {
-            dLat = resolved.latitude;
-            dLng = resolved.longitude;
+        // Resolve pickup if missing
+        if ((pLat == null || pLng == null) && pickup.trim().isNotEmpty) {
+          final resolvedPickup = await getLatLngFromAddress(pickup.trim());
+          if (resolvedPickup != null) {
+            pLat = resolvedPickup.latitude;
+            pLng = resolvedPickup.longitude;
           }
         }
+        pLat ??= mapCenter.value.latitude;
+        pLng ??= mapCenter.value.longitude;
 
-        // Final fallback if resolution failed
-        dLat ??= pLat;
-        dLng ??= pLng;
+        final List<LocationEntity> resolvedDestinations = [];
+        for (int i = 0; i < items.length; i++) {
+          final addr = items[i];
+          double? dLat;
+          double? dLng;
 
-        resolvedDestinations.add(
-          LocationEntity(lat: dLat, lng: dLng, address: addr),
+          // Final destination is expected to be last in the list.
+          if (i == items.length - 1) {
+            dLat = routeDestinationLat;
+            dLng = routeDestinationLng;
+          }
+
+          if (dLat == null || dLng == null) {
+            final resolved = await getLatLngFromAddress(addr);
+            if (resolved != null) {
+              dLat = resolved.latitude;
+              dLng = resolved.longitude;
+            }
+          }
+
+          // Final fallback if resolution failed
+          dLat ??= pLat;
+          dLng ??= pLng;
+
+          resolvedDestinations.add(
+            LocationEntity(lat: dLat, lng: dLng, address: addr),
+          );
+        }
+
+        if (resolvedDestinations.isEmpty) {
+          AppDialogs.showErrorDialog(
+            message: AppStrings.pleaseSelectAtLeastOneDestination.tr,
+          );
+          return null;
+        }
+
+        final canProceed = await _validateEstimateBeforeBookingNavigation(
+          pickupAddress: pickup,
+          pickupLat: pLat,
+          pickupLng: pLng,
+          destinations: resolvedDestinations,
         );
-      }
+        if (!canProceed) return null;
 
-      if (resolvedDestinations.isEmpty) {
-        AppDialogs.showErrorDialog(
-          message: AppStrings.pleaseSelectAtLeastOneDestination.tr,
-        );
-        return;
-      }
+        if (kDebugMode) {
+          debugPrint(
+            '[LocationSelection] Navigate booking args => '
+            'pickup=($pLat,$pLng), destinationsCount=${resolvedDestinations.length}, '
+            'preferredVehicleTypeId=${preferredVehicleTypeId ?? ''}',
+          );
+        }
 
-      final canProceed = await _validateEstimateBeforeBookingNavigation(
-        pickupAddress: pickup,
-        pickupLat: pLat,
-        pickupLng: pLng,
-        destinations: resolvedDestinations,
-      );
-      if (!canProceed) return;
-
-      if (kDebugMode) {
-        debugPrint(
-          '[LocationSelection] Navigate booking args => '
-          'pickup=($pLat,$pLng), destinationsCount=${resolvedDestinations.length}, '
-          'preferredVehicleTypeId=${preferredVehicleTypeId ?? ''}',
-        );
-      }
-
-      // Replace location-selection with vehicle-selection to avoid stack buildup
-      // when users repeatedly edit route and return.
-      Get.offNamed(
-        AppRoutes.booking,
-        arguments: {
+        return {
           'pickup': pickup,
           'destinations': resolvedDestinations,
           'pickupLat': pLat,
@@ -1585,11 +1638,16 @@ class HomeController extends GetxController with WidgetsBindingObserver {
             'preferredVehicleTypeId': preferredVehicleTypeId,
           if (preferredVehicleName != null && preferredVehicleName.isNotEmpty)
             'preferredVehicleName': preferredVehicleName,
-        },
-      );
+        };
+      });
     } finally {
       isProceedingToBooking.value = false;
     }
+
+    if (bookingArguments == null) return;
+
+    // Navigate only after the loader overlay is dismissed (root navigator).
+    Get.offNamed(AppRoutes.booking, arguments: bookingArguments);
   }
 
   /// Chip subtitle; Home falls back to current map address when saved line is empty.
@@ -1984,30 +2042,33 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
     isSavingPlace.value = true;
     try {
-      final latLng = await getLatLngFromAddress(address);
-      final lat = latLng?.latitude ?? mapCenter.value.latitude;
-      final lng = latLng?.longitude ?? mapCenter.value.longitude;
-      final name = address.split(',').first.trim().isEmpty
-          ? address
-          : address.split(',').first.trim();
+      await Loader.run(() async {
+        final latLng = await getLatLngFromAddress(address);
+        final lat = latLng?.latitude ?? mapCenter.value.latitude;
+        final lng = latLng?.longitude ?? mapCenter.value.longitude;
+        final name = address.split(',').first.trim().isEmpty
+            ? address
+            : address.split(',').first.trim();
 
-      final request = SaveRecentAsFavoriteRequest(
-        label: normalizedLabel.toLowerCase(),
-        name: name,
-        address: address,
-        lat: lat,
-        lng: lng,
-      );
+        final request = SaveRecentAsFavoriteRequest(
+          label: normalizedLabel.toLowerCase(),
+          name: name,
+          address: address,
+          lat: lat,
+          lng: lng,
+        );
 
-      final result = await profileRepository.saveRecentAsFavorite(request);
-      result.fold(
-        (failure) => AppDialogs.showErrorDialog(message: failure.message),
-        (success) async {
-          if (success) {
-            await refreshSavedPlacesAfterMutation();
-          }
-        },
-      );
+        final result = await profileRepository.saveRecentAsFavorite(request);
+        await result.fold(
+          (failure) async =>
+              AppDialogs.showErrorDialog(message: failure.message),
+          (success) async {
+            if (success) {
+              await refreshSavedPlacesAfterMutation();
+            }
+          },
+        );
+      });
     } finally {
       isSavingPlace.value = false;
     }
@@ -2031,25 +2092,28 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
     isSavingPlace.value = true;
     try {
-      final request = SaveRecentAsFavoriteRequest(
-        label: normalizedLabel.toLowerCase(),
-        name: address.split(',').first.trim().isEmpty
-            ? address
-            : address.split(',').first.trim(),
-        address: address,
-        lat: loc.lat,
-        lng: loc.lng,
-      );
+      await Loader.run(() async {
+        final request = SaveRecentAsFavoriteRequest(
+          label: normalizedLabel.toLowerCase(),
+          name: address.split(',').first.trim().isEmpty
+              ? address
+              : address.split(',').first.trim(),
+          address: address,
+          lat: loc.lat,
+          lng: loc.lng,
+        );
 
-      final result = await profileRepository.saveRecentAsFavorite(request);
-      result.fold(
-        (failure) => AppDialogs.showErrorDialog(message: failure.message),
-        (success) async {
-          if (success) {
-            await refreshSavedPlacesAfterMutation();
-          }
-        },
-      );
+        final result = await profileRepository.saveRecentAsFavorite(request);
+        await result.fold(
+          (failure) async =>
+              AppDialogs.showErrorDialog(message: failure.message),
+          (success) async {
+            if (success) {
+              await refreshSavedPlacesAfterMutation();
+            }
+          },
+        );
+      });
     } finally {
       isSavingPlace.value = false;
     }
@@ -2075,28 +2139,31 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
     isSavingPlace.value = true;
     try {
-      final latLng = (lat != null && lng != null)
-          ? LatLng(lat, lng)
-          : await getLatLngFromAddress(detailedAddress);
-      final request = SaveRecentAsFavoriteRequest(
-        label: normalizedLabel.toLowerCase(),
-        name: detailedAddress.split(',').first.trim().isEmpty
-            ? detailedAddress
-            : detailedAddress.split(',').first.trim(),
-        address: detailedAddress,
-        lat: latLng?.latitude ?? mapCenter.value.latitude,
-        lng: latLng?.longitude ?? mapCenter.value.longitude,
-      );
+      await Loader.run(() async {
+        final latLng = (lat != null && lng != null)
+            ? LatLng(lat, lng)
+            : await getLatLngFromAddress(detailedAddress);
+        final request = SaveRecentAsFavoriteRequest(
+          label: normalizedLabel.toLowerCase(),
+          name: detailedAddress.split(',').first.trim().isEmpty
+              ? detailedAddress
+              : detailedAddress.split(',').first.trim(),
+          address: detailedAddress,
+          lat: latLng?.latitude ?? mapCenter.value.latitude,
+          lng: latLng?.longitude ?? mapCenter.value.longitude,
+        );
 
-      final result = await profileRepository.saveRecentAsFavorite(request);
-      result.fold(
-        (failure) => AppDialogs.showErrorDialog(message: failure.message),
-        (success) async {
-          if (success) {
-            await refreshSavedPlacesAfterMutation();
-          }
-        },
-      );
+        final result = await profileRepository.saveRecentAsFavorite(request);
+        await result.fold(
+          (failure) async =>
+              AppDialogs.showErrorDialog(message: failure.message),
+          (success) async {
+            if (success) {
+              await refreshSavedPlacesAfterMutation();
+            }
+          },
+        );
+      });
     } finally {
       isSavingPlace.value = false;
     }

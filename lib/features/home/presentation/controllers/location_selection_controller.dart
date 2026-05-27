@@ -32,7 +32,13 @@ class LocationSelectionController extends GetxController {
   final RxnString preferredVehicleName = RxnString();
   final RxBool isVehicleSelectionEditMode = false.obs;
 
+  /// True while saved places / recents refresh for this screen.
+  final isLoadingInitialContent = true.obs;
+
   HomeController get homeController => Get.find<HomeController>();
+
+  bool get shouldShowPlaceListShimmer =>
+      isLoadingInitialContent.value || homeController.isLoadingHomeData.value;
 
   /// Pickup + final destination + every intermediate row (if any) confirmed from search/recent/saved.
   bool get areAllSegmentsReadyForBooking {
@@ -69,6 +75,25 @@ class LocationSelectionController extends GetxController {
   void onInit() {
     super.onInit();
     _initializeFromArguments();
+    _loadInitialContent();
+  }
+
+  Future<void> _loadInitialContent() async {
+    isLoadingInitialContent.value = true;
+    try {
+      while (homeController.isLoadingHomeData.value) {
+        await Future<void>.delayed(const Duration(milliseconds: 40));
+        if (_isDisposed) return;
+      }
+      await Future.wait<void>([
+        homeController.refreshRecentDestinations(),
+        homeController.loadSavedPlaces(),
+      ]);
+    } finally {
+      if (!_isDisposed) {
+        isLoadingInitialContent.value = false;
+      }
+    }
   }
 
   void _initializeFromArguments() {

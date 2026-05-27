@@ -14,6 +14,8 @@ import '../../../../shared/widgets/app_profile_user_avatar.dart';
 import '../../../../shared/widgets/app_profile_user_summary.dart';
 import '../controllers/profile_controller.dart';
 import '../widgets/menu_item_widget.dart';
+import '../widgets/profile_screen_layout.dart';
+import '../widgets/profile_screen_shimmer.dart';
 import '../widgets/wallet_summary_card.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -59,40 +61,13 @@ class ProfileScreen extends StatelessWidget {
                         padding: EdgeInsets.fromLTRB(16.w, 18.h, 16.w, 0),
                         child: _buildSettingsList(context),
                       ),
-                      SizedBox(height: 18.h),
+                      SizedBox(height: ProfileScreenLayout.logoutGapAfterSettings),
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.w),
-                        child: InkWell(
-                          onTap: controller.logout,
-                          borderRadius: BorderRadius.circular(16.r),
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              vertical: 16.h,
-                              horizontal: 16.w,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.white,
-                              border: Border.all(color: AppColors.divider),
-                              borderRadius: BorderRadius.circular(16.r),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Iconsax.logout,
-                                  size: 24.w,
-                                  color: AppColors.error,
-                                ),
-                                SizedBox(width: 7.w),
-                                Text(
-                                  AppStrings.logout.tr,
-                                  style: AppTextStyles.body.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.error,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                        child: Obx(
+                          () => controller.isLoadingProfile.value
+                              ? ProfileScreenShimmer.logoutButton()
+                              : _buildLogoutButton(),
                         ),
                       ),
                       SizedBox(height: 40.h),
@@ -155,16 +130,6 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
           ),
-
-          // Loading Overlay
-          Obx(
-            () => controller.isLoading.value
-                ? Container(
-                    color: AppColors.black.withValues(alpha: 0.26),
-                    child: const Center(child: CircularProgressIndicator()),
-                  )
-                : const SizedBox.shrink(),
-          ),
         ],
       ),
     );
@@ -172,6 +137,9 @@ class ProfileScreen extends StatelessWidget {
 
   Widget _buildNormalModeContent() {
     return Obx(() {
+      if (controller.isLoadingProfile.value) {
+        return ProfileScreenShimmer.headerContent();
+      }
       final user = controller.userModel.value;
       final name = (user?.name ?? '').trim().isNotEmpty
           ? (user?.name ?? '')
@@ -199,8 +167,14 @@ class ProfileScreen extends StatelessWidget {
 
           // Wallet Card
           Padding(
-            padding: EdgeInsets.fromLTRB(17.w, 16.h, 14.w, 12.h),
-            child: WalletSummaryCard(balance: balance, walletNumber: walletNum),
+            padding: ProfileScreenLayout.walletPadding,
+            child: SizedBox(
+              height: ProfileScreenLayout.walletCardHeight,
+              child: WalletSummaryCard(
+                balance: balance,
+                walletNumber: walletNum,
+              ),
+            ),
           ),
         ],
       );
@@ -299,22 +273,68 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildLogoutButton() {
+    return InkWell(
+      onTap: controller.logout,
+      borderRadius: BorderRadius.circular(ProfileScreenLayout.logoutBorderRadius),
+      child: Container(
+        height: ProfileScreenLayout.logoutButtonHeight,
+        padding: EdgeInsets.symmetric(
+          vertical: ProfileScreenLayout.logoutVerticalPadding,
+          horizontal: ProfileScreenLayout.logoutHorizontalPadding,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          border: Border.all(color: AppColors.divider),
+          borderRadius: BorderRadius.circular(
+            ProfileScreenLayout.logoutBorderRadius,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Iconsax.logout,
+              size: 24.w,
+              color: AppColors.error,
+            ),
+            SizedBox(width: 7.w),
+            Text(
+              AppStrings.logout.tr,
+              style: AppTextStyles.body.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.error,
+                height: 20 / 15,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildSettingsList(BuildContext context) {
     return Container(
-      padding: EdgeInsets.fromLTRB(10.w, 19.h, 10.w, 10.h),
+      padding: ProfileScreenLayout.settingsContainerPadding,
       decoration: BoxDecoration(
         color: AppColors.pageBackground,
         border: Border.all(color: AppColors.divider),
         borderRadius: BorderRadius.circular(16.r),
       ),
       child: Obx(
-        () => Column(
-          children: [
-            MenuItemWidget(
-              icon: Iconsax.clock,
-              title: AppStrings.myRides.tr,
-              onTap: controller.openMyRides,
-            ),
+        () {
+          final menuCount = controller.visibleMenuItemCount;
+          if (controller.isLoadingProfile.value) {
+            return ProfileScreenShimmer.settingsMenu(itemCount: menuCount);
+          }
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              MenuItemWidget(
+                icon: Iconsax.clock,
+                title: AppStrings.myRides.tr,
+                onTap: controller.openMyRides,
+              ),
             MenuItemWidget(
               icon: Iconsax.card,
               title: AppStrings.payment.tr,
@@ -349,8 +369,9 @@ class ProfileScreen extends StatelessWidget {
                 onTap: controller.openSettings,
                 showDivider: false,
               ),
-          ],
-        ),
+            ],
+          );
+        },
       ),
     );
   }

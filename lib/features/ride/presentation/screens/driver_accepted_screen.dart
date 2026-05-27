@@ -17,6 +17,7 @@ import '../../../../shared/widgets/app_map_route_one_line_bar.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../controllers/driver_accepted_controller.dart';
 import '../controllers/ride_share_controller.dart';
+import '../widgets/driver_accepted_screen_shimmer.dart';
 import '../widgets/ride_common_widgets.dart';
 
 /// SCR-11 — Driver accepted (heading to pickup). See `.agent/context/frontend/SCREENS.md`.
@@ -629,6 +630,10 @@ class DriverAcceptedScreen extends StatelessWidget {
       builder: (context) {
         return Obx(() {
           if (c.isLoadingRide.value) {
+            final state = c.rideBottomSheetState.value;
+            if (state == RideBottomSheetState.rideStarted) {
+              return _rideStartedSheetShimmer(c, scrollController);
+            }
             return _sheetScroll(
               context: context,
               scrollController: scrollController,
@@ -644,9 +649,10 @@ class DriverAcceptedScreen extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 20.h),
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24.h),
-                  child: const Center(child: CircularProgressIndicator()),
+                DriverAcceptedScreenShimmer.driverAssignedSheet(
+                  showPin: c.isPinRequired.value,
+                  pinDigitCount:
+                      c.otpDigits.isNotEmpty ? c.otpDigits.length : 4,
                 ),
               ],
             );
@@ -703,6 +709,58 @@ class DriverAcceptedScreen extends StatelessWidget {
             ],
           );
         });
+      },
+    );
+  }
+
+  Widget _rideStartedSheetShimmer(
+    DriverAcceptedController c,
+    ScrollController scrollController,
+  ) {
+    return Builder(
+      builder: (context) {
+        return ScrollConfiguration(
+          behavior: ScrollConfiguration.of(
+            context,
+          ).copyWith(overscroll: false, physics: const ClampingScrollPhysics()),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 64.w,
+                    height: 5.h,
+                    decoration: BoxDecoration(
+                      color: AppColors.skeletonBase,
+                      borderRadius: BorderRadius.circular(37.r),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 13.h),
+                DriverAcceptedScreenShimmer.rideStartedSheetTitle(),
+                SizedBox(height: 8.h),
+                const Divider(color: AppColors.borderWalletCard, height: 1),
+                SizedBox(height: 14.h),
+                Expanded(
+                  child: SingleChildScrollView(
+                    controller: scrollController,
+                    primary: false,
+                    clipBehavior: Clip.hardEdge,
+                    physics: const ClampingScrollPhysics(),
+                    padding: EdgeInsets.only(
+                      bottom: 16.h + _scrollBottomPad(context),
+                    ),
+                    child: DriverAcceptedScreenShimmer.rideStartedSheetBody(
+                      showChangeDropLink: true,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
       },
     );
   }

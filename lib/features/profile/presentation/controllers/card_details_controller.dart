@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import '../../../../core/services/progress_indicator/loader.dart';
 import '../../domain/entities/payment_card.dart';
 
 class CardDetailsController extends GetxController {
@@ -18,13 +19,10 @@ class CardDetailsController extends GetxController {
   Future<bool> deleteCard() async {
     if (isDeleteLoading.value) return false;
 
-    isDeleteLoading.value = true;
-    try {
+    return Loader.withFlag(isDeleteLoading, () async {
       // TODO(api): call delete-card endpoint/usecase here.
       await Future.delayed(const Duration(seconds: 3));
       return true;
-    } finally {
-      isDeleteLoading.value = false;
-    }
+    });
   }
 }

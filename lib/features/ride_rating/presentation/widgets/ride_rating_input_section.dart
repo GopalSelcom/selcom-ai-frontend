@@ -9,6 +9,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../controllers/ride_rating_controller.dart';
+import 'ride_rating_tags_shimmer.dart';
 
 class RideRatingInputSection extends StatelessWidget {
   const RideRatingInputSection({
@@ -73,7 +74,7 @@ class RideRatingInputSection extends StatelessWidget {
               ),
               SizedBox(height: 10.h),
               if (controller.isLoadingTags.value)
-                const Center(child: CircularProgressIndicator())
+                RideRatingTagsShimmer.tagChips()
               else if (controller.availableTags.isNotEmpty)
                 Wrap(
                   spacing: 8.w,

@@ -13,11 +13,13 @@ import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
+import '../../../../core/widgets/spin_kit_fading_circle.dart';
 import '../../../../shared/widgets/favorite_location_chips_row.dart';
 import '../../data/models/places_models.dart';
 import '../controllers/home_controller.dart';
 import '../controllers/location_selection_controller.dart';
 import '../widgets/favorite_icon_button.dart';
+import '../widgets/location_selection_shimmer.dart';
 
 class LocationSelectionScreen extends StatefulWidget {
   const LocationSelectionScreen({super.key});
@@ -465,6 +467,10 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
 
   Widget _chipsRow() {
     return Obx(() {
+      locationController.isLoadingInitialContent.value;
+      if (locationController.shouldShowPlaceListShimmer) {
+        return LocationSelectionShimmer.chipsRow();
+      }
       controller.savedPlaces.length;
       return FavoriteLocationChipsRow(
         contentHorizontalPadding: 16.w,
@@ -665,7 +671,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
               final result = await controller.homeRepository.getGeocode(
                 address: recentText,
               );
-              Get.back(); // close loading
+              AppDialogs.dismissLoadingDialog();
 
               result.fold(
                 (failure) =>
@@ -985,7 +991,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       final result = await controller.homeRepository.getGeocode(
         address: description,
       );
-      Get.back(); // close loading
+      AppDialogs.dismissLoadingDialog();
 
       result.fold(
         (failure) => AppDialogs.showErrorDialog(message: failure.message),
@@ -1028,8 +1034,18 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       behavior: HitTestBehavior.translucent,
       child: Obx(() {
+        locationController.isLoadingInitialContent.value;
         if (controller.isSearching.value) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(
+            child: SpinKitFadingCircle(
+              color: AppColors.primary,
+              size: 50.sp,
+            ),
+          );
+        }
+        if (locationController.shouldShowPlaceListShimmer &&
+            controller.searchQuery.value.trim().isEmpty) {
+          return LocationSelectionShimmer.savedAndRecentList();
         }
         if (controller.searchQuery.value.trim().isNotEmpty) {
           return _suggestionsList(controller);

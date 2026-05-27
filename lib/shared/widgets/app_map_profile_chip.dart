@@ -4,6 +4,7 @@ import 'package:shimmer/shimmer.dart';
 
 import '../../core/theme/app_colors.dart';
 import 'app_profile_user_avatar.dart';
+import 'app_shimmer.dart';
 
 /// Map header profile control — same avatar/placeholder as [AppProfileUserAvatar].
 class AppMapProfileChip extends StatelessWidget {
@@ -23,16 +24,11 @@ class AppMapProfileChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return Shimmer.fromColors(
-        baseColor: AppColors.skeletonBase,
-        highlightColor: AppColors.skeletonHighlight,
-        child: Container(
-          width: _chipSize.w,
-          height: _chipSize.w,
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(16.r),
-          ),
+      return AppShimmer(
+        child: AppShimmerBox(
+          width: 64.w,
+          height: 61.h,
+          borderRadius: 16.r,
         ),
       );
     }

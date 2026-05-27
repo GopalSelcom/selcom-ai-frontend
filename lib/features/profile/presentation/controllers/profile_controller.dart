@@ -9,6 +9,7 @@ import '../../../../core/network/urls.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/app_settings_service.dart';
 import '../../../../core/services/session_expiry_service.dart';
+import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../shared/utils/phone_formatter.dart';
 import '../../../../shared/widgets/web_view_screen.dart';
@@ -30,6 +31,7 @@ class ProfileController extends GetxController {
   // Observables for state
   final RxBool isEditing = false.obs;
   final RxBool isLoading = false.obs;
+  final RxBool isLoadingProfile = true.obs;
   final RxBool showSettingsOption = false.obs;
   final RxBool showSafetyOption = false.obs;
 
@@ -56,12 +58,29 @@ class ProfileController extends GetxController {
     nameFocusNode = FocusNode();
     phoneFocusNode = FocusNode();
 
-    fetchProfile();
     fetchWalletBalance();
-    unawaited(_syncProfileMenuVisibility());
+    unawaited(_loadInitialContent());
     ever<Map<String, bool>>(appSettingsService.features, (_) {
       syncSettingsVisibility();
     });
+  }
+
+  /// Menu rows shown when not loading (must match [_buildSettingsList]).
+  int get visibleMenuItemCount {
+    var count = 5;
+    if (showSafetyOption.value) count++;
+    if (showSettingsOption.value) count++;
+    return count;
+  }
+
+  Future<void> _loadInitialContent() async {
+    isLoadingProfile.value = true;
+    try {
+      await _syncProfileMenuVisibility();
+      await _fetchProfileData();
+    } finally {
+      isLoadingProfile.value = false;
+    }
   }
 
   Future<void> _syncProfileMenuVisibility() async {
@@ -76,6 +95,10 @@ class ProfileController extends GetxController {
   }
 
   Future<void> fetchProfile() async {
+    await _fetchProfileData();
+  }
+
+  Future<void> _fetchProfileData() async {
     final result = await profileUseCase.getProfile();
     result.fold(
       (failure) {
@@ -147,51 +170,59 @@ class ProfileController extends GetxController {
       return;
     }
 
+    if (isLoading.value) return;
+
     nameFocusNode.unfocus();
     phoneFocusNode.unfocus();
 
-    isLoading.value = true;
+    String? failureMessage;
+    var saved = false;
 
-    final result = await profileUseCase.updateProfile(
-      UserProfileUpdateRequest(
-        image: pickedImage.value,
-        name: nameTextController.text.trim(),
-        emailId: "",
-        userId: userModel.value?.id ?? '',
-        dob: "",
-        nidaNumber: ""
-      ),
+    await Loader.withFlag(isLoading, () async {
+      final result = await profileUseCase.updateProfile(
+        UserProfileUpdateRequest(
+          image: pickedImage.value,
+          name: nameTextController.text.trim(),
+          emailId: '',
+          userId: userModel.value?.id ?? '',
+          dob: '',
+          nidaNumber: '',
+        ),
+      );
+
+      await result.fold(
+        (failure) async {
+          failureMessage = failure.message;
+        },
+        (updatedUser) async {
+          final refreshed = await profileUseCase.getProfile();
+          refreshed.fold(
+            (_) {
+              final userModel = UserModel.fromJson(
+                updatedUser.response?.toJson() ?? const {},
+              );
+              _updateLocalUserState(userModel);
+            },
+            (freshUser) {
+              _updateLocalUserState(freshUser);
+            },
+          );
+          saved = true;
+        },
+      );
+    });
+
+    if (failureMessage != null) {
+      AppDialogs.showErrorDialog(message: failureMessage!);
+      return;
+    }
+    if (!saved) return;
+
+    pickedImage.value = null;
+    isEditing.value = false;
+    AppDialogs.showSuccessDialog(
+      message: AppStrings.userProfileUpdatedSuccessfully.tr,
     );
-
-    result.fold(
-      (failure) {
-        AppDialogs.showErrorDialog(message: failure.message);
-      },
-      (updatedUser) async {
-        // Refresh from source of truth after update.
-        final refreshed = await profileUseCase.getProfile();
-        refreshed.fold(
-          (_) {
-            // Fallback to update response payload if profile refresh fails.
-            final userModel = UserModel.fromJson(
-              updatedUser.response?.toJson() ?? const {},
-            );
-            _updateLocalUserState(userModel);
-          },
-          (freshUser) {
-            _updateLocalUserState(freshUser);
-          },
-        );
-
-        pickedImage.value = null;
-        isEditing.value = false;
-        AppDialogs.showSuccessDialog(
-          message: AppStrings.userProfileUpdatedSuccessfully.tr,
-        );
-      },
-    );
-
-    isLoading.value = false;
   }
 
   Future<void> pickProfileImage() async {

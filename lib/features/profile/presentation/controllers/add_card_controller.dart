@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../core/services/progress_indicator/loader.dart';
 import '../../domain/entities/payment_card.dart';
 
 class AddCardController extends GetxController {
@@ -64,10 +65,8 @@ class AddCardController extends GetxController {
       return;
     }
 
-    isSubmitting.value = true;
-    try {
+    await Loader.withFlag(isSubmitting, () async {
       // TODO(api): Replace this with AddCard use case + repository call.
-      // For now we return success and let caller show success bottom sheet.
       await Future.delayed(const Duration(seconds: 3));
       Get.back<PaymentCard>(
         result: PaymentCard(
@@ -78,10 +77,8 @@ class AddCardController extends GetxController {
           nickName: cardHolderController.text.trim(),
         ),
       );
-    } finally {
-      isSubmitting.value = false;
-      canSubmitForm.value = _isFormInputValidForVisibility();
-    }
+    });
+    canSubmitForm.value = _isFormInputValidForVisibility();
   }
 
   bool _validateForm() {

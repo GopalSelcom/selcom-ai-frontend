@@ -12,6 +12,7 @@ import '../../../../shared/widgets/app_cupertino_text_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/animated_blur_dialog.dart';
 import '../../../../shared/widgets/app_skeleton_loader.dart';
+import '../../../../shared/widgets/global_loader_widget.dart';
 import '../../../../shared/widgets/promo_apply_success_dialog.dart';
 import '../controllers/promo_code_controller.dart';
 
@@ -95,10 +96,7 @@ class PromoCodeScreen extends StatelessWidget {
         child: SizedBox(
           width: 36.w,
           height: 36.w,
-          child: const CircularProgressIndicator(
-            color: AppColors.primary,
-            strokeWidth: 3,
-          ),
+          child: const GlobalLoaderWidget(),
         ),
       ),
     );

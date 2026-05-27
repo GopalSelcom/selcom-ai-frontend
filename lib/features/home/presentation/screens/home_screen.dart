@@ -3,8 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:shimmer/shimmer.dart';
-
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
@@ -16,6 +14,7 @@ import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/widgets/app_cupertino_text_button.dart';
+import '../../../../shared/widgets/app_shimmer.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
 import '../../../../shared/widgets/app_map_gps_button.dart';
@@ -24,6 +23,9 @@ import '../../../../shared/widgets/favorite_location_chips_row.dart';
 import '../../../../shared/widgets/vehicle_type_image.dart';
 import '../../../ride/data/models/ride_management_models.dart';
 import '../controllers/home_controller.dart';
+import '../widgets/home_address_header_skeleton.dart';
+import '../widgets/home_sheet_layout.dart';
+import '../widgets/home_sheet_loading_content.dart';
 import '../widgets/recent_location_tile.dart';
 
 class HomeScreen extends GetView<HomeController> {
@@ -84,6 +86,11 @@ class HomeScreen extends GetView<HomeController> {
               }
               final activeRide = controller.activeRide.value;
               final bottomOffset = activeRide != null
+                  ? MediaQuery
+                      .paddingOf(context)
+                      .bottom +
+                      12.h +
+                      120.h
                   ? MediaQuery.paddingOf(context).bottom + 12.h + 120.h
                   : screenHeight * controller.sheetSize.value;
               return Positioned(
@@ -96,7 +103,7 @@ class HomeScreen extends GetView<HomeController> {
             }),
             Obx(() {
               if (controller.isLoadingHomeData.value) {
-                return const SizedBox.shrink();
+                return _buildFigmaDraggableSheet(context);
               }
               final activeRide = controller.activeRide.value;
               if (activeRide != null) {
@@ -137,20 +144,7 @@ class HomeScreen extends GetView<HomeController> {
             ],
           ),
           child: isLoading
-              ? Shimmer.fromColors(
-                  baseColor: AppColors.skeletonBase,
-                  highlightColor: AppColors.skeletonHighlight,
-                  child: Center(
-                    child: Container(
-                      width: 200.w,
-                      height: 16.h,
-                      decoration: BoxDecoration(
-                        color: AppColors.white,
-                        borderRadius: BorderRadius.circular(4.r),
-                      ),
-                    ),
-                  ),
-                )
+              ? const HomeAddressHeaderSkeleton()
               : Row(
                   children: [
                     SizedBox(
@@ -207,7 +201,7 @@ class HomeScreen extends GetView<HomeController> {
   }
   */
 
-  static const double _sheetHorizontalPadding = 16;
+  static const double _sheetHorizontalPadding = HomeSheetLayout.horizontalPadding;
 
   Widget _buildFigmaDraggableSheet(BuildContext context) {
     return Obx(() {
@@ -223,6 +217,7 @@ class HomeScreen extends GetView<HomeController> {
       final snapSizes = controller.homeSheetSnapSizes;
       final scrollPhysics = controller.homeSheetScrollPhysics;
       final contentSignature = Object.hash(
+        controller.isLoadingHomeData.value,
         controller.recentDestinations.length,
         controller.vehicleTypes.length,
         controller.savedPlaces.length,
@@ -238,13 +233,22 @@ class HomeScreen extends GetView<HomeController> {
         snap: controller.homeSheetShouldSnap,
         snapSizes: snapSizes,
         childBuilder: (scrollController) {
-          return _HomeSheetScrollContent(
-            key: ValueKey<int>(contentSignature),
-            scrollController: scrollController,
-            physics: scrollPhysics,
-            contentSignature: contentSignature,
-            onContentMeasured: controller.reportHomeSheetContentHeight,
-            children: _buildHomeSheetContentChildren(),
+          final isLoading = controller.isLoadingHomeData.value;
+          final children = isLoading
+              ? HomeSheetLoadingContent.buildChildren(
+                  horizontalPadding: _sheetHorizontalPadding,
+                )
+              : _buildHomeSheetContentChildren();
+          return AbsorbPointer(
+            absorbing: isLoading,
+            child: _HomeSheetScrollContent(
+              key: ValueKey<int>(contentSignature),
+              scrollController: scrollController,
+              physics: scrollPhysics,
+              contentSignature: contentSignature,
+              onContentMeasured: controller.reportHomeSheetContentHeight,
+              children: children,
+            ),
           );
         },
       );
@@ -334,9 +338,9 @@ class HomeScreen extends GetView<HomeController> {
       Padding(
         padding: EdgeInsets.symmetric(horizontal: _sheetHorizontalPadding.w),
         child: Obx(() {
-          const sectionGap = 12.0;
-          const titleContentGap = 10.0;
-          const recentItemGap = 12.0;
+          const sectionGap = HomeSheetLayout.sectionGap;
+          const titleContentGap = HomeSheetLayout.titleContentGap;
+          const recentItemGap = HomeSheetLayout.recentItemGap;
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -419,6 +423,39 @@ class HomeScreen extends GetView<HomeController> {
     return widgets;
   }
 
+  Widget _buildRecentLocationSkeleton() {
+    return AppShimmer(
+      child: Row(
+        children: [
+          AppShimmerBox(
+            width: 52.w,
+            height: 52.w,
+            borderRadius: 12.r,
+          ),
+          SizedBox(width: 16.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppShimmerBox(
+                  height: 14.h,
+                  width: 130.w,
+                  borderRadius: 8.r,
+                ),
+                SizedBox(height: 8.h),
+                AppShimmerBox(
+                  height: 12.h,
+                  width: 200.w,
+                  borderRadius: 8.r,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildRecentLocationItem(RecentDestinationModel loc) {
     return Obx(() {
       final distance = controller.calculateDistanceKm(loc.lat, loc.lng);
@@ -438,53 +475,10 @@ class HomeScreen extends GetView<HomeController> {
     });
   }
 
-  Widget _buildRecentLocationSkeleton() {
-    return Row(
-      children: [
-        Container(
-          width: 52.w,
-          height: 52.w,
-          decoration: BoxDecoration(
-            color: AppColors.skeletonBase,
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-        ),
-        SizedBox(width: 16.w),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                height: 14.h,
-                width: 130.w,
-                decoration: BoxDecoration(
-                  color: AppColors.skeletonBase,
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-              ),
-              SizedBox(height: 8.h),
-              Container(
-                height: 12.h,
-                width: 200.w,
-                decoration: BoxDecoration(
-                  color: AppColors.skeletonBase,
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// Image (42) + gap (4) + label + descender padding — fixed row height for the sheet.
-  static const double _vehicleRowHeight = 72;
-
   Widget _buildVehicleHorizontalList() {
     return Obx(
       () => SizedBox(
-        height: _vehicleRowHeight.h,
+        height: HomeSheetLayout.vehicleRowHeight.h,
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           clipBehavior: Clip.none,
@@ -493,9 +487,33 @@ class HomeScreen extends GetView<HomeController> {
             children: controller.isLoadingHomeData.value
                 ? List.generate(3, (_) => _buildVehicleSkeleton())
                 : controller.vehicleTypes
-                      .map((vehicle) => _buildVehicleCard(vehicle))
-                      .toList(),
+                    .map((vehicle) => _buildVehicleCard(vehicle))
+                    .toList(),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVehicleSkeleton() {
+    return AppShimmer(
+      child: Container(
+        margin: EdgeInsets.only(right: 16.w),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppShimmerBox(
+              width: 62.w,
+              height: 42.h,
+              borderRadius: 16.r,
+            ),
+            SizedBox(height: 4.h),
+            AppShimmerBox(
+              width: 52.w,
+              height: 10.h,
+              borderRadius: 8.r,
+            ),
+          ],
         ),
       ),
     );
@@ -539,41 +557,6 @@ class HomeScreen extends GetView<HomeController> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildVehicleSkeleton() {
-    return Container(
-      margin: EdgeInsets.only(right: 16.w),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 62.w,
-            height: 42.h,
-            padding: EdgeInsets.all(6.w),
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(16.r),
-            ),
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.skeletonBase,
-                borderRadius: BorderRadius.circular(10.r),
-              ),
-            ),
-          ),
-          SizedBox(height: 4.h),
-          Container(
-            width: 52.w,
-            height: 10.h,
-            decoration: BoxDecoration(
-              color: AppColors.skeletonBase,
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-          ),
-        ],
       ),
     );
   }

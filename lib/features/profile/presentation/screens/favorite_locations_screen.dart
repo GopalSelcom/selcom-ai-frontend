@@ -10,6 +10,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../controllers/favorite_locations_controller.dart';
+import '../widgets/favorite_locations_screen_shimmer.dart';
 
 class FavoriteLocationsScreen extends GetView<FavoriteLocationsController> {
   const FavoriteLocationsScreen({super.key});
@@ -23,8 +24,11 @@ class FavoriteLocationsScreen extends GetView<FavoriteLocationsController> {
           AppProfileHeader(title: AppStrings.savedLocations.tr),
           Expanded(
             child: Obx(() {
-              if (controller.isLoading.value) {
-                return const Center(child: CircularProgressIndicator());
+              if (controller.isLoading.value && controller.favorites.isEmpty) {
+                return Align(
+                  alignment: Alignment.topCenter,
+                  child: FavoriteLocationsScreenShimmer.listContent(),
+                );
               }
 
               if (controller.favorites.isEmpty) {
