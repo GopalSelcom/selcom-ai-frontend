@@ -237,10 +237,15 @@ class AppDialogs {
   /// Closes the top modal overlay, then replaces the stack with [route].
   /// Use after ride cancel so Obx/dialog dependents dispose before navigation.
   static Future<void> navigateReplacingStack(String route) async {
+    // Let any in-flight widget rebuilds settle before tearing down overlays.
+    await WidgetsBinding.instance.endOfFrame;
     dismissLoadingDialog();
-    final navigator = Get.key.currentState;
-    if (navigator != null && navigator.canPop()) {
-      navigator.pop();
+    if ((Get.isDialogOpen ?? false) || (Get.isBottomSheetOpen ?? false)) {
+      final navigator = Get.key.currentState;
+      if (navigator != null && navigator.canPop()) {
+        navigator.pop();
+      }
+      await WidgetsBinding.instance.endOfFrame;
     }
     await WidgetsBinding.instance.endOfFrame;
     await Get.offAllNamed(route);
