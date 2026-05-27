@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/app_shimmer.dart';
+import 'driver_accepted_ride_started_layout.dart';
 
 /// Content-section shimmer for [DriverAcceptedScreen] bottom sheets.
 /// Sizes mirror loaded text [fontSize] values — not line-height boxes.
@@ -30,33 +31,39 @@ abstract final class DriverAcceptedScreenShimmer {
     );
   }
 
-  static Widget rideStartedSheetBody({bool showChangeDropLink = true}) {
+  static Widget rideStartedSheetBody({
+    bool showChangeDropLink = true,
+    bool showEtaBadge = false,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        AppShimmer(child: _rideProgressHeader()),
-        SizedBox(height: 7.94.h),
+        _rideProgressHeader(showEtaBadge: showEtaBadge),
+        SizedBox(height: DriverAcceptedRideStartedLayout.headerToLocationsGap),
         _locationsCard(showChangeDropLink: showChangeDropLink),
-        SizedBox(height: 8.h),
+        SizedBox(height: DriverAcceptedRideStartedLayout.locationsToFareGap),
         _fareCard(),
-        SizedBox(height: 12.h),
+        SizedBox(height: DriverAcceptedRideStartedLayout.bodyBottomGap),
       ],
     );
   }
 
   static Widget rideStartedSheetTitle() {
-    return AppShimmer(
-      child: Center(
+    return Center(
+      child: AppShimmer(
         child: AppShimmerBox(
           width: 180.w,
-          height: 20.sp,
+          height: DriverAcceptedRideStartedLayout.progressTitleLineHeight,
           borderRadius: 4.r,
         ),
       ),
     );
   }
 
-  static Widget rideStartedSheet({bool showChangeDropLink = true}) {
+  static Widget rideStartedSheet({
+    bool showChangeDropLink = true,
+    bool showEtaBadge = false,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -64,7 +71,10 @@ abstract final class DriverAcceptedScreenShimmer {
         SizedBox(height: 14.h),
         const Divider(color: AppColors.borderWalletCard, height: 1),
         SizedBox(height: 16.h),
-        rideStartedSheetBody(showChangeDropLink: showChangeDropLink),
+        rideStartedSheetBody(
+          showChangeDropLink: showChangeDropLink,
+          showEtaBadge: showEtaBadge,
+        ),
       ],
     );
   }
@@ -263,120 +273,69 @@ abstract final class DriverAcceptedScreenShimmer {
     );
   }
 
-  static Widget _rideProgressHeader() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AppShimmerBox(
-                width: 100.w,
-                height: 20.sp,
-                borderRadius: 4.r,
-              ),
-              Row(
-                children: [
-                  AppShimmerBox(
-                    width: 72.w,
-                    height: 15.sp,
-                    borderRadius: 4.r,
-                  ),
-                  SizedBox(width: 5.w),
-                  AppShimmerBox(
-                    width: 48.w,
-                    height: 21.sp,
-                    borderRadius: 6.r,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        AppShimmerBox(
-          width: 76.w,
-          height: 60.67.h,
-          borderRadius: 8.r,
-        ),
-      ],
-    );
-  }
-
-  static Widget _locationsCard({required bool showChangeDropLink}) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 15.h),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceSubtle,
-        border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
-        borderRadius: BorderRadius.circular(16.r),
-      ),
-      child: AppShimmer(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _locationRow(showConnectorBelow: true),
-            _locationRow(
-              showConnectorBelow: false,
-              showChangeDropFooter: showChangeDropLink,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  static Widget _locationRow({
-    required bool showConnectorBelow,
-    bool showChangeDropFooter = false,
-  }) {
-    return IntrinsicHeight(
+  static Widget _rideProgressHeader({bool showEtaBadge = false}) {
+    return SizedBox(
+      height: DriverAcceptedRideStartedLayout.headerRowHeight,
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
-            children: [
-              AppShimmerBox(
-                width: 24.w,
-                height: 24.w,
-                borderRadius: 12.r,
-              ),
-              if (showConnectorBelow)
-                Expanded(
-                  child: Container(
-                    width: 1.w,
-                    margin: EdgeInsets.symmetric(vertical: 2.h),
-                    color: AppColors.white,
-                  ),
-                ),
-            ],
-          ),
-          SizedBox(width: 8.w),
           Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(bottom: showConnectorBelow ? 16.h : 0),
+            child: AppShimmer(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   AppShimmerBox(
-                    width: 120.w,
-                    height: 15.sp,
+                    width: 100.w,
+                    height: DriverAcceptedRideStartedLayout.vehicleLabelLineHeight,
                     borderRadius: 4.r,
                   ),
-                  SizedBox(height: 1.h),
-                  AppShimmerBox(
-                    width: double.infinity,
-                    height: 12.sp,
-                    borderRadius: 4.r,
-                  ),
-                  if (showChangeDropFooter)
+                  if (showEtaBadge)
+                    Row(
+                      children: [
+                        AppShimmerBox(
+                          width: 72.w,
+                          height:
+                              DriverAcceptedRideStartedLayout.subtitleLineHeight,
+                          borderRadius: 4.r,
+                        ),
+                        SizedBox(width: 5.w),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: DriverAcceptedRideStartedLayout
+                                .etaBadgeHorizontalPadding,
+                            vertical: DriverAcceptedRideStartedLayout
+                                .etaBadgeVerticalPadding,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.bgEtaBlueSoft,
+                            borderRadius: BorderRadius.circular(6.06.r),
+                          ),
+                          child: AppShimmerBox(
+                            width: 32.w,
+                            height: DriverAcceptedRideStartedLayout
+                                .subtitleLineHeight,
+                            borderRadius: 4.r,
+                          ),
+                        ),
+                      ],
+                    )
+                  else
                     AppShimmerBox(
-                      width: 140.w,
-                      height: 12.sp,
+                      width: 160.w,
+                      height:
+                          DriverAcceptedRideStartedLayout.subtitleLineHeight,
                       borderRadius: 4.r,
                     ),
                 ],
               ),
+            ),
+          ),
+          AppShimmer(
+            child: AppShimmerBox(
+              width: DriverAcceptedRideStartedLayout.vehicleImageWidth,
+              height: DriverAcceptedRideStartedLayout.vehicleImageHeight,
+              borderRadius: 8.r,
             ),
           ),
         ],
@@ -384,31 +343,156 @@ abstract final class DriverAcceptedScreenShimmer {
     );
   }
 
-  static Widget _fareCard() {
+  static Widget _locationsCard({required bool showChangeDropLink}) {
+    final contentHeight =
+        DriverAcceptedRideStartedLayout.locationsContentHeight(
+      showChangeDropLink: showChangeDropLink,
+    );
     return Container(
-      padding: EdgeInsets.fromLTRB(14.w, 14.h, 11.w, 24.h),
+      padding: EdgeInsets.symmetric(
+        horizontal: DriverAcceptedRideStartedLayout.locationCardPaddingH,
+        vertical: DriverAcceptedRideStartedLayout.locationCardPaddingV,
+      ),
       decoration: BoxDecoration(
         color: AppColors.surfaceSubtle,
         border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
         borderRadius: BorderRadius.circular(16.r),
       ),
-      child: AppShimmer(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: SizedBox(
+        height: contentHeight,
+        child: AppShimmer(
+          child: _locationsContent(showChangeDropLink: showChangeDropLink),
+        ),
+      ),
+    );
+  }
+
+  static Widget _locationsContent({required bool showChangeDropLink}) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _locationRow(showConnectorBelow: true),
+        _locationRow(
+          showConnectorBelow: false,
+          showChangeDropFooter: showChangeDropLink,
+        ),
+      ],
+    );
+  }
+
+  static Widget _locationRow({
+    required bool showConnectorBelow,
+    bool showChangeDropFooter = false,
+  }) {
+    final rowHeight = DriverAcceptedRideStartedLayout.locationRowHeight(
+      hasConnectorBelow: showConnectorBelow,
+      showChangeDropFooter: showChangeDropFooter,
+    );
+
+    return SizedBox(
+      height: rowHeight,
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            AppShimmerBox(
-              width: 72.w,
-              height: 15.sp,
-              borderRadius: 4.r,
+            Column(
+              children: [
+                AppShimmerBox(
+                  width: DriverAcceptedRideStartedLayout.locationMarkerSize,
+                  height: DriverAcceptedRideStartedLayout.locationMarkerSize,
+                  borderRadius:
+                      DriverAcceptedRideStartedLayout.locationMarkerSize / 2,
+                ),
+                if (showConnectorBelow)
+                  Expanded(
+                    child: Container(
+                      width: 1.w,
+                      margin: EdgeInsets.symmetric(vertical: 2.h),
+                      color: AppColors.white,
+                    ),
+                  ),
+              ],
             ),
-            SizedBox(height: 6.h),
-            for (var i = 0; i < 4; i++) ...[
-              if (i > 0) SizedBox(height: 4.h),
-              _fareRow(),
-            ],
+            SizedBox(width: 8.w),
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: showConnectorBelow
+                      ? DriverAcceptedRideStartedLayout.locationRowBottomPadding
+                      : 0,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppShimmerBox(
+                      width: 120.w,
+                      height:
+                          DriverAcceptedRideStartedLayout.locationTitleLineHeight,
+                      borderRadius: 4.r,
+                    ),
+                    SizedBox(
+                      height:
+                          DriverAcceptedRideStartedLayout.locationTitleAddressGap,
+                    ),
+                    AppShimmerBox(
+                      width: double.infinity,
+                      height: DriverAcceptedRideStartedLayout
+                          .locationAddressLineHeight,
+                      borderRadius: 4.r,
+                    ),
+                    if (showChangeDropFooter)
+                      AppShimmerBox(
+                        width: 140.w,
+                        height: DriverAcceptedRideStartedLayout
+                            .changeDropLinkLineHeight,
+                        borderRadius: 4.r,
+                      ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
+    );
+  }
+
+  static Widget _fareCard() {
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+        DriverAcceptedRideStartedLayout.fareCardPaddingLeft,
+        DriverAcceptedRideStartedLayout.fareCardPaddingTop,
+        DriverAcceptedRideStartedLayout.fareCardPaddingRight,
+        DriverAcceptedRideStartedLayout.fareCardPaddingBottom,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceSubtle,
+        border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+      child: SizedBox(
+        height: DriverAcceptedRideStartedLayout.fareContentHeight,
+        child: AppShimmer(child: _fareContent()),
+      ),
+    );
+  }
+
+  static Widget _fareContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AppShimmerBox(
+          width: 72.w,
+          height: DriverAcceptedRideStartedLayout.fareTitleLineHeight,
+          borderRadius: 4.r,
+        ),
+        SizedBox(height: DriverAcceptedRideStartedLayout.fareTitleRowsGap),
+        for (var i = 0; i < DriverAcceptedRideStartedLayout.fareRowCount; i++) ...[
+          if (i > 0) SizedBox(height: DriverAcceptedRideStartedLayout.fareRowGap),
+          _fareRow(),
+        ],
+      ],
     );
   }
 
@@ -418,14 +502,14 @@ abstract final class DriverAcceptedScreenShimmer {
       children: [
         Expanded(
           child: AppShimmerBox(
-            height: 12.sp,
+            height: DriverAcceptedRideStartedLayout.fareRowLineHeight,
             borderRadius: 4.r,
           ),
         ),
         SizedBox(width: 8.w),
         AppShimmerBox(
           width: 56.w,
-          height: 12.sp,
+          height: DriverAcceptedRideStartedLayout.fareRowLineHeight,
           borderRadius: 4.r,
         ),
       ],

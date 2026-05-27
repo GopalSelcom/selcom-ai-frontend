@@ -638,7 +638,7 @@ class DriverAcceptedScreen extends StatelessWidget {
           if (c.isLoadingRide.value) {
             final state = c.rideBottomSheetState.value;
             if (state == RideBottomSheetState.rideStarted) {
-              return _rideStartedSheetShimmer(scrollController);
+              return _rideStartedSheetShimmer(c, scrollController);
             }
             return _sheetScroll(
               context: context,
@@ -719,7 +719,10 @@ class DriverAcceptedScreen extends StatelessWidget {
     );
   }
 
-  Widget _rideStartedSheetShimmer(ScrollController scrollController) {
+  Widget _rideStartedSheetShimmer(
+    DriverAcceptedController c,
+    ScrollController scrollController,
+  ) {
     return Builder(
       builder: (context) {
         return ScrollConfiguration(
