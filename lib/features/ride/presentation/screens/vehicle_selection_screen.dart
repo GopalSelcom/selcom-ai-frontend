@@ -13,6 +13,7 @@ import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
 import '../../../../shared/widgets/app_map_route_one_line_bar.dart';
+import '../../../../shared/widgets/app_shimmer.dart';
 import '../../../../shared/widgets/vehicle_selection_promo_chip.dart';
 import '../../../payment/presentation/widgets/payment_bar.dart';
 import '../controllers/vehicle_selection_controller.dart';
@@ -48,14 +49,14 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
     final int visibleItems = estimatesCount.clamp(0, 3);
 
     double listHeight;
-    if (controller.isLoadingEstimates.value || estimatesCount == 0) {
-      listHeight = 120.h; // Loading spinner height
-    } else {
-      listHeight =
-          (visibleItems * 73.h) +
-          ((visibleItems - 1).clamp(0, 2) * 10.h) +
-          10.h;
-    }
+    final int loadingShimmerCount =
+        controller.isLoadingEstimates.value && estimatesCount == 0
+            ? 3
+            : visibleItems.clamp(1, 3);
+    final int listItemsCount =
+        controller.isLoadingEstimates.value ? loadingShimmerCount : visibleItems;
+    listHeight =
+        (listItemsCount * 73.h) + ((listItemsCount - 1).clamp(0, 2) * 10.h) + 10.h;
 
     // PaymentBar: top padding (18.h) + button (~56.h) + bottom padding
     final double paymentBarHeight =
@@ -471,9 +472,19 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
           Expanded(
             child: Obx(() {
               if (controller.isLoadingEstimates.value) {
-                return const Padding(
-                  padding: EdgeInsets.all(20),
-                  child: Center(child: CircularProgressIndicator()),
+                final int estimatesCount = controller.estimates.length;
+                final int visibleItems = estimatesCount.clamp(0, 3);
+                final int shimmerCount =
+                    (visibleItems == 0 ? 3 : visibleItems).clamp(1, 3);
+
+                return ListView.separated(
+                  controller: scrollController,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding:
+                      EdgeInsets.only(left: 16.w, right: 16.w, bottom: 10.h),
+                  itemCount: shimmerCount,
+                  separatorBuilder: (_, __) => SizedBox(height: 10.h),
+                  itemBuilder: (_, __) => _vehicleCardShimmer(),
                 );
               }
               return ListView.separated(
@@ -503,12 +514,12 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
             }),
           ),
           Obx(() {
-            final _fareDeps = (
+            final fareDeps = (
               controller.estimates.length,
               controller.selectedVehicleIndex.value,
               controller.appliedPromoCode.value,
             );
-            assert(_fareDeps.$1 >= 0);
+            assert(fareDeps.$1 >= 0);
             return PaymentBar(
               buttonLabel:
                   '${AppStrings.bookRide.tr} ${CurrencyFormatter.formatPayableOrFree(controller.selectedPayableFareAmount, controller.currency, freeLabel: AppStrings.rideFreeLabel.tr)}',
@@ -644,6 +655,91 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                 ),
               ),
               _vehicleFarePrice(item),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Loading placeholder for a single item inside the "Choose a ride" sheet.
+  /// Mirrors default card layout (no promo): title + ETA + single fare line.
+  Widget _vehicleCardShimmer() {
+    return Material(
+      color: AppColors.surfaceSubtle,
+      borderRadius: BorderRadius.circular(16.r),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(
+            color: AppColors.borderWalletCard,
+            width: 0.787,
+          ),
+        ),
+        // Shimmer only the inner content, not the outer card shell.
+        child: AppShimmer(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Vehicle thumbnail (matches [_vehicleThumb] sizes).
+              AppShimmerBox(
+                width: 72.w,
+                height: 52.h,
+                borderRadius: 8.r,
+              ),
+              SizedBox(width: 18.w),
+              // Left content column.
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      height: 18.h,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: AppShimmerBox(
+                              height: 16.h,
+                              borderRadius: 8.r,
+                            ),
+                          ),
+                          SizedBox(width: 10.w),
+                          AppShimmerBox(
+                            width: 10.w,
+                            height: 10.w,
+                            borderRadius: 999.r,
+                          ),
+                          SizedBox(width: 8.w),
+                          AppShimmerBox(
+                            width: 12.w,
+                            height: 12.w,
+                            borderRadius: 3.r,
+                          ),
+                          SizedBox(width: 6.w),
+                          AppShimmerBox(
+                            width: 26.w,
+                            height: 12.h,
+                            borderRadius: 6.r,
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 2.h),
+                    AppShimmerBox(
+                      width: 170.w,
+                      height: 14.h,
+                      borderRadius: 8.r,
+                    ),
+                  ],
+                ),
+              ),
+              // Single fare line (matches [_vehicleFarePrice] without promo).
+              AppShimmerBox(
+                width: 90.w,
+                height: 16.h,
+                borderRadius: 8.r,
+              ),
             ],
           ),
         ),
