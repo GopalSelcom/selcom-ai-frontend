@@ -155,20 +155,22 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
       final selected = _selectedDestination;
       if (selected == null) return;
       setState(() => _isSaving = true);
+      var popEditorOnSuccess = false;
       try {
         await Loader.run(() async {
           if (controller.destinationUpdatePreview.value == null) {
             await controller.previewDropLocationUpdate(selected);
           } else {
-            final ok = await controller.applyDropLocationUpdate(selected);
-            if (ok) {
-              if (Get.isBottomSheetOpen ?? false) {
-                Get.back();
-              }
-              Get.back();
-            }
+            popEditorOnSuccess =
+                await controller.applyDropLocationUpdate(selected);
           }
         });
+        // Pop after Loader.run — Get.back inside the loader task closes the
+        // overlay dialog, not this screen.
+        if (popEditorOnSuccess && mounted) {
+          await _popChangeDropLocationEditor();
+          await controller.onChangeDropLocationEditorClosedAfterConfirm();
+        }
       } finally {
         if (mounted) setState(() => _isSaving = false);
       }
@@ -176,20 +178,34 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
     }
 
     setState(() => _isSaving = true);
+    var popEditorOnSuccess = false;
     try {
       await Loader.run(() async {
         if (controller.stopUpdatePreview.value == null) {
           await controller.previewStopsUpdate(_stops);
         } else {
-          await controller.applyStopsUpdate(_stops);
-          if (controller.stopUpdateApplied.value != null) {
-            Get.back();
-          }
+          popEditorOnSuccess = await controller.applyStopsUpdate(_stops);
         }
       });
+      if (popEditorOnSuccess && mounted) {
+        await _popStopEditor();
+        await controller.onStopEditorClosedAfterConfirm();
+      }
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
+  }
+
+  Future<void> _popChangeDropLocationEditor() async {
+    if (Get.currentRoute != AppRoutes.changeDropLocationEditor) return;
+    Navigator.of(context).pop(true);
+    await WidgetsBinding.instance.endOfFrame;
+  }
+
+  Future<void> _popStopEditor() async {
+    if (Get.currentRoute != AppRoutes.stopEditor) return;
+    Navigator.of(context).pop(true);
+    await WidgetsBinding.instance.endOfFrame;
   }
 
   @override

@@ -50,7 +50,6 @@ import '../../domain/repositories/ride_repository.dart';
 import '../screens/ride_details_screen.dart';
 import '../widgets/cancel_ride_dialogs.dart';
 import '../widgets/ride_driver_call_options_sheet.dart';
-import '../widgets/stop_update_progress_modal.dart';
 import 'ride_details_controller.dart';
 
 /// SCR-11 — Driver accepted: live map, driver details, OTP.
@@ -161,9 +160,12 @@ class DriverAcceptedController extends GetxController
   final RxBool isDestinationUpdateFlow = false.obs;
   final Rxn<DestinationUpdatePreviewModel> destinationUpdatePreview =
       Rxn<DestinationUpdatePreviewModel>();
+  DestinationUpdateAppliedModel? _pendingDestinationAppliedAfterConfirm;
+  StopUpdateAppliedModel? _pendingStopAppliedAfterConfirm;
+  String? _pendingStopPaymentValidationId;
+  String? _pendingStopPaymentDirection;
   double? _pendingDestinationTargetLat;
   double? _pendingDestinationTargetLng;
-  bool _isStopUpdateProgressOpen = false;
 
   void updateSheetSize(double size) {
     sheetSize.value = size;
@@ -197,8 +199,6 @@ class DriverAcceptedController extends GetxController
         isInitialRouteLoaded.value = true;
       }
     });
-    ever(isUpdatingStops, (_) => _handleRouteUpdateProgress());
-    ever(isUpdatingDestination, (_) => _handleRouteUpdateProgress());
     ever(currentRideStatus, (status) {
       if (sheetController.isAttached) {
         final double target;
@@ -633,13 +633,13 @@ class DriverAcceptedController extends GetxController
         if (isUpdatingStops.value && stopUpdateProgressStep.value == 2) {
           if (r.pendingStopsUpdate == null) {
             _clearIdempotencyKey();
-            stopUpdateProgressStep.value = 3; // Success!
+            stopUpdateProgressStep.value = 0;
             isUpdatingStops.value = false;
           } else if (stopUpdateWorkingStops.isNotEmpty &&
               r.stops.length == stopUpdateWorkingStops.length) {
             // Also succeed if the confirmed stops list now matches our target list count
             _clearIdempotencyKey();
-            stopUpdateProgressStep.value = 3; // Success!
+            stopUpdateProgressStep.value = 0;
             isUpdatingStops.value = false;
           }
         }
@@ -652,7 +652,7 @@ class DriverAcceptedController extends GetxController
               tLng != null &&
               (dest.lat - tLat).abs() < 0.00002 &&
               (dest.lng - tLng).abs() < 0.00002) {
-            stopUpdateProgressStep.value = 3;
+            stopUpdateProgressStep.value = 0;
             isUpdatingDestination.value = false;
             isDestinationUpdateFlow.value = false;
             _pendingDestinationTargetLat = null;
@@ -923,7 +923,7 @@ class DriverAcceptedController extends GetxController
       if (res.rideId != rideId) return;
       _clearIdempotencyKey();
       isUpdatingStops.value = false;
-      stopUpdateProgressStep.value = 3; // Success
+      stopUpdateProgressStep.value = 0;
       _fetchRideDetails();
     });
 
@@ -2120,7 +2120,6 @@ class DriverAcceptedController extends GetxController
   }
 
   Future<void> previewStopsUpdate(List<RideStopEntity> stops) async {
-    isUpdatingStops.value = true;
     final stopsJson = _buildStopsPayloadForUpdate(stops);
 
     final result = await rideRepository.updateStops(
@@ -2132,7 +2131,6 @@ class DriverAcceptedController extends GetxController
 
     result.fold(
       (f) {
-        isUpdatingStops.value = false;
         AppDialogs.showErrorDialog(
           title: AppStrings.error.tr,
           message: f.message,
@@ -2147,24 +2145,20 @@ class DriverAcceptedController extends GetxController
           }
           _saveIdempotencyKey(stopUpdateIdempotencyKey.value);
         }
-        isUpdatingStops.value = false;
       },
     );
   }
 
-  Future<void> applyStopsUpdate(List<RideStopEntity> stops) async {
+  Future<bool> applyStopsUpdate(List<RideStopEntity> stops) async {
     final pending = ride.value?.pendingStopsUpdate;
     if (pending != null &&
         pending.status == 'pending_payment' &&
         pending.validationId != null) {
-      // RESUME FLOW: Skip PUT /stops and go straight to payment dummy
-      isUpdatingStops.value = true;
-      await _processPaymentHold(pending.validationId!, pending.direction);
-      return;
+      _pendingStopPaymentValidationId = pending.validationId;
+      _pendingStopPaymentDirection = pending.direction;
+      return true;
     }
 
-    isUpdatingStops.value = true;
-    stopUpdateProgressStep.value = 1; // Updating payment/Starting
     final stopsJson = _buildStopsPayloadForUpdate(stops);
 
     final result = await rideRepository.updateStops(
@@ -2174,26 +2168,64 @@ class DriverAcceptedController extends GetxController
       idempotencyKey: stopUpdateIdempotencyKey.value,
     );
 
-    result.fold(
+    return result.fold(
       (f) {
-        _clearIdempotencyKey(); // Clear on failure
-        isUpdatingStops.value = false;
+        _clearIdempotencyKey();
         stopUpdateProgressStep.value = 0;
         AppDialogs.showErrorDialog(
           title: AppStrings.error.tr,
           message: f.message,
         );
+        return false;
       },
-      (res) async {
+      (res) {
         if (res is StopUpdateAppliedModel) {
           stopUpdateApplied.value = res;
-          await _processPaymentHold(
-            res.blockUpdateValidationId ?? '',
-            res.direction,
-          );
+          stopUpdatePreview.value = null;
+          _pendingStopAppliedAfterConfirm = res;
+          return true;
         }
+        return false;
       },
     );
+  }
+
+  /// Called after [StopEditorScreen] pops on add-stops confirm success.
+  Future<void> onStopEditorClosedAfterConfirm() async {
+    final resumeValidationId = _pendingStopPaymentValidationId;
+    if (resumeValidationId != null) {
+      final direction = _pendingStopPaymentDirection ?? '';
+      _pendingStopPaymentValidationId = null;
+      _pendingStopPaymentDirection = null;
+      isUpdatingStops.value = true;
+      stopUpdateProgressStep.value = 1;
+      await _processPaymentHold(resumeValidationId, direction);
+      return;
+    }
+
+    final applied = _pendingStopAppliedAfterConfirm;
+    if (applied == null) return;
+    _pendingStopAppliedAfterConfirm = null;
+    await _finalizeStopsConfirm(applied);
+  }
+
+  Future<void> _finalizeStopsConfirm(StopUpdateAppliedModel applied) async {
+    if (applied.blockUpdateRequired &&
+        (applied.blockUpdateValidationId ?? '').isNotEmpty) {
+      isUpdatingStops.value = true;
+      stopUpdateProgressStep.value = 1;
+      await _processPaymentHold(
+        applied.blockUpdateValidationId!,
+        applied.direction,
+      );
+      return;
+    }
+
+    // Instant success — mirror change-drop flow: refresh SCR-11, no progress sheet.
+    _clearIdempotencyKey();
+    stopUpdateProgressStep.value = 0;
+    isUpdatingStops.value = false;
+    await _fetchRideDetails();
   }
 
   List<Map<String, dynamic>> _buildStopsPayloadForUpdate(
@@ -2277,74 +2309,6 @@ class DriverAcceptedController extends GetxController
         _pollForStopUpdateResult();
       }
     });
-  }
-
-  Future<void> cancelStopUpdate() async {
-    if (ride.value == null) return;
-
-    // Optimistic UI close
-    isUpdatingStops.value = false;
-    stopUpdateProgressStep.value = 0;
-
-    final result = await rideRepository.cancelPendingStops(rideId);
-    result.fold(
-      (f) => debugPrint("Failed to cancel stop update: ${f.message}"),
-      (_) {
-        _clearIdempotencyKey();
-        _fetchRideDetails();
-      },
-    );
-  }
-
-  void cancelDestinationUpdate() {
-    isUpdatingDestination.value = false;
-    stopUpdateProgressStep.value = 0;
-    isDestinationUpdateFlow.value = false;
-    _pendingDestinationTargetLat = null;
-    _pendingDestinationTargetLng = null;
-  }
-
-  Future<void> cancelRouteOrStopsUpdate() async {
-    if (isUpdatingDestination.value) {
-      cancelDestinationUpdate();
-    } else {
-      await cancelStopUpdate();
-    }
-  }
-
-  void _handleRouteUpdateProgress() {
-    final active = isUpdatingStops.value || isUpdatingDestination.value;
-    if (active) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!_isStopUpdateProgressOpen) {
-          _isStopUpdateProgressOpen = true;
-          AppDialogs.showAnimatedBottomSheet(
-            child: const StopUpdateProgressModal(),
-            barrierDismissible: false,
-          ).then((_) => _isStopUpdateProgressOpen = false);
-        }
-      });
-    } else {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_isStopUpdateProgressOpen) {
-          if (stopUpdateProgressStep.value == 3) {
-            Future.delayed(const Duration(seconds: 3), () {
-              if (_isStopUpdateProgressOpen) {
-                AppDialogs.closeActiveDialog();
-                _isStopUpdateProgressOpen = false;
-              }
-              stopUpdateProgressStep.value = 0;
-              isDestinationUpdateFlow.value = false;
-            });
-          } else {
-            AppDialogs.closeActiveDialog();
-            _isStopUpdateProgressOpen = false;
-            stopUpdateProgressStep.value = 0;
-            isDestinationUpdateFlow.value = false;
-          }
-        }
-      });
-    }
   }
 
   Future<void> onChangeDropLocation() async {
@@ -2465,31 +2429,37 @@ class DriverAcceptedController extends GetxController
     _pendingDestinationTargetLng = lng;
 
     isDestinationUpdateFlow.value = true;
-    isUpdatingDestination.value = true;
-    stopUpdateProgressStep.value = 1;
 
     // Step 2: apply destination update (confirm=true).
     final result = await rideRepository.confirmUpdateDestination(rideId, dest);
-    var success = false;
-    result.fold(
+    return result.fold(
       (f) {
-        isUpdatingDestination.value = false;
-        stopUpdateProgressStep.value = 0;
         isDestinationUpdateFlow.value = false;
+        stopUpdateProgressStep.value = 0;
         _pendingDestinationTargetLat = null;
         _pendingDestinationTargetLng = null;
+        _pendingDestinationAppliedAfterConfirm = null;
         AppDialogs.showErrorDialog(
           title: AppStrings.error.tr,
           message: f.message,
         );
+        return false;
       },
       (DestinationUpdateAppliedModel applied) {
-        success = true;
         destinationUpdatePreview.value = null;
-        unawaited(_finalizeDestinationConfirm(applied));
+        // Finalize after the editor screen pops so progress UI shows on SCR-11.
+        _pendingDestinationAppliedAfterConfirm = applied;
+        return true;
       },
     );
-    return success;
+  }
+
+  /// Called after [StopEditorScreen] pops on confirm success.
+  Future<void> onChangeDropLocationEditorClosedAfterConfirm() async {
+    final applied = _pendingDestinationAppliedAfterConfirm;
+    if (applied == null) return;
+    _pendingDestinationAppliedAfterConfirm = null;
+    await _finalizeDestinationConfirm(applied);
   }
 
   Future<void> _finalizeDestinationConfirm(
@@ -2510,11 +2480,11 @@ class DriverAcceptedController extends GetxController
         dir,
       );
     } else {
-      stopUpdateProgressStep.value = 3;
-      isUpdatingDestination.value = false;
       isDestinationUpdateFlow.value = false;
       await _fetchRideDetails();
       _setDropRouteFallback();
+      stopUpdateProgressStep.value = 0;
+      isUpdatingDestination.value = false;
     }
   }
 
@@ -2522,6 +2492,7 @@ class DriverAcceptedController extends GetxController
     String validationId,
     String direction,
   ) async {
+    isUpdatingDestination.value = true;
     // Mirrors stop-update payment behavior:
     // - up: request payment authorization
     // - down/flat: skip to route sync step
