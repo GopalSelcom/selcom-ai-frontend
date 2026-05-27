@@ -305,12 +305,6 @@ class VehicleSelectionController extends GetxController {
                   'last=${mapped.last.latitude},${mapped.last.longitude}',
                 );
               }
-              final n = mapped.length;
-              driverMarkerPoints.assignAll([
-                mapped[(n * 0.25).floor().clamp(0, n - 1)],
-                mapped[(n * 0.55).floor().clamp(0, n - 1)],
-                mapped[(n * 0.78).floor().clamp(0, n - 1)],
-              ]);
             } else {
               _useStraightLineFallback();
             }
