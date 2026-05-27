@@ -865,35 +865,37 @@ class FindingDriverController extends GetxController {
         isProcessing: isCancelPayProcessing,
         onConfirmTap: () async {
           _isUserInitiatedCancellation = true;
+          var cancelSucceeded = false;
           await Loader.withFlag(isCancelPayProcessing, () async {
-          final result = await rideRepository.cancelRide(
-            rideId,
-            selectedReason!,
-          );
-          result.fold(
-            (_) {
-              _isUserInitiatedCancellation = false;
-              AppDialogs.showErrorDialog(
-                title: AppStrings.cancelFailed.tr,
-                message: AppStrings.couldNotCancelTryAgain.tr,
-              );
-            },
-            (success) async {
-              if (!success) {
+            final result = await rideRepository.cancelRide(
+              rideId,
+              selectedReason!,
+            );
+            result.fold(
+              (_) {
                 _isUserInitiatedCancellation = false;
                 AppDialogs.showErrorDialog(
                   title: AppStrings.cancelFailed.tr,
-                  message: AppStrings.pleaseTryAgain.tr,
+                  message: AppStrings.couldNotCancelTryAgain.tr,
                 );
-              } else {
-                if (_isNavigatingHomeAfterCancel) return;
-                _isNavigatingHomeAfterCancel = true;
-                await Get.offAllNamed(AppRoutes.home);
-                unawaited(LiveActivityManager().endActivity(rideId));
-              }
-            },
-          );
+              },
+              (success) {
+                if (!success) {
+                  _isUserInitiatedCancellation = false;
+                  AppDialogs.showErrorDialog(
+                    title: AppStrings.cancelFailed.tr,
+                    message: AppStrings.pleaseTryAgain.tr,
+                  );
+                } else {
+                  cancelSucceeded = true;
+                }
+              },
+            );
           });
+          if (!cancelSucceeded || _isNavigatingHomeAfterCancel) return;
+          _isNavigatingHomeAfterCancel = true;
+          await AppDialogs.navigateHomeReplacingStack();
+          unawaited(LiveActivityManager().endActivity(rideId));
         },
       ),
       barrierDismissible: false,

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
+import '../../core/routes/app_routes.dart';
 import '../../core/localization/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
@@ -231,6 +232,22 @@ class AppDialogs {
   /// Dismisses the global [Loader] overlay from [showLoadingDialog].
   static void dismissLoadingDialog() {
     Loader.instance.hide();
+  }
+
+  /// Closes the top modal overlay, then replaces the stack with [route].
+  /// Use after ride cancel so Obx/dialog dependents dispose before navigation.
+  static Future<void> navigateReplacingStack(String route) async {
+    dismissLoadingDialog();
+    final navigator = Get.key.currentState;
+    if (navigator != null && navigator.canPop()) {
+      navigator.pop();
+    }
+    await WidgetsBinding.instance.endOfFrame;
+    await Get.offAllNamed(route);
+  }
+
+  static Future<void> navigateHomeReplacingStack() {
+    return navigateReplacingStack(AppRoutes.home);
   }
 
   static void _dismissActiveDialog() {

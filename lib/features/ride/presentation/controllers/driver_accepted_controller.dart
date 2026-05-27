@@ -1972,33 +1972,36 @@ class DriverAcceptedController extends GetxController
         isProcessing: isCancelPayProcessing,
         onConfirmTap: () async {
           _navigatedAway = true;
+          var cancelSucceeded = false;
           await Loader.withFlag(isCancelPayProcessing, () async {
-          final result = await rideRepository.cancelRide(
-            rideId,
-            selectedReason!,
-          );
-          result.fold(
-            (_) {
-              _navigatedAway = false;
-              AppDialogs.showErrorDialog(
-                title: AppStrings.cancelFailed.tr,
-                message: AppStrings.couldNotCancelTryAgain.tr,
-              );
-            },
-            (success) async {
-              if (success) {
-                await Get.offAllNamed(AppRoutes.home);
-                unawaited(LiveActivityManager().endActivity(rideId));
-              } else {
+            final result = await rideRepository.cancelRide(
+              rideId,
+              selectedReason!,
+            );
+            result.fold(
+              (_) {
                 _navigatedAway = false;
                 AppDialogs.showErrorDialog(
                   title: AppStrings.cancelFailed.tr,
-                  message: AppStrings.pleaseTryAgain.tr,
+                  message: AppStrings.couldNotCancelTryAgain.tr,
                 );
-              }
-            },
-          );
+              },
+              (success) {
+                if (success) {
+                  cancelSucceeded = true;
+                } else {
+                  _navigatedAway = false;
+                  AppDialogs.showErrorDialog(
+                    title: AppStrings.cancelFailed.tr,
+                    message: AppStrings.pleaseTryAgain.tr,
+                  );
+                }
+              },
+            );
           });
+          if (!cancelSucceeded) return;
+          await AppDialogs.navigateHomeReplacingStack();
+          unawaited(LiveActivityManager().endActivity(rideId));
         },
       ),
       barrierDismissible: false,
