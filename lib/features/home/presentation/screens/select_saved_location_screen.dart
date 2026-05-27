@@ -10,11 +10,11 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_back_button.dart';
-import '../../../../shared/widgets/custom_loader.dart';
 import '../../../ride/data/models/ride_management_models.dart';
 import '../../data/models/places_models.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/favorite_icon_button.dart';
+import '../widgets/select_saved_location_screen_shimmer.dart';
 
 class SelectSavedLocationScreen extends StatefulWidget {
   const SelectSavedLocationScreen({super.key});
@@ -91,12 +91,19 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
                   child: Stack(
                     children: [
                       Obx(() {
-                        if (controller.isSearching.value) {
-                          return const CustomLoader();
+                        final query = controller.searchQuery.value.trim();
+
+                        if (query.isNotEmpty) {
+                          if (controller.isSearching.value) {
+                            return SelectSavedLocationScreenShimmer
+                                .suggestionsList();
+                          }
+                          return _buildSuggestionsList();
                         }
 
-                        if (controller.searchQuery.value.trim().isNotEmpty) {
-                          return _buildSuggestionsList();
+                        if (controller.isLoadingHomeData.value &&
+                            controller.recentDestinations.isEmpty) {
+                          return SelectSavedLocationScreenShimmer.recentList();
                         }
 
                         return _buildRecentList();
