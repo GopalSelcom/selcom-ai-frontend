@@ -47,7 +47,7 @@ class PaymentBar extends StatelessWidget {
           25.w,
           computedBottomPadding,
         ),
-        decoration: const BoxDecoration(color: AppColors.primary),
+        decoration: const BoxDecoration(color: AppColors.primaryButton),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -128,7 +128,7 @@ class PaymentBar extends StatelessWidget {
                       buttonLabel,
                       maxLines: 1,
                       style: AppTextStyles.button.copyWith(
-                        color: AppColors.primary,
+                        color: AppColors.black,
                         fontSize: 15.sp,
                         fontFamily: AppTextStyles.metropolisFont,
                         fontWeight: FontWeight.w700,

@@ -86,11 +86,6 @@ class HomeScreen extends GetView<HomeController> {
               }
               final activeRide = controller.activeRide.value;
               final bottomOffset = activeRide != null
-                  ? MediaQuery
-                      .paddingOf(context)
-                      .bottom +
-                      12.h +
-                      120.h
                   ? MediaQuery.paddingOf(context).bottom + 12.h + 120.h
                   : screenHeight * controller.sheetSize.value;
               return Positioned(
