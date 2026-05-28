@@ -22,7 +22,7 @@ class CancelConfirmationDialog extends StatelessWidget {
         children: [
           _ActionButton(
             title: AppStrings.yesCancel.tr,
-            color: AppColors.primary,
+            color: AppColors.primaryButton,
             textColor: AppColors.white,
             onTap: () => Get.back(result: true),
           ),
@@ -78,7 +78,7 @@ class CancelAssignmentWarningDialog extends StatelessWidget {
           SizedBox(height: 32.h),
           _ActionButton(
             title: AppStrings.keepRide.tr,
-            color: AppColors.primary,
+            color: AppColors.primaryButton,
             textColor: AppColors.white,
             onTap: () => Get.back(result: false),
           ),
@@ -140,7 +140,6 @@ class _CancelReasonSelectionDialogState
     return AppCancelFlowDialog(
       canPop: false,
       title: AppStrings.whyDoYouWantToCancel.tr,
-      padding: EdgeInsets.symmetric(vertical: 32.h, horizontal: 24.w),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -213,14 +212,17 @@ class _CancelReasonSelectionDialogState
           SizedBox(height: 32.h),
           Obx(() {
             final loading = widget.isProcessing?.value ?? false;
+            final isContinueEnabled = _selectedReason != null && !loading;
             return _ActionButton(
               title: AppStrings.continueLabel.tr,
-              color: isSelected
-                  ? AppColors.primary
-                  : AppColors.primary.withValues(alpha: 0.5),
-              textColor: AppColors.white,
+              color: isContinueEnabled
+                  ? AppColors.primaryButton
+                  : AppColors.bgSoftCircle,
+              textColor: isContinueEnabled
+                  ? AppColors.white
+                  : AppColors.textSlateSoft,
               isLoading: loading,
-              onTap: _selectedReason == null || loading
+              onTap: !isContinueEnabled
                   ? null
                   : () async {
                       if (widget.onContinueTap != null) {
@@ -334,7 +336,7 @@ class CancellationChargesDialog extends StatelessWidget {
           SizedBox(height: 20.h),
           _ActionButton(
             title: AppStrings.keepRide.tr,
-            color: AppColors.primary,
+            color: AppColors.primaryButton,
             textColor: AppColors.white,
             onTap: () => Get.back(result: false),
           ),
