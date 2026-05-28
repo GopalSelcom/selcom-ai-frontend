@@ -126,6 +126,7 @@ class HomeScreen extends GetView<HomeController> {
         return AnimatedContainer(
           duration: const Duration(milliseconds: 320),
           curve: Curves.easeInOutCubic,
+          constraints: BoxConstraints(minHeight: 64.w),
           padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 9.h),
           decoration: BoxDecoration(
             color: AppColors.white,

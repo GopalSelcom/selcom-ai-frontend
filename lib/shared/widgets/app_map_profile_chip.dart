@@ -25,8 +25,8 @@ class AppMapProfileChip extends StatelessWidget {
     if (isLoading) {
       return AppShimmer(
         child: AppShimmerBox(
-          width: 64.w,
-          height: 61.h,
+          width: _chipSize.w,
+          height: _chipSize.w,
           borderRadius: 16.r,
         ),
       );
