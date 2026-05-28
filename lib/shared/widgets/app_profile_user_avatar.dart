@@ -3,14 +3,23 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../core/constants/app_assets.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/svg_picture_asset.dart';
 
 /// Shared profile placeholder styling (home map chip + profile screen).
 abstract final class AppProfileAvatarStyle {
-  static const IconData placeholderIcon = Icons.person;
-  static const Color placeholderIconColor = AppColors.primary;
+  static const double _placeholderAspect = 27 / 33;
 
-  static double placeholderIconSizeFor(double side) => side * (28 / 64);
+  static double profilePlaceholderWidthFor(double side) => side * (33 / 64);
+
+  static double profilePlaceholderHeightFor(double side) =>
+      profilePlaceholderWidthFor(side) * _placeholderAspect;
+
+  static double profileEditIconWidthFor(double side) => side * (22 / 64);
+
+  static double profileEditIconHeightFor(double side) =>
+      profileEditIconWidthFor(side) * (27 / 24);
 }
 
 /// Square rounded avatar (GO UI / map profile chip style).
@@ -50,10 +59,7 @@ class AppProfileUserAvatar extends StatelessWidget {
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: radius,
-        child: _buildImage(side),
-      ),
+      child: ClipRRect(borderRadius: radius, child: _buildImage(side)),
     );
 
     if (!showCameraBadge || onCameraTap == null) {
@@ -75,10 +81,16 @@ class AppProfileUserAvatar extends StatelessWidget {
                 color: AppColors.white,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                Icons.camera_alt_outlined,
-                color: AppColors.primary,
-                size: 18.w,
+              child: SvgPictureAsset(
+                AppAssets.icProfileEdit,
+                color: AppColors.white,
+                width: AppProfileAvatarStyle.profileEditIconWidthFor(side),
+                height: AppProfileAvatarStyle.profileEditIconHeightFor(side),
+                placeholderBuilder: (_) => Icon(
+                  Icons.edit_outlined,
+                  color: AppColors.white,
+                  size: AppProfileAvatarStyle.profileEditIconWidthFor(side),
+                ),
               ),
             ),
           ),
@@ -89,7 +101,12 @@ class AppProfileUserAvatar extends StatelessWidget {
 
   Widget _buildImage(double side) {
     if (imageFile != null) {
-      return Image.file(imageFile!, width: side, height: side, fit: BoxFit.cover);
+      return Image.file(
+        imageFile!,
+        width: side,
+        height: side,
+        fit: BoxFit.cover,
+      );
     }
 
     final url = imageUrl?.trim();
@@ -109,10 +126,15 @@ class AppProfileUserAvatar extends StatelessWidget {
 
   Widget _placeholder(double side) {
     return Center(
-      child: Icon(
-        AppProfileAvatarStyle.placeholderIcon,
-        color: AppProfileAvatarStyle.placeholderIconColor,
-        size: AppProfileAvatarStyle.placeholderIconSizeFor(side),
+      child: SvgPictureAsset(
+        AppAssets.icProfile,
+        width: AppProfileAvatarStyle.profilePlaceholderWidthFor(side),
+        height: AppProfileAvatarStyle.profilePlaceholderHeightFor(side),
+        placeholderBuilder: (_) => Icon(
+          Icons.person,
+          color: AppColors.primary,
+          size: AppProfileAvatarStyle.profilePlaceholderWidthFor(side),
+        ),
       ),
     );
   }

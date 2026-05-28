@@ -18,12 +18,13 @@ class AppAssets {
   static const String icWorkChip = '$_imagePath/ic_work_chip.svg';
   static const String icOtherChip = '$_imagePath/ic_other_chip.svg';
 
-  // Models
-  static const String gariPlus = '$_imagePath/img_cab.png';
+  static const String _vehicleImagePath = 'assets/images/vehicle';
+  static const String imgBoda = '$_vehicleImagePath/img_boda.svg';
+  static const String imgBajaji = '$_vehicleImagePath/img_bajaji.svg';
+  static const String imgCab = '$_vehicleImagePath/img_cab.svg';
 
-  static const String imgBoda = '$_imagePath/img_boda.png';
-  static const String imgBajaji = '$_imagePath/img_bajaji.png';
-  static const String imgCab = '$_imagePath/img_cab.png';
+  /// Legacy alias for cab vehicle art (SVG).
+  static const String gariPlus = imgCab;
 
   // Auth / Onboarding
   static const String onboarding1 = '$_imagePath/onboarding_1.svg';
@@ -33,7 +34,7 @@ class AppAssets {
   static const String icError = '$_imagePath/ic_error.svg';
 
   // Branding
-  static const String splashBgVector = '$_imagePath/splash_bg_vector.svg';
+  static const String splashScreenBg = '$_imagePath/splash_screen_bg.svg';
   static const String selcomGoLogo = '$_imagePath/selcom_go_logo.svg';
   static const String selcomGoLogoPrimaryColor =
       '$_imagePath/selcom_go_logo_primary_color.svg';
@@ -42,16 +43,19 @@ class AppAssets {
   static const String selcomGoLogoPng = '$_imagePath/selcom_go_logo.png';
   static const String selcomGoLogoRedSvg = '$_imagePath/Selcom Go logo-red.svg';
 
-  /// Map marker silhouettes (SVG → bitmap via [MapMarkerUtils]).
-  static const String mapVehicleRiderSvg = '$_imagePath/rider.svg';
-  static const String mapVehicleCarSvg = '$_imagePath/car.svg';
-  static const String mapVehicleRickshawSvg = '$_imagePath/rickshaw.svg';
+  /// Map driver markers (top-down silhouettes; SVG → bitmap via [MapMarkerUtils]).
+  static const String _mapMarkerPath = '$_imagePath/map';
+  static const String mapMarkerBoda = '$_mapMarkerPath/map_marker_boda.svg';
+  static const String mapMarkerCab = '$_mapMarkerPath/map_marker_cab.svg';
+  static const String mapMarkerBajaji = '$_mapMarkerPath/map_marker_bajaji.svg';
   static const String icPromotions = '$_imagePath/ic_promotions.svg';
   static const String icPromoCode = '$_imagePath/ic_promo_code.svg';
   static const String icPromoCodeDisabled =
       '$_imagePath/ic_promo_code_disabled.svg';
 
   // Profile
+  static const String icProfile = '$_imagePath/ic_profile.svg';
+  static const String icProfileEdit = '$_imagePath/ic_profile_edit.svg';
   static const String icFaceScan = '$_imagePath/ic_face_scan.svg';
   static const String icAccountVerified = '$_imagePath/ic_account_verified.svg';
   static const String icWallet = '$_imagePath/ic_wallet.svg';

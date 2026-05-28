@@ -86,6 +86,8 @@ flutter:
     - assets/images/
     - assets/images/payment/
     - assets/images/location/
+    - assets/images/map/
+    - assets/images/vehicle/
     - assets/json/
     - assets/lottie/
     - assets/sound/
@@ -116,6 +118,6 @@ flutter_launcher_icons:
   adaptive_icon_foreground: "assets/launcher_foreground.png"
 
 flutter_native_splash:
-  color: "#FDCC08"
+  color: "#FFCC00"
   ios: true
   android: true

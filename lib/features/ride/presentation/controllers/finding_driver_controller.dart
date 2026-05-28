@@ -28,7 +28,7 @@ import '../../../../shared/utils/driver_search_timeout_from_cancel_time.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../../../shared/utils/ride_pickup_status_labels.dart';
 import '../../../../shared/utils/ride_status_normalizer.dart';
-import '../../../../shared/utils/vehicle_image_utils.dart';
+import '../../../../shared/utils/map_vehicle_marker_utils.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../widgets/cancel_ride_dialogs.dart';
@@ -317,17 +317,18 @@ class FindingDriverController extends GetxController {
 
   Future<void> _loadDriverMarkerIcon({String? vehicleType}) async {
     try {
-      final asset = VehicleImageUtils.imageAssetForVehicleType(vehicleType);
-      assignedDriverMarkerIcon.value = await MapMarkerUtils.getResizedMarker(
+      final asset = MapVehicleMarkerUtils.markerAssetForVehicleType(
+        vehicleType,
+      );
+      assignedDriverMarkerIcon.value = await MapMarkerUtils.getSvgMarker(
         asset,
-        150,
+        MapVehicleMarkerUtils.defaultMarkerWidth,
       );
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      // Fallback
-      assignedDriverMarkerIcon.value = await BitmapDescriptor.asset(
-        const ImageConfiguration(size: Size(36, 36)),
-        AppAssets.gariPlus,
+      assignedDriverMarkerIcon.value = await MapMarkerUtils.getSvgMarker(
+        AppAssets.mapMarkerCab,
+        MapVehicleMarkerUtils.defaultMarkerWidth,
       );
     }
   }

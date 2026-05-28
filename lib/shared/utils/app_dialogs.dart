@@ -440,12 +440,12 @@ class AppDialogs {
                 Container(
                   padding: EdgeInsets.all(16.w),
                   decoration: BoxDecoration(
-                    color: AppColors.successBadge.withValues(alpha: 0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.check_circle_outline,
-                    color: AppColors.successBadge,
+                    color: AppColors.primary,
                     size: 32.sp,
                   ),
                 ),
@@ -748,7 +748,7 @@ class AppDialogs {
                     height: 140.h,
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: AppColors.bgSuccessLight,
+                      color: AppColors.primaryLight,
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(32.r),
                         topRight: Radius.circular(32.r),
@@ -764,11 +764,11 @@ class AppDialogs {
                     child: Container(
                       padding: EdgeInsets.all(16.w),
                       decoration: BoxDecoration(
-                        color: AppColors.successBadge,
+                        color: AppColors.primary,
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.successBadge.withValues(
+                            color: AppColors.primary.withValues(
                               alpha: 0.2,
                             ),
                             blurRadius: 10,

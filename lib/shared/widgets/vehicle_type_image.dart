@@ -11,6 +11,7 @@ class VehicleTypeImage extends StatelessWidget {
     this.width,
     this.height,
     this.fit = BoxFit.contain,
+    this.alignment = Alignment.center,
     this.fallbackIcon = Icons.directions_car,
     this.fallbackIconColor,
   });
@@ -19,6 +20,7 @@ class VehicleTypeImage extends StatelessWidget {
   final double? width;
   final double? height;
   final BoxFit fit;
+  final AlignmentGeometry alignment;
   final IconData fallbackIcon;
   final Color? fallbackIconColor;
 
@@ -33,16 +35,20 @@ class VehicleTypeImage extends StatelessWidget {
         width: w,
         height: h,
         fit: fit,
+        alignment: alignment,
         placeholderBuilder: (_) => _fallbackIcon(),
       );
     }
 
-    return Image.asset(
-      assetPath,
-      width: w,
-      height: h,
-      fit: fit,
-      errorBuilder: (_, __, ___) => _fallbackIcon(),
+    return Align(
+      alignment: alignment,
+      child: Image.asset(
+        assetPath,
+        width: w,
+        height: h,
+        fit: fit,
+        errorBuilder: (_, __, ___) => _fallbackIcon(),
+      ),
     );
   }
 

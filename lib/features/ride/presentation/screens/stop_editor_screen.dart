@@ -161,8 +161,9 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
           if (controller.destinationUpdatePreview.value == null) {
             await controller.previewDropLocationUpdate(selected);
           } else {
-            popEditorOnSuccess =
-                await controller.applyDropLocationUpdate(selected);
+            popEditorOnSuccess = await controller.applyDropLocationUpdate(
+              selected,
+            );
           }
         });
         // Pop after Loader.run — Get.back inside the loader task closes the
@@ -668,7 +669,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
         decoration: BoxDecoration(
           color: AppColors.surfaceSubtle,
           borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: AppColors.secondary),
+          border: Border.all(color: AppColors.borderWalletCard),
         ),
         child: Row(
           children: [

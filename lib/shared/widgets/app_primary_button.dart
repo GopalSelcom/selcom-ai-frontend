@@ -100,7 +100,16 @@ class AppPrimaryButton extends StatelessWidget {
       );
     }
 
-    final buttonChild = alignIconToTrailingEnd &&
+    final buttonChild = isLoading
+        ? SizedBox(
+            width: 24.w,
+            height: 24.w,
+            child: CircularProgressIndicator(
+              color: outlined ? effectiveOutlinedTextColor : effectiveTextColor,
+              strokeWidth: 2,
+            ),
+          )
+        : alignIconToTrailingEnd &&
                 !outlined &&
                 iconWidget != null
             ? Row(

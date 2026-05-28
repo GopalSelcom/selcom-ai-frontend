@@ -19,8 +19,8 @@ import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
 import '../../../../shared/widgets/app_map_gps_button.dart';
 import '../../../../shared/widgets/app_map_top_header.dart';
+import '../../../../shared/widgets/app_vehicle_explore_tile.dart';
 import '../../../../shared/widgets/favorite_location_chips_row.dart';
-import '../../../../shared/widgets/vehicle_type_image.dart';
 import '../../../ride/data/models/ride_management_models.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/home_address_header_skeleton.dart';
@@ -525,16 +525,7 @@ class HomeScreen extends GetView<HomeController> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(
-              width: 62.w,
-              height: 42.h,
-              child: VehicleTypeImage(
-                assetPath: imagePath,
-                width: 62.w,
-                height: 42.h,
-                fallbackIconColor: AppColors.textBody,
-              ),
-            ),
+            AppVehicleExploreTile(assetPath: imagePath),
             SizedBox(height: 4.h),
             Padding(
               padding: EdgeInsets.only(bottom: 2.h),

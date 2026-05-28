@@ -87,8 +87,16 @@ class RideDetailsController extends GetxController {
   }
 
   String get vehicleTypeForImage {
-    final value = (ride.vehicleKey ?? '').trim();
-    return value.isNotEmpty ? value : 'Ride';
+    final candidates = [
+      ride.vehicleKey,
+      ride.vehicleDisplayName,
+      ride.vehicleSnapshot?.vehicleType,
+    ];
+    for (final value in candidates) {
+      final trimmed = (value ?? '').trim();
+      if (trimmed.isNotEmpty) return trimmed;
+    }
+    return 'cab';
   }
 
   String get vehicleImageAsset {

@@ -7,6 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_cupertino_text_button.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
+import '../../../../shared/widgets/vehicle_type_image.dart';
 import '../controllers/ride_rating_controller.dart';
 import 'ride_rating_input_section.dart';
 
@@ -155,12 +156,15 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
                                             ],
                                           ),
                                         ),
-                                        Image.asset(
-                                          controller.vehicleImageAssetForType(
-                                            ride.vehicleType,
-                                          ),
+                                        VehicleTypeImage(
+                                          assetPath: controller
+                                              .vehicleImageAssetForType(
+                                                ride.vehicleType,
+                                              ),
                                           height: 52.h,
                                           fit: BoxFit.contain,
+                                          fallbackIcon: Icons.person,
+                                          fallbackIconColor: AppColors.textBody,
                                         ),
                                       ],
                                     ),
@@ -207,7 +211,7 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
       decoration: BoxDecoration(
         color: AppColors.surfaceSubtle,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: AppColors.secondary, width: 0.8),
+        border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

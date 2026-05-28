@@ -419,6 +419,8 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
               label: AppStrings.cancelRide.tr,
               onPressed: c.confirmCancelRide,
               outlined: true,
+              outlinedBorderColor: AppColors.iconHeartFilled,
+              outlinedTextColor: AppColors.iconHeartFilled,
               height: 56.h,
             ),
           );

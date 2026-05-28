@@ -35,7 +35,9 @@ abstract final class FavoriteLocationsScreenShimmer {
 
   static Widget locationTile() {
     return Container(
-      height: FavoriteLocationsScreenLayout.tileHeight,
+      constraints: BoxConstraints(
+        minHeight: FavoriteLocationsScreenLayout.tileHeight,
+      ),
       padding: EdgeInsets.all(FavoriteLocationsScreenLayout.tilePadding),
       decoration: BoxDecoration(
         color: AppColors.surfaceSubtle,

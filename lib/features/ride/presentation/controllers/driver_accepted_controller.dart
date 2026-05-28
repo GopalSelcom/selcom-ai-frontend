@@ -41,6 +41,7 @@ import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../../../shared/utils/ride_pickup_status_labels.dart';
 import '../../../../shared/utils/ride_status_normalizer.dart';
 import '../../../../shared/utils/tanzania_license_plate_formatter.dart';
+import '../../../../shared/utils/map_vehicle_marker_utils.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../data/models/destination_update_models.dart';
@@ -959,41 +960,22 @@ class DriverAcceptedController extends GetxController
 
   Future<void> loadDriverIcon({String? vehicleType}) async {
     try {
-      final type = (vehicleType ?? '').toLowerCase();
-      String assetPath = AppAssets.mapVehicleRiderSvg;
-
-      if (type.contains('car') ||
-          type.contains('cab') ||
-          type.contains('taxi') ||
-          type.contains('van') ||
-          type.contains('four wheeler')) {
-        assetPath = AppAssets.mapVehicleCarSvg;
-      } else if (type.contains('bajaj') ||
-          type.contains('rickshaw') ||
-          type.contains('tuk') ||
-          type.contains('auto') ||
-          type.contains('threewheeler') ||
-          type.contains('three wheeler')) {
-        assetPath = AppAssets.mapVehicleRickshawSvg;
-      } else if (type.contains('bike')) {
-        assetPath = AppAssets.mapVehicleRiderSvg;
-      }
-
+      final assetPath = MapVehicleMarkerUtils.markerAssetForVehicleType(
+        vehicleType,
+      );
       assignedDriverMarkerIcon.value = await MapMarkerUtils.getSvgMarker(
         assetPath,
-        70, // Consistent size for SVG markers
+        MapVehicleMarkerUtils.defaultMarkerWidth,
       );
     } catch (e, stackTrace) {
       developer.log(
-        "Error loading SVG marker icon ($vehicleType): $e",
+        "Error loading map marker icon ($vehicleType): $e",
         error: e,
         stackTrace: stackTrace,
       );
-      // Robust fallback to existing PNG assets
-      final asset = VehicleImageUtils.imageAssetForVehicleType(vehicleType);
-      assignedDriverMarkerIcon.value = await MapMarkerUtils.getResizedMarker(
-        asset,
-        150,
+      assignedDriverMarkerIcon.value = await MapMarkerUtils.getSvgMarker(
+        AppAssets.mapMarkerCab,
+        MapVehicleMarkerUtils.defaultMarkerWidth,
       );
     }
   }

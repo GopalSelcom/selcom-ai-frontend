@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
+import '../../../../shared/widgets/vehicle_type_image.dart';
 import '../../../ride_rating/presentation/widgets/ride_rating_input_section.dart';
 import '../controllers/ride_details_controller.dart';
 import '../widgets/ride_common_widgets.dart';
@@ -73,7 +74,10 @@ class RideDetailsScreen extends StatelessWidget {
             padding: EdgeInsets.all(14.w),
             decoration: BoxDecoration(
               color: AppColors.pageBackground,
-              border: Border.all(color: AppColors.secondary, width: 0.78),
+              border: Border.all(
+                color: AppColors.borderWalletCard,
+                width: 0.78,
+              ),
               borderRadius: BorderRadius.circular(16.r),
             ),
             child: Column(
@@ -183,17 +187,15 @@ class RideDetailsScreen extends StatelessWidget {
                               ),
                             ],
                           ),
-                          Image.asset(
-                            controller.vehicleImageAsset,
-                            width: RideDetailsScreenLayout.headerVehicleImageWidth,
-                            height:
-                                RideDetailsScreenLayout.headerVehicleImageHeight,
+                          VehicleTypeImage(
+                            assetPath: controller.vehicleImageAsset,
+                            width:
+                                RideDetailsScreenLayout.headerVehicleImageWidth,
+                            height: RideDetailsScreenLayout
+                                .headerVehicleImageHeight,
                             fit: BoxFit.contain,
-                            errorBuilder: (_, __, ___) => Icon(
-                              Icons.two_wheeler,
-                              size: 50.w,
-                              color: AppColors.textBody,
-                            ),
+                            fallbackIcon: Icons.two_wheeler,
+                            fallbackIconColor: AppColors.textBody,
                           ),
                         ],
                       ),
