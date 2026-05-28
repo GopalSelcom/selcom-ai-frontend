@@ -126,6 +126,7 @@ class RideRatingInputSection extends StatelessWidget {
                   maxLines: 2,
                   maxLength: 120,
                   showCounter: true,
+                  errorText: controller.commentValidationError.value,
                 ),
               ],
             ],

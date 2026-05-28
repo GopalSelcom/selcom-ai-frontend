@@ -43,6 +43,7 @@ class RideRatingController extends GetxController {
   final isLoadingTags = false.obs;
   final commentController = TextEditingController();
   final commentText = ''.obs;
+  final commentValidationError = RxnString();
 
   bool _hasPromptedThisSession = false;
   int _latestTagRequestRating = 0;
@@ -160,6 +161,9 @@ class RideRatingController extends GetxController {
       commentController.clear();
       commentText.value = '';
     }
+    if (rating > 2) {
+      commentValidationError.value = null;
+    }
     await _loadReviewTagsForRating(rating);
   }
 
@@ -176,6 +180,9 @@ class RideRatingController extends GetxController {
   void onCommentChanged(String value) {
     if (commentText.value != value) {
       commentText.value = value;
+    }
+    if (value.trim().isNotEmpty && commentValidationError.value != null) {
+      commentValidationError.value = null;
     }
   }
 
@@ -199,12 +206,10 @@ class RideRatingController extends GetxController {
     }
     final comment = requiresComment ? commentController.text.trim() : '';
     if (requiresComment && comment.isEmpty) {
-      AppDialogs.showErrorDialog(
-        title: AppStrings.commentRequired.tr,
-        message: AppStrings.pleaseEnterYourCommentFirst.tr,
-      );
+      commentValidationError.value = AppStrings.pleaseEnterYourCommentFirst.tr;
       return;
     }
+    commentValidationError.value = null;
 
     await Loader.withFlag(isSubmitting, () async {
       final result = await submitRideRatingUseCase(
@@ -339,6 +344,7 @@ class RideRatingController extends GetxController {
     selectedTags.clear();
     commentController.clear();
     commentText.value = '';
+    commentValidationError.value = null;
     isLoadingTags.value = false;
     _latestTagRequestRating = 0;
     if (clearPendingRide) {
