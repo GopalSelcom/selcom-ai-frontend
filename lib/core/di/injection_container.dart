@@ -63,7 +63,7 @@ Future<void> init() async {
   final environment = _mapEnvironment(AppConfig.environment);
 
   ApiService().init(
-    stagingBaseUrl: 'https://dukastaging.selcom.dev:7443',
+    stagingBaseUrl: 'https://tmpdukastaging.selcom.dev:7443',
     productionBaseUrl: 'https://api.duka.direct',
     environment: environment,
     commonHeadersBuilder: () => commonHeaders(accessTokenRequired: true),

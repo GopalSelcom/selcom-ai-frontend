@@ -457,10 +457,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   Future<bool> walletDummyPaymentRequest(DummyPaymentRequest request) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        customBaseUrl:
-            "https://dukastaging.selcom.dev:7443/api/v4/go/dev/payment_callback",
-        // endpoint: "${URLS.ride.base}/$rideId/messages",
-        endpoint: "",
+        endpoint: "go/dev/payment_callback",
         method: ApiMethod.post,
         body: request.toJson(),
       ),
