@@ -43,9 +43,9 @@ class AppCupertinoTextButton extends StatelessWidget {
       textStyle: AppTextStyles.homeSubtitle.copyWith(
         fontSize: 14.sp,
         fontWeight: FontWeight.w600,
-        color: AppColors.primary,
+        color: AppColors.primaryButton,
         decoration: TextDecoration.underline,
-        decorationColor: AppColors.primary,
+        decorationColor: AppColors.primaryButton,
         decorationThickness: 1,
         height: 18 / 14,
       ),
@@ -66,9 +66,9 @@ class AppCupertinoTextButton extends StatelessWidget {
       alignment: alignment,
       textStyle: AppTextStyles.onboardingSubtitle.copyWith(
         fontSize: 16.sp,
-        color: AppColors.primary,
+        color: AppColors.primaryButton,
         decoration: TextDecoration.underline,
-        decorationColor: AppColors.primary,
+        decorationColor: AppColors.primaryButton,
         decorationThickness: 1,
         decorationStyle: TextDecorationStyle.solid,
         height: 22 / 16,
@@ -87,7 +87,7 @@ class AppCupertinoTextButton extends StatelessWidget {
       label: label,
       onPressed: onPressed,
       textStyle: AppTextStyles.onboardingButton.copyWith(
-        color: AppColors.primary,
+        color: AppColors.primaryButton,
         fontSize: 15.sp,
       ),
     );
@@ -212,7 +212,7 @@ class AppCupertinoTextButton extends StatelessWidget {
       textStyle: TextStyle(
         fontFamily: AppTextStyles.metropolisFont,
         fontWeight: FontWeight.w600,
-        color: AppColors.primary,
+        color: AppColors.primaryButton,
         fontSize: 12.sp,
         height: 20 / 12,
       ),
