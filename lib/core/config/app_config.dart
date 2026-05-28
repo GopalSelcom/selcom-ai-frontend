@@ -37,11 +37,11 @@ class AppConfig {
     ).trim();
     switch (env) {
       case Environment.dev:
-        baseUrl = 'https://dukastaging.selcom.dev:7443/api';
+        baseUrl = 'https://tmpdukastaging.selcom.dev:7443/api';
         socketUrl = 'ws://localhost:5010';
         break;
       case Environment.staging:
-        baseUrl = 'https://dukastaging.selcom.dev:7443/api/';
+        baseUrl = 'https://tmpdukastaging.selcom.dev:7443/api/';
         socketUrl = 'wss://staging-socket.duka.direct';
         break;
       case Environment.prod:
