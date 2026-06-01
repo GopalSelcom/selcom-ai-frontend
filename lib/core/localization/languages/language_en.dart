@@ -22,6 +22,13 @@ class LanguageEn extends Languages {
     'book_ride': 'Book Ride',
     'book_ride_wallet_deduction_notice':
         'The amount will be deducted from your wallet.',
+    'insufficient_balance_title': 'Insufficient Balance',
+    'insufficient_balance_message':
+        'Your wallet balance is too low to book this ride. Please top up to continue.',
+    'current_balance_label': 'Current Balance',
+    'required_amount_label': 'Required Amount',
+    'amount_needed_label': 'Amount Needed',
+    'top_up_wallet': 'Top up Wallet',
     'select_a_vehicle': 'Please select a vehicle.',
     'book_ride_with_fare': 'Book Ride @currency @amount',
     'booking_fees_and_convenience_charges':
@@ -770,6 +777,26 @@ class LanguageEn extends Languages {
   @override
   String get bookRideWalletDeductionNotice =>
       values['book_ride_wallet_deduction_notice'] ?? '';
+
+  @override
+  String get insufficientBalanceTitle =>
+      values['insufficient_balance_title'] ?? '';
+
+  @override
+  String get insufficientBalanceMessage =>
+      values['insufficient_balance_message'] ?? '';
+
+  @override
+  String get currentBalanceLabel => values['current_balance_label'] ?? '';
+
+  @override
+  String get requiredAmountLabel => values['required_amount_label'] ?? '';
+
+  @override
+  String get amountNeededLabel => values['amount_needed_label'] ?? '';
+
+  @override
+  String get topUpWallet => values['top_up_wallet'] ?? '';
 
   @override
   String get selectAVehicle => values['select_a_vehicle'] ?? '';

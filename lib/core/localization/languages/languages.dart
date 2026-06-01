@@ -30,6 +30,12 @@ abstract class Languages {
   String get blinkYourEyes;
   String get bookRide;
   String get bookRideWalletDeductionNotice;
+  String get insufficientBalanceTitle;
+  String get insufficientBalanceMessage;
+  String get currentBalanceLabel;
+  String get requiredAmountLabel;
+  String get amountNeededLabel;
+  String get topUpWallet;
   String get selectAVehicle;
   String get bookRideWithFare;
   String get bookingFeesAndConvenienceCharges;

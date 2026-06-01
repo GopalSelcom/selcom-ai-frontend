@@ -20,6 +20,12 @@ class LanguageSw extends Languages {
     'blink_your_eyes': '',
     'book_ride': '',
     'book_ride_wallet_deduction_notice': '',
+    'insufficient_balance_title': '',
+    'insufficient_balance_message': '',
+    'current_balance_label': '',
+    'required_amount_label': '',
+    'amount_needed_label': '',
+    'top_up_wallet': '',
     'select_a_vehicle': '',
     'book_ride_with_fare': '',
     'booking_fees_and_convenience_charges': '',
@@ -673,6 +679,26 @@ class LanguageSw extends Languages {
   @override
   String get bookRideWalletDeductionNotice =>
       values['book_ride_wallet_deduction_notice'] ?? '';
+
+  @override
+  String get insufficientBalanceTitle =>
+      values['insufficient_balance_title'] ?? '';
+
+  @override
+  String get insufficientBalanceMessage =>
+      values['insufficient_balance_message'] ?? '';
+
+  @override
+  String get currentBalanceLabel => values['current_balance_label'] ?? '';
+
+  @override
+  String get requiredAmountLabel => values['required_amount_label'] ?? '';
+
+  @override
+  String get amountNeededLabel => values['amount_needed_label'] ?? '';
+
+  @override
+  String get topUpWallet => values['top_up_wallet'] ?? '';
 
   @override
   String get selectAVehicle => values['select_a_vehicle'] ?? '';

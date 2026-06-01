@@ -26,6 +26,12 @@ class AppStrings {
   static const String bookRide = 'book_ride';
   static const String bookRideWalletDeductionNotice =
       'book_ride_wallet_deduction_notice';
+  static const String insufficientBalanceTitle = 'insufficient_balance_title';
+  static const String insufficientBalanceMessage = 'insufficient_balance_message';
+  static const String currentBalanceLabel = 'current_balance_label';
+  static const String requiredAmountLabel = 'required_amount_label';
+  static const String amountNeededLabel = 'amount_needed_label';
+  static const String topUpWallet = 'top_up_wallet';
   static const String selectAVehicle = 'select_a_vehicle';
   static const String bookRideWithFare = 'book_ride_with_fare';
   static const String comingSoon = 'coming_soon';

@@ -10,6 +10,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/services/progress_indicator/loader.dart';
 import '../../core/services/session_expiry_service.dart';
+import '../../features/payment/domain/models/insufficient_wallet_balance_details.dart';
+import '../../features/payment/presentation/widgets/insufficient_wallet_balance_dialog.dart';
 import '../widgets/animated_blur_dialog.dart';
 import '../widgets/app_cancel_flow_dialog.dart';
 import '../widgets/app_primary_button.dart';
@@ -480,6 +482,24 @@ class AppDialogs {
       ),
       barrierDismissible: false,
       barrierColor: AppColors.overlayBlack12,
+    );
+  }
+
+  /// Insufficient wallet balance before book ride (see Figma insufficient-balance alert).
+  static Future<void> showInsufficientWalletBalanceDialog({
+    required InsufficientWalletBalanceDetails details,
+    required VoidCallback onTopUp,
+  }) {
+    return showAnimatedDialog<void>(
+      barrierDismissible: true,
+      child: InsufficientWalletBalanceDialog(
+        details: details,
+        onTopUp: () {
+          _dismissActiveDialog();
+          onTopUp();
+        },
+        onDismiss: _dismissActiveDialog,
+      ),
     );
   }
 

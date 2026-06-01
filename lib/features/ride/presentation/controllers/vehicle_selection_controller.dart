@@ -36,6 +36,8 @@ import '../../../../shared/utils/map_vehicle_marker_utils.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../home/domain/repositories/home_repository.dart';
 import '../../../home/presentation/controllers/location_selection_controller.dart';
+import '../../../payment/domain/models/insufficient_wallet_balance_details.dart';
+import '../../../payment/domain/wallet_ride_balance_guard.dart';
 import '../../../payment/presentation/controllers/payment_method_controller.dart';
 import '../../../payment/presentation/widgets/payment_status_dialog.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
@@ -821,10 +823,17 @@ class VehicleSelectionController extends GetxController {
                 ? rawRideNote.trim()
                 : rawRideNote.toString().trim());
 
-      // 1) Validate payment first (Validate Ride Payment - Block).
+      // 1) Wallet sufficiency (client guard until payment backend is ready).
       final refreshedSelectedEstimate = selectedEstimate;
+      final requiredFare =
+          refreshedSelectedEstimate?.displayFare ?? est.displayFare;
+      if (!await _guardWalletBalanceBeforePayment(requiredFare)) {
+        return;
+      }
+
+      // 2) Validate payment (block flow — dummy callback until real payment).
       final validateRequest = ValidateRidePaymentRequest(
-        fareEstimate: refreshedSelectedEstimate?.displayFare ?? est.displayFare,
+        fareEstimate: requiredFare,
         paymentMethod: pay.type,
         vehicleTypeId: resolvedVehicleTypeId,
       );
@@ -834,6 +843,7 @@ class VehicleSelectionController extends GetxController {
 
       await validationResult.fold(
         (f) async {
+          if (_handlePaymentValidationFailure(f)) return;
           AppDialogs.showErrorDialog(
             title: AppStrings.paymentValidationFailed.tr,
             message: AppStrings.couldNotValidatePaymentPleaseTryAgain.tr,
@@ -901,6 +911,7 @@ class VehicleSelectionController extends GetxController {
             );
             final nextId = reValidation.fold<String?>(
               (f) {
+                if (_handlePaymentValidationFailure(f)) return null;
                 AppDialogs.showErrorDialog(
                   title: AppStrings.paymentValidationFailed.tr,
                   message: AppStrings.couldNotValidatePaymentPleaseTryAgain.tr,
@@ -1030,6 +1041,47 @@ class VehicleSelectionController extends GetxController {
       Loader.instance.hide();
       isBooking.value = false;
     }
+  }
+
+  /// Client-side check via `go/wallet/balance` until payment API returns breakdown.
+  ///
+  /// See [WalletRideBalanceGuard] TODOs for backend migration.
+  Future<bool> _guardWalletBalanceBeforePayment(int requiredAmount) async {
+    final walletResult = await profileRepository.getWalletBalance();
+    return walletResult.fold(
+      (_) => true,
+      (wallet) {
+        final details = WalletRideBalanceGuard.insufficientDetails(
+          currentBalance: wallet.balance,
+          requiredAmount: requiredAmount,
+          currency: wallet.currency,
+        );
+        if (details == null) return true;
+        unawaited(_showInsufficientWalletDialog(details));
+        return false;
+      },
+    );
+  }
+
+  Future<void> _showInsufficientWalletDialog(
+    InsufficientWalletBalanceDetails details,
+  ) async {
+    Loader.instance.hide();
+    await AppDialogs.showInsufficientWalletBalanceDialog(
+      details: details,
+      onTopUp: openWalletTopUp,
+    );
+  }
+
+  /// TODO(payment-backend): Open production wallet top-up (Selcom Pesa), not only methods list.
+  void openWalletTopUp() {
+    Get.toNamed(AppRoutes.paymentMethods);
+  }
+
+  bool _handlePaymentValidationFailure(Failure failure) {
+    if (failure is! InsufficientWalletBalanceFailure) return false;
+    unawaited(_showInsufficientWalletDialog(failure.details));
+    return true;
   }
 
   String generateTransactionId() {
