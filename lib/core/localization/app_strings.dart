@@ -24,6 +24,9 @@ class AppStrings {
       'are_you_sure_you_want_to_cancel';
   static const String blinkYourEyes = 'blink_your_eyes';
   static const String bookRide = 'book_ride';
+  static const String bookRideWalletDeductionNotice =
+      'book_ride_wallet_deduction_notice';
+  static const String selectAVehicle = 'select_a_vehicle';
   static const String bookRideWithFare = 'book_ride_with_fare';
   static const String comingSoon = 'coming_soon';
   static const String bookingFeesAndConvenienceCharges =

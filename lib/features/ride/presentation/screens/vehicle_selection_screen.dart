@@ -16,7 +16,7 @@ import '../../../../shared/widgets/app_map_route_one_line_bar.dart';
 import '../../../../shared/widgets/app_shimmer.dart';
 import '../../../../shared/widgets/vehicle_type_image.dart';
 import '../../../../shared/widgets/vehicle_selection_promo_chip.dart';
-import '../../../payment/presentation/widgets/payment_bar.dart';
+import '../widgets/book_ride_wallet_footer.dart';
 import '../controllers/vehicle_selection_controller.dart';
 
 /// SCR-09 — vehicle selection, fare, payment + Book Ride.
@@ -60,16 +60,19 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
     listHeight =
         (listItemsCount * 73.h) +
         ((listItemsCount - 1).clamp(0, 2) * 10.h) +
-        10.h;
+        4.h;
 
-    // PaymentBar: top padding (18.h) + button (~56.h) + bottom padding
+    // Footer: top padding + button (56.h) + notice + bottom inset
     final double paymentBarHeight =
-        76.h +
+        4.h +
+        56.h +
+        8.h +
+        36.h +
         (GetPlatform.isIOS
             ? (bottomPadding > 0
-                  ? (bottomPadding - 10.h).clamp(12.h, bottomPadding)
-                  : 18.h)
-            : (bottomPadding > 0 ? bottomPadding + 8.h : 18.h));
+                  ? (bottomPadding - 8.h).clamp(8.h, bottomPadding)
+                  : 12.h)
+            : (bottomPadding > 0 ? bottomPadding + 8.h : 12.h));
 
     // Safety margin is zero since list is non-scrollable when <= 3 items are present
     const double safetyMargin = 0;
@@ -487,7 +490,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                   padding: EdgeInsets.only(
                     left: 16.w,
                     right: 16.w,
-                    bottom: 10.h,
+                    bottom: 4.h,
                   ),
                   itemCount: shimmerCount,
                   separatorBuilder: (_, __) => SizedBox(height: 10.h),
@@ -499,7 +502,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                 physics: controller.estimates.length <= 3
                     ? const NeverScrollableScrollPhysics()
                     : null,
-                padding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 10.h),
+                padding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 4.h),
                 itemCount: controller.estimates.length,
                 separatorBuilder: (_, __) => SizedBox(height: 10.h),
                 itemBuilder: (_, index) {
@@ -520,20 +523,12 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
               );
             }),
           ),
-          Obx(() {
-            final fareDeps = (
-              controller.estimates.length,
-              controller.selectedVehicleIndex.value,
-              controller.appliedPromoCode.value,
-            );
-            assert(fareDeps.$1 >= 0);
-            return PaymentBar(
-              buttonLabel:
-                  '${AppStrings.bookRide.tr} ${CurrencyFormatter.formatPayableOrFree(controller.selectedPayableFareAmount, controller.currency, freeLabel: AppStrings.rideFreeLabel.tr)}',
-              isLoading: controller.isBooking,
-              onActionButtonPressed: controller.bookRide,
-            );
-          }),
+          Obx(
+            () => BookRideWalletFooter(
+              isLoading: controller.isBooking.value,
+              onPressed: controller.bookRide,
+            ),
+          ),
         ],
       ),
     );

@@ -20,6 +20,9 @@ class LanguageEn extends Languages {
     'are_you_sure_you_want_to_cancel': 'Are you sure you want to cancel?',
     'blink_your_eyes': 'Blink Your Eyes',
     'book_ride': 'Book Ride',
+    'book_ride_wallet_deduction_notice':
+        'The amount will be deducted from your wallet.',
+    'select_a_vehicle': 'Please select a vehicle.',
     'book_ride_with_fare': 'Book Ride @currency @amount',
     'booking_fees_and_convenience_charges':
         'Booking Fees & Convenience Charges',
@@ -763,6 +766,13 @@ class LanguageEn extends Languages {
 
   @override
   String get bookRide => values['book_ride'] ?? '';
+
+  @override
+  String get bookRideWalletDeductionNotice =>
+      values['book_ride_wallet_deduction_notice'] ?? '';
+
+  @override
+  String get selectAVehicle => values['select_a_vehicle'] ?? '';
 
   @override
   String get bookRideWithFare => values['book_ride_with_fare'] ?? '';

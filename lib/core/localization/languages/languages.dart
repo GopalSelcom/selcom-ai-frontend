@@ -29,6 +29,8 @@ abstract class Languages {
   String get areYouSureYouWantToCancel;
   String get blinkYourEyes;
   String get bookRide;
+  String get bookRideWalletDeductionNotice;
+  String get selectAVehicle;
   String get bookRideWithFare;
   String get bookingFeesAndConvenienceCharges;
   String get bookingForName;

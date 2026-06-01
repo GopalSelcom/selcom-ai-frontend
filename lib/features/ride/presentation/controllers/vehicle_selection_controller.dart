@@ -7,6 +7,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/data/models/requests/book_ride_request.dart';
+import '../../../../core/data/models/user_profile_models.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/near_by_rider_response.dart';
@@ -115,14 +116,28 @@ class VehicleSelectionController extends GetxController {
   BitmapDescriptor? dropIcon;
   final stopIcons = <BitmapDescriptor>[].obs;
 
+  static PaymentMethodModel get _walletPaymentMethod => PaymentMethodModel(
+    id: 'wallet',
+    label: AppStrings.wallet.tr,
+    type: 'wallet',
+  );
+
   @override
   void onInit() {
     super.onInit();
     _parseArguments();
+    _ensureWalletPaymentSelected();
     loadLocationIcons();
     _initNearbyDriversSocket();
     _loadAll();
   }
+
+  void _ensureWalletPaymentSelected() {
+    paymentMethodController.selectedPayment.value = _walletPaymentMethod;
+  }
+
+  PaymentMethodModel get _walletPayment =>
+      paymentMethodController.selectedPayment.value ?? _walletPaymentMethod;
 
   @override
   void onClose() {
@@ -656,14 +671,15 @@ class VehicleSelectionController extends GetxController {
     if (isBooking.value) return;
 
     final est = selectedEstimate;
-    final pay = paymentMethodController.selectedPayment.value;
-    if (est == null || pay == null) {
+    if (est == null) {
       AppDialogs.showErrorDialog(
         title: AppStrings.missingInfo.tr,
-        message: AppStrings.selectAVehicleAndPaymentMethod.tr,
+        message: AppStrings.selectAVehicle.tr,
       );
       return;
     }
+    _ensureWalletPaymentSelected();
+    final pay = _walletPayment;
 
     isBooking.value = true;
     Loader.instance.show();
