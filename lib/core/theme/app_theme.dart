@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'app_colors.dart';
 import 'app_text_styles.dart';
 
@@ -30,7 +31,9 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primaryButton,
           foregroundColor: AppColors.white,
-          disabledBackgroundColor: AppColors.primaryButton.withValues(alpha: 0.5),
+          disabledBackgroundColor: AppColors.primaryButton.withValues(
+            alpha: 0.5,
+          ),
         ),
       ),
       cardTheme: CardThemeData(
@@ -72,9 +75,6 @@ class BouncingScrollBehavior extends MaterialScrollBehavior {
 
   @override
   ScrollPhysics getScrollPhysics(BuildContext context) {
-    return const BouncingScrollPhysics(
-      parent: AlwaysScrollableScrollPhysics(),
-    );
+    return const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics());
   }
 }
-

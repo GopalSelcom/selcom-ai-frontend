@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -29,13 +28,16 @@ class ReceiptImageGenerator {
   static Future<ReceiptPngCapture> generateReceiptPngBytes({
     required ReceiptModel receipt,
   }) async {
-    final logoSvg = await loadReceiptSvgAsset(AppAssets.selcomGoLogoPrimaryColor);
+    final logoSvg = await loadReceiptSvgAsset(
+      AppAssets.selcomGoLogoPrimaryColor,
+    );
     final screenshotController = ScreenshotController();
 
     final captureContext = Get.context;
     final pixelRatio = captureContext != null
-        ? MediaQuery.devicePixelRatioOf(captureContext)
-            .clamp(2.0, receiptExportPixelRatio)
+        ? MediaQuery.devicePixelRatioOf(
+            captureContext,
+          ).clamp(2.0, receiptExportPixelRatio)
         : receiptExportPixelRatio;
 
     final widget = RepaintBoundary(
@@ -52,8 +54,10 @@ class ReceiptImageGenerator {
               children: [
                 _buildTopBanner(receipt, logoSvg: logoSvg),
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 36, vertical: 24),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 36,
+                    vertical: 24,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -79,13 +83,13 @@ class ReceiptImageGenerator {
     );
 
     // Long-widget capture; delay + pixelRatio matter once multiple SVGs are in the tree.
-    final Uint8List imageBytes =
-        await screenshotController.captureFromLongWidget(
-      widget,
-      context: captureContext,
-      delay: _captureDelay,
-      pixelRatio: pixelRatio,
-    );
+    final Uint8List imageBytes = await screenshotController
+        .captureFromLongWidget(
+          widget,
+          context: captureContext,
+          delay: _captureDelay,
+          pixelRatio: pixelRatio,
+        );
 
     return ReceiptPngCapture(bytes: imageBytes, pixelRatio: pixelRatio);
   }
@@ -133,10 +137,7 @@ class ReceiptImageGenerator {
               const SizedBox(height: 2),
               Text(
                 AppStrings.refWithId.trParams({'id': receipt.rideId}).tr,
-                style: const TextStyle(
-                  fontSize: 9,
-                  color: _textLight,
-                ),
+                style: const TextStyle(fontSize: 9, color: _textLight),
               ),
             ],
           ),
@@ -305,7 +306,10 @@ class ReceiptImageGenerator {
         children: [
           _sectionLabel(AppStrings.driverAndVehicle.tr),
           const SizedBox(height: 12),
-          _detailRow(AppStrings.driver.tr, receipt.driverName ?? AppStrings.emDash.tr),
+          _detailRow(
+            AppStrings.driver.tr,
+            receipt.driverName ?? AppStrings.emDash.tr,
+          ),
           if (receipt.vehicleType != null)
             _detailRow(AppStrings.vehicleType.tr, receipt.vehicleType!),
           if (receipt.vehicleModel != null)
@@ -333,19 +337,27 @@ class ReceiptImageGenerator {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              _fareRow(AppStrings.baseFare.tr, receipt.baseFare, receipt.currency),
+              _fareRow(
+                AppStrings.baseFare.tr,
+                receipt.baseFare,
+                receipt.currency,
+              ),
               _fareRow(
                 AppStrings.distanceCharge.tr,
                 receipt.distanceCharge,
                 receipt.currency,
               ),
-              _fareRow(AppStrings.timeCharge.tr, receipt.timeCharge, receipt.currency),
+              _fareRow(
+                AppStrings.timeCharge.tr,
+                receipt.timeCharge,
+                receipt.currency,
+              ),
               if (receipt.promoDiscountAmount > 0 &&
                   (receipt.promoCode?.trim().isNotEmpty ?? false))
                 _fareRow(
-                  AppStrings.receiptPromoLine
-                      .trParams({'code': receipt.promoCode!.trim()})
-                      .tr,
+                  AppStrings.receiptPromoLine.trParams({
+                    'code': receipt.promoCode!.trim(),
+                  }).tr,
                   -receipt.promoDiscountAmount,
                   receipt.currency,
                   valueColor: Colors.green.shade700,
@@ -405,10 +417,7 @@ class ReceiptImageGenerator {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: const TextStyle(fontSize: 12, color: _textMid),
-          ),
+          Text(label, style: const TextStyle(fontSize: 12, color: _textMid)),
           Text(
             CurrencyFormatter.formatWithApiCurrency(amount, currency),
             style: TextStyle(fontSize: 12, color: valueColor),
@@ -453,10 +462,7 @@ class ReceiptImageGenerator {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: const TextStyle(fontSize: 12, color: _textMid),
-          ),
+          Text(label, style: const TextStyle(fontSize: 12, color: _textMid)),
           Text(
             value,
             style: const TextStyle(

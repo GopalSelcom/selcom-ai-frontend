@@ -3,21 +3,22 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+
 import '../../../../core/config/app_config.dart';
+import '../../../../core/data/models/user_model.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/network/urls.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/app_settings_service.dart';
-import '../../../../core/services/session_expiry_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
+import '../../../../core/services/session_expiry_service.dart';
 import '../../../../core/services/storage_service.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/phone_formatter.dart';
 import '../../../../shared/widgets/web_view_screen.dart';
 import '../../../ride/presentation/screens/my_rides_screen.dart';
 import '../../data/models/request/update_profile_request.dart';
 import '../../domain/usecases/profile_usecase.dart';
-import '../../../../core/data/models/user_model.dart';
-import '../../../../shared/utils/app_dialogs.dart';
 
 class ProfileController extends GetxController {
   final ProfileUseCase profileUseCase;
@@ -90,8 +91,9 @@ class ProfileController extends GetxController {
 
   void syncSettingsVisibility() {
     showSettingsOption.value = appSettingsService.hasAnyFeatureEnabled;
-    showSafetyOption.value =
-        !appSettingsService.featureEnabled('ride_pin_admin_required');
+    showSafetyOption.value = !appSettingsService.featureEnabled(
+      'ride_pin_admin_required',
+    );
   }
 
   Future<void> fetchProfile() async {
@@ -239,9 +241,7 @@ class ProfileController extends GetxController {
       }
     } catch (e) {
       AppDialogs.showErrorDialog(
-        message: AppStrings.errorPickingImage.trParams({
-          'error': e.toString(),
-        }),
+        message: AppStrings.errorPickingImage.trParams({'error': e.toString()}),
       );
     }
   }

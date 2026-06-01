@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+
 import '../../features/settings/data/models/settings_models.dart';
 import '../../features/settings/domain/usecases/settings_usecase.dart';
 
@@ -11,8 +12,7 @@ class AppSettingsService {
   final isLoaded = false.obs;
 
   /// `/go/settings` `payment_timer` (seconds). Default 5 minutes until loaded.
-  final paymentWaitSeconds =
-      AppSettingsModel.defaultPaymentTimerSeconds.obs;
+  final paymentWaitSeconds = AppSettingsModel.defaultPaymentTimerSeconds.obs;
 
   bool get hasAnyFeatureEnabled => features.values.any((v) => v == true);
 

@@ -87,26 +87,14 @@ abstract final class DriverAcceptedScreenShimmer {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            AppShimmerBox(
-              width: 29.w,
-              height: 29.w,
-              borderRadius: 14.5.r,
-            ),
+            AppShimmerBox(width: 29.w, height: 29.w, borderRadius: 14.5.r),
             SizedBox(width: 2.w),
-            AppShimmerBox(
-              width: 160.w,
-              height: 15.sp,
-              borderRadius: 4.r,
-            ),
+            AppShimmerBox(width: 160.w, height: 15.sp, borderRadius: 4.r),
           ],
         ),
         SizedBox(height: 2.h),
         Center(
-          child: AppShimmerBox(
-            width: 200.w,
-            height: 20.sp,
-            borderRadius: 4.r,
-          ),
+          child: AppShimmerBox(width: 200.w, height: 20.sp, borderRadius: 4.r),
         ),
       ],
     );
@@ -121,11 +109,7 @@ abstract final class DriverAcceptedScreenShimmer {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              AppShimmerBox(
-                width: 28.w,
-                height: 15.sp,
-                borderRadius: 4.r,
-              ),
+              AppShimmerBox(width: 28.w, height: 15.sp, borderRadius: 4.r),
               SizedBox(width: 8.w),
               for (var i = 0; i < digits; i++)
                 Padding(
@@ -152,10 +136,7 @@ abstract final class DriverAcceptedScreenShimmer {
           decoration: BoxDecoration(
             color: AppColors.ratingGoldDark,
             borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(
-              color: AppColors.borderWalletCard,
-              width: 0.787,
-            ),
+            border: Border.all(color: AppColors.borderWalletCard, width: 0.787),
           ),
           child: AppShimmer(
             child: Column(
@@ -167,11 +148,7 @@ abstract final class DriverAcceptedScreenShimmer {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    AppShimmerBox(
-                      width: 22.w,
-                      height: 14.h,
-                      borderRadius: 2.r,
-                    ),
+                    AppShimmerBox(width: 22.w, height: 14.h, borderRadius: 2.r),
                     SizedBox(width: 6.w),
                     AppShimmerBox(
                       width: 120.w,
@@ -217,11 +194,7 @@ abstract final class DriverAcceptedScreenShimmer {
             children: [
               Row(
                 children: [
-                  AppShimmerBox(
-                    width: 108.w,
-                    height: 20.sp,
-                    borderRadius: 4.r,
-                  ),
+                  AppShimmerBox(width: 108.w, height: 20.sp, borderRadius: 4.r),
                   SizedBox(width: 9.w),
                   AppShimmerBox(
                     width: starSize.w,
@@ -229,18 +202,10 @@ abstract final class DriverAcceptedScreenShimmer {
                     borderRadius: 2.r,
                   ),
                   SizedBox(width: 3.w),
-                  AppShimmerBox(
-                    width: 20.w,
-                    height: 15.sp,
-                    borderRadius: 4.r,
-                  ),
+                  AppShimmerBox(width: 20.w, height: 15.sp, borderRadius: 4.r),
                 ],
               ),
-              AppShimmerBox(
-                width: 130.w,
-                height: 15.sp,
-                borderRadius: 4.r,
-              ),
+              AppShimmerBox(width: 130.w, height: 15.sp, borderRadius: 4.r),
             ],
           ),
         ),
@@ -287,7 +252,8 @@ abstract final class DriverAcceptedScreenShimmer {
                 children: [
                   AppShimmerBox(
                     width: 100.w,
-                    height: DriverAcceptedRideStartedLayout.vehicleLabelLineHeight,
+                    height:
+                        DriverAcceptedRideStartedLayout.vehicleLabelLineHeight,
                     borderRadius: 4.r,
                   ),
                   if (showEtaBadge)
@@ -295,8 +261,8 @@ abstract final class DriverAcceptedScreenShimmer {
                       children: [
                         AppShimmerBox(
                           width: 72.w,
-                          height:
-                              DriverAcceptedRideStartedLayout.subtitleLineHeight,
+                          height: DriverAcceptedRideStartedLayout
+                              .subtitleLineHeight,
                           borderRadius: 4.r,
                         ),
                         SizedBox(width: 5.w),
@@ -346,8 +312,8 @@ abstract final class DriverAcceptedScreenShimmer {
   static Widget _locationsCard({required bool showChangeDropLink}) {
     final contentHeight =
         DriverAcceptedRideStartedLayout.locationsContentHeight(
-      showChangeDropLink: showChangeDropLink,
-    );
+          showChangeDropLink: showChangeDropLink,
+        );
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: DriverAcceptedRideStartedLayout.locationCardPaddingH,
@@ -426,13 +392,13 @@ abstract final class DriverAcceptedScreenShimmer {
                   children: [
                     AppShimmerBox(
                       width: 120.w,
-                      height:
-                          DriverAcceptedRideStartedLayout.locationTitleLineHeight,
+                      height: DriverAcceptedRideStartedLayout
+                          .locationTitleLineHeight,
                       borderRadius: 4.r,
                     ),
                     SizedBox(
-                      height:
-                          DriverAcceptedRideStartedLayout.locationTitleAddressGap,
+                      height: DriverAcceptedRideStartedLayout
+                          .locationTitleAddressGap,
                     ),
                     AppShimmerBox(
                       width: double.infinity,
@@ -488,8 +454,13 @@ abstract final class DriverAcceptedScreenShimmer {
           borderRadius: 4.r,
         ),
         SizedBox(height: DriverAcceptedRideStartedLayout.fareTitleRowsGap),
-        for (var i = 0; i < DriverAcceptedRideStartedLayout.fareRowCount; i++) ...[
-          if (i > 0) SizedBox(height: DriverAcceptedRideStartedLayout.fareRowGap),
+        for (
+          var i = 0;
+          i < DriverAcceptedRideStartedLayout.fareRowCount;
+          i++
+        ) ...[
+          if (i > 0)
+            SizedBox(height: DriverAcceptedRideStartedLayout.fareRowGap),
           _fareRow(),
         ],
       ],

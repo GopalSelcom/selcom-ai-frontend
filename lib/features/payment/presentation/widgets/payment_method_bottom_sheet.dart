@@ -30,16 +30,15 @@ class PaymentMethodBottomSheet extends StatelessWidget {
     final bottomPadding = MediaQuery.paddingOf(context).bottom;
     final computedBottomPadding = bottomPadding > 0
         ? (GetPlatform.isIOS
-            ? (bottomPadding - 12.h).clamp(
-                10.h > bottomPadding ? bottomPadding : 10.h,
-                bottomPadding,
-              )
-            : bottomPadding + 12.h)
+              ? (bottomPadding - 12.h).clamp(
+                  10.h > bottomPadding ? bottomPadding : 10.h,
+                  bottomPadding,
+                )
+              : bottomPadding + 12.h)
         : 12.h;
 
     return Obx(() {
-      if (controller.isLoading.value &&
-          controller.paymentMethods.isEmpty) {
+      if (controller.isLoading.value && controller.paymentMethods.isEmpty) {
         return const Padding(
           padding: EdgeInsets.all(40),
           child: CustomLoader(bgColor: AppColors.transparent),

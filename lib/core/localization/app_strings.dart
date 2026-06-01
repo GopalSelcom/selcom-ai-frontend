@@ -701,7 +701,8 @@ class AppStrings {
   static const String bookingFailed = 'booking_failed';
   static const String cancelReasonBookedByMistake =
       'cancel_reason_booked_by_mistake';
-  static const String cancelReasonChangedMyMind = 'cancel_reason_changed_my_mind';
+  static const String cancelReasonChangedMyMind =
+      'cancel_reason_changed_my_mind';
   static const String cancelReasonDriverAskedCancel =
       'cancel_reason_driver_asked_cancel';
   static const String cancelReasonDriverPayOffline =

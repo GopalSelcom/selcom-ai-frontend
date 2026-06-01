@@ -1,9 +1,9 @@
 import '../../../../core/data/models/requests/submit_ride_rating_request.dart';
-import '../models/ride_rating_ride_model.dart';
-import '../models/ride_rating_tag_model.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
+import '../models/ride_rating_ride_model.dart';
+import '../models/ride_rating_tag_model.dart';
 
 abstract class RideRatingRemoteDataSource {
   Future<RideRatingRideModel?> getLastCompletedRide();

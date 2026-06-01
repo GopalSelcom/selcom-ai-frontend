@@ -12,6 +12,7 @@ class BookRideRequest {
   final String? passengerName;
   final String? passengerPhone;
   final String note;
+
   /// Pre-discount fare for the selected vehicle (server re-validates promo).
   final int? fareEstimate;
   final String? promoCode;

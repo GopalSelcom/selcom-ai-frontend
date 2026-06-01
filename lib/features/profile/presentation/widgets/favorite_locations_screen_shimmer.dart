@@ -20,8 +20,8 @@ abstract final class FavoriteLocationsScreenShimmer {
           (index) {
             return Padding(
               padding: EdgeInsets.only(
-                bottom: index <
-                        FavoriteLocationsScreenLayout.shimmerTileCount - 1
+                bottom:
+                    index < FavoriteLocationsScreenLayout.shimmerTileCount - 1
                     ? FavoriteLocationsScreenLayout.tileSeparatorGap
                     : 0,
               ),
@@ -52,8 +52,7 @@ abstract final class FavoriteLocationsScreenShimmer {
             AppShimmerBox(
               width: FavoriteLocationsScreenLayout.tileIconSize,
               height: FavoriteLocationsScreenLayout.tileIconSize,
-              borderRadius:
-                  FavoriteLocationsScreenLayout.tileIconSize / 2,
+              borderRadius: FavoriteLocationsScreenLayout.tileIconSize / 2,
             ),
             SizedBox(width: FavoriteLocationsScreenLayout.tileIconTextGap),
             Expanded(
@@ -67,13 +66,11 @@ abstract final class FavoriteLocationsScreenShimmer {
                   children: [
                     AppShimmerBox(
                       width: 120.w,
-                      height:
-                          FavoriteLocationsScreenLayout.tileTitleLineHeight,
+                      height: FavoriteLocationsScreenLayout.tileTitleLineHeight,
                       borderRadius: 4.r,
                     ),
                     SizedBox(
-                      height:
-                          FavoriteLocationsScreenLayout.tileTitleAddressGap,
+                      height: FavoriteLocationsScreenLayout.tileTitleAddressGap,
                     ),
                     AppShimmerBox(
                       width: double.infinity,

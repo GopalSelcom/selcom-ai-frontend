@@ -1,12 +1,13 @@
 import 'package:get/get.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+
 import '../../../../core/data/models/ride_model.dart';
+import '../../../../core/localization/app_strings.dart';
+import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../domain/usecases/ride_usecase.dart';
 import '../screens/ride_details_screen.dart';
 import 'ride_details_controller.dart';
-import '../../../../core/services/error_reporting/error_reporter.dart';
 
 class MyRidesController extends GetxController {
   final RideUseCase rideUseCase;

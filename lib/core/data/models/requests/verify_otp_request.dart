@@ -18,8 +18,8 @@ class VerifyOtpRequest {
   }
 
   Map<String, dynamic> toJson() => {
-        'mobile_number': mobileNumber,
-        'country_code': countryCode,
-        'otp': otp,
-      };
+    'mobile_number': mobileNumber,
+    'country_code': countryCode,
+    'otp': otp,
+  };
 }

@@ -1579,8 +1579,7 @@ class LanguageSw extends Languages {
   String get rideCancelled => values['ride_cancelled'] ?? '';
 
   @override
-  String get driverStartedYourRide =>
-      values['driver_started_your_ride'] ?? '';
+  String get driverStartedYourRide => values['driver_started_your_ride'] ?? '';
 
   @override
   String get rideCompleted => values['ride_completed'] ?? '';
@@ -1600,8 +1599,7 @@ class LanguageSw extends Languages {
   String get youAreAlmostThere => values['you_are_almost_there'] ?? '';
 
   @override
-  String get onYourWayWithDriver =>
-      values['on_your_way_with_driver'] ?? '';
+  String get onYourWayWithDriver => values['on_your_way_with_driver'] ?? '';
 
   @override
   String get arrivedInMinutes => values['arrived_in_minutes'] ?? '';
@@ -2562,7 +2560,8 @@ class LanguageSw extends Languages {
   String get selectedPickupPoint => values['selected_pickup_point'] ?? '';
 
   @override
-  String get selcomPesaLinkedNumber => values['selcom_pesa_linked_number'] ?? '';
+  String get selcomPesaLinkedNumber =>
+      values['selcom_pesa_linked_number'] ?? '';
 
   @override
   String get socketDisconnected => values['socket_disconnected'] ?? '';

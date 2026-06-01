@@ -2,15 +2,15 @@ import 'dart:developer' as developer;
 
 import 'package:dio/dio.dart';
 
-import '../../../../core/data/models/responses/rides/active_ride_response.dart';
-import '../../../../core/data/models/responses/chat_quick_replies_response.dart';
-import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
-import '../../../../core/services/session_expiry_service.dart';
+import '../../../../core/data/models/responses/chat_quick_replies_response.dart';
+import '../../../../core/data/models/responses/rides/active_ride_response.dart';
+import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
+import '../../../../core/services/session_expiry_service.dart';
 import '../models/destination_update_models.dart';
 import '../models/emergency_contacts_response.dart';
 import '../models/ride_management_models.dart';

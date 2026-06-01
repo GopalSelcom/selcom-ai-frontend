@@ -1,15 +1,17 @@
-import 'package:dartz/dartz.dart';
 import 'dart:developer' as developer;
+
+import 'package:dartz/dartz.dart';
+
+import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/data/models/responses/rides/active_ride_response.dart';
+import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../datasources/ride_remote_data_source.dart';
-import '../../../../core/data/models/ride_model.dart';
 import '../models/destination_update_models.dart';
 import '../models/emergency_contacts_response.dart';
 import '../models/ride_management_models.dart';
-import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
-import '../../../../core/services/error_reporting/error_reporter.dart';
 
 class RideRepositoryImpl implements RideRepository {
   final RideRemoteDataSource remoteDataSource;
@@ -103,7 +105,8 @@ class RideRepositoryImpl implements RideRepository {
   }
 
   @override
-  Future<Either<Failure, DestinationUpdatePreviewModel>> previewUpdateDestination(
+  Future<Either<Failure, DestinationUpdatePreviewModel>>
+  previewUpdateDestination(
     String rideId,
     Map<String, dynamic> destination,
   ) async {
@@ -120,7 +123,8 @@ class RideRepositoryImpl implements RideRepository {
   }
 
   @override
-  Future<Either<Failure, DestinationUpdateAppliedModel>> confirmUpdateDestination(
+  Future<Either<Failure, DestinationUpdateAppliedModel>>
+  confirmUpdateDestination(
     String rideId,
     Map<String, dynamic> destination,
   ) async {

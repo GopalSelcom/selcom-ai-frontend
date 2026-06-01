@@ -32,10 +32,7 @@ class AppMapProfileChip extends StatelessWidget {
       );
     }
 
-    final avatar = AppProfileUserAvatar(
-      size: _chipSize.w,
-      imageUrl: imageUrl,
-    );
+    final avatar = AppProfileUserAvatar(size: _chipSize.w, imageUrl: imageUrl);
 
     if (onTap == null) {
       return avatar;

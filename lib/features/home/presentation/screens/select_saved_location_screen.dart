@@ -95,8 +95,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
 
                         if (query.isNotEmpty) {
                           if (controller.isSearching.value) {
-                            return SelectSavedLocationScreenShimmer
-                                .suggestionsList();
+                            return SelectSavedLocationScreenShimmer.suggestionsList();
                           }
                           return _buildSuggestionsList();
                         }

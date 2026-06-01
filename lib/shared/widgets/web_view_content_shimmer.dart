@@ -41,8 +41,7 @@ abstract final class WebViewContentShimmer {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: List.generate(_lineWidthFactors.length, (index) {
-                  final width =
-                      constraints.maxWidth * _lineWidthFactors[index];
+                  final width = constraints.maxWidth * _lineWidthFactors[index];
                   return Padding(
                     padding: EdgeInsets.only(
                       bottom: index == _lineWidthFactors.length - 1

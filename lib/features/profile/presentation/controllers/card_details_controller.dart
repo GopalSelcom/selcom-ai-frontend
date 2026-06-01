@@ -1,13 +1,12 @@
 import 'package:get/get.dart';
+
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../domain/entities/payment_card.dart';
 
 class CardDetailsController extends GetxController {
   final PaymentCard card;
 
-  CardDetailsController({
-    required this.card,
-  });
+  CardDetailsController({required this.card});
 
   final isCvvHidden = true.obs;
   final isDeleteLoading = false.obs;

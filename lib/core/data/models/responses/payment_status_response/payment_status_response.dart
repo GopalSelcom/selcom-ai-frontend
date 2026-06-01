@@ -4,9 +4,11 @@
 
 import 'dart:convert';
 
-PaymentStatusUpdateResponse paymentStatusUpdateResponseFromJson(String str) => PaymentStatusUpdateResponse.fromJson(json.decode(str));
+PaymentStatusUpdateResponse paymentStatusUpdateResponseFromJson(String str) =>
+    PaymentStatusUpdateResponse.fromJson(json.decode(str));
 
-String paymentStatusUpdateResponseToJson(PaymentStatusUpdateResponse data) => json.encode(data.toJson());
+String paymentStatusUpdateResponseToJson(PaymentStatusUpdateResponse data) =>
+    json.encode(data.toJson());
 
 class PaymentStatusUpdateResponse {
   String? phase;
@@ -35,26 +37,26 @@ class PaymentStatusUpdateResponse {
     String? message,
     int? cancellationFee,
     int? netRefund,
-  }) =>
-      PaymentStatusUpdateResponse(
-        phase: phase ?? this.phase,
-        status: status ?? this.status,
-        amount: amount ?? this.amount,
-        reference: reference ?? this.reference,
-        message: message ?? this.message,
-        cancellationFee: cancellationFee ?? this.cancellationFee,
-        netRefund: netRefund ?? this.netRefund,
-      );
-
-  factory PaymentStatusUpdateResponse.fromJson(Map<String, dynamic> json) => PaymentStatusUpdateResponse(
-    phase: json["phase"],
-    status: json["status"],
-    amount: json["amount"],
-    reference: json["reference"],
-    message: json["message"],
-    cancellationFee: json["cancellation_fee"],
-    netRefund: json["net_refund"],
+  }) => PaymentStatusUpdateResponse(
+    phase: phase ?? this.phase,
+    status: status ?? this.status,
+    amount: amount ?? this.amount,
+    reference: reference ?? this.reference,
+    message: message ?? this.message,
+    cancellationFee: cancellationFee ?? this.cancellationFee,
+    netRefund: netRefund ?? this.netRefund,
   );
+
+  factory PaymentStatusUpdateResponse.fromJson(Map<String, dynamic> json) =>
+      PaymentStatusUpdateResponse(
+        phase: json["phase"],
+        status: json["status"],
+        amount: json["amount"],
+        reference: json["reference"],
+        message: json["message"],
+        cancellationFee: json["cancellation_fee"],
+        netRefund: json["net_refund"],
+      );
 
   Map<String, dynamic> toJson() => {
     "phase": phase,

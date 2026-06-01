@@ -67,11 +67,8 @@ class PaymentDialogHeaderSection extends StatelessWidget {
                   width: 75.w,
                   height: 75.w,
                   color: iconColor,
-                  placeholderBuilder: (_) => Icon(
-                    placeholderIcon,
-                    color: iconColor,
-                    size: 75.sp,
-                  ),
+                  placeholderBuilder: (_) =>
+                      Icon(placeholderIcon, color: iconColor, size: 75.sp),
                 ),
               ),
           if (overlay != null) overlay!,

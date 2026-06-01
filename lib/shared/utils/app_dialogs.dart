@@ -4,8 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
-import '../../core/routes/app_routes.dart';
 import '../../core/localization/app_strings.dart';
+import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/services/progress_indicator/loader.dart';
@@ -24,7 +24,8 @@ class AppDialogs {
     if (context == null) return;
 
     final primaryFocus = FocusManager.instance.primaryFocus;
-    final hasKeyboard = (primaryFocus != null && primaryFocus.hasFocus) ||
+    final hasKeyboard =
+        (primaryFocus != null && primaryFocus.hasFocus) ||
         MediaQuery.viewInsetsOf(context).bottom > 0;
 
     if (hasKeyboard) {
@@ -51,10 +52,7 @@ class AppDialogs {
         return child;
       },
       transitionBuilder: (context, animation, secondaryAnimation, childWidget) {
-        return AppModalBlurTransition(
-          animation: animation,
-          child: childWidget,
-        );
+        return AppModalBlurTransition(animation: animation, child: childWidget);
       },
     );
   }
@@ -206,7 +204,8 @@ class AppDialogs {
       'or `sheet` (widget that already wraps AppStandardBottomSheet).',
     );
 
-    final Widget child = sheet ??
+    final Widget child =
+        sheet ??
         AppStandardBottomSheet(
           title: title,
           subtitle: subtitle,
@@ -586,7 +585,8 @@ class AppDialogs {
                           onConfirm();
                         },
                         height: 50.h,
-                        backgroundColor: confirmColor ?? AppColors.primaryButton,
+                        backgroundColor:
+                            confirmColor ?? AppColors.primaryButton,
                         textColor: AppColors.white,
                         borderRadius: 12.r,
                       ),
@@ -768,9 +768,7 @@ class AppDialogs {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.primary.withValues(
-                              alpha: 0.2,
-                            ),
+                            color: AppColors.primary.withValues(alpha: 0.2),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),

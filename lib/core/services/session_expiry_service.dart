@@ -29,10 +29,7 @@ class SessionExpiryService {
     _stopActiveRidePolling();
   }
 
-  static bool isSessionExpired({
-    int? httpStatus,
-    Map<String, dynamic>? body,
-  }) {
+  static bool isSessionExpired({int? httpStatus, Map<String, dynamic>? body}) {
     if (httpStatus == 405) return true;
 
     if (body == null || body.isEmpty) return false;

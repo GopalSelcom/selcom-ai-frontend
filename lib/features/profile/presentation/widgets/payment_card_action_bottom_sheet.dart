@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import '../../../../core/theme/app_colors.dart';
+
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 
@@ -49,12 +50,7 @@ class PaymentCardActionBottomSheet extends StatelessWidget {
         color: AppColors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(36.r)),
       ),
-      padding: EdgeInsets.only(
-        left: 24.w,
-        right: 24.w,
-        top: 16.h,
-        bottom: 0,
-      ),
+      padding: EdgeInsets.only(left: 24.w, right: 24.w, top: 16.h, bottom: 0),
       child: SafeArea(
         top: false,
         bottom: true,
@@ -149,9 +145,15 @@ class PaymentCardActionBottomSheet extends StatelessWidget {
                       borderRadius: 16.r,
                       outlined: true,
                       backgroundColor: AppColors.white,
-                      textColor: isSecondaryDanger ? AppColors.error : AppColors.primaryButton,
-                      outlinedTextColor: isSecondaryDanger ? AppColors.error : AppColors.primaryButton,
-                      outlinedBorderColor: isSecondaryDanger ? AppColors.error : AppColors.primaryButton,
+                      textColor: isSecondaryDanger
+                          ? AppColors.error
+                          : AppColors.primaryButton,
+                      outlinedTextColor: isSecondaryDanger
+                          ? AppColors.error
+                          : AppColors.primaryButton,
+                      outlinedBorderColor: isSecondaryDanger
+                          ? AppColors.error
+                          : AppColors.primaryButton,
                       outlinedBorderWidth: 1,
                     ),
                   ),

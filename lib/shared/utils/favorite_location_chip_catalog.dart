@@ -4,12 +4,7 @@ import '../../core/constants/app_assets.dart';
 import '../../core/localization/app_strings.dart';
 
 /// Ordered presets shared by Home chips row and [AddFavoriteLocationSheet].
-enum FavoriteLocationSlotId {
-  home,
-  office,
-  work,
-  other,
-}
+enum FavoriteLocationSlotId { home, office, work, other }
 
 /// Canonical API labels and icons for favorite-location chips (Duka-style presets).
 class FavoriteLocationChipCatalog {

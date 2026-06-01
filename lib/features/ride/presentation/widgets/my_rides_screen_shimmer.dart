@@ -89,26 +89,15 @@ abstract final class MyRidesScreenShimmer {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: AppShimmerBox(
-              height: 20.h,
-              borderRadius: 4.r,
-            ),
+            child: AppShimmerBox(height: 20.h, borderRadius: 4.r),
           ),
           SizedBox(width: 8.w),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              AppShimmerBox(
-                width: 6.w,
-                height: 6.w,
-                borderRadius: 3.r,
-              ),
+              AppShimmerBox(width: 6.w, height: 6.w, borderRadius: 3.r),
               SizedBox(width: 3.w),
-              AppShimmerBox(
-                width: 68.w,
-                height: 20.h,
-                borderRadius: 4.r,
-              ),
+              AppShimmerBox(width: 68.w, height: 20.h, borderRadius: 4.r),
             ],
           ),
         ],
@@ -135,11 +124,7 @@ abstract final class MyRidesScreenShimmer {
         children: [
           Column(
             children: [
-              AppShimmerBox(
-                width: 24.w,
-                height: 24.w,
-                borderRadius: 12.r,
-              ),
+              AppShimmerBox(width: 24.w, height: 24.w, borderRadius: 12.r),
               if (showConnectorBelow)
                 Expanded(
                   child: Container(
@@ -157,16 +142,9 @@ abstract final class MyRidesScreenShimmer {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AppShimmerBox(
-                    width: 140.w,
-                    height: 20.h,
-                    borderRadius: 4.r,
-                  ),
+                  AppShimmerBox(width: 140.w, height: 20.h, borderRadius: 4.r),
                   SizedBox(height: 1.h),
-                  AppShimmerBox(
-                    height: 20.h,
-                    borderRadius: 4.r,
-                  ),
+                  AppShimmerBox(height: 20.h, borderRadius: 4.r),
                 ],
               ),
             ),
@@ -181,17 +159,9 @@ abstract final class MyRidesScreenShimmer {
       padding: EdgeInsets.fromLTRB(16.w, 13.h, 12.w, 17.h),
       child: Row(
         children: [
-          AppShimmerBox(
-            width: 132.w,
-            height: 20.h,
-            borderRadius: 4.r,
-          ),
+          AppShimmerBox(width: 132.w, height: 20.h, borderRadius: 4.r),
           const Spacer(),
-          AppShimmerBox(
-            width: 72.w,
-            height: 20.h,
-            borderRadius: 4.r,
-          ),
+          AppShimmerBox(width: 72.w, height: 20.h, borderRadius: 4.r),
         ],
       ),
     );

@@ -134,10 +134,9 @@ class _AddFavoriteLocationSheetState extends State<AddFavoriteLocationSheet> {
     final keyboard = media.viewInsets.bottom;
     final safeBottom = media.padding.bottom;
 
-    final maxCap = (screenH * 0.92 -
-            _standardSheetHeaderHeight(context) -
-            safeBottom)
-        .clamp(240.0, screenH * 0.75);
+    final maxCap =
+        (screenH * 0.92 - _standardSheetHeaderHeight(context) - safeBottom)
+            .clamp(240.0, screenH * 0.75);
 
     final bodyHeight = keyboard > 0
         ? (maxCap - keyboard).clamp(180.0, maxCap)

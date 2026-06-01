@@ -18,9 +18,14 @@ class AuthModel extends AuthEntity {
 
     return AuthModel(
       user: UserModel.fromJson(data['user'] ?? {}),
-      accessToken: (data['access_token'] ?? data['authorization_token'] ?? data['accessToken'] ?? '')
+      accessToken:
+          (data['access_token'] ??
+                  data['authorization_token'] ??
+                  data['accessToken'] ??
+                  '')
+              .toString(),
+      refreshToken: (data['refresh_token'] ?? data['refreshToken'] ?? '')
           .toString(),
-      refreshToken: (data['refresh_token'] ?? data['refreshToken'] ?? '').toString(),
       isUserAlreadyRegistered: data['is_user_already_registered'] ?? false,
       isUserAddressAdded: data['is_user_address_added'] ?? false,
     );

@@ -29,9 +29,7 @@ class RidePinProtectionSection extends StatelessWidget {
             AppStrings
                 .securityAndPreferenceControlsMoreSettingsWillAppearHereAsTheyAreEnable
                 .tr,
-            style: AppTextStyles.caption.copyWith(
-              color: AppColors.textBody,
-            ),
+            style: AppTextStyles.caption.copyWith(color: AppColors.textBody),
           ),
           SizedBox(height: 14.h),
           SettingsToggleTile(

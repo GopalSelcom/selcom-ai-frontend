@@ -11,7 +11,9 @@ class VerifyOtpResponseModel {
     statusCode = json['status_code'];
     message = json['message'];
     final payload = json['data'] ?? json['response'];
-    data = payload is Map<String, dynamic> ? VerifyOtpData.fromJson(payload) : null;
+    data = payload is Map<String, dynamic>
+        ? VerifyOtpData.fromJson(payload)
+        : null;
   }
 
   Map<String, dynamic> toJson() {
@@ -45,8 +47,11 @@ class VerifyOtpData {
 
   VerifyOtpData.fromJson(Map<String, dynamic> json) {
     user = json['user'] != null ? UserModel.fromJson(json['user']) : null;
-    accessToken = (json['access_token'] ?? json['authorization_token'] ?? json['accessToken'])
-        ?.toString();
+    accessToken =
+        (json['access_token'] ??
+                json['authorization_token'] ??
+                json['accessToken'])
+            ?.toString();
     refreshToken = (json['refresh_token'] ?? json['refreshToken'])?.toString();
     isUserAlreadyRegistered = json['is_user_already_registered'];
     isUserAddressAdded = json['is_user_address_added'];

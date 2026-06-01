@@ -1,11 +1,12 @@
 import 'package:flutter/foundation.dart';
+
 import '../../../../core/constants/currency_code.dart';
-import '../../../../core/data/models/user_profile_models.dart';
-import '../../../../core/data/models/responses/get_saved_places_response.dart';
-import '../../../../core/data/models/user_model.dart';
 import '../../../../core/data/models/requests/create_saved_place_request.dart';
 import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
 import '../../../../core/data/models/responses/create_saved_place_response.dart';
+import '../../../../core/data/models/responses/get_saved_places_response.dart';
+import '../../../../core/data/models/user_model.dart';
+import '../../../../core/data/models/user_profile_models.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
@@ -18,7 +19,9 @@ import '../models/update_profile_response.dart';
 abstract class ProfileRemoteDataSource {
   Future<UserModel> getProfile();
 
-  Future<UserProfileUpdateResponse> updateProfile(UserProfileUpdateRequest profileRequest);
+  Future<UserProfileUpdateResponse> updateProfile(
+    UserProfileUpdateRequest profileRequest,
+  );
 
   Future<UserModel> saveUserAdditionalDetails({
     required String name,
@@ -72,20 +75,23 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   }
 
   @override
-  Future<UserProfileUpdateResponse> updateProfile(UserProfileUpdateRequest profileRequest) async {
-
+  Future<UserProfileUpdateResponse> updateProfile(
+    UserProfileUpdateRequest profileRequest,
+  ) async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.profile.updateProfile,
-        method: profileRequest.image != null ? ApiMethod.multipart : ApiMethod.post,
+        method: profileRequest.image != null
+            ? ApiMethod.multipart
+            : ApiMethod.post,
         body: profileRequest.toJson(),
         multipartFiles: profileRequest.image != null
             ? [
-          LocalMultipartFile(
-            name: "image",
-            path: profileRequest.image?.path ?? "",
-          ),
-        ]
+                LocalMultipartFile(
+                  name: "image",
+                  path: profileRequest.image?.path ?? "",
+                ),
+              ]
             : null,
       ),
     );
@@ -99,9 +105,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         return UserProfileUpdateResponse.fromJson(d);
       }
       if (d is Map) {
-        return UserProfileUpdateResponse.fromJson(
-          Map<String, dynamic>.from(d),
-        );
+        return UserProfileUpdateResponse.fromJson(Map<String, dynamic>.from(d));
       }
       return UserProfileUpdateResponse(
         statusCode: response.statusCode,
@@ -118,7 +122,6 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     required String emailId,
     String? imagePath,
   }) async {
-
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.auth.saveUserDetails,
@@ -259,9 +262,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       if (rawData is Map) {
         final def = rawData['default']?.toString().trim();
         if (def != null && def.isNotEmpty) {
-          final idx = models.indexWhere(
-            (m) => m.type == def || m.id == def,
-          );
+          final idx = models.indexWhere((m) => m.type == def || m.id == def);
           if (idx > 0) {
             models.insert(0, models.removeAt(idx));
           }

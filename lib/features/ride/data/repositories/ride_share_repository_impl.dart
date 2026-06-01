@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
+
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/share_link_entity.dart';
 import '../../domain/repositories/ride_share_repository.dart';
@@ -11,7 +12,9 @@ class RideShareRepositoryImpl implements RideShareRepository {
   RideShareRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Either<Failure, ShareLinkEntity>> generateShareLink(String rideId) async {
+  Future<Either<Failure, ShareLinkEntity>> generateShareLink(
+    String rideId,
+  ) async {
     try {
       final result = await remoteDataSource.generateShareLink(rideId);
       return Right(result);

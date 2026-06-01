@@ -43,8 +43,7 @@ class PromoValidateResponse {
     this.data,
   });
 
-  bool get isSuccess =>
-      (statusCode ?? httpStatus) == 200 && data != null;
+  bool get isSuccess => (statusCode ?? httpStatus) == 200 && data != null;
 
   factory PromoValidateResponse.fromHttpResponse({
     required int? httpStatus,

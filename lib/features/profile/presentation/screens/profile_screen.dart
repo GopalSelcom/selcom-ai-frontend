@@ -61,7 +61,9 @@ class ProfileScreen extends StatelessWidget {
                         padding: EdgeInsets.fromLTRB(16.w, 18.h, 16.w, 0),
                         child: _buildSettingsList(context),
                       ),
-                      SizedBox(height: ProfileScreenLayout.logoutGapAfterSettings),
+                      SizedBox(
+                        height: ProfileScreenLayout.logoutGapAfterSettings,
+                      ),
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.w),
                         child: Obx(
@@ -276,7 +278,9 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildLogoutButton() {
     return InkWell(
       onTap: controller.logout,
-      borderRadius: BorderRadius.circular(ProfileScreenLayout.logoutBorderRadius),
+      borderRadius: BorderRadius.circular(
+        ProfileScreenLayout.logoutBorderRadius,
+      ),
       child: Container(
         height: ProfileScreenLayout.logoutButtonHeight,
         padding: EdgeInsets.symmetric(
@@ -292,11 +296,7 @@ class ProfileScreen extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(
-              Iconsax.logout,
-              size: 24.w,
-              color: AppColors.error,
-            ),
+            Icon(Iconsax.logout, size: 24.w, color: AppColors.error),
             SizedBox(width: 7.w),
             Text(
               AppStrings.logout.tr,
@@ -320,21 +320,20 @@ class ProfileScreen extends StatelessWidget {
         border: Border.all(color: AppColors.divider),
         borderRadius: BorderRadius.circular(16.r),
       ),
-      child: Obx(
-        () {
-          final menuCount = controller.visibleMenuItemCount;
-          if (controller.isLoadingProfile.value) {
-            return ProfileScreenShimmer.settingsMenu(itemCount: menuCount);
-          }
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              MenuItemWidget(
-                icon: Iconsax.clock,
-                title: AppStrings.myRides.tr,
-                onTap: controller.openMyRides,
-              ),
+      child: Obx(() {
+        final menuCount = controller.visibleMenuItemCount;
+        if (controller.isLoadingProfile.value) {
+          return ProfileScreenShimmer.settingsMenu(itemCount: menuCount);
+        }
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            MenuItemWidget(
+              icon: Iconsax.clock,
+              title: AppStrings.myRides.tr,
+              onTap: controller.openMyRides,
+            ),
             MenuItemWidget(
               icon: Iconsax.card,
               title: AppStrings.payment.tr,
@@ -369,10 +368,9 @@ class ProfileScreen extends StatelessWidget {
                 onTap: controller.openSettings,
                 showDivider: false,
               ),
-            ],
-          );
-        },
-      ),
+          ],
+        );
+      }),
     );
   }
 }

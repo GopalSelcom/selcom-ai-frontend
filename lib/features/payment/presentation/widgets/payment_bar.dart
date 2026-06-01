@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import '../../../../core/theme/app_colors.dart';
+
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../controllers/payment_method_controller.dart';
@@ -32,21 +33,16 @@ class PaymentBar extends StatelessWidget {
       final double bottomPadding = MediaQuery.paddingOf(context).bottom;
       final double computedBottomPadding = bottomPadding > 0
           ? (GetPlatform.isIOS
-              ? (bottomPadding - 12.h).clamp(
-                  10.h > bottomPadding ? bottomPadding : 10.h,
-                  bottomPadding,
-                )
-              : bottomPadding + 12.h)
+                ? (bottomPadding - 12.h).clamp(
+                    10.h > bottomPadding ? bottomPadding : 10.h,
+                    bottomPadding,
+                  )
+                : bottomPadding + 12.h)
           : 12.h;
 
       return Container(
         width: double.infinity,
-        padding: EdgeInsets.fromLTRB(
-          25.w,
-          18.h,
-          25.w,
-          computedBottomPadding,
-        ),
+        padding: EdgeInsets.fromLTRB(25.w, 18.h, 25.w, computedBottomPadding),
         decoration: const BoxDecoration(color: AppColors.primaryButton),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -119,9 +115,7 @@ class PaymentBar extends StatelessWidget {
                   width: 180.w,
                   height: 56.h,
                   alignment: Alignment.center,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 12.w,
-                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 12.w),
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Text(

@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:get/get.dart';
+
 import '../localization/app_strings.dart';
 import 'failures.dart';
 

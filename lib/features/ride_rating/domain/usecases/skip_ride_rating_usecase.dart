@@ -8,9 +8,7 @@ class SkipRideRatingUseCase {
 
   SkipRideRatingUseCase(this.repository);
 
-  Future<Either<Failure, bool>> call({
-    required String rideId,
-  }) {
+  Future<Either<Failure, bool>> call({required String rideId}) {
     return repository.skipRideRating(rideId: rideId);
   }
 }

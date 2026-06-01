@@ -1,4 +1,4 @@
-import 'package:selcom_rides_frontend/core/data/models/ride_model.dart';
+import '../../../ride_model.dart';
 
 class RideStopsUpdatedResponse {
   final String rideId;

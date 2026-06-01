@@ -18,10 +18,14 @@ class DriverAcceptedBinding extends Bindings {
   void dependencies() {
     if (!Get.isRegistered<RideRepository>()) {
       Get.lazyPut<RideRemoteDataSource>(() => RideRemoteDataSourceImpl());
-      Get.lazyPut<RideRepository>(() => RideRepositoryImpl(remoteDataSource: Get.find()));
+      Get.lazyPut<RideRepository>(
+        () => RideRepositoryImpl(remoteDataSource: Get.find()),
+      );
     }
     if (!Get.isRegistered<RideShareRepository>()) {
-      Get.lazyPut<RideShareRemoteDataSource>(() => RideShareRemoteDataSourceImpl());
+      Get.lazyPut<RideShareRemoteDataSource>(
+        () => RideShareRemoteDataSourceImpl(),
+      );
       Get.lazyPut<RideShareRepository>(
         () => RideShareRepositoryImpl(remoteDataSource: Get.find()),
       );

@@ -127,7 +127,12 @@ class AppStandardBottomSheet extends StatelessWidget {
               top: false,
               bottom: true,
               child: Padding(
-                padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, computedBottomPadding),
+                padding: EdgeInsets.fromLTRB(
+                  20.w,
+                  8.h,
+                  20.w,
+                  computedBottomPadding,
+                ),
                 child: footer!,
               ),
             ),

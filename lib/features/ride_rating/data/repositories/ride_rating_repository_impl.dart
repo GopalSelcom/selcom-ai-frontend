@@ -2,11 +2,11 @@ import 'package:dartz/dartz.dart';
 
 import '../../../../core/data/models/requests/submit_ride_rating_request.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../domain/entities/ride_rating_ride_entity.dart';
 import '../../domain/entities/ride_rating_tag_entity.dart';
 import '../../domain/repositories/ride_rating_repository.dart';
 import '../datasources/ride_rating_remote_data_source.dart';
-import '../../../../core/services/error_reporting/error_reporter.dart';
 
 class RideRatingRepositoryImpl implements RideRatingRepository {
   final RideRatingRemoteDataSource remoteDataSource;

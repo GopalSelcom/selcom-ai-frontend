@@ -66,6 +66,7 @@ class ReceiptModel {
   final String currency;
   final String paymentMethod;
   final String? completedAt;
+
   /// From `fare_breakdown.promo_code` when ride used a promo.
   final String? promoCode;
   final int promoDiscountAmount;
@@ -118,8 +119,7 @@ class ReceiptModel {
     final totalParsed = totalRaw is num
         ? totalRaw.toInt()
         : int.tryParse(totalRaw.toString()) ?? 0;
-    final promoDisc =
-        (fareBreakdown['promo_discount'] as num?)?.toInt() ?? 0;
+    final promoDisc = (fareBreakdown['promo_discount'] as num?)?.toInt() ?? 0;
 
     return ReceiptModel(
       rideId: json['ride_id'] ?? '',
@@ -221,7 +221,8 @@ class CheckBookModeResult {
   factory CheckBookModeResult.fromJson(Map<String, dynamic> json) {
     final data = (json['data'] ?? json) as Map<String, dynamic>;
     return CheckBookModeResult(
-      showBookForOtherOption: data['show_book_for_other_option'] as bool? ?? false,
+      showBookForOtherOption:
+          data['show_book_for_other_option'] as bool? ?? false,
       distanceKm: (data['distance_km'] as num?)?.toDouble(),
       thresholdKm: (data['threshold_km'] as num?)?.toDouble() ?? 1.0,
     );

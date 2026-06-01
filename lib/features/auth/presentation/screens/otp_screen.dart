@@ -71,12 +71,12 @@ class OtpScreen extends GetView<AuthController> {
                           AppStrings
                               .pleaseEnterThe4DigitCodeSentToPhoneThroughSms
                               .trParams({
-                            'countryCode': controller.countryCode.value,
-                            'phoneNumber':
-                            TanzaniaPhoneFormatter.formatString(
-                              controller.mobileNumber.value,
-                            ),
-                          }),
+                                'countryCode': controller.countryCode.value,
+                                'phoneNumber':
+                                    TanzaniaPhoneFormatter.formatString(
+                                      controller.mobileNumber.value,
+                                    ),
+                              }),
                           style: AppTextStyles.onboardingSubtitle,
                         ),
                         SizedBox(height: 24.h),
@@ -90,103 +90,99 @@ class OtpScreen extends GetView<AuthController> {
                         // OTP Input Field
                         Center(
                           child: Obx(
-                                () =>
-                                AppOtpField(
-                                  length: 4,
-                                  fieldHeight: 70.h,
-                                  fieldWidth: 64.w,
-                                  mainAxisAlignment: MainAxisAlignment
-                                      .spaceEvenly,
-                                  hasError: controller.errorMessage.isNotEmpty,
-                                  textStyle: AppTextStyles.body.copyWith(
-                                    fontFamily: AppTextStyles.metropolisFont,
-                                    fontSize: 34.sp,
-                                    fontWeight: FontWeight.w400,
-                                    color: AppColors.textHeading,
-                                    height: 41 / 34,
-                                    letterSpacing: -0.4,
-                                  ),
-                                  onChanged: controller.onOtpChanged,
-                                  onCompleted: (v) async {
-                                    controller.otp.value = v;
-                                    await controller.verifyOtp();
-                                  },
-                                ),
+                            () => AppOtpField(
+                              length: 4,
+                              fieldHeight: 70.h,
+                              fieldWidth: 64.w,
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              hasError: controller.errorMessage.isNotEmpty,
+                              textStyle: AppTextStyles.body.copyWith(
+                                fontFamily: AppTextStyles.metropolisFont,
+                                fontSize: 34.sp,
+                                fontWeight: FontWeight.w400,
+                                color: AppColors.textHeading,
+                                height: 41 / 34,
+                                letterSpacing: -0.4,
+                              ),
+                              onChanged: controller.onOtpChanged,
+                              onCompleted: (v) async {
+                                controller.otp.value = v;
+                                await controller.verifyOtp();
+                              },
+                            ),
                           ),
                         ),
                         Obx(
-                              () =>
-                          controller.shouldShowGeneratedOtp &&
-                              controller.generatedOtp.value.isNotEmpty
+                          () =>
+                              controller.shouldShowGeneratedOtp &&
+                                  controller.generatedOtp.value.isNotEmpty
                               ? Padding(
-                            padding: EdgeInsets.only(top: 8.h),
-                            child: Center(
-                              child: Text(
-                                '${AppStrings.otpLabel.tr}: ${controller
-                                    .generatedOtp.value}',
-                                style: AppTextStyles.body.copyWith(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          )
+                                  padding: EdgeInsets.only(top: 8.h),
+                                  child: Center(
+                                    child: Text(
+                                      '${AppStrings.otpLabel.tr}: ${controller.generatedOtp.value}',
+                                      style: AppTextStyles.body.copyWith(
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                )
                               : const SizedBox.shrink(),
                         ),
                         // Error Message
                         Obx(
-                              () =>
-                          controller.errorMessage.isNotEmpty
+                          () => controller.errorMessage.isNotEmpty
                               ? Padding(
-                            padding: EdgeInsets.only(top: 12.h),
-                            child: Center(
-                              child: ConstrainedBox(
-                                constraints: BoxConstraints(
-                                  maxWidth: otpContentMaxWidth,
-                                ),
-                                child: Container(
-                                  width: double.infinity,
-                                  padding: EdgeInsets.all(12.w),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.otpErrorBackground,
-                                    borderRadius: BorderRadius.circular(
-                                      8.r,
-                                    ),
-                                    border: Border.all(
-                                      color: AppColors.otpErrorBorder,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    crossAxisAlignment:
-                                    CrossAxisAlignment.center,
-                                    children: [
-                                      SvgPictureAsset(
-                                        AppAssets.icError,
-                                        width: 20.w,
-                                        height: 20.w,
-                                        color: AppColors.otpErrorBorder,
+                                  padding: EdgeInsets.only(top: 12.h),
+                                  child: Center(
+                                    child: ConstrainedBox(
+                                      constraints: BoxConstraints(
+                                        maxWidth: otpContentMaxWidth,
                                       ),
-                                      SizedBox(width: 8.w),
-                                      Expanded(
-                                        child: Text(
-                                          controller.errorMessage.value,
-                                          style: AppTextStyles.body
-                                              .copyWith(
-                                            color:
-                                            AppColors.textHeading,
-                                            fontWeight:
-                                            FontWeight.w600,
-                                            height: 1,
-                                            letterSpacing: -0.14,
+                                      child: Container(
+                                        width: double.infinity,
+                                        padding: EdgeInsets.all(12.w),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.otpErrorBackground,
+                                          borderRadius: BorderRadius.circular(
+                                            8.r,
+                                          ),
+                                          border: Border.all(
+                                            color: AppColors.otpErrorBorder,
                                           ),
                                         ),
+                                        child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            SvgPictureAsset(
+                                              AppAssets.icError,
+                                              width: 20.w,
+                                              height: 20.w,
+                                              color: AppColors.otpErrorBorder,
+                                            ),
+                                            SizedBox(width: 8.w),
+                                            Expanded(
+                                              child: Text(
+                                                controller.errorMessage.value,
+                                                style: AppTextStyles.body
+                                                    .copyWith(
+                                                      color:
+                                                          AppColors.textHeading,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      height: 1,
+                                                      letterSpacing: -0.14,
+                                                    ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ],
+                                    ),
                                   ),
-                                ),
-                              ),
-                            ),
-                          )
+                                )
                               : const SizedBox.shrink(),
                         ),
 
@@ -207,16 +203,14 @@ class OtpScreen extends GetView<AuthController> {
                                   ),
                                 ),
                                 Text(
-                                  "00:${controller.resendTimer.value
-                                      .toString()
-                                      .padLeft(2, '0')}",
+                                  "00:${controller.resendTimer.value.toString().padLeft(2, '0')}",
                                   style: AppTextStyles.onboardingFooter
                                       .copyWith(
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 13.sp,
-                                    height: 18 / 13,
-                                  ),
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 13.sp,
+                                        height: 18 / 13,
+                                      ),
                                 ),
                               ],
                             );

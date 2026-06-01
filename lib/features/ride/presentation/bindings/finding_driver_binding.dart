@@ -10,7 +10,9 @@ class FindingDriverBinding extends Bindings {
   void dependencies() {
     if (!Get.isRegistered<RideRepository>()) {
       Get.lazyPut<RideRemoteDataSource>(() => RideRemoteDataSourceImpl());
-      Get.lazyPut<RideRepository>(() => RideRepositoryImpl(remoteDataSource: Get.find()));
+      Get.lazyPut<RideRepository>(
+        () => RideRepositoryImpl(remoteDataSource: Get.find()),
+      );
     }
     Get.lazyPut<FindingDriverController>(
       () => FindingDriverController(rideRepository: Get.find()),

@@ -62,10 +62,7 @@ class _SplashScreenState extends State<SplashScreen> {
     return const Scaffold(
       backgroundColor: AppColors.splashBackground,
       body: SizedBox.expand(
-        child: SvgPictureAsset(
-          AppAssets.splashScreenBg,
-          fit: BoxFit.cover,
-        ),
+        child: SvgPictureAsset(AppAssets.splashScreenBg, fit: BoxFit.cover),
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
@@ -14,11 +15,11 @@ import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/widgets/app_cupertino_text_button.dart';
-import '../../../../shared/widgets/app_shimmer.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
 import '../../../../shared/widgets/app_map_gps_button.dart';
 import '../../../../shared/widgets/app_map_top_header.dart';
+import '../../../../shared/widgets/app_shimmer.dart';
 import '../../../../shared/widgets/app_vehicle_explore_tile.dart';
 import '../../../../shared/widgets/favorite_location_chips_row.dart';
 import '../../../ride/data/models/ride_management_models.dart';
@@ -197,7 +198,8 @@ class HomeScreen extends GetView<HomeController> {
   }
   */
 
-  static const double _sheetHorizontalPadding = HomeSheetLayout.horizontalPadding;
+  static const double _sheetHorizontalPadding =
+      HomeSheetLayout.horizontalPadding;
 
   Widget _buildFigmaDraggableSheet(BuildContext context) {
     return Obx(() {
@@ -423,27 +425,15 @@ class HomeScreen extends GetView<HomeController> {
     return AppShimmer(
       child: Row(
         children: [
-          AppShimmerBox(
-            width: 52.w,
-            height: 52.w,
-            borderRadius: 12.r,
-          ),
+          AppShimmerBox(width: 52.w, height: 52.w, borderRadius: 12.r),
           SizedBox(width: 16.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AppShimmerBox(
-                  height: 14.h,
-                  width: 130.w,
-                  borderRadius: 8.r,
-                ),
+                AppShimmerBox(height: 14.h, width: 130.w, borderRadius: 8.r),
                 SizedBox(height: 8.h),
-                AppShimmerBox(
-                  height: 12.h,
-                  width: 200.w,
-                  borderRadius: 8.r,
-                ),
+                AppShimmerBox(height: 12.h, width: 200.w, borderRadius: 8.r),
               ],
             ),
           ),
@@ -483,8 +473,8 @@ class HomeScreen extends GetView<HomeController> {
             children: controller.isLoadingHomeData.value
                 ? List.generate(3, (_) => _buildVehicleSkeleton())
                 : controller.vehicleTypes
-                    .map((vehicle) => _buildVehicleCard(vehicle))
-                    .toList(),
+                      .map((vehicle) => _buildVehicleCard(vehicle))
+                      .toList(),
           ),
         ),
       ),
@@ -498,17 +488,9 @@ class HomeScreen extends GetView<HomeController> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            AppShimmerBox(
-              width: 62.w,
-              height: 42.h,
-              borderRadius: 16.r,
-            ),
+            AppShimmerBox(width: 62.w, height: 42.h, borderRadius: 16.r),
             SizedBox(height: 4.h),
-            AppShimmerBox(
-              width: 52.w,
-              height: 10.h,
-              borderRadius: 8.r,
-            ),
+            AppShimmerBox(width: 52.w, height: 10.h, borderRadius: 8.r),
           ],
         ),
       ),

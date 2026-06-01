@@ -1,31 +1,34 @@
-import 'dart:io';
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:dio/dio.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:get/get.dart' hide Response;
+import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:uuid/uuid.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 
+import '../../config/app_config.dart';
+import '../../data/models/user_model.dart';
 import '../../network/api_service.dart';
 import '../../network/network_connectivity_service.dart';
 import '../storage_service.dart';
-import '../../config/app_config.dart';
-import '../../data/models/user_model.dart';
-import 'models/error_report.dart';
 import 'models/error_constants.dart';
+import 'models/error_report.dart';
 
 class ErrorReporter {
   static final ErrorReporter instance = ErrorReporter._();
+
   ErrorReporter._();
 
   final _screenshotController = ScreenshotController();
+
   ScreenshotController get screenshotController => _screenshotController;
 
   final _connectivity = NetworkConnectivityService.instance;
@@ -36,6 +39,7 @@ class ErrorReporter {
 
   // Initialization safety
   final Completer<void> _initCompleter = Completer<void>();
+
   Future<void> get _waitUntilInitialized => _initCompleter.future;
 
   // To prevent flooding: last combined signature (error + message)

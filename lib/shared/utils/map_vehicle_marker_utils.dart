@@ -86,14 +86,10 @@ class MapVehicleMarkerUtils {
       return previousRotation;
     }
 
-    if (previousPosition != null &&
-        speedMps >= minSpeedMpsForRotationUpdate) {
+    if (previousPosition != null && speedMps >= minSpeedMpsForRotationUpdate) {
       final movedMeters = _distanceMeters(previousPosition, currentPosition);
       if (movedMeters >= minMovementMetersForBearing) {
-        return MapMathUtils.calculateBearing(
-          previousPosition,
-          currentPosition,
-        );
+        return MapMathUtils.calculateBearing(previousPosition, currentPosition);
       }
     }
 
@@ -120,12 +116,14 @@ class MapVehicleMarkerUtils {
     final lat2 = _degreesToRadians(b.latitude);
     final h =
         math.sin(dLat / 2) * math.sin(dLat / 2) +
-        math.cos(lat1) * math.cos(lat2) * math.sin(dLng / 2) * math.sin(dLng / 2);
+        math.cos(lat1) *
+            math.cos(lat2) *
+            math.sin(dLng / 2) *
+            math.sin(dLng / 2);
     return earthRadius * 2 * math.atan2(math.sqrt(h), math.sqrt(1 - h));
   }
 
-  static double _degreesToRadians(double degrees) =>
-      degrees * math.pi / 180.0;
+  static double _degreesToRadians(double degrees) => degrees * math.pi / 180.0;
 
   static double _normalizeDegrees(double degrees) {
     final mod = degrees % 360;

@@ -4,15 +4,14 @@ import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:get/get.dart' hide Response;
 
+import '../../shared/utils/app_dialogs.dart';
 import '../../shared/widgets/app_primary_button.dart';
 import '../localization/app_strings.dart';
 import '../services/error_reporting/error_reporter.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import 'api_service.dart';
-import '../../shared/utils/app_dialogs.dart';
 import 'failed_request_queue.dart';
 import 'network_connectivity_service.dart';
 

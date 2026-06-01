@@ -3,9 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
+import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/constants/app_assets.dart';
 import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
@@ -62,7 +62,8 @@ class _AddCardScreenState extends State<AddCardScreen> {
                               errorText: controller.fullNameError.value,
                               fontSize: 15.h,
                               fontWeight: FontWeight.w500,
-                              textFieldBackgroundColor: AppColors.pageBackground,
+                              textFieldBackgroundColor:
+                                  AppColors.pageBackground,
                               textColor: AppColors.textHeading,
                             ),
                           ),
@@ -85,7 +86,8 @@ class _AddCardScreenState extends State<AddCardScreen> {
                               ],
                               fontSize: 15.h,
                               fontWeight: FontWeight.w500,
-                              textFieldBackgroundColor: AppColors.pageBackground,
+                              textFieldBackgroundColor:
+                                  AppColors.pageBackground,
                               textColor: AppColors.textHeading,
                             ),
                           ),
@@ -112,7 +114,8 @@ class _AddCardScreenState extends State<AddCardScreen> {
                                     ],
                                     fontSize: 15.h,
                                     fontWeight: FontWeight.w500,
-                                    textFieldBackgroundColor: AppColors.pageBackground,
+                                    textFieldBackgroundColor:
+                                        AppColors.pageBackground,
                                     textColor: AppColors.textHeading,
                                   ),
                                 ),
@@ -150,7 +153,8 @@ class _AddCardScreenState extends State<AddCardScreen> {
                                     ],
                                     fontSize: 15.h,
                                     fontWeight: FontWeight.w500,
-                                    textFieldBackgroundColor: AppColors.pageBackground,
+                                    textFieldBackgroundColor:
+                                        AppColors.pageBackground,
                                     textColor: AppColors.textHeading,
                                   ),
                                 ),
@@ -165,29 +169,29 @@ class _AddCardScreenState extends State<AddCardScreen> {
                   SafeArea(
                     top: false,
                     bottom: true,
-                    child: Obx(
-                      () {
-                        final shouldShow =
-                            controller.isSubmitting.value ||
-                            controller.canSubmitForm.value;
-                        return AppAnimatedReveal(
-                          show: shouldShow,
-                          visibleKey: const ValueKey('add-card-button-visible'),
-                          hiddenKey: const ValueKey('add-card-button-hidden'),
-                          child: Padding(
-                            padding: EdgeInsets.only(bottom: computedBottomPadding),
-                            child: AppPrimaryButton(
-                              label: AppStrings.addCard.tr,
-                              iconAsset: AppAssets.locationIcArrowRight,
-                              isLoading: controller.isSubmitting.value,
-                              onPressed: controller.isSubmitting.value
-                                  ? null
-                                  : controller.submitCard,
-                            ),
+                    child: Obx(() {
+                      final shouldShow =
+                          controller.isSubmitting.value ||
+                          controller.canSubmitForm.value;
+                      return AppAnimatedReveal(
+                        show: shouldShow,
+                        visibleKey: const ValueKey('add-card-button-visible'),
+                        hiddenKey: const ValueKey('add-card-button-hidden'),
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            bottom: computedBottomPadding,
                           ),
-                        );
-                      },
-                    ),
+                          child: AppPrimaryButton(
+                            label: AppStrings.addCard.tr,
+                            iconAsset: AppAssets.locationIcArrowRight,
+                            isLoading: controller.isSubmitting.value,
+                            onPressed: controller.isSubmitting.value
+                                ? null
+                                : controller.submitCard,
+                          ),
+                        ),
+                      );
+                    }),
                   ),
                 ],
               ),

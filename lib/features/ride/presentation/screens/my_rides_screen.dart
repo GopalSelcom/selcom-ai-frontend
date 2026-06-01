@@ -86,8 +86,8 @@ class MyRidesScreen extends StatelessWidget {
                         children: [
                           Padding(
                             padding: EdgeInsets.symmetric(
-                              horizontal:
-                                  MyRidesScreenLayout.sectionTitleHorizontalInset,
+                              horizontal: MyRidesScreenLayout
+                                  .sectionTitleHorizontalInset,
                             ),
                             child: SizedBox(
                               height: MyRidesScreenLayout.sectionTitleHeight,

@@ -1,13 +1,16 @@
+import 'package:get/get.dart';
+
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
-import '../../../../core/localization/app_strings.dart';
-import 'package:get/get.dart';
 import '../models/settings_models.dart';
 
 abstract class SettingsRemoteDataSource {
   Future<AppSettingsModel> getAppSettings();
+
   Future<RidePinPreferenceModel> getRidePinPreference();
+
   Future<RidePinPreferenceModel> updateRidePinPreference({
     required bool enabled,
   });
@@ -36,7 +39,9 @@ class SettingsRemoteDataSourceImpl implements SettingsRemoteDataSource {
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
       return AppSettingsModel.fromJson({});
     }
-    throw Exception(response.data?['message'] ?? AppStrings.failedToLoadSettings.tr);
+    throw Exception(
+      response.data?['message'] ?? AppStrings.failedToLoadSettings.tr,
+    );
   }
 
   @override
@@ -50,9 +55,8 @@ class SettingsRemoteDataSourceImpl implements SettingsRemoteDataSource {
 
     if (response.statusCode == 200 && response.data != null) {
       final payload =
-          (response.data['data'] ??
-              response.data['response'] ??
-              response.data) as Map<String, dynamic>;
+          (response.data['data'] ?? response.data['response'] ?? response.data)
+              as Map<String, dynamic>;
       return RidePinPreferenceModel.fromJson(payload);
     }
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
@@ -77,16 +81,16 @@ class SettingsRemoteDataSourceImpl implements SettingsRemoteDataSource {
 
     if (response.statusCode == 200 && response.data != null) {
       final payload =
-          (response.data['data'] ??
-              response.data['response'] ??
-              response.data) as Map<String, dynamic>;
+          (response.data['data'] ?? response.data['response'] ?? response.data)
+              as Map<String, dynamic>;
       return RidePinPreferenceModel.fromJson(payload);
     }
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
       return RidePinPreferenceModel.fromJson({});
     }
     throw Exception(
-      response.data?['message'] ?? AppStrings.failedToUpdateRidePinPreference.tr,
+      response.data?['message'] ??
+          AppStrings.failedToUpdateRidePinPreference.tr,
     );
   }
 }

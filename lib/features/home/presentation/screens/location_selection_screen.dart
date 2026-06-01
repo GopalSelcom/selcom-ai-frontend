@@ -8,12 +8,12 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/spin_kit_fading_circle.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
-import '../../../../core/widgets/spin_kit_fading_circle.dart';
 import '../../../../shared/widgets/favorite_location_chips_row.dart';
 import '../../data/models/places_models.dart';
 import '../controllers/home_controller.dart';
@@ -1037,10 +1037,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         locationController.isLoadingInitialContent.value;
         if (controller.isSearching.value) {
           return Center(
-            child: SpinKitFadingCircle(
-              color: AppColors.primary,
-              size: 50.sp,
-            ),
+            child: SpinKitFadingCircle(color: AppColors.primary, size: 50.sp),
           );
         }
         if (locationController.shouldShowPlaceListShimmer &&

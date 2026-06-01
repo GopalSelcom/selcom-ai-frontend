@@ -89,11 +89,14 @@ class RideModel extends RideEntity {
         : null;
 
     final pdfLinksJson = json['pdf_links'] as List?;
-    final pdfLinks = pdfLinksJson?.map((e) => PdfLinkModel.fromJson(e)).toList();
+    final pdfLinks = pdfLinksJson
+        ?.map((e) => PdfLinkModel.fromJson(e))
+        .toList();
 
     final promoCodeRaw = json['promo_code']?.toString().trim();
-    final promoCodeParsed =
-        (promoCodeRaw == null || promoCodeRaw.isEmpty) ? null : promoCodeRaw;
+    final promoCodeParsed = (promoCodeRaw == null || promoCodeRaw.isEmpty)
+        ? null
+        : promoCodeRaw;
     final promoDiscountParsed = (json['promo_discount'] as num?)?.toInt();
 
     return RideModel(
@@ -396,8 +399,12 @@ class PdfLinkModel extends PdfLinkEntity {
       url: json['url'] ?? '',
       token: json['token'] ?? '',
       originalName: json['original_name'] ?? '',
-      expiresAt: json['expires_at'] != null ? DateTime.tryParse(json['expires_at']) : null,
-      uploadedAt: json['uploaded_at'] != null ? DateTime.tryParse(json['uploaded_at']) : null,
+      expiresAt: json['expires_at'] != null
+          ? DateTime.tryParse(json['expires_at'])
+          : null,
+      uploadedAt: json['uploaded_at'] != null
+          ? DateTime.tryParse(json['uploaded_at'])
+          : null,
     );
   }
 }

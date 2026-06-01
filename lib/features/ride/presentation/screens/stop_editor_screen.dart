@@ -4,19 +4,19 @@ import 'package:get/get.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/constants/ride_stop_limits.dart';
-import '../../../../core/routes/app_routes.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
+import '../../../../core/localization/app_strings.dart';
+import '../../../../core/routes/app_routes.dart';
+import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/widgets/svg_picture_asset.dart';
-import '../../../../shared/utils/currency_formatter.dart';
-import '../../../../core/services/progress_indicator/loader.dart';
-import '../../../../shared/utils/app_dialogs.dart';
-import '../../../../shared/widgets/app_primary_button.dart';
-import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/currency_formatter.dart';
+import '../../../../shared/widgets/app_back_button.dart';
+import '../../../../shared/widgets/app_primary_button.dart';
 import '../controllers/driver_accepted_controller.dart';
-import '../../../../core/localization/app_strings.dart';
 
 class StopEditorScreen extends StatefulWidget {
   const StopEditorScreen({super.key});

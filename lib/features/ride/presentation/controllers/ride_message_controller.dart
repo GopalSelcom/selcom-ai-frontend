@@ -3,14 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../../core/localization/app_strings.dart';
-
 import '../../../../core/data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
-import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
-import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
+import '../../../../core/services/nearby_drivers_socket_service.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 import '../../domain/entities/ride_chat_message.dart';
 import '../../domain/repositories/ride_chat_repository.dart';
 import '../widgets/ride_driver_call_options_sheet.dart';
@@ -172,10 +171,7 @@ class RideMessageController extends GetxController {
     });
     isSocketConnected.value = socket.isConnected;
 
-    await Future.wait([
-      _loadQuickReplies(),
-      _loadChatHistory(),
-    ]);
+    await Future.wait([_loadQuickReplies(), _loadChatHistory()]);
 
     // 3. Connect/Join room
     await _repository.ensureConnected();
@@ -249,8 +245,7 @@ class RideMessageController extends GetxController {
         words.skip(1).map((w) => w[0].toUpperCase() + w.substring(1)).join('');
   }
 
-  Future<void> sendQuickReply(String text) =>
-      sendMessageWithText(text.trim());
+  Future<void> sendQuickReply(String text) => sendMessageWithText(text.trim());
 
   void sendCurrentMessage() {
     unawaited(sendMessageWithText(messageController.text.trim()));

@@ -3,14 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+
 import '../theme/app_colors.dart';
 
 class MapMarkerUtils {
   /// Builds a map marker from a PNG or SVG asset path.
-  static Future<BitmapDescriptor> markerFromAsset(
-    String path,
-    int width,
-  ) {
+  static Future<BitmapDescriptor> markerFromAsset(String path, int width) {
     if (path.toLowerCase().endsWith('.svg')) {
       return getSvgMarker(path, width);
     }
@@ -35,10 +33,7 @@ class MapMarkerUtils {
   }
 
   /// Converts an SVG asset to a Google Maps marker.
-  static Future<BitmapDescriptor> getSvgMarker(
-    String path,
-    int width,
-  ) async {
+  static Future<BitmapDescriptor> getSvgMarker(String path, int width) async {
     final pictureInfo = await vg.loadPicture(SvgAssetLoader(path), null);
 
     final recorder = ui.PictureRecorder();
@@ -50,10 +45,13 @@ class MapMarkerUtils {
     canvas.scale(scale, scale);
     canvas.drawPicture(pictureInfo.picture);
 
-    final ui.Image image =
-        await recorder.endRecording().toImage(width, height.toInt());
-    final ByteData? bytes =
-        await image.toByteData(format: ui.ImageByteFormat.png);
+    final ui.Image image = await recorder.endRecording().toImage(
+      width,
+      height.toInt(),
+    );
+    final ByteData? bytes = await image.toByteData(
+      format: ui.ImageByteFormat.png,
+    );
 
     pictureInfo.picture.dispose();
 
@@ -162,12 +160,7 @@ class MapMarkerUtils {
 
     final markerHeight = (size * 0.72).roundToDouble();
     final markerRect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(
-        size * 0.10,
-        size * 0.18,
-        size * 0.80,
-        markerHeight * 0.62,
-      ),
+      Rect.fromLTWH(size * 0.10, size * 0.18, size * 0.80, markerHeight * 0.62),
       Radius.circular(size * 0.16),
     );
 
@@ -176,10 +169,7 @@ class MapMarkerUtils {
       ..color = AppColors.black.withValues(alpha: 0.14)
       ..style = PaintingStyle.fill
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
-    canvas.drawRRect(
-      markerRect.shift(const Offset(1, 1)),
-      shadowPaint,
-    );
+    canvas.drawRRect(markerRect.shift(const Offset(1, 1)), shadowPaint);
 
     final mainPaint = Paint()
       ..color = color

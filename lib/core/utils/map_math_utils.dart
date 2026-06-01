@@ -20,7 +20,8 @@ class MapMathUtils {
 
   /// Linearly interpolates between two LatLngs.
   static LatLng interpolate(LatLng start, LatLng end, double fraction) {
-    final double lat = (end.latitude - start.latitude) * fraction + start.latitude;
+    final double lat =
+        (end.latitude - start.latitude) * fraction + start.latitude;
     double lngDelta = end.longitude - start.longitude;
 
     // Handle wrapping around the 180th meridian

@@ -1,19 +1,22 @@
 import 'dart:async';
-import 'package:get/get.dart';
-import 'package:m7_livelyness_detection/index.dart' hide Rx;
-import 'package:permission_handler/permission_handler.dart';
+
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:selcom_rides_frontend/core/constants/app_assets.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:m7_livelyness_detection/m7_livelyness_detection.dart';
+import 'package:permission_handler/permission_handler.dart';
+
+import '../../../../core/constants/app_assets.dart';
+import '../../../../core/localization/app_strings.dart';
+import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/app_dialogs.dart';
-import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../domain/entities/payment_card.dart';
 import '../screens/add_card_screen.dart';
 import '../screens/card_details_screen.dart';
 import '../widgets/payment_card_action_bottom_sheet.dart';
-import '../widgets/selcom_pesa_linked_bottom_sheet.dart';
 import '../widgets/selcom_pesa_flow_bottom_sheet.dart';
+import '../widgets/selcom_pesa_linked_bottom_sheet.dart';
 
 enum SelcomPesaStep { connect, phoneInput, otp, selfie }
 

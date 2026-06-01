@@ -38,16 +38,14 @@ class EmergencyContactsData {
       return EmergencyContactsData(contacts: []);
     }
     return EmergencyContactsData(
-      contacts: raw
-          .map((e) {
-            if (e is Map<String, dynamic>) {
-              return EmergencyContactModel.fromJson(e);
-            }
-            return EmergencyContactModel.fromJson(
-              Map<String, dynamic>.from(e as Map),
-            );
-          })
-          .toList(),
+      contacts: raw.map((e) {
+        if (e is Map<String, dynamic>) {
+          return EmergencyContactModel.fromJson(e);
+        }
+        return EmergencyContactModel.fromJson(
+          Map<String, dynamic>.from(e as Map),
+        );
+      }).toList(),
     );
   }
 

@@ -4,28 +4,27 @@ import 'dart:developer' as developer;
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart' hide Response, FormData, MultipartFile;
 import 'package:http_parser/http_parser.dart';
 
-import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
-
+import '../../shared/utils/app_dialogs.dart';
 import '../constants/app_assets.dart';
+import '../localization/app_strings.dart';
 import '../routes/app_routes.dart';
-import '../theme/app_colors.dart';
-import '../theme/app_text_styles.dart';
+import '../services/error_reporting/error_reporter.dart';
+import '../services/error_reporting/models/error_constants.dart';
 import '../services/progress_indicator/loader.dart';
 import '../services/session_expiry_service.dart';
 import '../services/storage_service.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
 import '../widgets/svg_picture_asset.dart';
-import 'failed_request_queue.dart';
-import 'retry_manager.dart';
-import 'network_connectivity_service.dart';
 import 'connectivity_probe.dart';
-import '../../shared/utils/app_dialogs.dart';
-import '../services/error_reporting/error_reporter.dart';
-import '../services/error_reporting/models/error_constants.dart';
+import 'failed_request_queue.dart';
+import 'network_connectivity_service.dart';
+import 'retry_manager.dart';
 
 // ─────────────────────────────────────────────────────────
 // Enums

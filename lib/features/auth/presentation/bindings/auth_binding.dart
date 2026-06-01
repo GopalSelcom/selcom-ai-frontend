@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+
 import '../../../../core/di/injection_container.dart' as di;
 import '../../../../core/services/app_region_service.dart';
 import '../../data/datasources/auth_remote_data_source.dart';
@@ -16,9 +17,7 @@ class AuthBinding extends Bindings {
   @override
   void dependencies() {
     // Data Sources (no Dio needed — ApiService is a singleton)
-    Get.lazyPut<AuthRemoteDataSource>(
-      () => AuthRemoteDataSourceImpl(),
-    );
+    Get.lazyPut<AuthRemoteDataSource>(() => AuthRemoteDataSourceImpl());
 
     // Repositories
     Get.lazyPut<AuthRepository>(

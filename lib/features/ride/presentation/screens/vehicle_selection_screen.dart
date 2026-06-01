@@ -52,12 +52,15 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
     double listHeight;
     final int loadingShimmerCount =
         controller.isLoadingEstimates.value && estimatesCount == 0
-            ? 3
-            : visibleItems.clamp(1, 3);
-    final int listItemsCount =
-        controller.isLoadingEstimates.value ? loadingShimmerCount : visibleItems;
+        ? 3
+        : visibleItems.clamp(1, 3);
+    final int listItemsCount = controller.isLoadingEstimates.value
+        ? loadingShimmerCount
+        : visibleItems;
     listHeight =
-        (listItemsCount * 73.h) + ((listItemsCount - 1).clamp(0, 2) * 10.h) + 10.h;
+        (listItemsCount * 73.h) +
+        ((listItemsCount - 1).clamp(0, 2) * 10.h) +
+        10.h;
 
     // PaymentBar: top padding (18.h) + button (~56.h) + bottom padding
     final double paymentBarHeight =
@@ -475,14 +478,17 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
               if (controller.isLoadingEstimates.value) {
                 final int estimatesCount = controller.estimates.length;
                 final int visibleItems = estimatesCount.clamp(0, 3);
-                final int shimmerCount =
-                    (visibleItems == 0 ? 3 : visibleItems).clamp(1, 3);
+                final int shimmerCount = (visibleItems == 0 ? 3 : visibleItems)
+                    .clamp(1, 3);
 
                 return ListView.separated(
                   controller: scrollController,
                   physics: const NeverScrollableScrollPhysics(),
-                  padding:
-                      EdgeInsets.only(left: 16.w, right: 16.w, bottom: 10.h),
+                  padding: EdgeInsets.only(
+                    left: 16.w,
+                    right: 16.w,
+                    bottom: 10.h,
+                  ),
                   itemCount: shimmerCount,
                   separatorBuilder: (_, __) => SizedBox(height: 10.h),
                   itemBuilder: (_, __) => _vehicleCardShimmer(),
@@ -673,10 +679,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(
-            color: AppColors.borderWalletCard,
-            width: 0.787,
-          ),
+          border: Border.all(color: AppColors.borderWalletCard, width: 0.787),
         ),
         // Shimmer only the inner content, not the outer card shell.
         child: AppShimmer(
@@ -684,11 +687,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Vehicle thumbnail (matches [_vehicleThumb] sizes).
-              AppShimmerBox(
-                width: 72.w,
-                height: 52.h,
-                borderRadius: 8.r,
-              ),
+              AppShimmerBox(width: 72.w, height: 52.h, borderRadius: 8.r),
               SizedBox(width: 18.w),
               // Left content column.
               Expanded(
@@ -736,11 +735,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                 ),
               ),
               // Single fare line (matches [_vehicleFarePrice] without promo).
-              AppShimmerBox(
-                width: 90.w,
-                height: 16.h,
-                borderRadius: 8.r,
-              ),
+              AppShimmerBox(width: 90.w, height: 16.h, borderRadius: 8.r),
             ],
           ),
         ),

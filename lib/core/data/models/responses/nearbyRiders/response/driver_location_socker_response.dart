@@ -4,9 +4,11 @@
 
 import 'dart:convert';
 
-DriverLocationSocketResponse driverLocationSocketResponseFromJson(String str) => DriverLocationSocketResponse.fromJson(json.decode(str));
+DriverLocationSocketResponse driverLocationSocketResponseFromJson(String str) =>
+    DriverLocationSocketResponse.fromJson(json.decode(str));
 
-String driverLocationSocketResponseToJson(DriverLocationSocketResponse data) => json.encode(data.toJson());
+String driverLocationSocketResponseToJson(DriverLocationSocketResponse data) =>
+    json.encode(data.toJson());
 
 class DriverLocationSocketResponse {
   double? latitude;
@@ -25,14 +27,15 @@ class DriverLocationSocketResponse {
     this.recordedAt,
   });
 
-  factory DriverLocationSocketResponse.fromJson(Map<String, dynamic> json) => DriverLocationSocketResponse(
-    latitude: (json["latitude"] ?? json["lat"])?.toDouble(),
-    longitude: (json["longitude"] ?? json["lng"])?.toDouble(),
-    heading: json["heading"],
-    speed: (json["speed"])?.toDouble(),
-    accuracy: (json["accuracy"])?.toDouble(),
-    recordedAt: json["recorded_at"],
-  );
+  factory DriverLocationSocketResponse.fromJson(Map<String, dynamic> json) =>
+      DriverLocationSocketResponse(
+        latitude: (json["latitude"] ?? json["lat"])?.toDouble(),
+        longitude: (json["longitude"] ?? json["lng"])?.toDouble(),
+        heading: json["heading"],
+        speed: (json["speed"])?.toDouble(),
+        accuracy: (json["accuracy"])?.toDouble(),
+        recordedAt: json["recorded_at"],
+      );
 
   Map<String, dynamic> toJson() => {
     "latitude": latitude,

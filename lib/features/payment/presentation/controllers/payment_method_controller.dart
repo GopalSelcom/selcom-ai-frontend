@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/data/models/user_profile_models.dart';
 import '../../../../features/profile/domain/repositories/profile_repository.dart';
@@ -22,10 +23,7 @@ class PaymentMethodController extends GetxController {
 
   Future<void> loadAll() async {
     isLoading.value = true;
-    await Future.wait([
-      loadPaymentMethods(),
-      loadWalletBalance(),
-    ]);
+    await Future.wait([loadPaymentMethods(), loadWalletBalance()]);
     isLoading.value = false;
   }
 
@@ -42,9 +40,9 @@ class PaymentMethodController extends GetxController {
 
   Future<void> loadPaymentMethods() async {
     error.value = '';
-    
+
     final result = await profileRepository.getPaymentMethods();
-    
+
     result.fold(
       (failure) {
         error.value = failure.message;

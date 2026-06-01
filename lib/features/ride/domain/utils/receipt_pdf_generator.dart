@@ -30,11 +30,7 @@ class ReceiptPdfGenerator {
     final pdf = pw.Document();
     pdf.addPage(
       pw.Page(
-        pageFormat: PdfPageFormat(
-          pageWidth,
-          pageHeight,
-          marginAll: 0,
-        ),
+        pageFormat: PdfPageFormat(pageWidth, pageHeight, marginAll: 0),
         build: (pw.Context context) {
           return pw.Image(
             pw.MemoryImage(capture.bytes),

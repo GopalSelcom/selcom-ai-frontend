@@ -134,6 +134,7 @@ class RideEntity {
   final String? passengerName;
   final String? passengerPhone;
   final List<PdfLinkEntity>? pdfLinks;
+
   /// Applied promo on this ride (GET ride / history payloads).
   final String? promoCode;
   final int? promoDiscount;

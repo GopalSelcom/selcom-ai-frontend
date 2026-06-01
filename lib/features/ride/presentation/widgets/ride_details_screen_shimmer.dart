@@ -80,10 +80,7 @@ abstract final class RideDetailsScreenShimmer {
       padding: padding,
       decoration: BoxDecoration(
         color: AppColors.pageBackground,
-        border: Border.all(
-          color: AppColors.borderWalletCard,
-          width: 0.78,
-        ),
+        border: Border.all(color: AppColors.borderWalletCard, width: 0.78),
         borderRadius: BorderRadius.circular(16.r),
       ),
       child: child,
@@ -116,9 +113,7 @@ abstract final class RideDetailsScreenShimmer {
       padding: EdgeInsets.all(RideDetailsScreenLayout.locationCardPadding),
       child: SizedBox(
         height: contentHeight,
-        child: AppShimmer(
-          child: _locationsSection(locationRowCount: rows),
-        ),
+        child: AppShimmer(child: _locationsSection(locationRowCount: rows)),
       ),
     );
   }
@@ -160,7 +155,8 @@ abstract final class RideDetailsScreenShimmer {
         RideDetailsScreenLayout.headerTitleDateGap +
         RideDetailsScreenLayout.headerDateLineHeight;
     return SizedBox(
-      height: textColumnHeight > RideDetailsScreenLayout.headerVehicleImageHeight
+      height:
+          textColumnHeight > RideDetailsScreenLayout.headerVehicleImageHeight
           ? textColumnHeight
           : RideDetailsScreenLayout.headerVehicleImageHeight,
       child: Row(
@@ -246,8 +242,7 @@ abstract final class RideDetailsScreenShimmer {
                 AppShimmerBox(
                   width: RideDetailsScreenLayout.locationMarkerSize,
                   height: RideDetailsScreenLayout.locationMarkerSize,
-                  borderRadius:
-                      RideDetailsScreenLayout.locationMarkerSize / 2,
+                  borderRadius: RideDetailsScreenLayout.locationMarkerSize / 2,
                 ),
                 if (showConnectorBelow)
                   Expanded(
@@ -270,7 +265,9 @@ abstract final class RideDetailsScreenShimmer {
                   height: RideDetailsScreenLayout.locationTitleLineHeight,
                   borderRadius: 4.r,
                 ),
-                SizedBox(height: RideDetailsScreenLayout.locationTitleAddressGap),
+                SizedBox(
+                  height: RideDetailsScreenLayout.locationTitleAddressGap,
+                ),
                 AppShimmerBox(
                   width: double.infinity,
                   height: RideDetailsScreenLayout.locationAddressLineHeight,

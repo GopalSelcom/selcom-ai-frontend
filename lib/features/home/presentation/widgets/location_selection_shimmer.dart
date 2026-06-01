@@ -106,17 +106,9 @@ abstract final class LocationSelectionShimmer {
             Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                AppShimmerBox(
-                  width: 21.w,
-                  height: 21.h,
-                  borderRadius: 10.r,
-                ),
+                AppShimmerBox(width: 21.w, height: 21.h, borderRadius: 10.r),
                 SizedBox(height: 4.h),
-                AppShimmerBox(
-                  width: 32.w,
-                  height: 12.h,
-                  borderRadius: 6.r,
-                ),
+                AppShimmerBox(width: 32.w, height: 12.h, borderRadius: 6.r),
               ],
             ),
             SizedBox(width: 16.w),
@@ -124,24 +116,13 @@ abstract final class LocationSelectionShimmer {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AppShimmerBox(
-                    width: 140.w,
-                    height: 16.h,
-                    borderRadius: 8.r,
-                  ),
+                  AppShimmerBox(width: 140.w, height: 16.h, borderRadius: 8.r),
                   SizedBox(height: 4.h),
-                  AppShimmerBox(
-                    height: 14.h,
-                    borderRadius: 8.r,
-                  ),
+                  AppShimmerBox(height: 14.h, borderRadius: 8.r),
                 ],
               ),
             ),
-            AppShimmerBox(
-              width: 24.w,
-              height: 24.h,
-              borderRadius: 12.r,
-            ),
+            AppShimmerBox(width: 24.w, height: 24.h, borderRadius: 12.r),
           ],
         ),
       ),

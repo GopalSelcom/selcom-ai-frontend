@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../domain/entities/payment_card.dart';
 
@@ -119,7 +120,8 @@ class AddCardController extends GetxController {
       cvvError.value = 'CVV must be 3 digits';
     }
 
-    final isValid = fullNameError.value == null &&
+    final isValid =
+        fullNameError.value == null &&
         cardNumberError.value == null &&
         expiryError.value == null &&
         cvvError.value == null;

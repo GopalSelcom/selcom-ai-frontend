@@ -1,20 +1,23 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer' as developer;
 import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:live_activities/live_activities.dart';
 import 'package:live_activities/models/activity_update.dart';
-import 'dart:developer' as developer;
-import '../error_reporting/error_reporter.dart';
 
-import '../storage_service.dart';
-import 'android_order_tracking_manager.dart';
 import '../../../features/ride/domain/repositories/ride_repository.dart';
 import '../../di/injection_container.dart';
+import '../error_reporting/error_reporter.dart';
+import '../storage_service.dart';
+import 'android_order_tracking_manager.dart';
 
 class LiveActivityManager {
   static final LiveActivityManager _instance = LiveActivityManager._internal();
+
   factory LiveActivityManager() => _instance;
+
   LiveActivityManager._internal();
 
   final LiveActivities _liveActivitiesPlugin = LiveActivities();
@@ -37,6 +40,7 @@ class LiveActivityManager {
       _liveActivitiesPlugin.activityUpdateStream;
 
   bool get _isAndroid => !kIsWeb && Platform.isAndroid;
+
   bool get _isIOS => !kIsWeb && Platform.isIOS;
 
   static const String _activityIdKey = 'live_activity_order_to_id';
@@ -169,6 +173,7 @@ class LiveActivityManager {
   bool isTracking(String orderId) => _orderToActivityId.containsKey(orderId);
 
   static const int _maxConcurrentIOSActivities = 5;
+
   int get _iosActivityCount =>
       _orderToActivityId.values.where((v) => v != 'android').length;
 
@@ -450,7 +455,6 @@ class LiveActivityManager {
       final String? activityId = _orderToActivityId[orderId];
       if (activityId == null || activityId == 'android') return;
 
-
       final updateData = <String, dynamic>{
         'status': status,
         'driver_name': driverName.isNotEmpty
@@ -488,7 +492,11 @@ class LiveActivityManager {
       );
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      developer.log("❌ Error in updateActivity: $e", name: 'LIVE_ACTIVITY',stackTrace: stackTrace);
+      developer.log(
+        "❌ Error in updateActivity: $e",
+        name: 'LIVE_ACTIVITY',
+        stackTrace: stackTrace,
+      );
     }
   }
 

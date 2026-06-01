@@ -7,7 +7,14 @@ import '../../../../shared/widgets/app_shimmer.dart';
 abstract final class RideRatingTagsShimmer {
   RideRatingTagsShimmer._();
 
-  static const List<double> _chipWidthFactors = [0.22, 0.28, 0.18, 0.24, 0.2, 0.26];
+  static const List<double> _chipWidthFactors = [
+    0.22,
+    0.28,
+    0.18,
+    0.24,
+    0.2,
+    0.26,
+  ];
 
   static double get chipHeight => 38.h;
 

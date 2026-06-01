@@ -27,8 +27,7 @@ class ConfirmPickupController extends GetxController {
   final bookingMode = BookingMode.self.obs;
   final passengerName = ''.obs;
   final passengerPhone = ''.obs;
-  final TextEditingController noteForDriverController =
-      TextEditingController();
+  final TextEditingController noteForDriverController = TextEditingController();
   late final VoidCallback _pickupNoteListener;
   late LatLng _initialLatLng;
   late String initialAddress;
@@ -124,25 +123,26 @@ class ConfirmPickupController extends GetxController {
 
     try {
       final position = await Loader.run(
-        () => Geolocator.getCurrentPosition(
-          locationSettings: const LocationSettings(
-            accuracy: LocationAccuracy.high,
-          ),
-        ).timeout(
-          const Duration(seconds: 5),
-          onTimeout: () => Position(
-            latitude: selectedLatLng.value.latitude,
-            longitude: selectedLatLng.value.longitude,
-            timestamp: DateTime.now(),
-            accuracy: 0,
-            altitude: 0,
-            heading: 0,
-            speed: 0,
-            speedAccuracy: 0,
-            altitudeAccuracy: 0,
-            headingAccuracy: 0,
-          ),
-        ),
+        () =>
+            Geolocator.getCurrentPosition(
+              locationSettings: const LocationSettings(
+                accuracy: LocationAccuracy.high,
+              ),
+            ).timeout(
+              const Duration(seconds: 5),
+              onTimeout: () => Position(
+                latitude: selectedLatLng.value.latitude,
+                longitude: selectedLatLng.value.longitude,
+                timestamp: DateTime.now(),
+                accuracy: 0,
+                altitude: 0,
+                heading: 0,
+                speed: 0,
+                speedAccuracy: 0,
+                altitudeAccuracy: 0,
+                headingAccuracy: 0,
+              ),
+            ),
       );
 
       await Loader.run(
