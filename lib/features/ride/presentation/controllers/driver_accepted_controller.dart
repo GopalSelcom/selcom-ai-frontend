@@ -124,6 +124,7 @@ class DriverAcceptedController extends GetxController
   VoidCallback? onRecenterPressed;
 
   GoogleMapController? mapController;
+  LatLng? _lastDriverRotationSamplePosition;
   bool _navigatedAway = false;
   DateTime? _lastCameraUpdate;
   bool _openedCompletedRideDetails = false;
@@ -855,13 +856,26 @@ class DriverAcceptedController extends GetxController
         animDuration = const Duration(milliseconds: 4000);
       }
 
-      if (head != null) {
-        if (head is num) {
-          assignedDriverHeading.value = head.toDouble();
-        } else if (head is String) {
-          assignedDriverHeading.value =
-              double.tryParse(head) ?? assignedDriverHeading.value;
+      final parsedHeading = MapVehicleMarkerUtils.parseHeadingDegrees(head);
+      final rotationFrom =
+          _lastDriverRotationSamplePosition ??
+          mapWidgetKey.currentState?.currentAnimatedPosition;
+
+      assignedDriverHeading.value = MapVehicleMarkerUtils.resolveMarkerRotation(
+        previousPosition: rotationFrom,
+        currentPosition: rawPos,
+        headingDegrees: parsedHeading,
+        previousRotation: assignedDriverHeading.value,
+        speedMps: speed,
+      );
+
+      if (rotationFrom != null) {
+        final moved = _calculateDistanceInMeters(rotationFrom, rawPos);
+        if (moved >= MapVehicleMarkerUtils.minMovementMetersForBearing) {
+          _lastDriverRotationSamplePosition = rawPos;
         }
+      } else {
+        _lastDriverRotationSamplePosition = rawPos;
       }
 
       mapWidgetKey.currentState?.updateRiderPosition(
