@@ -19,6 +19,7 @@ import '../../../../shared/widgets/web_view_screen.dart';
 import '../../../ride/presentation/screens/my_rides_screen.dart';
 import '../../data/models/request/update_profile_request.dart';
 import '../../domain/usecases/profile_usecase.dart';
+import '../widgets/wallet_actions_bottom_sheet.dart';
 
 class ProfileController extends GetxController {
   final ProfileUseCase profileUseCase;
@@ -270,6 +271,10 @@ class ProfileController extends GetxController {
 
   void openPaymentMethods() {
     Get.toNamed(AppRoutes.paymentMethods);
+  }
+
+  void openWalletActionsSheet() {
+    WalletActionsBottomSheet.show();
   }
 
   void openContactUs() {

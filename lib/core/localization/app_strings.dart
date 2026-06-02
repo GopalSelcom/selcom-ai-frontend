@@ -33,6 +33,8 @@ class AppStrings {
   static const String amountNeededLabel = 'amount_needed_label';
   static const String topUpWallet = 'top_up_wallet';
   static const String addMoneyToWallet = 'add_money_to_wallet';
+  static const String addMoney = 'add_money';
+  static const String back = 'back';
   static const String addMoneySelcomPesaSubtitle = 'add_money_selcom_pesa_subtitle';
   static const String addMoneyTanQrTips = 'add_money_tan_qr_tips';
   static const String addMoneyTanQrTipsSubtitle = 'add_money_tan_qr_tips_subtitle';

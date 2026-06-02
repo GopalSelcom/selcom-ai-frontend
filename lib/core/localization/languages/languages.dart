@@ -37,6 +37,8 @@ abstract class Languages {
   String get amountNeededLabel;
   String get topUpWallet;
   String get addMoneyToWallet;
+  String get addMoney;
+  String get back;
   String get addMoneySelcomPesaSubtitle;
   String get addMoneyTanQrTips;
   String get addMoneyTanQrTipsSubtitle;

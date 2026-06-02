@@ -30,6 +30,8 @@ class LanguageEn extends Languages {
     'amount_needed_label': 'Amount Needed',
     'top_up_wallet': 'Top up Wallet',
     'add_money_to_wallet': 'Add Money to wallet',
+    'add_money': 'Add Money',
+    'back': 'Back',
     'add_money_selcom_pesa_subtitle': 'Request money from selcom pesa',
     'add_money_tan_qr_tips': 'TanQR/TIPS',
     'add_money_tan_qr_tips_subtitle': 'Add Money using TanQR/Tips',
@@ -813,6 +815,12 @@ class LanguageEn extends Languages {
 
   @override
   String get addMoneyToWallet => values['add_money_to_wallet'] ?? '';
+
+  @override
+  String get addMoney => values['add_money'] ?? '';
+
+  @override
+  String get back => values['back'] ?? '';
 
   @override
   String get addMoneySelcomPesaSubtitle =>

@@ -27,6 +27,8 @@ class LanguageSw extends Languages {
     'amount_needed_label': '',
     'top_up_wallet': '',
     'add_money_to_wallet': '',
+    'add_money': '',
+    'back': '',
     'add_money_selcom_pesa_subtitle': '',
     'add_money_tan_qr_tips': '',
     'add_money_tan_qr_tips_subtitle': '',
@@ -714,6 +716,12 @@ class LanguageSw extends Languages {
 
   @override
   String get addMoneyToWallet => values['add_money_to_wallet'] ?? '';
+
+  @override
+  String get addMoney => values['add_money'] ?? '';
+
+  @override
+  String get back => values['back'] ?? '';
 
   @override
   String get addMoneySelcomPesaSubtitle =>
