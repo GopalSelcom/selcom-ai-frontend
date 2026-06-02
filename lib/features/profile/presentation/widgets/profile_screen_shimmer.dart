@@ -104,36 +104,20 @@ abstract final class ProfileScreenShimmer {
         ),
         child: Row(
           children: [
-            AppShimmerBox(
-              width: 51.w,
-              height: 51.w,
-              borderRadius: 26.r,
-            ),
+            AppShimmerBox(width: 51.w, height: 51.w, borderRadius: 26.r),
             SizedBox(width: 13.w),
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AppShimmerBox(
-                    width: 56.w,
-                    height: 15.h,
-                    borderRadius: 6.r,
-                  ),
+                  AppShimmerBox(width: 56.w, height: 15.h, borderRadius: 6.r),
                   SizedBox(height: 6.h),
-                  AppShimmerBox(
-                    width: 100.w,
-                    height: 12.h,
-                    borderRadius: 6.r,
-                  ),
+                  AppShimmerBox(width: 100.w, height: 12.h, borderRadius: 6.r),
                 ],
               ),
             ),
-            AppShimmerBox(
-              width: 88.w,
-              height: 20.h,
-              borderRadius: 8.r,
-            ),
+            AppShimmerBox(width: 88.w, height: 20.h, borderRadius: 8.r),
           ],
         ),
       ),
@@ -171,17 +155,9 @@ abstract final class ProfileScreenShimmer {
         ),
         child: Row(
           children: [
-            AppShimmerBox(
-              width: 24.w,
-              height: 24.w,
-              borderRadius: 8.r,
-            ),
+            AppShimmerBox(width: 24.w, height: 24.w, borderRadius: 8.r),
             SizedBox(width: 7.w),
-            AppShimmerBox(
-              width: 72.w,
-              height: 15.h,
-              borderRadius: 6.r,
-            ),
+            AppShimmerBox(width: 72.w, height: 15.h, borderRadius: 6.r),
           ],
         ),
       ),
@@ -202,23 +178,12 @@ abstract final class ProfileScreenShimmer {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  AppShimmerBox(
-                    width: 24.w,
-                    height: 24.w,
-                    borderRadius: 8.r,
-                  ),
+                  AppShimmerBox(width: 24.w, height: 24.w, borderRadius: 8.r),
                   SizedBox(width: 9.w),
                   Expanded(
-                    child: AppShimmerBox(
-                      height: 15.h,
-                      borderRadius: 6.r,
-                    ),
+                    child: AppShimmerBox(height: 15.h, borderRadius: 6.r),
                   ),
-                  AppShimmerBox(
-                    width: 18.w,
-                    height: 18.w,
-                    borderRadius: 6.r,
-                  ),
+                  AppShimmerBox(width: 18.w, height: 18.w, borderRadius: 6.r),
                 ],
               ),
             ),

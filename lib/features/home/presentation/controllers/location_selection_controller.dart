@@ -170,7 +170,8 @@ class LocationSelectionController extends GetxController {
       clearDestinationOnOpen = (m['clearDestinationOnOpen'] as bool?) ?? false;
       preferredVehicleTypeId.value = (m['preferredVehicleTypeId'] as String?)
           ?.trim();
-      preferredVehicleName.value = (m['preferredVehicleName'] as String?)?.trim();
+      preferredVehicleName.value = (m['preferredVehicleName'] as String?)
+          ?.trim();
     }
 
     if (clearPickupOnOpen) {
@@ -288,8 +289,8 @@ class LocationSelectionController extends GetxController {
     extraDestinationFocusNodes.add(FocusNode());
     extraStopSelected.add(false);
     activeSegmentIndex.value = 2 + extraDestinationControllers.length - 1;
-    homeController.searchQuery.value =
-        extraDestinationControllers.last.text.trim();
+    homeController.searchQuery.value = extraDestinationControllers.last.text
+        .trim();
     focusActiveSegment();
   }
 

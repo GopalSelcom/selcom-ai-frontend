@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
-import '../../../../core/localization/app_strings.dart';
-import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
-import '../../../../shared/widgets/app_cupertino_text_button.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/widgets/app_cupertino_text_button.dart';
 
 class RideDateFormatter {
   static String formatDate(String apiDate) {
@@ -358,7 +358,10 @@ class RideLocationsTimeline extends StatelessWidget {
               children: [
                 Align(
                   alignment: Alignment.center,
-                  child: Container(height: 0.8.h, color: AppColors.borderWalletCard),
+                  child: Container(
+                    height: 0.8.h,
+                    color: AppColors.borderWalletCard,
+                  ),
                 ),
                 _buildAddStopPill(),
               ],

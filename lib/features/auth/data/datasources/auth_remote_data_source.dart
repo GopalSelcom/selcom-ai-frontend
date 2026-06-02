@@ -1,13 +1,13 @@
+import '../../../../core/data/models/requests/save_user_additional_details_request.dart';
+import '../../../../core/data/models/requests/send_otp_request.dart';
+import '../../../../core/data/models/requests/verify_otp_request.dart';
+import '../../../../core/data/models/responses/onboarding_banners_response.dart';
+import '../../../../core/data/models/responses/send_otp_response.dart';
+import '../../../../core/data/models/responses/verify_otp_response.dart';
+import '../../../../core/data/models/user_model.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
-import '../../../../core/data/models/requests/send_otp_request.dart';
-import '../../../../core/data/models/requests/save_user_additional_details_request.dart';
-import '../../../../core/data/models/responses/send_otp_response.dart';
-import '../../../../core/data/models/requests/verify_otp_request.dart';
-import '../../../../core/data/models/responses/verify_otp_response.dart';
-import '../../../../core/data/models/user_model.dart';
-import '../../../../core/data/models/responses/onboarding_banners_response.dart';
 
 abstract class AuthRemoteDataSource {
   Future<SendOtpResponseModel?> sendOtp({required SendOtpRequest request});

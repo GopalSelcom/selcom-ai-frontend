@@ -35,13 +35,16 @@ class SignUpScreen extends GetView<SignUpController> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Obx(
-                () => AppPrimaryButton(
-                  label: AppStrings.submit.tr,
-                  isLoading: controller.isLoading.value,
-                  onPressed: controller.canSubmit
-                      ? controller.submitAdditionalDetails
-                      : null,
-                ),
+                () {
+                  if (!controller.canSubmit) {
+                    return const SizedBox.shrink();
+                  }
+                  return AppPrimaryButton(
+                    label: AppStrings.submit.tr,
+                    isLoading: controller.isLoading.value,
+                    onPressed: controller.submitAdditionalDetails,
+                  );
+                },
               ),
               Obx(
                 () => controller.errorMessage.value.trim().isEmpty

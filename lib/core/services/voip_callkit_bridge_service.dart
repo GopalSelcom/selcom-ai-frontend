@@ -35,9 +35,7 @@ class VoipCallkitBridgeService {
 
   /// Registers a host-app callback fired whenever the VoIP token changes.
   /// Called once with the cached token if one is already known.
-  void setOnVoipTokenChanged(
-    Future<void> Function(String token)? handler,
-  ) {
+  void setOnVoipTokenChanged(Future<void> Function(String token)? handler) {
     _onVoipTokenChanged = handler;
     final cached = _voipToken;
     if (handler != null && cached != null && cached.isNotEmpty) {
@@ -47,9 +45,7 @@ class VoipCallkitBridgeService {
 
   /// Registers a host-app sink for native PushKit-delivered incoming calls.
   /// Used to forward into `AgoraCalling.dispatchExternalIncomingCall`.
-  void setOnIncomingCall(
-    void Function(Map<String, dynamic> data)? sink,
-  ) {
+  void setOnIncomingCall(void Function(Map<String, dynamic> data)? sink) {
     _onIncomingCall = sink;
   }
 
@@ -59,8 +55,10 @@ class VoipCallkitBridgeService {
     _voipToken = await StorageService().read(StorageKeys.voipToken);
     if (kDebugMode) {
       final cached = _voipToken;
-      debugPrint('[VOIP_BRIDGE] initialize — cached token '
-          '${cached == null || cached.isEmpty ? 'NONE' : 'len=${cached.length}'}');
+      debugPrint(
+        '[VOIP_BRIDGE] initialize — cached token '
+        '${cached == null || cached.isEmpty ? 'NONE' : 'len=${cached.length}'}',
+      );
     }
     _channel.setMethodCallHandler(_onNativeCall);
     await _consumePendingNativeEvents();
@@ -69,7 +67,9 @@ class VoipCallkitBridgeService {
   Future<void> _consumePendingNativeEvents() async {
     try {
       if (defaultTargetPlatform != TargetPlatform.iOS) return;
-      final dynamic raw = await _channel.invokeMethod('consumePendingVoipEvents');
+      final dynamic raw = await _channel.invokeMethod(
+        'consumePendingVoipEvents',
+      );
       if (raw is! List) return;
       for (final dynamic item in raw) {
         if (item is! Map) continue;
@@ -119,8 +119,10 @@ class VoipCallkitBridgeService {
         final sink = _onIncomingCall;
         if (sink == null) {
           if (kDebugMode) {
-            debugPrint('[VOIP_BRIDGE] $method dropped — no sink registered '
-                '(setOnIncomingCall not called yet)');
+            debugPrint(
+              '[VOIP_BRIDGE] $method dropped — no sink registered '
+              '(setOnIncomingCall not called yet)',
+            );
           }
           return;
         }

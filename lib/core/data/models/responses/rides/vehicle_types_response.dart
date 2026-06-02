@@ -11,7 +11,9 @@ class VehicleTypesResponseModel {
     return VehicleTypesResponseModel(
       statusCode: json['status_code'],
       message: json['message'],
-      data: json['data'] != null ? VehicleTypesData.fromJson(json['data']) : null,
+      data: json['data'] != null
+          ? VehicleTypesData.fromJson(json['data'])
+          : null,
     );
   }
 
@@ -35,15 +37,13 @@ class VehicleTypesData {
     return VehicleTypesData(
       vehicleTypes: json['vehicle_types'] != null
           ? (json['vehicle_types'] as List)
-              .map((v) => VehicleTypeModel.fromJson(v))
-              .toList()
+                .map((v) => VehicleTypeModel.fromJson(v))
+                .toList()
           : null,
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'vehicle_types': vehicleTypes?.map((v) => v.toJson()).toList(),
-    };
+    return {'vehicle_types': vehicleTypes?.map((v) => v.toJson()).toList()};
   }
 }

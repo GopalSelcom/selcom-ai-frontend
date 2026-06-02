@@ -37,8 +37,10 @@ class PhoneNationalRules {
   static String hintForIso(String? iso2) {
     final c = Countries.findByIsoCode(iso2);
     final synthetic = List.filled(c.maxLength, '9').join();
-    final formatted =
-        GroupedPhoneNumberFormatter.formatDigits(synthetic, c.format);
+    final formatted = GroupedPhoneNumberFormatter.formatDigits(
+      synthetic,
+      c.format,
+    );
     return formatted.replaceAll(RegExp(r'[0-9]'), 'x');
   }
 }

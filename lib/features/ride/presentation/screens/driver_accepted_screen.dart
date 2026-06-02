@@ -652,8 +652,9 @@ class DriverAcceptedScreen extends StatelessWidget {
                 SizedBox(height: 20.h),
                 DriverAcceptedScreenShimmer.driverAssignedSheet(
                   showPin: c.isPinRequired.value,
-                  pinDigitCount:
-                      c.otpDigits.isNotEmpty ? c.otpDigits.length : 4,
+                  pinDigitCount: c.otpDigits.isNotEmpty
+                      ? c.otpDigits.length
+                      : 4,
                 ),
               ],
             );

@@ -219,6 +219,31 @@ class AppCupertinoTextButton extends StatelessWidget {
     );
   }
 
+  /// Insufficient wallet dialog — full-width dismiss (e.g. "NO").
+  factory AppCupertinoTextButton.insufficientBalanceDismiss({
+    Key? key,
+    required String label,
+    required VoidCallback? onPressed,
+  }) {
+    final textStyle = TextStyle(
+      fontFamily: AppTextStyles.metropolisFont,
+      fontWeight: FontWeight.w500,
+      fontSize: 14.sp,
+      height: 18 / 14,
+      letterSpacing: 14.sp * 0.02,
+      color: const Color(0xFF7F7F7F),
+    );
+    return AppCupertinoTextButton(
+      key: key,
+      label: label,
+      onPressed: onPressed,
+      alignment: Alignment.center,
+      padding: EdgeInsets.symmetric(vertical: 12.h),
+      minimumSize: Size(double.infinity, 44.h),
+      textStyle: textStyle,
+    );
+  }
+
   /// Ride details footer — need help.
   factory AppCupertinoTextButton.inlineHelpLink({
     Key? key,
@@ -235,12 +260,16 @@ class AppCupertinoTextButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoButton(
+    final button = CupertinoButton(
       padding: padding ?? EdgeInsets.zero,
       minimumSize: minimumSize,
       alignment: alignment,
       onPressed: onPressed,
-      child: child ?? Text(label!, style: textStyle),
+      child: child ?? Text(label!, style: textStyle, textAlign: TextAlign.center),
     );
+    if (minimumSize.width >= double.infinity) {
+      return SizedBox(width: double.infinity, child: button);
+    }
+    return button;
   }
 }

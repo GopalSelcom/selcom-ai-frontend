@@ -20,6 +20,45 @@ class LanguageEn extends Languages {
     'are_you_sure_you_want_to_cancel': 'Are you sure you want to cancel?',
     'blink_your_eyes': 'Blink Your Eyes',
     'book_ride': 'Book Ride',
+    'book_ride_wallet_deduction_notice':
+        'The amount will be deducted from your wallet.',
+    'insufficient_balance_title': 'Insufficient Balance',
+    'insufficient_balance_message':
+        'Your wallet balance is too low to book this ride. Please top up to continue.',
+    'current_balance_label': 'Current Balance',
+    'required_amount_label': 'Required Amount',
+    'amount_needed_label': 'Amount Needed',
+    'top_up_wallet': 'Top up Wallet',
+    'add_money_to_wallet': 'Add Money to wallet',
+    'add_money': 'Add Money',
+    'amount': 'Amount',
+    'back': 'Back',
+    'add_money_selcom_pesa_subtitle': 'Request money from selcom pesa',
+    'add_money_tan_qr_tips': 'TanQR/TIPS',
+    'add_money_tan_qr_tips_subtitle': 'Add Money using TanQR/Tips',
+    'add_money_mobile_money_subtitle': 'Add Money using TanQR/Tips',
+    'add_money_steps_to_load_go_wallet': 'Steps to load your Go wallet',
+    'add_money_steps_to_load_go_wallet_subtitle':
+        'Add Money using your bank app or USSD',
+    'add_money_go_wallet_step_1': 'Select TanQR or send money to other banks',
+    'add_money_go_wallet_step_2': 'Select Selcom MFB',
+    'add_money_go_wallet_step_3': 'Enter your Go Wallet number',
+    'add_money_go_wallet_step_4': 'Enter Amount',
+    'add_money_go_wallet_step_5': 'Enter PIN to confirm',
+    'wallet_funds_received_title': 'Your wallet has received funds',
+    'wallet_funds_received_subtitle':
+        'You can now use your wallet to book rides.',
+    'top_up_request_sent_title': 'Top up request sent',
+    'selcom_pesa_to_go_wallet': 'Selcom Pesa to Go wallet',
+    'use_another_number': '+ Use another number',
+    'enter_selcom_pesa_customer_phone_hint':
+        'Enter Selcom Pesa customer phone number, and we\'ll send a request',
+    'request_sent_complete_selcom_topup':
+        'Request sent. Please complete payment on Selcom Pesa to Topup your Go wallet',
+    'expires_in_with_time': 'Expires in ... @time',
+    'mobile_money_phone_value': '+255 711 410 410',
+    'mobile_money_amount_value': 'TZS 43,000',
+    'select_a_vehicle': 'Please select a vehicle.',
     'book_ride_with_fare': 'Book Ride @currency @amount',
     'booking_fees_and_convenience_charges':
         'Booking Fees & Convenience Charges',
@@ -763,6 +802,122 @@ class LanguageEn extends Languages {
 
   @override
   String get bookRide => values['book_ride'] ?? '';
+
+  @override
+  String get bookRideWalletDeductionNotice =>
+      values['book_ride_wallet_deduction_notice'] ?? '';
+
+  @override
+  String get insufficientBalanceTitle =>
+      values['insufficient_balance_title'] ?? '';
+
+  @override
+  String get insufficientBalanceMessage =>
+      values['insufficient_balance_message'] ?? '';
+
+  @override
+  String get currentBalanceLabel => values['current_balance_label'] ?? '';
+
+  @override
+  String get requiredAmountLabel => values['required_amount_label'] ?? '';
+
+  @override
+  String get amountNeededLabel => values['amount_needed_label'] ?? '';
+
+  @override
+  String get topUpWallet => values['top_up_wallet'] ?? '';
+
+  @override
+  String get addMoneyToWallet => values['add_money_to_wallet'] ?? '';
+
+  @override
+  String get addMoney => values['add_money'] ?? '';
+
+  @override
+  String get amount => values['amount'] ?? '';
+
+  @override
+  String get back => values['back'] ?? '';
+
+  @override
+  String get addMoneySelcomPesaSubtitle =>
+      values['add_money_selcom_pesa_subtitle'] ?? '';
+
+  @override
+  String get addMoneyTanQrTips => values['add_money_tan_qr_tips'] ?? '';
+
+  @override
+  String get addMoneyTanQrTipsSubtitle =>
+      values['add_money_tan_qr_tips_subtitle'] ?? '';
+
+  @override
+  String get addMoneyMobileMoneySubtitle =>
+      values['add_money_mobile_money_subtitle'] ?? '';
+
+  @override
+  String get addMoneyStepsToLoadGoWallet =>
+      values['add_money_steps_to_load_go_wallet'] ?? '';
+
+  @override
+  String get addMoneyStepsToLoadGoWalletSubtitle =>
+      values['add_money_steps_to_load_go_wallet_subtitle'] ?? '';
+
+  @override
+  String get addMoneyGoWalletStep1 =>
+      values['add_money_go_wallet_step_1'] ?? '';
+
+  @override
+  String get addMoneyGoWalletStep2 =>
+      values['add_money_go_wallet_step_2'] ?? '';
+
+  @override
+  String get addMoneyGoWalletStep3 =>
+      values['add_money_go_wallet_step_3'] ?? '';
+
+  @override
+  String get addMoneyGoWalletStep4 =>
+      values['add_money_go_wallet_step_4'] ?? '';
+
+  @override
+  String get addMoneyGoWalletStep5 =>
+      values['add_money_go_wallet_step_5'] ?? '';
+
+  @override
+  String get walletFundsReceivedTitle =>
+      values['wallet_funds_received_title'] ?? '';
+
+  @override
+  String get walletFundsReceivedSubtitle =>
+      values['wallet_funds_received_subtitle'] ?? '';
+
+  @override
+  String get topUpRequestSentTitle => values['top_up_request_sent_title'] ?? '';
+
+  @override
+  String get selcomPesaToGoWallet => values['selcom_pesa_to_go_wallet'] ?? '';
+
+  @override
+  String get useAnotherNumber => values['use_another_number'] ?? '';
+
+  @override
+  String get enterSelcomPesaCustomerPhoneHint =>
+      values['enter_selcom_pesa_customer_phone_hint'] ?? '';
+
+  @override
+  String get requestSentCompleteSelcomTopup =>
+      values['request_sent_complete_selcom_topup'] ?? '';
+
+  @override
+  String get expiresInWithTime => values['expires_in_with_time'] ?? '';
+
+  @override
+  String get mobileMoneyPhoneValue => values['mobile_money_phone_value'] ?? '';
+
+  @override
+  String get mobileMoneyAmountValue => values['mobile_money_amount_value'] ?? '';
+
+  @override
+  String get selectAVehicle => values['select_a_vehicle'] ?? '';
 
   @override
   String get bookRideWithFare => values['book_ride_with_fare'] ?? '';

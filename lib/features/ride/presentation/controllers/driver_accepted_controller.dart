@@ -1,16 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer' as developer;
 import 'dart:io';
 import 'dart:math' as math;
-import 'package:selcom_rides_frontend/shared/widgets/app_google_map.dart';
-import 'package:uuid/uuid.dart';
 
-import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
@@ -20,29 +19,30 @@ import '../../../../core/data/models/responses/nearbyRiders/response/rider_statu
 import '../../../../core/data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
 import '../../../../core/data/models/responses/payment_status_response/payment_status_response.dart';
 import '../../../../core/data/models/ride_model.dart';
-import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/domain/entities/location_entity.dart';
+import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/app_map_service.dart';
-import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
-import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
+import '../../../../core/services/notification_service.dart';
+import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/address_display_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/currency_formatter.dart';
+import '../../../../shared/utils/map_vehicle_marker_utils.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../../../shared/utils/ride_pickup_status_labels.dart';
 import '../../../../shared/utils/ride_status_normalizer.dart';
 import '../../../../shared/utils/tanzania_license_plate_formatter.dart';
-import '../../../../shared/utils/map_vehicle_marker_utils.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
+import '../../../../shared/widgets/app_google_map.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../data/models/destination_update_models.dart';
 import '../../data/models/emergency_contacts_response.dart';
@@ -124,6 +124,7 @@ class DriverAcceptedController extends GetxController
   VoidCallback? onRecenterPressed;
 
   GoogleMapController? mapController;
+  LatLng? _lastDriverRotationSamplePosition;
   bool _navigatedAway = false;
   DateTime? _lastCameraUpdate;
   bool _openedCompletedRideDetails = false;
@@ -855,13 +856,26 @@ class DriverAcceptedController extends GetxController
         animDuration = const Duration(milliseconds: 4000);
       }
 
-      if (head != null) {
-        if (head is num) {
-          assignedDriverHeading.value = head.toDouble();
-        } else if (head is String) {
-          assignedDriverHeading.value =
-              double.tryParse(head) ?? assignedDriverHeading.value;
+      final parsedHeading = MapVehicleMarkerUtils.parseHeadingDegrees(head);
+      final rotationFrom =
+          _lastDriverRotationSamplePosition ??
+          mapWidgetKey.currentState?.currentAnimatedPosition;
+
+      assignedDriverHeading.value = MapVehicleMarkerUtils.resolveMarkerRotation(
+        previousPosition: rotationFrom,
+        currentPosition: rawPos,
+        headingDegrees: parsedHeading,
+        previousRotation: assignedDriverHeading.value,
+        speedMps: speed,
+      );
+
+      if (rotationFrom != null) {
+        final moved = _calculateDistanceInMeters(rotationFrom, rawPos);
+        if (moved >= MapVehicleMarkerUtils.minMovementMetersForBearing) {
+          _lastDriverRotationSamplePosition = rawPos;
         }
+      } else {
+        _lastDriverRotationSamplePosition = rawPos;
       }
 
       mapWidgetKey.currentState?.updateRiderPosition(
@@ -1570,8 +1584,9 @@ class DriverAcceptedController extends GetxController
     if (etaSeconds <= 0) return;
     currentEtaSeconds.value = etaSeconds;
     final minutes = (etaSeconds / 60).ceil();
-    etaLabel.value =
-        AppStrings.minutesShortCount.trParams({'count': '$minutes'});
+    etaLabel.value = AppStrings.minutesShortCount.trParams({
+      'count': '$minutes',
+    });
     final rideStatus = normalizeRideStatusString(currentRideStatus.value);
     if (_isDriverHeadingToPickupForEta(rideStatus)) {
       arrivalLabel.value = AppStrings.driverWillArrivingInMinutes.trParams({
@@ -1917,25 +1932,26 @@ class DriverAcceptedController extends GetxController
             return;
           }
           await Loader.withFlag(isReasonProcessing, () async {
-          final charges = await rideRepository.getCancellationCharges(rideId);
-          await charges.fold(
-            (_) async {
-              AppDialogs.showErrorDialog(
-                title: AppStrings.cancelFailed.tr,
-                message: AppStrings.couldNotCancelTryAgain.tr,
-              );
-            },
-            (data) async {
-              final selectedPolicy = data.policy.firstWhereOrNull(
-                (p) =>
-                    p.status.toLowerCase() == data.currentStatus.toLowerCase(),
-              );
-              selectedReason = reason;
-              cancellationData = data;
-              selectedPolicyLabel = selectedPolicy?.label ?? '';
-              Get.back();
-            },
-          );
+            final charges = await rideRepository.getCancellationCharges(rideId);
+            await charges.fold(
+              (_) async {
+                AppDialogs.showErrorDialog(
+                  title: AppStrings.cancelFailed.tr,
+                  message: AppStrings.couldNotCancelTryAgain.tr,
+                );
+              },
+              (data) async {
+                final selectedPolicy = data.policy.firstWhereOrNull(
+                  (p) =>
+                      p.status.toLowerCase() ==
+                      data.currentStatus.toLowerCase(),
+                );
+                selectedReason = reason;
+                cancellationData = data;
+                selectedPolicyLabel = selectedPolicy?.label ?? '';
+                Get.back();
+              },
+            );
           });
         },
       ),

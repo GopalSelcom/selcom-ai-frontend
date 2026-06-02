@@ -83,23 +83,23 @@ class AuthController extends GetxController {
       );
 
       return result.fold(
-      (failure) {
-        errorMessage.value = failure.message;
-        generatedOtp.value = '';
-        return false;
-      },
-      (response) {
-        if (response?.isSuccess == true) {
-          generatedOtp.value = response?.response?.otp ?? '';
-          return true;
-        } else {
-          errorMessage.value =
-              response?.message ?? AppStrings.failedToSendOtp.tr;
+        (failure) {
+          errorMessage.value = failure.message;
           generatedOtp.value = '';
           return false;
-        }
-      },
-    );
+        },
+        (response) {
+          if (response?.isSuccess == true) {
+            generatedOtp.value = response?.response?.otp ?? '';
+            return true;
+          } else {
+            errorMessage.value =
+                response?.message ?? AppStrings.failedToSendOtp.tr;
+            generatedOtp.value = '';
+            return false;
+          }
+        },
+      );
     });
   }
 
@@ -150,27 +150,28 @@ class AuthController extends GetxController {
       );
 
       return result.fold(
-      (failure) {
-        errorMessage.value = failure.message;
-        generatedOtp.value = '';
-        // If it failed, we might want to stop the timer, but usually keeping it 
-        // prevents spamming. If you want to allow retry immediately on error:
-        // resendTimer.value = 0;
-        return false;
-      },
-      (response) {
-        if (response?.isSuccess == true) {
-          generatedOtp.value = response?.response?.otp ?? '';
-          return true;
-        } else {
-          errorMessage.value =
-              response?.message ?? AppStrings.failedToResendOtp.tr;
-          resendTimer.value = 0; // Show resend button again if API specifically failed
+        (failure) {
+          errorMessage.value = failure.message;
           generatedOtp.value = '';
+          // If it failed, we might want to stop the timer, but usually keeping it
+          // prevents spamming. If you want to allow retry immediately on error:
+          // resendTimer.value = 0;
           return false;
-        }
-      },
-    );
+        },
+        (response) {
+          if (response?.isSuccess == true) {
+            generatedOtp.value = response?.response?.otp ?? '';
+            return true;
+          } else {
+            errorMessage.value =
+                response?.message ?? AppStrings.failedToResendOtp.tr;
+            resendTimer.value =
+                0; // Show resend button again if API specifically failed
+            generatedOtp.value = '';
+            return false;
+          }
+        },
+      );
     });
   }
 

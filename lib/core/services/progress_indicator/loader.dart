@@ -53,10 +53,7 @@ class Loader {
               ),
               Center(
                 child: FadeTransition(
-                  opacity: CurvedAnimation(
-                    parent: anim,
-                    curve: Curves.easeOut,
-                  ),
+                  opacity: CurvedAnimation(parent: anim, curve: Curves.easeOut),
                   child: Lottie.asset(
                     AppLoaderAssets.overlayLoaderLottie,
                     fit: BoxFit.cover,
@@ -97,10 +94,7 @@ class Loader {
   }
 
   /// Sets [flag] while running [task] behind the global loader.
-  static Future<T> withFlag<T>(
-    RxBool flag,
-    Future<T> Function() task,
-  ) async {
+  static Future<T> withFlag<T>(RxBool flag, Future<T> Function() task) async {
     flag.value = true;
     try {
       return await run(task);

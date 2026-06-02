@@ -23,7 +23,8 @@ abstract final class HomeSheetLayout {
   /// Matches [RecentLocationTile] row height (icon column + heart control).
   static double get recentRowHeight => 56.h;
 
-  static double get recentDividerBlockHeight => recentItemGap.h + 1.h + recentItemGap.h;
+  static double get recentDividerBlockHeight =>
+      recentItemGap.h + 1.h + recentItemGap.h;
 
   static double estimatedContentHeight({
     required bool includeRecent,

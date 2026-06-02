@@ -144,15 +144,18 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
     final safeBottom = media.padding.bottom;
 
     // Match [AppStandardBottomSheet] max body (0.85) minus chrome and keyboard.
-    final bodyMaxHeight = (screenH * 0.85 -
-            keyboard -
-            _standardSheetHeaderHeight(context) -
-            safeBottom)
-        .clamp(160.0, screenH * 0.55);
+    final bodyMaxHeight =
+        (screenH * 0.85 -
+                keyboard -
+                _standardSheetHeaderHeight(context) -
+                safeBottom)
+            .clamp(160.0, screenH * 0.55);
 
     final searchBlockHeight = 56.h;
-    final listHeight = (bodyMaxHeight - searchBlockHeight - 12.h)
-        .clamp(80.0, bodyMaxHeight - searchBlockHeight);
+    final listHeight = (bodyMaxHeight - searchBlockHeight - 12.h).clamp(
+      80.0,
+      bodyMaxHeight - searchBlockHeight,
+    );
 
     // Sheet uses light surfaces; force dark input/list text when app theme is dark.
     final lightOnSheet = ThemeData(

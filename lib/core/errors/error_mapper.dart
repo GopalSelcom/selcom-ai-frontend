@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:get/get.dart';
+
+import '../../features/payment/domain/models/insufficient_wallet_balance_details.dart';
 import '../localization/app_strings.dart';
 import 'failures.dart';
 
@@ -39,10 +41,19 @@ class ErrorMapper {
               return ServerFailure(
                 message ?? AppStrings.youAlreadyHaveAnActiveRide.tr,
               );
-            case 'PAY_INSUFFICIENT_FUNDS':
+            case 'PAY_INSUFFICIENT_FUNDS': {
+              final details =
+                  InsufficientWalletBalanceDetails.tryParseFromApiResponse(data);
+              if (details != null) {
+                return InsufficientWalletBalanceFailure(
+                  message ?? AppStrings.insufficientFundsInWallet.tr,
+                  details: details,
+                );
+              }
               return ServerFailure(
                 message ?? AppStrings.insufficientFundsInWallet.tr,
               );
+            }
             default:
               return ServerFailure(
                 message ?? AppStrings.anUnexpectedErrorOccurred.tr,

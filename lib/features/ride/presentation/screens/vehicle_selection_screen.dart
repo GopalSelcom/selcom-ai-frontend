@@ -16,7 +16,7 @@ import '../../../../shared/widgets/app_map_route_one_line_bar.dart';
 import '../../../../shared/widgets/app_shimmer.dart';
 import '../../../../shared/widgets/vehicle_type_image.dart';
 import '../../../../shared/widgets/vehicle_selection_promo_chip.dart';
-import '../../../payment/presentation/widgets/payment_bar.dart';
+import '../widgets/book_ride_wallet_footer.dart';
 import '../controllers/vehicle_selection_controller.dart';
 
 /// SCR-09 — vehicle selection, fare, payment + Book Ride.
@@ -52,21 +52,27 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
     double listHeight;
     final int loadingShimmerCount =
         controller.isLoadingEstimates.value && estimatesCount == 0
-            ? 3
-            : visibleItems.clamp(1, 3);
-    final int listItemsCount =
-        controller.isLoadingEstimates.value ? loadingShimmerCount : visibleItems;
+        ? 3
+        : visibleItems.clamp(1, 3);
+    final int listItemsCount = controller.isLoadingEstimates.value
+        ? loadingShimmerCount
+        : visibleItems;
     listHeight =
-        (listItemsCount * 73.h) + ((listItemsCount - 1).clamp(0, 2) * 10.h) + 10.h;
+        (listItemsCount * 73.h) +
+        ((listItemsCount - 1).clamp(0, 2) * 10.h) +
+        4.h;
 
-    // PaymentBar: top padding (18.h) + button (~56.h) + bottom padding
+    // Footer: top padding + button (56.h) + notice + bottom inset
     final double paymentBarHeight =
-        76.h +
+        4.h +
+        56.h +
+        8.h +
+        36.h +
         (GetPlatform.isIOS
             ? (bottomPadding > 0
-                  ? (bottomPadding - 10.h).clamp(12.h, bottomPadding)
-                  : 18.h)
-            : (bottomPadding > 0 ? bottomPadding + 8.h : 18.h));
+                  ? (bottomPadding - 8.h).clamp(8.h, bottomPadding)
+                  : 12.h)
+            : (bottomPadding > 0 ? bottomPadding + 8.h : 12.h));
 
     // Safety margin is zero since list is non-scrollable when <= 3 items are present
     const double safetyMargin = 0;
@@ -475,14 +481,17 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
               if (controller.isLoadingEstimates.value) {
                 final int estimatesCount = controller.estimates.length;
                 final int visibleItems = estimatesCount.clamp(0, 3);
-                final int shimmerCount =
-                    (visibleItems == 0 ? 3 : visibleItems).clamp(1, 3);
+                final int shimmerCount = (visibleItems == 0 ? 3 : visibleItems)
+                    .clamp(1, 3);
 
                 return ListView.separated(
                   controller: scrollController,
                   physics: const NeverScrollableScrollPhysics(),
-                  padding:
-                      EdgeInsets.only(left: 16.w, right: 16.w, bottom: 10.h),
+                  padding: EdgeInsets.only(
+                    left: 16.w,
+                    right: 16.w,
+                    bottom: 4.h,
+                  ),
                   itemCount: shimmerCount,
                   separatorBuilder: (_, __) => SizedBox(height: 10.h),
                   itemBuilder: (_, __) => _vehicleCardShimmer(),
@@ -493,7 +502,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                 physics: controller.estimates.length <= 3
                     ? const NeverScrollableScrollPhysics()
                     : null,
-                padding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 10.h),
+                padding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 4.h),
                 itemCount: controller.estimates.length,
                 separatorBuilder: (_, __) => SizedBox(height: 10.h),
                 itemBuilder: (_, index) {
@@ -514,20 +523,12 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
               );
             }),
           ),
-          Obx(() {
-            final fareDeps = (
-              controller.estimates.length,
-              controller.selectedVehicleIndex.value,
-              controller.appliedPromoCode.value,
-            );
-            assert(fareDeps.$1 >= 0);
-            return PaymentBar(
-              buttonLabel:
-                  '${AppStrings.bookRide.tr} ${CurrencyFormatter.formatPayableOrFree(controller.selectedPayableFareAmount, controller.currency, freeLabel: AppStrings.rideFreeLabel.tr)}',
-              isLoading: controller.isBooking,
-              onActionButtonPressed: controller.bookRide,
-            );
-          }),
+          Obx(
+            () => BookRideWalletFooter(
+              isLoading: controller.isBooking.value,
+              onPressed: controller.bookRide,
+            ),
+          ),
         ],
       ),
     );
@@ -673,10 +674,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(
-            color: AppColors.borderWalletCard,
-            width: 0.787,
-          ),
+          border: Border.all(color: AppColors.borderWalletCard, width: 0.787),
         ),
         // Shimmer only the inner content, not the outer card shell.
         child: AppShimmer(
@@ -684,11 +682,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Vehicle thumbnail (matches [_vehicleThumb] sizes).
-              AppShimmerBox(
-                width: 72.w,
-                height: 52.h,
-                borderRadius: 8.r,
-              ),
+              AppShimmerBox(width: 72.w, height: 52.h, borderRadius: 8.r),
               SizedBox(width: 18.w),
               // Left content column.
               Expanded(
@@ -736,11 +730,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                 ),
               ),
               // Single fare line (matches [_vehicleFarePrice] without promo).
-              AppShimmerBox(
-                width: 90.w,
-                height: 16.h,
-                borderRadius: 8.r,
-              ),
+              AppShimmerBox(width: 90.w, height: 16.h, borderRadius: 8.r),
             ],
           ),
         ),

@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -14,10 +12,7 @@ const double receiptExportPixelRatio = 3.0;
 
 /// High-resolution receipt PNG from screenshot capture.
 class ReceiptPngCapture {
-  const ReceiptPngCapture({
-    required this.bytes,
-    required this.pixelRatio,
-  });
+  const ReceiptPngCapture({required this.bytes, required this.pixelRatio});
 
   final Uint8List bytes;
   final double pixelRatio;

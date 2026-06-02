@@ -1,15 +1,16 @@
 import 'package:dartz/dartz.dart';
-import '../../../../core/errors/failures.dart';
-import '../../../../core/data/models/requests/send_otp_request.dart';
+
 import '../../../../core/data/models/requests/save_user_additional_details_request.dart';
-import '../../../../core/data/models/responses/send_otp_response.dart';
+import '../../../../core/data/models/requests/send_otp_request.dart';
 import '../../../../core/data/models/requests/verify_otp_request.dart';
+import '../../../../core/data/models/responses/onboarding_banners_response.dart';
+import '../../../../core/data/models/responses/send_otp_response.dart';
 import '../../../../core/data/models/responses/verify_otp_response.dart';
 import '../../../../core/data/models/user_model.dart';
-import '../../../../core/data/models/responses/onboarding_banners_response.dart';
+import '../../../../core/errors/failures.dart';
+import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_data_source.dart';
-import '../../../../core/services/error_reporting/error_reporter.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
@@ -94,7 +95,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Either<Failure, List<OnboardingBannerItem>>>
-      getOnboardingBanners() async {
+  getOnboardingBanners() async {
     try {
       final list = await remoteDataSource.getOnboardingBanners();
       return Right(list);

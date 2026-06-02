@@ -24,6 +24,45 @@ class AppStrings {
       'are_you_sure_you_want_to_cancel';
   static const String blinkYourEyes = 'blink_your_eyes';
   static const String bookRide = 'book_ride';
+  static const String bookRideWalletDeductionNotice =
+      'book_ride_wallet_deduction_notice';
+  static const String insufficientBalanceTitle = 'insufficient_balance_title';
+  static const String insufficientBalanceMessage = 'insufficient_balance_message';
+  static const String currentBalanceLabel = 'current_balance_label';
+  static const String requiredAmountLabel = 'required_amount_label';
+  static const String amountNeededLabel = 'amount_needed_label';
+  static const String topUpWallet = 'top_up_wallet';
+  static const String addMoneyToWallet = 'add_money_to_wallet';
+  static const String addMoney = 'add_money';
+  static const String amount = 'amount';
+  static const String back = 'back';
+  static const String addMoneySelcomPesaSubtitle = 'add_money_selcom_pesa_subtitle';
+  static const String addMoneyTanQrTips = 'add_money_tan_qr_tips';
+  static const String addMoneyTanQrTipsSubtitle = 'add_money_tan_qr_tips_subtitle';
+  static const String addMoneyMobileMoneySubtitle = 'add_money_mobile_money_subtitle';
+  static const String addMoneyStepsToLoadGoWallet = 'add_money_steps_to_load_go_wallet';
+  static const String addMoneyStepsToLoadGoWalletSubtitle =
+      'add_money_steps_to_load_go_wallet_subtitle';
+  static const String addMoneyGoWalletStep1 = 'add_money_go_wallet_step_1';
+  static const String addMoneyGoWalletStep2 = 'add_money_go_wallet_step_2';
+  static const String addMoneyGoWalletStep3 =
+      'add_money_go_wallet_step_3';
+  static const String addMoneyGoWalletStep4 = 'add_money_go_wallet_step_4';
+  static const String addMoneyGoWalletStep5 = 'add_money_go_wallet_step_5';
+  static const String walletFundsReceivedTitle = 'wallet_funds_received_title';
+  static const String walletFundsReceivedSubtitle =
+      'wallet_funds_received_subtitle';
+  static const String topUpRequestSentTitle = 'top_up_request_sent_title';
+  static const String selcomPesaToGoWallet = 'selcom_pesa_to_go_wallet';
+  static const String useAnotherNumber = 'use_another_number';
+  static const String enterSelcomPesaCustomerPhoneHint =
+      'enter_selcom_pesa_customer_phone_hint';
+  static const String requestSentCompleteSelcomTopup =
+      'request_sent_complete_selcom_topup';
+  static const String expiresInWithTime = 'expires_in_with_time';
+  static const String mobileMoneyPhoneValue = 'mobile_money_phone_value';
+  static const String mobileMoneyAmountValue = 'mobile_money_amount_value';
+  static const String selectAVehicle = 'select_a_vehicle';
   static const String bookRideWithFare = 'book_ride_with_fare';
   static const String comingSoon = 'coming_soon';
   static const String bookingFeesAndConvenienceCharges =
@@ -701,7 +740,8 @@ class AppStrings {
   static const String bookingFailed = 'booking_failed';
   static const String cancelReasonBookedByMistake =
       'cancel_reason_booked_by_mistake';
-  static const String cancelReasonChangedMyMind = 'cancel_reason_changed_my_mind';
+  static const String cancelReasonChangedMyMind =
+      'cancel_reason_changed_my_mind';
   static const String cancelReasonDriverAskedCancel =
       'cancel_reason_driver_asked_cancel';
   static const String cancelReasonDriverPayOffline =

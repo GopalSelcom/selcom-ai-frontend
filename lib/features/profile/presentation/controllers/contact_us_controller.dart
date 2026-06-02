@@ -74,12 +74,12 @@ class ContactUsController extends GetxController {
       );
 
       result.fold(
-      (failure) => AppDialogs.showErrorDialog(message: failure.message),
-      (success) {
-        Get.back();
-        AppDialogs.showSuccessDialog(message: success.message);
-      },
-    );
+        (failure) => AppDialogs.showErrorDialog(message: failure.message),
+        (success) {
+          Get.back();
+          AppDialogs.showSuccessDialog(message: success.message);
+        },
+      );
     });
   }
 

@@ -7,17 +7,17 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/payment_dialog_header_section.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
-import '../../../../shared/widgets/app_back_button.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/favorite_location_chip_catalog.dart';
 import '../../../../shared/utils/saved_place_confirmation_copy.dart';
-import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/widgets/app_back_button.dart';
+import '../../../../shared/widgets/app_google_map.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
-import '../../../../shared/widgets/map_widgets.dart';
-import '../../../../core/routes/app_routes.dart';
 import '../controllers/home_controller.dart';
 
 /// Counter-clockwise tilt for the label pill (matches reference artwork).

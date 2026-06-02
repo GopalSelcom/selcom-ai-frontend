@@ -25,6 +25,7 @@ class EventRiderStatusUpdateResponse {
   bool? pinRequired;
   int? currentStopIndex;
   String? rideStopStatus;
+
   /// Root-level average from socket (e.g. `ride:status_update`).
   num? driverAvgRating;
   num? riderAvgRating;

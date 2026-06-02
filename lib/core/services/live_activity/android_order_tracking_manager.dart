@@ -1,15 +1,19 @@
-import 'dart:io';
 import 'dart:convert';
+import 'dart:developer' as developer;
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'dart:developer' as developer;
+
 import '../../theme/app_colors.dart';
 import '../storage_service.dart';
 
 class AndroidOrderTrackingManager {
   static final AndroidOrderTrackingManager _instance =
       AndroidOrderTrackingManager._internal();
+
   factory AndroidOrderTrackingManager() => _instance;
+
   AndroidOrderTrackingManager._internal();
 
   static const int _baseNotificationId = 88000;
@@ -71,7 +75,7 @@ class AndroidOrderTrackingManager {
     if (totalSeconds < 60) {
       return '${totalSeconds}s';
     }
-    
+
     final int totalMinutes = (totalSeconds / 60).ceil();
     if (totalMinutes >= 60) {
       final int h = totalMinutes ~/ 60;
@@ -200,8 +204,9 @@ class AndroidOrderTrackingManager {
       } else if (normalizedStatus.contains('driver_arrived')) {
         etaDetail = 'Driver is here for pickup';
       } else {
-        final String phase =
-            isInRide ? 'Arriving at destination' : 'Arriving at pickup';
+        final String phase = isInRide
+            ? 'Arriving at destination'
+            : 'Arriving at pickup';
         etaDetail = '$phase • $displayEta';
       }
 

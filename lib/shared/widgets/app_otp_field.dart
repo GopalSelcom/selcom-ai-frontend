@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 
@@ -69,6 +70,7 @@ class AppOtpField extends StatefulWidget {
   final double? fieldWidth;
   final TextStyle? textStyle;
   final MainAxisAlignment mainAxisAlignment;
+  final bool autofocus;
 
   const AppOtpField({
     super.key,
@@ -81,6 +83,7 @@ class AppOtpField extends StatefulWidget {
     this.fieldWidth,
     this.textStyle,
     this.mainAxisAlignment = MainAxisAlignment.spaceBetween,
+    this.autofocus = false,
   });
 
   @override
@@ -114,6 +117,13 @@ class _AppOtpFieldState extends State<AppOtpField> {
     _effectiveController.addListener(_onControllerChanged);
     _filledLength = _onlyDigits(_effectiveController.text).length;
     HardwareKeyboard.instance.addHandler(_handleHardwareKey);
+    if (widget.autofocus) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!_disposed && mounted) {
+          _focusNode.requestFocus();
+        }
+      });
+    }
   }
 
   @override

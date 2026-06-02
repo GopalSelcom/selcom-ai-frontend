@@ -56,10 +56,7 @@ class PromoAvailableData {
   final List<AvailablePromoItem> promos;
   final int total;
 
-  const PromoAvailableData({
-    required this.promos,
-    required this.total,
-  });
+  const PromoAvailableData({required this.promos, required this.total});
 
   factory PromoAvailableData.fromJson(Map<String, dynamic> json) {
     final raw = json['promos'];

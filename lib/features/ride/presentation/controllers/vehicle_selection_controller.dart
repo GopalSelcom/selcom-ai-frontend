@@ -4,42 +4,46 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:selcom_rides_frontend/core/utils/map_marker_utils.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/data/models/requests/book_ride_request.dart';
-import '../../../../core/data/models/responses/rides/book_rides_response.dart';
+import '../../../../core/data/models/user_profile_models.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/near_by_rider_response.dart';
 import '../../../../core/data/models/responses/payment_status_response/payment_status_response.dart';
+import '../../../../core/data/models/responses/rides/book_rides_response.dart';
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
-import '../../../payment/presentation/widgets/payment_status_dialog.dart';
-import '../../../../core/domain/entities/location_entity.dart';
-import '../../../../core/routes/app_routes.dart';
-import '../../../../core/services/app_map_service.dart';
-import '../../../../core/services/progress_indicator/loader.dart';
-import '../../../../core/services/nearby_drivers_socket_service.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../home/domain/repositories/home_repository.dart';
-import '../../../home/presentation/controllers/location_selection_controller.dart';
-import '../../../payment/presentation/controllers/payment_method_controller.dart';
-import '../../../profile/domain/repositories/profile_repository.dart';
-import '../../../../shared/utils/address_display_utils.dart';
-import '../../../../shared/utils/app_dialogs.dart';
-import '../../../../shared/utils/map_vehicle_marker_utils.dart';
-import '../../../../shared/utils/vehicle_image_utils.dart';
-import '../../domain/repositories/ride_repository.dart';
 import '../../../../core/di/injection_container.dart' as di;
+import '../../../../core/domain/entities/location_entity.dart';
+import '../../../../core/errors/failures.dart';
+import '../../../../core/localization/app_strings.dart';
+import '../../../../core/routes/app_routes.dart';
+import '../../../../core/services/analytics_service.dart';
+import '../../../../core/services/app_map_service.dart';
 import '../../../../core/services/app_region_service.dart';
 import '../../../../core/services/app_settings_service.dart';
-import '../../../../core/services/analytics_service.dart';
-import '../../../../core/errors/failures.dart';
-import '../../../promotions/presentation/promo_code_route_args.dart';
-import '../../../../shared/utils/country_region_defaults.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
+import '../../../../core/services/nearby_drivers_socket_service.dart';
+import '../../../../core/services/progress_indicator/loader.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/map_marker_utils.dart';
+import '../../../../shared/utils/address_display_utils.dart';
+import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/country_region_defaults.dart';
+import '../../../../shared/utils/map_vehicle_marker_utils.dart';
+import '../../../../shared/utils/vehicle_image_utils.dart';
+import '../../../home/domain/repositories/home_repository.dart';
+import '../../../home/presentation/controllers/location_selection_controller.dart';
+import '../../../payment/domain/models/insufficient_wallet_balance_details.dart';
+import '../../../payment/domain/wallet_ride_balance_guard.dart';
+import '../../../payment/presentation/controllers/payment_method_controller.dart';
+import '../../../payment/presentation/widgets/add_money_to_wallet_bottom_sheet.dart';
+import '../../../payment/presentation/widgets/payment_status_dialog.dart';
+import '../../../profile/domain/repositories/profile_repository.dart';
+import '../../../promotions/presentation/promo_code_route_args.dart';
+import '../../domain/repositories/ride_repository.dart';
 
 enum BookingMode { self, other }
 
@@ -63,6 +67,7 @@ class VehicleSelectionController extends GetxController {
   final isBooking = false.obs;
   final isLoadingNearbyDrivers = false.obs;
   final isSocketConnected = false.obs;
+
   /// User-visible nearby-drivers badge failed (never show raw socket errors).
   final nearbyDriversUnavailable = false.obs;
   final nearbyDriverCount = 0.obs;
@@ -114,14 +119,28 @@ class VehicleSelectionController extends GetxController {
   BitmapDescriptor? dropIcon;
   final stopIcons = <BitmapDescriptor>[].obs;
 
+  static PaymentMethodModel get _walletPaymentMethod => PaymentMethodModel(
+    id: 'wallet',
+    label: AppStrings.wallet.tr,
+    type: 'wallet',
+  );
+
   @override
   void onInit() {
     super.onInit();
     _parseArguments();
+    _ensureWalletPaymentSelected();
     loadLocationIcons();
     _initNearbyDriversSocket();
     _loadAll();
   }
+
+  void _ensureWalletPaymentSelected() {
+    paymentMethodController.selectedPayment.value = _walletPaymentMethod;
+  }
+
+  PaymentMethodModel get _walletPayment =>
+      paymentMethodController.selectedPayment.value ?? _walletPaymentMethod;
 
   @override
   void onClose() {
@@ -341,8 +360,7 @@ class VehicleSelectionController extends GetxController {
   }
 
   Future<void> loadDriverIcon() async {
-    final vehicleType =
-        estimates[selectedVehicleIndex.value].vehicleName;
+    final vehicleType = estimates[selectedVehicleIndex.value].vehicleName;
     final asset = MapVehicleMarkerUtils.markerAssetForVehicleType(vehicleType);
     driverIcon = await MapMarkerUtils.getSvgMarker(
       asset,
@@ -656,14 +674,15 @@ class VehicleSelectionController extends GetxController {
     if (isBooking.value) return;
 
     final est = selectedEstimate;
-    final pay = paymentMethodController.selectedPayment.value;
-    if (est == null || pay == null) {
+    if (est == null) {
       AppDialogs.showErrorDialog(
         title: AppStrings.missingInfo.tr,
-        message: AppStrings.selectAVehicleAndPaymentMethod.tr,
+        message: AppStrings.selectAVehicle.tr,
       );
       return;
     }
+    _ensureWalletPaymentSelected();
+    final pay = _walletPayment;
 
     isBooking.value = true;
     Loader.instance.show();
@@ -805,10 +824,17 @@ class VehicleSelectionController extends GetxController {
                 ? rawRideNote.trim()
                 : rawRideNote.toString().trim());
 
-      // 1) Validate payment first (Validate Ride Payment - Block).
+      // 1) Wallet sufficiency (client guard until payment backend is ready).
       final refreshedSelectedEstimate = selectedEstimate;
+      final requiredFare =
+          refreshedSelectedEstimate?.displayFare ?? est.displayFare;
+      if (!await _guardWalletBalanceBeforePayment(requiredFare)) {
+        return;
+      }
+
+      // 2) Validate payment (block flow — dummy callback until real payment).
       final validateRequest = ValidateRidePaymentRequest(
-        fareEstimate: refreshedSelectedEstimate?.displayFare ?? est.displayFare,
+        fareEstimate: requiredFare,
         paymentMethod: pay.type,
         vehicleTypeId: resolvedVehicleTypeId,
       );
@@ -818,6 +844,7 @@ class VehicleSelectionController extends GetxController {
 
       await validationResult.fold(
         (f) async {
+          if (_handlePaymentValidationFailure(f)) return;
           AppDialogs.showErrorDialog(
             title: AppStrings.paymentValidationFailed.tr,
             message: AppStrings.couldNotValidatePaymentPleaseTryAgain.tr,
@@ -885,6 +912,7 @@ class VehicleSelectionController extends GetxController {
             );
             final nextId = reValidation.fold<String?>(
               (f) {
+                if (_handlePaymentValidationFailure(f)) return null;
                 AppDialogs.showErrorDialog(
                   title: AppStrings.paymentValidationFailed.tr,
                   message: AppStrings.couldNotValidatePaymentPleaseTryAgain.tr,
@@ -950,7 +978,8 @@ class VehicleSelectionController extends GetxController {
                   if (rideId == null || rideId.isEmpty || ride == null) {
                     AppDialogs.showErrorDialog(
                       title: AppStrings.booking.tr,
-                      message: data.message ?? AppStrings.rideCreatedMissingId.tr,
+                      message:
+                          data.message ?? AppStrings.rideCreatedMissingId.tr,
                     );
                     return;
                   }
@@ -1013,6 +1042,51 @@ class VehicleSelectionController extends GetxController {
       Loader.instance.hide();
       isBooking.value = false;
     }
+  }
+
+  /// Client-side check via `go/wallet/balance` until payment API returns breakdown.
+  ///
+  /// See [WalletRideBalanceGuard] TODOs for backend migration.
+  Future<bool> _guardWalletBalanceBeforePayment(int requiredAmount) async {
+    // TODO(payment-backend): re-enable insufficient-balance blocking when
+    // backend wallet sufficiency APIs are fully ready.
+    //
+    // Kept previous client-guard logic below for quick restoration:
+    // final walletResult = await profileRepository.getWalletBalance();
+    // return walletResult.fold(
+    //   (_) => true,
+    //   (wallet) {
+    //     final details = WalletRideBalanceGuard.insufficientDetails(
+    //       currentBalance: wallet.balance,
+    //       requiredAmount: requiredAmount,
+    //       currency: wallet.currency,
+    //     );
+    //     if (details == null) return true;
+    //     unawaited(_showInsufficientWalletDialog(details));
+    //     return false;
+    //   },
+    // );
+    return true;
+  }
+
+  Future<void> _showInsufficientWalletDialog(
+    InsufficientWalletBalanceDetails details,
+  ) async {
+    Loader.instance.hide();
+    await AppDialogs.showInsufficientWalletBalanceDialog(
+      details: details,
+      onTopUp: openWalletTopUp,
+    );
+  }
+
+  void openWalletTopUp() {
+    unawaited(AddMoneyToWalletBottomSheet.show());
+  }
+
+  bool _handlePaymentValidationFailure(Failure failure) {
+    if (failure is! InsufficientWalletBalanceFailure) return false;
+    unawaited(_showInsufficientWalletDialog(failure.details));
+    return true;
   }
 
   String generateTransactionId() {

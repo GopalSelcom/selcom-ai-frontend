@@ -60,9 +60,7 @@ abstract final class RideDetailsScreenLayout {
 
   static double get bookedForRowHeight {
     final textBlock =
-        bookedForNameLineHeight +
-        bookedForLineGap +
-        bookedForPhoneLineHeight;
+        bookedForNameLineHeight + bookedForLineGap + bookedForPhoneLineHeight;
     return bookedForIconSize > textBlock ? bookedForIconSize : textBlock;
   }
 

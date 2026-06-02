@@ -70,8 +70,6 @@ class _BookingForSomeoneElseFlowBottomSheetState
     super.dispose();
   }
 
-
-
   String? get _sheetTitle {
     switch (_currentStep) {
       case BookingFlowStep.choice:

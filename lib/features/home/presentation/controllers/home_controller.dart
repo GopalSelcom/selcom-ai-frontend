@@ -1,46 +1,47 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'dart:developer' as developer;
 
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:get/get.dart';
-import '../../../../core/domain/entities/ride_entity.dart';
 import 'package:app_settings/app_settings.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import '../../../../core/services/progress_indicator/loader.dart';
-import '../../../../shared/utils/app_dialogs.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/services/notification_service.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:selcom_rides_frontend/features/home/data/models/places_models.dart';
-import 'package:selcom_rides_frontend/core/data/models/ride_model.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
-import '../../../../core/data/models/vehicle_type_model.dart';
+import 'package:get/get.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
 import '../../../../core/data/models/requests/create_saved_place_request.dart';
-import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
-import '../../../../core/utils/map_marker_utils.dart';
-import '../../../profile/presentation/screens/profile_screen.dart';
-import '../../domain/repositories/home_repository.dart';
-import '../../data/models/home_models.dart';
-import '../../../ride/domain/repositories/ride_repository.dart';
-import '../../../ride/data/models/ride_management_models.dart';
-import '../../../ride_rating/presentation/controllers/ride_rating_controller.dart';
-import '../../../profile/domain/repositories/profile_repository.dart';
-import '../../../../core/data/models/responses/get_saved_places_response.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
+import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
+import '../../../../core/data/models/responses/get_saved_places_response.dart';
+import '../../../../core/data/models/responses/rides/active_ride_response.dart';
+import '../../../../core/data/models/ride_model.dart';
+import '../../../../core/data/models/vehicle_type_model.dart';
+import '../../../../core/domain/entities/location_entity.dart';
+import '../../../../core/domain/entities/ride_entity.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/services/analytics_service.dart';
+import '../../../../core/services/error_reporting/error_reporter.dart';
+import '../../../../core/services/live_activity/live_activity_manager.dart';
+import '../../../../core/services/nearby_drivers_socket_service.dart';
+import '../../../../core/services/notification_service.dart';
+import '../../../../core/services/progress_indicator/loader.dart';
+import '../../../../core/services/session_expiry_service.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/map_marker_utils.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../../shared/widgets/add_favorite_location_sheet.dart';
-import '../../../../core/services/analytics_service.dart';
-import '../../../../core/services/nearby_drivers_socket_service.dart';
-import '../../../../core/services/session_expiry_service.dart';
-import '../../../../core/data/models/responses/rides/active_ride_response.dart';
-import '../../../../core/domain/entities/location_entity.dart';
-import '../../../../core/services/live_activity/live_activity_manager.dart';
-import '../../../../core/services/error_reporting/error_reporter.dart';
+import '../../../profile/domain/repositories/profile_repository.dart';
+import '../../../profile/presentation/screens/profile_screen.dart';
+import '../../../ride/data/models/ride_management_models.dart';
+import '../../../ride/domain/repositories/ride_repository.dart';
+import '../../../ride_rating/presentation/controllers/ride_rating_controller.dart';
+import '../../data/models/home_models.dart';
+import '../../data/models/places_models.dart';
+import '../../domain/repositories/home_repository.dart';
 import '../screens/recent_locations_screen.dart';
 import 'location_selection_controller.dart';
 
@@ -333,8 +334,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         if (isLoadingHomeData.value) {
           final start = DateTime.now();
           while (recentDestinations.isEmpty &&
-              DateTime.now().difference(start) <
-                  const Duration(seconds: 5)) {
+              DateTime.now().difference(start) < const Duration(seconds: 5)) {
             await Future<void>.delayed(const Duration(milliseconds: 100));
           }
         }
@@ -588,8 +588,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
   /// Smallest drag height: handle + search + chips only (recents/vehicles collapse).
   double get homeSheetMinSize {
-    final fraction =
-        _homeSheetCollapsedPeekHeight() / _homeSheetScreenHeight;
+    final fraction = _homeSheetCollapsedPeekHeight() / _homeSheetScreenHeight;
     final max = homeSheetMaxChildSize;
     if (max <= homeSheetCollapsedPeekMin + 0.02) {
       return (max - 0.02).clamp(0.15, max);
@@ -614,7 +613,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         _homeSheetScreenHeight;
   }
 
-  bool get homeSheetHasMeasuredContent => measuredSheetContentHeightPx.value != null;
+  bool get homeSheetHasMeasuredContent =>
+      measuredSheetContentHeightPx.value != null;
 
   /// True when content exceeds 90% — inner list scrolls; sheet max stays at 90%.
   bool get homeSheetNeedsInnerScroll =>

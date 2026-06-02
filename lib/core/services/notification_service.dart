@@ -1,25 +1,29 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/material.dart';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import '../services/storage_service.dart';
-import 'package:logger/logger.dart';
 import 'package:get/get.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
-import '../di/injection_container.dart';
+import 'package:logger/logger.dart';
+
 import '../../features/ride/domain/repositories/ride_repository.dart';
-import '../../shared/utils/ride_active_navigation.dart';
 import '../../shared/utils/app_dialogs.dart';
+import '../../shared/utils/ride_active_navigation.dart';
 import '../data/models/notification_model.dart';
+import '../di/injection_container.dart';
+import '../localization/app_strings.dart';
+import 'error_reporting/error_reporter.dart';
 import 'live_activity/android_order_tracking_manager.dart';
-import '../services/error_reporting/error_reporter.dart';
 import 'progress_indicator/loader.dart';
+import 'storage_service.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
+
   factory NotificationService() => _instance;
+
   NotificationService._internal();
 
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
@@ -290,15 +294,12 @@ class NotificationService {
         final rideRepo = sl<RideRepository>();
         final result = await rideRepo.getRideDetails(rideId);
 
-        result.fold(
-          (failure) {
-            _logger.e("Error fetching ride details: ${failure.message}");
-            AppDialogs.showErrorDialog(
-              message: AppStrings.unableToOpenRideDetails.tr,
-            );
-          },
-          (ride) => navigateToDriverAcceptedForRide(ride),
-        );
+        result.fold((failure) {
+          _logger.e("Error fetching ride details: ${failure.message}");
+          AppDialogs.showErrorDialog(
+            message: AppStrings.unableToOpenRideDetails.tr,
+          );
+        }, (ride) => navigateToDriverAcceptedForRide(ride));
       } finally {
         Loader.instance.hide();
       }
@@ -310,6 +311,7 @@ class NotificationService {
   }
 
   int _idCounter = 0;
+
   Future<void> showLocalNotification({
     int? id,
     String? title,
@@ -350,5 +352,4 @@ class NotificationService {
       debugPrint("Error in _localNotifications.show: $e");
     }
   }
-
 }

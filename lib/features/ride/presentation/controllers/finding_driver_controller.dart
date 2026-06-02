@@ -88,10 +88,11 @@ class FindingDriverController extends GetxController {
 
   /// Sheet headline — driven by [RidePickupStatusLabels] from socket/API status.
   final currentStatusLabel = AppStrings.findingYourDriver.tr.obs;
+
   /// Sheet subline — paired with [currentStatusLabel].
   final currentDescriptionLabel =
-      AppStrings.findingDriverDefaultDescription.tr
-          .obs;
+      AppStrings.findingDriverDefaultDescription.tr.obs;
+
   /// Canonical pickup-phase status (`searching`, `driver_assigned`, …).
   final normalizedRideStatus = 'searching'.obs;
   final isRideCancelled = false.obs;
@@ -129,7 +130,8 @@ class FindingDriverController extends GetxController {
   bool _isNavigatingHomeAfterCancel = false;
 
   /// When false, hide search countdown/progress (driver matched or later).
-  bool get isSearchingPhase => isRideSearchingStatus(normalizedRideStatus.value);
+  bool get isSearchingPhase =>
+      isRideSearchingStatus(normalizedRideStatus.value);
 
   /// Updates sheet copy from [RidePickupStatusLabels] after status normalization.
   void _applyPickupStatusLabels(String normalized) {
@@ -148,11 +150,12 @@ class FindingDriverController extends GetxController {
   }
 
   /// Stops search UI and opens driver-accepted (once per ride).
-  void _onDriverAssignedPhase(String normalized, EventRiderStatusUpdateResponse payload) {
+  void _onDriverAssignedPhase(
+    String normalized,
+    EventRiderStatusUpdateResponse payload,
+  ) {
     _countdownTimer?.cancel();
-    _loadDriverMarkerIcon(
-      vehicleType: payload.driverSnapshot?.vehicleType,
-    );
+    _loadDriverMarkerIcon(vehicleType: payload.driverSnapshot?.vehicleType);
     if (!_didNavigateToAccepted) {
       _navigateToDriverAccepted();
     }
@@ -161,7 +164,10 @@ class FindingDriverController extends GetxController {
   /// Central handler for `ride:status_update` and HTTP catch-up on this screen.
   ///
   /// Always normalizes [rawStatus] first — never compare raw socket strings directly.
-  void _handleRideStatus(String rawStatus, EventRiderStatusUpdateResponse payload) {
+  void _handleRideStatus(
+    String rawStatus,
+    EventRiderStatusUpdateResponse payload,
+  ) {
     final normalized = normalizeRideStatusString(rawStatus);
     if (normalized.isEmpty) return;
 
@@ -189,8 +195,7 @@ class FindingDriverController extends GetxController {
         currentStatusLabel.value = AppStrings.driverStartedYourRide.trParams({
           'driverName': driver,
         });
-        currentDescriptionLabel.value =
-            AppStrings.rideStartedDescription.tr;
+        currentDescriptionLabel.value = AppStrings.rideStartedDescription.tr;
         _onDriverAssignedPhase(normalized, payload);
         _setDropRouteFallback();
         _fitRouteBounds();
@@ -213,7 +218,8 @@ class FindingDriverController extends GetxController {
         if (_isUserInitiatedCancellation) return;
         isRideCancelled.value = true;
         currentStatusLabel.value = AppStrings.noDriverFound.tr;
-        currentDescriptionLabel.value = AppStrings.weCouldntFindADriverNearby.tr;
+        currentDescriptionLabel.value =
+            AppStrings.weCouldntFindADriverNearby.tr;
         LiveActivityManager().endActivity(rideId);
         _showCancelDialogThenGoHome(
           AppStrings.noDriversNearbyPleaseTryAgainLater.tr,
@@ -471,7 +477,7 @@ class FindingDriverController extends GetxController {
   Future<void> _syncLiveActivity() async {
     try {
       if (Platform.isIOS && LiveActivityManager().isTracking(rideId)) return;
-      
+
       await LiveActivityManager().startActivity(
         orderId: rideId,
         status: 'SEARCHING',
@@ -787,9 +793,7 @@ class FindingDriverController extends GetxController {
   /// Localized "X min remaining" — whole minutes = floor(seconds / 60) so 8:59 shows 8.
   String findingDriverMinutesRemainLabel() {
     final mins = remainingSeconds.value ~/ 60;
-    return AppStrings.findingDriverMinutesRemain.trParams({
-      'minutes': '$mins',
-    });
+    return AppStrings.findingDriverMinutesRemain.trParams({'minutes': '$mins'});
   }
 
   Future<void> confirmCancelRide() async {
@@ -829,25 +833,26 @@ class FindingDriverController extends GetxController {
             return;
           }
           await Loader.withFlag(isReasonProcessing, () async {
-          final charges = await rideRepository.getCancellationCharges(rideId);
-          await charges.fold(
-            (_) async {
-              AppDialogs.showErrorDialog(
-                title: AppStrings.cancelFailed.tr,
-                message: AppStrings.couldNotCancelTryAgain.tr,
-              );
-            },
-            (data) async {
-              final selectedPolicy = data.policy.firstWhereOrNull(
-                (p) =>
-                    p.status.toLowerCase() == data.currentStatus.toLowerCase(),
-              );
-              selectedReason = reason;
-              cancellationData = data;
-              selectedPolicyLabel = selectedPolicy?.label ?? '';
-              Get.back();
-            },
-          );
+            final charges = await rideRepository.getCancellationCharges(rideId);
+            await charges.fold(
+              (_) async {
+                AppDialogs.showErrorDialog(
+                  title: AppStrings.cancelFailed.tr,
+                  message: AppStrings.couldNotCancelTryAgain.tr,
+                );
+              },
+              (data) async {
+                final selectedPolicy = data.policy.firstWhereOrNull(
+                  (p) =>
+                      p.status.toLowerCase() ==
+                      data.currentStatus.toLowerCase(),
+                );
+                selectedReason = reason;
+                cancellationData = data;
+                selectedPolicyLabel = selectedPolicy?.label ?? '';
+                Get.back();
+              },
+            );
           });
         },
       ),
@@ -918,5 +923,4 @@ class FindingDriverController extends GetxController {
       },
     );
   }
-
 }

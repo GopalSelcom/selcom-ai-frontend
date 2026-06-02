@@ -2,15 +2,17 @@ import 'dart:developer' as developer;
 
 import 'package:dio/dio.dart';
 
-import '../../../../core/data/models/responses/rides/active_ride_response.dart';
-import '../../../../core/data/models/responses/chat_quick_replies_response.dart';
-import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
-import '../../../../core/services/session_expiry_service.dart';
+import '../../../../core/data/models/responses/chat_quick_replies_response.dart';
+import '../../../../core/data/models/responses/rides/active_ride_response.dart';
+import '../../../../core/data/models/ride_model.dart';
+import '../../../../core/errors/insufficient_wallet_balance_exception.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
+import '../../../payment/domain/models/insufficient_wallet_balance_details.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
+import '../../../../core/services/session_expiry_service.dart';
 import '../models/destination_update_models.dart';
 import '../models/emergency_contacts_response.dart';
 import '../models/ride_management_models.dart';
@@ -386,6 +388,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
         endpoint: URLS.payment.validateRidePayment,
         method: ApiMethod.post,
         body: request.toJson(),
+        errorPresentationType: ErrorPresentationType.none,
       ),
     );
 
@@ -393,6 +396,13 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       return response.data['data']?['validation_id'] ?? '';
     }
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      final insufficient =
+          InsufficientWalletBalanceDetails.tryParseFromApiResponse(
+            response.data,
+          );
+      if (insufficient != null) {
+        throw InsufficientWalletBalanceException(insufficient);
+      }
       return '';
     }
     throw Exception('Payment validation failed');

@@ -294,11 +294,7 @@ class _RideLocationSummaryCardState extends State<RideLocationSummaryCard> {
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        Icon(
-          Icons.expand_less,
-          color: AppColors.textHint,
-          size: 18.sp,
-        ),
+        Icon(Icons.expand_less, color: AppColors.textHint, size: 18.sp),
       ],
     );
   }
@@ -343,11 +339,7 @@ class _RideLocationSummaryCardState extends State<RideLocationSummaryCard> {
     return Row(
       children: [
         _buildIconContainer(
-          Container(
-            width: 1.w,
-            height: height,
-            color: AppColors.borderDefault,
-          ),
+          Container(width: 1.w, height: height, color: AppColors.borderDefault),
         ),
         const Spacer(),
       ],

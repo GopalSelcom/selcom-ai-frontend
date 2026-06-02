@@ -1,8 +1,9 @@
 import 'package:dartz/dartz.dart';
+
 import '../../../../core/errors/failures.dart';
+import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../domain/repositories/settings_repository.dart';
 import '../datasources/settings_remote_data_source.dart';
-import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../models/settings_models.dart';
 
 class SettingsRepositoryImpl implements SettingsRepository {

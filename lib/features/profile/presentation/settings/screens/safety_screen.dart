@@ -31,9 +31,7 @@ class SafetyScreen extends GetView<SettingsController> {
                 child: ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 16.h),
-                  children: const [
-                    RidePinProtectionSection(),
-                  ],
+                  children: const [RidePinProtectionSection()],
                 ),
               );
             }),

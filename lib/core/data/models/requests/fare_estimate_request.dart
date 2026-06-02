@@ -4,6 +4,7 @@ class FareEstimateRequest {
   final LocationEntity pickup;
   final LocationEntity? destination;
   final List<LocationEntity>? destinations;
+
   /// When set, estimate API returns per-vehicle promo fields.
   final String? promoCode;
 

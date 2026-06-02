@@ -93,6 +93,7 @@ class OtpScreen extends GetView<AuthController> {
                                 () =>
                                 AppOtpField(
                                   length: 4,
+                                  autofocus: true,
                                   fieldHeight: 70.h,
                                   fieldWidth: 64.w,
                                   mainAxisAlignment: MainAxisAlignment

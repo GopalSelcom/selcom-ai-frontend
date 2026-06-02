@@ -58,7 +58,9 @@ abstract final class RecentLocationsScreenShimmer {
                   height: RecentLocationTileLayout.leadingIconSize,
                   borderRadius: 6.r,
                 ),
-                SizedBox(height: RecentLocationTileLayout.leadingIconDistanceGap),
+                SizedBox(
+                  height: RecentLocationTileLayout.leadingIconDistanceGap,
+                ),
                 AppShimmerBox(
                   width: 32.w,
                   height: RecentLocationTileLayout.leadingDistanceLineHeight,

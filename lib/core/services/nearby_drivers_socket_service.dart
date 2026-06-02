@@ -3,16 +3,16 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/foundation.dart';
-import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/driver_location_socker_response.dart';
-import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
-import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/ride_stops_update_response.dart';
-import 'package:selcom_rides_frontend/core/data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
-import 'package:selcom_rides_frontend/core/data/models/responses/payment_status_response/payment_status_response.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
+import '../data/models/responses/nearbyRiders/response/driver_location_socker_response.dart';
 import '../data/models/responses/nearbyRiders/response/near_by_rider_response.dart';
-import 'storage_service.dart';
+import '../data/models/responses/nearbyRiders/response/ride_stops_update_response.dart';
+import '../data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
+import '../data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
+import '../data/models/responses/payment_status_response/payment_status_response.dart';
 import 'error_reporting/error_reporter.dart';
+import 'storage_service.dart';
 
 class NearbyDriverPoint {
   final String fleetId;

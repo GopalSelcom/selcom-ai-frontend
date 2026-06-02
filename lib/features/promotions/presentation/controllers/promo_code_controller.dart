@@ -5,11 +5,11 @@ import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/data/models/responses/rides/promo_available_response.dart';
+import '../../../../core/di/injection_container.dart' as di;
 import '../../../../core/errors/failures.dart';
 import '../../../../core/localization/app_strings.dart';
-import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/analytics_service.dart';
-import '../../../../core/di/injection_container.dart' as di;
+import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../home/domain/repositories/home_repository.dart';
 import '../promo_code_route_args.dart';
@@ -147,7 +147,9 @@ class PromoCodeController extends GetxController {
   }
 
   static const Duration _successDisplayDuration = Duration(seconds: 2);
-  static const Duration _successDismissSettleDuration = Duration(milliseconds: 320);
+  static const Duration _successDismissSettleDuration = Duration(
+    milliseconds: 320,
+  );
 
   /// Shows success on promo screen, waits for dismiss, then pops with [applyResult].
   Future<void> _showSuccessThenReturn(PromoCodeApplyResult applyResult) async {

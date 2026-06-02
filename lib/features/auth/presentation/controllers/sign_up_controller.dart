@@ -1,6 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'dart:convert';
 
 import '../../../../core/data/models/requests/save_user_additional_details_request.dart';
 import '../../../../core/localization/app_strings.dart';
@@ -30,6 +31,7 @@ class SignUpController extends GetxController {
   }
 
   void onNameChanged(String _) => _formTick.value++;
+
   void onEmailChanged(String _) => _formTick.value++;
 
   void setAcceptedTerms(bool value) {
@@ -50,7 +52,8 @@ class SignUpController extends GetxController {
     final value = emailController.text.trim();
     if (value.isEmpty) return null;
     final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
-    if (!emailRegex.hasMatch(value)) return AppStrings.pleaseEnterAValidEmail.tr;
+    if (!emailRegex.hasMatch(value))
+      return AppStrings.pleaseEnterAValidEmail.tr;
     return null;
   }
 
@@ -80,17 +83,20 @@ class SignUpController extends GetxController {
         ),
       );
 
-      return await result.fold((failure) async {
-        errorMessage.value = failure.message;
-        return false;
-      }, (user) async {
-        await StorageService().write(
-          StorageKeys.user,
-          jsonEncode(user.toJson()),
-        );
-        await StorageService().write(StorageKeys.signupCompleted, 'true');
-        return true;
-      });
+      return await result.fold(
+        (failure) async {
+          errorMessage.value = failure.message;
+          return false;
+        },
+        (user) async {
+          await StorageService().write(
+            StorageKeys.user,
+            jsonEncode(user.toJson()),
+          );
+          await StorageService().write(StorageKeys.signupCompleted, 'true');
+          return true;
+        },
+      );
     });
 
     if (saved) {

@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+
 import '../../../../core/data/models/requests/book_ride_request.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/responses/rides/book_rides_response.dart';
@@ -27,7 +28,9 @@ abstract class HomeRepository {
     required String address,
   });
 
-  Future<Either<Failure, FareEstimateModel>> estimateFare(FareEstimateRequest request);
+  Future<Either<Failure, FareEstimateModel>> estimateFare(
+    FareEstimateRequest request,
+  );
 
   Future<Either<Failure, BookRideResponse>> bookRide(BookRideRequest request);
 

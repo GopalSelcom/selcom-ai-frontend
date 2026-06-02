@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:selcom_rides_frontend/core/services/storage_service.dart';
-import 'package:selcom_rides_frontend/main.dart';
+import '../../main.dart';
+import '../services/storage_service.dart';
 
 class Localization {
   static Localization? _instance;

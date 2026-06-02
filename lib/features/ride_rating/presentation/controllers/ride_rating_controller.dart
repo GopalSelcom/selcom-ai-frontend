@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 
 import '../../../../core/data/models/requests/submit_ride_rating_request.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../shared/utils/app_dialogs.dart';
@@ -12,8 +12,8 @@ import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../domain/entities/ride_rating_ride_entity.dart';
 import '../../domain/entities/ride_rating_tag_entity.dart';
-import '../../domain/usecases/get_review_tags_usecase.dart';
 import '../../domain/usecases/get_last_completed_ride_usecase.dart';
+import '../../domain/usecases/get_review_tags_usecase.dart';
 import '../../domain/usecases/skip_ride_rating_usecase.dart';
 import '../../domain/usecases/submit_ride_rating_usecase.dart';
 import '../widgets/ride_rating_bottom_sheet.dart';
@@ -222,31 +222,31 @@ class RideRatingController extends GetxController {
       );
 
       result.fold((failure) => _handleFailure(failure), (ok) async {
-      if (!ok) {
-        AppDialogs.showErrorDialog(
-          title: AppStrings.submitFailed.tr,
-          message: AppStrings.unableToSubmitRatingNow.tr,
+        if (!ok) {
+          AppDialogs.showErrorDialog(
+            title: AppStrings.submitFailed.tr,
+            message: AppStrings.unableToSubmitRatingNow.tr,
+          );
+          return;
+        }
+        await analyticsService.logEvent(
+          'ride_rating_submitted',
+          parameters: {
+            'ride_id': ride.rideId,
+            'rating': selectedRating.value,
+            'tags_count': selectedTags.length,
+          },
         );
-        return;
-      }
-      await analyticsService.logEvent(
-        'ride_rating_submitted',
-        parameters: {
-          'ride_id': ride.rideId,
-          'rating': selectedRating.value,
-          'tags_count': selectedTags.length,
-        },
-      );
-      closeBottomSheet();
-      AppDialogs.showSuccessDialog(
-        title: AppStrings.thankYou.tr,
-        message: AppStrings.yourRatingHasBeenSubmitted.tr,
-        onConfirm: () {
-          _resetSheetState(clearPendingRide: true);
-          onSuccessConfirmed?.call();
-        },
-      );
-    });
+        closeBottomSheet();
+        AppDialogs.showSuccessDialog(
+          title: AppStrings.thankYou.tr,
+          message: AppStrings.yourRatingHasBeenSubmitted.tr,
+          onConfirm: () {
+            _resetSheetState(clearPendingRide: true);
+            onSuccessConfirmed?.call();
+          },
+        );
+      });
     });
   }
 

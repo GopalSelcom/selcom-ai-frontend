@@ -8,7 +8,8 @@
 ///
 /// Examples: `driverAssigned` → `driver_assigned`,
 /// `RideStatus.driverArriving` → `driver_arriving`.
-String normalizeRideStatusString(String? raw) {  final status = (raw ?? '').toString().trim();
+String normalizeRideStatusString(String? raw) {
+  final status = (raw ?? '').toString().trim();
   if (status.isEmpty) return '';
 
   final canonical = status
@@ -30,7 +31,8 @@ bool isRideSearchingStatus(String normalized) {
 }
 
 /// Driver accepted through arrival at pickup (trip has not started yet).
-bool isDriverPickupEnRouteStatus(String normalized) {  return normalized == 'driver_assigned' ||
+bool isDriverPickupEnRouteStatus(String normalized) {
+  return normalized == 'driver_assigned' ||
       normalized == 'accepted' ||
       normalized == 'driver_arriving' ||
       normalized == 'driver_arrived' ||

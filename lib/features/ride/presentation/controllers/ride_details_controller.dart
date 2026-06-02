@@ -144,9 +144,8 @@ class RideDetailsController extends GetxController {
     return code.isNotEmpty && d > 0;
   }
 
-  String get promoFareLineTitle => AppStrings.receiptPromoLine
-      .trParams({'code': ride.promoCode!.trim()})
-      .tr;
+  String get promoFareLineTitle =>
+      AppStrings.receiptPromoLine.trParams({'code': ride.promoCode!.trim()}).tr;
 
   String get promoFareLineAmountLabel =>
       '-${CurrencyFormatter.format(ride.promoDiscount!)}';
@@ -222,12 +221,9 @@ class RideDetailsController extends GetxController {
       if (ride.pdfLinks != null && ride.pdfLinks!.isNotEmpty) {
         final now = DateTime.now().toUtc();
         // Sort to get the most recent one
-        final sortedLinks = List<PdfLinkEntity>.from(ride.pdfLinks!)
-          ..sort(
-            (a, b) => (b.uploadedAt ?? now).compareTo(
-              a.uploadedAt ?? now,
-            ),
-          );
+        final sortedLinks = List<PdfLinkEntity>.from(
+          ride.pdfLinks!,
+        )..sort((a, b) => (b.uploadedAt ?? now).compareTo(a.uploadedAt ?? now));
         shareUrl = sortedLinks.first.url;
       }
 

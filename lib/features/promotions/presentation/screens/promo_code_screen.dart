@@ -8,9 +8,9 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/widgets/animated_blur_dialog.dart';
 import '../../../../shared/widgets/app_cupertino_text_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
-import '../../../../shared/widgets/animated_blur_dialog.dart';
 import '../../../../shared/widgets/app_skeleton_loader.dart';
 import '../../../../shared/widgets/global_loader_widget.dart';
 import '../../../../shared/widgets/promo_apply_success_dialog.dart';
@@ -84,9 +84,7 @@ class PromoCodeScreen extends StatelessWidget {
 
   Widget _buildApplySuccessOverlay() {
     return const Positioned.fill(
-      child: AppBlurModalOverlay(
-        child: PromoApplySuccessPanel(),
-      ),
+      child: AppBlurModalOverlay(child: PromoApplySuccessPanel()),
     );
   }
 
@@ -107,11 +105,10 @@ class PromoCodeScreen extends StatelessWidget {
       return Column(
         children: List.generate(
           3,
-              (i) =>
-              Padding(
-                padding: EdgeInsets.only(bottom: i < 2 ? 12.h : 0),
-                child: AppSkeletonLoader(height: 120.h, borderRadius: 16),
-              ),
+          (i) => Padding(
+            padding: EdgeInsets.only(bottom: i < 2 ? 12.h : 0),
+            child: AppSkeletonLoader(height: 120.h, borderRadius: 16),
+          ),
         ),
       );
     }
@@ -200,20 +197,19 @@ class PromoCodeScreen extends StatelessWidget {
                   AppAssets.icPromoCode,
                   width: 24.w,
                   height: 24.w,
-                  placeholderBuilder: (_) =>
-                      Container(
-                        width: 24.w,
-                        height: 24.w,
-                        decoration: const BoxDecoration(
-                          color: AppColors.promotionBlue,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.percent,
-                          color: AppColors.white,
-                          size: 14.sp,
-                        ),
-                      ),
+                  placeholderBuilder: (_) => Container(
+                    width: 24.w,
+                    height: 24.w,
+                    decoration: const BoxDecoration(
+                      color: AppColors.promotionBlue,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.percent,
+                      color: AppColors.white,
+                      size: 14.sp,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 4),
                 Expanded(
@@ -348,24 +344,23 @@ class PromoCodeScreen extends StatelessWidget {
                           : AppAssets.icPromoCodeDisabled,
                       width: 46.w,
                       height: 46.w,
-                      placeholderBuilder: (_) =>
-                          Container(
-                            width: 46.w,
-                            height: 46.w,
-                            decoration: BoxDecoration(
-                              color: promo.isApplicable
-                                  ? AppColors.promotionBlue
-                                  : AppColors.promoBadgeStarDisabled,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.percent,
-                              color: promo.isApplicable
-                                  ? AppColors.white
-                                  : AppColors.promoBadgeAccentDisabled,
-                              size: 18.sp,
-                            ),
-                          ),
+                      placeholderBuilder: (_) => Container(
+                        width: 46.w,
+                        height: 46.w,
+                        decoration: BoxDecoration(
+                          color: promo.isApplicable
+                              ? AppColors.promotionBlue
+                              : AppColors.promoBadgeStarDisabled,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.percent,
+                          color: promo.isApplicable
+                              ? AppColors.white
+                              : AppColors.promoBadgeAccentDisabled,
+                          size: 18.sp,
+                        ),
+                      ),
                     ),
                   ],
                 ),

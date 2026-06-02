@@ -105,9 +105,8 @@ class PaymentMethodModel {
     final bool available = rawAvail == null
         ? true
         : rawAvail is bool
-            ? rawAvail
-            : rawAvail == 1 ||
-                rawAvail.toString().trim().toLowerCase() == 'true';
+        ? rawAvail
+        : rawAvail == 1 || rawAvail.toString().trim().toLowerCase() == 'true';
 
     return PaymentMethodModel(
       id: json['id'] ?? json['type'] ?? '',

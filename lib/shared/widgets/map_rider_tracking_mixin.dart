@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+
 import '../../core/utils/map_math_utils.dart';
 import 'app_google_map.dart';
 
-mixin MapRiderTrackingMixin on State<AppGoogleMap>, TickerProviderStateMixin<AppGoogleMap> {
+mixin MapRiderTrackingMixin
+    on State<AppGoogleMap>, TickerProviderStateMixin<AppGoogleMap> {
   late AnimationController _positionController;
 
   DateTime? _lastUpdateAt;
@@ -38,7 +40,7 @@ mixin MapRiderTrackingMixin on State<AppGoogleMap>, TickerProviderStateMixin<App
             _targetPosition!,
             _positionController.value,
           );
-          
+
           if (_previousRotation != null && _targetRotation != null) {
             _currentAnimatedRotation = MapMathUtils.interpolateRotation(
               _previousRotation!,
@@ -120,10 +122,15 @@ mixin MapRiderTrackingMixin on State<AppGoogleMap>, TickerProviderStateMixin<App
 
   /// Updates the rider's target position and starts a smooth animation towards it.
   /// [duration] should match the frequency of data updates (e.g. 3.5s for 3s updates).
-  void updateRiderPosition(LatLng newPosition, {double rotation = 0.0, Duration duration = const Duration(milliseconds: 3500)}) {
+  void updateRiderPosition(
+    LatLng newPosition, {
+    double rotation = 0.0,
+    Duration duration = const Duration(milliseconds: 3500),
+  }) {
     // Always start the new animation from where the bike is CURRENTLY standing.
     // This is the key to buttery-smooth movement without jumps.
-    _previousPosition = _currentAnimatedPosition ?? _targetPosition ?? newPosition;
+    _previousPosition =
+        _currentAnimatedPosition ?? _targetPosition ?? newPosition;
     _targetPosition = newPosition;
 
     _previousRotation = _currentAnimatedRotation ?? _targetRotation ?? rotation;

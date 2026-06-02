@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:iconsax/iconsax.dart';
 
 import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/utils/phone_formatter.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/vehicle_type_image.dart';
@@ -15,8 +17,6 @@ import '../controllers/ride_details_controller.dart';
 import '../widgets/ride_common_widgets.dart';
 import '../widgets/ride_details_screen_layout.dart';
 import '../widgets/ride_details_screen_shimmer.dart';
-import 'package:iconsax/iconsax.dart';
-import '../../../../shared/utils/phone_formatter.dart';
 
 class RideDetailsScreen extends StatelessWidget {
   final RideEntity ride;

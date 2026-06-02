@@ -38,7 +38,7 @@ class AppGoogleMap extends StatefulWidget {
     this.compassEnabled = false,
     this.mapType = MapType.normal,
     this.trafficEnabled = false,
-    this.buildingsEnabled = true,
+    this.buildingsEnabled = false,
     this.indoorViewEnabled = true,
     this.liteModeEnabled = false,
     this.minMaxZoomPreference = MinMaxZoomPreference.unbounded,

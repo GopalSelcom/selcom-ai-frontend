@@ -75,11 +75,7 @@ abstract final class SelectSavedLocationScreenShimmer {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AppShimmerBox(
-                    width: 140.w,
-                    height: 15.sp,
-                    borderRadius: 4.r,
-                  ),
+                  AppShimmerBox(width: 140.w, height: 15.sp, borderRadius: 4.r),
                   SizedBox(height: 4.h),
                   AppShimmerBox(
                     width: double.infinity,
@@ -90,11 +86,7 @@ abstract final class SelectSavedLocationScreenShimmer {
               ),
             ),
             if (showFavorite)
-              AppShimmerBox(
-                width: 22.w,
-                height: 22.w,
-                borderRadius: 11.r,
-              ),
+              AppShimmerBox(width: 22.w, height: 22.w, borderRadius: 11.r),
           ],
         ),
       ),

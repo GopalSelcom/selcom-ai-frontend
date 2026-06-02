@@ -58,17 +58,10 @@ class HomeSheetLoadingContent {
               ),
               child: Row(
                 children: [
-                  AppShimmerBox(
-                    width: 19.w,
-                    height: 19.w,
-                    borderRadius: 10.r,
-                  ),
+                  AppShimmerBox(width: 19.w, height: 19.w, borderRadius: 10.r),
                   SizedBox(width: 12.w),
                   Expanded(
-                    child: AppShimmerBox(
-                      height: 15.h,
-                      borderRadius: 8.r,
-                    ),
+                    child: AppShimmerBox(height: 15.h, borderRadius: 8.r),
                   ),
                 ],
               ),
@@ -137,35 +130,20 @@ class HomeSheetLoadingContent {
       child: AppShimmer(
         child: Row(
           children: [
-            AppShimmerBox(
-              width: 52.w,
-              height: 52.w,
-              borderRadius: 12.r,
-            ),
+            AppShimmerBox(width: 52.w, height: 52.w, borderRadius: 12.r),
             SizedBox(width: 16.w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  AppShimmerBox(
-                    width: 130.w,
-                    height: 14.h,
-                    borderRadius: 8.r,
-                  ),
+                  AppShimmerBox(width: 130.w, height: 14.h, borderRadius: 8.r),
                   SizedBox(height: 8.h),
-                  AppShimmerBox(
-                    height: 12.h,
-                    borderRadius: 8.r,
-                  ),
+                  AppShimmerBox(height: 12.h, borderRadius: 8.r),
                 ],
               ),
             ),
-            AppShimmerBox(
-              width: 21.w,
-              height: 21.w,
-              borderRadius: 6.r,
-            ),
+            AppShimmerBox(width: 21.w, height: 21.w, borderRadius: 6.r),
           ],
         ),
       ),
@@ -193,11 +171,7 @@ class HomeSheetLoadingContent {
                       borderRadius: 16.r,
                     ),
                     SizedBox(height: 4.h),
-                    AppShimmerBox(
-                      width: 52.w,
-                      height: 10.h,
-                      borderRadius: 8.r,
-                    ),
+                    AppShimmerBox(width: 52.w, height: 10.h, borderRadius: 8.r),
                   ],
                 ),
               ),

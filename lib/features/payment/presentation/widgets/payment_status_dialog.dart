@@ -33,8 +33,8 @@ class PaymentStatusDialog extends StatelessWidget {
     final String asset = isPending ? AppAssets.icRequest : AppAssets.icSuccess;
     final String title = isPending
         ? AppStrings
-            .requestSentPleaseCompletePaymentOnSelcomPesaToBookYourRide
-            .tr
+              .requestSentPleaseCompletePaymentOnSelcomPesaToBookYourRide
+              .tr
         : AppStrings.paymentCompletedSuccessfully.tr;
 
     return Dialog(

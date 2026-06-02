@@ -289,142 +289,137 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
       physics: const AlwaysScrollableScrollPhysics(
         parent: ClampingScrollPhysics(),
       ),
-      padding: EdgeInsets.fromLTRB(
-        20.w,
-        10.h,
-        20.w,
-        _scrollBottomPad(context),
-      ),
+      padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, _scrollBottomPad(context)),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-        Center(
-          child: Container(
-            width: 48.w,
-            height: 5.h,
-            decoration: BoxDecoration(
-              color: AppColors.skeletonBase,
-              borderRadius: BorderRadius.circular(10.r),
+          Center(
+            child: Container(
+              width: 48.w,
+              height: 5.h,
+              decoration: BoxDecoration(
+                color: AppColors.skeletonBase,
+                borderRadius: BorderRadius.circular(10.r),
+              ),
             ),
           ),
-        ),
-        SizedBox(height: 24.h),
+          SizedBox(height: 24.h),
 
-        // 1. Title & Subtitle (Centered)
-        Obx(
-          () => Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                c.currentStatusLabel.value,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.homeTitle,
-              ),
-              SizedBox(height: 4.h),
-              Text(
-                c.currentDescriptionLabel.value,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.homeSubtitle,
-              ),
+          // 1. Title & Subtitle (Centered)
+          Obx(
+            () => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  c.currentStatusLabel.value,
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.homeTitle,
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  c.currentDescriptionLabel.value,
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.homeSubtitle,
+                ),
 
-              // Countdown + progress only while status is still `searching`.
-              if (c.isSearchingPhase && !c.isRideCancelled.value) ...[
-                SizedBox(height: 36.h),
+                // Countdown + progress only while status is still `searching`.
+                if (c.isSearchingPhase && !c.isRideCancelled.value) ...[
+                  SizedBox(height: 36.h),
 
-                // 2. Bolt-like Linear Progress Bar
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(4.r),
-                    child: LinearProgressIndicator(
-                      minHeight: 6.h,
-                      backgroundColor: AppColors.primary.withValues(
-                        alpha: 0.15,
-                      ),
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                        AppColors.primary,
+                  // 2. Bolt-like Linear Progress Bar
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20.w),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(4.r),
+                      child: LinearProgressIndicator(
+                        minHeight: 6.h,
+                        backgroundColor: AppColors.primary.withValues(
+                          alpha: 0.15,
+                        ),
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          AppColors.primary,
+                        ),
                       ),
                     ),
                   ),
-                ),
 
-                SizedBox(height: 20.h),
+                  SizedBox(height: 20.h),
 
-                // 3. Timer: M:SS countdown + floor-minute "X min remaining"
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  // 3. Timer: M:SS countdown + floor-minute "X min remaining"
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.access_time_rounded,
+                        color: AppColors.textHeading,
+                        size: 18.sp,
+                      ),
+                      SizedBox(width: 4.5.w),
+                      Text(
+                        c.findingDriverMinutesRemainLabel(),
+                        style: AppTextStyles.homeSubtitle,
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          SizedBox(height: 28.h),
+
+          // 4. Action Buttons (Search Again & Back to Home OR Cancel)
+          Obx(() {
+            if (c.isRideCancelled.value) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (sheetController.isAttached && sheetController.size > 0.35) {
+                  sheetController.animateTo(
+                    0.35,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOut,
+                  );
+                }
+              });
+              return Padding(
+                padding: EdgeInsets.symmetric(horizontal: 10.w),
+                child: Column(
                   children: [
-                    Icon(
-                      Icons.access_time_rounded,
-                      color: AppColors.textHeading,
-                      size: 18.sp,
+                    SizedBox(
+                      width: double.infinity,
+                      child: AppPrimaryButton(
+                        label: AppStrings.searchAgain.tr,
+                        onPressed: c.searchAgain,
+                        height: 56.h,
+                      ),
                     ),
-                    SizedBox(width: 4.5.w),
-                    Text(
-                      c.findingDriverMinutesRemainLabel(),
-                      style: AppTextStyles.homeSubtitle,
+                    SizedBox(height: 16.h),
+                    SizedBox(
+                      width: double.infinity,
+                      child: AppPrimaryButton(
+                        label: AppStrings.backToHome.tr,
+                        onPressed: () => Get.offAllNamed(AppRoutes.home),
+                        outlined: true,
+                        height: 56.h,
+                      ),
                     ),
                   ],
                 ),
-              ],
-            ],
-          ),
-        ),
-
-        SizedBox(height: 28.h),
-
-        // 4. Action Buttons (Search Again & Back to Home OR Cancel)
-        Obx(() {
-          if (c.isRideCancelled.value) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (sheetController.isAttached && sheetController.size > 0.35) {
-                sheetController.animateTo(
-                  0.35,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOut,
-                );
-              }
-            });
+              );
+            }
             return Padding(
               padding: EdgeInsets.symmetric(horizontal: 10.w),
-              child: Column(
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: AppPrimaryButton(
-                      label: AppStrings.searchAgain.tr,
-                      onPressed: c.searchAgain,
-                      height: 56.h,
-                    ),
-                  ),
-                  SizedBox(height: 16.h),
-                  SizedBox(
-                    width: double.infinity,
-                    child: AppPrimaryButton(
-                      label: AppStrings.backToHome.tr,
-                      onPressed: () => Get.offAllNamed(AppRoutes.home),
-                      outlined: true,
-                      height: 56.h,
-                    ),
-                  ),
-                ],
+              child: AppPrimaryButton(
+                label: AppStrings.cancelRide.tr,
+                onPressed: c.confirmCancelRide,
+                outlined: true,
+                outlinedBorderColor: AppColors.iconHeartFilled,
+                outlinedTextColor: AppColors.iconHeartFilled,
+                height: 56.h,
               ),
             );
-          }
-          return Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10.w),
-            child: AppPrimaryButton(
-              label: AppStrings.cancelRide.tr,
-              onPressed: c.confirmCancelRide,
-              outlined: true,
-              outlinedBorderColor: AppColors.iconHeartFilled,
-              outlinedTextColor: AppColors.iconHeartFilled,
-              height: 56.h,
-            ),
-          );
-        }),
+          }),
         ],
       ),
     );

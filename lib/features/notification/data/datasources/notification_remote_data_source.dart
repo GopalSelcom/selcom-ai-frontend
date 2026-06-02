@@ -41,10 +41,7 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
     return NotificationResponseModel(
       statusCode: response.statusCode,
       message: message,
-      data: NotificationPayloadModel(
-        notifications: const [],
-        unreadCount: 0,
-      ),
+      data: NotificationPayloadModel(notifications: const [], unreadCount: 0),
     );
   }
 

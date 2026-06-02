@@ -12,27 +12,16 @@ class HomeAddressHeaderSkeleton extends StatelessWidget {
     return AppShimmer(
       child: Row(
         children: [
-          AppShimmerBox(
-            width: 28.w,
-            height: 28.w,
-            borderRadius: 8.r,
-          ),
+          AppShimmerBox(width: 28.w, height: 28.w, borderRadius: 8.r),
           SizedBox(width: 4.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                AppShimmerBox(
-                  width: 108.w,
-                  height: 15.h,
-                  borderRadius: 4.r,
-                ),
+                AppShimmerBox(width: 108.w, height: 15.h, borderRadius: 4.r),
                 SizedBox(height: 4.h),
-                AppShimmerBox(
-                  height: 15.h,
-                  borderRadius: 4.r,
-                ),
+                AppShimmerBox(height: 15.h, borderRadius: 4.r),
               ],
             ),
           ),

@@ -7,8 +7,8 @@ import '../../../../../core/localization/app_strings.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../shared/widgets/app_profile_header.dart';
 import '../../../../../shared/widgets/custom_loader.dart';
-import '../controllers/settings_controller.dart';
 import '../../widgets/menu_item_widget.dart';
+import '../controllers/settings_controller.dart';
 
 class SettingsScreen extends GetView<SettingsController> {
   const SettingsScreen({super.key});
