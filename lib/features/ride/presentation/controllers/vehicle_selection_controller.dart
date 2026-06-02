@@ -1048,20 +1048,25 @@ class VehicleSelectionController extends GetxController {
   ///
   /// See [WalletRideBalanceGuard] TODOs for backend migration.
   Future<bool> _guardWalletBalanceBeforePayment(int requiredAmount) async {
-    final walletResult = await profileRepository.getWalletBalance();
-    return walletResult.fold(
-      (_) => true,
-      (wallet) {
-        final details = WalletRideBalanceGuard.insufficientDetails(
-          currentBalance: wallet.balance,
-          requiredAmount: requiredAmount,
-          currency: wallet.currency,
-        );
-        if (details == null) return true;
-        unawaited(_showInsufficientWalletDialog(details));
-        return false;
-      },
-    );
+    // TODO(payment-backend): re-enable insufficient-balance blocking when
+    // backend wallet sufficiency APIs are fully ready.
+    //
+    // Kept previous client-guard logic below for quick restoration:
+    // final walletResult = await profileRepository.getWalletBalance();
+    // return walletResult.fold(
+    //   (_) => true,
+    //   (wallet) {
+    //     final details = WalletRideBalanceGuard.insufficientDetails(
+    //       currentBalance: wallet.balance,
+    //       requiredAmount: requiredAmount,
+    //       currency: wallet.currency,
+    //     );
+    //     if (details == null) return true;
+    //     unawaited(_showInsufficientWalletDialog(details));
+    //     return false;
+    //   },
+    // );
+    return true;
   }
 
   Future<void> _showInsufficientWalletDialog(
