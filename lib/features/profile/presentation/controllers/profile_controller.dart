@@ -69,7 +69,7 @@ class ProfileController extends GetxController {
 
   /// Menu rows shown when not loading (must match [_buildSettingsList]).
   int get visibleMenuItemCount {
-    var count = 5;
+    var count = 4;
     if (showSafetyOption.value) count++;
     if (showSettingsOption.value) count++;
     return count;

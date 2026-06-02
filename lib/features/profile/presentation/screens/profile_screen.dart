@@ -343,11 +343,6 @@ class ProfileScreen extends StatelessWidget {
               onTap: controller.openMyRides,
             ),
             MenuItemWidget(
-              icon: Iconsax.card,
-              title: AppStrings.payment.tr,
-              onTap: controller.openPaymentMethods,
-            ),
-            MenuItemWidget(
               icon: Iconsax.message_question,
               title: AppStrings.help.tr,
               onTap: controller.openContactUs,
