@@ -28,6 +28,7 @@ class LanguageSw extends Languages {
     'top_up_wallet': '',
     'add_money_to_wallet': '',
     'add_money': '',
+    'amount': '',
     'back': '',
     'add_money_selcom_pesa_subtitle': '',
     'add_money_tan_qr_tips': '',
@@ -40,6 +41,12 @@ class LanguageSw extends Languages {
     'add_money_go_wallet_step_3': '',
     'add_money_go_wallet_step_4': '',
     'add_money_go_wallet_step_5': '',
+    'wallet_funds_received_title': '',
+    'wallet_funds_received_subtitle': '',
+    'top_up_request_sent_title': '',
+    'expires_in_with_time': '',
+    'mobile_money_phone_value': '',
+    'mobile_money_amount_value': '',
     'select_a_vehicle': '',
     'book_ride_with_fare': '',
     'booking_fees_and_convenience_charges': '',
@@ -721,6 +728,9 @@ class LanguageSw extends Languages {
   String get addMoney => values['add_money'] ?? '';
 
   @override
+  String get amount => values['amount'] ?? '';
+
+  @override
   String get back => values['back'] ?? '';
 
   @override
@@ -765,6 +775,26 @@ class LanguageSw extends Languages {
   @override
   String get addMoneyGoWalletStep5 =>
       values['add_money_go_wallet_step_5'] ?? '';
+
+  @override
+  String get walletFundsReceivedTitle =>
+      values['wallet_funds_received_title'] ?? '';
+
+  @override
+  String get walletFundsReceivedSubtitle =>
+      values['wallet_funds_received_subtitle'] ?? '';
+
+  @override
+  String get topUpRequestSentTitle => values['top_up_request_sent_title'] ?? '';
+
+  @override
+  String get expiresInWithTime => values['expires_in_with_time'] ?? '';
+
+  @override
+  String get mobileMoneyPhoneValue => values['mobile_money_phone_value'] ?? '';
+
+  @override
+  String get mobileMoneyAmountValue => values['mobile_money_amount_value'] ?? '';
 
   @override
   String get selectAVehicle => values['select_a_vehicle'] ?? '';

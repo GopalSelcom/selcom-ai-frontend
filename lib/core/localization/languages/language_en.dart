@@ -31,6 +31,7 @@ class LanguageEn extends Languages {
     'top_up_wallet': 'Top up Wallet',
     'add_money_to_wallet': 'Add Money to wallet',
     'add_money': 'Add Money',
+    'amount': 'Amount',
     'back': 'Back',
     'add_money_selcom_pesa_subtitle': 'Request money from selcom pesa',
     'add_money_tan_qr_tips': 'TanQR/TIPS',
@@ -44,6 +45,13 @@ class LanguageEn extends Languages {
     'add_money_go_wallet_step_3': 'Enter your Go Wallet number',
     'add_money_go_wallet_step_4': 'Enter Amount',
     'add_money_go_wallet_step_5': 'Enter PIN to confirm',
+    'wallet_funds_received_title': 'Your wallet has received funds',
+    'wallet_funds_received_subtitle':
+        'You can now use your wallet to book rides.',
+    'top_up_request_sent_title': 'Top up request sent',
+    'expires_in_with_time': 'Expires in ... @time',
+    'mobile_money_phone_value': '+255 711 410 410',
+    'mobile_money_amount_value': 'TZS 43,000',
     'select_a_vehicle': 'Please select a vehicle.',
     'book_ride_with_fare': 'Book Ride @currency @amount',
     'booking_fees_and_convenience_charges':
@@ -820,6 +828,9 @@ class LanguageEn extends Languages {
   String get addMoney => values['add_money'] ?? '';
 
   @override
+  String get amount => values['amount'] ?? '';
+
+  @override
   String get back => values['back'] ?? '';
 
   @override
@@ -864,6 +875,26 @@ class LanguageEn extends Languages {
   @override
   String get addMoneyGoWalletStep5 =>
       values['add_money_go_wallet_step_5'] ?? '';
+
+  @override
+  String get walletFundsReceivedTitle =>
+      values['wallet_funds_received_title'] ?? '';
+
+  @override
+  String get walletFundsReceivedSubtitle =>
+      values['wallet_funds_received_subtitle'] ?? '';
+
+  @override
+  String get topUpRequestSentTitle => values['top_up_request_sent_title'] ?? '';
+
+  @override
+  String get expiresInWithTime => values['expires_in_with_time'] ?? '';
+
+  @override
+  String get mobileMoneyPhoneValue => values['mobile_money_phone_value'] ?? '';
+
+  @override
+  String get mobileMoneyAmountValue => values['mobile_money_amount_value'] ?? '';
 
   @override
   String get selectAVehicle => values['select_a_vehicle'] ?? '';

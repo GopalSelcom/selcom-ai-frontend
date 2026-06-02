@@ -34,6 +34,7 @@ class AppStrings {
   static const String topUpWallet = 'top_up_wallet';
   static const String addMoneyToWallet = 'add_money_to_wallet';
   static const String addMoney = 'add_money';
+  static const String amount = 'amount';
   static const String back = 'back';
   static const String addMoneySelcomPesaSubtitle = 'add_money_selcom_pesa_subtitle';
   static const String addMoneyTanQrTips = 'add_money_tan_qr_tips';
@@ -48,6 +49,13 @@ class AppStrings {
       'add_money_go_wallet_step_3';
   static const String addMoneyGoWalletStep4 = 'add_money_go_wallet_step_4';
   static const String addMoneyGoWalletStep5 = 'add_money_go_wallet_step_5';
+  static const String walletFundsReceivedTitle = 'wallet_funds_received_title';
+  static const String walletFundsReceivedSubtitle =
+      'wallet_funds_received_subtitle';
+  static const String topUpRequestSentTitle = 'top_up_request_sent_title';
+  static const String expiresInWithTime = 'expires_in_with_time';
+  static const String mobileMoneyPhoneValue = 'mobile_money_phone_value';
+  static const String mobileMoneyAmountValue = 'mobile_money_amount_value';
   static const String selectAVehicle = 'select_a_vehicle';
   static const String bookRideWithFare = 'book_ride_with_fare';
   static const String comingSoon = 'coming_soon';

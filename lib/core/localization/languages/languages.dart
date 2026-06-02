@@ -38,6 +38,7 @@ abstract class Languages {
   String get topUpWallet;
   String get addMoneyToWallet;
   String get addMoney;
+  String get amount;
   String get back;
   String get addMoneySelcomPesaSubtitle;
   String get addMoneyTanQrTips;
@@ -50,6 +51,12 @@ abstract class Languages {
   String get addMoneyGoWalletStep3;
   String get addMoneyGoWalletStep4;
   String get addMoneyGoWalletStep5;
+  String get walletFundsReceivedTitle;
+  String get walletFundsReceivedSubtitle;
+  String get topUpRequestSentTitle;
+  String get expiresInWithTime;
+  String get mobileMoneyPhoneValue;
+  String get mobileMoneyAmountValue;
   String get selectAVehicle;
   String get bookRideWithFare;
   String get bookingFeesAndConvenienceCharges;
