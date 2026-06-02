@@ -26,6 +26,13 @@ class LanguageSw extends Languages {
     'required_amount_label': '',
     'amount_needed_label': '',
     'top_up_wallet': '',
+    'add_money_to_wallet': '',
+    'add_money_selcom_pesa_subtitle': '',
+    'add_money_tan_qr_tips': '',
+    'add_money_tan_qr_tips_subtitle': '',
+    'add_money_mobile_money_subtitle': '',
+    'add_money_steps_to_load_go_wallet': '',
+    'add_money_steps_to_load_go_wallet_subtitle': '',
     'select_a_vehicle': '',
     'book_ride_with_fare': '',
     'booking_fees_and_convenience_charges': '',
@@ -699,6 +706,32 @@ class LanguageSw extends Languages {
 
   @override
   String get topUpWallet => values['top_up_wallet'] ?? '';
+
+  @override
+  String get addMoneyToWallet => values['add_money_to_wallet'] ?? '';
+
+  @override
+  String get addMoneySelcomPesaSubtitle =>
+      values['add_money_selcom_pesa_subtitle'] ?? '';
+
+  @override
+  String get addMoneyTanQrTips => values['add_money_tan_qr_tips'] ?? '';
+
+  @override
+  String get addMoneyTanQrTipsSubtitle =>
+      values['add_money_tan_qr_tips_subtitle'] ?? '';
+
+  @override
+  String get addMoneyMobileMoneySubtitle =>
+      values['add_money_mobile_money_subtitle'] ?? '';
+
+  @override
+  String get addMoneyStepsToLoadGoWallet =>
+      values['add_money_steps_to_load_go_wallet'] ?? '';
+
+  @override
+  String get addMoneyStepsToLoadGoWalletSubtitle =>
+      values['add_money_steps_to_load_go_wallet_subtitle'] ?? '';
 
   @override
   String get selectAVehicle => values['select_a_vehicle'] ?? '';

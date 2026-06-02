@@ -39,6 +39,7 @@ import '../../../home/presentation/controllers/location_selection_controller.dar
 import '../../../payment/domain/models/insufficient_wallet_balance_details.dart';
 import '../../../payment/domain/wallet_ride_balance_guard.dart';
 import '../../../payment/presentation/controllers/payment_method_controller.dart';
+import '../../../payment/presentation/widgets/add_money_to_wallet_bottom_sheet.dart';
 import '../../../payment/presentation/widgets/payment_status_dialog.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../promotions/presentation/promo_code_route_args.dart';
@@ -1073,9 +1074,8 @@ class VehicleSelectionController extends GetxController {
     );
   }
 
-  /// TODO(payment-backend): Open production wallet top-up (Selcom Pesa), not only methods list.
   void openWalletTopUp() {
-    Get.toNamed(AppRoutes.paymentMethods);
+    unawaited(AddMoneyToWalletBottomSheet.show());
   }
 
   bool _handlePaymentValidationFailure(Failure failure) {

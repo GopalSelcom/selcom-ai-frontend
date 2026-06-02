@@ -32,6 +32,14 @@ class AppStrings {
   static const String requiredAmountLabel = 'required_amount_label';
   static const String amountNeededLabel = 'amount_needed_label';
   static const String topUpWallet = 'top_up_wallet';
+  static const String addMoneyToWallet = 'add_money_to_wallet';
+  static const String addMoneySelcomPesaSubtitle = 'add_money_selcom_pesa_subtitle';
+  static const String addMoneyTanQrTips = 'add_money_tan_qr_tips';
+  static const String addMoneyTanQrTipsSubtitle = 'add_money_tan_qr_tips_subtitle';
+  static const String addMoneyMobileMoneySubtitle = 'add_money_mobile_money_subtitle';
+  static const String addMoneyStepsToLoadGoWallet = 'add_money_steps_to_load_go_wallet';
+  static const String addMoneyStepsToLoadGoWalletSubtitle =
+      'add_money_steps_to_load_go_wallet_subtitle';
   static const String selectAVehicle = 'select_a_vehicle';
   static const String bookRideWithFare = 'book_ride_with_fare';
   static const String comingSoon = 'coming_soon';

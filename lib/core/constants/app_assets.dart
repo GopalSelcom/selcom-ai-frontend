@@ -32,6 +32,7 @@ class AppAssets {
   static const String onboarding3 = '$_imagePath/onboarding_3.svg';
   static const String icTanzaniaFlag = '$_imagePath/ic_tanzania_flag.svg';
   static const String icError = '$_imagePath/ic_error.svg';
+  static const String icArrowForward = '$_imagePath/ic_arrow_forward.svg';
 
   // Branding
   static const String splashScreenBg = '$_imagePath/splash_screen_bg.svg';

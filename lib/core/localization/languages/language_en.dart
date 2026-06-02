@@ -29,6 +29,14 @@ class LanguageEn extends Languages {
     'required_amount_label': 'Required Amount',
     'amount_needed_label': 'Amount Needed',
     'top_up_wallet': 'Top up Wallet',
+    'add_money_to_wallet': 'Add Money to wallet',
+    'add_money_selcom_pesa_subtitle': 'Request money from selcom pesa',
+    'add_money_tan_qr_tips': 'TanQR/TIPS',
+    'add_money_tan_qr_tips_subtitle': 'Add Money using TanQR/Tips',
+    'add_money_mobile_money_subtitle': 'Add Money using TanQR/Tips',
+    'add_money_steps_to_load_go_wallet': 'Steps to load your Go wallet',
+    'add_money_steps_to_load_go_wallet_subtitle':
+        'Add Money using your bank app or USSD',
     'select_a_vehicle': 'Please select a vehicle.',
     'book_ride_with_fare': 'Book Ride @currency @amount',
     'booking_fees_and_convenience_charges':
@@ -797,6 +805,32 @@ class LanguageEn extends Languages {
 
   @override
   String get topUpWallet => values['top_up_wallet'] ?? '';
+
+  @override
+  String get addMoneyToWallet => values['add_money_to_wallet'] ?? '';
+
+  @override
+  String get addMoneySelcomPesaSubtitle =>
+      values['add_money_selcom_pesa_subtitle'] ?? '';
+
+  @override
+  String get addMoneyTanQrTips => values['add_money_tan_qr_tips'] ?? '';
+
+  @override
+  String get addMoneyTanQrTipsSubtitle =>
+      values['add_money_tan_qr_tips_subtitle'] ?? '';
+
+  @override
+  String get addMoneyMobileMoneySubtitle =>
+      values['add_money_mobile_money_subtitle'] ?? '';
+
+  @override
+  String get addMoneyStepsToLoadGoWallet =>
+      values['add_money_steps_to_load_go_wallet'] ?? '';
+
+  @override
+  String get addMoneyStepsToLoadGoWalletSubtitle =>
+      values['add_money_steps_to_load_go_wallet_subtitle'] ?? '';
 
   @override
   String get selectAVehicle => values['select_a_vehicle'] ?? '';

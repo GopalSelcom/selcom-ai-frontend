@@ -36,6 +36,13 @@ abstract class Languages {
   String get requiredAmountLabel;
   String get amountNeededLabel;
   String get topUpWallet;
+  String get addMoneyToWallet;
+  String get addMoneySelcomPesaSubtitle;
+  String get addMoneyTanQrTips;
+  String get addMoneyTanQrTipsSubtitle;
+  String get addMoneyMobileMoneySubtitle;
+  String get addMoneyStepsToLoadGoWallet;
+  String get addMoneyStepsToLoadGoWalletSubtitle;
   String get selectAVehicle;
   String get bookRideWithFare;
   String get bookingFeesAndConvenienceCharges;
