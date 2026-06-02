@@ -43,6 +43,11 @@ abstract class Languages {
   String get addMoneyMobileMoneySubtitle;
   String get addMoneyStepsToLoadGoWallet;
   String get addMoneyStepsToLoadGoWalletSubtitle;
+  String get addMoneyGoWalletStep1;
+  String get addMoneyGoWalletStep2;
+  String get addMoneyGoWalletStep3;
+  String get addMoneyGoWalletStep4;
+  String get addMoneyGoWalletStep5;
   String get selectAVehicle;
   String get bookRideWithFare;
   String get bookingFeesAndConvenienceCharges;

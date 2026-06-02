@@ -37,6 +37,11 @@ class LanguageEn extends Languages {
     'add_money_steps_to_load_go_wallet': 'Steps to load your Go wallet',
     'add_money_steps_to_load_go_wallet_subtitle':
         'Add Money using your bank app or USSD',
+    'add_money_go_wallet_step_1': 'Select TanQR or send money to other banks',
+    'add_money_go_wallet_step_2': 'Select Selcom MFB',
+    'add_money_go_wallet_step_3': 'Enter your Go Wallet number',
+    'add_money_go_wallet_step_4': 'Enter Amount',
+    'add_money_go_wallet_step_5': 'Enter PIN to confirm',
     'select_a_vehicle': 'Please select a vehicle.',
     'book_ride_with_fare': 'Book Ride @currency @amount',
     'booking_fees_and_convenience_charges':
@@ -831,6 +836,26 @@ class LanguageEn extends Languages {
   @override
   String get addMoneyStepsToLoadGoWalletSubtitle =>
       values['add_money_steps_to_load_go_wallet_subtitle'] ?? '';
+
+  @override
+  String get addMoneyGoWalletStep1 =>
+      values['add_money_go_wallet_step_1'] ?? '';
+
+  @override
+  String get addMoneyGoWalletStep2 =>
+      values['add_money_go_wallet_step_2'] ?? '';
+
+  @override
+  String get addMoneyGoWalletStep3 =>
+      values['add_money_go_wallet_step_3'] ?? '';
+
+  @override
+  String get addMoneyGoWalletStep4 =>
+      values['add_money_go_wallet_step_4'] ?? '';
+
+  @override
+  String get addMoneyGoWalletStep5 =>
+      values['add_money_go_wallet_step_5'] ?? '';
 
   @override
   String get selectAVehicle => values['select_a_vehicle'] ?? '';

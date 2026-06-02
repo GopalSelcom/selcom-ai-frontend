@@ -40,6 +40,12 @@ class AppStrings {
   static const String addMoneyStepsToLoadGoWallet = 'add_money_steps_to_load_go_wallet';
   static const String addMoneyStepsToLoadGoWalletSubtitle =
       'add_money_steps_to_load_go_wallet_subtitle';
+  static const String addMoneyGoWalletStep1 = 'add_money_go_wallet_step_1';
+  static const String addMoneyGoWalletStep2 = 'add_money_go_wallet_step_2';
+  static const String addMoneyGoWalletStep3 =
+      'add_money_go_wallet_step_3';
+  static const String addMoneyGoWalletStep4 = 'add_money_go_wallet_step_4';
+  static const String addMoneyGoWalletStep5 = 'add_money_go_wallet_step_5';
   static const String selectAVehicle = 'select_a_vehicle';
   static const String bookRideWithFare = 'book_ride_with_fare';
   static const String comingSoon = 'coming_soon';

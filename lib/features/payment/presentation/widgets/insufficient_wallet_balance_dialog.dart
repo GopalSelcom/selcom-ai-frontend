@@ -54,7 +54,7 @@ class InsufficientWalletBalanceDialog extends StatelessWidget {
               label: AppStrings.topUpWallet.tr,
               onPressed: onTopUp,
               width: double.infinity,
-              borderRadius: 24.r,
+              borderRadius: 28.r,
             ),
             AppCupertinoTextButton.insufficientBalanceDismiss(
               label: AppStrings.no.tr,

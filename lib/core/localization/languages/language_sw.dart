@@ -33,6 +33,11 @@ class LanguageSw extends Languages {
     'add_money_mobile_money_subtitle': '',
     'add_money_steps_to_load_go_wallet': '',
     'add_money_steps_to_load_go_wallet_subtitle': '',
+    'add_money_go_wallet_step_1': '',
+    'add_money_go_wallet_step_2': '',
+    'add_money_go_wallet_step_3': '',
+    'add_money_go_wallet_step_4': '',
+    'add_money_go_wallet_step_5': '',
     'select_a_vehicle': '',
     'book_ride_with_fare': '',
     'booking_fees_and_convenience_charges': '',
@@ -732,6 +737,26 @@ class LanguageSw extends Languages {
   @override
   String get addMoneyStepsToLoadGoWalletSubtitle =>
       values['add_money_steps_to_load_go_wallet_subtitle'] ?? '';
+
+  @override
+  String get addMoneyGoWalletStep1 =>
+      values['add_money_go_wallet_step_1'] ?? '';
+
+  @override
+  String get addMoneyGoWalletStep2 =>
+      values['add_money_go_wallet_step_2'] ?? '';
+
+  @override
+  String get addMoneyGoWalletStep3 =>
+      values['add_money_go_wallet_step_3'] ?? '';
+
+  @override
+  String get addMoneyGoWalletStep4 =>
+      values['add_money_go_wallet_step_4'] ?? '';
+
+  @override
+  String get addMoneyGoWalletStep5 =>
+      values['add_money_go_wallet_step_5'] ?? '';
 
   @override
   String get selectAVehicle => values['select_a_vehicle'] ?? '';

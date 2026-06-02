@@ -10,6 +10,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import 'steps_to_load_go_wallet_bottom_sheet.dart';
 
 /// Add-money options after insufficient-balance "Top up Wallet" (Figma sheet).
 class AddMoneyToWalletBottomSheet extends StatelessWidget {
@@ -66,11 +67,19 @@ class AddMoneyToWalletBottomSheet extends StatelessWidget {
 
   void _onOptionTap(_AddMoneyOption option) {
     Get.back<void>();
-    // TODO(payment-backend): Wire ${option.name} top-up flow when APIs are ready.
-    AppDialogs.showErrorDialog(
-      title: AppStrings.comingSoon.tr,
-      message: AppStrings.comingSoon.tr,
-    );
+    switch (option) {
+      case _AddMoneyOption.stepsToLoad:
+        StepsToLoadGoWalletBottomSheet.show();
+        break;
+      case _AddMoneyOption.tanQrTips:
+      case _AddMoneyOption.mobileMoney:
+        // TODO(payment-backend): Wire ${option.name} top-up flow when APIs are ready.
+        AppDialogs.showErrorDialog(
+          title: AppStrings.comingSoon.tr,
+          message: AppStrings.comingSoon.tr,
+        );
+        break;
+    }
   }
 }
 
