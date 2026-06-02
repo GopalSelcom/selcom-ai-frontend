@@ -16,10 +16,14 @@ class MobileMoneyTopupStatusDialog extends StatelessWidget {
     super.key,
     required this.type,
     this.secondsListenable,
+    this.requestTitle,
+    this.requestSubtitle,
   });
 
   final MobileMoneyTopupDialogType type;
   final ValueListenable<int>? secondsListenable;
+  final String? requestTitle;
+  final String? requestSubtitle;
 
   @override
   Widget build(BuildContext context) {
@@ -54,43 +58,53 @@ class MobileMoneyTopupStatusDialog extends StatelessWidget {
                   : Icons.check_circle,
             ),
             SizedBox(height: 18.h),
-            Text(
-              isRequest
-                  ? AppStrings.topUpRequestSentTitle.tr
-                  : AppStrings.walletFundsReceivedTitle.tr,
-              textAlign: TextAlign.center,
-              style: AppTextStyles.homeTitle.copyWith(
-                height: 26 / 20,
-                letterSpacing: -0.4,
-              ),
-            ),
-            SizedBox(height: 3.h),
             Padding(
-              padding: EdgeInsets.fromLTRB(22.w, 0, 22.w, 26.h),
-              child: isRequest
-                  ? (secondsListenable == null
-                        ? Text(
-                            AppStrings.expiresInWithTime.trParams({
-                              'time': _formatTimer(120),
-                            }),
+              padding: EdgeInsets.symmetric(horizontal: 8.w),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    isRequest
+                        ? (requestTitle ?? AppStrings.topUpRequestSentTitle.tr)
+                        : AppStrings.walletFundsReceivedTitle.tr,
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.homeTitle.copyWith(
+                      height: 26 / 20,
+                      letterSpacing: -0.4,
+                    ),
+                  ),
+                  SizedBox(height: 3.h),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(22.w, 0, 22.w, 26.h),
+                    child: isRequest
+                        ? (secondsListenable == null
+                              ? Text(
+                                  requestSubtitle ??
+                                      AppStrings.expiresInWithTime.trParams({
+                                        'time': _formatTimer(120),
+                                      }),
+                                  textAlign: TextAlign.center,
+                                  style: AppTextStyles.homeSubtitle,
+                                )
+                              : ValueListenableBuilder<int>(
+                                  valueListenable: secondsListenable!,
+                                  builder: (_, seconds, __) => Text(
+                                    requestSubtitle ??
+                                        AppStrings.expiresInWithTime.trParams({
+                                          'time': _formatTimer(seconds),
+                                        }),
+                                    textAlign: TextAlign.center,
+                                    style: AppTextStyles.homeSubtitle,
+                                  ),
+                                ))
+                        : Text(
+                            AppStrings.walletFundsReceivedSubtitle.tr,
                             textAlign: TextAlign.center,
                             style: AppTextStyles.homeSubtitle,
-                          )
-                        : ValueListenableBuilder<int>(
-                            valueListenable: secondsListenable!,
-                            builder: (_, seconds, __) => Text(
-                              AppStrings.expiresInWithTime.trParams({
-                                'time': _formatTimer(seconds),
-                              }),
-                              textAlign: TextAlign.center,
-                              style: AppTextStyles.homeSubtitle,
-                            ),
-                          ))
-                  : Text(
-                      AppStrings.walletFundsReceivedSubtitle.tr,
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.homeSubtitle,
-                    ),
+                          ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

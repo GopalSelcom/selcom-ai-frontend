@@ -54,6 +54,10 @@ abstract class Languages {
   String get walletFundsReceivedTitle;
   String get walletFundsReceivedSubtitle;
   String get topUpRequestSentTitle;
+  String get selcomPesaToGoWallet;
+  String get useAnotherNumber;
+  String get enterSelcomPesaCustomerPhoneHint;
+  String get requestSentCompleteSelcomTopup;
   String get expiresInWithTime;
   String get mobileMoneyPhoneValue;
   String get mobileMoneyAmountValue;

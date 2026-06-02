@@ -49,6 +49,12 @@ class LanguageEn extends Languages {
     'wallet_funds_received_subtitle':
         'You can now use your wallet to book rides.',
     'top_up_request_sent_title': 'Top up request sent',
+    'selcom_pesa_to_go_wallet': 'Selcom Pesa to Go wallet',
+    'use_another_number': '+ Use another number',
+    'enter_selcom_pesa_customer_phone_hint':
+        'Enter Selcom Pesa customer phone number, and we\'ll send a request',
+    'request_sent_complete_selcom_topup':
+        'Request sent. Please complete payment on Selcom Pesa to Topup your Go wallet',
     'expires_in_with_time': 'Expires in ... @time',
     'mobile_money_phone_value': '+255 711 410 410',
     'mobile_money_amount_value': 'TZS 43,000',
@@ -886,6 +892,20 @@ class LanguageEn extends Languages {
 
   @override
   String get topUpRequestSentTitle => values['top_up_request_sent_title'] ?? '';
+
+  @override
+  String get selcomPesaToGoWallet => values['selcom_pesa_to_go_wallet'] ?? '';
+
+  @override
+  String get useAnotherNumber => values['use_another_number'] ?? '';
+
+  @override
+  String get enterSelcomPesaCustomerPhoneHint =>
+      values['enter_selcom_pesa_customer_phone_hint'] ?? '';
+
+  @override
+  String get requestSentCompleteSelcomTopup =>
+      values['request_sent_complete_selcom_topup'] ?? '';
 
   @override
   String get expiresInWithTime => values['expires_in_with_time'] ?? '';

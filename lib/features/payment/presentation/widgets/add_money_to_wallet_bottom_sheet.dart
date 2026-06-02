@@ -5,12 +5,12 @@ import 'package:get/get.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
-import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import 'mobile_money_topup_bottom_sheet.dart';
+import 'selcom_pesa_to_wallet_bottom_sheet.dart';
 import 'steps_to_load_go_wallet_bottom_sheet.dart';
 import 'tanqr_tips_bottom_sheet.dart';
 
@@ -63,8 +63,7 @@ class AddMoneyToWalletBottomSheet extends StatelessWidget {
 
   void _onSelcomPesaTap() {
     Get.back<void>();
-    // TODO(payment-backend): Open Selcom Pesa request-money flow in-app.
-    Get.toNamed(AppRoutes.paymentMethods);
+    SelcomPesaToWalletBottomSheet.show();
   }
 
   void _onOptionTap(_AddMoneyOption option) {

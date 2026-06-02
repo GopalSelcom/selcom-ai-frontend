@@ -53,6 +53,12 @@ class AppStrings {
   static const String walletFundsReceivedSubtitle =
       'wallet_funds_received_subtitle';
   static const String topUpRequestSentTitle = 'top_up_request_sent_title';
+  static const String selcomPesaToGoWallet = 'selcom_pesa_to_go_wallet';
+  static const String useAnotherNumber = 'use_another_number';
+  static const String enterSelcomPesaCustomerPhoneHint =
+      'enter_selcom_pesa_customer_phone_hint';
+  static const String requestSentCompleteSelcomTopup =
+      'request_sent_complete_selcom_topup';
   static const String expiresInWithTime = 'expires_in_with_time';
   static const String mobileMoneyPhoneValue = 'mobile_money_phone_value';
   static const String mobileMoneyAmountValue = 'mobile_money_amount_value';
