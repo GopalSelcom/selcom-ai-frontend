@@ -837,6 +837,8 @@ class VehicleSelectionController extends GetxController {
         fareEstimate: requiredFare,
         paymentMethod: pay.type,
         vehicleTypeId: resolvedVehicleTypeId,
+        pickup: pickupEntity,
+        destinations: destinations.toList(),
       );
       final validationResult = await rideRepository.validateRidePayment(
         validateRequest,
