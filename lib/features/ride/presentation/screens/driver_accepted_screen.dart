@@ -11,6 +11,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/tracking_route_geometry_utils.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
 import '../../../../shared/widgets/app_map_route_one_line_bar.dart';
@@ -506,7 +507,7 @@ class DriverAcceptedScreen extends StatelessWidget {
       }
 
       final polylines = <Polyline>{};
-      if (route.length > 2) {
+      if (TrackingRouteGeometryUtils.shouldDrawPolyline(route)) {
         polylines.add(
           Polyline(
             polylineId: const PolylineId('active_route'),
