@@ -158,6 +158,93 @@ class ReceiptImageGenerator {
   }
 
   static Widget _buildRouteSection(ReceiptModel receipt) {
+    // Filter stops to avoid duplicating final destination
+    final filteredStops = receipt.stops.where((s) {
+      final stopAddr = s.address.trim().toLowerCase();
+      final endAddr = receipt.destinationAddress.trim().toLowerCase();
+      return stopAddr != endAddr;
+    }).toList();
+
+    final children = <Widget>[
+      _sectionLabel(AppStrings.route.tr),
+      const SizedBox(height: 12),
+      _routeStop(
+        label: AppStrings.pickup.tr,
+        address: receipt.pickupAddress,
+        icon: SizedBox(
+          width: 11,
+          height: 14,
+          child: SvgPicture.asset(
+            AppAssets.locationIcPickupPin,
+            width: 11,
+            height: 14,
+            fit: BoxFit.contain,
+            alignment: Alignment.topCenter,
+            allowDrawingOutsideViewBox: true,
+          ),
+        ),
+      ),
+    ];
+
+    for (int i = 0; i < filteredStops.length; i++) {
+      children.add(
+        Container(
+          margin: const EdgeInsets.only(left: 5, top: 2, bottom: 2),
+          width: 2,
+          height: 16,
+          color: _divider,
+        ),
+      );
+      children.add(
+        _routeStop(
+          label: '${AppStrings.stop.tr} ${i + 1}',
+          address: filteredStops[i].address,
+          icon: Container(
+            width: 11,
+            height: 14,
+            alignment: Alignment.topCenter,
+            child: Container(
+              margin: const EdgeInsets.only(top: 4),
+              width: 6,
+              height: 6,
+              decoration: const BoxDecoration(
+                color: AppColors.mapStopMarkerRed,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    children.add(
+      Container(
+        margin: const EdgeInsets.only(left: 5, top: 2, bottom: 2),
+        width: 2,
+        height: 16,
+        color: _divider,
+      ),
+    );
+
+    children.add(
+      _routeStop(
+        label: AppStrings.dropoff.tr,
+        address: receipt.destinationAddress,
+        icon: SizedBox(
+          width: 11,
+          height: 16,
+          child: SvgPicture.asset(
+            AppAssets.locationIcDestinationPin,
+            width: 11,
+            height: 16,
+            fit: BoxFit.contain,
+            alignment: Alignment.topCenter,
+            allowDrawingOutsideViewBox: true,
+          ),
+        ),
+      ),
+    );
+
     return Container(
       decoration: const BoxDecoration(
         color: _bgLight,
@@ -166,30 +253,7 @@ class ReceiptImageGenerator {
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _sectionLabel(AppStrings.route.tr),
-          const SizedBox(height: 12),
-          _routeStop(
-            label: AppStrings.pickup.tr,
-            address: receipt.pickupAddress,
-            iconAsset: AppAssets.locationIcPickupPin,
-            iconWidth: 11,
-            iconHeight: 14,
-          ),
-          Container(
-            margin: const EdgeInsets.only(left: 5, top: 2, bottom: 2),
-            width: 2,
-            height: 16,
-            color: _divider,
-          ),
-          _routeStop(
-            label: AppStrings.dropoff.tr,
-            address: receipt.destinationAddress,
-            iconAsset: AppAssets.locationIcDestinationPin,
-            iconWidth: 11,
-            iconHeight: 16,
-          ),
-        ],
+        children: children,
       ),
     );
   }
@@ -197,25 +261,12 @@ class ReceiptImageGenerator {
   static Widget _routeStop({
     required String label,
     required String address,
-    required String iconAsset,
-    required double iconWidth,
-    required double iconHeight,
+    required Widget icon,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(
-          width: iconWidth,
-          height: iconHeight,
-          child: SvgPicture.asset(
-            iconAsset,
-            width: iconWidth,
-            height: iconHeight,
-            fit: BoxFit.contain,
-            alignment: Alignment.topCenter,
-            allowDrawingOutsideViewBox: true,
-          ),
-        ),
+        icon,
         const SizedBox(width: 10),
         Expanded(
           child: Column(

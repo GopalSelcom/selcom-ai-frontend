@@ -1,4 +1,5 @@
 import '../../../../core/constants/currency_code.dart';
+import '../../../../core/data/models/ride_model.dart';
 
 class BookingResponseModel {
   final String id;
@@ -81,6 +82,8 @@ class ReceiptModel {
   final int durationMinutes;
   final String pickupAddress;
   final String destinationAddress;
+  final bool isMultiStop;
+  final List<RideStopModel> stops;
 
   ReceiptModel({
     required this.rideId,
@@ -104,6 +107,8 @@ class ReceiptModel {
     this.durationMinutes = 0,
     this.pickupAddress = '',
     this.destinationAddress = '',
+    this.isMultiStop = false,
+    this.stops = const [],
   });
 
   factory ReceiptModel.fromJson(Map<String, dynamic> json) {
@@ -120,6 +125,12 @@ class ReceiptModel {
         ? totalRaw.toInt()
         : int.tryParse(totalRaw.toString()) ?? 0;
     final promoDisc = (fareBreakdown['promo_discount'] as num?)?.toInt() ?? 0;
+
+    final stopsJson = json['stops'] as List? ?? [];
+    final stops = stopsJson
+        .whereType<Map>()
+        .map((e) => RideStopModel.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
 
     return ReceiptModel(
       rideId: json['ride_id'] ?? '',
@@ -143,6 +154,8 @@ class ReceiptModel {
       durationMinutes: (json['duration_minutes'] ?? 0) as int,
       pickupAddress: (pickup['address'] ?? '') as String,
       destinationAddress: (destination['address'] ?? '') as String,
+      isMultiStop: json['is_multi_stop'] ?? false,
+      stops: stops,
     );
   }
 }
