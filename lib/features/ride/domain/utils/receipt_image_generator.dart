@@ -165,23 +165,18 @@ class ReceiptImageGenerator {
       return stopAddr != endAddr;
     }).toList();
 
+    final bool isMulti = filteredStops.isNotEmpty;
+    const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+
     final children = <Widget>[
       _sectionLabel(AppStrings.route.tr),
       const SizedBox(height: 12),
       _routeStop(
         label: AppStrings.pickup.tr,
         address: receipt.pickupAddress,
-        icon: SizedBox(
-          width: 11,
-          height: 14,
-          child: SvgPicture.asset(
-            AppAssets.locationIcPickupPin,
-            width: 11,
-            height: 14,
-            fit: BoxFit.contain,
-            alignment: Alignment.topCenter,
-            allowDrawingOutsideViewBox: true,
-          ),
+        icon: _buildLetterIcon(
+          isMulti ? 'A' : 'P',
+          color: AppColors.mapPickupMarkerBlue,
         ),
       ),
     ];
@@ -189,7 +184,7 @@ class ReceiptImageGenerator {
     for (int i = 0; i < filteredStops.length; i++) {
       children.add(
         Container(
-          margin: const EdgeInsets.only(left: 5, top: 2, bottom: 2),
+          margin: const EdgeInsets.only(left: 11, top: 2, bottom: 2),
           width: 2,
           height: 16,
           color: _divider,
@@ -199,19 +194,9 @@ class ReceiptImageGenerator {
         _routeStop(
           label: '${AppStrings.stop.tr} ${i + 1}',
           address: filteredStops[i].address,
-          icon: Container(
-            width: 11,
-            height: 14,
-            alignment: Alignment.topCenter,
-            child: Container(
-              margin: const EdgeInsets.only(top: 4),
-              width: 6,
-              height: 6,
-              decoration: const BoxDecoration(
-                color: AppColors.mapStopMarkerRed,
-                shape: BoxShape.circle,
-              ),
-            ),
+          icon: _buildLetterIcon(
+            letters[i + 1],
+            color: AppColors.mapStopMarkerRed,
           ),
         ),
       );
@@ -219,7 +204,7 @@ class ReceiptImageGenerator {
 
     children.add(
       Container(
-        margin: const EdgeInsets.only(left: 5, top: 2, bottom: 2),
+        margin: const EdgeInsets.only(left: 11, top: 2, bottom: 2),
         width: 2,
         height: 16,
         color: _divider,
@@ -230,17 +215,9 @@ class ReceiptImageGenerator {
       _routeStop(
         label: AppStrings.dropoff.tr,
         address: receipt.destinationAddress,
-        icon: SizedBox(
-          width: 11,
-          height: 16,
-          child: SvgPicture.asset(
-            AppAssets.locationIcDestinationPin,
-            width: 11,
-            height: 16,
-            fit: BoxFit.contain,
-            alignment: Alignment.topCenter,
-            allowDrawingOutsideViewBox: true,
-          ),
+        icon: _buildLetterIcon(
+          isMulti ? letters[filteredStops.length + 1] : 'D',
+          color: AppColors.mapDropMarkerGreen,
         ),
       ),
     );
@@ -254,6 +231,23 @@ class ReceiptImageGenerator {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: children,
+      ),
+    );
+  }
+
+  static Widget _buildLetterIcon(String label, {required Color color}) {
+    return Container(
+      width: 24,
+      height: 24,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      alignment: Alignment.center,
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }
