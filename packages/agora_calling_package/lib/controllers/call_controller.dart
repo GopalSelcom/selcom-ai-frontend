@@ -200,11 +200,14 @@ class CallController extends GetxController {
           debugPrint('[AGORA_CTRL] resume sync — seeded ringing rideId=$rideId');
         }
         _startIncomingRingTimer();
-        _openIncomingCallScreen();
+        if (!Platform.isIOS) {
+          _openIncomingCallScreen();
+        }
         return;
       }
 
-      if (state.value == CallState.ringing &&
+      if (!Platform.isIOS &&
+          state.value == CallState.ringing &&
           currentCall.value?.rideId == rideId &&
           Get.currentRoute != IncomingCallScreen.routeName) {
         if (kDebugMode) {
@@ -393,14 +396,30 @@ class CallController extends GetxController {
     currentCall.value = call;
     state.value = CallState.ringing;
     _startIncomingRingTimer();
-    // iOS: CallKit / system still plays the ring; skip duplicate in-app tone.
+    // Callee ringtone (caller_ring.mp3). On iOS skip haptic — CallKit handles UX.
+    await _audio.startRingtone(vibrate: !Platform.isIOS);
+    // iOS: native CallKit is the only incoming surface.
     if (!Platform.isIOS) {
-      await _audio.startRingtone();
+      _openIncomingCallScreen();
     }
-    // Show in-app incoming UI on all platforms (including iOS) so users who
-    // stay inside the app still see the calling screen; CallKit remains the
-    // lock-screen / background surface. Accept is deduped via `_acceptMutex`.
-    _openIncomingCallScreen();
+  }
+
+  /// Native iOS CallKit Accept (PushKit / AppDelegate).
+  Future<void> handleNativeVoipAccepted(Map<String, dynamic> data) async {
+    final rideId = (data['ride_id'] ?? data['rideId'])?.toString().trim();
+    final body = rideId == null || rideId.isEmpty
+        ? null
+        : <String, dynamic>{...data, 'ride_id': rideId};
+    await _acceptIncoming(body);
+  }
+
+  /// Native iOS CallKit Decline / End.
+  Future<void> handleNativeVoipDeclined(Map<String, dynamic> data) async {
+    final rideId = (data['ride_id'] ?? data['rideId'])?.toString().trim();
+    final body = rideId == null || rideId.isEmpty
+        ? null
+        : <String, dynamic>{...data, 'ride_id': rideId};
+    await _declineIncoming(body);
   }
 
   void _handleCallJoinedPush(Map<String, dynamic> data) {

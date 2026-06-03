@@ -23,9 +23,9 @@ class CallAudio {
     _ringback = AudioPlayer();
     try {
       await _ringback!.setReleaseMode(ReleaseMode.loop);
-      await _ringback!.play(_assetSource(ringbackAsset!));
+      await _ringback!.play(_assetSource(ringbackAsset!), volume: 1.0);
     } catch (_) {
-      // Best-effort; fall through.
+      // waiting_ring.mp3 missing or audio session busy — best-effort.
     }
   }
 
@@ -40,13 +40,15 @@ class CallAudio {
     if (ringtoneAsset == null) return;
     await stopRingtone();
     _ringtone = AudioPlayer();
+    var played = false;
     try {
       await _ringtone!.setReleaseMode(ReleaseMode.loop);
       await _ringtone!.play(_assetSource(ringtoneAsset!), volume: 1.0);
+      played = true;
     } catch (_) {
-      // Best-effort.
+      // Asset missing or audio session busy — fall back to vibration only.
     }
-    if (vibrate) {
+    if (vibrate && !played) {
       unawaited(Vibration.hasVibrator().then((has) {
         if (has == true) {
           Vibration.vibrate(pattern: [500, 1000, 500, 1000], repeat: 0);

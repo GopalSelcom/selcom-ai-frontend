@@ -138,4 +138,18 @@ class AgoraCalling {
     final notif = Get.find<AgoraCallingNotificationService>();
     notif.injectExternalIncomingCall(data);
   }
+
+  static Future<void> dispatchNativeVoipAccepted(
+    Map<String, dynamic> data,
+  ) async {
+    if (!_initialized) return;
+    await Get.find<CallController>().handleNativeVoipAccepted(data);
+  }
+
+  static Future<void> dispatchNativeVoipDeclined(
+    Map<String, dynamic> data,
+  ) async {
+    if (!_initialized) return;
+    await Get.find<CallController>().handleNativeVoipDeclined(data);
+  }
 }

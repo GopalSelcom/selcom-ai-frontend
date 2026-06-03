@@ -37,7 +37,7 @@ class CallControls extends StatelessWidget {
                 icon: controller.speakerOn.value
                     ? Icons.volume_up
                     : Icons.hearing,
-                label: controller.speakerOn.value ? 'Speaker' : 'Earpiece',
+                label: 'Speaker',
                 active: controller.speakerOn.value,
                 onPressed: controller.toggleSpeaker,
               )),

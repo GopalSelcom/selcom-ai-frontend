@@ -27,7 +27,10 @@ class AgoraCallingBootstrap {
         appName: fcmBackgroundCallKitAppName,
         iosCallKitIconName: iosCallKitIconName,
         callKitCallIdNamespace: callKitCallIdNamespace,
-        callerRingbackAsset: 'assets/sound/ringback.mp3',
+        /// Outgoing (caller): loop while waiting for the peer to answer.
+        callerRingbackAsset: 'assets/sound/waiting_ring.mp3',
+        /// Incoming (callee): loop while the incoming-call UI is shown.
+        incomingRingtoneAsset: 'assets/sound/caller_ring.mp3',
         endpoints: CallEndpoints(
           tokenPath: (rideId) => '/v4/go/rides/$rideId/call/token',
           cancelPath: (rideId) => '/v4/go/rides/$rideId/call/cancel',

@@ -129,13 +129,8 @@ class AgoraCallingNotificationService {
     if (Platform.isAndroid) {
       await _createAndroidChannels();
     }
-    if (Platform.isIOS) {
-      await _fcm.setForegroundNotificationPresentationOptions(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
-    }
+    // Foreground FCM presentation is owned by the host app — do not override
+    // here (global options would affect every push type on iOS).
 
     FirebaseMessaging.onMessage.listen(_onForegroundMessage);
     FirebaseMessaging.onMessageOpenedApp.listen(_onMessageOpened);
@@ -207,14 +202,11 @@ class AgoraCallingNotificationService {
         _pushes.add(
           IncomingPushPayload(type, Map<String, dynamic>.from(message.data)),
         );
-        // Avoid duplicate Accept/Decline surfaces: on **Android** in the
-        // foreground, the controller opens [IncomingCallScreen] only — the
-        // system CallStyle notification is **not** shown here (it would stack
-        // with the full-screen incoming UI and confuse users). On **iOS**,
-        // CallKit is the primary incoming surface, so we still show it while
-        // the controller skips the duplicate in-app sheet (see CallController).
-        if (Platform.isIOS) {
-          _showIncomingUi(message.data);
+        // Android foreground: in-app sheet only (no CallStyle here).
+        // iOS: PushKit → AppDelegate CallKit is the ONLY incoming UI — never
+        // call flutter_callkit_incoming here or you get two CallKit surfaces.
+        if (Platform.isAndroid) {
+          // Controller opens IncomingCallScreen.
         }
         return;
       case PushTypes.callJoined:
@@ -248,14 +240,9 @@ class AgoraCallingNotificationService {
     );
   }
 
-  /// Shows the incoming-call UI — same path on both platforms now:
-  /// CallKit on iOS, CallStyle notification + full-screen activity on Android,
-  /// both via `flutter_callkit_incoming` so Accept/Decline buttons dispatch
-  /// the same `CallEvent` regardless of platform or app state.
-  Future<void> _showIncomingUi(Map<String, dynamic> data) =>
-      _showCallkitIncoming(data);
-
+  /// CallStyle incoming UI (Android only). iOS uses native PushKit CallKit.
   Future<void> _showCallkitIncoming(Map<String, dynamic> data) async {
+    if (Platform.isIOS) return;
     final rideId = (data['ride_id'] ?? data['rideId'])?.toString() ?? 'unknown';
     final peerLabel = _resolvePeerLabel(data);
     if (kDebugMode) {
@@ -313,6 +300,13 @@ class AgoraCallingNotificationService {
   void injectExternalIncomingCall(Map<String, dynamic> data) {
     if (kDebugMode) {
       debugPrint('[AGORA_NOTIF] injectExternalIncomingCall data=$data');
+    }
+    // VoIP + FCM often deliver the same ride — share fg dedup with FCM handler.
+    if (_isDuplicatePush(PushTypes.incomingCall, data, _fgPushDedup)) {
+      if (kDebugMode) {
+        debugPrint('[AGORA_NOTIF] injectExternal dropped — duplicate incoming');
+      }
+      return;
     }
     final patched = <String, dynamic>{
       ...data,
@@ -416,9 +410,15 @@ class AgoraCallingNotificationService {
       return;
     }
 
-    // type == incoming_call — same path on both platforms (CallKit on iOS,
-    // CallStyle on Android). The native side wakes the app on Accept and
-    // dispatches Event.actionCallAccept once the Dart isolate is alive.
+    // iOS: VoIP → AppDelegate CallKit already rang; plugin CallKit = duplicate.
+    if (Platform.isIOS) {
+      if (kDebugMode) {
+        debugPrint('[AGORA_NOTIF] bg iOS incoming_call skipped — native VoIP');
+      }
+      return;
+    }
+
+    // Android: CallStyle + full-screen activity.
     final peerLabel = _defaultPeerLabel(
       _peerRoleFromDataOrFallback(message.data),
       message.data,

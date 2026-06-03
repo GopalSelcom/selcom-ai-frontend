@@ -212,11 +212,23 @@ class NotificationService {
   void _onForegroundMessage(RemoteMessage message) {
     _logger.d("Foreground Message received: ${message.messageId}");
     final data = FCMNotificationData.fromJson(message.data);
+    final pushType =
+        (message.data['type'] ?? '').toString().toLowerCase().trim();
 
     String? title = message.notification?.title ?? data.title;
     String? body = message.notification?.body ?? data.body;
 
-    if (title != null || body != null) {
+    // iOS incoming_call: native CallKit only — no extra local banner.
+    final skipLocalBanner =
+        Platform.isIOS && pushType == 'incoming_call';
+
+    // iOS: FCM already presents `message.notification` when alert is enabled.
+    final iosSystemAlreadyPresented =
+        Platform.isIOS && message.notification != null;
+
+    if (!skipLocalBanner &&
+        !iosSystemAlreadyPresented &&
+        (title != null || body != null)) {
       _logger.d("Showing local notification for foreground message");
       showLocalNotification(
         id: message.notification?.hashCode ?? message.messageId.hashCode,

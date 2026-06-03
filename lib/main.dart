@@ -160,6 +160,12 @@ void main() async {
       VoipCallkitBridgeService.instance.setOnIncomingCall(
         AgoraCalling.dispatchExternalIncomingCall,
       );
+      VoipCallkitBridgeService.instance.setOnCallAccepted(
+        AgoraCalling.dispatchNativeVoipAccepted,
+      );
+      VoipCallkitBridgeService.instance.setOnCallDeclined(
+        AgoraCalling.dispatchNativeVoipDeclined,
+      );
 
       await di.sl<AnalyticsService>().logEvent('app_opened');
 

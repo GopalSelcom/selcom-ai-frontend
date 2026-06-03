@@ -179,6 +179,10 @@ import CallKit
         return
       }
       NSLog("[VOIP_NATIVE] reportNewIncomingCall OK rideId=\(rideId) uuid=\(uuid.uuidString)")
+      UserDefaults.standard.set(
+        Date().timeIntervalSince1970,
+        forKey: "native_callkit_ride_\(rideId)"
+      )
       var args: [String: Any] = raw
       args["call_id"] = uuid.uuidString
       self?.emitVoipEvent(method: "onVoipIncomingCall", arguments: args)

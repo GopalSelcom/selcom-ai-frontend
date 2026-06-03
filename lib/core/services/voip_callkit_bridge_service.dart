@@ -21,6 +21,8 @@ class VoipCallkitBridgeService {
   String? _voipToken;
   Future<void> Function(String token)? _onVoipTokenChanged;
   void Function(Map<String, dynamic> data)? _onIncomingCall;
+  Future<void> Function(Map<String, dynamic> data)? _onCallAccepted;
+  Future<void> Function(Map<String, dynamic> data)? _onCallDeclined;
 
   /// Latest known VoIP push token (iOS / PushKit). Empty string when unknown.
   String get voipToken => _voipToken ?? '';
@@ -47,6 +49,18 @@ class VoipCallkitBridgeService {
   /// Used to forward into `AgoraCalling.dispatchExternalIncomingCall`.
   void setOnIncomingCall(void Function(Map<String, dynamic> data)? sink) {
     _onIncomingCall = sink;
+  }
+
+  void setOnCallAccepted(
+    Future<void> Function(Map<String, dynamic> data)? handler,
+  ) {
+    _onCallAccepted = handler;
+  }
+
+  void setOnCallDeclined(
+    Future<void> Function(Map<String, dynamic> data)? handler,
+  ) {
+    _onCallDeclined = handler;
   }
 
   Future<void> initialize() async {
@@ -134,6 +148,12 @@ class VoipCallkitBridgeService {
           }
         }
         return;
+      case 'onVoipCallAccepted':
+        await _invokeCallActionHandler(_onCallAccepted, args);
+        return;
+      case 'onVoipCallCancelled':
+        await _invokeCallActionHandler(_onCallDeclined, args);
+        return;
       case 'onVoipToken':
         final token = args['token']?.toString() ?? '';
         if (token.isEmpty) return;
@@ -155,6 +175,20 @@ class VoipCallkitBridgeService {
         if (kDebugMode) {
           debugPrint('[VOIP_BRIDGE] unhandled method=$method');
         }
+    }
+  }
+
+  Future<void> _invokeCallActionHandler(
+    Future<void> Function(Map<String, dynamic> data)? handler,
+    Map<String, dynamic> args,
+  ) async {
+    if (handler == null) return;
+    try {
+      await handler(args);
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[VOIP_BRIDGE] call action handler failed: $e');
+      }
     }
   }
 
