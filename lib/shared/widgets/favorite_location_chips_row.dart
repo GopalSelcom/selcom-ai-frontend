@@ -12,7 +12,7 @@ import 'app_saved_place_chip.dart';
 /// Horizontal row of four presets (Home, Office, Work, Other): category icon when
 /// saved, add icon when empty. Behavior is delegated via callbacks (Home vs Location Selection).
 ///
-/// Optional [extraSavedPlaces] appends one chip per non-preset saved address (Home screen only).
+/// Optional [extraSavedPlaces]: custom labels (e.g. "Test") after filled presets, before empty presets.
 ///
 /// Place outside horizontal [Padding] on the parent. Pass [contentHorizontalPadding]
 /// so the first chip lines up with padded siblings while the list scrolls to screen edges.
@@ -37,7 +37,7 @@ class FavoriteLocationChipsRow extends StatelessWidget {
 
   final void Function(String canonicalLabel)? onSavedChipLongPress;
 
-  /// Non-preset favourites (e.g. custom labels from API). Omit everywhere except Home.
+  /// Non-preset favourites (e.g. custom labels from API).
   final List<SavedPlace>? extraSavedPlaces;
 
   final void Function(SavedPlace place)? onExtraChipTap;
@@ -69,10 +69,50 @@ class FavoriteLocationChipsRow extends StatelessWidget {
     return raw.capitalizeFirst ?? raw;
   }
 
+  Widget _presetChip(FavoriteLocationSlotId id, {required bool hasSaved}) {
+    final canonical = FavoriteLocationChipCatalog.canonicalLabel(id);
+    final place = resolvePlace(canonical);
+    return Padding(
+      padding: EdgeInsets.only(right: 8.w),
+      child: AppSavedPlaceChip(
+        label: _displayTitle(id),
+        iconAsset: hasSaved
+            ? FavoriteLocationChipCatalog.categoryIconAsset(id)
+            : FavoriteLocationChipCatalog.emptySlotIconAsset,
+        iconColor: hasSaved ? null : AppColors.primary,
+        backgroundColor: chipBackgroundColor,
+        borderColor: chipBorderColor,
+        onTap: () => onChipTap(canonical, place),
+        onLongPress: hasSaved && onSavedChipLongPress != null
+            ? () => onSavedChipLongPress!(canonical)
+            : null,
+      ),
+    );
+  }
+
+  Widget _extraChip(SavedPlace place) {
+    return Padding(
+      padding: EdgeInsets.only(right: 8.w),
+      child: AppSavedPlaceChip(
+        label: _extraChipTitle(place),
+        iconAsset: AppAssets.icOtherChip,
+        backgroundColor: chipBackgroundColor,
+        borderColor: chipBorderColor,
+        onTap: () => onExtraChipTap?.call(place),
+        onLongPress: onExtraChipLongPress != null
+            ? () => onExtraChipLongPress!(place)
+            : null,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final extras = extraSavedPlaces ?? const <SavedPlace>[];
     final inset = contentHorizontalPadding ?? 0;
+    final groups = FavoriteLocationChipCatalog.slotDisplayGroups(
+      resolvePlace: resolvePlace,
+    );
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -82,42 +122,9 @@ class FavoriteLocationChipsRow extends StatelessWidget {
       clipBehavior: Clip.none,
       child: Row(
         children: [
-          ...FavoriteLocationSlotId.values.map((id) {
-            final canonical = FavoriteLocationChipCatalog.canonicalLabel(id);
-            final place = resolvePlace(canonical);
-            final hasSaved = place != null;
-            return Padding(
-              padding: EdgeInsets.only(right: 8.w),
-              child: AppSavedPlaceChip(
-                label: _displayTitle(id),
-                iconAsset: hasSaved
-                    ? FavoriteLocationChipCatalog.categoryIconAsset(id)
-                    : FavoriteLocationChipCatalog.emptySlotIconAsset,
-                iconColor: hasSaved ? null : AppColors.primary,
-                backgroundColor: chipBackgroundColor,
-                borderColor: chipBorderColor,
-                onTap: () => onChipTap(canonical, place),
-                onLongPress: hasSaved && onSavedChipLongPress != null
-                    ? () => onSavedChipLongPress!(canonical)
-                    : null,
-              ),
-            );
-          }),
-          ...extras.map((place) {
-            return Padding(
-              padding: EdgeInsets.only(right: 8.w),
-              child: AppSavedPlaceChip(
-                label: _extraChipTitle(place),
-                iconAsset: AppAssets.icOtherChip,
-                backgroundColor: chipBackgroundColor,
-                borderColor: chipBorderColor,
-                onTap: () => onExtraChipTap?.call(place),
-                onLongPress: onExtraChipLongPress != null
-                    ? () => onExtraChipLongPress!(place)
-                    : null,
-              ),
-            );
-          }),
+          ...groups.filled.map((id) => _presetChip(id, hasSaved: true)),
+          ...extras.map(_extraChip),
+          ...groups.empty.map((id) => _presetChip(id, hasSaved: false)),
         ],
       ),
     );

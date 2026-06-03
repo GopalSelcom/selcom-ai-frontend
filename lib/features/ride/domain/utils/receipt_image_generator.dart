@@ -158,6 +158,70 @@ class ReceiptImageGenerator {
   }
 
   static Widget _buildRouteSection(ReceiptModel receipt) {
+    // Filter stops to avoid duplicating final destination
+    final filteredStops = receipt.stops.where((s) {
+      final stopAddr = s.address.trim().toLowerCase();
+      final endAddr = receipt.destinationAddress.trim().toLowerCase();
+      return stopAddr != endAddr;
+    }).toList();
+
+    final bool isMulti = filteredStops.isNotEmpty;
+    const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+
+    final children = <Widget>[
+      _sectionLabel(AppStrings.route.tr),
+      const SizedBox(height: 12),
+      _routeStop(
+        label: AppStrings.pickup.tr,
+        address: receipt.pickupAddress,
+        icon: _buildLetterIcon(
+          isMulti ? 'A' : 'P',
+          color: AppColors.mapPickupMarkerBlue,
+        ),
+      ),
+    ];
+
+    for (int i = 0; i < filteredStops.length; i++) {
+      children.add(
+        Container(
+          margin: const EdgeInsets.only(left: 11, top: 2, bottom: 2),
+          width: 2,
+          height: 16,
+          color: _divider,
+        ),
+      );
+      children.add(
+        _routeStop(
+          label: '${AppStrings.stop.tr} ${i + 1}',
+          address: filteredStops[i].address,
+          icon: _buildLetterIcon(
+            letters[i + 1],
+            color: AppColors.mapStopMarkerRed,
+          ),
+        ),
+      );
+    }
+
+    children.add(
+      Container(
+        margin: const EdgeInsets.only(left: 11, top: 2, bottom: 2),
+        width: 2,
+        height: 16,
+        color: _divider,
+      ),
+    );
+
+    children.add(
+      _routeStop(
+        label: AppStrings.dropoff.tr,
+        address: receipt.destinationAddress,
+        icon: _buildLetterIcon(
+          isMulti ? letters[filteredStops.length + 1] : 'D',
+          color: AppColors.mapDropMarkerGreen,
+        ),
+      ),
+    );
+
     return Container(
       decoration: const BoxDecoration(
         color: _bgLight,
@@ -166,30 +230,24 @@ class ReceiptImageGenerator {
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _sectionLabel(AppStrings.route.tr),
-          const SizedBox(height: 12),
-          _routeStop(
-            label: AppStrings.pickup.tr,
-            address: receipt.pickupAddress,
-            iconAsset: AppAssets.locationIcPickupPin,
-            iconWidth: 11,
-            iconHeight: 14,
-          ),
-          Container(
-            margin: const EdgeInsets.only(left: 5, top: 2, bottom: 2),
-            width: 2,
-            height: 16,
-            color: _divider,
-          ),
-          _routeStop(
-            label: AppStrings.dropoff.tr,
-            address: receipt.destinationAddress,
-            iconAsset: AppAssets.locationIcDestinationPin,
-            iconWidth: 11,
-            iconHeight: 16,
-          ),
-        ],
+        children: children,
+      ),
+    );
+  }
+
+  static Widget _buildLetterIcon(String label, {required Color color}) {
+    return Container(
+      width: 24,
+      height: 24,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      alignment: Alignment.center,
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }
@@ -197,25 +255,12 @@ class ReceiptImageGenerator {
   static Widget _routeStop({
     required String label,
     required String address,
-    required String iconAsset,
-    required double iconWidth,
-    required double iconHeight,
+    required Widget icon,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(
-          width: iconWidth,
-          height: iconHeight,
-          child: SvgPicture.asset(
-            iconAsset,
-            width: iconWidth,
-            height: iconHeight,
-            fit: BoxFit.contain,
-            alignment: Alignment.topCenter,
-            allowDrawingOutsideViewBox: true,
-          ),
-        ),
+        icon,
         const SizedBox(width: 10),
         Expanded(
           child: Column(
@@ -338,18 +383,13 @@ class ReceiptImageGenerator {
           child: Column(
             children: [
               _fareRow(
-                AppStrings.baseFare.tr,
-                receipt.baseFare,
+                AppStrings.rideCharge.tr,
+                receipt.totalFare,
                 receipt.currency,
               ),
               _fareRow(
-                AppStrings.distanceCharge.tr,
-                receipt.distanceCharge,
-                receipt.currency,
-              ),
-              _fareRow(
-                AppStrings.timeCharge.tr,
-                receipt.timeCharge,
+                AppStrings.bookingFeesAndConvenienceCharges.tr,
+                receipt.bookingFee,
                 receipt.currency,
               ),
               if (receipt.promoDiscountAmount > 0 &&
@@ -378,7 +418,7 @@ class ReceiptImageGenerator {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    AppStrings.total.tr,
+                    AppStrings.totalAmount.tr,
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
@@ -387,7 +427,7 @@ class ReceiptImageGenerator {
                   ),
                   Text(
                     CurrencyFormatter.formatPayableOrFree(
-                      receipt.total,
+                      receipt.totalAmount,
                       receipt.currency,
                       freeLabel: AppStrings.rideFreeLabel.tr,
                     ),

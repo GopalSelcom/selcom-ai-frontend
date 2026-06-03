@@ -625,7 +625,7 @@ class AppDialogs {
     );
   }
 
-  /// Shows a permission dialog when notifications are disabled.
+  /// Settings prompt for denied permissions (notifications, location, camera, …).
   static void showPermissionDialog({
     required String title,
     required String message,

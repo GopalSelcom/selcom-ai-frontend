@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
@@ -31,7 +32,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/address_display_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
-import '../../../../shared/widgets/animated_blur_dialog.dart';
 import '../../../../shared/utils/country_region_defaults.dart';
 import '../../../../shared/utils/map_vehicle_marker_utils.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
@@ -41,7 +41,6 @@ import '../../../payment/domain/models/insufficient_wallet_balance_details.dart'
 import '../../../payment/domain/wallet_ride_balance_guard.dart';
 import '../../../payment/presentation/controllers/payment_method_controller.dart';
 import '../../../payment/presentation/widgets/add_money_to_wallet_bottom_sheet.dart';
-import '../../../payment/presentation/widgets/payment_status_dialog.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../promotions/presentation/promo_code_route_args.dart';
 import '../../domain/repositories/ride_repository.dart';
@@ -72,10 +71,6 @@ class VehicleSelectionController extends GetxController {
   /// User-visible nearby-drivers badge failed (never show raw socket errors).
   final nearbyDriversUnavailable = false.obs;
   final nearbyDriverCount = 0.obs;
-  final paymentStatus = PaymentStatus.pending.obs;
-
-  /// Countdown shown in [PaymentStatusDialog]; initial duration from settings API.
-  final paymentTimerSeconds = 300.obs;
   final appliedPromoCode = ''.obs;
   final promoValidatedAt = Rxn<DateTime>();
   PromoCodeApplyResult? _pendingPromoApplyResult;
@@ -105,6 +100,10 @@ class VehicleSelectionController extends GetxController {
   StreamSubscription<List<Driver>>? _nearbyDriversSub;
   StreamSubscription<String>? _nearbyDriversErrorSub;
   StreamSubscription<bool>? _nearbyDriversConnectionSub;
+
+  static const String _nearbyDriversLogName = 'NEARBY_DRIVERS';
+  String? _pendingNearbyDriversVehicleType;
+  int? _lastLoggedNearbyDriversCount;
 
   GoogleMapController? mapController;
   LatLng? _lastProjectedPickup;
@@ -409,7 +408,7 @@ class VehicleSelectionController extends GetxController {
             : letters.last;
         dropIcon = await MapMarkerUtils.createTextMarker(
           text: label,
-          color: AppColors.mapDropMarkerGreen,
+          color: AppColors.primary,
         );
       }
     } catch (e, stackTrace) {
@@ -866,7 +865,7 @@ class VehicleSelectionController extends GetxController {
           }
 
           var blockValidationId = validationId;
-          Loader.instance.hide();
+          Loader.instance.show();
           while (true) {
             final roomValidationId = blockValidationId;
             _socketService.joinPaymentRoom(validationId: roomValidationId);
@@ -881,8 +880,6 @@ class VehicleSelectionController extends GetxController {
                 ),
               );
             });
-            Loader.instance.hide();
-            _showPaymentStatusDialog();
 
             final blockOk = await _waitForPaymentBlockStatus(
               timeout: Duration(
@@ -891,19 +888,15 @@ class VehicleSelectionController extends GetxController {
             );
 
             if (blockOk) {
-              paymentStatus.value = PaymentStatus.success;
-              await Future.delayed(const Duration(seconds: 2));
-              await _closePaymentStatusDialogThenShowLoader();
               break;
             }
 
-            await _closePaymentStatusDialogIfOpen();
             Loader.instance.hide();
             final shouldRetry = await _offerPaymentBlockRetry();
-            await Loader.instance.showAsync();
             if (!shouldRetry) {
               return;
             }
+            Loader.instance.show();
 
             final reValidation = await rideRepository.validateRidePayment(
               validateRequest,
@@ -1155,81 +1148,6 @@ class VehicleSelectionController extends GetxController {
     return null;
   }
 
-  void _showPaymentStatusDialog() {
-    paymentStatus.value = PaymentStatus.pending;
-    paymentTimerSeconds.value = di
-        .sl<AppSettingsService>()
-        .paymentWaitSeconds
-        .value;
-
-    if (_paymentStatusDialogFuture != null) return;
-
-    _paymentStatusDialogFuture = AppDialogs.showAnimatedDialog<void>(
-      useRootNavigator: true,
-      child: Obx(
-        () => PaymentStatusDialog(
-          status: paymentStatus.value,
-          secondsRemaining: paymentStatus.value == PaymentStatus.pending
-              ? paymentTimerSeconds.value
-              : null,
-        ),
-      ),
-      barrierDismissible: false,
-    );
-
-    // Start local timer for the dialog display
-    _startPaymentTimer();
-  }
-
-  Timer? _paymentTimer;
-  Future<void>? _paymentStatusDialogFuture;
-
-  void _startPaymentTimer() {
-    _paymentTimer?.cancel();
-    _paymentTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (paymentTimerSeconds.value <= 0) {
-        timer.cancel();
-      } else {
-        paymentTimerSeconds.value--;
-      }
-    });
-  }
-
-  /// Success dialog visible for 2s, then dismissed before the common loader shows.
-  Future<void> _closePaymentStatusDialogThenShowLoader() async {
-    await _closePaymentStatusDialogIfOpen();
-    await Loader.instance.hideAsync();
-    await Loader.instance.showAsync();
-  }
-
-  Future<void> _closePaymentStatusDialogIfOpen() async {
-    _paymentTimer?.cancel();
-    final dialogFuture = _paymentStatusDialogFuture;
-    if (dialogFuture == null) return;
-
-    final overlay = Get.overlayContext;
-    if (overlay != null) {
-      final navigator = Navigator.of(overlay, rootNavigator: true);
-      if (navigator.canPop()) {
-        navigator.pop();
-      }
-    } else if (Get.isDialogOpen == true) {
-      Get.back<void>();
-    }
-
-    try {
-      await dialogFuture.timeout(
-        AppModalBlurTokens.duration + const Duration(milliseconds: 150),
-      );
-    } catch (_) {
-      await Future<void>.delayed(AppModalBlurTokens.duration);
-    } finally {
-      _paymentStatusDialogFuture = null;
-    }
-
-    await WidgetsBinding.instance.endOfFrame;
-  }
-
   Future<void> _initNearbyDriversSocket() async {
     _nearbyDriversSub?.cancel();
     _nearbyDriversErrorSub?.cancel();
@@ -1248,19 +1166,23 @@ class VehicleSelectionController extends GetxController {
       nearbyDriverCount.value = drivers.length;
       nearbyDriversUnavailable.value = false;
       isLoadingNearbyDrivers.value = false;
+      _logNearbyDriversResult(drivers);
     });
 
-    _nearbyDriversErrorSub = _socketService.errorStream.listen((_) {
+    _nearbyDriversErrorSub = _socketService.errorStream.listen((message) {
       nearbyDriversUnavailable.value = true;
       isLoadingNearbyDrivers.value = false;
+      _logNearbyDriversError(message);
     });
     _nearbyDriversConnectionSub = _socketService.connectionStream.listen((ok) {
       isSocketConnected.value = ok;
       if (!ok) {
         nearbyDriversUnavailable.value = true;
         isLoadingNearbyDrivers.value = false;
+        _logNearbyDriversInfo('Socket disconnected');
       } else {
         nearbyDriversUnavailable.value = false;
+        _logNearbyDriversInfo('Socket connected');
       }
     });
 
@@ -1272,12 +1194,85 @@ class VehicleSelectionController extends GetxController {
     if (pickupEntity.lat == 0 || pickupEntity.lng == 0) return;
     isLoadingNearbyDrivers.value = true;
     nearbyDriversUnavailable.value = false;
+    nearbyDriverCount.value = 0;
+    driverMarkerPoints.clear();
     final vehicleType = _socketVehicleTypeForEstimate(selectedEstimate);
+    _pendingNearbyDriversVehicleType = vehicleType ?? 'any';
+    _lastLoggedNearbyDriversCount = null;
+    _logNearbyDriversRequest(vehicleType: _pendingNearbyDriversVehicleType!);
     _socketService.requestNearbyDrivers(
       lat: pickupEntity.lat,
       lng: pickupEntity.lng,
       vehicleType: vehicleType,
       radiusKm: 1000,
+    );
+  }
+
+  void _logNearbyDriversRequest({required String vehicleType}) {
+    if (!kDebugMode) return;
+    developer.log(
+      '▶ REQUEST nearby drivers (awaiting result)\n'
+      '  vehicleType: $vehicleType\n'
+      '  lat: ${pickupEntity.lat}\n'
+      '  lng: ${pickupEntity.lng}\n'
+      '  socketConnected: ${isSocketConnected.value}',
+      name: _nearbyDriversLogName,
+    );
+  }
+
+  void _logNearbyDriversResult(List<Driver> drivers) {
+    if (!kDebugMode) return;
+
+    final found = drivers.length;
+    final vehicleType = _pendingNearbyDriversVehicleType ?? 'any';
+    if (_lastLoggedNearbyDriversCount == found) {
+      return;
+    }
+    _lastLoggedNearbyDriversCount = found;
+    final buffer = StringBuffer()
+      ..writeln(
+        found > 0
+            ? '▶ RESULT — driversFound: $found'
+            : '▶ RESULT — driversFound: 0 (no drivers nearby)',
+      )
+      ..writeln('  vehicleType: $vehicleType')
+      ..writeln('  socketConnected: ${isSocketConnected.value}');
+
+    if (drivers.isNotEmpty) {
+      buffer.writeln('  drivers:');
+      for (final d in drivers.take(5)) {
+        final type = d.vehicleType ?? '?';
+        final dist = d.distanceKm?.toStringAsFixed(2) ?? '?';
+        buffer.writeln(
+          '    • fleet=${d.fleetId ?? '?'} type=$type dist=${dist}km '
+          '(${d.lat}, ${d.lng})',
+        );
+      }
+      if (drivers.length > 5) {
+        buffer.writeln('    … +${drivers.length - 5} more');
+      }
+    }
+
+    developer.log(buffer.toString(), name: _nearbyDriversLogName);
+  }
+
+  void _logNearbyDriversError(String message) {
+    if (!kDebugMode) return;
+    _lastLoggedNearbyDriversCount = null;
+    developer.log(
+      '▶ ERROR — nearby drivers failed\n'
+      '  vehicleType: ${_pendingNearbyDriversVehicleType ?? 'any'}\n'
+      '  message: $message',
+      name: _nearbyDriversLogName,
+    );
+  }
+
+  void _logNearbyDriversInfo(String headline) {
+    if (!kDebugMode) return;
+    developer.log(
+      '▶ $headline\n'
+      '  socketConnected: ${isSocketConnected.value}',
+      name: _nearbyDriversLogName,
     );
   }
 
@@ -1396,31 +1391,6 @@ class VehicleSelectionController extends GetxController {
         ? AppStrings.minutesShortCount.trParams({'count': '$minutes'})
         : AppStrings.etaBadge.tr;
   }
-
-  String get socketDriverStatusText {
-    if (isSocketConnected.value) {
-      if (nearbyDriverCount.value > 0) {
-        return AppStrings.driversOnlineCount.trParams({
-          'count': '${nearbyDriverCount.value}',
-        });
-      }
-      return AppStrings.noDriversNearbyBadge.tr;
-    }
-    if (isLoadingNearbyDrivers.value) {
-      return AppStrings.connectingDrivers.tr;
-    }
-    if (nearbyDriversUnavailable.value) {
-      return AppStrings.socketDisconnected.tr;
-    }
-    return AppStrings.connectingDrivers.tr;
-  }
-
-  Color get socketDriverStatusColor =>
-      isSocketConnected.value ? AppColors.success : AppColors.warningStrong;
-
-  Color get socketDriverStatusBackground => isSocketConnected.value
-      ? AppColors.bgSuccessBanner
-      : AppColors.bgWarningLight;
 
   void _clearPromoAfterRouteChange() {
     if (appliedPromoCode.value.trim().isEmpty) return;

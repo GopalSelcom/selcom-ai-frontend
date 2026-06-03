@@ -1,4 +1,5 @@
 import '../../../../core/constants/currency_code.dart';
+import '../../../../core/data/models/ride_model.dart';
 
 class BookingResponseModel {
   final String id;
@@ -81,6 +82,12 @@ class ReceiptModel {
   final int durationMinutes;
   final String pickupAddress;
   final String destinationAddress;
+  final bool isMultiStop;
+  final List<RideStopModel> stops;
+  // Detailed Fare breakdown fields
+  final int totalFare;
+  final int bookingFee;
+  final int totalAmount;
 
   ReceiptModel({
     required this.rideId,
@@ -104,6 +111,11 @@ class ReceiptModel {
     this.durationMinutes = 0,
     this.pickupAddress = '',
     this.destinationAddress = '',
+    this.isMultiStop = false,
+    this.stops = const [],
+    this.totalFare = 0,
+    this.bookingFee = 0,
+    this.totalAmount = 0,
   });
 
   factory ReceiptModel.fromJson(Map<String, dynamic> json) {
@@ -120,6 +132,19 @@ class ReceiptModel {
         ? totalRaw.toInt()
         : int.tryParse(totalRaw.toString()) ?? 0;
     final promoDisc = (fareBreakdown['promo_discount'] as num?)?.toInt() ?? 0;
+
+    final stopsJson = json['stops'] as List? ?? [];
+    final stops = stopsJson
+        .whereType<Map>()
+        .map((e) => RideStopModel.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
+
+    final baseFare = (fareBreakdown['base_fare'] ?? 0) as int;
+    final distanceCharge = (fareBreakdown['distance_charge'] ?? 0) as int;
+    final timeCharge = (fareBreakdown['time_charge'] ?? 0) as int;
+    final totalFare = (fareBreakdown['total_fare'] ?? (baseFare + distanceCharge + timeCharge)) as int;
+    final bookingFee = (fareBreakdown['booking_fee'] ?? 0) as int;
+    final totalAmount = (fareBreakdown['total_amount'] ?? (totalFare + bookingFee)) as int;
 
     return ReceiptModel(
       rideId: json['ride_id'] ?? '',
@@ -143,6 +168,11 @@ class ReceiptModel {
       durationMinutes: (json['duration_minutes'] ?? 0) as int,
       pickupAddress: (pickup['address'] ?? '') as String,
       destinationAddress: (destination['address'] ?? '') as String,
+      isMultiStop: json['is_multi_stop'] ?? false,
+      stops: stops,
+      totalFare: totalFare,
+      bookingFee: bookingFee,
+      totalAmount: totalAmount,
     );
   }
 }

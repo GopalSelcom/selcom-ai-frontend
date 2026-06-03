@@ -108,27 +108,6 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                 ),
               ),
             ),
-          Positioned(
-            top: MediaQuery.paddingOf(context).top + 60.h,
-            right: 16.w,
-            child: Obx(
-              () => Container(
-                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-                decoration: BoxDecoration(
-                  color: controller.socketDriverStatusBackground,
-                  borderRadius: BorderRadius.circular(14.r),
-                ),
-                child: Text(
-                  controller.socketDriverStatusText,
-                  style: AppTextStyles.homeCaption.copyWith(
-                    color: controller.socketDriverStatusColor,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 11.sp,
-                  ),
-                ),
-              ),
-            ),
-          ),
           Obx(() {
             final double factor = _calculateInitialSheetSize(context);
             final int estimatesCount = controller.estimates.length;
@@ -339,8 +318,12 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                         child: _locationEditBubble(
                           label: controller.dropMapLabelAt(i),
                           onTap: () => controller.editDropAtIndexFromMap(i),
-                          bubbleColor: AppColors.pinRed,
-                          textColor: AppColors.white,
+                          bubbleColor: i == offsets.length - 1
+                              ? AppColors.primary
+                              : AppColors.pinRed,
+                          textColor: i == offsets.length - 1
+                              ? AppColors.textHeading
+                              : AppColors.white,
                           leadingLabel: i == offsets.length - 1
                               ? controller.destinationEtaBadgeText
                               : null,

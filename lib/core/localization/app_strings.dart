@@ -553,6 +553,9 @@ class AppStrings {
   static const String searchingForDriver = 'searching_for_driver';
   static const String enableLocationService = 'enable_location_service';
   static const String locationPermissionDenied = 'location_permission_denied';
+  static const String locationAccessRequired = 'location_access_required';
+  static const String locationPermissionDeniedOpenSettings =
+      'location_permission_denied_open_settings';
   static const String unableToEstimateFareForThisRoute =
       'unable_to_estimate_fare_for_this_route';
   static const String distanceMinKm = 'distance_min_km';
