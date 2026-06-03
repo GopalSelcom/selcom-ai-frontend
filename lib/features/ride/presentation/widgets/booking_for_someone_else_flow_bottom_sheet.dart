@@ -4,6 +4,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 
+import '../../../../shared/data/countries_phone_data.dart';
+import '../../../../shared/utils/grouped_phone_number_formatter.dart';
+
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -66,11 +69,17 @@ class _BookingForSomeoneElseFlowBottomSheetState
             cleanNumber = cleanNumber.substring(1);
           }
 
+          final c = Countries.findByIsoCode(TanzaniaPhoneValidation.iso2);
+          final formattedPhone = GroupedPhoneNumberFormatter.formatDigits(
+            cleanNumber,
+            c.format,
+          );
+
           setState(() {
             if (name.isNotEmpty) {
               _name.text = name;
             }
-            _phone.text = cleanNumber;
+            _phone.text = formattedPhone;
             _nameError = null;
             _phoneError = null;
           });
