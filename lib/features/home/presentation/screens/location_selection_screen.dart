@@ -472,9 +472,11 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         return LocationSelectionShimmer.chipsRow();
       }
       controller.savedPlaces.length;
+      final extras = controller.savedPlacesBeyondPresetSlots;
       return FavoriteLocationChipsRow(
         contentHorizontalPadding: 16.w,
         resolvePlace: controller.getSavedPlaceByLabel,
+        extraSavedPlaces: extras,
         onChipTap: (canonical, place) {
           if (place == null) {
             Get.toNamed(AppRoutes.selectSavedLocation, arguments: canonical);
@@ -501,6 +503,33 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         },
         onSavedChipLongPress: (canonical) =>
             Get.toNamed(AppRoutes.selectSavedLocation, arguments: canonical),
+        onExtraChipTap: (place) {
+          final applied = controller.applySavedPlaceToLocationSelection(
+            savedPlace: place,
+            activeSegmentIndex: _activeSegmentIndex.value,
+            pickupController: pickupController,
+            destinationController: destinationController,
+            extraDestinationControllers: _extraDestinationControllers,
+            pickupEditedByUser: pickupEditedByUser,
+            routePickupLat: _routePickupLat,
+            routePickupLng: _routePickupLng,
+            routeDestinationLat: _routeDestinationLat,
+            routeDestinationLng: _routeDestinationLng,
+            destinationPlaceId: _destinationPlaceId,
+          );
+          if (applied) {
+            locationController.confirmSelectionForSegment(
+              _activeSegmentIndex.value,
+            );
+          }
+        },
+        onExtraChipLongPress: (place) {
+          final raw = (place.label ?? place.name ?? '').trim();
+          Get.toNamed(
+            AppRoutes.selectSavedLocation,
+            arguments: raw.isEmpty ? AppStrings.saved.tr : raw,
+          );
+        },
       );
     });
   }

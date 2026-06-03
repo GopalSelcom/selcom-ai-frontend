@@ -32,7 +32,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/address_display_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
-import '../../../../shared/widgets/animated_blur_dialog.dart';
 import '../../../../shared/utils/country_region_defaults.dart';
 import '../../../../shared/utils/map_vehicle_marker_utils.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
@@ -42,7 +41,6 @@ import '../../../payment/domain/models/insufficient_wallet_balance_details.dart'
 import '../../../payment/domain/wallet_ride_balance_guard.dart';
 import '../../../payment/presentation/controllers/payment_method_controller.dart';
 import '../../../payment/presentation/widgets/add_money_to_wallet_bottom_sheet.dart';
-import '../../../payment/presentation/widgets/payment_status_dialog.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../promotions/presentation/promo_code_route_args.dart';
 import '../../domain/repositories/ride_repository.dart';
@@ -73,10 +71,6 @@ class VehicleSelectionController extends GetxController {
   /// User-visible nearby-drivers badge failed (never show raw socket errors).
   final nearbyDriversUnavailable = false.obs;
   final nearbyDriverCount = 0.obs;
-  final paymentStatus = PaymentStatus.pending.obs;
-
-  /// Countdown shown in [PaymentStatusDialog]; initial duration from settings API.
-  final paymentTimerSeconds = 300.obs;
   final appliedPromoCode = ''.obs;
   final promoValidatedAt = Rxn<DateTime>();
   PromoCodeApplyResult? _pendingPromoApplyResult;
@@ -414,7 +408,7 @@ class VehicleSelectionController extends GetxController {
             : letters.last;
         dropIcon = await MapMarkerUtils.createTextMarker(
           text: label,
-          color: AppColors.mapDropMarkerGreen,
+          color: AppColors.primary,
         );
       }
     } catch (e, stackTrace) {
@@ -871,7 +865,7 @@ class VehicleSelectionController extends GetxController {
           }
 
           var blockValidationId = validationId;
-          Loader.instance.hide();
+          Loader.instance.show();
           while (true) {
             final roomValidationId = blockValidationId;
             _socketService.joinPaymentRoom(validationId: roomValidationId);
@@ -886,8 +880,6 @@ class VehicleSelectionController extends GetxController {
                 ),
               );
             });
-            Loader.instance.hide();
-            _showPaymentStatusDialog();
 
             final blockOk = await _waitForPaymentBlockStatus(
               timeout: Duration(
@@ -896,19 +888,15 @@ class VehicleSelectionController extends GetxController {
             );
 
             if (blockOk) {
-              paymentStatus.value = PaymentStatus.success;
-              await Future.delayed(const Duration(seconds: 2));
-              await _closePaymentStatusDialogThenShowLoader();
               break;
             }
 
-            await _closePaymentStatusDialogIfOpen();
             Loader.instance.hide();
             final shouldRetry = await _offerPaymentBlockRetry();
-            await Loader.instance.showAsync();
             if (!shouldRetry) {
               return;
             }
+            Loader.instance.show();
 
             final reValidation = await rideRepository.validateRidePayment(
               validateRequest,
@@ -1158,81 +1146,6 @@ class VehicleSelectionController extends GetxController {
       return false;
     }
     return null;
-  }
-
-  void _showPaymentStatusDialog() {
-    paymentStatus.value = PaymentStatus.pending;
-    paymentTimerSeconds.value = di
-        .sl<AppSettingsService>()
-        .paymentWaitSeconds
-        .value;
-
-    if (_paymentStatusDialogFuture != null) return;
-
-    _paymentStatusDialogFuture = AppDialogs.showAnimatedDialog<void>(
-      useRootNavigator: true,
-      child: Obx(
-        () => PaymentStatusDialog(
-          status: paymentStatus.value,
-          secondsRemaining: paymentStatus.value == PaymentStatus.pending
-              ? paymentTimerSeconds.value
-              : null,
-        ),
-      ),
-      barrierDismissible: false,
-    );
-
-    // Start local timer for the dialog display
-    _startPaymentTimer();
-  }
-
-  Timer? _paymentTimer;
-  Future<void>? _paymentStatusDialogFuture;
-
-  void _startPaymentTimer() {
-    _paymentTimer?.cancel();
-    _paymentTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (paymentTimerSeconds.value <= 0) {
-        timer.cancel();
-      } else {
-        paymentTimerSeconds.value--;
-      }
-    });
-  }
-
-  /// Success dialog visible for 2s, then dismissed before the common loader shows.
-  Future<void> _closePaymentStatusDialogThenShowLoader() async {
-    await _closePaymentStatusDialogIfOpen();
-    await Loader.instance.hideAsync();
-    await Loader.instance.showAsync();
-  }
-
-  Future<void> _closePaymentStatusDialogIfOpen() async {
-    _paymentTimer?.cancel();
-    final dialogFuture = _paymentStatusDialogFuture;
-    if (dialogFuture == null) return;
-
-    final overlay = Get.overlayContext;
-    if (overlay != null) {
-      final navigator = Navigator.of(overlay, rootNavigator: true);
-      if (navigator.canPop()) {
-        navigator.pop();
-      }
-    } else if (Get.isDialogOpen == true) {
-      Get.back<void>();
-    }
-
-    try {
-      await dialogFuture.timeout(
-        AppModalBlurTokens.duration + const Duration(milliseconds: 150),
-      );
-    } catch (_) {
-      await Future<void>.delayed(AppModalBlurTokens.duration);
-    } finally {
-      _paymentStatusDialogFuture = null;
-    }
-
-    await WidgetsBinding.instance.endOfFrame;
   }
 
   Future<void> _initNearbyDriversSocket() async {
