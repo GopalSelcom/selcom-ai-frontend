@@ -1650,7 +1650,7 @@ class VehicleSelectionController extends GetxController {
 
 /// True when [ride] looks like a successful hold/charge for prepaid [paymentMethodType].
 bool rideBookResponseIndicatesPaymentApplied(
-  Ride ride,
+  BookRide ride,
   String paymentMethodType,
 ) {
   final type = paymentMethodType.toLowerCase().trim().replaceAll('-', '_');
