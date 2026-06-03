@@ -318,8 +318,12 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                         child: _locationEditBubble(
                           label: controller.dropMapLabelAt(i),
                           onTap: () => controller.editDropAtIndexFromMap(i),
-                          bubbleColor: AppColors.pinRed,
-                          textColor: AppColors.white,
+                          bubbleColor: i == offsets.length - 1
+                              ? AppColors.primary
+                              : AppColors.pinRed,
+                          textColor: i == offsets.length - 1
+                              ? AppColors.textHeading
+                              : AppColors.white,
                           leadingLabel: i == offsets.length - 1
                               ? controller.destinationEtaBadgeText
                               : null,
