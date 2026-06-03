@@ -75,20 +75,20 @@ class BookRideResponse {
 }
 
 class RideData {
-  Ride? ride;
+  BookRide? ride;
 
   RideData({this.ride});
 
-  RideData copyWith({Ride? ride}) => RideData(ride: ride ?? this.ride);
+  RideData copyWith({BookRide? ride}) => RideData(ride: ride ?? this.ride);
 
   /// Book ride API may return either `{ "ride": { ... } }` or the ride
   /// document flattened at the root of `data`.
   factory RideData.fromJson(Map<String, dynamic> json) {
     final nested = json['ride'];
     if (nested is Map<String, dynamic>) {
-      return RideData(ride: Ride.fromJson(nested));
+      return RideData(ride: BookRide.fromJson(nested));
     }
-    return RideData(ride: Ride.fromJson(json));
+    return RideData(ride: BookRide.fromJson(json));
   }
 
   Map<String, dynamic> toJson() => {"ride": ride?.toJson()};
@@ -145,7 +145,7 @@ class BookRideStop {
   };
 }
 
-class Ride {
+class BookRide {
   FareBreakdown? fareBreakdown;
   dynamic driverId;
   dynamic taskId;
@@ -218,7 +218,7 @@ class Ride {
   int? v;
   int? cancelTime;
 
-  Ride({
+  BookRide({
     this.fareBreakdown,
     this.driverId,
     this.taskId,
@@ -298,7 +298,7 @@ class Ride {
        ratingTags = ratingTags ?? const [],
        pdfLinks = pdfLinks ?? const [];
 
-  factory Ride.fromJson(Map<String, dynamic> json) => Ride(
+  factory BookRide.fromJson(Map<String, dynamic> json) => BookRide(
     fareBreakdown: json["fare_breakdown"] == null
         ? null
         : FareBreakdown.fromJson(json["fare_breakdown"]),

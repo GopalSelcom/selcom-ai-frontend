@@ -17,6 +17,8 @@ class Loader {
 
   bool get isLoading => _isLoading;
 
+  static const Duration _transitionDuration = Duration(milliseconds: 250);
+
   void show() {
     if (_isLoading) return;
 
@@ -29,7 +31,7 @@ class Loader {
       barrierLabel: '',
       barrierColor: Colors.transparent,
       useRootNavigator: true,
-      transitionDuration: const Duration(milliseconds: 250),
+      transitionDuration: _transitionDuration,
       pageBuilder: (_, __, ___) => const SizedBox.shrink(),
       transitionBuilder: (context, anim, _, __) {
         return PopScope(
@@ -81,6 +83,23 @@ class Loader {
     if (navigator.canPop()) {
       navigator.pop();
     }
+  }
+
+  /// Waits for the loader route to finish dismissing (use before showing another overlay).
+  Future<void> hideAsync() async {
+    if (!_isLoading) return;
+    hide();
+    await Future<void>.delayed(_transitionDuration);
+    await WidgetsBinding.instance.endOfFrame;
+  }
+
+  /// Shows the loader only after any prior loader route has fully closed.
+  Future<void> showAsync() async {
+    if (_isLoading) return;
+    await hideAsync();
+    show();
+    await Future<void>.delayed(_transitionDuration);
+    await WidgetsBinding.instance.endOfFrame;
   }
 
   /// Full-screen loader for the duration of [task] (Duka Direct pattern).

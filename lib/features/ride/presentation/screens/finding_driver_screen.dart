@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
+import '../../../../shared/utils/tracking_route_geometry_utils.dart';
 import '../../../../shared/widgets/app_map_route_one_line_bar.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../controllers/finding_driver_controller.dart';
@@ -142,7 +143,6 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
       final destination = c.destinationLatLng;
       final driver = c.assignedDriverLocation.value;
       final routePoints = c.activeRoutePoints.toList();
-      final isPickupRoute = c.routeTarget.value == 'pick_up';
       final sheetSize = c.sheetSize.value;
       final markers = <Marker>{};
       final circles = <Circle>{};
@@ -257,19 +257,12 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
           }
         },
         polylines: {
-          if (routePoints.isNotEmpty)
+          if (TrackingRouteGeometryUtils.shouldDrawPolyline(routePoints))
             Polyline(
               polylineId: const PolylineId('active_route'),
               points: routePoints,
               color: AppColors.inputBorderActive,
               width: 5,
-            ),
-          if (routePoints.isEmpty && isPickupRoute && driver != null)
-            Polyline(
-              polylineId: const PolylineId('fallback_pickup_route'),
-              points: [driver, pickup],
-              color: AppColors.inputBorderActive.withValues(alpha: 0.5),
-              width: 3,
             ),
         },
         circles: circles,

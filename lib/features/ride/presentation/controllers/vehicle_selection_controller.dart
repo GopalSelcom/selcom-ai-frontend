@@ -31,6 +31,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/address_display_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/widgets/animated_blur_dialog.dart';
 import '../../../../shared/utils/country_region_defaults.dart';
 import '../../../../shared/utils/map_vehicle_marker_utils.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
@@ -865,6 +866,7 @@ class VehicleSelectionController extends GetxController {
           }
 
           var blockValidationId = validationId;
+          Loader.instance.hide();
           while (true) {
             final roomValidationId = blockValidationId;
             _socketService.joinPaymentRoom(validationId: roomValidationId);
@@ -891,18 +893,14 @@ class VehicleSelectionController extends GetxController {
             if (blockOk) {
               paymentStatus.value = PaymentStatus.success;
               await Future.delayed(const Duration(seconds: 2));
-            }
-
-            _closePaymentStatusDialogIfOpen();
-            Loader.instance.show();
-
-            if (blockOk) {
+              await _closePaymentStatusDialogThenShowLoader();
               break;
             }
 
+            await _closePaymentStatusDialogIfOpen();
             Loader.instance.hide();
             final shouldRetry = await _offerPaymentBlockRetry();
-            Loader.instance.show();
+            await Loader.instance.showAsync();
             if (!shouldRetry) {
               return;
             }
@@ -1164,9 +1162,10 @@ class VehicleSelectionController extends GetxController {
         .paymentWaitSeconds
         .value;
 
-    if (Get.isDialogOpen == true) return;
+    if (_paymentStatusDialogFuture != null) return;
 
-    AppDialogs.showAnimatedDialog<void>(
+    _paymentStatusDialogFuture = AppDialogs.showAnimatedDialog<void>(
+      useRootNavigator: true,
       child: Obx(
         () => PaymentStatusDialog(
           status: paymentStatus.value,
@@ -1183,6 +1182,7 @@ class VehicleSelectionController extends GetxController {
   }
 
   Timer? _paymentTimer;
+  Future<void>? _paymentStatusDialogFuture;
 
   void _startPaymentTimer() {
     _paymentTimer?.cancel();
@@ -1195,11 +1195,39 @@ class VehicleSelectionController extends GetxController {
     });
   }
 
-  void _closePaymentStatusDialogIfOpen() {
+  /// Success dialog visible for 2s, then dismissed before the common loader shows.
+  Future<void> _closePaymentStatusDialogThenShowLoader() async {
+    await _closePaymentStatusDialogIfOpen();
+    await Loader.instance.hideAsync();
+    await Loader.instance.showAsync();
+  }
+
+  Future<void> _closePaymentStatusDialogIfOpen() async {
     _paymentTimer?.cancel();
-    if (Get.isDialogOpen == true) {
-      Get.back();
+    final dialogFuture = _paymentStatusDialogFuture;
+    if (dialogFuture == null) return;
+
+    final overlay = Get.overlayContext;
+    if (overlay != null) {
+      final navigator = Navigator.of(overlay, rootNavigator: true);
+      if (navigator.canPop()) {
+        navigator.pop();
+      }
+    } else if (Get.isDialogOpen == true) {
+      Get.back<void>();
     }
+
+    try {
+      await dialogFuture.timeout(
+        AppModalBlurTokens.duration + const Duration(milliseconds: 150),
+      );
+    } catch (_) {
+      await Future<void>.delayed(AppModalBlurTokens.duration);
+    } finally {
+      _paymentStatusDialogFuture = null;
+    }
+
+    await WidgetsBinding.instance.endOfFrame;
   }
 
   Future<void> _initNearbyDriversSocket() async {
@@ -1650,7 +1678,7 @@ class VehicleSelectionController extends GetxController {
 
 /// True when [ride] looks like a successful hold/charge for prepaid [paymentMethodType].
 bool rideBookResponseIndicatesPaymentApplied(
-  Ride ride,
+  BookRide ride,
   String paymentMethodType,
 ) {
   final type = paymentMethodType.toLowerCase().trim().replaceAll('-', '_');

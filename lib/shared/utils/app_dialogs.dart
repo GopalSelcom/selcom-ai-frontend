@@ -42,10 +42,12 @@ class AppDialogs {
     required Widget child,
     bool barrierDismissible = true,
     Color? barrierColor,
+    bool useRootNavigator = false,
   }) async {
     await ensureKeyboardClosed();
     return showGeneralDialog<T>(
       context: Get.context!,
+      useRootNavigator: useRootNavigator,
       barrierDismissible: barrierDismissible,
       barrierLabel: "AnimatedBlurDialog",
       barrierColor: barrierColor ?? AppColors.overlayBlack12,
