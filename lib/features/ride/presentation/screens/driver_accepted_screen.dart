@@ -512,7 +512,7 @@ class DriverAcceptedScreen extends StatelessWidget {
           Polyline(
             polylineId: const PolylineId('active_route'),
             points: route,
-            color: AppColors.routeBlue,
+            color: AppColors.primary,
             width: 5,
           ),
         );
@@ -580,7 +580,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                         height: 14.w,
                         child: const CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: AppColors.routeBlue,
+                          color: AppColors.primary,
                         ),
                       ),
                       SizedBox(width: 10.w),
