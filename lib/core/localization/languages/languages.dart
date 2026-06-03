@@ -427,6 +427,8 @@ abstract class Languages {
   String get searchingForDriver;
   String get enableLocationService;
   String get locationPermissionDenied;
+  String get locationAccessRequired;
+  String get locationPermissionDeniedOpenSettings;
   String get unableToEstimateFareForThisRoute;
   String get distanceMinKm;
   String get distanceMaxKm;

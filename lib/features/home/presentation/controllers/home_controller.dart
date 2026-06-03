@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:app_settings/app_settings.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -128,6 +127,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   bool _activeRideRefreshQueued = false;
   bool _skipNextVisibleRefresh = true;
   DateTime? _lastActiveRideRefreshAt;
+  bool _isResolvingLocationPermission = false;
 
   final pickupMarkerIcon = Rxn<BitmapDescriptor>();
 
@@ -177,18 +177,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }
 
   Future<void> _checkNotificationPermission() async {
-    final status = await notificationService.requestPermission();
-
-    // If explicitly denied, show the custom settings popup
-    if (status.authorizationStatus == AuthorizationStatus.denied) {
-      AppDialogs.showPermissionDialog(
-        title: AppStrings.stayNotified.tr,
-        message: AppStrings.enableNotificationsForRideUpdates.tr,
-        onOpenSettings: () {
-          AppSettings.openAppSettings(type: AppSettingsType.notification);
-        },
-      );
-    }
+    await notificationService.requestPermission();
   }
 
   Future<void> _loadMapIcons() async {
@@ -200,10 +189,74 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }
 
   Future<void> recenterMap() async {
-    // GPS tap should switch header pickup to current location.
-    selectedPickupSavedPlaceId.value = _currentLocationPlaceId;
-    isSavedPlacesExpanded.value = false;
-    await _getCurrentLocation();
+    if (_isResolvingLocationPermission) return;
+    _isResolvingLocationPermission = true;
+    try {
+      // GPS tap: request permission if needed; settings dialog only here.
+      selectedPickupSavedPlaceId.value = _currentLocationPlaceId;
+      isSavedPlacesExpanded.value = false;
+      await _getCurrentLocation(
+        requestPermissionIfDenied: true,
+        showLocationSettingsDialogIfBlocked: true,
+      );
+    } finally {
+      _isResolvingLocationPermission = false;
+    }
+  }
+
+  void _showLocationPermissionSettingsDialog() {
+    if (Get.isDialogOpen == true) return;
+    AppDialogs.showPermissionDialog(
+      title: AppStrings.locationAccessRequired.tr,
+      message: AppStrings.locationPermissionDeniedOpenSettings.tr,
+      onOpenSettings: () {
+        AppSettings.openAppSettings();
+      },
+      icon: Icons.location_off_outlined,
+      secondaryIcon: Icons.location_on_outlined,
+    );
+  }
+
+  void _applyLocationPermissionDenied() {
+    hasLocationPermission.value = false;
+    deviceGpsLocation.value = null;
+    currentMapAddress.value = AppStrings.locationPermissionDenied.tr;
+  }
+
+  /// Returns true when location permission is granted and services are on.
+  Future<bool> _ensureLocationPermission({
+    bool requestPermissionIfDenied = false,
+    bool showLocationSettingsDialogIfBlocked = false,
+  }) async {
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      hasLocationPermission.value = false;
+      deviceGpsLocation.value = null;
+      currentMapAddress.value = AppStrings.enableLocationService.tr;
+      return false;
+    }
+
+    var permission = await Geolocator.checkPermission();
+
+    if (permission == LocationPermission.denied && requestPermissionIfDenied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      _applyLocationPermissionDenied();
+      if (showLocationSettingsDialogIfBlocked) {
+        _showLocationPermissionSettingsDialog();
+      }
+      return false;
+    }
+
+    if (permission == LocationPermission.denied) {
+      _applyLocationPermissionDenied();
+      return false;
+    }
+
+    hasLocationPermission.value = true;
+    return true;
   }
 
   /// 200 m radius around [deviceGpsLocation] (true GPS), not map drag position.
@@ -563,6 +616,9 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     if (state != AppLifecycleState.resumed) return;
     if (SessionExpiryService.isHandling) return;
     Future.microtask(() async {
+      if (!hasLocationPermission.value) {
+        await _getCurrentLocation();
+      }
       await refreshActiveRide(force: true);
       final active = activeRide.value;
       if (active != null) {
@@ -867,30 +923,17 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     // Removed map driver markers
   }
 
-  Future<void> _getCurrentLocation() async {
+  Future<void> _getCurrentLocation({
+    bool requestPermissionIfDenied = false,
+    bool showLocationSettingsDialogIfBlocked = false,
+  }) async {
     try {
-      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        hasLocationPermission.value = false;
-        deviceGpsLocation.value = null;
-        currentMapAddress.value = AppStrings.enableLocationService.tr;
-        return;
-      }
-
-      var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        hasLocationPermission.value = false;
-        deviceGpsLocation.value = null;
-        currentMapAddress.value = AppStrings.locationPermissionDenied.tr;
-        return;
-      }
-
-      hasLocationPermission.value = true;
+      final granted = await _ensureLocationPermission(
+        requestPermissionIfDenied: requestPermissionIfDenied,
+        showLocationSettingsDialogIfBlocked:
+            showLocationSettingsDialogIfBlocked,
+      );
+      if (!granted) return;
 
       // ── Step 1: Try Last Known Position (Quick) ──
       final lastPos = await Geolocator.getLastKnownPosition();

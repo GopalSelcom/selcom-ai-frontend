@@ -477,6 +477,9 @@ class LanguageEn extends Languages {
     'searching_for_driver': 'Searching for driver...',
     'enable_location_service': 'Enable location service',
     'location_permission_denied': 'Location permission denied',
+    'location_access_required': 'Location access required',
+    'location_permission_denied_open_settings':
+        'Location permission is permanently denied. Open Settings to allow location for pickup and nearby drivers.',
     'unable_to_estimate_fare_for_this_route':
         'Unable to estimate fare for this route.',
     'distance_min_km': '0.1 KM',
@@ -2112,6 +2115,14 @@ class LanguageEn extends Languages {
   @override
   String get locationPermissionDenied =>
       values['location_permission_denied'] ?? '';
+
+  @override
+  String get locationAccessRequired =>
+      values['location_access_required'] ?? '';
+
+  @override
+  String get locationPermissionDeniedOpenSettings =>
+      values['location_permission_denied_open_settings'] ?? '';
 
   @override
   String get unableToEstimateFareForThisRoute =>

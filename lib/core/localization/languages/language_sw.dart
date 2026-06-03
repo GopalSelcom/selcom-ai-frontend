@@ -415,6 +415,8 @@ class LanguageSw extends Languages {
     'searching_for_driver': '',
     'enable_location_service': '',
     'location_permission_denied': '',
+    'location_access_required': '',
+    'location_permission_denied_open_settings': '',
     'unable_to_estimate_fare_for_this_route': '',
     'distance_min_km': '',
     'distance_max_km': '',
@@ -2010,6 +2012,14 @@ class LanguageSw extends Languages {
   @override
   String get locationPermissionDenied =>
       values['location_permission_denied'] ?? '';
+
+  @override
+  String get locationAccessRequired =>
+      values['location_access_required'] ?? '';
+
+  @override
+  String get locationPermissionDeniedOpenSettings =>
+      values['location_permission_denied_open_settings'] ?? '';
 
   @override
   String get unableToEstimateFareForThisRoute =>
