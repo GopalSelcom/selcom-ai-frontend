@@ -6,6 +6,7 @@ import '../../../../core/data/models/requests/validate_ride_payment_request.dart
 import '../../../../core/data/models/responses/rides/active_ride_response.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../../core/errors/insufficient_wallet_balance_exception.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../datasources/ride_remote_data_source.dart';
@@ -217,6 +218,10 @@ class RideRepositoryImpl implements RideRepository {
     try {
       final result = await remoteDataSource.validateRidePayment(request);
       return Right(result);
+    } on InsufficientWalletBalanceException catch (e) {
+      return Left(
+        InsufficientWalletBalanceFailure('', details: e.details),
+      );
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));

@@ -113,10 +113,17 @@ class WalletSummaryCard extends StatelessWidget {
                   letterSpacing: -0.27,
                 ),
               ),
-              Icon(
-                Iconsax.arrow_right_3,
-                size: 24.w,
+              SizedBox(width: 8.w),
+              SvgPictureAsset(
+                AppAssets.icArrowForward,
+                width: 20.w,
+                height: 20.w,
                 color: AppColors.textHeading.withValues(alpha: 0.5),
+                placeholderBuilder: (_) => Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 24.w,
+                  color: AppColors.textHeading.withValues(alpha: 0.5),
+                ),
               ),
             ],
           ),

@@ -70,6 +70,7 @@ class AppOtpField extends StatefulWidget {
   final double? fieldWidth;
   final TextStyle? textStyle;
   final MainAxisAlignment mainAxisAlignment;
+  final bool autofocus;
 
   const AppOtpField({
     super.key,
@@ -82,6 +83,7 @@ class AppOtpField extends StatefulWidget {
     this.fieldWidth,
     this.textStyle,
     this.mainAxisAlignment = MainAxisAlignment.spaceBetween,
+    this.autofocus = false,
   });
 
   @override
@@ -115,6 +117,13 @@ class _AppOtpFieldState extends State<AppOtpField> {
     _effectiveController.addListener(_onControllerChanged);
     _filledLength = _onlyDigits(_effectiveController.text).length;
     HardwareKeyboard.instance.addHandler(_handleHardwareKey);
+    if (widget.autofocus) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!_disposed && mounted) {
+          _focusNode.requestFocus();
+        }
+      });
+    }
   }
 
   @override

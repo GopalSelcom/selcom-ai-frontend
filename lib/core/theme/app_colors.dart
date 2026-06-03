@@ -71,6 +71,7 @@ class AppColors {
   static const Color textMessageHint = Color(0xFF1B1A57);
   static const Color textPaymentDialogMessage = Color(0xFF132235);
   static const Color textEtaBlue = Color(0xFF0088FF);
+  static const Color textQrMeta = Color(0xFF707072);
 
   // Semantic
   static const Color success = Color(0xFF0EAD36); // Green

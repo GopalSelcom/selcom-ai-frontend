@@ -28,13 +28,13 @@ class ActiveRideResponseModel {
 }
 
 class Data {
-  Ride? ride;
+  ActiveRide? ride;
   SocketRooms? socketRooms;
 
   Data({this.ride, this.socketRooms});
 
   factory Data.fromJson(Map<String, dynamic> json) => Data(
-    ride: json["ride"] == null ? null : Ride.fromJson(json["ride"]),
+    ride: json["ride"] == null ? null : ActiveRide.fromJson(json["ride"]),
     socketRooms: json["socket_rooms"] == null
         ? null
         : SocketRooms.fromJson(json["socket_rooms"]),
@@ -46,7 +46,7 @@ class Data {
   };
 }
 
-class Ride {
+class ActiveRide {
   String? id;
   String? status;
   FareBreakdown? fareBreakdown;
@@ -61,7 +61,7 @@ class Ride {
   String? pinCode;
   String? createdAt;
 
-  Ride({
+  ActiveRide({
     this.id,
     this.status,
     this.fareBreakdown,
@@ -77,7 +77,7 @@ class Ride {
     this.createdAt,
   });
 
-  factory Ride.fromJson(Map<String, dynamic> json) => Ride(
+  factory ActiveRide.fromJson(Map<String, dynamic> json) => ActiveRide(
     id: json["_id"],
     status: json["status"],
     fareBreakdown: json["fare_breakdown"] == null

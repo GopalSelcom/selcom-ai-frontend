@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
@@ -7,6 +8,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/data/models/requests/book_ride_request.dart';
+import '../../../../core/data/models/user_profile_models.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/near_by_rider_response.dart';
@@ -30,12 +32,16 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/address_display_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/widgets/animated_blur_dialog.dart';
 import '../../../../shared/utils/country_region_defaults.dart';
 import '../../../../shared/utils/map_vehicle_marker_utils.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../home/domain/repositories/home_repository.dart';
 import '../../../home/presentation/controllers/location_selection_controller.dart';
+import '../../../payment/domain/models/insufficient_wallet_balance_details.dart';
+import '../../../payment/domain/wallet_ride_balance_guard.dart';
 import '../../../payment/presentation/controllers/payment_method_controller.dart';
+import '../../../payment/presentation/widgets/add_money_to_wallet_bottom_sheet.dart';
 import '../../../payment/presentation/widgets/payment_status_dialog.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../promotions/presentation/promo_code_route_args.dart';
@@ -101,6 +107,10 @@ class VehicleSelectionController extends GetxController {
   StreamSubscription<String>? _nearbyDriversErrorSub;
   StreamSubscription<bool>? _nearbyDriversConnectionSub;
 
+  static const String _nearbyDriversLogName = 'NEARBY_DRIVERS';
+  String? _pendingNearbyDriversVehicleType;
+  int? _lastLoggedNearbyDriversCount;
+
   GoogleMapController? mapController;
   LatLng? _lastProjectedPickup;
   List<LatLng> _lastProjectedDrops = const <LatLng>[];
@@ -115,14 +125,28 @@ class VehicleSelectionController extends GetxController {
   BitmapDescriptor? dropIcon;
   final stopIcons = <BitmapDescriptor>[].obs;
 
+  static PaymentMethodModel get _walletPaymentMethod => PaymentMethodModel(
+    id: 'wallet',
+    label: AppStrings.wallet.tr,
+    type: 'wallet',
+  );
+
   @override
   void onInit() {
     super.onInit();
     _parseArguments();
+    _ensureWalletPaymentSelected();
     loadLocationIcons();
     _initNearbyDriversSocket();
     _loadAll();
   }
+
+  void _ensureWalletPaymentSelected() {
+    paymentMethodController.selectedPayment.value = _walletPaymentMethod;
+  }
+
+  PaymentMethodModel get _walletPayment =>
+      paymentMethodController.selectedPayment.value ?? _walletPaymentMethod;
 
   @override
   void onClose() {
@@ -656,14 +680,15 @@ class VehicleSelectionController extends GetxController {
     if (isBooking.value) return;
 
     final est = selectedEstimate;
-    final pay = paymentMethodController.selectedPayment.value;
-    if (est == null || pay == null) {
+    if (est == null) {
       AppDialogs.showErrorDialog(
         title: AppStrings.missingInfo.tr,
-        message: AppStrings.selectAVehicleAndPaymentMethod.tr,
+        message: AppStrings.selectAVehicle.tr,
       );
       return;
     }
+    _ensureWalletPaymentSelected();
+    final pay = _walletPayment;
 
     isBooking.value = true;
     Loader.instance.show();
@@ -805,10 +830,17 @@ class VehicleSelectionController extends GetxController {
                 ? rawRideNote.trim()
                 : rawRideNote.toString().trim());
 
-      // 1) Validate payment first (Validate Ride Payment - Block).
+      // 1) Wallet sufficiency (client guard until payment backend is ready).
       final refreshedSelectedEstimate = selectedEstimate;
+      final requiredFare =
+          refreshedSelectedEstimate?.displayFare ?? est.displayFare;
+      if (!await _guardWalletBalanceBeforePayment(requiredFare)) {
+        return;
+      }
+
+      // 2) Validate payment (block flow — dummy callback until real payment).
       final validateRequest = ValidateRidePaymentRequest(
-        fareEstimate: refreshedSelectedEstimate?.displayFare ?? est.displayFare,
+        fareEstimate: requiredFare,
         paymentMethod: pay.type,
         vehicleTypeId: resolvedVehicleTypeId,
       );
@@ -818,6 +850,7 @@ class VehicleSelectionController extends GetxController {
 
       await validationResult.fold(
         (f) async {
+          if (_handlePaymentValidationFailure(f)) return;
           AppDialogs.showErrorDialog(
             title: AppStrings.paymentValidationFailed.tr,
             message: AppStrings.couldNotValidatePaymentPleaseTryAgain.tr,
@@ -838,6 +871,7 @@ class VehicleSelectionController extends GetxController {
           }
 
           var blockValidationId = validationId;
+          Loader.instance.hide();
           while (true) {
             final roomValidationId = blockValidationId;
             _socketService.joinPaymentRoom(validationId: roomValidationId);
@@ -864,18 +898,14 @@ class VehicleSelectionController extends GetxController {
             if (blockOk) {
               paymentStatus.value = PaymentStatus.success;
               await Future.delayed(const Duration(seconds: 2));
-            }
-
-            _closePaymentStatusDialogIfOpen();
-            Loader.instance.show();
-
-            if (blockOk) {
+              await _closePaymentStatusDialogThenShowLoader();
               break;
             }
 
+            await _closePaymentStatusDialogIfOpen();
             Loader.instance.hide();
             final shouldRetry = await _offerPaymentBlockRetry();
-            Loader.instance.show();
+            await Loader.instance.showAsync();
             if (!shouldRetry) {
               return;
             }
@@ -885,6 +915,7 @@ class VehicleSelectionController extends GetxController {
             );
             final nextId = reValidation.fold<String?>(
               (f) {
+                if (_handlePaymentValidationFailure(f)) return null;
                 AppDialogs.showErrorDialog(
                   title: AppStrings.paymentValidationFailed.tr,
                   message: AppStrings.couldNotValidatePaymentPleaseTryAgain.tr,
@@ -1016,6 +1047,51 @@ class VehicleSelectionController extends GetxController {
     }
   }
 
+  /// Client-side check via `go/wallet/balance` until payment API returns breakdown.
+  ///
+  /// See [WalletRideBalanceGuard] TODOs for backend migration.
+  Future<bool> _guardWalletBalanceBeforePayment(int requiredAmount) async {
+    // TODO(payment-backend): re-enable insufficient-balance blocking when
+    // backend wallet sufficiency APIs are fully ready.
+    //
+    // Kept previous client-guard logic below for quick restoration:
+    // final walletResult = await profileRepository.getWalletBalance();
+    // return walletResult.fold(
+    //   (_) => true,
+    //   (wallet) {
+    //     final details = WalletRideBalanceGuard.insufficientDetails(
+    //       currentBalance: wallet.balance,
+    //       requiredAmount: requiredAmount,
+    //       currency: wallet.currency,
+    //     );
+    //     if (details == null) return true;
+    //     unawaited(_showInsufficientWalletDialog(details));
+    //     return false;
+    //   },
+    // );
+    return true;
+  }
+
+  Future<void> _showInsufficientWalletDialog(
+    InsufficientWalletBalanceDetails details,
+  ) async {
+    Loader.instance.hide();
+    await AppDialogs.showInsufficientWalletBalanceDialog(
+      details: details,
+      onTopUp: openWalletTopUp,
+    );
+  }
+
+  void openWalletTopUp() {
+    unawaited(AddMoneyToWalletBottomSheet.show());
+  }
+
+  bool _handlePaymentValidationFailure(Failure failure) {
+    if (failure is! InsufficientWalletBalanceFailure) return false;
+    unawaited(_showInsufficientWalletDialog(failure.details));
+    return true;
+  }
+
   String generateTransactionId() {
     final random = Random();
     int randomNumber = random.nextInt(100000); // 0 to 99999
@@ -1091,9 +1167,10 @@ class VehicleSelectionController extends GetxController {
         .paymentWaitSeconds
         .value;
 
-    if (Get.isDialogOpen == true) return;
+    if (_paymentStatusDialogFuture != null) return;
 
-    AppDialogs.showAnimatedDialog<void>(
+    _paymentStatusDialogFuture = AppDialogs.showAnimatedDialog<void>(
+      useRootNavigator: true,
       child: Obx(
         () => PaymentStatusDialog(
           status: paymentStatus.value,
@@ -1110,6 +1187,7 @@ class VehicleSelectionController extends GetxController {
   }
 
   Timer? _paymentTimer;
+  Future<void>? _paymentStatusDialogFuture;
 
   void _startPaymentTimer() {
     _paymentTimer?.cancel();
@@ -1122,11 +1200,39 @@ class VehicleSelectionController extends GetxController {
     });
   }
 
-  void _closePaymentStatusDialogIfOpen() {
+  /// Success dialog visible for 2s, then dismissed before the common loader shows.
+  Future<void> _closePaymentStatusDialogThenShowLoader() async {
+    await _closePaymentStatusDialogIfOpen();
+    await Loader.instance.hideAsync();
+    await Loader.instance.showAsync();
+  }
+
+  Future<void> _closePaymentStatusDialogIfOpen() async {
     _paymentTimer?.cancel();
-    if (Get.isDialogOpen == true) {
-      Get.back();
+    final dialogFuture = _paymentStatusDialogFuture;
+    if (dialogFuture == null) return;
+
+    final overlay = Get.overlayContext;
+    if (overlay != null) {
+      final navigator = Navigator.of(overlay, rootNavigator: true);
+      if (navigator.canPop()) {
+        navigator.pop();
+      }
+    } else if (Get.isDialogOpen == true) {
+      Get.back<void>();
     }
+
+    try {
+      await dialogFuture.timeout(
+        AppModalBlurTokens.duration + const Duration(milliseconds: 150),
+      );
+    } catch (_) {
+      await Future<void>.delayed(AppModalBlurTokens.duration);
+    } finally {
+      _paymentStatusDialogFuture = null;
+    }
+
+    await WidgetsBinding.instance.endOfFrame;
   }
 
   Future<void> _initNearbyDriversSocket() async {
@@ -1147,19 +1253,23 @@ class VehicleSelectionController extends GetxController {
       nearbyDriverCount.value = drivers.length;
       nearbyDriversUnavailable.value = false;
       isLoadingNearbyDrivers.value = false;
+      _logNearbyDriversResult(drivers);
     });
 
-    _nearbyDriversErrorSub = _socketService.errorStream.listen((_) {
+    _nearbyDriversErrorSub = _socketService.errorStream.listen((message) {
       nearbyDriversUnavailable.value = true;
       isLoadingNearbyDrivers.value = false;
+      _logNearbyDriversError(message);
     });
     _nearbyDriversConnectionSub = _socketService.connectionStream.listen((ok) {
       isSocketConnected.value = ok;
       if (!ok) {
         nearbyDriversUnavailable.value = true;
         isLoadingNearbyDrivers.value = false;
+        _logNearbyDriversInfo('Socket disconnected');
       } else {
         nearbyDriversUnavailable.value = false;
+        _logNearbyDriversInfo('Socket connected');
       }
     });
 
@@ -1171,12 +1281,85 @@ class VehicleSelectionController extends GetxController {
     if (pickupEntity.lat == 0 || pickupEntity.lng == 0) return;
     isLoadingNearbyDrivers.value = true;
     nearbyDriversUnavailable.value = false;
+    nearbyDriverCount.value = 0;
+    driverMarkerPoints.clear();
     final vehicleType = _socketVehicleTypeForEstimate(selectedEstimate);
+    _pendingNearbyDriversVehicleType = vehicleType ?? 'any';
+    _lastLoggedNearbyDriversCount = null;
+    _logNearbyDriversRequest(vehicleType: _pendingNearbyDriversVehicleType!);
     _socketService.requestNearbyDrivers(
       lat: pickupEntity.lat,
       lng: pickupEntity.lng,
       vehicleType: vehicleType,
       radiusKm: 1000,
+    );
+  }
+
+  void _logNearbyDriversRequest({required String vehicleType}) {
+    if (!kDebugMode) return;
+    developer.log(
+      '▶ REQUEST nearby drivers (awaiting result)\n'
+      '  vehicleType: $vehicleType\n'
+      '  lat: ${pickupEntity.lat}\n'
+      '  lng: ${pickupEntity.lng}\n'
+      '  socketConnected: ${isSocketConnected.value}',
+      name: _nearbyDriversLogName,
+    );
+  }
+
+  void _logNearbyDriversResult(List<Driver> drivers) {
+    if (!kDebugMode) return;
+
+    final found = drivers.length;
+    final vehicleType = _pendingNearbyDriversVehicleType ?? 'any';
+    if (_lastLoggedNearbyDriversCount == found) {
+      return;
+    }
+    _lastLoggedNearbyDriversCount = found;
+    final buffer = StringBuffer()
+      ..writeln(
+        found > 0
+            ? '▶ RESULT — driversFound: $found'
+            : '▶ RESULT — driversFound: 0 (no drivers nearby)',
+      )
+      ..writeln('  vehicleType: $vehicleType')
+      ..writeln('  socketConnected: ${isSocketConnected.value}');
+
+    if (drivers.isNotEmpty) {
+      buffer.writeln('  drivers:');
+      for (final d in drivers.take(5)) {
+        final type = d.vehicleType ?? '?';
+        final dist = d.distanceKm?.toStringAsFixed(2) ?? '?';
+        buffer.writeln(
+          '    • fleet=${d.fleetId ?? '?'} type=$type dist=${dist}km '
+          '(${d.lat}, ${d.lng})',
+        );
+      }
+      if (drivers.length > 5) {
+        buffer.writeln('    … +${drivers.length - 5} more');
+      }
+    }
+
+    developer.log(buffer.toString(), name: _nearbyDriversLogName);
+  }
+
+  void _logNearbyDriversError(String message) {
+    if (!kDebugMode) return;
+    _lastLoggedNearbyDriversCount = null;
+    developer.log(
+      '▶ ERROR — nearby drivers failed\n'
+      '  vehicleType: ${_pendingNearbyDriversVehicleType ?? 'any'}\n'
+      '  message: $message',
+      name: _nearbyDriversLogName,
+    );
+  }
+
+  void _logNearbyDriversInfo(String headline) {
+    if (!kDebugMode) return;
+    developer.log(
+      '▶ $headline\n'
+      '  socketConnected: ${isSocketConnected.value}',
+      name: _nearbyDriversLogName,
     );
   }
 
@@ -1295,31 +1478,6 @@ class VehicleSelectionController extends GetxController {
         ? AppStrings.minutesShortCount.trParams({'count': '$minutes'})
         : AppStrings.etaBadge.tr;
   }
-
-  String get socketDriverStatusText {
-    if (isSocketConnected.value) {
-      if (nearbyDriverCount.value > 0) {
-        return AppStrings.driversOnlineCount.trParams({
-          'count': '${nearbyDriverCount.value}',
-        });
-      }
-      return AppStrings.noDriversNearbyBadge.tr;
-    }
-    if (isLoadingNearbyDrivers.value) {
-      return AppStrings.connectingDrivers.tr;
-    }
-    if (nearbyDriversUnavailable.value) {
-      return AppStrings.socketDisconnected.tr;
-    }
-    return AppStrings.connectingDrivers.tr;
-  }
-
-  Color get socketDriverStatusColor =>
-      isSocketConnected.value ? AppColors.success : AppColors.warningStrong;
-
-  Color get socketDriverStatusBackground => isSocketConnected.value
-      ? AppColors.bgSuccessBanner
-      : AppColors.bgWarningLight;
 
   void _clearPromoAfterRouteChange() {
     if (appliedPromoCode.value.trim().isEmpty) return;
@@ -1577,7 +1735,7 @@ class VehicleSelectionController extends GetxController {
 
 /// True when [ride] looks like a successful hold/charge for prepaid [paymentMethodType].
 bool rideBookResponseIndicatesPaymentApplied(
-  Ride ride,
+  BookRide ride,
   String paymentMethodType,
 ) {
   final type = paymentMethodType.toLowerCase().trim().replaceAll('-', '_');

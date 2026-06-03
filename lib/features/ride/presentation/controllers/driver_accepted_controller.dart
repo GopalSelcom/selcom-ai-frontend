@@ -41,6 +41,7 @@ import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../../../shared/utils/ride_pickup_status_labels.dart';
 import '../../../../shared/utils/ride_status_normalizer.dart';
 import '../../../../shared/utils/tanzania_license_plate_formatter.dart';
+import '../../../../shared/utils/tracking_route_geometry_utils.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../../shared/widgets/app_google_map.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
@@ -128,6 +129,7 @@ class DriverAcceptedController extends GetxController
   bool _navigatedAway = false;
   DateTime? _lastCameraUpdate;
   bool _openedCompletedRideDetails = false;
+  bool _hasReceivedTrackingUpdate = false;
 
   StreamSubscription<bool>? _connectionSub;
   StreamSubscription<EventRiderStatusUpdateResponse>? _rideStatusSub;
@@ -195,10 +197,13 @@ class DriverAcceptedController extends GetxController
     _bootstrap();
     ever(animatedRiderLocation, (_) => scheduleAssignedEtaOverlayRefresh());
     ever(routePoints, (List<LatLng> points) {
-      // Fit bounds only when we first get a valid route, not on every update.
-      if (points.length > 2 && isInitialRouteLoaded.value == false) {
+      if (isInitialRouteLoaded.value) return;
+      final kind = TrackingRouteGeometryUtils.classifyFromPoints(points);
+      if (kind == TrackingRouteGeometryKind.path) {
         recenterMap();
-        isInitialRouteLoaded.value = true;
+        _markInitialRouteReady();
+      } else if (kind == TrackingRouteGeometryKind.repeatedLocation) {
+        _markInitialRouteReady();
       }
     });
     ever(currentRideStatus, (status) {
@@ -492,7 +497,8 @@ class DriverAcceptedController extends GetxController
       _seedBookingFee = (fareBreakdown['booking_fee'] as num?)?.toInt();
       _seedTotalAmount = (fareBreakdown['total_amount'] as num?)?.toInt();
     }
-    _setDropRouteFallback();
+    routePoints.clear();
+    routeTarget.value = 'pick_up';
     _hydrateSocketSeedPayloads(args);
     _refreshMapRouteHeader();
   }
@@ -503,13 +509,19 @@ class DriverAcceptedController extends GetxController
   }
 
   void _setPickupRouteFallback() {
+    routeTarget.value = 'pick_up';
     final driver = assignedDriverLocation.value;
     if (driver != null) {
       routePoints.assignAll([driver, pickupLatLng]);
-    } else {
-      routePoints.assignAll([pickupLatLng, destinationLatLng]);
+      return;
     }
-    routeTarget.value = 'pick_up';
+    routePoints.assignAll([pickupLatLng, destinationLatLng]);
+  }
+
+  void _markInitialRouteReady() {
+    if (!isInitialRouteLoaded.value) {
+      isInitialRouteLoaded.value = true;
+    }
   }
 
   void _hydrateSocketSeedPayloads(Map<String, dynamic> args) {
@@ -538,6 +550,7 @@ class DriverAcceptedController extends GetxController
     }
     final trackingRaw = args['trackingPayload'];
     if (trackingRaw is Map) {
+      _hasReceivedTrackingUpdate = true;
       final payload = TrackingUpdateSocketResponse.fromJson(
         Map<String, dynamic>.from(trackingRaw),
       );
@@ -889,6 +902,7 @@ class DriverAcceptedController extends GetxController
       payload,
     ) async {
       if (payload != null) {
+        _hasReceivedTrackingUpdate = true;
         developer.log(
           "📥 Socket Event: tracking_update_socket - Target: ${payload.routeTarget} for ride $rideId",
           name: 'ORDER_TRACKING',
@@ -1238,21 +1252,18 @@ class DriverAcceptedController extends GetxController
     final oldTarget = routeTarget.value;
 
     final target = _normalizeRouteTarget(payload.routeTarget);
-    if (target == 'pick_up') {
-      routeTarget.value = target;
-      final coords = payload.routeGeometry?.coordinates;
-      if (coords != null && coords.isNotEmpty) {
-        routePoints.assignAll(_toLatLngPolyline(coords));
-      }
-    } else if (target == 'drop_off') {
-      routeTarget.value = target;
-      final coords = payload.routeGeometry?.coordinates;
-      if (coords != null && coords.isNotEmpty) {
-        routePoints.assignAll(_toLatLngPolyline(coords));
-      }
-    } else if (status.isNotEmpty) {
+    final routeTargetChanged = target.isNotEmpty && target != oldTarget;
+    _applyRouteGeometryFromPayload(
+      routeTarget: target,
+      coordinates: payload.routeGeometry?.coordinates,
+      fitCameraOnChange: status != oldStatus || routeTargetChanged,
+    );
+    if (target.isEmpty && status.isNotEmpty) {
       // Active-ride entry can provide status without routeTarget.
       _applyRouteFallbackForStatus(status);
+      if (status != oldStatus || routeTarget.value != oldTarget) {
+        _fitRouteBounds();
+      }
     }
 
     if (payload.currentStopIndex != null) {
@@ -1262,13 +1273,6 @@ class DriverAcceptedController extends GetxController
           currentStopIndex: payload.currentStopIndex,
         );
       }
-    }
-
-    // Only re-fit camera if status or route target actually changed.
-    // This prevents frequent zoom-outs on every location update.
-    if (currentRideStatus.value != oldStatus ||
-        routeTarget.value != oldTarget) {
-      _fitRouteBounds();
     }
 
     final rootEta = payload.etaSeconds;
@@ -1456,6 +1460,7 @@ class DriverAcceptedController extends GetxController
   }
 
   void _applyRouteFallbackForStatus(String rawStatus) {
+    if (!_hasReceivedTrackingUpdate) return;
     // Only apply fallback if we don't already have points.
     if (routePoints.isNotEmpty) return;
 
@@ -1668,7 +1673,7 @@ class DriverAcceptedController extends GetxController
       }
     }
 
-    String target = _normalizeRouteTarget(payload.routeTarget);
+    var target = _normalizeRouteTarget(payload.routeTarget);
     final coords = payload.routeGeometry?.coordinates;
 
     // If target is missing, infer it from the status
@@ -1681,24 +1686,56 @@ class DriverAcceptedController extends GetxController
       }
     }
 
-    if (target == 'pick_up') {
-      routeTarget.value = target;
-      if (coords != null && coords.isNotEmpty) {
-        final newPoints = _toLatLngPolyline(coords);
-        if (newPoints.isNotEmpty) {
-          routePoints.assignAll(newPoints);
+    _applyRouteGeometryFromPayload(
+      routeTarget: target,
+      coordinates: coords,
+      fitCameraOnChange: true,
+    );
+  }
+
+  /// Applies `route_geometry` from tracking/status payloads without re-fitting on duplicates.
+  void _applyRouteGeometryFromPayload({
+    required String routeTarget,
+    required List<List<double>>? coordinates,
+    required bool fitCameraOnChange,
+  }) {
+    if (routeTarget != 'pick_up' && routeTarget != 'drop_off') return;
+
+    this.routeTarget.value = routeTarget;
+    if (!_hasReceivedTrackingUpdate) return;
+
+    final kind = TrackingRouteGeometryUtils.classify(coordinates);
+    switch (kind) {
+      case TrackingRouteGeometryKind.empty:
+        _markInitialRouteReady();
+        if (_hasReceivedTrackingUpdate) {
+          if (routeTarget == 'pick_up') {
+            _setPickupRouteFallback();
+          } else {
+            _setDropRouteFallback();
+          }
+          if (fitCameraOnChange) _fitRouteBounds();
+        } else if (routePoints.isNotEmpty) {
+          routePoints.clear();
+        }
+        return;
+      case TrackingRouteGeometryKind.repeatedLocation:
+      case TrackingRouteGeometryKind.path:
+        final nextPoints = TrackingRouteGeometryUtils.pointsForMap(coordinates);
+        _markInitialRouteReady();
+        if (TrackingRouteGeometryUtils.routesEquivalent(
+          routePoints,
+          nextPoints,
+        )) {
+          return;
+        }
+        routePoints.assignAll(nextPoints);
+        if (fitCameraOnChange &&
+            kind == TrackingRouteGeometryKind.path &&
+            nextPoints.length >= 2) {
           _fitRouteBounds();
         }
-      }
-    } else if (target == 'drop_off') {
-      routeTarget.value = target;
-      if (coords != null && coords.isNotEmpty) {
-        final newPoints = _toLatLngPolyline(coords);
-        if (newPoints.isNotEmpty) {
-          routePoints.assignAll(newPoints);
-          _fitRouteBounds();
-        }
-      }
+        return;
     }
   }
 
@@ -1728,13 +1765,6 @@ class DriverAcceptedController extends GetxController
       return 'drop_off';
     }
     return '';
-  }
-
-  List<LatLng> _toLatLngPolyline(List<List<double>> coords) {
-    return coords
-        .where((c) => c.length >= 2)
-        .map((c) => LatLng(c[1], c[0]))
-        .toList();
   }
 
   void openProfile() {

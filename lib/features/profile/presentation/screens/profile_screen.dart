@@ -170,11 +170,19 @@ class ProfileScreen extends StatelessWidget {
           // Wallet Card
           Padding(
             padding: ProfileScreenLayout.walletPadding,
-            child: SizedBox(
-              height: ProfileScreenLayout.walletCardHeight,
-              child: WalletSummaryCard(
-                balance: balance,
-                walletNumber: walletNum,
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(27.r),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(27.r),
+                onTap: controller.openWalletActionsSheet,
+                child: SizedBox(
+                  height: ProfileScreenLayout.walletCardHeight,
+                  child: WalletSummaryCard(
+                    balance: balance,
+                    walletNumber: walletNum,
+                  ),
+                ),
               ),
             ),
           ),
@@ -333,11 +341,6 @@ class ProfileScreen extends StatelessWidget {
               icon: Iconsax.clock,
               title: AppStrings.myRides.tr,
               onTap: controller.openMyRides,
-            ),
-            MenuItemWidget(
-              icon: Iconsax.card,
-              title: AppStrings.payment.tr,
-              onTap: controller.openPaymentMethods,
             ),
             MenuItemWidget(
               icon: Iconsax.message_question,

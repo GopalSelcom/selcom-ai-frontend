@@ -44,7 +44,7 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
     return Obx(
       () => AppStandardBottomSheet(
         title: _titleForStep(controller.selcomPesaStep.value),
-        headerTextAlign: TextAlign.start,
+        headerTextAlign: TextAlign.center,
         showHeaderDivider: true,
         maxHeightFactor: 0.92,
         content: AnimatedSize(
@@ -159,13 +159,12 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
           alignment: Alignment.centerLeft,
           child: Text(
             AppStrings.enterPhoneNumber.tr,
-            style: AppTextStyles.body.copyWith(
-              color: AppColors.textBody,
-              fontWeight: FontWeight.w500,
+            style: AppTextStyles.homeSubtitle.copyWith(
+              color: AppColors.textMutedStrong,
             ),
           ),
         ),
-        SizedBox(height: 8.h),
+        SizedBox(height: 4.h),
 
         Obx(
           () => AppTextField(
@@ -400,17 +399,21 @@ class _StepperItem extends StatelessWidget {
     this.isLast = false,
   });
 
+  static final double _nodeSize = 48.w;
+  static final double _connectorHeight = 32.h;
+
   @override
   Widget build(BuildContext context) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Column(
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: _nodeSize,
+          child: Column(
             children: [
               Container(
-                width: 48.w,
-                height: 48.h,
+                width: _nodeSize,
+                height: _nodeSize,
                 decoration: BoxDecoration(
                   color: AppColors.surfaceSubtle,
                   shape: BoxShape.circle,
@@ -419,55 +422,55 @@ class _StepperItem extends StatelessWidget {
                     width: 1,
                   ),
                 ),
-                child: Center(
-                  child: Text(
-                    step,
-                    style: AppTextStyles.body.copyWith(
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textHeading,
-                      fontSize: 15.sp,
-                      height: 20 / 15,
-                    ),
+                alignment: Alignment.center,
+                child: Text(
+                  step,
+                  style: AppTextStyles.body.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textHeading,
+                    fontSize: 15.sp,
+                    height: 20 / 15,
                   ),
                 ),
               ),
               if (!isLast)
-                Expanded(
-                  child: Container(
-                    width: 10.w,
-                    decoration: const BoxDecoration(
-                      color: AppColors.surfaceSubtle,
-                      border: Border.symmetric(
-                        vertical: BorderSide(
-                          color: AppColors.borderWalletCard,
-                          width: 1,
-                        ),
-                      ),
+                Container(
+                  width: 10.w,
+                  height: _connectorHeight,
+                  decoration: const BoxDecoration(
+                    color: AppColors.surfaceSubtle,
+                    border: Border.symmetric(
+                      vertical: BorderSide(color: AppColors.borderWalletCard),
                     ),
                   ),
                 ),
             ],
           ),
-          SizedBox(width: 16.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: 2.h),
-                Text(
-                  description,
-                  style: AppTextStyles.body.copyWith(
-                    color: AppColors.textBody,
-                    fontSize: 15.sp,
-                    height: 1.4,
+        ),
+        SizedBox(width: 16.w),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: _nodeSize,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    description,
+                    style: AppTextStyles.body.copyWith(
+                      color: AppColors.textBody,
+                      fontSize: 15.sp,
+                      height: 1.4,
+                    ),
                   ),
                 ),
-                if (!isLast) SizedBox(height: 14.h),
-              ],
-            ),
+              ),
+              if (!isLast) SizedBox(height: _connectorHeight),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
