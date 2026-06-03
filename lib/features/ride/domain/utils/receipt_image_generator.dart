@@ -383,18 +383,13 @@ class ReceiptImageGenerator {
           child: Column(
             children: [
               _fareRow(
-                AppStrings.baseFare.tr,
-                receipt.baseFare,
+                AppStrings.rideCharge.tr,
+                receipt.totalFare,
                 receipt.currency,
               ),
               _fareRow(
-                AppStrings.distanceCharge.tr,
-                receipt.distanceCharge,
-                receipt.currency,
-              ),
-              _fareRow(
-                AppStrings.timeCharge.tr,
-                receipt.timeCharge,
+                AppStrings.bookingFeesAndConvenienceCharges.tr,
+                receipt.bookingFee,
                 receipt.currency,
               ),
               if (receipt.promoDiscountAmount > 0 &&
@@ -423,7 +418,7 @@ class ReceiptImageGenerator {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    AppStrings.total.tr,
+                    AppStrings.totalAmount.tr,
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
@@ -432,7 +427,7 @@ class ReceiptImageGenerator {
                   ),
                   Text(
                     CurrencyFormatter.formatPayableOrFree(
-                      receipt.total,
+                      receipt.totalAmount,
                       receipt.currency,
                       freeLabel: AppStrings.rideFreeLabel.tr,
                     ),
