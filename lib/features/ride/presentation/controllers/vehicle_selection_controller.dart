@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
@@ -105,6 +106,10 @@ class VehicleSelectionController extends GetxController {
   StreamSubscription<List<Driver>>? _nearbyDriversSub;
   StreamSubscription<String>? _nearbyDriversErrorSub;
   StreamSubscription<bool>? _nearbyDriversConnectionSub;
+
+  static const String _nearbyDriversLogName = 'NEARBY_DRIVERS';
+  String? _pendingNearbyDriversVehicleType;
+  int? _lastLoggedNearbyDriversCount;
 
   GoogleMapController? mapController;
   LatLng? _lastProjectedPickup;
@@ -1248,19 +1253,23 @@ class VehicleSelectionController extends GetxController {
       nearbyDriverCount.value = drivers.length;
       nearbyDriversUnavailable.value = false;
       isLoadingNearbyDrivers.value = false;
+      _logNearbyDriversResult(drivers);
     });
 
-    _nearbyDriversErrorSub = _socketService.errorStream.listen((_) {
+    _nearbyDriversErrorSub = _socketService.errorStream.listen((message) {
       nearbyDriversUnavailable.value = true;
       isLoadingNearbyDrivers.value = false;
+      _logNearbyDriversError(message);
     });
     _nearbyDriversConnectionSub = _socketService.connectionStream.listen((ok) {
       isSocketConnected.value = ok;
       if (!ok) {
         nearbyDriversUnavailable.value = true;
         isLoadingNearbyDrivers.value = false;
+        _logNearbyDriversInfo('Socket disconnected');
       } else {
         nearbyDriversUnavailable.value = false;
+        _logNearbyDriversInfo('Socket connected');
       }
     });
 
@@ -1272,12 +1281,85 @@ class VehicleSelectionController extends GetxController {
     if (pickupEntity.lat == 0 || pickupEntity.lng == 0) return;
     isLoadingNearbyDrivers.value = true;
     nearbyDriversUnavailable.value = false;
+    nearbyDriverCount.value = 0;
+    driverMarkerPoints.clear();
     final vehicleType = _socketVehicleTypeForEstimate(selectedEstimate);
+    _pendingNearbyDriversVehicleType = vehicleType ?? 'any';
+    _lastLoggedNearbyDriversCount = null;
+    _logNearbyDriversRequest(vehicleType: _pendingNearbyDriversVehicleType!);
     _socketService.requestNearbyDrivers(
       lat: pickupEntity.lat,
       lng: pickupEntity.lng,
       vehicleType: vehicleType,
       radiusKm: 1000,
+    );
+  }
+
+  void _logNearbyDriversRequest({required String vehicleType}) {
+    if (!kDebugMode) return;
+    developer.log(
+      '▶ REQUEST nearby drivers (awaiting result)\n'
+      '  vehicleType: $vehicleType\n'
+      '  lat: ${pickupEntity.lat}\n'
+      '  lng: ${pickupEntity.lng}\n'
+      '  socketConnected: ${isSocketConnected.value}',
+      name: _nearbyDriversLogName,
+    );
+  }
+
+  void _logNearbyDriversResult(List<Driver> drivers) {
+    if (!kDebugMode) return;
+
+    final found = drivers.length;
+    final vehicleType = _pendingNearbyDriversVehicleType ?? 'any';
+    if (_lastLoggedNearbyDriversCount == found) {
+      return;
+    }
+    _lastLoggedNearbyDriversCount = found;
+    final buffer = StringBuffer()
+      ..writeln(
+        found > 0
+            ? '▶ RESULT — driversFound: $found'
+            : '▶ RESULT — driversFound: 0 (no drivers nearby)',
+      )
+      ..writeln('  vehicleType: $vehicleType')
+      ..writeln('  socketConnected: ${isSocketConnected.value}');
+
+    if (drivers.isNotEmpty) {
+      buffer.writeln('  drivers:');
+      for (final d in drivers.take(5)) {
+        final type = d.vehicleType ?? '?';
+        final dist = d.distanceKm?.toStringAsFixed(2) ?? '?';
+        buffer.writeln(
+          '    • fleet=${d.fleetId ?? '?'} type=$type dist=${dist}km '
+          '(${d.lat}, ${d.lng})',
+        );
+      }
+      if (drivers.length > 5) {
+        buffer.writeln('    … +${drivers.length - 5} more');
+      }
+    }
+
+    developer.log(buffer.toString(), name: _nearbyDriversLogName);
+  }
+
+  void _logNearbyDriversError(String message) {
+    if (!kDebugMode) return;
+    _lastLoggedNearbyDriversCount = null;
+    developer.log(
+      '▶ ERROR — nearby drivers failed\n'
+      '  vehicleType: ${_pendingNearbyDriversVehicleType ?? 'any'}\n'
+      '  message: $message',
+      name: _nearbyDriversLogName,
+    );
+  }
+
+  void _logNearbyDriversInfo(String headline) {
+    if (!kDebugMode) return;
+    developer.log(
+      '▶ $headline\n'
+      '  socketConnected: ${isSocketConnected.value}',
+      name: _nearbyDriversLogName,
     );
   }
 
@@ -1396,31 +1478,6 @@ class VehicleSelectionController extends GetxController {
         ? AppStrings.minutesShortCount.trParams({'count': '$minutes'})
         : AppStrings.etaBadge.tr;
   }
-
-  String get socketDriverStatusText {
-    if (isSocketConnected.value) {
-      if (nearbyDriverCount.value > 0) {
-        return AppStrings.driversOnlineCount.trParams({
-          'count': '${nearbyDriverCount.value}',
-        });
-      }
-      return AppStrings.noDriversNearbyBadge.tr;
-    }
-    if (isLoadingNearbyDrivers.value) {
-      return AppStrings.connectingDrivers.tr;
-    }
-    if (nearbyDriversUnavailable.value) {
-      return AppStrings.socketDisconnected.tr;
-    }
-    return AppStrings.connectingDrivers.tr;
-  }
-
-  Color get socketDriverStatusColor =>
-      isSocketConnected.value ? AppColors.success : AppColors.warningStrong;
-
-  Color get socketDriverStatusBackground => isSocketConnected.value
-      ? AppColors.bgSuccessBanner
-      : AppColors.bgWarningLight;
 
   void _clearPromoAfterRouteChange() {
     if (appliedPromoCode.value.trim().isEmpty) return;
