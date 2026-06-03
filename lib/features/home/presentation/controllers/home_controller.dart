@@ -31,6 +31,7 @@ import '../../../../core/services/session_expiry_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/saved_places_ordering.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../../shared/widgets/add_favorite_location_sheet.dart';
@@ -293,7 +294,9 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       results[2].fold((_) => null, (response) {
         final res = response as GetSavedPlacesResponseModel?;
         if (res?.data?.savedPlaces != null) {
-          savedPlaces.assignAll(res!.data!.savedPlaces!);
+          savedPlaces.assignAll(
+            SavedPlacesOrdering.sortForDisplay(res!.data!.savedPlaces!),
+          );
           _syncSelectedPickupAfterSavedPlacesLoad();
         }
       });
@@ -987,43 +990,13 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }
 
   SavedPlace? getSavedPlaceByLabel(String label) {
-    for (final place in savedPlaces) {
-      if ((place.label ?? '').toLowerCase() == label.toLowerCase()) {
-        return place;
-      }
-    }
-    return null;
+    return SavedPlacesOrdering.placeForCanonicalLabel(savedPlaces, label);
   }
 
-  static bool _isPresetSlotLabel(String normalizedLowercase) {
-    return normalizedLowercase == 'home' ||
-        normalizedLowercase == 'office' ||
-        normalizedLowercase == 'work' ||
-        normalizedLowercase == 'other';
-  }
-
-  /// Saved places whose primary label is **not** Home / Office / Work / Other (custom API labels).
+  /// Saved places not bound to a preset chip (custom labels or duplicate presets).
   /// Used only on Home to show additional chips after the four presets.
   List<SavedPlace> get savedPlacesBeyondPresetSlots {
-    final result = <SavedPlace>[];
-    for (final p in savedPlaces) {
-      final labelTrim = (p.label ?? '').trim();
-      final nameTrim = (p.name ?? '').trim();
-      final effective = labelTrim.isNotEmpty ? labelTrim : nameTrim;
-      if (effective.isEmpty) continue;
-      if (_isPresetSlotLabel(effective.toLowerCase())) continue;
-      result.add(p);
-    }
-    result.sort((a, b) {
-      final la = ((a.label ?? '').trim().isNotEmpty ? a.label! : (a.name ?? ''))
-          .trim()
-          .toLowerCase();
-      final lb = ((b.label ?? '').trim().isNotEmpty ? b.label! : (b.name ?? ''))
-          .trim()
-          .toLowerCase();
-      return la.compareTo(lb);
-    });
-    return result;
+    return SavedPlacesOrdering.beyondPresetSlots(savedPlaces);
   }
 
   String? getSavedPlaceSubtitle(String label) {
@@ -1296,7 +1269,9 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     final result = await profileRepository.getSavedPlaces();
     result.fold((_) => null, (response) {
       if (response?.data?.savedPlaces != null) {
-        savedPlaces.assignAll(response!.data!.savedPlaces!);
+        savedPlaces.assignAll(
+          SavedPlacesOrdering.sortForDisplay(response!.data!.savedPlaces!),
+        );
         _syncSelectedPickupAfterSavedPlacesLoad();
       }
     });
@@ -1787,18 +1762,46 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     required RxnString destinationPlaceId,
   }) {
     final savedPlace = getSavedPlaceByLabel(label);
-    final saved = savedPlace?.address?.trim();
+    if (savedPlace == null) return false;
+    return applySavedPlaceToLocationSelection(
+      savedPlace: savedPlace,
+      activeSegmentIndex: activeSegmentIndex,
+      pickupController: pickupController,
+      destinationController: destinationController,
+      extraDestinationControllers: extraDestinationControllers,
+      pickupEditedByUser: pickupEditedByUser,
+      routePickupLat: routePickupLat,
+      routePickupLng: routePickupLng,
+      routeDestinationLat: routeDestinationLat,
+      routeDestinationLng: routeDestinationLng,
+      destinationPlaceId: destinationPlaceId,
+    );
+  }
+
+  bool applySavedPlaceToLocationSelection({
+    required SavedPlace savedPlace,
+    required int activeSegmentIndex,
+    required TextEditingController pickupController,
+    required TextEditingController destinationController,
+    required List<TextEditingController> extraDestinationControllers,
+    required RxBool pickupEditedByUser,
+    required RxnDouble routePickupLat,
+    required RxnDouble routePickupLng,
+    required RxnDouble routeDestinationLat,
+    required RxnDouble routeDestinationLng,
+    required RxnString destinationPlaceId,
+  }) {
+    final saved = savedPlace.address?.trim();
     if (saved == null || saved.isEmpty) return false;
 
-    final coords = savedPlace?.location?.coordinates;
+    final coords = savedPlace.location?.coordinates;
     final lat =
-        savedPlace?.lat ??
+        savedPlace.lat ??
         ((coords != null && coords.length >= 2) ? coords[1] : null);
     final lng =
-        savedPlace?.lng ??
+        savedPlace.lng ??
         ((coords != null && coords.length >= 2) ? coords[0] : null);
 
-    // Apply text to the correct field
     applyLocationSelectionTextToSegment(
       activeSegmentIndex: activeSegmentIndex,
       text: saved,
@@ -1813,7 +1816,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       destinationPlaceId: destinationPlaceId,
     );
 
-    // Apply coordinates if they exist
     if (lat != null && lng != null) {
       if (activeSegmentIndex == 0) {
         routePickupLat.value = lat;
@@ -1821,8 +1823,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       } else if (activeSegmentIndex == 1) {
         routeDestinationLat.value = lat;
         routeDestinationLng.value = lng;
-        destinationPlaceId.value =
-            null; // Saved places don't always have placeId
+        destinationPlaceId.value = null;
       }
     }
 
