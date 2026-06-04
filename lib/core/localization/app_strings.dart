@@ -646,7 +646,6 @@ class AppStrings {
   static const String viewTrip = 'view_trip';
   static const String visa = 'visa';
   static const String wallet = 'wallet';
-  static const String walletNumberCopied = 'wallet_number_copied';
   static const String walletNumberLabel = 'wallet_number_label';
   static const String recentTransactions = 'recent_transactions';
   static const String recentTransactionTitle = 'recent_transaction_title';

@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../payment/presentation/widgets/add_money_to_wallet_bottom_sheet.dart';
@@ -115,16 +114,6 @@ class WalletController extends GetxController {
     final number = walletNumberForCopy;
     if (number.isEmpty) return;
     Clipboard.setData(ClipboardData(text: number));
-    _showCopiedSnack();
-  }
-
-  void _showCopiedSnack() {
-    Get.snackbar(
-      AppStrings.wallet.tr,
-      AppStrings.walletNumberCopied.tr,
-      snackPosition: SnackPosition.BOTTOM,
-      duration: const Duration(seconds: 2),
-    );
   }
 
   WalletTransactionItem _mapTransactionToItem(WalletTransactionEntity entity) {

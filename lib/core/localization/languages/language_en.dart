@@ -563,7 +563,6 @@ class LanguageEn extends Languages {
     'view_trip': 'View trip',
     'visa': 'VISA',
     'wallet': 'Wallet',
-    'wallet_number_copied': 'Wallet number copied',
     'wallet_number_label': 'Wallet Number',
     'recent_transactions': 'Recent Transactions',
     'recent_transaction_title': 'Recent Transaction',
@@ -2326,9 +2325,6 @@ class LanguageEn extends Languages {
 
   @override
   String get wallet => values['wallet'] ?? '';
-
-  @override
-  String get walletNumberCopied => values['wallet_number_copied'] ?? '';
 
   @override
   String get walletNumberLabel => values['wallet_number_label'] ?? '';
