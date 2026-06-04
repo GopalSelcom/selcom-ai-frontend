@@ -491,6 +491,7 @@ class LanguageSw extends Languages {
     'view_trip': '',
     'visa': '',
     'wallet': '',
+    'link_wallet_subtitle': '',
     'wallet_number_label': '',
     'recent_transactions': '',
     'recent_transaction_title': '',
@@ -2222,6 +2223,9 @@ class LanguageSw extends Languages {
 
   @override
   String get wallet => values['wallet'] ?? '';
+
+  @override
+  String get linkWalletSubtitle => values['link_wallet_subtitle'] ?? '';
 
   @override
   String get walletNumberLabel => values['wallet_number_label'] ?? '';

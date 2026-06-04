@@ -17,6 +17,7 @@ import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/phone_formatter.dart';
 import '../../../../shared/widgets/web_view_screen.dart';
 import '../../../ride/presentation/screens/my_rides_screen.dart';
+import '../../../wallet/presentation/utils/wallet_format_utils.dart';
 import '../../data/models/request/update_profile_request.dart';
 import '../../domain/usecases/profile_usecase.dart';
 
@@ -38,8 +39,9 @@ class ProfileController extends GetxController {
 
   // User Data
   final Rxn<UserModel> userModel = Rxn<UserModel>();
-  final RxString walletBalance = '43,829'.obs;
-  final RxString walletNumber = '16010 00000 034'.obs;
+  final RxBool isWalletLinked = false.obs;
+  final RxString walletBalance = ''.obs;
+  final RxString walletNumber = ''.obs;
   final Rxn<File> pickedImage = Rxn<File>();
 
   // Controllers for text fields
@@ -138,16 +140,31 @@ class ProfileController extends GetxController {
   }
 
   Future<void> fetchWalletBalance() async {
-    // TODO: Skip API call for now if still pending on backend
-    /*
     final result = await profileUseCase.getWalletBalance();
-    result.fold(
-      (failure) => null,
-      (balance) {
-        walletBalance.value = balance.balance.toString();
-      },
-    );
-    */
+    result.fold((_) => _setWalletUnlinked(), (balance) {
+      if (!balance.isLinked) {
+        _setWalletUnlinked();
+        return;
+      }
+      isWalletLinked.value = true;
+      walletBalance.value = balance.balance.toStringAsFixed(0);
+      final account = balance.walletNumber;
+      walletNumber.value = account == null
+          ? ''
+          : formatWalletAccountNumber(account);
+    });
+  }
+
+  void _setWalletUnlinked() {
+    isWalletLinked.value = false;
+    walletBalance.value = '';
+    walletNumber.value = '';
+  }
+
+  void onWalletCardTap() {
+    // TODO: When wallet linking is available, navigate unlinked tap to
+    // if (!isWalletLinked.value) return;
+    openWallet();
   }
 
   void toggleEditMode() {

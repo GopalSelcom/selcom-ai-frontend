@@ -74,13 +74,33 @@ class SavedPlaceModel {
 class WalletBalanceModel {
   final double balance;
   final String currency;
+  final bool isLinked;
+  final String? walletNumber;
 
-  WalletBalanceModel({required this.balance, required this.currency});
+  WalletBalanceModel({
+    required this.balance,
+    required this.currency,
+    this.isLinked = false,
+    this.walletNumber,
+  });
 
   factory WalletBalanceModel.fromJson(Map<String, dynamic> json) {
+    final account =
+        json['wallet_number']?.toString() ??
+        json['account_number']?.toString() ??
+        json['wallet_account']?.toString();
+    final linkedFlag = json['is_linked'];
+    final isLinked = linkedFlag is bool
+        ? linkedFlag
+        : account != null && account.trim().isNotEmpty;
+
     return WalletBalanceModel(
       balance: (json['balance'] ?? 0.0).toDouble(),
       currency: json['currency'] ?? CurrencyCode.tzs,
+      isLinked: isLinked,
+      walletNumber: account == null || account.trim().isEmpty
+          ? null
+          : account.trim(),
     );
   }
 }

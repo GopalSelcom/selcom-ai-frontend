@@ -16,6 +16,7 @@ import '../controllers/profile_controller.dart';
 import '../widgets/menu_item_widget.dart';
 import '../widgets/profile_screen_layout.dart';
 import '../widgets/profile_screen_shimmer.dart';
+import '../widgets/wallet_link_card.dart';
 import '../widgets/wallet_summary_card.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -151,6 +152,7 @@ class ProfileScreen extends StatelessWidget {
               user!.mobileNumber.toString(),
             )
           : '';
+      final isWalletLinked = controller.isWalletLinked.value;
       final balance = controller.walletBalance.value;
       final walletNum = controller.walletNumber.value;
       final avgRating = (user?.goAvgRating ?? 0).toDouble();
@@ -170,21 +172,26 @@ class ProfileScreen extends StatelessWidget {
           // Wallet Card
           Padding(
             padding: ProfileScreenLayout.walletPadding,
-            child: Material(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(27.r),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(27.r),
-                onTap: controller.openWallet,
-                child: SizedBox(
-                  height: ProfileScreenLayout.walletCardHeight,
-                  child: WalletSummaryCard(
-                    balance: balance,
-                    walletNumber: walletNum,
+            child: isWalletLinked
+                ? Material(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(27.r),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(27.r),
+                      onTap: controller.onWalletCardTap,
+                      child: SizedBox(
+                        height: ProfileScreenLayout.walletCardHeight,
+                        child: WalletSummaryCard(
+                          balance: balance,
+                          walletNumber: walletNum,
+                        ),
+                      ),
+                    ),
+                  )
+                : SizedBox(
+                    height: ProfileScreenLayout.walletCardHeight,
+                    child: const WalletLinkCard(),
                   ),
-                ),
-              ),
-            ),
           ),
         ],
       );

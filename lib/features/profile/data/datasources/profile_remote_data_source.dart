@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 
-import '../../../../core/constants/currency_code.dart';
 import '../../../../core/data/models/requests/create_saved_place_request.dart';
 import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
 import '../../../../core/data/models/responses/create_saved_place_response.dart';
@@ -223,7 +222,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       debugPrint("getWalletBalance error (suppressed): $e");
     }
-    return WalletBalanceModel(balance: 0.0, currency: CurrencyCode.tzs);
+    throw StateError('Wallet balance unavailable');
   }
 
   @override

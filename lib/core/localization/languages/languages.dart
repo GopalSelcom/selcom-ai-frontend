@@ -486,6 +486,7 @@ abstract class Languages {
   String get viewTrip;
   String get visa;
   String get wallet;
+  String get linkWalletSubtitle;
   String get walletNumberLabel;
   String get recentTransactions;
   String get recentTransactionTitle;

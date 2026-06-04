@@ -563,6 +563,7 @@ class LanguageEn extends Languages {
     'view_trip': 'View trip',
     'visa': 'VISA',
     'wallet': 'Wallet',
+    'link_wallet_subtitle': 'Link your Go wallet to pay for rides',
     'wallet_number_label': 'Wallet Number',
     'recent_transactions': 'Recent Transactions',
     'recent_transaction_title': 'Recent Transaction',
@@ -2325,6 +2326,9 @@ class LanguageEn extends Languages {
 
   @override
   String get wallet => values['wallet'] ?? '';
+
+  @override
+  String get linkWalletSubtitle => values['link_wallet_subtitle'] ?? '';
 
   @override
   String get walletNumberLabel => values['wallet_number_label'] ?? '';
