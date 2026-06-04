@@ -86,6 +86,9 @@ class LanguageEn extends Languages {
     'coming_soon': 'Coming soon',
     'calling_driver': 'Calling Driver',
     'camera_permission': 'Camera Permission',
+    'contacts_permission': 'Contacts Permission',
+    'contacts_access_needed':
+        'We need contacts access to let you select a passenger from your contact list. Please enable it in Settings.',
     'cancel_update': 'Cancel Update',
     'cancel_and_pay': 'Cancel & Pay',
     'cancel_dialogs_gallery': 'Cancel Dialogs Gallery',
@@ -917,7 +920,8 @@ class LanguageEn extends Languages {
   String get mobileMoneyPhoneValue => values['mobile_money_phone_value'] ?? '';
 
   @override
-  String get mobileMoneyAmountValue => values['mobile_money_amount_value'] ?? '';
+  String get mobileMoneyAmountValue =>
+      values['mobile_money_amount_value'] ?? '';
 
   @override
   String get selectAVehicle => values['select_a_vehicle'] ?? '';
@@ -972,6 +976,12 @@ class LanguageEn extends Languages {
 
   @override
   String get cameraPermission => values['camera_permission'] ?? '';
+
+  @override
+  String get contactsPermission => values['contacts_permission'] ?? '';
+
+  @override
+  String get contactsAccessNeeded => values['contacts_access_needed'] ?? '';
 
   @override
   String get cancelUpdate => values['cancel_update'] ?? '';
@@ -2117,8 +2127,7 @@ class LanguageEn extends Languages {
       values['location_permission_denied'] ?? '';
 
   @override
-  String get locationAccessRequired =>
-      values['location_access_required'] ?? '';
+  String get locationAccessRequired => values['location_access_required'] ?? '';
 
   @override
   String get locationPermissionDeniedOpenSettings =>

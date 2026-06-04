@@ -27,7 +27,8 @@ class AppStrings {
   static const String bookRideWalletDeductionNotice =
       'book_ride_wallet_deduction_notice';
   static const String insufficientBalanceTitle = 'insufficient_balance_title';
-  static const String insufficientBalanceMessage = 'insufficient_balance_message';
+  static const String insufficientBalanceMessage =
+      'insufficient_balance_message';
   static const String currentBalanceLabel = 'current_balance_label';
   static const String requiredAmountLabel = 'required_amount_label';
   static const String amountNeededLabel = 'amount_needed_label';
@@ -36,17 +37,20 @@ class AppStrings {
   static const String addMoney = 'add_money';
   static const String amount = 'amount';
   static const String back = 'back';
-  static const String addMoneySelcomPesaSubtitle = 'add_money_selcom_pesa_subtitle';
+  static const String addMoneySelcomPesaSubtitle =
+      'add_money_selcom_pesa_subtitle';
   static const String addMoneyTanQrTips = 'add_money_tan_qr_tips';
-  static const String addMoneyTanQrTipsSubtitle = 'add_money_tan_qr_tips_subtitle';
-  static const String addMoneyMobileMoneySubtitle = 'add_money_mobile_money_subtitle';
-  static const String addMoneyStepsToLoadGoWallet = 'add_money_steps_to_load_go_wallet';
+  static const String addMoneyTanQrTipsSubtitle =
+      'add_money_tan_qr_tips_subtitle';
+  static const String addMoneyMobileMoneySubtitle =
+      'add_money_mobile_money_subtitle';
+  static const String addMoneyStepsToLoadGoWallet =
+      'add_money_steps_to_load_go_wallet';
   static const String addMoneyStepsToLoadGoWalletSubtitle =
       'add_money_steps_to_load_go_wallet_subtitle';
   static const String addMoneyGoWalletStep1 = 'add_money_go_wallet_step_1';
   static const String addMoneyGoWalletStep2 = 'add_money_go_wallet_step_2';
-  static const String addMoneyGoWalletStep3 =
-      'add_money_go_wallet_step_3';
+  static const String addMoneyGoWalletStep3 = 'add_money_go_wallet_step_3';
   static const String addMoneyGoWalletStep4 = 'add_money_go_wallet_step_4';
   static const String addMoneyGoWalletStep5 = 'add_money_go_wallet_step_5';
   static const String walletFundsReceivedTitle = 'wallet_funds_received_title';
@@ -90,6 +94,8 @@ class AppStrings {
   static const String callDriverSheetSubtitle = 'call_driver_sheet_subtitle';
   static const String callingDriver = 'calling_driver';
   static const String cameraPermission = 'camera_permission';
+  static const String contactsPermission = 'contacts_permission';
+  static const String contactsAccessNeeded = 'contacts_access_needed';
   static const String cancelUpdate = 'cancel_update';
   static const String cancelAndPay = 'cancel_and_pay';
   static const String cancelDialogsGallery = 'cancel_dialogs_gallery';

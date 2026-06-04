@@ -3,6 +3,7 @@ import 'package:flutter_native_contact_picker/flutter_native_contact_picker.dart
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../shared/data/countries_phone_data.dart';
 import '../../../../shared/utils/grouped_phone_number_formatter.dart';
@@ -47,10 +48,30 @@ class _BookingForSomeoneElseFlowBottomSheetState
   String? _nameError;
   String? _phoneError;
 
-  final FlutterNativeContactPicker _contactPicker = FlutterNativeContactPicker();
+  final FlutterNativeContactPicker _contactPicker =
+      FlutterNativeContactPicker();
 
   Future<void> _pickContact() async {
     try {
+      if (GetPlatform.isAndroid) {
+        final status = await Permission.contacts.status;
+        if (status.isPermanentlyDenied) {
+          AppDialogs.showPermissionDialog(
+            title: AppStrings.contactsPermission.tr,
+            message: AppStrings.contactsAccessNeeded.tr,
+            onOpenSettings: () => openAppSettings(),
+            icon: Icons.contacts_outlined,
+            secondaryIcon: Icons.contacts,
+          );
+          return;
+        } else if (!status.isGranted) {
+          final requestStatus = await Permission.contacts.request();
+          if (!requestStatus.isGranted) {
+            return;
+          }
+        }
+      }
+
       final contact = await _contactPicker.selectContact();
       if (contact != null) {
         final name = contact.fullName ?? '';
@@ -254,11 +275,7 @@ class _BookingForSomeoneElseFlowBottomSheetState
             ),
           ),
           suffixIcon: IconButton(
-            icon: Icon(
-              Iconsax.user_add,
-              color: AppColors.primary,
-              size: 22.sp,
-            ),
+            icon: Icon(Iconsax.user_add, color: AppColors.primary, size: 22.sp),
             onPressed: _pickContact,
           ),
           errorText: _phoneError,
