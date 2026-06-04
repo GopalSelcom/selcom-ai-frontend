@@ -401,14 +401,14 @@ class VehicleSelectionController extends GetxController {
           stopIcons.add(icon);
         }
 
-        // Destination letter (Green)
+        // Final destination letter circle (secondary — pickup stays primary).
         final destIndex = destinations.length; // If 2 drops, index is 2 (C)
         final label = (destIndex < letters.length)
             ? letters[destIndex]
             : letters.last;
         dropIcon = await MapMarkerUtils.createTextMarker(
           text: label,
-          color: AppColors.primary,
+          color: AppColors.secondary,
         );
       }
     } catch (e, stackTrace) {
