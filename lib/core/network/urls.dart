@@ -168,6 +168,12 @@ class _WalletEndpoints {
   const _WalletEndpoints();
 
   final balance = "go/wallet/balance";
+
+  /// TODO(backend): Confirm wallet-link identity path (SelcomID uses `register/user_data_exist_new`).
+  final verifyIdentity = "go/wallet/verify-identity";
+
+  /// TODO(backend): Name update for wallet link — API not available yet.
+  final updateLinkName = "go/wallet/link/update-name";
 }
 
 /// ─────────────────────────────────

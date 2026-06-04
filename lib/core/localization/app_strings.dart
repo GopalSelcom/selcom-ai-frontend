@@ -647,6 +647,67 @@ class AppStrings {
   static const String visa = 'visa';
   static const String wallet = 'wallet';
   static const String linkWalletSubtitle = 'link_wallet_subtitle';
+  static const String walletLinkSelectId = 'wallet_link_select_id';
+  static const String walletLinkSelectIdSubtitle = 'wallet_link_select_id_subtitle';
+  static const String walletLinkNida = 'wallet_link_nida';
+  static const String walletLinkPassport = 'wallet_link_passport';
+  static const String walletLinkEnterNidaHint = 'wallet_link_enter_nida_hint';
+  static const String walletLinkNidaFieldHint = 'wallet_link_nida_field_hint';
+  static const String walletLinkNidaMaskHint = 'wallet_link_nida_mask_hint';
+  static const String walletLinkPassportDetailsHint =
+      'wallet_link_passport_details_hint';
+  static const String walletLinkPassportNumber = 'wallet_link_passport_number';
+  static const String walletLinkPassportNumberHint =
+      'wallet_link_passport_number_hint';
+  static const String walletLinkDateOfBirth = 'wallet_link_date_of_birth';
+  static const String walletLinkDateOfExpiry = 'wallet_link_date_of_expiry';
+  static const String walletLinkDatePlaceholder = 'wallet_link_date_placeholder';
+  static const String walletLinkFirstName = 'wallet_link_first_name';
+  static const String walletLinkMiddleName = 'wallet_link_middle_name';
+  static const String walletLinkLastName = 'wallet_link_last_name';
+  static const String walletLinkFullNameSubtitle = 'wallet_link_full_name_subtitle';
+  static const String walletLinkInProgressTitle = 'wallet_link_in_progress_title';
+  static const String walletLinkInProgressMessage = 'wallet_link_in_progress_message';
+  static const String walletLinkStepComingSoon = 'wallet_link_step_coming_soon';
+  static const String walletLinkStepSelfie = 'wallet_link_step_selfie';
+  static const String walletLinkStepPassport = 'wallet_link_step_passport';
+  static const String walletLinkBiometricAuth = 'wallet_link_biometric_auth';
+  static const String walletLinkBiometricIntroTitle =
+      'wallet_link_biometric_intro_title';
+  static const String walletLinkBiometricInstruction1 =
+      'wallet_link_biometric_instruction_1';
+  static const String walletLinkBiometricInstruction2 =
+      'wallet_link_biometric_instruction_2';
+  static const String walletLinkBiometricInstruction3 =
+      'wallet_link_biometric_instruction_3';
+  static const String walletLinkBiometricInstruction4 =
+      'wallet_link_biometric_instruction_4';
+  static const String proceed = 'proceed';
+  static const String walletLinkLeftHand = 'wallet_link_left_hand';
+  static const String walletLinkRightHand = 'wallet_link_right_hand';
+  static const String walletLinkHowToScanFingers =
+      'wallet_link_how_to_scan_fingers';
+  static const String walletLinkFingerScanCorrect = 'wallet_link_finger_correct';
+  static const String walletLinkFingerScanWrong = 'wallet_link_finger_wrong';
+  static const String walletLinkHaveMissingFingers =
+      'wallet_link_have_missing_fingers';
+  static const String walletLinkPassportScanTitle =
+      'wallet_link_passport_scan_title';
+  static const String walletLinkPassportScanHow =
+      'wallet_link_passport_scan_how';
+  static const String walletLinkPassportScanHowBody =
+      'wallet_link_passport_scan_how_body';
+  static const String walletLinkPassportNfcTitle = 'wallet_link_passport_nfc_title';
+  static const String walletLinkPassportNfcBody = 'wallet_link_passport_nfc_body';
+  static const String walletLinkPassportNfcCta = 'wallet_link_passport_nfc_cta';
+  static const String walletLinkPassportCameraTitle =
+      'wallet_link_passport_camera_title';
+  static const String walletLinkPassportCameraBody =
+      'wallet_link_passport_camera_body';
+  static const String walletLinkPassportCameraCta =
+      'wallet_link_passport_camera_cta';
+  static const String walletLinkNfcComingSoon = 'wallet_link_nfc_coming_soon';
+  static const String walletLinkEnterYourName = 'wallet_link_enter_your_name';
   static const String walletNumberLabel = 'wallet_number_label';
   static const String recentTransactions = 'recent_transactions';
   static const String recentTransactionTitle = 'recent_transaction_title';

@@ -72,7 +72,6 @@ class AppRoutes {
   static const String changeDropLocationEditor = '/change-drop-location-editor';
   static const String wallet = '/wallet';
   static const String walletTransactions = '/wallet/transactions';
-
   static List<GetPage> get pages => [
     ...AgoraCalling.routes(),
     GetPage(name: splash, page: () => const SplashScreen()),

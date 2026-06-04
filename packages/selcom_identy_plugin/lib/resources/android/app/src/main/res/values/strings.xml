@@ -1,0 +1,154 @@
+<resources>
+    <!-- <string name="app_name">PaperScanner</string> -->
+    <string name="title_activity_main2">Main2Activity</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_settings">Settings</string>
+    <string name="camera_grant">grant camera!</string>
+    <string name="press_again_logout">Press back again and logout</string>
+
+    <string name="next">Confirm</string>
+    <string name="crop">Next</string>
+    <string name="save">Save</string>
+    <string name="export">Export</string>
+    <string name="delete">Delete</string>
+    <string name="enhance">Enhance</string>
+    <string name="black">Black_White</string>
+    <string name="reset">Reset</string>
+    <string name="scan">Scan</string>
+    <string name="rotate">Rotate</string>
+<!--    <string name="rotate_your_phone">Rotate your phone to horizontal orientation and place your passport within a frame until all four edges are aligned then tap red recording button.</string>-->
+    <string name="rotate_your_phone">Rotate your <b>Passport</b> and place it within a frame until all four edges are aligned and tap on the red record button.</string>
+
+    <string name="new_next">Next</string>
+    <string name="new_done">Done</string>
+
+    <string name="txt_need_camera_storage_permission">We will need camera &amp; storage access to detect liveness and selfie capture.</string>
+
+
+    <!-- Finger Scan String -->
+    <string name="id_hold">Please hold</string>
+    <string name="id_hold_1">Please hold 1</string>
+    <string name="id_hold_2">Please hold 2</string>
+    <string name="id_hold_3">Please hold 3</string>
+    <string name="id_hold_4">Please hold 4</string>
+    <string name="id_hold_5">Please hold 5</string>
+    <string name="id_hold_6">Please hold 6</string>
+    <string name="id_hand_closer">Please bring hand closer</string>
+    <string name="id_hand_further_away">Move hand further away</string>
+    <string name="id_capturing">Capturing..</string>
+    <string name="id_captured">Captured</string>
+    <string name="id_spoof">SPOOF</string>
+    <string name="id_stable">Please be stable</string>
+    <string name="id_inside_guide">Please be inside the guide</string>
+    <string name="id_keep_fingers_together">keep fingers together</string>
+    <string name="id_searching_left">Searching For Left fingers ...</string>
+    <string name="id_searching_right">Searching For Right fingers ...</string>
+    <string name="id_searching_left_index">Searching For Left Index ...</string>
+    <string name="id_searching_right_index">Searching For Right Index ...</string>
+    <string name="id_searching_left_middle">Searching For Left Middle ...</string>
+    <string name="id_searching_right_middle">Searching For Right Middle ...</string>
+    <string name="id_searching_left_ring">Searching For Left Ring ...</string>
+    <string name="id_searching_right_ring">Searching For Right Ring ...</string>
+    <string name="id_searching_left_little">Searching For Left Little ...</string>
+    <string name="id_searching_right_little">Searching For Right Little ...</string>
+    <string name="id_searching_left_thumb">Searching For Left Thumb ...</string>
+    <string name="id_searching_right_thumb">Searching For Right Thumb ...</string>
+    <string name="id_searching_thumb">Searching For Thumbs ...</string>
+    <string name="id_capture_completed">Capture Completed</string>
+    <string name="id_authentication_successful">Authenticated</string>
+    <string name="id_authentication_unsuccessful">Authentication UnSuccessful</string>
+    <string name="id_authentication_retake">UNSURE RETAKE</string>
+    <string name="id_retry">Retry</string>
+    <string name="id_pic_qc_title">PICTURE QUALITY FAILED</string>
+    <string name="id_qc_retake">We need to retake the picture</string>
+    <string name="id_hold_still">Make sure you hold still until automatic capture </string>
+    <string name="id_retake_additional_tip">Additional Tips</string>
+    <string name="id_retake_tip_1">Your fingers face the camera</string>
+    <string name="id_retake_tip_2">Your fingers are inside blue box </string>
+    <string name="id_retake_tip_3">Use normal indoor lighting</string>
+    <string name="id_spoof_title">Spoof Detected</string>
+    <string name="id_spoof_question">Are you using real hands to authenticate?</string>
+    <string name="id_spoof_additional_tip">Additional Tips</string>
+    <string name="id_spoof_tip_1">Use your real fingers</string>
+    <string name="id_spoof_tip_2">Use normal indoor lighting </string>
+    <string name="id_spoof_tip_3">Try a different location/background</string>
+    <string name="id_retake">RETAKE</string>
+    <string name="id_continue">CONTINUE</string>
+    <string name="id_try_again_in">Please try again in : </string>
+    <string name="id_select_hand">please select atleast one hand</string>
+    <string name="id_processing">Processing ...</string>
+    <string name="id_try_again">Try Again</string>
+    <string name="id_next">NEXT</string>
+    <string name="id_dshow_again">Don\'t show me again</string>
+    <string name="id_identy_template_format">IDENTY Template Format</string>
+    <string name="id_wsq_compression">WSQ Compression ratio</string>
+    <string name="id_not_good_quality">not good quality.</string>
+    <string name="id_index_finger">index finger</string>
+    <string name="id_middle_finger">middle finger</string>
+    <string name="id_ring_finger">ring finger</string>
+    <string name="id_little_finger">index finger</string>
+    <string name="id_thumb_finger">index finger</string>
+    <string name="id_close">Close</string>
+    <string name="id_success">Success</string>
+    <string name="id_index">INDEX </string>
+    <string name="id_middle">MIDDLE </string>
+    <string name="id_ring">RING </string>
+    <string name="id_little">LITTLE </string>
+    <string name="id_thumb">THUMB </string>
+    <string name="id_left_thumb"> LEFT THUMB</string>
+    <string name="id_right_thumb">RIGHT THUMB</string>
+    <string name="id_zero">0</string>
+    <string name="id_yes">YES</string>
+    <string name="id_no">NO</string>
+    <string name="id_ok">OK</string>
+    <string name="id_retake_string">retake</string>
+    <string name="id_retake_q">retake?</string>
+    <string name="id_quality_failed">Image Quality Failed</string>
+    <string name="id_image_cd_todo">TODO</string>
+    <string name="id_success_match">SUCCESSFUL MATCH</string>
+    <string name="id_retake_match">Unsucessfully recongized, try again</string>
+    <string name="id_no_match">NO MATCH</string>
+    <string name="id_good_quality">All good quality</string>
+    <string name="id_enrollment_completed">ENROLLMENT COMPLETED</string>
+    <string name="id_keep_fingers">1.Extend and keep fingers together</string>
+    <string name="id_in_front_camera">2.Place fingers in front of camera</string>
+    <string name="id_stay_still_blue">3.Stay still inside the blue rectangle</string>
+    <string name="id_wait_auto">4.Wait for automatic capture (Until flash goes off)</string>
+    <string name="id_next_detection">Move to next hand ?</string>
+    <string name="id_next_hand_confirm">Next Detection Confirm</string>
+    <string name="id_location_error_1">Something is weird</string>
+    <string name="id_location_error_2">Change Location</string>
+    <string name="id_confirm_exit">Confirm Exit</string>
+    <string name="id_exit_text">Do you want to exit Capture?</string>
+
+    <!-- app string -->
+    <string name="title_select_screen">Biometric Authentication</string>
+    <string name="select_hand">Select one of the finger combinations to scan</string>
+    <string name="left_finger">Left four fingers</string>
+    <string name="right_finger">Right four fingers</string>
+    <string name="missing_finger">Have missing fingers?</string>
+    <string name="btnproceed">Proceed</string>
+    <string name="deselect_missingfinger">Deselect Missing Fingers</string>
+    <string name="done">Done</string>
+    <string name="left_missing">Left %d Fingers</string>
+    <string name="right_missing">Right %d Fingers</string>
+       <!-- Footer string -->
+    <string name="selcom_how_to_scan">How to scan fingers</string>
+    <string name="selcom_how_to_scan_one">1. Ensure your hand is steadily placed on a stable surface and your fingertips are clearly in focus.</string>
+    <string name="selcom_how_to_scan_two">2. Make sure there is an ample lighting condition.</string>
+       <!-- Sppof screen string -->
+    <string name="spoof_title">Spoof Detected</string>
+    <string name="spoof_description">Please retake using real fingers.</string>
+    <string name="spoof_point_one">• Use your real fingers</string>
+    <string name="spoof_point_two">• Use normal indoor lighting</string>
+    <string name="spoof_point_three">• Try a different location/background</string>
+       <!-- Quality screen string -->
+    <string name="quality_title">Low Picture Quality</string>
+    <string name="quality_description">Please hold still until your fingerprints are captured.</string>
+    <string name="quality_point_one">• Your fingers are visible on the camera</string>
+    <string name="quality_point_two">• Your fingers are inside the green box</string>
+    <string name="quality_point_three">• You are in a well lit environment</string>
+</resources>

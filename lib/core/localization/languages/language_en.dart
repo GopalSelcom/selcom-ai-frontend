@@ -564,6 +564,67 @@ class LanguageEn extends Languages {
     'visa': 'VISA',
     'wallet': 'Wallet',
     'link_wallet_subtitle': 'Link your Go wallet to pay for rides',
+    'wallet_link_select_id': 'Select ID',
+    'wallet_link_select_id_subtitle':
+        'Choose NIDA or Passport to verify your identity and link your Go wallet.',
+    'wallet_link_nida': 'NIDA',
+    'wallet_link_passport': 'Passport',
+    'wallet_link_enter_nida_hint': 'Enter your NIDA card number to proceed',
+    'wallet_link_nida_field_hint': 'Enter NIDA card number',
+    'wallet_link_nida_mask_hint': '########-#####-#####-##',
+    'wallet_link_passport_details_hint':
+        'Enter your passport details to proceed',
+    'wallet_link_passport_number': 'Passport number',
+    'wallet_link_passport_number_hint': 'Enter passport number',
+    'wallet_link_date_of_birth': 'Date of birth',
+    'wallet_link_date_of_expiry': 'Date of expiry',
+    'wallet_link_date_placeholder': 'YYYY-MM-DD',
+    'wallet_link_first_name': 'First name',
+    'wallet_link_middle_name': 'Middle name',
+    'wallet_link_last_name': 'Last name',
+    'wallet_link_full_name_subtitle':
+        'Provide your full name as it appears on your ID.',
+    'wallet_link_in_progress_title': 'Wallet linking',
+    'wallet_link_in_progress_message':
+        'Next steps (biometrics and selfie) will be available soon. You can try again later from Profile.',
+    'wallet_link_step_coming_soon': 'Coming soon:',
+    'wallet_link_step_selfie': 'Selfie verification',
+    'wallet_link_step_passport': 'Passport scan',
+    'wallet_link_biometric_auth': 'Biometric Authentication',
+    'wallet_link_biometric_intro_title':
+        'Instruction to scan your fingerprints',
+    'wallet_link_biometric_instruction_1':
+        '1. Place your hand on a flat surface in a well-lit environment.',
+    'wallet_link_biometric_instruction_2':
+        '2. Keep your hand still during the scan.',
+    'wallet_link_biometric_instruction_3':
+        '3. Make minor adjustments in case the camera cannot focus',
+    'wallet_link_biometric_instruction_4':
+        '4. Wait for the scanner to take the picture automatically',
+    'proceed': 'Proceed',
+    'wallet_link_left_hand': 'Left Hand',
+    'wallet_link_right_hand': 'Right Hand',
+    'wallet_link_how_to_scan_fingers': 'How to scan your fingers',
+    'wallet_link_finger_correct': 'Correct',
+    'wallet_link_finger_wrong': 'Wrong',
+    'wallet_link_have_missing_fingers': 'Have missing fingers?',
+    'wallet_link_passport_scan_title': 'Passport',
+    'wallet_link_passport_scan_how': 'How do you want to read your passport?',
+    'wallet_link_passport_scan_how_body':
+        'Choose one option. NFC reads the electronic chip on the passport cover. '
+        'Camera captures the printed data page so text can be read on this device.',
+    'wallet_link_passport_nfc_title': 'NFC chip scan',
+    'wallet_link_passport_nfc_body':
+        'Enable NFC in system settings. Enter passport number and dates on the next screen, '
+        'then place your phone on the passport cover until reading finishes.',
+    'wallet_link_passport_nfc_cta': 'Continue with NFC',
+    'wallet_link_passport_camera_title': 'Camera scan',
+    'wallet_link_passport_camera_body':
+        'Photograph the passport data page in good light. Align the page inside the frame '
+        'with the MRZ lines in the highlighted band, then review extracted details before saving.',
+    'wallet_link_passport_camera_cta': 'Open camera',
+    'wallet_link_nfc_coming_soon': 'NFC passport scan will be available soon.',
+    'wallet_link_enter_your_name': 'Enter your name',
     'wallet_number_label': 'Wallet Number',
     'recent_transactions': 'Recent Transactions',
     'recent_transaction_title': 'Recent Transaction',
@@ -2329,6 +2390,174 @@ class LanguageEn extends Languages {
 
   @override
   String get linkWalletSubtitle => values['link_wallet_subtitle'] ?? '';
+
+  @override
+  String get walletLinkSelectId => values['wallet_link_select_id'] ?? '';
+
+  @override
+  String get walletLinkSelectIdSubtitle =>
+      values['wallet_link_select_id_subtitle'] ?? '';
+
+  @override
+  String get walletLinkNida => values['wallet_link_nida'] ?? '';
+
+  @override
+  String get walletLinkPassport => values['wallet_link_passport'] ?? '';
+
+  @override
+  String get walletLinkEnterNidaHint => values['wallet_link_enter_nida_hint'] ?? '';
+
+  @override
+  String get walletLinkNidaFieldHint => values['wallet_link_nida_field_hint'] ?? '';
+
+  @override
+  String get walletLinkNidaMaskHint => values['wallet_link_nida_mask_hint'] ?? '';
+
+  @override
+  String get walletLinkPassportDetailsHint =>
+      values['wallet_link_passport_details_hint'] ?? '';
+
+  @override
+  String get walletLinkPassportNumber =>
+      values['wallet_link_passport_number'] ?? '';
+
+  @override
+  String get walletLinkPassportNumberHint =>
+      values['wallet_link_passport_number_hint'] ?? '';
+
+  @override
+  String get walletLinkDateOfBirth => values['wallet_link_date_of_birth'] ?? '';
+
+  @override
+  String get walletLinkDateOfExpiry => values['wallet_link_date_of_expiry'] ?? '';
+
+  @override
+  String get walletLinkDatePlaceholder =>
+      values['wallet_link_date_placeholder'] ?? '';
+
+  @override
+  String get walletLinkFirstName => values['wallet_link_first_name'] ?? '';
+
+  @override
+  String get walletLinkMiddleName => values['wallet_link_middle_name'] ?? '';
+
+  @override
+  String get walletLinkLastName => values['wallet_link_last_name'] ?? '';
+
+  @override
+  String get walletLinkFullNameSubtitle =>
+      values['wallet_link_full_name_subtitle'] ?? '';
+
+  @override
+  String get walletLinkInProgressTitle =>
+      values['wallet_link_in_progress_title'] ?? '';
+
+  @override
+  String get walletLinkInProgressMessage =>
+      values['wallet_link_in_progress_message'] ?? '';
+
+  @override
+  String get walletLinkStepComingSoon =>
+      values['wallet_link_step_coming_soon'] ?? '';
+
+  @override
+  String get walletLinkStepSelfie => values['wallet_link_step_selfie'] ?? '';
+
+  @override
+  String get walletLinkStepPassport => values['wallet_link_step_passport'] ?? '';
+
+  @override
+  String get walletLinkBiometricAuth =>
+      values['wallet_link_biometric_auth'] ?? '';
+
+  @override
+  String get walletLinkBiometricIntroTitle =>
+      values['wallet_link_biometric_intro_title'] ?? '';
+
+  @override
+  String get walletLinkBiometricInstruction1 =>
+      values['wallet_link_biometric_instruction_1'] ?? '';
+
+  @override
+  String get walletLinkBiometricInstruction2 =>
+      values['wallet_link_biometric_instruction_2'] ?? '';
+
+  @override
+  String get walletLinkBiometricInstruction3 =>
+      values['wallet_link_biometric_instruction_3'] ?? '';
+
+  @override
+  String get walletLinkBiometricInstruction4 =>
+      values['wallet_link_biometric_instruction_4'] ?? '';
+
+  @override
+  String get proceed => values['proceed'] ?? '';
+
+  @override
+  String get walletLinkLeftHand => values['wallet_link_left_hand'] ?? '';
+
+  @override
+  String get walletLinkRightHand => values['wallet_link_right_hand'] ?? '';
+
+  @override
+  String get walletLinkHowToScanFingers =>
+      values['wallet_link_how_to_scan_fingers'] ?? '';
+
+  @override
+  String get walletLinkFingerScanCorrect =>
+      values['wallet_link_finger_correct'] ?? '';
+
+  @override
+  String get walletLinkFingerScanWrong =>
+      values['wallet_link_finger_wrong'] ?? '';
+
+  @override
+  String get walletLinkHaveMissingFingers =>
+      values['wallet_link_have_missing_fingers'] ?? '';
+
+  @override
+  String get walletLinkPassportScanTitle =>
+      values['wallet_link_passport_scan_title'] ?? '';
+
+  @override
+  String get walletLinkPassportScanHow =>
+      values['wallet_link_passport_scan_how'] ?? '';
+
+  @override
+  String get walletLinkPassportScanHowBody =>
+      values['wallet_link_passport_scan_how_body'] ?? '';
+
+  @override
+  String get walletLinkPassportNfcTitle =>
+      values['wallet_link_passport_nfc_title'] ?? '';
+
+  @override
+  String get walletLinkPassportNfcBody =>
+      values['wallet_link_passport_nfc_body'] ?? '';
+
+  @override
+  String get walletLinkPassportNfcCta =>
+      values['wallet_link_passport_nfc_cta'] ?? '';
+
+  @override
+  String get walletLinkPassportCameraTitle =>
+      values['wallet_link_passport_camera_title'] ?? '';
+
+  @override
+  String get walletLinkPassportCameraBody =>
+      values['wallet_link_passport_camera_body'] ?? '';
+
+  @override
+  String get walletLinkPassportCameraCta =>
+      values['wallet_link_passport_camera_cta'] ?? '';
+
+  @override
+  String get walletLinkNfcComingSoon =>
+      values['wallet_link_nfc_coming_soon'] ?? '';
+
+  @override
+  String get walletLinkEnterYourName =>
+      values['wallet_link_enter_your_name'] ?? '';
 
   @override
   String get walletNumberLabel => values['wallet_number_label'] ?? '';

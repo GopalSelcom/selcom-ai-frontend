@@ -18,6 +18,8 @@ import '../../../../shared/utils/phone_formatter.dart';
 import '../../../../shared/widgets/web_view_screen.dart';
 import '../../../ride/presentation/screens/my_rides_screen.dart';
 import '../../../wallet/presentation/utils/wallet_format_utils.dart';
+import '../../../wallet_link/presentation/bindings/wallet_enter_nida_binding.dart';
+import '../../../wallet_link/presentation/screens/wallet_enter_nida_screen.dart';
 import '../../data/models/request/update_profile_request.dart';
 import '../../domain/usecases/profile_usecase.dart';
 
@@ -162,9 +164,19 @@ class ProfileController extends GetxController {
   }
 
   void onWalletCardTap() {
-    // TODO: When wallet linking is available, navigate unlinked tap to
-    // if (!isWalletLinked.value) return;
+    if (!isWalletLinked.value) {
+      openWalletLinkFlow();
+      return;
+    }
     openWallet();
+  }
+
+  Future<void> openWalletLinkFlow() async {
+    await Get.to(
+      () => const WalletEnterNidaScreen(),
+      binding: WalletEnterNidaBinding(),
+    );
+    await fetchWalletBalance();
   }
 
   void toggleEditMode() {

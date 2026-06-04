@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#202124</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="colorTransparent">#00ffffff</color>
+    <color name="black">#000000</color>
+    <color name="themeColor">#202124</color>
+
+    <color name="colorbuttonbg">#89c6f1</color>
+
+    <color name="boxes">#ff5CB75E</color>
+    <color name="boxes_transparent">#ffE3F3E4</color>
+    <color name="id_result_center">#ff5CB75E</color>
+    <color name="id_result_end">#ff5CB75E</color>
+    <color name="id_result_start">#ff5CB75E</color>
+    <color name="id_success">#ff5CB75E</color>
+    <color name="id_error">#ff5CB75E</color>
+    <color name="id_retake">#ff5CB75E</color>
+
+    <color name="background_color">#202124</color>
+    <color name="white">#ffffff</color>
+    <color name="green">#2ABA52</color>
+    <color name="grey">#A0A0A0</color>
+
+
+
+</resources>

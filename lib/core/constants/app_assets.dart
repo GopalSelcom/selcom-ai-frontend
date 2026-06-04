@@ -95,4 +95,19 @@ class AppAssets {
 
   ///animations:-
   static const String carAnimation = '$_jsonPath/car_animation.json';
+
+  // Wallet link (selcom_auth onboarding parity)
+  static const String _walletLinkOnboarding = 'assets/selcom_auth/onboarding';
+  static const String walletLinkBiometricScanLottie =
+      '$_walletLinkOnboarding/biometric_scanning.json';
+  static const String walletLinkLeftHand =
+      '$_walletLinkOnboarding/left_hand.png';
+  static const String walletLinkRightHand =
+      '$_walletLinkOnboarding/right_hand.png';
+  static const String walletLinkFingerScanCorrect =
+      '$_walletLinkOnboarding/finger_right_scan.png';
+  static const String walletLinkFingerScanWrong =
+      '$_walletLinkOnboarding/finger_wrong_scan.png';
+  static const String walletLinkFaceScan =
+      'assets/selcom_auth/face/facescan.png';
 }

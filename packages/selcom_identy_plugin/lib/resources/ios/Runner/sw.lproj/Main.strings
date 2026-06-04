@@ -1,0 +1,177 @@
+"search_left_missingFingers" = "Inatafuta vidole vya kushoto";
+"search_right_missingFingers" = "Inatafuta vidole vya kulia";
+
+"identy_please_wait" = "Tafadhali subiri...";
+"identy_left_four_fingers" = "Kushoto vidole vinne";
+"identy_right_four_fingers" = "Vidole vinne vya kulia";
+"identy_left_index" = "Faharisi ya kushoto";
+"identy_left_middle" = "Kushoto katikati";
+"identy_left_ring" = "Pete ya kushoto";
+"identy_left_little" = "Kushoto kidogo";
+"identy_right_index" = "Faharisi ya kulia";
+"identy_right_middle" = "Katikati ya kulia";
+"identy_right_ring" = "Pete ya kulia";
+"identy_right_little" = "Haki kidogo";
+"identy_left_thumb" = "Kidole gumba cha kushoto";
+"identy_right_thumb" = "Kidole gumba cha kulia";
+"identy_two_thumb" = "Kidole gumba";
+"identy_left_palm" = "Mtende wa kushoto";
+"identy_right_palm" = "Kiganja cha kulia";
+"id_searching_thumbs" = "Inatafuta vidole gumba";
+
+/*Internet Check*/
+"identy_alert" = "Tahadhari";
+"identy_settings" = "Mipangilio";
+"identy_cancel" = "Ghairi";
+"identy_no_internet" = "Tafadhali angalia muunganisho wako wa Mtandao";
+"identy_enable_internet_message" = "Tafadhali washa mtandao";
+"identy_initialization_failed" = "Uanzishaji Umeshindwa";
+"identy_jailbroken_device" = "Kifaa ni Jailbroken";
+"identy_no_lic_file" = "Hitilafu ya leseni....";
+"identy_activity_paused" = "Shughuli imesitishwa";
+"identy_back_pressed" = "Shughuli imesitishwa kwa kubonyeza nyuma";
+"identy_timeout" = "Muda wa Malipo";
+"identy_limit_exceeded" = "Kikomo cha shughuli kilizidi";
+"identy_invalid_transaction_time" = "Wakati batili wa Ununuzi";
+"identy_invalid_transaction_count" = "Hesabu batili ya Ununuzi";
+"identy_nistgenration_failed" = "Imeshindwa kuunda faili ya NIST";
+"identy_templategenration_failed" = "Imeshindwa kuunda Kiolezo";
+"identy_invalid_input" = "Ingizo batili";
+
+
+"id_close" = "Funga";
+"id_yes" = "NDIYO";
+"id_no" = "HAPANA";
+/*FingerResultViewController*/
+"identy_nfiq" = "NFIQ";
+"identy_score" = "Score";
+
+"id_enrollment_completed" =  "Usajili Umekamilika";
+"id_success_match" =  "Imefanikiwa";
+"id_authentication_unsuccessful" = "Uhakiki haujafanikiwa";
+"id_capture_successful" = "Imemaliza kuchukua";
+"identy_nfiq" = "NFIQ";
+"identy_score" = "Alama";
+
+
+/*CameraViewController*/
+"search_left_missingFingers_index" = "Inatafuta kidole cha shahada cha kushoto";
+"search_left_missingFingers_middle" = "Inatafuta kidole cha kati cha kushoto";
+"search_left_missingFingers_ring" = "Inatafuta kidole cha pete cha kushoto";
+"search_left_missingFingers_little" = "Inatafuta kidole cha mwisho cha kushoto";
+
+"search_right_missingFingers_index" = "Inatafuta kidole cha shahada cha kulia";
+"search_right_missingFingers_middle" = "Inatafuta kidole cha kati cha kulia";
+"search_right_missingFingers_ring" = "Inatafuta kidole cha pete cha kulia";
+"search_right_missingFingers_little" = "Inatafuta kidole cha mwisho cha kulia";
+
+
+"id_badlighting" = "Kuna kitu hakiko sawa \Badili mazingira";
+"id_searching_left" = "Inatafuta vidole vya kushoto";
+"id_searching_right" = "Kutafuta vidole vya kulia";
+"id_searching_left_thumb" = "Inatafuta kidole gumba cha kushoto";
+"id_searching_right_thumb" = "Inatafuta kidole gumba cha kulia";
+
+"id_spoof" = "FEKI";
+"id_hold" = "Tafadhali subiri";
+"id_hold_0" = "Tafadhali subiri 0";
+"id_hold_1" = "Tafadhali subiri 1";
+"id_hold_2" = "Tafadhali subiri 2";
+"id_hold_3" = "Tafadhali subiri 3";
+"id_hold_4" = "Tafadhali subiri 4";
+"id_hold_5" = "Tafadhali subiri 5";
+
+"id_capturing" = "Inachukua";
+"id_captured" = "Imemaliza kuchukua";
+"id_inside_guide" = "Tafadhali kaa ndani ya mstari";
+"id_stable" = "Usijitingishe";
+"id_next_hand_confirm" = "Hakiki mkono mwingine";
+"id_next_detection" = "Weka mkono mwingine?";
+"id_move_your_hand_away" = "Sogeza mkono mbali zaidi";
+"id_bring_hand_closer" = "Sogeza mkono karibu";
+
+
+/*IntroScreenViewController*/
+
+"id_keep_fingers" = "1.Nyoosha na weka vidole pamoja";
+"id_in_front_camera" = "2.Weka vidole kwenye camera ya mbele";
+"id_stay_still_blue" = "3.Tulia ndani ya boksi la blue";
+"id_wait_auto" = "4.Subiri ikijipiga yenyewe";
+"id_next" = "Endelea";
+"id_dshow_again" = "Usinioneshe hii tena";
+
+
+
+/*Spoof*/
+
+"id_spoof_title" = "Taarifa zisizo sahihi zimegundulika";
+"id_spoof_question" = "Je, unatumia mikono halisi kuhakiki?";
+"id_spoof_additional_tip" = "Taarifa za ziada";
+"id_spoof_tip_1" = "Tumia vidole halisi";
+"id_spoof_tip_2" = "Tumia mwanga wa kawaida";
+"id_spoof_tip_3" = "Jaribu eneo tofauti";
+"id_continue" = "Endelea";
+
+/*Picture Quality*/
+
+"id_pic_qc_title" = "Ubora wa picha umekataliwa";
+"id_qc_retake" = "Inahitaji kuchukua picha tena";
+"id_hold_still" = "Tulia mpaka itakapochukua picha yenyewe";
+"id_retake_additional_tip" = "Taarifa za ziada";
+"id_retake_tip_1" = "Vidole viangalie kamera";
+"id_retake_tip_2" = "Vidole vipo nje ya box la blue";
+"id_retake_tip_3" = "Tumia mwanga wa kawaida";
+"id_retake" = "Chukua tena";
+
+/*Fingers*/
+
+"id_index" = "CHA KWANZA";
+"id_middle" = "CHA KATI";
+"id_ring" = "CHA PETE";
+"id_little" = "CHA MWISHO";
+"id_thumb" = "GUMBA";
+"id_left_thumb" = "GUMBA KUSHOTO";
+"id_right_thumb" = "GUMBA KULIA";
+
+"id_something_weird" = "Kitu cha kushangaza";
+"id_try_again_btn"   = "Jaribu tena";
+
+
+"identy_camera_permission"  = "Ruhusa ya kufikia Kamera";
+"identy_camera_permission_message" = "Programu haina ruhusa ya kutumia kamera, tafadhali badilisha mipangilio ya faragha";
+
+"identy_initialize" = "Inaanzisha...";
+"identy_exit" = "Unataka kusitishakuchukua picha?";
+"id_nistcreated" = "Faili ya ANSI / NIST imetengenezwa...";
+"id_timeout" = "Imeisha Muda";
+"id_alert_btn"  = "SAWA";
+"id_unsuccessful_recognition" =  "haijatambulika, jaribu tena";
+
+
+"title_select_screen" = "Uhakiki kwa biometriki";
+"select_hand" = "Chagua njia mojawapo ya kuskani vidole";
+"left_finger" = "Vidole vinne vya kushoto";
+"right_finger" = "Vidole vinne vya kulia";
+"missing_finger" = "Hauna baadhi ya vidole?";
+"btnproceed" = "Endelea";
+"deselect_missingfinger" = "Ondoka vidole vinavyokosekana";
+"done" = "Imekamilika";
+"left_missing" = "Kushoto %d vidole";
+"right_missing" = "Vidole %d vya kulia";
+"validation_handselection" = "Tafadhali hakikisha umechagua mkono";
+
+"selcom_how_to_scan" = "Jinsi ya kuskani";
+"selcom_how_to_scan_one" = "1. Hakikisha mkono wako umewekwa juu ya sehemu bapa iliyotulia na sehemu ya juu ya vidole inaonekana vizuri kwenye kamera.";
+"selcom_how_to_scan_two" = "2. Hakikisha sehemu uliyopo ina mwanga wa kutosha.";
+
+"spoof_title" = "Sio Halisia";
+"spoof_description" = "Tafadhali jaribu tena na vidole vyako halisi.";
+"spoof_point_one" = "Tumia vidole vyako halisi";
+"spoof_point_two" = "Hakikisha upo kwenye mwanga angavu";
+"spoof_point_three" = "Jaribu kupiga picha kwenye mazingira tofauti";
+
+"quality_title" = "Ubora wa Picha ni Hafifu";
+"quality_description" = "Tafadhali hakikisha picha ya alama za vidole vyako imechukuliwa.";
+"quality_point_one" = "Hakikisha vidole vinaonekana kwenye kamera";
+"quality_point_two" = "Vidole vipo ndani ya boksi la kijani";
+"quality_point_three" = "Upo kwenye mwanga angavu";

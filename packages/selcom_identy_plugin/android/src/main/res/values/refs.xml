@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <item name="identy_fin_s_main_header" type="layout" tools:override="true">
+        @layout/identy_scanner_header
+    </item>
+    <item name="identy_fin_support_below_preview" type="layout" tools:override="true">
+        @layout/identy_scanner_footer
+    </item>
+    <item name="touchless_spoof_dialog" type="layout" tools:override="true">
+        @layout/android_retake_layout_spoof
+    </item>
+    <item name="identy_retake" type="layout" tools:override="true">
+        @layout/android_retake_quality
+    </item>
+<!--    <item name="boxes" type="color" tools:override="true">#FF0000</item>-->
+<!--    <item name="boxes_transparent" type="color" tools:override="true">-->
+<!--        #FF0000-->
+<!--    </item>-->
+</resources>

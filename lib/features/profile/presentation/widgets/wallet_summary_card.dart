@@ -14,16 +14,23 @@ import '../../../../shared/utils/currency_formatter.dart';
 class WalletSummaryCard extends StatelessWidget {
   final String balance;
   final String walletNumber;
+  final VoidCallback? onTap;
 
   const WalletSummaryCard({
     super.key,
     required this.balance,
     required this.walletNumber,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(27.r),
+        child: Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 9.w, vertical: 6.h),
       decoration: BoxDecoration(
@@ -82,6 +89,7 @@ class WalletSummaryCard extends StatelessWidget {
                         onTap: () {
                           Clipboard.setData(ClipboardData(text: walletNumber));
                         },
+                        behavior: HitTestBehavior.opaque,
                         child: SvgPictureAsset(
                           AppAssets.icCopy,
                           width: 14.w,
@@ -128,6 +136,8 @@ class WalletSummaryCard extends StatelessWidget {
             ],
           ),
         ],
+      ),
+        ),
       ),
     );
   }
