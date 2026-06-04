@@ -647,6 +647,16 @@ class AppStrings {
   static const String visa = 'visa';
   static const String wallet = 'wallet';
   static const String walletNumberCopied = 'wallet_number_copied';
+  static const String walletNumberLabel = 'wallet_number_label';
+  static const String recentTransactions = 'recent_transactions';
+  static const String recentTransactionTitle = 'recent_transaction_title';
+  static const String viewAll = 'view_all';
+  static const String eStatement = 'e_statement';
+  static const String showVcn = 'show_vcn';
+  static const String noTransactionsYet = 'no_transactions_yet';
+  static const String filterAll = 'filter_all';
+  static const String filterReceived = 'filter_received';
+  static const String filterSent = 'filter_sent';
   static const String weCouldNotConfirmYourPaymentBlockPleaseTryAgain =
       'we_could_not_confirm_your_payment_block_please_try_again';
   static const String weLlTextACodeToVerifyYourPhoneNumber =

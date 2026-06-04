@@ -101,6 +101,7 @@ class AppColors {
   static const Color borderNeutral = Color(0xFFEDEDED);
   static const Color borderNeutralStrong = Color(0xFFCBD5E1);
   static const Color borderGray = Color(0xFFD9D9D9);
+  static const Color walletCardText = Color(0xFF5D6A85);
 
   // Base colors
   static const Color white = Color(0xFFFFFFFF);

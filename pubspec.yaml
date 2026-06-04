@@ -71,6 +71,7 @@ dependencies:
   flutter_native_contact_picker: ^0.0.12
   agora_calling_package:
     path: ./packages/agora_calling_package
+  card_swiper: ^3.0.1
 
 dev_dependencies:
   flutter_test:

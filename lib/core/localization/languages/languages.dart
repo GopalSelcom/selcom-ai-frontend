@@ -487,6 +487,16 @@ abstract class Languages {
   String get visa;
   String get wallet;
   String get walletNumberCopied;
+  String get walletNumberLabel;
+  String get recentTransactions;
+  String get recentTransactionTitle;
+  String get viewAll;
+  String get eStatement;
+  String get showVcn;
+  String get noTransactionsYet;
+  String get filterAll;
+  String get filterReceived;
+  String get filterSent;
   String get weCouldNotConfirmYourPaymentBlockPleaseTryAgain;
   String get weLlTextACodeToVerifyYourPhoneNumber;
   String get weWillNotifyYouWhenSomethingImportantHappens;

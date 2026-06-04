@@ -564,6 +564,16 @@ class LanguageEn extends Languages {
     'visa': 'VISA',
     'wallet': 'Wallet',
     'wallet_number_copied': 'Wallet number copied',
+    'wallet_number_label': 'Wallet Number',
+    'recent_transactions': 'Recent Transactions',
+    'recent_transaction_title': 'Recent Transaction',
+    'view_all': 'View All',
+    'e_statement': 'E-Statement',
+    'show_vcn': 'Show VCN',
+    'no_transactions_yet': 'No transactions yet',
+    'filter_all': 'All',
+    'filter_received': 'Received',
+    'filter_sent': 'Sent',
     'we_could_not_confirm_your_payment_block_please_try_again':
         'We could not confirm your payment block. Please try again.',
     'we_ll_text_acode_to_verify_your_phone_number':
@@ -2319,6 +2329,36 @@ class LanguageEn extends Languages {
 
   @override
   String get walletNumberCopied => values['wallet_number_copied'] ?? '';
+
+  @override
+  String get walletNumberLabel => values['wallet_number_label'] ?? '';
+
+  @override
+  String get recentTransactions => values['recent_transactions'] ?? '';
+
+  @override
+  String get recentTransactionTitle => values['recent_transaction_title'] ?? '';
+
+  @override
+  String get viewAll => values['view_all'] ?? '';
+
+  @override
+  String get eStatement => values['e_statement'] ?? '';
+
+  @override
+  String get showVcn => values['show_vcn'] ?? '';
+
+  @override
+  String get noTransactionsYet => values['no_transactions_yet'] ?? '';
+
+  @override
+  String get filterAll => values['filter_all'] ?? '';
+
+  @override
+  String get filterReceived => values['filter_received'] ?? '';
+
+  @override
+  String get filterSent => values['filter_sent'] ?? '';
 
   @override
   String get weCouldNotConfirmYourPaymentBlockPleaseTryAgain =>

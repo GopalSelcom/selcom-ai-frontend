@@ -37,6 +37,10 @@ import '../../features/ride/presentation/screens/finding_driver_screen.dart';
 import '../../features/ride/presentation/screens/ride_message_screen.dart';
 import '../../features/ride/presentation/screens/stop_editor_screen.dart';
 import '../../features/ride/presentation/screens/vehicle_selection_screen.dart';
+import '../../features/wallet/presentation/bindings/wallet_binding.dart';
+import '../../features/wallet/presentation/bindings/wallet_history_binding.dart';
+import '../../features/wallet/presentation/screens/wallet_history_screen.dart';
+import '../../features/wallet/presentation/screens/wallet_main_screen.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -66,6 +70,8 @@ class AppRoutes {
   static const String stopEditor = '/stop-editor';
   static const String confirmStop = '/confirm-stop';
   static const String changeDropLocationEditor = '/change-drop-location-editor';
+  static const String wallet = '/wallet';
+  static const String walletTransactions = '/wallet/transactions';
 
   static List<GetPage> get pages => [
     ...AgoraCalling.routes(),
@@ -164,6 +170,16 @@ class AppRoutes {
       name: confirmStop,
       page: () => const ConfirmStopScreen(),
       binding: HomeBinding(),
+    ),
+    GetPage(
+      name: wallet,
+      page: () => const WalletMainScreen(),
+      binding: WalletBinding(),
+    ),
+    GetPage(
+      name: walletTransactions,
+      page: () => const WalletHistoryScreen(),
+      binding: WalletHistoryBinding(),
     ),
   ];
 }

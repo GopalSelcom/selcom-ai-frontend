@@ -61,6 +61,7 @@ class AppAssets {
   static const String icAccountVerified = '$_imagePath/ic_account_verified.svg';
   static const String icWallet = '$_imagePath/ic_wallet.svg';
   static const String icCopy = '$_imagePath/ic_copy.svg';
+
   static const String icHeadPhone = '$_imagePath/headphone.svg';
 
   static const String _figmaLocation = '$_imagePath/location';
@@ -81,9 +82,12 @@ class AppAssets {
   static const String _paymentPath = '$_imagePath/payment';
   static const String icPaymentPerson = '$_paymentPath/ic_person.svg';
   static const String icCardReceive = '$_paymentPath/ic_card_receive.svg';
+  static const String icEStatement = '$_paymentPath/ic_e_statement.svg';
+  static const String icShowVcn = '$_paymentPath/ic_show_vcn.svg';
   static const String icTips = '$_paymentPath/ic_tips.svg';
   static const String imgQrCode = '$_paymentPath/img_qr_code.png';
   static const String imgQrBg = '$_paymentPath/img_qr_bg.png';
+  static const String imgVcnCard = '$_paymentPath/img_vcn_card.png';
   static const String imgPaymentAddCardSuccess =
       '$_paymentPath/add_card_success.png';
   static const String imgPaymentDeleteCardConfirm =

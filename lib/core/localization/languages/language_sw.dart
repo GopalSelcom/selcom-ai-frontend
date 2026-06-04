@@ -492,6 +492,16 @@ class LanguageSw extends Languages {
     'visa': '',
     'wallet': '',
     'wallet_number_copied': '',
+    'wallet_number_label': '',
+    'recent_transactions': '',
+    'recent_transaction_title': '',
+    'view_all': '',
+    'e_statement': '',
+    'show_vcn': '',
+    'no_transactions_yet': '',
+    'filter_all': '',
+    'filter_received': '',
+    'filter_sent': '',
     'we_could_not_confirm_your_payment_block_please_try_again': '',
     'we_ll_text_acode_to_verify_your_phone_number': '',
     'we_will_notify_you_when_something_important_happens': '',
@@ -2216,6 +2226,36 @@ class LanguageSw extends Languages {
 
   @override
   String get walletNumberCopied => values['wallet_number_copied'] ?? '';
+
+  @override
+  String get walletNumberLabel => values['wallet_number_label'] ?? '';
+
+  @override
+  String get recentTransactions => values['recent_transactions'] ?? '';
+
+  @override
+  String get recentTransactionTitle => values['recent_transaction_title'] ?? '';
+
+  @override
+  String get viewAll => values['view_all'] ?? '';
+
+  @override
+  String get eStatement => values['e_statement'] ?? '';
+
+  @override
+  String get showVcn => values['show_vcn'] ?? '';
+
+  @override
+  String get noTransactionsYet => values['no_transactions_yet'] ?? '';
+
+  @override
+  String get filterAll => values['filter_all'] ?? '';
+
+  @override
+  String get filterReceived => values['filter_received'] ?? '';
+
+  @override
+  String get filterSent => values['filter_sent'] ?? '';
 
   @override
   String get weCouldNotConfirmYourPaymentBlockPleaseTryAgain =>
