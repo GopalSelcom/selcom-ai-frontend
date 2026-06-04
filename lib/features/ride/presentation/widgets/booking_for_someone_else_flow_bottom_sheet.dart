@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_native_contact_picker/flutter_native_contact_picker.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:permission_handler/permission_handler.dart';
+
+import '../../../../shared/data/countries_phone_data.dart';
+import '../../../../shared/utils/grouped_phone_number_formatter.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
@@ -42,6 +47,73 @@ class _BookingForSomeoneElseFlowBottomSheetState
   final TextEditingController _phone = TextEditingController();
   String? _nameError;
   String? _phoneError;
+
+  final FlutterNativeContactPicker _contactPicker =
+      FlutterNativeContactPicker();
+
+  Future<void> _pickContact() async {
+    try {
+      if (GetPlatform.isAndroid) {
+        final status = await Permission.contacts.status;
+        if (status.isPermanentlyDenied) {
+          AppDialogs.showPermissionDialog(
+            title: AppStrings.contactsPermission.tr,
+            message: AppStrings.contactsAccessNeeded.tr,
+            onOpenSettings: () => openAppSettings(),
+            icon: Icons.contacts_outlined,
+            secondaryIcon: Icons.contacts,
+          );
+          return;
+        } else if (!status.isGranted) {
+          final requestStatus = await Permission.contacts.request();
+          if (!requestStatus.isGranted) {
+            return;
+          }
+        }
+      }
+
+      final contact = await _contactPicker.selectContact();
+      if (contact != null) {
+        final name = contact.fullName ?? '';
+        final numbers = contact.phoneNumbers ?? [];
+        if (numbers.isNotEmpty) {
+          final rawPhone = numbers.first;
+          // Normalize the phone number to extract Tanzania national significant number
+          String cleanNumber = rawPhone.replaceAll(RegExp(r'\s+|-|\(|\)'), '');
+          if (cleanNumber.startsWith('+')) {
+            cleanNumber = cleanNumber.substring(1);
+          }
+          if (cleanNumber.startsWith('255') && cleanNumber.length > 3) {
+            cleanNumber = cleanNumber.substring(3);
+          }
+          if (cleanNumber.startsWith('0')) {
+            cleanNumber = cleanNumber.substring(1);
+          }
+
+          final c = Countries.findByIsoCode(TanzaniaPhoneValidation.iso2);
+          final formattedPhone = GroupedPhoneNumberFormatter.formatDigits(
+            cleanNumber,
+            c.format,
+          );
+
+          setState(() {
+            if (name.isNotEmpty) {
+              _name.text = name;
+            }
+            _phone.text = formattedPhone;
+            _nameError = null;
+            _phoneError = null;
+          });
+        } else {
+          AppDialogs.showErrorDialog(
+            message: 'No phone number found for this contact',
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error picking contact: $e');
+    }
+  }
 
   @override
   void initState() {
@@ -201,6 +273,10 @@ class _BookingForSomeoneElseFlowBottomSheetState
                 ),
               ],
             ),
+          ),
+          suffixIcon: IconButton(
+            icon: Icon(Iconsax.user_add, color: AppColors.primary, size: 22.sp),
+            onPressed: _pickContact,
           ),
           errorText: _phoneError,
           onChanged: (_) {},

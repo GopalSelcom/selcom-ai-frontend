@@ -40,6 +40,8 @@
 			<key>NSAllowsArbitraryLoads</key>
 			<true/>
 		</dict>
+		<key>NSContactsUsageDescription</key>
+		<string>Selcom Go needs access to your contacts to allow you to select a passenger from your contact list when booking a ride for someone else.</string>
 		<key>NSCameraUsageDescription</key>
 		<string>Selcom Go needs access to your camera to capture a selfie for identity verification.</string>
 		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>

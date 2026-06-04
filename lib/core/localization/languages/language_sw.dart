@@ -74,6 +74,9 @@ class LanguageSw extends Languages {
     'coming_soon': '',
     'calling_driver': '',
     'camera_permission': '',
+    'contacts_permission': 'Ruhusa ya Anwani',
+    'contacts_access_needed':
+        'Selcom Go inahitaji ufikiaji wa anwani zako ili kukuruhusu kuchagua abiria kutoka kwenye kitabu chako cha simu. Tafadhali wezesha kwenye Mipangilio.',
     'cancel_update': '',
     'cancel_and_pay': '',
     'cancel_dialogs_gallery': '',
@@ -814,7 +817,8 @@ class LanguageSw extends Languages {
   String get mobileMoneyPhoneValue => values['mobile_money_phone_value'] ?? '';
 
   @override
-  String get mobileMoneyAmountValue => values['mobile_money_amount_value'] ?? '';
+  String get mobileMoneyAmountValue =>
+      values['mobile_money_amount_value'] ?? '';
 
   @override
   String get selectAVehicle => values['select_a_vehicle'] ?? '';
@@ -869,6 +873,12 @@ class LanguageSw extends Languages {
 
   @override
   String get cameraPermission => values['camera_permission'] ?? '';
+
+  @override
+  String get contactsPermission => values['contacts_permission'] ?? '';
+
+  @override
+  String get contactsAccessNeeded => values['contacts_access_needed'] ?? '';
 
   @override
   String get cancelUpdate => values['cancel_update'] ?? '';
@@ -2014,8 +2024,7 @@ class LanguageSw extends Languages {
       values['location_permission_denied'] ?? '';
 
   @override
-  String get locationAccessRequired =>
-      values['location_access_required'] ?? '';
+  String get locationAccessRequired => values['location_access_required'] ?? '';
 
   @override
   String get locationPermissionDeniedOpenSettings =>

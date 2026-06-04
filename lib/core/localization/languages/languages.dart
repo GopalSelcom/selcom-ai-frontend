@@ -77,6 +77,8 @@ abstract class Languages {
   String get comingSoon;
   String get callingDriver;
   String get cameraPermission;
+  String get contactsPermission;
+  String get contactsAccessNeeded;
   String get cancelUpdate;
   String get cancelAndPay;
   String get cancelDialogsGallery;
