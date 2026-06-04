@@ -44,7 +44,7 @@ class AppSocketService {
 
   AppSocketService._internal();
 
-  static const String defaultBaseUrl = 'https://tmpdukastaging.selcom.dev:7443';
+  static const String defaultBaseUrl = 'https://dukastaging.selcom.dev:7443';
 
   // ---------------- EVENTS ----------------
 

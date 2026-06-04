@@ -224,7 +224,7 @@ class ErrorReporter {
     try {
       final String errorBaseUrl = AppConfig.environment == Environment.prod
           ? 'https://app2.duka.direct'
-          : 'https://tmpdukastaging.selcom.dev:7443';
+          : 'https://dukastaging.selcom.dev:7443';
 
       final request = ApiRequest(
         endpoint: "/api/v4/report-error",

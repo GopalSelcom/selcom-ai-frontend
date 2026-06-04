@@ -468,7 +468,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
     final response = await ApiService().call(
       request: ApiRequest(
         customBaseUrl:
-            "https://tmpdukastaging.selcom.dev:7443/api/v4/go/dev/payment_callback",
+            "https://dukastaging.selcom.dev:7443/api/v4/go/dev/payment_callback",
         // endpoint: "${URLS.ride.base}/$rideId/messages",
         endpoint: "",
         method: ApiMethod.post,
