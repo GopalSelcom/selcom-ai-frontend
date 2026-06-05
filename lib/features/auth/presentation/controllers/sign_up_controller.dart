@@ -50,10 +50,11 @@ class SignUpController extends GetxController {
 
   String? get emailError {
     final value = emailController.text.trim();
-    if (value.isEmpty) return null;
+    if (value.isEmpty) return AppStrings.emailIsRequired.tr;
     final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
-    if (!emailRegex.hasMatch(value))
+    if (!emailRegex.hasMatch(value)) {
       return AppStrings.pleaseEnterAValidEmail.tr;
+    }
     return null;
   }
 

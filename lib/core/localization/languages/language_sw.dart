@@ -519,6 +519,8 @@ class LanguageSw extends Languages {
     'enter_your_full_name': '',
     'email': '',
     'enter_your_email_optional': '',
+    'enter_your_email': '',
+    'email_is_required': '',
     'i_agree_to_the_terms_and_conditions': '',
     'please_accept_terms_and_conditions': '',
     'your_selfie_will_be_captured_to_help_us_validate_you_against_your_id_please_hold_your':
@@ -2303,6 +2305,12 @@ class LanguageSw extends Languages {
   @override
   String get enterYourEmailOptional =>
       values['enter_your_email_optional'] ?? '';
+
+  @override
+  String get enterYourEmail => values['enter_your_email'] ?? '';
+
+  @override
+  String get emailIsRequired => values['email_is_required'] ?? '';
 
   @override
   String get iAgreeToTheTermsAndConditions =>

@@ -512,6 +512,8 @@ abstract class Languages {
   String get enterYourFullName;
   String get email;
   String get enterYourEmailOptional;
+  String get enterYourEmail;
+  String get emailIsRequired;
   String get iAgreeToTheTermsAndConditions;
   String get pleaseAcceptTermsAndConditions;
   String

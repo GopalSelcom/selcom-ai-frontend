@@ -683,6 +683,8 @@ class AppStrings {
   static const String enterYourFullName = 'enter_your_full_name';
   static const String email = 'email';
   static const String enterYourEmailOptional = 'enter_your_email_optional';
+  static const String enterYourEmail = 'enter_your_email';
+  static const String emailIsRequired = 'email_is_required';
   static const String iAgreeToTheTermsAndConditions =
       'i_agree_to_the_terms_and_conditions';
   static const String pleaseAcceptTermsAndConditions =

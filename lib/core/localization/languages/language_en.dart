@@ -596,6 +596,8 @@ class LanguageEn extends Languages {
     'enter_your_full_name': 'Enter your full name',
     'email': 'Email',
     'enter_your_email_optional': 'Enter your email (optional)',
+    'enter_your_email': 'Enter your email',
+    'email_is_required': 'Email is required',
     'i_agree_to_the_terms_and_conditions':
         'I agree to the Terms and Conditions',
     'please_accept_terms_and_conditions': 'Please accept Terms and Conditions',
@@ -2406,6 +2408,12 @@ class LanguageEn extends Languages {
   @override
   String get enterYourEmailOptional =>
       values['enter_your_email_optional'] ?? '';
+
+  @override
+  String get enterYourEmail => values['enter_your_email'] ?? '';
+
+  @override
+  String get emailIsRequired => values['email_is_required'] ?? '';
 
   @override
   String get iAgreeToTheTermsAndConditions =>
