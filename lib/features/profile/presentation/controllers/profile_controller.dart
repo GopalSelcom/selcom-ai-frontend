@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:selcom_rides_frontend/features/wallet/presentation/screens/registration/enter_nida_number_screen.dart';
 
 import '../../../../core/config/app_config.dart';
 import '../../../../core/data/models/user_model.dart';
@@ -18,8 +19,6 @@ import '../../../../shared/utils/phone_formatter.dart';
 import '../../../../shared/widgets/web_view_screen.dart';
 import '../../../ride/presentation/screens/my_rides_screen.dart';
 import '../../../wallet/presentation/utils/wallet_format_utils.dart';
-import '../../../wallet_link/presentation/bindings/wallet_enter_nida_binding.dart';
-import '../../../wallet_link/presentation/screens/wallet_enter_nida_screen.dart';
 import '../../data/models/request/update_profile_request.dart';
 import '../../domain/usecases/profile_usecase.dart';
 
@@ -173,8 +172,7 @@ class ProfileController extends GetxController {
 
   Future<void> openWalletLinkFlow() async {
     await Get.to(
-      () => const WalletEnterNidaScreen(),
-      binding: WalletEnterNidaBinding(),
+      () => const EnterNidaNumberScreen(),
     );
     await fetchWalletBalance();
   }

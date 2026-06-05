@@ -4,10 +4,10 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:selcom_rides_frontend/core/theme/app_text_styles.dart';
 
 import '../../../../../core/theme/app_colors.dart';
-import '../../../../wallet_link/presentation/utils/mask_text_input_formatter.dart';
 import '../../controllers/registration_controller.dart' show RegistrationController;
 import '../../widgets/common_button.dart';
 import '../../widgets/custom_scrollbar_widget.dart';

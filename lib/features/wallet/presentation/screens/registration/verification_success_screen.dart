@@ -70,15 +70,15 @@ class _VerificationSuccessScreenState extends State<VerificationSuccessScreen> {
                   child: CommonButton(
                     label: Languages.of(context).continueLabel,
                     onTap: () async {
-                      if (walletController.isWalletCreated &&
-                          (walletController
-                                  .walletData
-                                  .value
-                                  ?.response
-                                  ?.clientId !=
-                              null)) {
-                        Get.offAll(() => WalletMainScreen());
-                      }
+                      // if (walletController.isWalletCreated &&
+                      //     (walletController
+                      //             .walletData
+                      //             .value
+                      //             ?.response
+                      //             ?.clientId !=
+                      //         null)) {
+                      //   Get.offAll(() => WalletMainScreen());
+                      // }
                     },
                     enabledColor: AppColors.primary,
                     isEnabled: true,

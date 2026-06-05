@@ -357,12 +357,14 @@ class RegistrationController extends GetxController {
       // showLoaderDialog(Get.context);
       Loader.instance.show();
 
-      final userData = UserController().userData.value;
+      final userData = UserModel.fromJson(jsonDecode(await StorageService().read(StorageKeys.user)??""));
+
+      // final userData = UserController().userData.value;
 
       FingerScanModel?
       response = await registrationRepository.uploadNFCPasportData(
         // userId: userData.id ?? "",
-        mobileNumber: userData.user?.mobileNumber?.toString() ?? "",
+        mobileNumber: userData.mobileNumber?.toString() ?? "",
         passportNumber: passportScanningData.value.data?.documentNumber ?? "",
         firstName: passportScanningData.value.data?.name ?? "",
         lastName: passportScanningData.value.data?.surname ?? "",
@@ -548,7 +550,9 @@ class RegistrationController extends GetxController {
 
   Future<bool> selcomIdUserDataExist() async {
     isDataGotFromSelcomId = false;
-    if (UserController().accessToken.isEmpty) {
+    final accessToken  = await StorageService().read(StorageKeys.accessToken);
+    final userData = UserModel.fromJson(jsonDecode(await StorageService().read(StorageKeys.user)??""));
+    if ((accessToken??"").isEmpty) {
       return false;
     }
 
@@ -558,7 +562,7 @@ class RegistrationController extends GetxController {
     final response = await RegistrationRepository.selcomIdUserDataExistAPI(
       SelcomIdUserDataExistRequest(
         mobileNumber:
-            UserController().userData.value.user?.mobileNumber?.toString() ??
+        userData?.mobileNumber?.toString() ??
             "",
       ),
     );
@@ -765,62 +769,62 @@ class RegistrationController extends GetxController {
       );
 
       if (response != null && response.response?.resultcode == "200") {
-        UserAddCardDetailModel? userAddCardDetailsResponse =
-            await registrationRepository.userAddCardDetail(
-              userId: user?.id ?? "",
-              clientId:
-                  response.response?.data?.first.clientId.toString() ?? "",
-              accountNumber: response.response?.data?.first.accountNo ?? "",
-              address: (address.isNotEmpty) ? address : "DAR ES SALAAM",
-              city: (city.isNotEmpty) ? city : "DAR ES SALAAM",
-              firstName: firstName,
-              lastName: lastName,
-              gender: gender,
-              dob: dob,
-              passportNumber: passportNumber,
-
-              // pass status 1 for registration
-              status: "1",
-              nidaNumber: nidaNumber.replaceAll("-", "").replaceAll(" ", ""),
-            );
-
-        if (userAddCardDetailsResponse != null &&
-            userAddCardDetailsResponse.statusCode == 200) {
-          // WalletController().walletData(userAddCardDetailsResponse);
-          // SetCardLimitController().setCurrentLimit();
-          // WalletController().checkCardExpiry();
-          bool isCardCreated = await walletController.createCard(
-            userDetails: userAddCardDetailsResponse,
-            showSuccessDialog: false,
-            showLoader: false,
-          );
-
-          if (!isCardCreated) {
-            Get.back();
-            ;
-            return;
-          }
-
-          WalletCreditRefundAmountModel? walletCreditRefundAmountResponse =
-              await registrationRepository.walletCreditUserRefundAmountAPI(
-                userId: user?.id ?? "",
-                clientId:
-                    response.response?.data?.first.clientId.toString() ?? "",
-                accountNumber: response.response?.data?.first.accountNo ?? "",
-              );
-
-          // if (walletCreditRefundAmountResponse?.statusCode == 200) {}
-          Get.to(
-            () => const VerificationSuccessScreen(),
-          );
-        } else {
-          Get.back();
-          AppDialogs.showErrorDialog(
-            message: kDebugMode
-                ? (userAddCardDetailsResponse?.message ?? "")
-                : "Something went wrong! Please try again later.",
-          );
-        }
+        // UserAddCardDetailModel? userAddCardDetailsResponse =
+        //     await registrationRepository.userAddCardDetail(
+        //       userId: user?.id ?? "",
+        //       clientId:
+        //           response.response?.data?.first.clientId.toString() ?? "",
+        //       accountNumber: response.response?.data?.first.accountNo ?? "",
+        //       address: (address.isNotEmpty) ? address : "DAR ES SALAAM",
+        //       city: (city.isNotEmpty) ? city : "DAR ES SALAAM",
+        //       firstName: firstName,
+        //       lastName: lastName,
+        //       gender: gender,
+        //       dob: dob,
+        //       passportNumber: passportNumber,
+        //
+        //       // pass status 1 for registration
+        //       status: "1",
+        //       nidaNumber: nidaNumber.replaceAll("-", "").replaceAll(" ", ""),
+        //     );
+        //
+        // if (userAddCardDetailsResponse != null &&
+        //     userAddCardDetailsResponse.statusCode == 200) {
+        //   // WalletController().walletData(userAddCardDetailsResponse);
+        //   // SetCardLimitController().setCurrentLimit();
+        //   // WalletController().checkCardExpiry();
+        //   bool isCardCreated = await walletController.createCard(
+        //     userDetails: userAddCardDetailsResponse,
+        //     showSuccessDialog: false,
+        //     showLoader: false,
+        //   );
+        //
+        //   if (!isCardCreated) {
+        //     Get.back();
+        //     ;
+        //     return;
+        //   }
+        //
+        //   WalletCreditRefundAmountModel? walletCreditRefundAmountResponse =
+        //       await registrationRepository.walletCreditUserRefundAmountAPI(
+        //         userId: user?.id ?? "",
+        //         clientId:
+        //             response.response?.data?.first.clientId.toString() ?? "",
+        //         accountNumber: response.response?.data?.first.accountNo ?? "",
+        //       );
+        //
+        //   // if (walletCreditRefundAmountResponse?.statusCode == 200) {}
+        //   Get.to(
+        //     () => const VerificationSuccessScreen(),
+        //   );
+        // } else {
+        //   Get.back();
+        //   AppDialogs.showErrorDialog(
+        //     message: kDebugMode
+        //         ? (userAddCardDetailsResponse?.message ?? "")
+        //         : "Something went wrong! Please try again later.",
+        //   );
+        // }
       } else {
         Get.back();
         ;

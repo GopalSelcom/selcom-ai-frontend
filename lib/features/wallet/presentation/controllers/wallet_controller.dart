@@ -43,6 +43,9 @@ class WalletController extends GetxController {
 
   RxBool isTestingMode = true.obs;
 
+  RxBool isNidaRegistrationDialogVisible = false.obs;
+
+
   @override
   void onInit() {
     super.onInit();
