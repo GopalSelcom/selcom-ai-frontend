@@ -149,7 +149,7 @@ class _DocumentConfirmationScreenState
                   Expanded(
                     child: AppPrimaryButton(
                       label:"Confirm",
-                      onPressed:()=> _loginController.confirmAndSubmitDocuments,
+                      onPressed: _loginController.confirmAndSubmitDocuments,
                     ),
                   ),
                 ],

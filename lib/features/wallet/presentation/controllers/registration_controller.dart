@@ -62,11 +62,6 @@ class RegistrationController extends GetxController {
   final RegistrationRepository registrationRepository =
   RegistrationRepository();
 
-  WalletController? get walletController =>
-      Get.isRegistered<WalletController>()
-          ? Get.find<WalletController>()
-          : null;
-
   void resetMissingFingers() {
     SelcomIdentyPlugin selcomIdentyPlugin = SelcomIdentyPlugin();
 

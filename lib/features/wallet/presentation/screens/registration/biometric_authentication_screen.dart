@@ -19,6 +19,7 @@ import '../../../../../core/localization/languages/languages.dart';
 import '../../../../../shared/widgets/app_profile_header.dart';
 import '../../controllers/registration_controller.dart';
 import 'hand_selection_screen.dart';
+import 'widgets/custom_app_bar.dart';
 
 class BiometricAuthenticationScreen extends StatefulWidget {
   const BiometricAuthenticationScreen({super.key});
@@ -97,20 +98,20 @@ class _BiometricAuthenticationScreenState
     return Scaffold(
       backgroundColor: AppColors.white,
 
-      // appBar: CustomAppBar(
-      //   title: Languages.of(context).biometricAuthentication,
-      //   showBack: true,
-      //
-      //   // leadingIcon: Images.IC_BACK,
-      //   // onTapLeading: appNavigator.pop
-      // ),
+      appBar: CustomAppBar(
+        title:AppStrings.wallet.tr,
+        showBack: true,
+
+        // leadingIcon: Images.IC_BACK,
+        // onTapLeading: appNavigator.pop
+      ),
       body: Padding(
         padding: EdgeInsets.only(top: 15.0.sp),
         child: Column(
           children: [
-            AppProfileHeader(
-              title: AppStrings.wallet.tr,
-            ),
+            // AppProfileHeader(
+            //   title: AppStrings.wallet.tr,
+            // ),
             Lottie.asset(
               Lotties.fingerScan,
               height: Get.height * 0.28,

@@ -10,6 +10,7 @@ import 'package:selcom_identy_plugin/selcom_identy_plugin.dart';
 import 'package:selcom_rides_frontend/core/constants/app_assets.dart';
 import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import 'package:selcom_rides_frontend/core/theme/app_colors.dart';
+import 'package:selcom_rides_frontend/shared/utils/app_dialogs.dart';
 import 'package:selcom_rides_frontend/shared/widgets/app_standard_bottom_sheet.dart';
 // import 'package:selcom_identy_plugin/selcom_identy_plugin.dart';
 
@@ -234,7 +235,7 @@ class _BiometricsSelectionScreeState extends State<BiometricsSelectionScree> {
                     debugPrint("after hide loader");
                     if (position != null) {
                       debugPrint("before instruction dialog", );
-                      AppStandardBottomSheet(content:  ShowFingerScanInstructionSheet());
+                      AppDialogs.showStandardBottomSheet(content:  ShowFingerScanInstructionSheet());
 
                       debugPrint("after instruction dialog",);
                     }

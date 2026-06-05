@@ -203,7 +203,7 @@ class AppColors {
   static const Color textVisaBrandAlt = textBrandVisaSecondary;
   static const Color dangerStrong = dangerDeep;
 
-  static const Color walletColor = Color(0xff6629B2);
+  static const Color walletColor = Color(0xFFFFCC00);
   static const Color greyE4E4E4 = Color(0xffE4E4E4);
   static const Color greyD0D0D0 = Color(0xffD0D0D0);
 }

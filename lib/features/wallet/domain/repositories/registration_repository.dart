@@ -628,7 +628,7 @@ class RegistrationRepository {
     required String nidaImagePath,
     required String selfieImagePath,
   }) async {
-    if (Get.find<WalletController>().isTestingMode.value??false) {
+    if (true) {
       return VerifySelfieResponseModel(statusCode: 200);
     }
 

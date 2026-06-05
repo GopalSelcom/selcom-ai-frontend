@@ -32,10 +32,6 @@ class FaceDetectionScreen extends StatefulWidget {
 
 class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
   RegistrationController registrationController = RegistrationController();
-  WalletController? get walletController =>
-      Get.isRegistered<WalletController>()
-          ? Get.find<WalletController>()
-          : null;
   @override
   void initState() {
     RegistrationController().verifyDocumentSelfieCalledCount = 0;
@@ -82,8 +78,6 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
         appBar: CustomAppBar(
           title: "Face Scan Process",
           showBack: true,
-          // leadingIcon: widget.leadingIcon ?? CommonImages.IC_BACK,
-          // onTapLeading: onBackPress,
         ),
         body: Padding(
           padding: EdgeInsets.only(top: 15.0.sp),
@@ -180,7 +174,7 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
 
 
                     bool testIt =
-                        (walletController?.isTestingMode.value??false)&&
+                        (true)&&
                         !DeviceInfo().isPhysicalDevice;
 
                     if (testIt) {

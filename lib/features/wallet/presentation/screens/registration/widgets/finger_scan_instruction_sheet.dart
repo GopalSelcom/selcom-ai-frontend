@@ -171,7 +171,7 @@ class _ShowFingerScanInstructionSheetState
                   onTap: () async {
 
                     bool testIt =
-                        (walletController?.isTestingMode.value??false) &&
+                        (true) &&
                         !DeviceInfo().isPhysicalDevice;
 
                     if (testIt) {

@@ -11,6 +11,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'core/utils/device_info.dart';
 import 'firebase_options.dart';
 import 'core/config/app_config.dart';
 import 'core/di/injection_container.dart' as di;
@@ -100,8 +101,11 @@ void main() async {
         options: DefaultFirebaseOptions.currentPlatform,
       );
 
+      await DeviceInfo().get();
       // Initialize Error Reporter
       await ErrorReporter.instance.init();
+
+
 
       // Set background handler
       FirebaseMessaging.onBackgroundMessage(

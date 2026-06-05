@@ -8,7 +8,7 @@ import '../../core/theme/app_colors.dart';
 class AppBackButton extends StatelessWidget {
   const AppBackButton({
     super.key,
-    this.color = AppColors.white,
+    this.color = AppColors.primary,
     this.size,
     this.onPressed,
     this.alignment = Alignment.centerLeft,

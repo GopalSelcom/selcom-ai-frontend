@@ -82,7 +82,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                                 )
                               : const SizedBox.shrink()),
                     ),
-                    if (showBack) AppBackButton(onPressed: () => {}),
                   ],
                 ),
                 actions: actions,
