@@ -14,7 +14,6 @@ import '../../domain/usecases/get_wallet_summary_usecase.dart';
 import '../../domain/usecases/get_wallet_transactions_usecase.dart';
 import '../models/wallet_transaction_item.dart';
 import '../utils/wallet_format_utils.dart';
-import '../widgets/wallet_vcn_overlay.dart';
 
 class WalletController extends GetxController {
   static WalletController? _instance;
@@ -37,15 +36,6 @@ class WalletController extends GetxController {
       <WalletTransactionItem>[].obs;
 
   static const int recentPreviewCount = 3;
-
-  // Dummy VCN until API is available.
-  static const String _vcnCardNumberRaw = '1234123412321653';
-  static const String _vcnExpiry = '09/27';
-  static const String _vcnCvv = '786';
-
-  String get vcnExpiry => _vcnExpiry;
-
-  String get vcnCvv => _vcnCvv;
 
   RxBool isTestingMode = true.obs;
 
@@ -101,24 +91,6 @@ class WalletController extends GetxController {
 
   void openEStatement() {
     // Placeholder until e-statement API / flow is available.
-  }
-
-  String get formattedVcnCardNumber => formatCardNumber(_vcnCardNumberRaw);
-
-  String get vcnCardNumberForCopy => _vcnCardNumberRaw;
-
-  void openShowVcn() {
-    unawaited(WalletVcnOverlay.show());
-  }
-
-  void closeShowVcn() => Get.back<void>();
-
-  void copyVcnCardNumber() {
-    Clipboard.setData(ClipboardData(text: vcnCardNumberForCopy));
-  }
-
-  void copyVcnCvv() {
-    Clipboard.setData(const ClipboardData(text: _vcnCvv));
   }
 
   void copyWalletNumber() {

@@ -39,7 +39,6 @@ class WalletScreen extends GetView<WalletController> {
                       onCopyWalletNumber: controller.copyWalletNumber,
                       onAddMoney: controller.openAddMoney,
                       onEStatement: controller.openEStatement,
-                      onShowVcn: controller.openShowVcn,
                     ),
                     SizedBox(height: 20.h),
                     WalletRecentTransactionsSection(

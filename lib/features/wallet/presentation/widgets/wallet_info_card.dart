@@ -17,7 +17,6 @@ class WalletInfoCard extends StatelessWidget {
     required this.onCopyWalletNumber,
     required this.onAddMoney,
     required this.onEStatement,
-    required this.onShowVcn,
   });
 
   final String balanceText;
@@ -25,7 +24,6 @@ class WalletInfoCard extends StatelessWidget {
   final VoidCallback onCopyWalletNumber;
   final VoidCallback onAddMoney;
   final VoidCallback onEStatement;
-  final VoidCallback onShowVcn;
 
   @override
   Widget build(BuildContext context) {
@@ -110,11 +108,6 @@ class WalletInfoCard extends StatelessWidget {
                   label: AppStrings.eStatement.tr,
                   iconAsset: AppAssets.icEStatement,
                   onTap: onEStatement,
-                ),
-                WalletIconLabelButton(
-                  label: AppStrings.showVcn.tr,
-                  iconAsset: AppAssets.icShowVcn,
-                  onTap: onShowVcn,
                 ),
               ],
             ),

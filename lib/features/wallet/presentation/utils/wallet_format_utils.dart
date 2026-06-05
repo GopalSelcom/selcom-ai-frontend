@@ -33,14 +33,3 @@ double sheetFractionFromHeight(BuildContext context, double heightPx) {
   if (safeHeight <= 0) return 0.45;
   return (heightPx / safeHeight).clamp(0.0, 1.0) - 0.018;
 }
-
-String formatCardNumber(String value, {int groupSize = 4}) {
-  final clean = value.replaceAll(RegExp(r'\s+'), '');
-  if (clean.isEmpty) return '';
-  final buffer = StringBuffer();
-  for (var i = 0; i < clean.length; i++) {
-    if (i > 0 && i % groupSize == 0) buffer.write(' ');
-    buffer.write(clean[i]);
-  }
-  return buffer.toString();
-}
