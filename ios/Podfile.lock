@@ -149,6 +149,8 @@ PODS:
     - Flutter
   - flutter_local_notifications (0.0.1):
     - Flutter
+  - flutter_native_contact_picker (0.0.12):
+    - Flutter
   - flutter_native_splash (2.4.3):
     - Flutter
   - flutter_ringtone_player (0.0.1):
@@ -316,6 +318,7 @@ DEPENDENCIES:
   - flutter_background_service_ios (from `.symlinks/plugins/flutter_background_service_ios/ios`)
   - flutter_callkit_incoming (from `.symlinks/plugins/flutter_callkit_incoming/ios`)
   - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
+  - flutter_native_contact_picker (from `.symlinks/plugins/flutter_native_contact_picker/ios`)
   - flutter_native_splash (from `.symlinks/plugins/flutter_native_splash/ios`)
   - flutter_ringtone_player (from `.symlinks/plugins/flutter_ringtone_player/ios`)
   - flutter_secure_storage_darwin (from `.symlinks/plugins/flutter_secure_storage_darwin/darwin`)
@@ -402,6 +405,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/flutter_callkit_incoming/ios"
   flutter_local_notifications:
     :path: ".symlinks/plugins/flutter_local_notifications/ios"
+  flutter_native_contact_picker:
+    :path: ".symlinks/plugins/flutter_native_contact_picker/ios"
   flutter_native_splash:
     :path: ".symlinks/plugins/flutter_native_splash/ios"
   flutter_ringtone_player:
@@ -475,6 +480,7 @@ SPEC CHECKSUMS:
   flutter_background_service_ios: 00d31bdff7b4bfe06d32375df358abe0329cf87e
   flutter_callkit_incoming: cb8138af67cda6dd981f7101a5d709003af21502
   flutter_local_notifications: ad39620c743ea4c15127860f4b5641649a988100
+  flutter_native_contact_picker: 37b345f52a15ca8f1fe0072159b4f022998a8682
   flutter_native_splash: c32d145d68aeda5502d5f543ee38c192065986cf
   flutter_ringtone_player: a77c42464250845611eaa44c27e8714acc800138
   flutter_secure_storage_darwin: acdb3f316ed05a3e68f856e0353b133eec373a23
@@ -513,6 +519,6 @@ SPEC CHECKSUMS:
   vibration: ca8104a8875b9c493e15b21b04e456befd0ff6eb
   webview_flutter_wkwebview: 8ebf4fded22593026f7dbff1fbff31ea98573c8d
 
-PODFILE CHECKSUM: f9766fcdc24407bfc6dab2258747aaaed4d98110
+PODFILE CHECKSUM: 89e409fe0c46b790c1f35d6e45078596cf8e6808
 
 COCOAPODS: 1.16.2
