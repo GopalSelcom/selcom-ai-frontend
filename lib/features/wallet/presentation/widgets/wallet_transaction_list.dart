@@ -22,22 +22,31 @@ class WalletTransactionList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final resolvedPadding = padding ?? EdgeInsets.fromLTRB(16.w, 0, 16.w, 32.h);
+
     if (items.isEmpty) {
-      return ListView(
-        controller: scrollController,
-        physics: const AlwaysScrollableScrollPhysics(
-          parent: BouncingScrollPhysics(),
-        ),
-        padding: padding ?? EdgeInsets.all(24.w),
-        children: [
-          SizedBox(height: 120.h),
-          Center(
-            child: Text(
-              AppStrings.noTransactionsYet.tr,
-              style: AppTextStyles.caption.copyWith(color: AppColors.textHint),
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            controller: scrollController,
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
             ),
-          ),
-        ],
+            padding: resolvedPadding,
+            child: SizedBox(
+              height: constraints.maxHeight,
+              child: Center(
+                child: Text(
+                  AppStrings.noTransactionsYet.tr,
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.textHint,
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
       );
     }
 
@@ -46,10 +55,9 @@ class WalletTransactionList extends StatelessWidget {
       physics: const AlwaysScrollableScrollPhysics(
         parent: BouncingScrollPhysics(),
       ),
-      padding: padding ?? EdgeInsets.fromLTRB(16.w, 0, 16.w, 32.h),
+      padding: resolvedPadding,
       itemCount: items.length,
-      itemBuilder: (context, index) =>
-          WalletTransactionRow(item: items[index]),
+      itemBuilder: (context, index) => WalletTransactionRow(item: items[index]),
     );
   }
 }

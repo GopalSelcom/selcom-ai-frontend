@@ -2,18 +2,19 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../payment/presentation/widgets/add_money_to_wallet_bottom_sheet.dart';
 import '../../domain/entities/wallet_summary_entity.dart';
-import '../../domain/entities/wallet_transaction_entity.dart';
+import '../../domain/entities/wallet_transaction_filter.dart';
 import '../../domain/usecases/get_wallet_summary_usecase.dart';
 import '../../domain/usecases/get_wallet_transactions_usecase.dart';
+import '../../domain/utils/wallet_statement_utils.dart';
 import '../models/wallet_transaction_item.dart';
 import '../utils/wallet_format_utils.dart';
+import '../utils/wallet_transaction_mapper.dart';
 
 class WalletController extends GetxController {
   static WalletController? _instance;
@@ -35,12 +36,9 @@ class WalletController extends GetxController {
   final RxList<WalletTransactionItem> recentTransactions =
       <WalletTransactionItem>[].obs;
 
-  static const int recentPreviewCount = 3;
-
   RxBool isTestingMode = true.obs;
 
   RxBool isNidaRegistrationDialogVisible = false.obs;
-
 
   @override
   void onInit() {
@@ -52,12 +50,14 @@ class WalletController extends GetxController {
     isLoading.value = true;
     try {
       final walletSummary = await _getWalletSummaryUseCase();
-      final transactions = await _getWalletTransactionsUseCase();
+      final transactions = await _getWalletTransactionsUseCase(
+        filter: WalletTransactionFilter.all,
+      );
       summary.value = walletSummary;
       recentTransactions.assignAll(
         transactions
-            .take(recentPreviewCount)
-            .map(_mapTransactionToItem)
+            .take(walletRecentTransactionPreviewLimit)
+            .map(mapWalletTransactionToItem)
             .toList(growable: false),
       );
     } finally {
@@ -97,20 +97,6 @@ class WalletController extends GetxController {
     final number = walletNumberForCopy;
     if (number.isEmpty) return;
     Clipboard.setData(ClipboardData(text: number));
-  }
-
-  WalletTransactionItem _mapTransactionToItem(WalletTransactionEntity entity) {
-    return WalletTransactionItem(
-      merchantName: entity.merchantName,
-      categoryLabel: entity.categoryLabel,
-      amount: entity.amount,
-      isCredit: entity.isCredit,
-      createdAtLabel: _formatCreatedAt(entity.createdAt),
-    );
-  }
-
-  String _formatCreatedAt(DateTime date) {
-    return DateFormat('d MMM yyyy, h:mm a').format(date.toLocal());
   }
 
   ///wallet controller from v4

@@ -170,6 +170,7 @@ class _WalletEndpoints {
   final balance = "go/wallet/balance";
   final details = "go_wallet/go_wallet_details";
   final cardBalance = "go_wallet/go_card_balance";
+  final cardStatement = "go_wallet/go_card_statement";
 }
 
 /// ─────────────────────────────────

@@ -31,11 +31,11 @@ class WalletTransactionRow extends StatelessWidget {
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
-
         children: [
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
                   item.merchantName,
@@ -50,8 +50,10 @@ class WalletTransactionRow extends StatelessWidget {
               ],
             ),
           ),
+          SizedBox(width: 12.w),
           Text(
             amountText,
+            textAlign: TextAlign.end,
             style: AppTextStyles.homeSubtitle.copyWith(
               fontWeight: FontWeight.w600,
               color: amountColor,

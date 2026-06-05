@@ -2,13 +2,12 @@ import 'dart:async';
 
 import 'package:card_swiper/card_swiper.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/localization/app_strings.dart';
-import '../../domain/entities/wallet_transaction_entity.dart';
 import '../../domain/entities/wallet_transaction_filter.dart';
 import '../../domain/usecases/get_wallet_transactions_usecase.dart';
 import '../models/wallet_transaction_item.dart';
+import '../utils/wallet_transaction_mapper.dart';
 import '../widgets/wallet_segmented_tabs.dart';
 
 class WalletHistoryController extends GetxController {
@@ -43,16 +42,10 @@ class WalletHistoryController extends GetxController {
   Future<void> loadAllFilters() async {
     isLoading.value = true;
     try {
-      final entries = await Future.wait(
-        WalletSegmentedTabs.filters.map((filter) async {
-          final result = await _getWalletTransactionsUseCase(filter: filter);
-          return MapEntry(
-            filter,
-            result.map(_mapTransactionToItem).toList(growable: false),
-          );
-        }),
+      final transactions = await _getWalletTransactionsUseCase(
+        filter: WalletTransactionFilter.all,
       );
-      transactionsByFilter.assignAll(Map.fromEntries(entries));
+      transactionsByFilter.assignAll(groupWalletTransactionsByFilter(transactions));
     } finally {
       isLoading.value = false;
     }
@@ -86,17 +79,5 @@ class WalletHistoryController extends GetxController {
       WalletTransactionFilter.received => AppStrings.filterReceived.tr,
       WalletTransactionFilter.sent => AppStrings.filterSent.tr,
     };
-  }
-
-  WalletTransactionItem _mapTransactionToItem(WalletTransactionEntity entity) {
-    return WalletTransactionItem(
-      merchantName: entity.merchantName,
-      categoryLabel: entity.categoryLabel,
-      amount: entity.amount,
-      isCredit: entity.isCredit,
-      createdAtLabel: DateFormat(
-        'd MMM yyyy, h:mm a',
-      ).format(entity.createdAt.toLocal()),
-    );
   }
 }

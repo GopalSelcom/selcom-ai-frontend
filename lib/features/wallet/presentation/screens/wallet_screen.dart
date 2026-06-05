@@ -28,7 +28,7 @@ class WalletScreen extends GetView<WalletController> {
               if (controller.isLoading.value) {
                 return _WalletShimmer();
               }
-              return SingleChildScrollView(
+              return Padding(
                 padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 32.h),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -41,9 +41,11 @@ class WalletScreen extends GetView<WalletController> {
                       onEStatement: controller.openEStatement,
                     ),
                     SizedBox(height: 20.h),
-                    WalletRecentTransactionsSection(
-                      transactions: controller.recentTransactions,
-                      onViewAll: controller.openTransactionHistory,
+                    Expanded(
+                      child: WalletRecentTransactionsSection(
+                        transactions: controller.recentTransactions,
+                        onViewAll: controller.openTransactionHistory,
+                      ),
                     ),
                   ],
                 ),
@@ -59,10 +61,11 @@ class WalletScreen extends GetView<WalletController> {
 class _WalletShimmer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
+    return Padding(
       padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 32.h),
       child: AppShimmer(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             AppShimmerBox(
               height: 210.h,

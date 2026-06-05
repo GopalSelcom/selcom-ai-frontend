@@ -3,18 +3,15 @@ import '../../domain/entities/wallet_summary_entity.dart';
 import '../../domain/entities/wallet_transaction_entity.dart';
 import '../../domain/entities/wallet_transaction_filter.dart';
 import '../../domain/repositories/wallet_repository.dart';
-import '../datasources/wallet_local_data_source.dart';
+import '../../domain/utils/wallet_statement_utils.dart';
 import '../datasources/wallet_remote_data_source.dart';
 
 class WalletRepositoryImpl implements WalletRepository {
-  WalletRepositoryImpl({
-    required WalletRemoteDataSource remoteDataSource,
-    required WalletLocalDataSource localDataSource,
-  }) : _remoteDataSource = remoteDataSource,
-       _localDataSource = localDataSource;
+  WalletRepositoryImpl({required WalletRemoteDataSource remoteDataSource})
+    : _remoteDataSource = remoteDataSource;
 
   final WalletRemoteDataSource _remoteDataSource;
-  final WalletLocalDataSource _localDataSource;
+  List<WalletTransactionEntity>? _statementCache;
 
   @override
   Future<WalletDetailsEntity?> getWalletDetails() =>
@@ -40,6 +37,33 @@ class WalletRepositoryImpl implements WalletRepository {
   @override
   Future<List<WalletTransactionEntity>> getTransactions({
     WalletTransactionFilter filter = WalletTransactionFilter.all,
-  }) =>
-      _localDataSource.getTransactions(filter: filter);
+  }) async {
+    final all = await _loadStatementTransactions();
+    final filtered = switch (filter) {
+      WalletTransactionFilter.all => all,
+      WalletTransactionFilter.received =>
+        all.where((transaction) => transaction.isCredit).toList(growable: false),
+      WalletTransactionFilter.sent =>
+        all.where((transaction) => !transaction.isCredit).toList(growable: false),
+    };
+    return List.unmodifiable(filtered);
+  }
+
+  Future<List<WalletTransactionEntity>> _loadStatementTransactions() async {
+    if (_statementCache != null) {
+      return _statementCache!;
+    }
+
+    final (startDate, endDate) = defaultWalletStatementDateRange();
+    final transactions = await _remoteDataSource.getCardStatement(
+      startDate: startDate,
+      endDate: endDate,
+    );
+
+    final sorted = List<WalletTransactionEntity>.from(transactions)
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    _statementCache = List.unmodifiable(sorted);
+    return _statementCache!;
+  }
 }

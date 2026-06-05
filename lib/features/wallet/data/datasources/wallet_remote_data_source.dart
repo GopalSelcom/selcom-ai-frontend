@@ -6,13 +6,21 @@ import '../../../../core/network/urls.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../domain/entities/wallet_card_balance_entity.dart';
 import '../../domain/entities/wallet_details_entity.dart';
+import '../../domain/entities/wallet_transaction_entity.dart';
 import '../models/go_card_balance_response.dart';
+import '../models/go_card_statement_response.dart';
 import '../models/go_wallet_details_response.dart';
 
 abstract class WalletRemoteDataSource {
   Future<WalletDetailsEntity?> getWalletDetails();
 
   Future<WalletCardBalanceEntity?> getCardBalance();
+
+  Future<List<WalletTransactionEntity>> getCardStatement({
+    required String startDate,
+    required String endDate,
+    String currency = 'TZS',
+  });
 }
 
 class WalletRemoteDataSourceImpl implements WalletRemoteDataSource {
@@ -78,5 +86,45 @@ class WalletRemoteDataSourceImpl implements WalletRemoteDataSource {
       debugPrint('getCardBalance error (suppressed): $e');
     }
     return null;
+  }
+
+  @override
+  Future<List<WalletTransactionEntity>> getCardStatement({
+    required String startDate,
+    required String endDate,
+    String currency = 'TZS',
+  }) async {
+    try {
+      final response = await ApiService().call(
+        request: ApiRequest(
+          endpoint: URLS.wallet.cardStatement,
+          method: ApiMethod.get,
+          queryParams: {
+            'startdate': startDate,
+            'enddate': endDate,
+            'currency': currency,
+          },
+          errorPresentationType: ErrorPresentationType.none,
+        ),
+      );
+
+      if (response.statusCode == 200 && response.data is Map<String, dynamic>) {
+        final model = GoCardStatementResponseModel.fromJson(
+          Map<String, dynamic>.from(response.data),
+        );
+        if (model.isSuccess) {
+          return model.response!.toEntities();
+        }
+        return const [];
+      }
+
+      if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+        return const [];
+      }
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      debugPrint('getCardStatement error (suppressed): $e');
+    }
+    return const [];
   }
 }

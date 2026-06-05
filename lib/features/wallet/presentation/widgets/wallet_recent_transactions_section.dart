@@ -22,7 +22,7 @@ class WalletRecentTransactionsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Row(
           children: [
@@ -42,20 +42,25 @@ class WalletRecentTransactionsSection extends StatelessWidget {
           ],
         ),
         SizedBox(height: 12.h),
-        if (transactions.isEmpty)
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 24.h),
-            child: Center(
-              child: Text(
-                AppStrings.noTransactionsYet.tr,
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.textHint,
+        Expanded(
+          child: transactions.isEmpty
+              ? Center(
+                  child: Text(
+                    AppStrings.noTransactionsYet.tr,
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.textHint,
+                    ),
+                  ),
+                )
+              : ListView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: EdgeInsets.zero,
+                  children: transactions
+                      .map((item) => WalletTransactionRow(item: item))
+                      .toList(growable: false),
                 ),
-              ),
-            ),
-          )
-        else
-          ...transactions.map((item) => WalletTransactionRow(item: item)),
+        ),
       ],
     );
   }
