@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../core/config/app_config.dart';
 import '../../../../core/data/models/user_model.dart';
@@ -17,15 +18,19 @@ import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/phone_formatter.dart';
 import '../../../../shared/widgets/web_view_screen.dart';
 import '../../../ride/presentation/screens/my_rides_screen.dart';
+import '../../../wallet/domain/usecases/get_wallet_summary_usecase.dart';
+import '../../../wallet/presentation/utils/wallet_format_utils.dart';
 import '../../data/models/request/update_profile_request.dart';
 import '../../domain/usecases/profile_usecase.dart';
 class ProfileController extends GetxController {
   final ProfileUseCase profileUseCase;
   final AppSettingsService appSettingsService;
+  final GetWalletSummaryUseCase getWalletSummaryUseCase;
 
   ProfileController({
     required this.profileUseCase,
     required this.appSettingsService,
+    required this.getWalletSummaryUseCase,
   });
 
   // Observables for state
@@ -37,8 +42,9 @@ class ProfileController extends GetxController {
 
   // User Data
   final Rxn<UserModel> userModel = Rxn<UserModel>();
-  final RxString walletBalance = '43,829'.obs;
-  final RxString walletNumber = '16010 00000 034'.obs;
+  final RxString walletBalance = ''.obs;
+  final RxString walletNumber = ''.obs;
+  final RxBool isWalletLinked = false.obs;
   final Rxn<File> pickedImage = Rxn<File>();
 
   // Controllers for text fields
@@ -137,16 +143,25 @@ class ProfileController extends GetxController {
   }
 
   Future<void> fetchWalletBalance() async {
-    // TODO: Skip API call for now if still pending on backend
-    /*
-    final result = await profileUseCase.getWalletBalance();
-    result.fold(
-      (failure) => null,
-      (balance) {
-        walletBalance.value = balance.balance.toString();
-      },
-    );
-    */
+    try {
+      final summary = await getWalletSummaryUseCase();
+      final account = summary.walletNumber.trim();
+      if (account.isEmpty) {
+        _setWalletUnlinked();
+        return;
+      }
+      isWalletLinked.value = true;
+      walletBalance.value = NumberFormat('#,##0', 'en_US').format(summary.balance);
+      walletNumber.value = formatWalletAccountNumber(account);
+    } catch (_) {
+      _setWalletUnlinked();
+    }
+  }
+
+  void _setWalletUnlinked() {
+    isWalletLinked.value = false;
+    walletBalance.value = '';
+    walletNumber.value = '';
   }
 
   void toggleEditMode() {

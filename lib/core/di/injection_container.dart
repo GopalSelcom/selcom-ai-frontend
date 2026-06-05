@@ -36,8 +36,10 @@ import '../../features/settings/data/repositories/settings_repository_impl.dart'
 import '../../features/settings/domain/repositories/settings_repository.dart';
 import '../../features/settings/domain/usecases/settings_usecase.dart';
 import '../../features/wallet/data/datasources/wallet_local_data_source.dart';
+import '../../features/wallet/data/datasources/wallet_remote_data_source.dart';
 import '../../features/wallet/data/repositories/wallet_repository_impl.dart';
 import '../../features/wallet/domain/repositories/wallet_repository.dart';
+import '../../features/wallet/domain/usecases/get_wallet_details_usecase.dart';
 import '../../features/wallet/domain/usecases/get_wallet_summary_usecase.dart';
 import '../../features/wallet/domain/usecases/get_wallet_transactions_usecase.dart';
 import '../config/app_config.dart';
@@ -126,7 +128,11 @@ Future<void> init() async {
   // BLoCs / Controllers
   sl.registerFactory(() => MyRidesController(rideUseCase: sl()));
   sl.registerFactory(
-    () => ProfileController(profileUseCase: sl(), appSettingsService: sl()),
+    () => ProfileController(
+      profileUseCase: sl(),
+      appSettingsService: sl(),
+      getWalletSummaryUseCase: sl(),
+    ),
   );
   sl.registerFactory(() => PaymentMethodController(profileRepository: sl()));
 
@@ -153,13 +159,17 @@ Future<void> init() async {
   sl.registerLazySingleton(() => SubmitRideRatingUseCase(sl()));
   sl.registerLazySingleton(() => SkipRideRatingUseCase(sl()));
 
-  // ── Wallet Feature (dummy local data until API) ──
+  // ── Wallet Feature ──
+  sl.registerLazySingleton<WalletRemoteDataSource>(
+    () => WalletRemoteDataSourceImpl(),
+  );
   sl.registerLazySingleton<WalletLocalDataSource>(
     () => WalletLocalDataSourceImpl(),
   );
   sl.registerLazySingleton<WalletRepository>(
-    () => WalletRepositoryImpl(localDataSource: sl()),
+    () => WalletRepositoryImpl(remoteDataSource: sl(), localDataSource: sl()),
   );
+  sl.registerLazySingleton(() => GetWalletDetailsUseCase(sl()));
   sl.registerLazySingleton(() => GetWalletSummaryUseCase(sl()));
   sl.registerLazySingleton(() => GetWalletTransactionsUseCase(sl()));
 
