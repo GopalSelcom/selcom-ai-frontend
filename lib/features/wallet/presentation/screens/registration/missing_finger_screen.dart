@@ -10,6 +10,7 @@ import 'package:selcom_rides_frontend/shared/utils/app_dialogs.dart';
 import '../../../../../core/services/location.dart';
 import '../../../../../core/services/progress_indicator/loader.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/widgets/svg_picture_asset.dart';
 import '../../controllers/registration_controller.dart';
 import '../../widgets/common_button.dart';
 import 'widgets/bouncing_selcom_pesa.dart';
@@ -182,7 +183,7 @@ class _HaveMissingFingersWidgetState extends State<HaveMissingFingersWidget> {
                             isEnabled: true,
                             child: SizedBox(
                               width: Get.width * 0.12,
-                              child: Image.asset(
+                              child: SvgPictureAsset(
                                 AppAssets.finger1,
                                 color:
                                     registrationController
@@ -205,7 +206,7 @@ class _HaveMissingFingersWidgetState extends State<HaveMissingFingersWidget> {
                             isEnabled: true,
                             child: SizedBox(
                               width: Get.width * 0.13,
-                              child: Image.asset(
+                              child: SvgPictureAsset(
                                 AppAssets.finger2,
                                 color:
                                     registrationController
@@ -228,7 +229,7 @@ class _HaveMissingFingersWidgetState extends State<HaveMissingFingersWidget> {
                             isEnabled: true,
                             child: SizedBox(
                               width: Get.width * 0.125,
-                              child: Image.asset(
+                              child: SvgPictureAsset(
                                 AppAssets.finger3,
                                 color:
                                     registrationController
@@ -252,7 +253,7 @@ class _HaveMissingFingersWidgetState extends State<HaveMissingFingersWidget> {
                             isEnabled: true,
                             child: SizedBox(
                               width: Get.width * 0.11,
-                              child: Image.asset(
+                              child: SvgPictureAsset(
                                 AppAssets.finger4,
                                 color:
                                     registrationController
