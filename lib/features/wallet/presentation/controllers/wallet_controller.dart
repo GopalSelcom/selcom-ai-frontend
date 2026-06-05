@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/di/injection_container.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../payment/presentation/widgets/add_money_to_wallet_bottom_sheet.dart';
@@ -16,14 +17,19 @@ import '../utils/wallet_format_utils.dart';
 import '../widgets/wallet_vcn_overlay.dart';
 
 class WalletController extends GetxController {
-  WalletController({
-    required GetWalletSummaryUseCase getWalletSummaryUseCase,
-    required GetWalletTransactionsUseCase getWalletTransactionsUseCase,
-  }) : _getWalletSummaryUseCase = getWalletSummaryUseCase,
-       _getWalletTransactionsUseCase = getWalletTransactionsUseCase;
+  static WalletController? _instance;
 
-  final GetWalletSummaryUseCase _getWalletSummaryUseCase;
-  final GetWalletTransactionsUseCase _getWalletTransactionsUseCase;
+  factory WalletController() {
+    _instance ??= WalletController._internal();
+    return _instance!;
+  }
+
+  WalletController._internal();
+
+  final GetWalletSummaryUseCase _getWalletSummaryUseCase =
+      sl<GetWalletSummaryUseCase>();
+  final GetWalletTransactionsUseCase _getWalletTransactionsUseCase =
+      sl<GetWalletTransactionsUseCase>();
 
   final RxBool isLoading = true.obs;
   final Rxn<WalletSummaryEntity> summary = Rxn<WalletSummaryEntity>();
@@ -136,5 +142,5 @@ class WalletController extends GetxController {
   }
 
   ///wallet controller from v4
-RxString lang = "en".obs;
+  RxString lang = "en".obs;
 }

@@ -35,16 +35,13 @@ class BiometricVerificationInprogrees extends StatefulWidget {
 class _BiometricVerificationInprogreesState
     extends State<BiometricVerificationInprogrees> {
   RegistrationController registrationController = RegistrationController();
-  WalletController? get walletController =>
-      Get.isRegistered<WalletController>()
-          ? Get.find<WalletController>()
-          : null;
+  WalletController walletController = WalletController();
 
   @override
   void initState() {
     super.initState();
     bool testIt =
-        (walletController?.isTestingMode.value??false) && DeviceInfo().isPhysicalDevice;
+        walletController.isTestingMode.value && DeviceInfo().isPhysicalDevice;
     if (testIt) {
       registrationController.nidaNumberString.value = "19990102-61401-00001-20";
       (fingerScanBody["data"] as Map).remove("finger1");

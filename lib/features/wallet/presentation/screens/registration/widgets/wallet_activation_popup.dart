@@ -19,26 +19,22 @@ class WalletActivationPopup extends StatefulWidget {
 }
 
 class _WalletActivationPopupState extends State<WalletActivationPopup> {
-  WalletController? get walletController =>
-      Get.isRegistered<WalletController>()
-          ? Get.find<WalletController>()
-          : null;
+  WalletController walletController = WalletController();
 
   Future<void> setLanguage() async {
-    walletController?.lang.value =
-         "en";
+    walletController.lang.value = "en";
   }
 
   @override
   void initState() {
-    walletController?.isNidaRegistrationDialogVisible.value = true;
+    walletController.isNidaRegistrationDialogVisible.value = true;
     super.initState();
     setLanguage();
   }
 
   @override
   void dispose() {
-    walletController?.isNidaRegistrationDialogVisible.value = false;
+    walletController.isNidaRegistrationDialogVisible.value = false;
     super.dispose();
   }
 
@@ -75,7 +71,7 @@ class _WalletActivationPopupState extends State<WalletActivationPopup> {
                       ),
                     ),
                     TextSpan(
-                      text: walletController?.lang.value == "en"
+                      text: walletController.lang.value == "en"
                           ? 'and beyond!'
                           : "na kwingineko!",
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -94,7 +90,7 @@ class _WalletActivationPopupState extends State<WalletActivationPopup> {
               () => RichText(
                 textAlign: TextAlign.center,
                 text: TextSpan(
-                  text: walletController?.lang.value == "en"
+                  text: walletController.lang.value == "en"
                       ? 'Register for a duka.direct Prepaid Mastercard with your '
                       : "Jisajili kwa duka.direct Prepaid Mastercard ukitumia ",
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -105,7 +101,7 @@ class _WalletActivationPopupState extends State<WalletActivationPopup> {
                   children: (widget.isFromLipa ?? false)
                       ? <TextSpan>[
                           TextSpan(
-                            text: walletController?.lang.value == "en"
+                            text: walletController.lang.value == "en"
                                 ? 'NIDA ID or Passport '
                                 : "NIDA ID au Pasipoti ",
                             style: Theme.of(context).textTheme.bodyMedium
@@ -117,7 +113,7 @@ class _WalletActivationPopupState extends State<WalletActivationPopup> {
                                 ),
                           ),
                           TextSpan(
-                            text: walletController?.lang.value == "en"
+                            text: walletController.lang.value == "en"
                                 ? 'today'
                                 : "leo",
                             style: Theme.of(context).textTheme.bodyMedium
@@ -128,7 +124,7 @@ class _WalletActivationPopupState extends State<WalletActivationPopup> {
                                 ),
                           ),
                           TextSpan(
-                            text: walletController?.lang.value == "en"
+                            text: walletController.lang.value == "en"
                                 ? ' to use Lipa!'
                                 : " Tumia Lipa!",
                             style: Theme.of(context).textTheme.bodyMedium
@@ -141,7 +137,7 @@ class _WalletActivationPopupState extends State<WalletActivationPopup> {
                         ]
                       : <TextSpan>[
                           TextSpan(
-                            text: walletController?.lang.value == "en"
+                            text: walletController.lang.value == "en"
                                 ? 'NIDA ID or Passport '
                                 : "NIDA ID au Pasipoti ",
                             style: Theme.of(context).textTheme.bodyMedium
@@ -153,7 +149,7 @@ class _WalletActivationPopupState extends State<WalletActivationPopup> {
                                 ),
                           ),
                           TextSpan(
-                            text: walletController?.lang.value == "en"
+                            text: walletController.lang.value == "en"
                                 ? 'today!'
                                 : "leo!",
                             style: Theme.of(context).textTheme.bodyMedium

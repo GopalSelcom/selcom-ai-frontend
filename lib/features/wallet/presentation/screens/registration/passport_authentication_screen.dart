@@ -28,10 +28,7 @@ class PassportAuthenticationScreen extends StatefulWidget {
 class _PassportAuthenticationScreenState
     extends State<PassportAuthenticationScreen> {
   RegistrationController registrationController = RegistrationController();
-  WalletController? get walletController =>
-      Get.isRegistered<WalletController>()
-          ? Get.find<WalletController>()
-          : null;
+  WalletController walletController = WalletController();
 
   @override
   void initState() {
@@ -128,7 +125,7 @@ class _PassportAuthenticationScreenState
               child: CommonButton(
                 label: "Proceed",
                 onTap: () async {
-                  bool testIt = walletController?.isTestingMode.value??false;
+                  bool testIt = walletController.isTestingMode.value;
 
                   if (testIt) {
                     registrationController.processPassportResult(

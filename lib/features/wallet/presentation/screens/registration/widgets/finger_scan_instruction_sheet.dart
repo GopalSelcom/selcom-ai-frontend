@@ -32,10 +32,7 @@ class _ShowFingerScanInstructionSheetState
   RegistrationController registrationController = RegistrationController();
 
   SelcomIdentyPlugin selcomIdentyPlugin = SelcomIdentyPlugin();
-  WalletController? get walletController =>
-      Get.isRegistered<WalletController>()
-          ? Get.find<WalletController>()
-          : null;
+  WalletController walletController = WalletController();
   @override
   Widget build(BuildContext context) {
     return Column(
