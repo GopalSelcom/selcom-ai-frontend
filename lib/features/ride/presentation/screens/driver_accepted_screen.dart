@@ -278,12 +278,24 @@ class DriverAcceptedScreen extends StatelessWidget {
             ],
           );
         }),
-        SizedBox(width: 10.w),
-        _iconActionChip(
-          icon: Icons.shield_outlined,
-          onTap: () => _showSafetyBottomSheet(context, c, shareController),
-          color: AppColors.textHeading,
-        ),
+        Obx(() {
+          if (c.rideBottomSheetState.value ==
+              RideBottomSheetState.rideStarted) {
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(width: 10.w),
+                _iconActionChip(
+                  icon: Icons.shield_outlined,
+                  onTap: () =>
+                      _showSafetyBottomSheet(context, c, shareController),
+                  color: AppColors.textHeading,
+                ),
+              ],
+            );
+          }
+          return const SizedBox.shrink();
+        }),
       ],
     );
   }
@@ -775,6 +787,7 @@ class DriverAcceptedScreen extends StatelessWidget {
     return Builder(
       builder: (context) {
         return ScrollConfiguration(
+          key: ValueKey(c.currentRideStatus.value),
           behavior: ScrollConfiguration.of(
             context,
           ).copyWith(overscroll: false, physics: const ClampingScrollPhysics()),
@@ -1127,6 +1140,7 @@ class DriverAcceptedScreen extends StatelessWidget {
 
   Widget _rideProgressSheet(DriverAcceptedController c) {
     return Column(
+      key: ValueKey(c.currentRideStatus.value),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Obx(
