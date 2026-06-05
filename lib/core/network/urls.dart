@@ -56,17 +56,26 @@ class _RideEndpoints {
   final activeRide = "go/rides/active";
   final pendingReview = "go/rides/pending-review";
   final reviewTags = "go/review-tags";
+
   String cancelRide(String rideId) => "$base/$rideId/cancel";
+
   String rateRide(String rideId) => "$base/$rideId/rate";
+
   String skipRideRating(String rideId) => "$base/$rideId/skip-review";
+
   String activityToken(String rideId) => "$base/$rideId/activity-token";
+
   String cancellationCharges(String rideId) =>
       "$base/$rideId/cancellation-charges";
+
   String shareRide(String rideId) => "$base/$rideId/share";
+
   String updateStops(String rideId) => "$base/$rideId/stops";
+
   String cancelPendingStops(String rideId) => "$base/$rideId/stops/pending";
   final checkBookMode = "go/check-book-mode";
   final emergencyContacts = "go/emergency-contacts";
+
   String cancelVoiceCall(String rideId) => "$base/$rideId/call/cancel";
   final base = "go/rides";
 }
@@ -167,13 +176,22 @@ class _PlacesEndpoints {
 class _WalletEndpoints {
   const _WalletEndpoints();
 
-  final balance = "go/wallet/balance";
+  final createWallet = "go_wallet/go_create_wallet";
+  final walletDetails = "go_wallet/go_wallet_details";
+  final balance = "go_wallet/go_card_balance";
+  final walletStatement = "go_wallet/go_card_statement";
+  final walletDebit = "go_wallet/go_card_debit";
+  final walletOtherPaymentMethod = "go_wallet/go_other_payment_methods";
+  final userDataExistSelcomId = "user_data_exist_selcom_id";
 
-  /// TODO(backend): Confirm wallet-link identity path (SelcomID uses `register/user_data_exist_new`).
-  final verifyIdentity = "go/wallet/verify-identity";
+  final getUserFromSelcomId = "get_user_selcom_id";
+  final String addUserToSelcomId = "add_user_selcom_id";
 
-  /// TODO(backend): Name update for wallet link — API not available yet.
-  final updateLinkName = "go/wallet/link/update-name";
+  final fingerScan = "wallet/finger_scan";
+  final createSupportTicketSelcomId = "create_support_ticket_selcom_id";
+  final String verifySelfie = "wallet/verify_selfie";
+  final String syncPassportData = "wallet/sync_passport_data";
+
 }
 
 /// ─────────────────────────────────
@@ -184,6 +202,7 @@ class _NotificationEndpoints {
 
   final list = "go/notifications";
   final readAll = "go/notifications/read-all";
+
   String readById(String notificationId) =>
       "go/notifications/$notificationId/read";
 }

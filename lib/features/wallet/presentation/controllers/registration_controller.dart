@@ -12,14 +12,12 @@ import 'package:selcom_identy_plugin/selcom_identy_plugin.dart';
 import 'package:selcom_rides_frontend/core/constants/app_assets.dart';
 import 'package:selcom_rides_frontend/shared/utils/app_dialogs.dart';
 
-import '../../../../core/constants/currency_code.dart';
 import '../../../../core/data/models/user_model.dart';
-import '../../../../core/localization/languages/languages.dart';
-import '../../../../core/routes/app_navigator.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../home/presentation/screens/home_screen.dart';
+import '../../domain/repositories/registration_repository.dart';
 import '../models/nida_card_model.dart';
 import '../models/passport_scanning_model.dart';
 import '../models/registration/add_user_to_selcom_id_request.dart';
@@ -32,6 +30,7 @@ import '../models/registration/selcom_id_contact_support_request.dart';
 import '../models/registration/selcom_id_user_data_exist_request.dart';
 import '../models/registration/selcom_id_user_data_exist_response.dart';
 import '../models/registration/verify_selfie_response.dart';
+import '../models/registration/wallet_credit_refund_amount_model.dart';
 import '../models/user_add_card_details_model.dart';
 import '../screens/registration/biometric_authentication_screen.dart';
 import '../screens/registration/document_confirmation_screen.dart';
@@ -60,8 +59,8 @@ class RegistrationController extends GetxController {
   }
 
   // Rx<CityConfigModel> cityConfigModel = CityConfigModel().obs;
-  // final RegistrationRepository registrationRepository =
-  // RegistrationRepository();
+  final RegistrationRepository registrationRepository =
+  RegistrationRepository();
 
   WalletController? get walletController =>
       Get.isRegistered<WalletController>()
@@ -354,61 +353,60 @@ class RegistrationController extends GetxController {
       TextEditingController();
 
   Future<void> uploadNFCPasportData() async {
-    ///todo:- pending
-    // try {
-    //   // showLoaderDialog(Get.context);
-    //   Loader.instance.show();
-    //
-    //   final userData = UserController().userData.value;
-    //
-    //   FingerScanModel?
-    //   response = await registrationRepository.uploadNFCPasportData(
-    //     // userId: userData.id ?? "",
-    //     mobileNumber: userData.user?.mobileNumber?.toString() ?? "",
-    //     passportNumber: passportScanningData.value.data?.documentNumber ?? "",
-    //     firstName: passportScanningData.value.data?.name ?? "",
-    //     lastName: passportScanningData.value.data?.surname ?? "",
-    //     dateOfBirth: yyMMddDateParser(
-    //       date: (passportScanningData.value.data?.dob ?? "").trim(),
-    //     ),
-    //     expiry: yyMMddDateParser(
-    //       date: (passportScanningData.value.data?.dateOfExpiry ?? "").trim(),
-    //     ),
-    //     gender: passportScanningData.value.data?.gender ?? "",
-    //     nationality: passportScanningData.value.data?.nationality ?? "",
-    //     placeOfBirth: passportScanningData.value.data?.placeOfBirth ?? "",
-    //     passportImage: nfcPassportImage?.path ?? "",
-    //     passportSignatureImage: nfcSignatureImage?.path ?? "",
-    //     state: passportFieldCityController.text,
-    //     residenceAddress: passportFieldAddressController.text,
-    //   );
-    //
-    //   Loader.instance.hide();
-    //
-    //   if (response != null &&
-    //       (response.statusCode == 200 || response.statusCode == 201)) {
-    //     accountOpeningUsingPassport = true;
-    //     if (nfcPassportImage != null &&
-    //         (nfcPassportImage?.path.isNotEmpty ?? false)) {
-    //       nidaImageFile = File(nfcPassportImage!.path);
-    //     }
-    //
-    //     Get.ofAll(
-    //       FaceDetectionScreen(leadingIcon: Images.home),
-    //     );
-    //   }
-    // } catch (e, stackTrace) {
-    //   ErrorReporter.instance.report(
-    //     error: e,
-    //     stackTrace: stackTrace,
-    //     customMessage: "RegistrationController.uploadNFCPasportData failed",
-    //     extraData: [],
-    //   );
-    //
-    //   // hideLoaderDialog();
-    //   Loader.instance.hide();
-    //   debugPrint("Exception in uploadNFCPasportData: $e");
-    // }
+    try {
+      // showLoaderDialog(Get.context);
+      Loader.instance.show();
+
+      final userData = UserController().userData.value;
+
+      FingerScanModel?
+      response = await registrationRepository.uploadNFCPasportData(
+        // userId: userData.id ?? "",
+        mobileNumber: userData.user?.mobileNumber?.toString() ?? "",
+        passportNumber: passportScanningData.value.data?.documentNumber ?? "",
+        firstName: passportScanningData.value.data?.name ?? "",
+        lastName: passportScanningData.value.data?.surname ?? "",
+        dateOfBirth: yyMMddDateParser(
+          date: (passportScanningData.value.data?.dob ?? "").trim(),
+        ),
+        expiry: yyMMddDateParser(
+          date: (passportScanningData.value.data?.dateOfExpiry ?? "").trim(),
+        ),
+        gender: passportScanningData.value.data?.gender ?? "",
+        nationality: passportScanningData.value.data?.nationality ?? "",
+        placeOfBirth: passportScanningData.value.data?.placeOfBirth ?? "",
+        passportImage: nfcPassportImage?.path ?? "",
+        passportSignatureImage: nfcSignatureImage?.path ?? "",
+        state: passportFieldCityController.text,
+        residenceAddress: passportFieldAddressController.text,
+      );
+
+      Loader.instance.hide();
+
+      if (response != null &&
+          (response.statusCode == 200 || response.statusCode == 201)) {
+        accountOpeningUsingPassport = true;
+        if (nfcPassportImage != null &&
+            (nfcPassportImage?.path.isNotEmpty ?? false)) {
+          nidaImageFile = File(nfcPassportImage!.path);
+        }
+
+        Get.offAll(
+            ()=> const FaceDetectionScreen(leadingIcon: AppAssets.home),
+        );
+      }
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(
+        error: e,
+        stackTrace: stackTrace,
+        customMessage: "RegistrationController.uploadNFCPasportData failed",
+        extraData: [],
+      );
+
+      // hideLoaderDialog();
+      Loader.instance.hide();
+      debugPrint("Exception in uploadNFCPasportData: $e");
+    }
   }
 
   //---------------------------------NFC Passport scanning FLOW------------------------------//
@@ -626,7 +624,6 @@ class RegistrationController extends GetxController {
   void uploadOcrDocuments() async {
     try {
       externalId = generateRandomString(msg: "ExternalId is");
-      final userData = UserController().userData.value;
       String email = "";
       String address = "";
       String city = "";
@@ -636,12 +633,13 @@ class RegistrationController extends GetxController {
       String dob = "";
       String nidaNumber = "";
       String passportNumber = "";
+      final user = UserModel.fromJson(jsonDecode(await StorageService().read(StorageKeys.user)??""));
 
       if ( /*todo Features().selcomIdImpl*/ true) {
         if (isDataGotFromSelcomId) {
           if (verifySelfieResponse.response?.nidaNumber?.isNotEmpty ?? false) {
             nidaNumber = verifySelfieResponse.response?.nidaNumber ?? "";
-            email = UserController().userData.value.user?.emailId ?? "";
+            email = user?.emailId ?? "";
             address = verifySelfieResponse.response?.residentStreet ?? "";
             city = verifySelfieResponse.response?.residentRegion ?? "";
             firstName = verifySelfieResponse.response?.firstName ?? "";
@@ -658,7 +656,7 @@ class RegistrationController extends GetxController {
               false) {
             passportNumber =
                 verifySelfieResponse.response?.passport?.number ?? "";
-            email = UserController().userData.value.user?.emailId ?? "";
+            email = user?.emailId ?? "";
             address =
                 verifySelfieResponse.response?.passport?.residenceAddress ?? "";
             city = verifySelfieResponse.response?.passport?.state ?? "";
@@ -677,7 +675,7 @@ class RegistrationController extends GetxController {
                 false) {
               nidaNumber =
                   selcomIdUserData?.response?.response?.nidaNumber ?? "";
-              email = UserController().userData.value.user?.emailId ?? "";
+              email =user?.emailId ?? "";
               address =
                   selcomIdUserData?.response?.response?.residentStreet ?? "";
               city = selcomIdUserData?.response?.response?.residentRegion ?? "";
@@ -691,7 +689,7 @@ class RegistrationController extends GetxController {
             } else {
               passportNumber =
                   selcomIdUserData?.response?.response?.passport?.number ?? "";
-              email = UserController().userData.value.user?.emailId ?? "";
+              email = user?.emailId ?? "";
               address =
                   selcomIdUserData
                       ?.response
@@ -733,7 +731,8 @@ class RegistrationController extends GetxController {
             gender = nidaDocumentSelectedGenderController.text;
             dob = nidaDocumentBithdateController.text;
           } else {
-            final userData = UserController().userData.value;
+
+            final userData = UserModel.fromJson(jsonDecode(await StorageService().read(StorageKeys.user)??""));
 
             passportNumber =
                 passportScanningData.value.data?.documentNumber ?? "";
@@ -743,35 +742,10 @@ class RegistrationController extends GetxController {
               date: (passportScanningData.value.data?.dob ?? "").trim(),
             );
             gender = passportScanningData.value.data?.gender ?? "";
-            email = userData.user?.emailId ?? "";
+            email = userData.emailId ?? "";
             address = passportFieldAddressController.text;
             city = passportFieldCityController.text;
           }
-        }
-      } else {
-        if (nidaNumberString.value.isNotEmpty) {
-          nidaNumber = nidaNumberString.value.trim();
-          email = registerAddressInfoEmailController.text;
-          address = registerAddressInfoAddressController.text;
-          city = registerAddressInfoCityController.text;
-          firstName = nidaDocumentFirstNameController.text.trim();
-          lastName = nidaDocumentLastNameController.text.trim();
-          gender = nidaDocumentSelectedGenderController.text;
-          dob = nidaDocumentBithdateController.text;
-        } else {
-          final userData = UserController().userData.value;
-
-          passportNumber =
-              passportScanningData.value.data?.documentNumber ?? "";
-          firstName = passportScanningData.value.data?.name ?? "";
-          lastName = passportScanningData.value.data?.surname ?? "";
-          dob = yyMMddDateParser(
-            date: (passportScanningData.value.data?.dob ?? "").trim(),
-          );
-          gender = passportScanningData.value.data?.gender ?? "";
-          email = userData.user?.emailId ?? "";
-          address = passportFieldAddressController.text;
-          city = passportFieldCityController.text;
         }
       }
 
@@ -787,13 +761,13 @@ class RegistrationController extends GetxController {
         dob: dob,
         externalId: externalId,
         msisdn:
-            "${CommonValues.countryMobileCodeWithoutSymbol}${userData.user?.mobileNumber.toString()}",
+            "+255 ${user?.mobileNumber.toString()}",
       );
 
       if (response != null && response.response?.resultcode == "200") {
         UserAddCardDetailModel? userAddCardDetailsResponse =
             await registrationRepository.userAddCardDetail(
-              userId: userData.user?.id ?? "",
+              userId: user?.id ?? "",
               clientId:
                   response.response?.data?.first.clientId.toString() ?? "",
               accountNumber: response.response?.data?.first.accountNo ?? "",
@@ -829,7 +803,7 @@ class RegistrationController extends GetxController {
 
           WalletCreditRefundAmountModel? walletCreditRefundAmountResponse =
               await registrationRepository.walletCreditUserRefundAmountAPI(
-                userId: userData.user?.id ?? "",
+                userId: user?.id ?? "",
                 clientId:
                     response.response?.data?.first.clientId.toString() ?? "",
                 accountNumber: response.response?.data?.first.accountNo ?? "",
@@ -837,7 +811,7 @@ class RegistrationController extends GetxController {
 
           // if (walletCreditRefundAmountResponse?.statusCode == 200) {}
           Get.to(
-            () => VerificationSuccessScreen(),
+            () => const VerificationSuccessScreen(),
           );
         } else {
           Get.back();

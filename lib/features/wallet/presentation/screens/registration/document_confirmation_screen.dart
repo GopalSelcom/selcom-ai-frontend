@@ -30,7 +30,7 @@ class _DocumentConfirmationScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.whiteColor,
-      appBar: CustomAppBar(
+      appBar: const CustomAppBar(
         title: "Document Confirmation",
         showBack: true,
         // leadingIcon: Images.IC_BACK,
