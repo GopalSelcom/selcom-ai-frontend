@@ -646,6 +646,14 @@ class AppStrings {
   static const String viewTrip = 'view_trip';
   static const String visa = 'visa';
   static const String wallet = 'wallet';
+  static const String enterNidaWalletActivation = 'enter_nida_wallet_activation';
+  static const String enterNidaChooseIdTypeTitle =
+      'enter_nida_choose_id_type_title';
+  static const String enterNidaChooseNidaOrPassport =
+      'enter_nida_choose_nida_or_passport';
+  static const String enterNidaRegistrationHint = 'enter_nida_registration_hint';
+  static const String enterNidaBirthDate = 'enter_nida_birth_date';
+  static const String enterNidaExpirationDate = 'enter_nida_expiration_date';
   static const String linkWalletSubtitle = 'link_wallet_subtitle';
   static const String walletLinkSelectId = 'wallet_link_select_id';
   static const String walletLinkSelectIdSubtitle = 'wallet_link_select_id_subtitle';
@@ -659,6 +667,8 @@ class AppStrings {
   static const String walletLinkPassportNumber = 'wallet_link_passport_number';
   static const String walletLinkPassportNumberHint =
       'wallet_link_passport_number_hint';
+  static const String walletLinkPassportMaskHint =
+      'wallet_link_passport_mask_hint';
   static const String walletLinkDateOfBirth = 'wallet_link_date_of_birth';
   static const String walletLinkDateOfExpiry = 'wallet_link_date_of_expiry';
   static const String walletLinkDatePlaceholder = 'wallet_link_date_placeholder';

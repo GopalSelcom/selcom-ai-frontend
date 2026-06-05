@@ -563,6 +563,13 @@ class LanguageEn extends Languages {
     'view_trip': 'View trip',
     'visa': 'VISA',
     'wallet': 'Wallet',
+    'enter_nida_wallet_activation': 'Wallet Activation',
+    'enter_nida_choose_id_type_title': 'Choose ID type for registration',
+    'enter_nida_choose_nida_or_passport': 'Choose NIDA or Passport',
+    'enter_nida_registration_hint':
+        'Please enter your nida card number for further registration process',
+    'enter_nida_birth_date': 'Birth date',
+    'enter_nida_expiration_date': 'Expiration date',
     'link_wallet_subtitle': 'Link your Go wallet to pay for rides',
     'wallet_link_select_id': 'Select ID',
     'wallet_link_select_id_subtitle':
@@ -576,6 +583,7 @@ class LanguageEn extends Languages {
         'Enter your passport details to proceed',
     'wallet_link_passport_number': 'Passport number',
     'wallet_link_passport_number_hint': 'Enter passport number',
+    'wallet_link_passport_mask_hint': 'AAA AAA AAA',
     'wallet_link_date_of_birth': 'Date of birth',
     'wallet_link_date_of_expiry': 'Date of expiry',
     'wallet_link_date_placeholder': 'YYYY-MM-DD',
@@ -2389,6 +2397,29 @@ class LanguageEn extends Languages {
   String get wallet => values['wallet'] ?? '';
 
   @override
+  String get enterNidaWalletActivation =>
+      values['enter_nida_wallet_activation'] ?? '';
+
+  @override
+  String get enterNidaChooseIdTypeTitle =>
+      values['enter_nida_choose_id_type_title'] ?? '';
+
+  @override
+  String get enterNidaChooseNidaOrPassport =>
+      values['enter_nida_choose_nida_or_passport'] ?? '';
+
+  @override
+  String get enterNidaRegistrationHint =>
+      values['enter_nida_registration_hint'] ?? '';
+
+  @override
+  String get enterNidaBirthDate => values['enter_nida_birth_date'] ?? '';
+
+  @override
+  String get enterNidaExpirationDate =>
+      values['enter_nida_expiration_date'] ?? '';
+
+  @override
   String get linkWalletSubtitle => values['link_wallet_subtitle'] ?? '';
 
   @override
@@ -2424,6 +2455,10 @@ class LanguageEn extends Languages {
   @override
   String get walletLinkPassportNumberHint =>
       values['wallet_link_passport_number_hint'] ?? '';
+
+  @override
+  String get walletLinkPassportMaskHint =>
+      values['wallet_link_passport_mask_hint'] ?? '';
 
   @override
   String get walletLinkDateOfBirth => values['wallet_link_date_of_birth'] ?? '';

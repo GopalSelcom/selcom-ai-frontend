@@ -486,6 +486,12 @@ abstract class Languages {
   String get viewTrip;
   String get visa;
   String get wallet;
+  String get enterNidaWalletActivation;
+  String get enterNidaChooseIdTypeTitle;
+  String get enterNidaChooseNidaOrPassport;
+  String get enterNidaRegistrationHint;
+  String get enterNidaBirthDate;
+  String get enterNidaExpirationDate;
   String get linkWalletSubtitle;
   String get walletLinkSelectId;
   String get walletLinkSelectIdSubtitle;
@@ -497,6 +503,7 @@ abstract class Languages {
   String get walletLinkPassportDetailsHint;
   String get walletLinkPassportNumber;
   String get walletLinkPassportNumberHint;
+  String get walletLinkPassportMaskHint;
   String get walletLinkDateOfBirth;
   String get walletLinkDateOfExpiry;
   String get walletLinkDatePlaceholder;

@@ -491,6 +491,12 @@ class LanguageSw extends Languages {
     'view_trip': '',
     'visa': '',
     'wallet': '',
+    'enter_nida_wallet_activation': '',
+    'enter_nida_choose_id_type_title': '',
+    'enter_nida_choose_nida_or_passport': '',
+    'enter_nida_registration_hint': '',
+    'enter_nida_birth_date': '',
+    'enter_nida_expiration_date': '',
     'link_wallet_subtitle': '',
     'wallet_link_select_id': '',
     'wallet_link_select_id_subtitle': '',
@@ -502,6 +508,7 @@ class LanguageSw extends Languages {
     'wallet_link_passport_details_hint': '',
     'wallet_link_passport_number': '',
     'wallet_link_passport_number_hint': '',
+    'wallet_link_passport_mask_hint': '',
     'wallet_link_date_of_birth': '',
     'wallet_link_date_of_expiry': '',
     'wallet_link_date_placeholder': '',
@@ -2271,6 +2278,29 @@ class LanguageSw extends Languages {
   String get wallet => values['wallet'] ?? '';
 
   @override
+  String get enterNidaWalletActivation =>
+      values['enter_nida_wallet_activation'] ?? '';
+
+  @override
+  String get enterNidaChooseIdTypeTitle =>
+      values['enter_nida_choose_id_type_title'] ?? '';
+
+  @override
+  String get enterNidaChooseNidaOrPassport =>
+      values['enter_nida_choose_nida_or_passport'] ?? '';
+
+  @override
+  String get enterNidaRegistrationHint =>
+      values['enter_nida_registration_hint'] ?? '';
+
+  @override
+  String get enterNidaBirthDate => values['enter_nida_birth_date'] ?? '';
+
+  @override
+  String get enterNidaExpirationDate =>
+      values['enter_nida_expiration_date'] ?? '';
+
+  @override
   String get linkWalletSubtitle => values['link_wallet_subtitle'] ?? '';
 
   @override
@@ -2306,6 +2336,10 @@ class LanguageSw extends Languages {
   @override
   String get walletLinkPassportNumberHint =>
       values['wallet_link_passport_number_hint'] ?? '';
+
+  @override
+  String get walletLinkPassportMaskHint =>
+      values['wallet_link_passport_mask_hint'] ?? '';
 
   @override
   String get walletLinkDateOfBirth => values['wallet_link_date_of_birth'] ?? '';

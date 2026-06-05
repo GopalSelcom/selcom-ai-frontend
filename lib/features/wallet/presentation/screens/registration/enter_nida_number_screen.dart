@@ -7,14 +7,16 @@ import 'package:intl/intl.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:selcom_rides_frontend/core/theme/app_text_styles.dart';
 
+import '../../../../../core/localization/app_strings.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../shared/widgets/app_animated_reveal.dart';
+import '../../../../../shared/widgets/app_primary_button.dart';
+import '../../../../../shared/widgets/app_text_field.dart';
 import '../../controllers/registration_controller.dart'
     show RegistrationController;
-import '../../widgets/common_button.dart';
 import '../../widgets/custom_scrollbar_widget.dart';
 import 'biometric_authentication_screen.dart';
 import 'passport_scan_method_screen.dart';
-import 'widgets/common_input_field.dart';
 import 'widgets/custom_app_bar.dart';
 
 class EnterNidaNumberScreen extends StatefulWidget {
@@ -32,20 +34,91 @@ class _EnterNidaNumberScreenState extends State<EnterNidaNumberScreen> {
   FocusNode passportFocusNode = FocusNode();
 
   void validateFields() {
-    if (isNidaSelected.value &&
-        registrationController.nidaNumberController.value.text.length == 23) {
-      isButtonEnable.value = true;
-    } else if (registrationController
-            .passportNumberController
-            .text
-            .isNotEmpty &&
-        registrationController.passportNumberController.text.length >= 8 &&
-        registrationController.passportDOBController.text.isNotEmpty &&
-        registrationController.passportExpiryDateController.text.isNotEmpty) {
-      isButtonEnable.value = true;
+    if (isNidaSelected.value) {
+      isButtonEnable.value =
+          registrationController.nidaNumberController.text.length == 23;
     } else {
-      isButtonEnable.value = false;
+      isButtonEnable.value =
+          registrationController.passportNumberController.text.length >= 8 &&
+          registrationController.passportDOBController.text.isNotEmpty &&
+          registrationController.passportExpiryDateController.text.isNotEmpty;
     }
+  }
+
+  DateTime _dateOnly(DateTime value) =>
+      DateTime(value.year, value.month, value.day);
+
+  Future<void> _openDatePicker({
+    required TextEditingController targetController,
+    DateTime? maxDate,
+  }) async {
+    final max = maxDate != null ? _dateOnly(maxDate) : null;
+    var pickedDate = targetController.text.isNotEmpty
+        ? DateTime.tryParse(targetController.text) ?? _dateOnly(DateTime.now())
+        : _dateOnly(DateTime.now());
+    pickedDate = _dateOnly(pickedDate);
+    if (max != null && pickedDate.isAfter(max)) {
+      pickedDate = max;
+    }
+
+    await Get.dialog<void>(
+      Dialog(
+        backgroundColor: AppColors.white,
+        insetPadding: EdgeInsets.symmetric(horizontal: 24.w),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        child: CupertinoTheme(
+          data: CupertinoThemeData(
+            brightness: Brightness.light,
+            textTheme: CupertinoTextThemeData(
+              dateTimePickerTextStyle: TextStyle(
+                color: AppColors.textHeading,
+                fontSize: 18.sp,
+              ),
+            ),
+          ),
+          child: SizedBox(
+            height: 280.h,
+            child: Column(
+              children: [
+                SizedBox(
+                  height: 220.h,
+                  child: CupertinoDatePicker(
+                    backgroundColor: AppColors.white,
+                    mode: CupertinoDatePickerMode.date,
+                    minimumYear: 1950,
+                    initialDateTime: pickedDate,
+                    maximumDate: max,
+                    dateOrder: DatePickerDateOrder.ymd,
+                    onDateTimeChanged: (DateTime value) => pickedDate = value,
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    targetController.text = DateFormat(
+                      'yyyy-MM-dd',
+                    ).format(pickedDate);
+                    registrationController.nidaNumberController.clear();
+                    isNidaSelected.value = false;
+                    setState(() {});
+                    validateFields();
+                    Get.back();
+                  },
+                  child: Text(
+                    AppStrings.done.tr,
+                    style: AppTextStyles.body.copyWith(
+                      color: AppColors.walletColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -72,12 +145,10 @@ class _EnterNidaNumberScreenState extends State<EnterNidaNumberScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.boxGray,
-      appBar: const CustomAppBar(
-        title: "Wallet Activation",
+      backgroundColor: AppColors.pageBackground,
+      appBar: CustomAppBar(
+        title: AppStrings.enterNidaWalletActivation.tr,
         showBack: true,
-        // leadingIcon: CommonImages.IC_BACK,
-        // onTapLeading: appNavigator.pop
       ),
       body: Padding(
         padding: EdgeInsets.only(
@@ -91,20 +162,14 @@ class _EnterNidaNumberScreenState extends State<EnterNidaNumberScreen> {
             Column(
               children: [
                 Text(
-                  "Choose ID type for registration",
-                  style: AppTextStyles.screenTitle.copyWith(
-                    fontSize: 20.0.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  AppStrings.enterNidaChooseIdTypeTitle.tr,
+                  style: AppTextStyles.homeTitle,
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 6.0.sp),
                 Text(
-                  "Choose NIDA or Passport",
-                  style: AppTextStyles.body.copyWith(
-                    color: AppColors.textGrayAskleois,
-                    fontSize: 13.0.sp,
-                  ),
+                  AppStrings.enterNidaChooseNidaOrPassport.tr,
+                  style: AppTextStyles.homeSubtitle,
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -128,45 +193,25 @@ class _EnterNidaNumberScreenState extends State<EnterNidaNumberScreen> {
               ),
             ),
 
-            Padding(
-              padding: EdgeInsets.all(0.0.sp),
-              child: ValueListenableBuilder(
-                valueListenable: isButtonEnable,
-                builder: (context, enabled, child) => CommonButton(
-                  label: "Continue",
-                  onTap: enabled
-                      ? () async {
-                          if (isNidaSelected.value) {
-                            nidaFocusNode.unfocus();
-                            Get.to(() => const BiometricAuthenticationScreen());
-                          } else {
-                            passportFocusNode.unfocus();
-                            Get.to(() => const PassportScanMethodScreen());
-                          }
-                        }
-                      : () {},
-                  enabledColor: AppColors.walletColor,
-                  isEnabled: enabled,
-                ) /*OutlineBorderButtonView(
-                  fontSize: 15.0.sp,
-                  translate(Labels.Continue),
-                  fontFamily: FontName.NunitoSansBold,
-                  color: AppColors.whiteColor,
-                  backgroundColor: enabled
-                      ? AppColors.loaderColor
-                      : AppColors.textGrey,
-                  onPressed: enabled
-                      ? () async {
-                          if (isNidaSelected.value) {
-                            nidaFocusNode.unfocus();
-                            appNavigator.to(() => BiometricAuthenticationScreen());
-                          } else {
-                            passportFocusNode.unfocus();
-                            appNavigator.to(() => PassportAuthenticationScreen());
-                          }
-                        }
-                      : () {},
-                )*/,
+            ValueListenableBuilder<bool>(
+              valueListenable: isButtonEnable,
+              builder: (context, showContinue, _) => AppAnimatedReveal(
+                show: showContinue,
+                visibleKey: const ValueKey('nida-continue-visible'),
+                hiddenKey: const ValueKey('nida-continue-hidden'),
+                child: AppPrimaryButton(
+                  label: AppStrings.continueLabel.tr,
+                  backgroundColor: AppColors.walletColor,
+                  onPressed: () {
+                    if (isNidaSelected.value) {
+                      nidaFocusNode.unfocus();
+                      Get.to(() => const BiometricAuthenticationScreen());
+                    } else {
+                      passportFocusNode.unfocus();
+                      Get.to(() => const PassportScanMethodScreen());
+                    }
+                  },
+                ),
               ),
             ),
           ],
@@ -196,6 +241,7 @@ class _EnterNidaNumberScreenState extends State<EnterNidaNumberScreen> {
                 behavior: HitTestBehavior.opaque,
                 onTap: () {
                   isNidaSelected.value = true;
+                  validateFields();
                 },
                 child: Container(
                   height: 55.0.sp,
@@ -212,9 +258,8 @@ class _EnterNidaNumberScreenState extends State<EnterNidaNumberScreen> {
                       ),
                       SizedBox(width: 15.0.sp),
                       Text(
-                        "NIDA",
-                        style: AppTextStyles.screenTitle.copyWith(
-                          height: 1.3,
+                        AppStrings.walletLinkNida.tr,
+                        style: AppTextStyles.homeTitle.copyWith(
                           color: isNidaSelected.value
                               ? null
                               : AppColors.lightGreyTextColor,
@@ -232,40 +277,28 @@ class _EnterNidaNumberScreenState extends State<EnterNidaNumberScreen> {
               Padding(
                 padding: EdgeInsets.only(top: 10.0.sp, bottom: 20.0.sp),
                 child: Text(
-                  "Please enter your nida card number for further registration process",
-                  style: AppTextStyles.screenTitle.copyWith(
-                    //     color: AppColors
-                    //         .lightThemeLightGreyTextColor,
-                    //     height: 1.3,
-                    // fontSize: 12.0.sp
-                    color: AppColors.lightThemeLightGreyTextColor,
-                    fontSize: 13.0.sp,
+                  AppStrings.enterNidaRegistrationHint.tr,
+                  style: AppTextStyles.homeCaption.copyWith(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
-              Text(
-                "Enter NIDA card number",
-                style: AppTextStyles.screenTitle.copyWith(
-                  color: AppColors.lightThemeLightGreyTextColor,
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+
               Padding(
                 padding: EdgeInsets.only(top: 10.0.sp, bottom: 15.0.sp),
-                child: CommonInputField(
+                child: AppTextField(
                   focusNode: nidaFocusNode,
                   maxLength: 23,
-                  hintColor: AppColors.lightThemeLightGreyTextColor,
                   textColor: AppColors.blackColor,
-                  hintText: "Enter NIDA card number",
+                  label: AppStrings.walletLinkNidaFieldHint.tr,
+                  hintText: AppStrings.walletLinkNidaMaskHint.tr,
                   controller: registrationController.nidaNumberController,
                   textInputAction: TextInputAction.done,
-
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: false,
                   ),
-                  onChange: (value) {
+                  onChanged: (value) {
                     registrationController.passportNumberController.clear();
                     registrationController.passportDOBController.clear();
                     registrationController.passportExpiryDateController.clear();
@@ -308,6 +341,7 @@ class _EnterNidaNumberScreenState extends State<EnterNidaNumberScreen> {
                 behavior: HitTestBehavior.opaque,
                 onTap: () {
                   isNidaSelected.value = false;
+                  validateFields();
                 },
                 child: Container(
                   height: 55.0.sp,
@@ -324,22 +358,12 @@ class _EnterNidaNumberScreenState extends State<EnterNidaNumberScreen> {
                       ),
                       SizedBox(width: 15.0.sp),
                       Text(
-                        "Passport",
-                        style: AppTextStyles.screenTitle.copyWith(
-                          height: 1.3,
+                        AppStrings.walletLinkPassport.tr,
+                        style: AppTextStyles.homeTitle.copyWith(
                           color: !isNidaSelected.value
                               ? null
                               : AppColors.lightGreyTextColor,
                         ),
-                        /*  style: Theme.of(context)
-                                            .textTheme
-                                            .bodyLarge
-                                            ?.copyWith(
-                                              color: !isNidaSelected.value
-                                                  ? null
-                                                  : AppColors
-                                                        .lightGreyTextColor,
-                                            )*/
                       ),
                     ],
                   ),
@@ -352,50 +376,27 @@ class _EnterNidaNumberScreenState extends State<EnterNidaNumberScreen> {
               ),
               SizedBox(height: 10.0.sp),
               Text(
-                "Enter your passport details to proceed",
-                style: AppTextStyles.screenTitle.copyWith(
-                  //     color: AppColors
-                  //         .lightThemeLightGreyTextColor,
-                  //     height: 1.3,
-                  // fontSize: 12.0.sp
-                  color: AppColors.lightThemeLightGreyTextColor,
-                  fontSize: 13.0.sp,
-                ),
-              ),
-              SizedBox(height: 20.0.sp),
-              Text(
-                "Enter passport number",
-                style: AppTextStyles.screenTitle.copyWith(
-                  color: AppColors.lightThemeLightGreyTextColor,
-                  fontSize: 14.sp,
+                AppStrings.walletLinkPassportDetailsHint.tr,
+                style: AppTextStyles.homeCaption.copyWith(
+                  fontSize: 13.sp,
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              SizedBox(height: 10.0.sp),
+              SizedBox(height: 20.0.sp),
 
-              CommonInputField(
+              AppTextField(
                 focusNode: passportFocusNode,
                 maxLength: 11,
-                // autofocus: false,
-                // isBorderEnable: false,
-                // filled: true,
-                // fillColor: AppColors.lightThemeSecondaryColor,
-                hintColor: AppColors.lightThemeLightGreyTextColor,
                 textColor: AppColors.blackColor,
-                hintText: "Enter passport number",
+                label: AppStrings.walletLinkPassportNumberHint.tr,
+                hintText: AppStrings.walletLinkPassportMaskHint.tr,
                 controller: registrationController.passportNumberController,
                 textInputAction: TextInputAction.done,
-
-                onTap: () {
-                  nidaFocusNode.unfocus();
-                  passportFocusNode.requestFocus();
-                },
-                onChange: (value) {
+                onChanged: (value) {
                   registrationController.nidaNumberController.clear();
                   isNidaSelected.value = false;
                   validateFields();
                 },
-                textCapitalization: TextCapitalization.characters,
                 inputFormatters: [
                   MaskTextInputFormatter(
                     mask: "AAA AAA AAA",
@@ -404,181 +405,98 @@ class _EnterNidaNumberScreenState extends State<EnterNidaNumberScreen> {
                 ],
               ),
               SizedBox(height: 20.0.sp),
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Birth date",
-                          style: AppTextStyles.screenTitle.copyWith(
-                            color: AppColors.lightThemeLightGreyTextColor,
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w600,
+              Padding(
+                padding: EdgeInsets.only(right: 8.0.sp),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            AppStrings.enterNidaBirthDate.tr,
+                            style: AppTextStyles.cardTitle.copyWith(
+                              color: AppColors.textMutedStrong,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 15.h,
+                            ),
                           ),
-                        ),
-                        SizedBox(height: 5.0.sp),
-                        CommonInputField(
-                          onTap: () async {
-                            nidaFocusNode.unfocus();
-                            passportFocusNode.unfocus();
-                            await Get.dialog(
-                              Dialog(
-                                    elevation: 0,
-                                    shadowColor: Colors.transparent,
-                                    backgroundColor: Colors.transparent,
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(
-                                          8.0.sp,
-                                        ),
-                                      ),
-                                      height: Get.width * 0.5,
-                                      width: Get.height * 0.9,
-                                      child: CupertinoDatePicker(
-                                        backgroundColor:
-                                            AppColors.lightThemeSecondaryColor,
-                                        mode: CupertinoDatePickerMode.date,
-                                        minimumYear: 1950,
-                                        initialDateTime: DateTime.now(),
-                                        dateOrder: DatePickerDateOrder.ymd,
-                                        maximumDate: DateTime.now(),
-                                        maximumYear: DateTime.now().year,
-                                        onDateTimeChanged: (DateTime newDate) {
-                                          registrationController
-                                              .passportDOBController
-                                              .text = DateFormat(
-                                            'yyyy-MM-dd',
-                                          ).format(newDate).toString();
-                                          registrationController
-                                              .nidaNumberController
-                                              .clear();
-                                          isNidaSelected.value = false;
-
-                                          validateFields();
-                                        },
-                                      ),
-                                    ),
-                                  )
-                                  .animate()
-                                  .fade(
-                                    duration: 400.ms,
-                                    curve: Curves.fastOutSlowIn,
-                                  )
-                                  .scale(
-                                    duration: 400.ms,
-                                    curve: Curves.fastOutSlowIn,
-                                  ),
-                            );
-                          },
-                          onChange: (value) {
-                            registrationController.nidaNumberController.clear();
-                            isNidaSelected.value = false;
-
-                            validateFields();
-                          },
-                          hintColor: AppColors.lightThemeLightGreyTextColor,
-                          textColor: AppColors.blackColor,
-                          enable: false,
-                          keyboardType: TextInputType.none,
-                          controller:
-                              registrationController.passportDOBController,
-                          // isBorderEnable: false,
-                          // filled: true,
-                          // fillColor: AppColors
-                          //     .lightThemeSecondaryColor,
-                          hintText: "YYYY-MM-DD",
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(width: 20.0.sp),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Expiration date",
-                          style: AppTextStyles.screenTitle.copyWith(
-                            color: AppColors.lightThemeLightGreyTextColor,
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w600,
+                          SizedBox(height: 5.0.sp),
+                          GestureDetector(
+                            onTap: () async {
+                              nidaFocusNode.unfocus();
+                              passportFocusNode.unfocus();
+                              await _openDatePicker(
+                                targetController: registrationController
+                                    .passportDOBController,
+                                maxDate: DateTime.now(),
+                              );
+                            },
+                            behavior: HitTestBehavior.opaque,
+                            child: AbsorbPointer(
+                              child: ValueListenableBuilder<TextEditingValue>(
+                                valueListenable: registrationController
+                                    .passportDOBController,
+                                builder: (context, _, __) => AppTextField(
+                                  readOnly: true,
+                                  fontSize: 12.sp,
+                                  textColor: AppColors.textHeading,
+                                  textFieldBackgroundColor: AppColors.white,
+                                  controller: registrationController
+                                      .passportDOBController,
+                                  hintText: AppStrings.walletLinkDatePlaceholder.tr,
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                        SizedBox(height: 5.0.sp),
-                        CommonInputField(
-                          onTap: () async {
-                            nidaFocusNode.unfocus();
-                            passportFocusNode.unfocus();
-                            await Get.dialog(
-                              Dialog(
-                                    elevation: 0,
-                                    shadowColor: Colors.transparent,
-                                    backgroundColor: Colors.transparent,
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(
-                                          8.0.sp,
-                                        ),
-                                      ),
-                                      height: Get.width * 0.5,
-                                      width: Get.height * 0.9,
-                                      child: CupertinoDatePicker(
-                                        backgroundColor:
-                                            AppColors.lightThemeSecondaryColor,
-                                        mode: CupertinoDatePickerMode.date,
-                                        minimumYear: 1950,
-                                        initialDateTime: DateTime.now(),
-                                        dateOrder: DatePickerDateOrder.ymd,
-                                        onDateTimeChanged: (DateTime newDate) {
-                                          registrationController
-                                              .passportExpiryDateController
-                                              .text = DateFormat(
-                                            'yyyy-MM-dd',
-                                          ).format(newDate).toString();
-                                          registrationController
-                                              .nidaNumberController
-                                              .clear();
-                                          isNidaSelected.value = false;
-
-                                          validateFields();
-                                        },
-                                      ),
-                                    ),
-                                  )
-                                  .animate()
-                                  .fade(
-                                    duration: 400.ms,
-                                    curve: Curves.fastOutSlowIn,
-                                  )
-                                  .scale(
-                                    duration: 400.ms,
-                                    curve: Curves.fastOutSlowIn,
-                                  ),
-                            );
-                          },
-                          onChange: (value) {
-                            registrationController.nidaNumberController.clear();
-                            isNidaSelected.value = false;
-                            validateFields();
-                          },
-                          hintColor: AppColors.lightThemeLightGreyTextColor,
-                          textColor: AppColors.blackColor,
-                          enable: false,
-                          keyboardType: TextInputType.none,
-                          controller: registrationController
-                              .passportExpiryDateController,
-                          // isBorderEnable: false,
-                          // filled: true,
-                          // fillColor: AppColors
-                          //     .lightThemeSecondaryColor,
-                          hintText: "YYYY-MM-DD",
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                    SizedBox(width: 12.0.sp),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            AppStrings.enterNidaExpirationDate.tr,
+                            style: AppTextStyles.cardTitle.copyWith(
+                              color: AppColors.textMutedStrong,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 15.h,
+                            ),
+                          ),
+                          SizedBox(height: 5.0.sp),
+                          GestureDetector(
+                            onTap: () async {
+                              nidaFocusNode.unfocus();
+                              passportFocusNode.unfocus();
+                              await _openDatePicker(
+                                targetController: registrationController
+                                    .passportExpiryDateController,
+                              );
+                            },
+                            behavior: HitTestBehavior.opaque,
+                            child: AbsorbPointer(
+                              child: ValueListenableBuilder<TextEditingValue>(
+                                valueListenable: registrationController
+                                    .passportExpiryDateController,
+                                builder: (context, _, __) => AppTextField(
+                                  readOnly: true,
+                                  fontSize: 12.sp,
+                                  textColor: AppColors.textHeading,
+                                  textFieldBackgroundColor: AppColors.white,
+                                  controller: registrationController
+                                      .passportExpiryDateController,
+                                  hintText: AppStrings.walletLinkDatePlaceholder.tr,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
               SizedBox(height: 15.0.sp),
             ],

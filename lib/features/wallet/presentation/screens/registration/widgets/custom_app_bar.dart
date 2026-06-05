@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:selcom_rides_frontend/core/theme/app_text_styles.dart';
 
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../shared/widgets/app_back_button.dart';
@@ -58,6 +59,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 toolbarHeight: toolbarHeight,
                 title: Row(
                   mainAxisSize: MainAxisSize.max,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     if (showBack)
                       AppBackButton(onPressed: onBack ?? () => Get.back()),
@@ -67,14 +69,11 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                           (title != null
                               ? Text(
                                   title!,
-                                  style: Theme.of(context).textTheme.bodyLarge
-                                      ?.copyWith(
-                                        color: AppColors.greyColor242E49,
-                                        // fontFamily:
-                                        //     Fonts.plusJakartaSansExtraBold,
-                                        fontSize: 24.0.sp,
-                                        fontWeight: FontWeight.w700,
-                                      ),
+                                  style: AppTextStyles.homeTitle.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 22.sp,
+                                    height: 1,
+                                  ),
                                   overflow: TextOverflow.ellipsis,
                                   textAlign: centerTitle
                                       ? TextAlign.center
