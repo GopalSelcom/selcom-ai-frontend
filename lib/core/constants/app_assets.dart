@@ -61,6 +61,7 @@ class AppAssets {
   static const String icAccountVerified = '$_imagePath/ic_account_verified.svg';
   static const String icWallet = '$_imagePath/ic_wallet.svg';
   static const String icCopy = '$_imagePath/ic_copy.svg';
+  static const String home = "$_imagePath/home.svg";
 
   static const String icHeadPhone = '$_imagePath/headphone.svg';
 
