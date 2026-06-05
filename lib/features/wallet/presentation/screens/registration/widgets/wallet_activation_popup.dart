@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
+import '../../../../../../core/constants/app_assets.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../controllers/wallet_controller.dart';
 import '../../../widgets/common_button.dart';
@@ -50,7 +51,7 @@ class _WalletActivationPopupState extends State<WalletActivationPopup> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Image.asset(Images.walletActivationPopupIcon, height: 100.0.sp),
+            Image.asset(AppAssets.walletActivationPopupIcon, height: 100.0.sp),
             SizedBox(height: 13.0.sp),
             Obx(
               () => RichText(

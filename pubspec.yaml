@@ -102,6 +102,7 @@ flutter:
     - assets/images/payment/
     - assets/images/location/
     - assets/images/map/
+    - assets/images/onboarding/
     - assets/images/vehicle/
     - assets/json/
     - assets/lottie/

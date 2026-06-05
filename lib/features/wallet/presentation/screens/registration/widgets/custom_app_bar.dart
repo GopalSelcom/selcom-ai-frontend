@@ -1,14 +1,10 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:selcom_rides_frontend/core/constants/app_assets.dart';
 
 import '../../../../../../core/theme/app_colors.dart';
+import '../../../../../../shared/widgets/app_back_button.dart';
 import '../../../utils/common_shadow.dart';
-import '../../../utils/media_viewer.dart';
-
-
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool showBack;
@@ -64,11 +60,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   mainAxisSize: MainAxisSize.max,
                   children: [
                     if (showBack)
-                      IconButton(
-                        constraints: const BoxConstraints(),
-                        onPressed: onBack ?? () => Get.back(),
-                        icon: MediaViewer(path: AppAssets.icBack, height: 15.sp),
-                      ),
+                      AppBackButton(onPressed: onBack ?? () => Get.back()),
                     Expanded(
                       child:
                           titleWidget ??
@@ -90,16 +82,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                                 )
                               : const SizedBox.shrink()),
                     ),
-                    if (showBack)
-                      IconButton(
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                        onPressed: () => {},
-                        icon: MediaViewer(path: Images.icBack,
-                          color: Colors.transparent,
-                          height: 15.sp,
-                        ),
-                      ),
+                    if (showBack) AppBackButton(onPressed: () => {}),
                   ],
                 ),
                 actions: actions,

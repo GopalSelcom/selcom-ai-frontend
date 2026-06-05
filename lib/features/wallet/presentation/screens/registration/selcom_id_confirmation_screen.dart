@@ -8,6 +8,7 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../../../../../shared/widgets/app_profile_header.dart';
 import '../../controllers/registration_controller.dart';
+import '../../utils/media_viewer.dart';
 import '../../widgets/common_button.dart';
 import 'wallet_waiting_screen.dart';
 
@@ -100,8 +101,8 @@ class _DocumentConfirmationScreenState
               shape: BoxShape.rectangle,
               borderRadius: BorderRadius.circular(10.0),
             ),
-            child: ImageWidget(
-              imageUrl: widget.profilePicture,
+            child: MediaViewer(
+              path: widget.profilePicture,
               fit: BoxFit.cover,
               height: 160.0.sp,
               width: 150.0.sp,

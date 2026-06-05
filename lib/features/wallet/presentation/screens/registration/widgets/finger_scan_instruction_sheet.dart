@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 import 'package:selcom_identy_plugin/selcom_identy_plugin.dart';
 import 'package:selcom_rides_frontend/core/theme/app_text_styles.dart';
 // import 'package:selcom_identy_plugin/selcom_identy_plugin.dart';
+import '../../../../../../core/constants/app_assets.dart';
 import '../../../../../../core/services/progress_indicator/loader.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../core/utils/device_info.dart';
@@ -83,7 +84,7 @@ class _ShowFingerScanInstructionSheetState
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Image.asset(
-                          Images.fingerRightScan,
+                            AppAssets.fingerRightScan,
                           height: Get.width * 0.4,
                           width: Get.width * 0.4,
                         ),
@@ -110,7 +111,7 @@ class _ShowFingerScanInstructionSheetState
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Image.asset(
-                          Images.finerWrongScan,
+                          AppAssets.finerWrongScan,
                           height: Get.width * 0.4,
                           width: Get.width * 0.4,
                         ),

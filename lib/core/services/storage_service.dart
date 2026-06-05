@@ -10,7 +10,7 @@ class StorageKeys {
   static const String fcmToken = 'fcm_token';
   static const String voipToken = 'voip_push_token';
   static const String preferredLanguage = 'preferred_language';
-  static const String uniqueDeviceId = 'unique_device_id';';
+  static const String uniqueDeviceId = 'unique_device_id';
 
   /// ISO 3166-1 alpha-2 (e.g. TZ, IN).
   static const String selectedPhoneCountryId = 'selected_phone_country_id';

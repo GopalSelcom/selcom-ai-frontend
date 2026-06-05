@@ -11,6 +11,7 @@ import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../core/theme/app_text_styles.dart';
 import '../../../../../../core/utils/device_info.dart';
 
+import '../../../../../../core/widgets/svg_picture_asset.dart';
 import '../../../controllers/registration_controller.dart';
 import '../../../controllers/wallet_controller.dart';
 
@@ -87,7 +88,7 @@ class _BiometricVerificationInprogreesState
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Image.asset(Images.appLogo, height: 60.0.sp),
+                  SvgPictureAsset(AppAssets.selcomGoLogo, height: 60.0.sp),
                   SizedBox(height: 10.0.sp),
                   Lottie.asset(
                     Lotties.waitingForVerification3,

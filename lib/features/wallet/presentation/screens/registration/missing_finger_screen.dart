@@ -205,7 +205,7 @@ class _HaveMissingFingersWidgetState extends State<HaveMissingFingersWidget> {
                             child: SizedBox(
                               width: Get.width * 0.13,
                               child: Image.asset(
-                                Images.finger2,
+                                AppAssets.finger2,
                                 color:
                                     registrationController
                                         .isMiddleFingerMissing
@@ -228,7 +228,7 @@ class _HaveMissingFingersWidgetState extends State<HaveMissingFingersWidget> {
                             child: SizedBox(
                               width: Get.width * 0.125,
                               child: Image.asset(
-                                Images.finger3,
+                                AppAssets.finger3,
                                 color:
                                     registrationController
                                         .isRingFingerMissing
@@ -252,7 +252,7 @@ class _HaveMissingFingersWidgetState extends State<HaveMissingFingersWidget> {
                             child: SizedBox(
                               width: Get.width * 0.11,
                               child: Image.asset(
-                                Images.finger4,
+                                AppAssets.finger4,
                                 color:
                                     registrationController
                                         .isLittleFingerMissing

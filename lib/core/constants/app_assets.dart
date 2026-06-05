@@ -110,17 +110,41 @@ class AppAssets {
       '$_walletLinkOnboarding/finger_wrong_scan.png';
   static const String walletLinkFaceScan =
       'assets/selcom_auth/face/facescan.png';
+
+  static const String _onboardingPath = '$_imagePath/onboarding';
+  static const String fingerScan = "$_onboardingPath/biometric_scanning.json";
+  static const String fingerRightScan =
+      "$_onboardingPath/finger_right_scan.png";
+  static const String finerWrongScan = "$_onboardingPath/finger_wrong_scan.png";
+  static const String leftHand = "$_onboardingPath/left_hand.png";
+  static const String rightHand = "$_onboardingPath/right_hand.png";
+  static const String verticalHand = "$_onboardingPath/vertical_hand.png";
+  static const String fingersBottom = "$_onboardingPath/fingers_bottom.svg";
+  static const String fingersBottom2 = "$_onboardingPath/finger_bottom.png";
+  static const String finger1 = "$_onboardingPath/finger_1.svg";
+  static const String finger2 = "$_onboardingPath/finger_2.svg";
+  static const String finger3 = "$_onboardingPath/finger_3.svg";
+  static const String finger4 = "$_onboardingPath/finger_4.svg";
+  static const String fingers1 = "$_onboardingPath/finger_1.png";
+  static const String fingers2 = "$_onboardingPath/finger_2.png";
+  static const String fingers3 = "$_onboardingPath/finger_3.png";
+  static const String fingers4 = "$_onboardingPath/finger_4.png";
+  static const String passport = "$_onboardingPath/passport.png";
+  static const String workPermit = "$_onboardingPath/work_permit.png";
+  static const String walletActivationPopupIcon =
+      '$_onboardingPath/wallet_activation_popup_icon.png';
+  static const String placeHolder = "$_onboardingPath/placeholder.png";
 }
 
 class Lotties {
   static const String _jsonPath = 'assets/json';
   static const String dukaLoader = "$_jsonPath/duka_loader.json";
   static const String dukaLoaderNew = "$_jsonPath/duka_loader_new.json";
-  static String waitingForVerification3 =
+  static const String waitingForVerification3 =
       "$_jsonPath/waiting_verfication_3.json";
-  static String contactSupportTicketAnimation =
+  static const String contactSupportTicketAnimation =
       "$_jsonPath/contact_support_ticket_animation.json";
-  static String fingerScan = "$_jsonPath/biometric_scanning.json";
+  static const String fingerScan = "$_jsonPath/biometric_scanning.json";
   static const String passportScanning = '$_jsonPath/passport_scanning.json';
   static const String walletAnimation = '$_jsonPath/wallet_animation.json';
   static const String qrScanner = "$_jsonPath/qr_scanner.json";

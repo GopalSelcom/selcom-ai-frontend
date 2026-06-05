@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
+import '../../../../../core/constants/app_assets.dart';
 import '../../../../../core/localization/languages/languages.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/widgets/svg_picture_asset.dart';
 import '../../controllers/registration_controller.dart';
 import '../../controllers/wallet_controller.dart';
 import '../../widgets/common_button.dart';
@@ -38,7 +40,7 @@ class _VerificationSuccessScreenState extends State<VerificationSuccessScreen> {
             child: Column(
               children: [
                 SizedBox(height: 200.0.sp),
-                Image.asset(Images.successPayment, height: Get.height * 0.15),
+                SvgPictureAsset(AppAssets.icSuccess, height: Get.height * 0.15),
                 SizedBox(height: 50.0.sp),
                 Text(
                   "Registration complete",
