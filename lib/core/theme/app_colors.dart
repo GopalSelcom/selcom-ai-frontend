@@ -119,6 +119,7 @@ class AppColors {
   // Skeleton
   static const Color skeletonBase = Color(0xFFE2E8F0);
   static const Color skeletonHighlight = Color(0xFFF8FAFC);
+  static const Color walletCardText = Color(0xFF5D6A85);
 
   static const Color safetyBannerBg = Color(0xFFE8F4FC);
   static const Color onlineGreen = Color(0xFF22C55E);

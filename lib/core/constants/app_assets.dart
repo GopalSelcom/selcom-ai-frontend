@@ -88,6 +88,9 @@ class AppAssets {
       '$_paymentPath/add_card_success.png';
   static const String imgPaymentDeleteCardConfirm =
       '$_paymentPath/delete_card_confirm.png';
+  static const String icEStatement = '$_paymentPath/ic_e_statement.svg';
+  static const String icShowVcn = '$_paymentPath/ic_show_vcn.svg';
+  static const String imgVcnCard = '$_paymentPath/img_vcn_card.png';
 
   ///animations:-
   static const String carAnimation = '$_jsonPath/car_animation.json';

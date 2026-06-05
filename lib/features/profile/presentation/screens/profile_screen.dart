@@ -175,7 +175,7 @@ class ProfileScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(27.r),
               child: InkWell(
                 borderRadius: BorderRadius.circular(27.r),
-                onTap: controller.openWalletActionsSheet,
+                onTap: controller.openWallet,
                 child: SizedBox(
                   height: ProfileScreenLayout.walletCardHeight,
                   child: WalletSummaryCard(
