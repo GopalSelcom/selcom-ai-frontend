@@ -335,7 +335,7 @@ class RegistrationController extends GetxController {
       }
 
       /// passportScanConfirmationScreen navigation pending
-      Get.to(() => PassportScanConfirmationScreen());
+      Get.to(() => const PassportScanConfirmationScreen());
     } else if (passportScanningData.value.statusCode == 400) {
       AppDialogs.showErrorDialog(
         message: passportScanningData.value.msg ?? "data",
@@ -951,7 +951,7 @@ class RegistrationController extends GetxController {
 
   void registerAddressInfoSubmit() {
     if (validateRegisterAddressInfo()) {
-      Get.to(() => WalletWaitingScreen());
+      Get.to(() => const WalletWaitingScreen());
     }
   }
 
@@ -1060,7 +1060,7 @@ class RegistrationController extends GetxController {
       Get.back();
       ;
 
-      Get.to(() => DocumentConfirmationScreen());
+      Get.to(() => const DocumentConfirmationScreen());
     } else {
       Get.back();
       ;
@@ -1074,7 +1074,7 @@ class RegistrationController extends GetxController {
     // appNavigator.to(
     //   () => FaceDetectionScreen(),
     // );
-    Get.offAll(() => FaceDetectionScreen(leadingIcon: AppAssets.home));
+    Get.offAll(() => const FaceDetectionScreen(leadingIcon: AppAssets.home));
   }
 
   String verifyDocumentPath = "";
@@ -1108,7 +1108,7 @@ class RegistrationController extends GetxController {
     AppDialogs.showErrorDialog(
       message: response?.message ?? "",
       onConfirm: () {
-        Get.offAll(() => HomeScreen(/*showNidaDialog: false*/));
+        Get.offAll(() => const HomeScreen(/*showNidaDialog: false*/));
       },
     );
     // CommonLogics.showError(
@@ -1390,16 +1390,12 @@ class RegistrationController extends GetxController {
   void openPassportCameraScan(BuildContext context) {
     PassportMrzCapture.capture(
       context: context,
-      config: PassportMrzCaptureConfig(
+      config: const PassportMrzCaptureConfig(
         screenTitle: '',
         includeFaceImage: true,
         includeMrzCropInResult: kDebugMode,
-        captureButtonColor: AppTheme.isDarkMode.value
-            ? AppColors.darkThemeTextFieldColor
-            : Colors.white,
-        captureIconColor: AppTheme.isDarkMode.value
-            ? Colors.white
-            : AppColors.blackColor,
+        captureButtonColor: Colors.white,
+        captureIconColor: AppColors.blackColor,
       ),
       onSuccess: (success) {
         _mergeCaptureSuccess(success);

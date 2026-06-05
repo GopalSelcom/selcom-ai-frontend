@@ -171,11 +171,7 @@ class _ScreenTitleWidgetState extends State<ScreenTitleWidget> {
                             colorFilter:
                                 widget.colorFilter ??
                                 ColorFilter.mode(
-                                  // widget.svgColor ?? AppColors.whiteColor,
-                                  widget.svgColor ??
-                                      (AppTheme.isDarkMode.value
-                                          ? AppColors.whiteColor
-                                          : AppColors.blackColor),
+                                  widget.svgColor ?? (AppColors.blackColor),
                                   BlendMode.srcIn,
                                 ),
                             height: widget.svgHeight,

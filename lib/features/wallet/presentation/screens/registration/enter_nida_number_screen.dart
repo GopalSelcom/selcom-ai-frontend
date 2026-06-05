@@ -8,11 +8,12 @@ import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:selcom_rides_frontend/core/theme/app_text_styles.dart';
 
 import '../../../../../core/theme/app_colors.dart';
-import '../../controllers/registration_controller.dart' show RegistrationController;
+import '../../controllers/registration_controller.dart'
+    show RegistrationController;
 import '../../widgets/common_button.dart';
 import '../../widgets/custom_scrollbar_widget.dart';
 import 'biometric_authentication_screen.dart';
-import 'passport_authentication_screen.dart';
+import 'passport_scan_method_screen.dart';
 import 'widgets/common_input_field.dart';
 import 'widgets/custom_app_bar.dart';
 
@@ -72,8 +73,8 @@ class _EnterNidaNumberScreenState extends State<EnterNidaNumberScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.boxGray,
-      appBar: CustomAppBar(
-        title:"Wallet Activation",
+      appBar: const CustomAppBar(
+        title: "Wallet Activation",
         showBack: true,
         // leadingIcon: CommonImages.IC_BACK,
         // onTapLeading: appNavigator.pop
@@ -90,8 +91,11 @@ class _EnterNidaNumberScreenState extends State<EnterNidaNumberScreen> {
             Column(
               children: [
                 Text(
-        "Choose ID type for registration",
-                  style: AppTextStyles.screenTitle.copyWith(fontSize: 20.0.sp, fontWeight: FontWeight.w600),
+                  "Choose ID type for registration",
+                  style: AppTextStyles.screenTitle.copyWith(
+                    fontSize: 20.0.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 6.0.sp),
@@ -134,10 +138,10 @@ class _EnterNidaNumberScreenState extends State<EnterNidaNumberScreen> {
                       ? () async {
                           if (isNidaSelected.value) {
                             nidaFocusNode.unfocus();
-                            Get.to(()=>BiometricAuthenticationScreen());
+                            Get.to(() => const BiometricAuthenticationScreen());
                           } else {
                             passportFocusNode.unfocus();
-                            Get.to(()=>PassportAuthenticationScreen());
+                            Get.to(() => const PassportScanMethodScreen());
                           }
                         }
                       : () {},
@@ -195,7 +199,7 @@ class _EnterNidaNumberScreenState extends State<EnterNidaNumberScreen> {
                 },
                 child: Container(
                   height: 55.0.sp,
-                  decoration: BoxDecoration(color: AppColors.white),
+                  decoration: const BoxDecoration(color: AppColors.white),
                   child: Row(
                     children: [
                       Icon(
@@ -307,7 +311,7 @@ class _EnterNidaNumberScreenState extends State<EnterNidaNumberScreen> {
                 },
                 child: Container(
                   height: 55.0.sp,
-                  decoration: BoxDecoration(color: AppColors.white),
+                  decoration: const BoxDecoration(color: AppColors.white),
                   child: Row(
                     children: [
                       Icon(
@@ -320,7 +324,7 @@ class _EnterNidaNumberScreenState extends State<EnterNidaNumberScreen> {
                       ),
                       SizedBox(width: 15.0.sp),
                       Text(
-                       "Passport",
+                        "Passport",
                         style: AppTextStyles.screenTitle.copyWith(
                           height: 1.3,
                           color: !isNidaSelected.value
@@ -378,7 +382,7 @@ class _EnterNidaNumberScreenState extends State<EnterNidaNumberScreen> {
                 // fillColor: AppColors.lightThemeSecondaryColor,
                 hintColor: AppColors.lightThemeLightGreyTextColor,
                 textColor: AppColors.blackColor,
-                hintText:"Enter passport number",
+                hintText: "Enter passport number",
                 controller: registrationController.passportNumberController,
                 textInputAction: TextInputAction.done,
 
@@ -495,7 +499,7 @@ class _EnterNidaNumberScreenState extends State<EnterNidaNumberScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                    "Expiration date",
+                          "Expiration date",
                           style: AppTextStyles.screenTitle.copyWith(
                             color: AppColors.lightThemeLightGreyTextColor,
                             fontSize: 14.sp,

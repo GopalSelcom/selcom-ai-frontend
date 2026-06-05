@@ -3,13 +3,14 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_theme.dart';
-import '../../../../../core/widgets/screen_title_widget.dart';
+import '../../../../../core/theme/app_text_styles.dart';
 import '../../controllers/registration_controller.dart';
 import 'passport_authentication_screen.dart';
+import 'widgets/custom_app_bar.dart';
 
 /// Entry point: user chooses NFC chip read or camera capture of the data page.
 class PassportScanMethodScreen extends StatefulWidget {
@@ -28,11 +29,9 @@ class _PassportScanMethodScreenState extends State<PassportScanMethodScreen> {
     super.initState();
     if (Platform.isAndroid) {
       SystemChrome.setSystemUIOverlayStyle(
-        SystemUiOverlayStyle(
+        const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
-          statusBarIconBrightness: AppTheme.isDarkMode.value
-              ? Brightness.light
-              : Brightness.dark,
+          statusBarIconBrightness: Brightness.light,
           systemNavigationBarDividerColor: Colors.transparent,
         ),
       );
@@ -45,30 +44,14 @@ class _PassportScanMethodScreenState extends State<PassportScanMethodScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final muted = AppTheme.isDarkMode.value
-        ? AppColors.whiteColor.withValues(alpha: 0.72)
-        : AppColors.lightGreyTextColor;
-
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      backgroundColor: AppTheme.isDarkMode.value
-          ? Theme.of(context).scaffoldBackgroundColor
-          : Theme.of(context).colorScheme.secondary,
+      backgroundColor: AppColors.pageBackground,
+      appBar: const CustomAppBar(title: "Passport", showBack: true),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ScreenTitleWidget(
-              leftIconColor: AppTheme.isDarkMode.value
-                  ? AppColors.whiteColor
-                  : AppColors.blackColor,
-              screenTitle: 'Passport',
-              isLeftIconOnTap: true,
-              titleStyle: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(height: 1.4),
-              onLeftIconTap: () => Get.back(),
-            ),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(
@@ -78,23 +61,23 @@ class _PassportScanMethodScreenState extends State<PassportScanMethodScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    SizedBox(height: 8.h),
                     Text(
                       'How do you want to read your passport?',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      style: AppTextStyles.homeSubtitle.copyWith(
+                        color: AppColors.textHeading,
                         fontWeight: FontWeight.w600,
-                        height: 1.35,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 8.h),
                     Text(
                       'Choose one option. NFC reads the electronic chip on the passport cover. '
                       'Camera captures the printed data page so text can be read on this device.',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: muted,
-                        height: 1.35,
+                      style: AppTextStyles.homeSubtitle.copyWith(
+                        fontSize: 13.sp,
                       ),
                     ),
-                    const SizedBox(height: 28),
+                    SizedBox(height: 28.h),
                     _MethodCard(
                       icon: CupertinoIcons.waveform_path,
                       title: 'NFC chip scan',
@@ -158,40 +141,27 @@ class _MethodCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final border = AppTheme.isDarkMode.value
-        ? AppColors.whiteColor.withValues(alpha: 0.12)
-        : AppColors.blackColor.withValues(alpha: 0.08);
-    final fill = AppTheme.isDarkMode.value
-        ? AppColors.darkThemeTextFieldColor.withValues(alpha: 0.45)
-        : AppColors.lightThemeTextFieldColor;
-
     return Material(
       color: Colors.transparent,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: fill,
+          color: AppColors.surfaceSubtle,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: border),
+          border: Border.all(color: AppColors.borderWalletCard),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(
-                  icon,
-                  size: 28,
-                  color: AppTheme.isDarkMode.value
-                      ? AppColors.whiteColor
-                      : AppColors.blackColor,
-                ),
+                Icon(icon, size: 28, color: AppColors.blackColor),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    style: AppTextStyles.homeSubtitle.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -201,11 +171,10 @@ class _MethodCard extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               instructions,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              style: AppTextStyles.homeCaption.copyWith(
+                fontSize: 14.sp,
                 height: 1.4,
-                color: AppTheme.isDarkMode.value
-                    ? AppColors.whiteColor.withValues(alpha: 0.75)
-                    : AppColors.lightGreyTextColor,
+                color: AppColors.textBody.withValues(alpha: 0.8),
               ),
             ),
             const SizedBox(height: 16),
