@@ -2,4 +2,12 @@
 <resources>
     <color name="ic_launcher_background">#FFCC00</color>
     <color name="splash_color">#FFCC00</color>
+    <color name="boxes">#ff5CB75E</color>
+    <color name="boxes_transparent">#ffE3F3E4</color>
+    <color name="id_result_center">#ff5CB75E</color>
+    <color name="id_result_end">#ff5CB75E</color>
+    <color name="id_result_start">#ff5CB75E</color>
+    <color name="id_success">#ff5CB75E</color>
+    <color name="id_error">#ff5CB75E</color>
+    <color name="id_retake">#ff5CB75E</color>
 </resources>

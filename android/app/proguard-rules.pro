@@ -24,3 +24,10 @@
 -keep class **.R$* {
     <fields>;
 }
+
+# selcom_identy_plugin
+-keep class org.identy.** { *; }
+-keep class com.identy.** { *; }
+-keep public class org.opencv.core.** { *; }
+-keep public class org.dft.** { *; }
+-dontwarn org.conscrypt.OpenSSLProvider
