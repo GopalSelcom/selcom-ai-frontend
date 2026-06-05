@@ -18,7 +18,10 @@ class VerificationSuccessScreen extends StatefulWidget {
 }
 
 class _VerificationSuccessScreenState extends State<VerificationSuccessScreen> {
-  WalletController walletController = WalletController();
+  WalletController? get walletController =>
+      Get.isRegistered<WalletController>()
+          ? Get.find<WalletController>()
+          : null;
   RegistrationController registrationController = RegistrationController();
 
   @override

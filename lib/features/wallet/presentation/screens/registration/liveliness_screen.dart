@@ -13,6 +13,7 @@ import '../../../../home/presentation/screens/home_screen.dart';
 
 import '../../controllers/registration_controller.dart';
 import '../../controllers/wallet_controller.dart';
+import '../../widgets/common_button.dart';
 import 'widgets/custom_app_bar.dart';
 
 class FaceDetectionScreen extends StatefulWidget {
@@ -31,7 +32,10 @@ class FaceDetectionScreen extends StatefulWidget {
 
 class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
   RegistrationController registrationController = RegistrationController();
-
+  WalletController? get walletController =>
+      Get.isRegistered<WalletController>()
+          ? Get.find<WalletController>()
+          : null;
   @override
   void initState() {
     RegistrationController().verifyDocumentSelfieCalledCount = 0;
@@ -174,8 +178,9 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
 
                     registrationController.verifyDocumentSelfieCalledCount++;
 
+
                     bool testIt =
-                        WalletController().isTestingMode &&
+                        (walletController?.isTestingMode.value??false)&&
                         !DeviceInfo().isPhysicalDevice;
 
                     if (testIt) {

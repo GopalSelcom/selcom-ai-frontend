@@ -1,17 +1,15 @@
-import 'package:duka_direct_4_flutter/core/extensions/formatting_extensions.dart';
-import 'package:duka_direct_4_flutter/core/services/responsive/responsive.dart';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
-import '../../../../../core/constants/constans.dart';
-import '../../../../../core/resources/images.dart';
-import '../../../../../core/services/localization/language/languages.dart';
-import '../../../../../core/services/localization/localization.dart';
-import '../../../../../core/services/router/app_navigator.dart';
-import '../../../../../core/services/theme/theme.dart';
-import '../../../../../core/widgets/common_button.dart';
-import 'package:duka_direct_4_flutter/core/widgets/media_viewer.dart';
-import '../../../controller/wallet_controller.dart';
+import '../../../../../../core/theme/app_colors.dart';
+import '../../../../../../core/theme/app_text_styles.dart';
+import '../../../controllers/wallet_controller.dart';
+import '../../../utils/media_viewer.dart';
+import '../../../widgets/common_button.dart';
+
+
 
 class WalletRefundActivationPopup extends StatefulWidget {
   final bool isFromLipa;
@@ -24,11 +22,13 @@ class WalletRefundActivationPopup extends StatefulWidget {
 }
 
 class _WalletActivationPopupState extends State<WalletRefundActivationPopup> {
-  WalletController walletController = WalletController();
+  WalletController? get walletController =>
+      Get.isRegistered<WalletController>()
+          ? Get.find<WalletController>()
+          : null;
 
   Future<void> setLanguage() async {
-    walletController.lang.value =
-        Localization.instance.currentLanguage?.languageCode ?? "en";
+    walletController?.lang.value = "en";
   }
 
   @override
@@ -76,8 +76,7 @@ class _WalletActivationPopupState extends State<WalletRefundActivationPopup> {
             RichText(
               textAlign: TextAlign.center,
               text:
-                  Localization.instance.currentLanguage?.languageCode ==
-                      Localization.instance.english
+                  true
                   ? TextSpan(
                       text: "You have ",
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -125,7 +124,7 @@ class _WalletActivationPopupState extends State<WalletRefundActivationPopup> {
             ),
             SizedBox(height: 13.0.sp),
             Text(
-              "${CommonValues.currencyCode} ${walletController.walletRefundAmountResponse.value.totalRefundAmount?.toShortScaleFormat() ?? 0}",
+              "+255 ${walletController.walletRefundAmountResponse.value.totalRefundAmount?.toShortScaleFormat() ?? 0}",
               style: AppTextStyles.screenTitle.copyWith(
                 color: AppColors.grey535353,
                 // fontName: FontName.NunitoSansBold,
@@ -137,8 +136,8 @@ class _WalletActivationPopupState extends State<WalletRefundActivationPopup> {
 
             CommonButton(
               bottomSpace: 13.sp,
-              enabledColor: context.textColors.walletColor,
-              label: Languages.of(context).activateWallet,
+              enabledColor:AppColors.walletColor,
+              label: "Activate Wallet",
               isButtonAnimationEnable: false,
               // labelTextStyle: TextStyle(
               //   fontFamily: Fonts.plusJakartaSansBold,
@@ -146,26 +145,26 @@ class _WalletActivationPopupState extends State<WalletRefundActivationPopup> {
               //   fontSize: 15.sp,
               // ),
               onTap: () {
-                appNavigator.pop(result: true);
+                Get.back(result: true);
               },
               isEnabled: true,
             ),
 
             CommonButton(
-              label: Languages.of(context).remindMeLater,
+              label: "Remind Me Later",
               bottomSpace: 16.sp,
-              enabledColor: context.textColors.white,
-              borderColor: context.textColors.textGrayAskleois,
+              enabledColor: AppColors.white,
+              borderColor: AppColors.textGrayAskleois,
               iconColor: Colors.transparent,
               labelTextStyle: TextStyle(
-                fontFamily: Fonts.plusJakartaSansBold,
-                color: context.textColors.textGrayAskleois,
+                // fontFamily: Fonts.plusJakartaSansBold,
+                color: AppColors.textGrayAskleois,
                 fontSize: 15.sp,
               ),
 
               isButtonAnimationEnable: false,
               onTap: () {
-                appNavigator.pop();
+                Get.back();
               },
               isEnabled: true,
             ),

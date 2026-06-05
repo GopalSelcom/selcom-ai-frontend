@@ -10,6 +10,7 @@ import 'package:selcom_rides_frontend/shared/utils/app_dialogs.dart';
 import '../../../../../core/services/progress_indicator/loader.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../controllers/registration_controller.dart';
+import '../../widgets/common_button.dart';
 import 'widgets/bouncing_selcom_pesa.dart';
 import 'widgets/custom_app_bar.dart';
 import 'widgets/finger_scan_instruction_sheet.dart';

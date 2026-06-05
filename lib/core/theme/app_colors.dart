@@ -19,7 +19,11 @@ class AppColors {
   static const Color textGrayAskleois = Color(0xff5D6A85);
   static const Color grey595959 = Color(0xff595959);
   static const Color greyColor242E49 = Color(0xff242E49);
+  static const Color loaderColor = Color(0xfffF4004C);
+  static const Color drawerWhiteColor = Color(0xffF3F3F3);
+  static const Color grey535353 = Color(0xff535353);
   static const Color borderColor = Color(0xffD1D5D8);
+  static const Color lightThemeBlackColor = Color(0xff121212);
   static const Color primaryButton = Color(
     0xFF5CB75E,
   ); // Buttons & solid actions (unchanged green)

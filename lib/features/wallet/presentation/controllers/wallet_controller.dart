@@ -41,6 +41,8 @@ class WalletController extends GetxController {
 
   String get vcnCvv => _vcnCvv;
 
+  RxBool isTestingMode = true.obs;
+
   @override
   void onInit() {
     super.onInit();
@@ -129,4 +131,7 @@ class WalletController extends GetxController {
   String _formatCreatedAt(DateTime date) {
     return DateFormat('d MMM yyyy, h:mm a').format(date.toLocal());
   }
+
+  ///wallet controller from v4
+RxString lang = "en".obs;
 }

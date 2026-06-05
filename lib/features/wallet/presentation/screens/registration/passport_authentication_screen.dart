@@ -13,6 +13,7 @@ import '../../../../../core/constants/app_assets.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../../controllers/registration_controller.dart';
 import '../../controllers/wallet_controller.dart';
+import '../../widgets/common_button.dart';
 import 'test/passport_scanning_data.dart';
 import 'widgets/custom_app_bar.dart';
 
@@ -27,6 +28,10 @@ class PassportAuthenticationScreen extends StatefulWidget {
 class _PassportAuthenticationScreenState
     extends State<PassportAuthenticationScreen> {
   RegistrationController registrationController = RegistrationController();
+  WalletController? get walletController =>
+      Get.isRegistered<WalletController>()
+          ? Get.find<WalletController>()
+          : null;
 
   @override
   void initState() {
@@ -123,8 +128,7 @@ class _PassportAuthenticationScreenState
               child: CommonButton(
                 label: "Proceed",
                 onTap: () async {
-                  Popup.isPopupShowing = false;
-                  bool testIt = WalletController().isTestingMode;
+                  bool testIt = walletController?.isTestingMode.value??false;
 
                   if (testIt) {
                     registrationController.processPassportResult(

@@ -9,8 +9,11 @@ import 'package:selcom_rides_frontend/core/theme/app_text_styles.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../wallet_link/presentation/utils/mask_text_input_formatter.dart';
 import '../../controllers/registration_controller.dart' show RegistrationController;
+import '../../widgets/common_button.dart';
+import '../../widgets/custom_scrollbar_widget.dart';
 import 'biometric_authentication_screen.dart';
 import 'passport_authentication_screen.dart';
+import 'widgets/common_input_field.dart';
 import 'widgets/custom_app_bar.dart';
 
 class EnterNidaNumberScreen extends StatefulWidget {
@@ -93,8 +96,8 @@ class _EnterNidaNumberScreenState extends State<EnterNidaNumberScreen> {
                 ),
                 SizedBox(height: 6.0.sp),
                 Text(
-                  Languages.of(context).chooseNidaOrPassport,
-                  style: desStyle(context)?.copyWith(
+                  "Choose NIDA or Passport",
+                  style: AppTextStyles.body.copyWith(
                     color: AppColors.textGrayAskleois,
                     fontSize: 13.0.sp,
                   ),
@@ -126,7 +129,7 @@ class _EnterNidaNumberScreenState extends State<EnterNidaNumberScreen> {
               child: ValueListenableBuilder(
                 valueListenable: isButtonEnable,
                 builder: (context, enabled, child) => CommonButton(
-                  label: Languages.of(context).continueLabel,
+                  label: "Continue",
                   onTap: enabled
                       ? () async {
                           if (isNidaSelected.value) {

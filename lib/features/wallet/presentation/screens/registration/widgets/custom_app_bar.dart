@@ -4,6 +4,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:selcom_rides_frontend/core/constants/app_assets.dart';
 
+import '../../../../../../core/theme/app_colors.dart';
+import '../../../utils/common_shadow.dart';
 import '../../../utils/media_viewer.dart';
 
 
@@ -76,8 +78,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                                   style: Theme.of(context).textTheme.bodyLarge
                                       ?.copyWith(
                                         color: AppColors.greyColor242E49,
-                                        fontFamily:
-                                            Fonts.plusJakartaSansExtraBold,
+                                        // fontFamily:
+                                        //     Fonts.plusJakartaSansExtraBold,
                                         fontSize: 24.0.sp,
                                         fontWeight: FontWeight.w700,
                                       ),

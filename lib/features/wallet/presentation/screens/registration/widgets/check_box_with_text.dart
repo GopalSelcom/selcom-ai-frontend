@@ -1,8 +1,9 @@
-import 'package:duka_direct_4_flutter/core/services/responsive/responsive.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../../../core/services/theme/theme.dart';
+import '../../../../../../core/theme/app_colors.dart';
+
 
 class CheckboxWithText extends StatefulWidget {
   final bool value;
@@ -110,7 +111,7 @@ class _CheckboxWithTextState extends State<CheckboxWithText> {
                             text: widget.spannedText,
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
-                                  color: AppColors.redColor,
+                                  color: AppColors.primary,
                                   fontSize: 10.0.sp,
                                   // fontFamily: FontName.NunitoSansRegular,
 

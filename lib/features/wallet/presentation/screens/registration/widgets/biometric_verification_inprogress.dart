@@ -1,25 +1,21 @@
-import 'package:duka_direct_4_flutter/core/extensions/formatting_extensions.dart';
-import 'package:duka_direct_4_flutter/core/services/responsive/responsive.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
+import 'package:selcom_rides_frontend/shared/utils/app_dialogs.dart';
 
-import '../../../../../core/functions/date_format.dart';
-import '../../../../../core/resources/images.dart';
-import '../../../../../core/services/localization/language/languages.dart';
-import '../../../../../core/services/localization/localization.dart';
-import '../../../../../core/services/router/app_navigator.dart';
-import '../../../../../core/services/theme/theme.dart';
-import '../../../../../core/utils/manager/device_info.dart';
-import '../../../../../core/widgets/blur_bottomsheet.dart';
-import '../../../../../core/widgets/common_bottomsheet.dart';
-import '../../../../../core/widgets/common_button.dart';
-import '../../../controller/registration_controller.dart';
-import '../../../controller/wallet_controller.dart';
+import '../../../../../../core/constants/app_assets.dart';
+import '../../../../../../core/theme/app_colors.dart';
+import '../../../../../../core/theme/app_text_styles.dart';
+import '../../../../../../core/utils/device_info.dart';
+
 import '../../../controllers/registration_controller.dart';
 import '../../../controllers/wallet_controller.dart';
-import '../../../test/finger_scan_body.dart';
+
+import '../../../widgets/common_button.dart';
+import '../test/finger_scan_body.dart';
 import 'finger_scan_instruction_sheet.dart';
 
 class BiometricVerificationInprogrees extends StatefulWidget {
@@ -38,12 +34,16 @@ class BiometricVerificationInprogrees extends StatefulWidget {
 class _BiometricVerificationInprogreesState
     extends State<BiometricVerificationInprogrees> {
   RegistrationController registrationController = RegistrationController();
+  WalletController? get walletController =>
+      Get.isRegistered<WalletController>()
+          ? Get.find<WalletController>()
+          : null;
 
   @override
   void initState() {
     super.initState();
     bool testIt =
-        WalletController().isTestingMode && DeviceInfo().isPhysicalDevice;
+        (walletController?.isTestingMode.value??false) && DeviceInfo().isPhysicalDevice;
     if (testIt) {
       registrationController.nidaNumberString.value = "19990102-61401-00001-20";
       (fingerScanBody["data"] as Map).remove("finger1");
@@ -98,7 +98,7 @@ class _BiometricVerificationInprogreesState
                       ? Column(
                           children: [
                             Text(
-                              Languages.of(Get.context!).nidaVerificationMsg,
+                              "NIDA verification in progress. This can take up to 2 minutes to complete. Don't press back or close the app.",
                               style: AppTextStyles.screenTitle.copyWith(
                                 fontSize: 16.0.sp,
                                 height: 1.1,
@@ -109,10 +109,8 @@ class _BiometricVerificationInprogreesState
                             ),
                             SizedBox(height: 10.0.sp),
                             Text(
-                              Languages.of(Get.context!).waitingForVerification,
-                              style: titleStyle(
-                                context,
-                              )?.copyWith(fontSize: 16.0.sp),
+                              "Waiting for verification",
+                              style: AppTextStyles.screenTitle.copyWith(fontSize: 16.0.sp),
                               textAlign: TextAlign.center,
                             ),
                             SizedBox(height: 3.0.sp),
@@ -123,13 +121,7 @@ class _BiometricVerificationInprogreesState
                                 text: TextSpan(
                                   children: [
                                     TextSpan(
-                                      text:
-                                          Localization
-                                                  .instance
-                                                  .currentLanguage
-                                                  ?.languageCode ==
-                                              "sw"
-                                          ? "Dakika"
+                                      text
                                           : "",
                                       style: TextStyle(
                                         fontSize: 16.0.sp,
@@ -148,14 +140,7 @@ class _BiometricVerificationInprogreesState
                                       ),
                                     ),
                                     TextSpan(
-                                      text:
-                                          Localization
-                                                  .instance
-                                                  .currentLanguage
-                                                  ?.languageCode ==
-                                              "en"
-                                          ? "sec"
-                                          : "",
+                                      text: "sec",
                                       style: TextStyle(
                                         fontSize: 16.0.sp,
                                         height: 1.4,
@@ -170,10 +155,8 @@ class _BiometricVerificationInprogreesState
                           ],
                         )
                       : Text(
-                          Languages.of(context).nidaFailedMsg,
-                          style: titleStyle(
-                            context,
-                          )?.copyWith(fontSize: 16.0.sp),
+      "NIDA verification is taking longer then usual. Please try again to proceed.",
+                          style: AppTextStyles.screenTitle.copyWith(fontSize: 16.0.sp),
 
                           textAlign: TextAlign.center,
                         ),
@@ -187,9 +170,9 @@ class _BiometricVerificationInprogreesState
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 5),
                       child: CommonButton(
-                        label: Languages.of(context).tryAgain,
+                        label: "Try again",
                         onTap: () async {
-                          appNavigator.pop();
+Get.back();
                           await Future.delayed(300.ms);
                           await /*Get.bottomSheet(
                             enterBottomSheetDuration: const Duration(
@@ -202,11 +185,11 @@ class _BiometricVerificationInprogreesState
                             elevation: 0,
                             backgroundColor: Colors.transparent,
                             enableDrag: true,
-                          );*/ BlurBottomSheet.show(
-                            context: context,
-                            child: CustomBottomSheet(
-                              child: ShowFingerScanInstructionSheet(),
-                            ),
+                          );*/ AppDialogs.showAnimatedBottomSheet(
+
+
+                              child: ShowFingerScanInstructionSheet()
+
                           );
                         },
                         enabledColor: AppColors.walletColor,
@@ -217,9 +200,9 @@ class _BiometricVerificationInprogreesState
                   Visibility(
                     visible: registrationController.displaySeconds.value == 0,
                     child: CommonButton(
-                      label: Languages.of(context).cancel,
+                      label: "Cancel",
                       onTap: () async {
-                        appNavigator.pop();
+                        Get.back();
                       },
                       enabledColor: AppColors.walletColor,
                       isEnabled: true,

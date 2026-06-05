@@ -15,6 +15,7 @@ import 'package:selcom_rides_frontend/shared/utils/app_dialogs.dart';
 import '../../../../core/constants/currency_code.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/localization/languages/languages.dart';
+import '../../../../core/routes/app_navigator.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/storage_service.dart';
@@ -37,6 +38,7 @@ import '../screens/registration/document_confirmation_screen.dart';
 import '../screens/registration/liveliness_screen.dart';
 import '../screens/registration/passport_scan_confirmation_screen.dart';
 import '../screens/registration/selcom_id_confirmation_screen.dart';
+import '../screens/registration/verification_success_screen.dart';
 import '../screens/registration/wallet_waiting_screen.dart';
 import '../screens/registration/widgets/biometric_verification_inprogress.dart';
 import '../utils/app_info.dart';
@@ -60,6 +62,11 @@ class RegistrationController extends GetxController {
   // Rx<CityConfigModel> cityConfigModel = CityConfigModel().obs;
   // final RegistrationRepository registrationRepository =
   // RegistrationRepository();
+
+  WalletController? get walletController =>
+      Get.isRegistered<WalletController>()
+          ? Get.find<WalletController>()
+          : null;
 
   void resetMissingFingers() {
     SelcomIdentyPlugin selcomIdentyPlugin = SelcomIdentyPlugin();
@@ -808,7 +815,7 @@ class RegistrationController extends GetxController {
           // WalletController().walletData(userAddCardDetailsResponse);
           // SetCardLimitController().setCurrentLimit();
           // WalletController().checkCardExpiry();
-          bool isCardCreated = await WalletController().createCard(
+          bool isCardCreated = await walletController.createCard(
             userDetails: userAddCardDetailsResponse,
             showSuccessDialog: false,
             showLoader: false,
@@ -831,7 +838,6 @@ class RegistrationController extends GetxController {
           // if (walletCreditRefundAmountResponse?.statusCode == 200) {}
           Get.to(
             () => VerificationSuccessScreen(),
-            transition: CupertinoTransition(),
           );
         } else {
           Get.back();
