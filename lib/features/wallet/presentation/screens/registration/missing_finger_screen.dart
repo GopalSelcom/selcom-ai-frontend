@@ -7,6 +7,7 @@ import 'package:selcom_rides_frontend/core/constants/app_assets.dart';
 import 'package:selcom_rides_frontend/features/wallet/presentation/screens/registration/widgets/check_box_with_text.dart';
 import 'package:selcom_rides_frontend/shared/utils/app_dialogs.dart';
 
+import '../../../../../core/services/location.dart';
 import '../../../../../core/services/progress_indicator/loader.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../controllers/registration_controller.dart';

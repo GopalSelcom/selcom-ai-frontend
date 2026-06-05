@@ -15,6 +15,7 @@ import 'package:selcom_rides_frontend/shared/widgets/app_standard_bottom_sheet.d
 
 
 import '../../../../../core/services/error_reporting/error_reporter.dart';
+import '../../../../../core/services/location.dart';
 import '../../../../../core/services/progress_indicator/loader.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../../controllers/registration_controller.dart';
