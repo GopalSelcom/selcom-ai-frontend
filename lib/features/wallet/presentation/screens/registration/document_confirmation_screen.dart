@@ -108,7 +108,7 @@ class _DocumentConfirmationScreenState
                       children: <Widget>[
                         Text(
                           "${_loginController.uploadDocumentsModel.value.data?[0].documentDetails?[index].key}",
-                          style: AppTextStyles.screenTitle.copyWith(color: AppColors.lightGreyColor),
+                          style: AppTextStyles.body.copyWith(color: AppColors.lightGreyColor),
                         ),
                         const SizedBox(height: 8),
                         Container(
@@ -117,12 +117,12 @@ class _DocumentConfirmationScreenState
                           padding: const EdgeInsets.symmetric(horizontal: 15),
                           width: Get.width,
                           decoration: BoxDecoration(
-                            color: AppColors.textGrey,
+                            color: AppColors.greyColor,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
                             "${_loginController.uploadDocumentsModel.value.data?[0].documentDetails?[index].value}",
-                            style: Theme.of(context).textTheme.bodyLarge,
+                            style: AppTextStyles.body,
                           ),
                         ),
                       ],

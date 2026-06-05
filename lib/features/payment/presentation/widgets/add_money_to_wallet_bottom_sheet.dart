@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -9,10 +11,10 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../controllers/wallet_topup_controller.dart';
 import 'mobile_money_topup_bottom_sheet.dart';
 import 'selcom_pesa_to_wallet_bottom_sheet.dart';
 import 'steps_to_load_go_wallet_bottom_sheet.dart';
-import 'tanqr_tips_bottom_sheet.dart';
 
 /// Add-money options after insufficient-balance "Top up Wallet" (Figma sheet).
 class AddMoneyToWalletBottomSheet extends StatelessWidget {
@@ -42,7 +44,7 @@ class AddMoneyToWalletBottomSheet extends StatelessWidget {
         _AddMoneyOptionTile(
           title: AppStrings.addMoneyTanQrTips.tr,
           subtitle: AppStrings.addMoneyTanQrTipsSubtitle.tr,
-          onTap: () => _onOptionTap(_AddMoneyOption.tanQrTips),
+          onTap: _onTanQrTap,
         ),
         SizedBox(height: 12.h),
         _AddMoneyOptionTile(
@@ -66,23 +68,33 @@ class AddMoneyToWalletBottomSheet extends StatelessWidget {
     SelcomPesaToWalletBottomSheet.show();
   }
 
+  void _onTanQrTap() {
+    Get.back<void>();
+    final controller = Get.put(WalletTopupController());
+    controller.prepareForTopup();
+    unawaited(
+      MobileMoneyTopupBottomSheet.show(
+        title: AppStrings.addMoneyTanQrTips.tr,
+      ),
+    );
+  }
+
   void _onOptionTap(_AddMoneyOption option) {
     Get.back<void>();
     switch (option) {
       case _AddMoneyOption.stepsToLoad:
         StepsToLoadGoWalletBottomSheet.show();
         break;
-      case _AddMoneyOption.tanQrTips:
-        TanQrTipsBottomSheet.show();
-        break;
       case _AddMoneyOption.mobileMoney:
+        final controller = Get.put(WalletTopupController());
+        controller.prepareForTopup();
         MobileMoneyTopupBottomSheet.show();
         break;
     }
   }
 }
 
-enum _AddMoneyOption { tanQrTips, mobileMoney, stepsToLoad }
+enum _AddMoneyOption { mobileMoney, stepsToLoad }
 
 class _AddMoneyOptionTile extends StatelessWidget {
   const _AddMoneyOptionTile({

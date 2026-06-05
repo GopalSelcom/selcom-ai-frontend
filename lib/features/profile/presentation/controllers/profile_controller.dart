@@ -19,6 +19,7 @@ import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/phone_formatter.dart';
 import '../../../../shared/widgets/web_view_screen.dart';
 import '../../../ride/presentation/screens/my_rides_screen.dart';
+import '../../../wallet/presentation/controllers/wallet_controller.dart';
 import '../../../wallet/presentation/utils/wallet_format_utils.dart';
 import '../../data/models/request/update_profile_request.dart';
 import '../../domain/usecases/profile_usecase.dart';
@@ -63,11 +64,22 @@ class ProfileController extends GetxController {
     nameFocusNode = FocusNode();
     phoneFocusNode = FocusNode();
 
-    fetchWalletBalance();
+    _syncWalletBalanceFromWalletStatus();
     unawaited(_loadInitialContent());
     ever<Map<String, bool>>(appSettingsService.features, (_) {
       syncSettingsVisibility();
     });
+    ever<bool>(WalletController().isWalletCreated, (_) {
+      _syncWalletBalanceFromWalletStatus();
+    });
+  }
+
+  void _syncWalletBalanceFromWalletStatus() {
+    if (WalletController().isWalletCreated.value) {
+      unawaited(fetchWalletBalance());
+      return;
+    }
+    _setWalletUnlinked();
   }
 
   /// Menu rows shown when not loading (must match [_buildSettingsList]).
@@ -164,7 +176,7 @@ class ProfileController extends GetxController {
   }
 
   void onWalletCardTap() {
-    if (!isWalletLinked.value) {
+    if (!WalletController().isWalletCreated.value) {
       openWalletActiveFlow();
       return;
     }
@@ -174,7 +186,12 @@ class ProfileController extends GetxController {
   Future<void> openWalletActiveFlow() async {
     ActiveWalletBinding().dependencies();
     await Get.to(() => const ActiveWalletFormScreen());
-    await fetchWalletBalance();
+    await WalletController().checkWalletRegistrationStatus();
+    if (WalletController().isWalletCreated.value) {
+      await fetchWalletBalance();
+      return;
+    }
+    _setWalletUnlinked();
   }
 
   void toggleEditMode() {

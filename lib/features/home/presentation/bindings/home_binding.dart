@@ -11,6 +11,8 @@ import '../../../ride/data/repositories/ride_repository_impl.dart';
 import '../../../ride/domain/repositories/ride_repository.dart';
 import '../../../ride_rating/presentation/bindings/ride_rating_binding.dart';
 import '../../../ride_rating/presentation/controllers/ride_rating_controller.dart';
+import '../../../wallet/presentation/bindings/wallet_binding.dart';
+import '../../../wallet/presentation/controllers/wallet_controller.dart';
 import '../../data/datasources/home_remote_data_source.dart';
 import '../../data/repositories/home_repository_impl.dart';
 import '../../domain/repositories/home_repository.dart';
@@ -22,6 +24,9 @@ class HomeBinding extends Bindings {
   void dependencies() {
     if (!Get.isRegistered<RideRatingController>()) {
       RideRatingBinding().dependencies();
+    }
+    if (!Get.isRegistered<WalletController>()) {
+      WalletBinding().dependencies();
     }
 
     // Home Data

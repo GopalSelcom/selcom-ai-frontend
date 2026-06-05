@@ -36,6 +36,7 @@ import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../../shared/widgets/add_favorite_location_sheet.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
+import '../../../wallet/presentation/controllers/wallet_controller.dart';
 import '../../../ride/data/models/ride_management_models.dart';
 import '../../../ride/domain/repositories/ride_repository.dart';
 import '../../../ride_rating/presentation/controllers/ride_rating_controller.dart';
@@ -144,6 +145,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     _getCurrentLocation();
     _addMockDrivers();
     _startActiveRidePolling();
+    unawaited(WalletController().checkWalletRegistrationStatus());
     _loadHomeData().whenComplete(() async {
       // Product rule: call pending-review API only once when app session
       // first opens Home, not on subsequent returns to Home.

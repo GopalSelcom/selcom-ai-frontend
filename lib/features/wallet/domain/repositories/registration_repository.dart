@@ -6,10 +6,9 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/network/api_service.dart';
+import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
-import '../../presentation/controllers/registration_controller.dart';
-import '../../presentation/controllers/wallet_controller.dart';
 import '../../presentation/models/registration/add_user_to_selcom_id_request.dart';
 import '../../presentation/models/registration/add_user_to_selcom_id_response_model.dart';
 import '../../presentation/models/registration/client_success_model.dart';
@@ -23,6 +22,8 @@ import '../../presentation/models/registration/selcom_id_contact_support_request
 import '../../presentation/models/registration/selcom_id_user_data_exist_request.dart';
 import '../../presentation/models/registration/selcom_id_user_data_exist_response.dart';
 import '../../presentation/models/registration/verify_selfie_response.dart';
+import '../../../payment/domain/models/wallet_other_payment_topup_request.dart';
+import '../../../payment/presentation/models/wallet_other_payment_topup_response.dart';
 import '../../presentation/models/user_add_card_details_model.dart';
 
 
@@ -263,23 +264,29 @@ class RegistrationRepository {
   static Future<UserAddCardDetailModel?> checkWalletRegistrationAPI({
     required bool skipError,
   }) async {
-    // Map<String, String> headers = await getHeaders(
-    //   accessTokenRequired: true,
-    //   contentTypeEnabled: true,
-    // );
     try {
-      var response = await ApiService().call(
+      final response = await ApiService().call(
         request: ApiRequest(
           endpoint: URLS.wallet.walletDetails,
           method: ApiMethod.get,
           errorPresentationType: skipError
               ? ErrorPresentationType.none
               : ErrorPresentationType.dialog,
-          // body: body,
         ),
       );
 
-      return UserAddCardDetailModel.fromJson(response.data);
+      final statusCode = response.statusCode;
+      if (statusCode == 200 && response.data != null) {
+        final model = UserAddCardDetailModel.fromJson(response.data);
+        if (model.response != null) {
+          return model;
+        }
+        return null;
+      }
+
+      if (isExpectedClientBusinessHttpStatus(statusCode)) {
+        return null;
+      }
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(
         error: e,
@@ -288,8 +295,43 @@ class RegistrationRepository {
         extraData: [{"skipError": skipError}],
       );
       debugPrint("checkWalletRegistrationAPI Exception: $e");
-      return null;
     }
+    return null;
+  }
+
+  static Future<WalletOtherPaymentTopupResponse?> walletOtherPaymentTopupAPI({
+    required WalletOtherPaymentTopupRequest request,
+  }) async {
+    try {
+      final response = await ApiService().call(
+        request: ApiRequest(
+          endpoint: URLS.wallet.walletOtherPaymentMethod,
+          method: ApiMethod.post,
+          body: request.toJson(),
+          showLoader: true,
+        ),
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        return WalletOtherPaymentTopupResponse.fromJson(response.data);
+      }
+
+      if (response.data is Map<String, dynamic>) {
+        return WalletOtherPaymentTopupResponse.fromJson(
+          response.data as Map<String, dynamic>,
+        );
+      }
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(
+        error: e,
+        stackTrace: stackTrace,
+        customMessage:
+            'RegistrationRepository.walletOtherPaymentTopupAPI failed',
+        extraData: [request.toJson()],
+      );
+      debugPrint('walletOtherPaymentTopupAPI Exception: $e');
+    }
+    return null;
   }
 
   // static Future<GetWalletRefundAmountModel?> checkWalletRefundAmountAPI({

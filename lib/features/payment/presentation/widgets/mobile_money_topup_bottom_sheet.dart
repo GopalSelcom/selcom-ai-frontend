@@ -12,71 +12,29 @@ import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/phone_formatter.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_text_field.dart';
+import '../controllers/wallet_topup_controller.dart';
 import 'mobile_money_topup_status_dialog.dart';
 
 class MobileMoneyTopupBottomSheet extends StatefulWidget {
   const MobileMoneyTopupBottomSheet({super.key});
 
-  static final ValueNotifier<String> _phoneInput = ValueNotifier<String>('');
-  static final ValueNotifier<String> _amountInput = ValueNotifier<String>('');
-  static final ValueNotifier<String?> _phoneError = ValueNotifier<String?>(null);
-  static final ValueNotifier<String?> _amountError = ValueNotifier<String?>(null);
-
-  static Future<void> show() {
-    _phoneInput.value = '';
-    _amountInput.value = '';
-    _phoneError.value = null;
-    _amountError.value = null;
+  static Future<void> show({String? title}) {
     return AppDialogs.showStandardBottomSheet<void>(
-      title: AppStrings.mobileMoney.tr,
+      title: title ?? AppStrings.mobileMoney.tr,
       headerTextAlign: TextAlign.center,
       showHeaderDivider: true,
       barrierDismissible: true,
       content: const MobileMoneyTopupBottomSheet(),
-      footer: Row(
-        children: [
-          Expanded(
-            child: AppPrimaryButton(
-              label: AppStrings.back.tr,
-              onPressed: () => Get.back<void>(),
-              outlined: true,
-              backgroundColor: AppColors.white,
-              outlinedTextColor: AppColors.black,
-              outlinedBorderColor: AppColors.black,
-              outlinedBorderWidth: 1,
-              borderRadius: 16.r,
-              height: 56.h,
-            ),
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: AppPrimaryButton(
-              label: AppStrings.continueLabel.tr,
-              onPressed: MobileMoneyTopupBottomSheet._startMockFlowFromFooter,
-              borderRadius: 16.r,
-              height: 56.h,
-            ),
-          ),
-        ],
-      ),
+      footer: const _MobileMoneyTopupFooter(),
     );
   }
 
-  static Future<void> _startMockFlowFromFooter() async {
-    final phone = _phoneInput.value.replaceAll(RegExp(r'\s+'), '');
-    final amount = _amountInput.value.trim();
-    if (phone.length < 9) {
-      _phoneError.value = AppStrings.enterPhoneNumber.tr;
-      return;
-    }
-    if (amount.isEmpty) {
-      _amountError.value = AppStrings.amount.tr;
-      return;
-    }
+  static Future<void> startTopupFlowFromFooter() async {
+    final controller = Get.find<WalletTopupController>();
+    if (!controller.validateInputs()) return;
 
-    _phoneError.value = null;
-    _amountError.value = null;
     Get.back<void>();
+
     final countdown = ValueNotifier<int>(120);
     final status = ValueNotifier<MobileMoneyTopupDialogType>(
       MobileMoneyTopupDialogType.request,
@@ -86,7 +44,6 @@ class MobileMoneyTopupBottomSheet extends StatefulWidget {
       child: ValueListenableBuilder<MobileMoneyTopupDialogType>(
         valueListenable: status,
         builder: (_, value, __) => PopScope(
-          // Block device-back only while request is pending.
           canPop: value == MobileMoneyTopupDialogType.success,
           child: MobileMoneyTopupStatusDialog(
             type: value,
@@ -97,12 +54,28 @@ class MobileMoneyTopupBottomSheet extends StatefulWidget {
         ),
       ),
     );
-    // TODO(payment-backend): Replace timer with API status polling/websocket.
+
+    final succeeded = await controller.submitTopupWithFeedback();
+    if (!succeeded) {
+      countdown.dispose();
+      status.dispose();
+      final navigator = Get.key.currentState;
+      if (navigator != null) {
+        navigator.maybePop();
+      } else if (Get.isDialogOpen == true) {
+        Get.back<void>();
+      }
+      await dialogFuture.timeout(
+        const Duration(milliseconds: 600),
+        onTimeout: () {},
+      );
+      return;
+    }
+
     for (var i = 0; i < 5; i++) {
       await Future<void>.delayed(const Duration(seconds: 1));
       countdown.value = (countdown.value - 1).clamp(0, 120);
     }
-    // Switch request dialog content to success state.
     status.value = MobileMoneyTopupDialogType.success;
     countdown.dispose();
     await Future<void>.delayed(const Duration(seconds: 2));
@@ -121,16 +94,57 @@ class MobileMoneyTopupBottomSheet extends StatefulWidget {
       _MobileMoneyTopupBottomSheetState();
 }
 
+class _MobileMoneyTopupFooter extends StatelessWidget {
+  const _MobileMoneyTopupFooter();
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = Get.find<WalletTopupController>();
+    return Obx(
+      () => Row(
+        children: [
+          Expanded(
+            child: AppPrimaryButton(
+              label: AppStrings.back.tr,
+              onPressed: controller.isSubmitting.value ? null : () => Get.back<void>(),
+              outlined: true,
+              backgroundColor: AppColors.white,
+              outlinedTextColor: AppColors.black,
+              outlinedBorderColor: AppColors.black,
+              outlinedBorderWidth: 1,
+              borderRadius: 16.r,
+              height: 56.h,
+            ),
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: AppPrimaryButton(
+              label: AppStrings.continueLabel.tr,
+              onPressed: controller.isSubmitting.value
+                  ? null
+                  : MobileMoneyTopupBottomSheet.startTopupFlowFromFooter,
+              borderRadius: 16.r,
+              height: 56.h,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _MobileMoneyTopupBottomSheetState
     extends State<MobileMoneyTopupBottomSheet> {
   late final TextEditingController _phoneController;
   late final TextEditingController _amountController;
+  late final WalletTopupController _controller;
 
   @override
   void initState() {
     super.initState();
-    _phoneController = TextEditingController();
-    _amountController = TextEditingController();
+    _controller = Get.find<WalletTopupController>();
+    _phoneController = TextEditingController(text: _controller.phoneInput.value);
+    _amountController = TextEditingController(text: _controller.amountInput.value);
   }
 
   @override
@@ -153,11 +167,10 @@ class _MobileMoneyTopupBottomSheetState
           ),
         ),
         SizedBox(height: 4.h),
-        ValueListenableBuilder<String?>(
-          valueListenable: MobileMoneyTopupBottomSheet._phoneError,
-          builder: (_, phoneError, __) => AppTextField(
+        Obx(
+          () => AppTextField(
             readOnly: false,
-            enabled: true,
+            enabled: !_controller.isSubmitting.value,
             hintText: '987 654 321',
             keyboardType: TextInputType.phone,
             maxLength: 11,
@@ -168,13 +181,8 @@ class _MobileMoneyTopupBottomSheetState
             textFieldBackgroundColor: AppColors.surfaceSubtle,
             borderColor: AppColors.borderWalletCard,
             controller: _phoneController,
-            errorText: phoneError,
-            onChanged: (value) {
-              MobileMoneyTopupBottomSheet._phoneInput.value = value;
-              if (MobileMoneyTopupBottomSheet._phoneError.value != null) {
-                MobileMoneyTopupBottomSheet._phoneError.value = null;
-              }
-            },
+            errorText: _controller.phoneError.value,
+            onChanged: _controller.updatePhone,
             prefixIcon: Padding(
               padding: EdgeInsets.only(left: 16.w, right: 8.w),
               child: Center(
@@ -203,11 +211,10 @@ class _MobileMoneyTopupBottomSheetState
           ),
         ),
         SizedBox(height: 4.h),
-        ValueListenableBuilder<String?>(
-          valueListenable: MobileMoneyTopupBottomSheet._amountError,
-          builder: (_, amountError, __) => AppTextField(
+        Obx(
+          () => AppTextField(
             readOnly: false,
-            enabled: true,
+            enabled: !_controller.isSubmitting.value,
             hintText: '43,000',
             keyboardType: TextInputType.number,
             maxLength: 8,
@@ -215,13 +222,8 @@ class _MobileMoneyTopupBottomSheetState
             textFieldBackgroundColor: AppColors.surfaceSubtle,
             borderColor: AppColors.borderWalletCard,
             controller: _amountController,
-            errorText: amountError,
-            onChanged: (value) {
-              MobileMoneyTopupBottomSheet._amountInput.value = value;
-              if (MobileMoneyTopupBottomSheet._amountError.value != null) {
-                MobileMoneyTopupBottomSheet._amountError.value = null;
-              }
-            },
+            errorText: _controller.amountError.value,
+            onChanged: _controller.updateAmount,
             prefixIcon: Padding(
               padding: EdgeInsets.only(left: 16.w, right: 8.w),
               child: Center(

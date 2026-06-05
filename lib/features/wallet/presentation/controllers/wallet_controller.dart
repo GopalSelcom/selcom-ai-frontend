@@ -10,6 +10,7 @@ import '../../../../shared/utils/currency_formatter.dart';
 import '../../../payment/presentation/widgets/add_money_to_wallet_bottom_sheet.dart';
 import '../../domain/entities/wallet_summary_entity.dart';
 import '../../domain/entities/wallet_transaction_entity.dart';
+import '../../domain/repositories/registration_repository.dart';
 import '../../domain/usecases/get_wallet_summary_usecase.dart';
 import '../../domain/usecases/get_wallet_transactions_usecase.dart';
 import '../models/wallet_transaction_item.dart';
@@ -32,6 +33,9 @@ class WalletController extends GetxController {
       sl<GetWalletTransactionsUseCase>();
 
   final RxBool isLoading = true.obs;
+  final RxBool isWalletCreated = false.obs;
+  final RxBool isCheckingWalletStatus = false.obs;
+  final RxString walletAccountNumber = ''.obs;
   final Rxn<WalletSummaryEntity> summary = Rxn<WalletSummaryEntity>();
   final RxList<WalletTransactionItem> recentTransactions =
       <WalletTransactionItem>[].obs;
@@ -56,6 +60,24 @@ class WalletController extends GetxController {
   void onInit() {
     super.onInit();
     unawaited(loadWallet());
+  }
+
+  Future<void> checkWalletRegistrationStatus() async {
+    isCheckingWalletStatus.value = true;
+    try {
+      final result = await RegistrationRepository.checkWalletRegistrationAPI(
+        skipError: true,
+      );
+      if (result?.statusCode == 200 && result?.response != null) {
+        isWalletCreated.value = true;
+        walletAccountNumber.value = result!.response!.accountNo ?? '';
+        return;
+      }
+      isWalletCreated.value = true;
+      walletAccountNumber.value = '';
+    } finally {
+      isCheckingWalletStatus.value = false;
+    }
   }
 
   Future<void> loadWallet() async {

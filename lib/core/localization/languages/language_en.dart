@@ -34,9 +34,9 @@ class LanguageEn extends Languages {
     'amount': 'Amount',
     'back': 'Back',
     'add_money_selcom_pesa_subtitle': 'Request money from selcom pesa',
-    'add_money_tan_qr_tips': 'TanQR/TIPS',
-    'add_money_tan_qr_tips_subtitle': 'Add Money using TanQR/Tips',
-    'add_money_mobile_money_subtitle': 'Add Money using TanQR/Tips',
+    'add_money_tan_qr_tips': 'TanQR',
+    'add_money_tan_qr_tips_subtitle': 'Add Money using TanQR',
+    'add_money_mobile_money_subtitle': 'Add Money using TanQR',
     'add_money_steps_to_load_go_wallet': 'Steps to load your Go wallet',
     'add_money_steps_to_load_go_wallet_subtitle':
         'Add Money using your bank app or USSD',

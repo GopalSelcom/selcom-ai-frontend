@@ -833,7 +833,7 @@ class RegistrationController extends GetxController {
         Get.back();
         AppDialogs.showErrorDialog(
           message: kDebugMode
-              ? (response?.response?.message ?? "")
+              ? (response?.message ?? "Something went wrong! Please try again later.")
               : "Something went wrong! Please try again later.",
         );
       }

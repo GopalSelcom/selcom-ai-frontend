@@ -12,6 +12,7 @@ import '../../../../shared/utils/phone_formatter.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/app_profile_user_avatar.dart';
 import '../../../../shared/widgets/app_profile_user_summary.dart';
+import '../../../wallet/presentation/controllers/wallet_controller.dart';
 import '../controllers/profile_controller.dart';
 import '../widgets/menu_item_widget.dart';
 import '../widgets/profile_screen_layout.dart';
@@ -23,6 +24,7 @@ class ProfileScreen extends StatelessWidget {
   ProfileScreen({super.key});
 
   final ProfileController controller = Get.put(sl<ProfileController>());
+  final WalletController walletController = WalletController();
 
   @override
   Widget build(BuildContext context) {
@@ -142,7 +144,8 @@ class ProfileScreen extends StatelessWidget {
 
   Widget _buildNormalModeContent() {
     return Obx(() {
-      if (controller.isLoadingProfile.value) {
+      if (controller.isLoadingProfile.value ||
+          walletController.isCheckingWalletStatus.value) {
         return ProfileScreenShimmer.headerContent();
       }
       final user = controller.userModel.value;
@@ -154,7 +157,7 @@ class ProfileScreen extends StatelessWidget {
               user!.mobileNumber.toString(),
             )
           : '';
-      final isWalletLinked = controller.isWalletLinked.value;
+      final isWalletCreated = walletController.isWalletCreated.value;
       final balance = controller.walletBalance.value;
       final walletNum = controller.walletNumber.value;
       final avgRating = (user?.goAvgRating ?? 0).toDouble();
@@ -176,7 +179,7 @@ class ProfileScreen extends StatelessWidget {
             padding: ProfileScreenLayout.walletPadding,
             child: SizedBox(
               height: ProfileScreenLayout.walletCardHeight,
-              child: isWalletLinked
+              child: isWalletCreated
                   ? WalletSummaryCard(
                       balance: balance,
                       walletNumber: walletNum,

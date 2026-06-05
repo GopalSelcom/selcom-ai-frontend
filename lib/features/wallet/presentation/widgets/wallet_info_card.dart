@@ -111,11 +111,11 @@ class WalletInfoCard extends StatelessWidget {
                   iconAsset: AppAssets.icEStatement,
                   onTap: onEStatement,
                 ),
-                WalletIconLabelButton(
-                  label: AppStrings.showVcn.tr,
-                  iconAsset: AppAssets.icShowVcn,
-                  onTap: onShowVcn,
-                ),
+                // WalletIconLabelButton(
+                //   label: AppStrings.showVcn.tr,
+                //   iconAsset: AppAssets.icShowVcn,
+                //   onTap: onShowVcn,
+                // ),
               ],
             ),
           ),
