@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/app_shimmer.dart';
 import 'profile_screen_layout.dart';
+import 'wallet_summary_card.dart';
 
 /// Shimmer placeholders for [ProfileScreen] initial load.
 abstract final class ProfileScreenShimmer {
@@ -91,38 +92,11 @@ abstract final class ProfileScreenShimmer {
     );
   }
 
-  static Widget walletCard() {
-    return AppShimmer(
-      child: Container(
-        width: double.infinity,
-        height: ProfileScreenLayout.walletCardHeight,
-        padding: EdgeInsets.symmetric(horizontal: 9.w, vertical: 6.h),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceSubtle,
-          border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
-          borderRadius: BorderRadius.circular(27.r),
-        ),
-        child: Row(
-          children: [
-            AppShimmerBox(width: 51.w, height: 51.w, borderRadius: 26.r),
-            SizedBox(width: 13.w),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppShimmerBox(width: 56.w, height: 15.h, borderRadius: 6.r),
-                  SizedBox(height: 6.h),
-                  AppShimmerBox(width: 100.w, height: 12.h, borderRadius: 6.r),
-                ],
-              ),
-            ),
-            AppShimmerBox(width: 88.w, height: 20.h, borderRadius: 8.r),
-          ],
-        ),
-      ),
-    );
-  }
+  static Widget walletCard() => const WalletSummaryCard(
+    balance: '',
+    walletNumber: '',
+    isLoading: true,
+  );
 
   /// Menu block height matches [itemCount] (same as loaded settings list).
   static Widget settingsMenu({required int itemCount}) {

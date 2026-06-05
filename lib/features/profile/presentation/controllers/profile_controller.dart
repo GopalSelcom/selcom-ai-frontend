@@ -45,6 +45,7 @@ class ProfileController extends GetxController {
   final RxString walletBalance = ''.obs;
   final RxString walletNumber = ''.obs;
   final RxBool isWalletLinked = false.obs;
+  final RxBool isLoadingWallet = true.obs;
   final Rxn<File> pickedImage = Rxn<File>();
 
   // Controllers for text fields
@@ -143,6 +144,7 @@ class ProfileController extends GetxController {
   }
 
   Future<void> fetchWalletBalance() async {
+    isLoadingWallet.value = true;
     try {
       final summary = await getWalletSummaryUseCase();
       final account = summary.walletNumber.trim();
@@ -155,6 +157,8 @@ class ProfileController extends GetxController {
       walletNumber.value = formatWalletAccountNumber(account);
     } catch (_) {
       _setWalletUnlinked();
+    } finally {
+      isLoadingWallet.value = false;
     }
   }
 
