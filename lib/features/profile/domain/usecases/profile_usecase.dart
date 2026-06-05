@@ -23,18 +23,6 @@ class ProfileUseCase {
     return repository.updateProfile(profileRequest);
   }
 
-  Future<Either<Failure, UserModel>> saveUserAdditionalDetails({
-    required String name,
-    required String emailId,
-    String? imagePath,
-  }) {
-    return repository.saveUserAdditionalDetails(
-      name: name,
-      emailId: emailId,
-      imagePath: imagePath,
-    );
-  }
-
   Future<Either<Failure, WalletBalanceModel>> getWalletBalance() {
     return repository.getWalletBalance();
   }

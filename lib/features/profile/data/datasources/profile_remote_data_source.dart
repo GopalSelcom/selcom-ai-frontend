@@ -23,12 +23,6 @@ abstract class ProfileRemoteDataSource {
     UserProfileUpdateRequest profileRequest,
   );
 
-  Future<UserModel> saveUserAdditionalDetails({
-    required String name,
-    required String emailId,
-    String? imagePath,
-  });
-
   Future<GetSavedPlacesResponseModel?> getSavedPlaces();
 
   Future<GetSavedPlacesResponseModel?> getFavoritePlaces();
@@ -112,29 +106,6 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         message: null,
         response: null,
       );
-    }
-    throw Exception(response.data['message'] ?? 'Failed to update profile');
-  }
-
-  @override
-  Future<UserModel> saveUserAdditionalDetails({
-    required String name,
-    required String emailId,
-    String? imagePath,
-  }) async {
-    final response = await ApiService().call(
-      request: ApiRequest(
-        endpoint: URLS.auth.saveUserDetails,
-        method: imagePath != null ? ApiMethod.multipart : ApiMethod.post,
-        body: {'name': name, 'emailId': emailId},
-      ),
-    );
-
-    if (response.statusCode == 200 && response.data != null) {
-      return UserModel.fromJson(response.data['response'] ?? {});
-    }
-    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
-      return UserModel.fromJson({});
     }
     throw Exception(response.data['message'] ?? 'Failed to update profile');
   }
