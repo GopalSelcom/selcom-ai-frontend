@@ -111,3 +111,21 @@ class AppAssets {
   static const String walletLinkFaceScan =
       'assets/selcom_auth/face/facescan.png';
 }
+
+class Lotties {
+  static const String _jsonPath = 'assets/json';
+  static const String dukaLoader = "$_jsonPath/duka_loader.json";
+  static const String dukaLoaderNew = "$_jsonPath/duka_loader_new.json";
+  static String waitingForVerification3 =
+      "$_jsonPath/waiting_verfication_3.json";
+  static String contactSupportTicketAnimation =
+      "$_jsonPath/contact_support_ticket_animation.json";
+  static String fingerScan = "$_jsonPath/biometric_scanning.json";
+  static const String passportScanning = '$_jsonPath/passport_scanning.json';
+  static const String walletAnimation = '$_jsonPath/wallet_animation.json';
+  static const String qrScanner = "$_jsonPath/qr_scanner.json";
+  static const String buildings = "$_jsonPath/buildings.json";
+  static const String discount = "$_jsonPath/discount.json";
+  static const String riding = "$_jsonPath/delivery.json";
+  static const String deliveryRiding = "$_jsonPath/delivery_riding.json";
+}

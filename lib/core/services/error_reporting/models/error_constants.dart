@@ -6,4 +6,5 @@ class ErrorKeys {
   static const String logicError = "logic_error";
   static const String paymentError = "payment_error";
   static const String permissionError = "permission_error";
+  static const String imageError = "image_error";
 }

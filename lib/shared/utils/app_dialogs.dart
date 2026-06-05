@@ -272,6 +272,7 @@ class AppDialogs {
   static void showErrorDialog({
     String title = AppStrings.error,
     required String message,
+    String? buttonText,
     VoidCallback? onConfirm,
   }) {
     if (_isErrorDialogVisible) return;
@@ -341,7 +342,7 @@ class AppDialogs {
 
                 // OK Button
                 AppPrimaryButton(
-                  label: AppStrings.ok.tr,
+                  label: buttonText??AppStrings.ok.tr,
                   onPressed: () => handleAction(invokeConfirm: true),
                   height: 54.h,
                   borderRadius: 16.r,

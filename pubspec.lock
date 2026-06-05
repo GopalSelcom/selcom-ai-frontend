@@ -24,6 +24,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.5.3"
+  android_id:
+    dependency: "direct main"
+    description:
+      name: android_id
+      sha256: f6489be4c4380cdb55a99db5b03764d936e84e9d5258a26571aa500bd1159fe0
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.4.1"
   animate_do:
     dependency: transitive
     description:
@@ -296,6 +304,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.0.8"
+  country_picker:
+    dependency: "direct main"
+    description:
+      name: country_picker
+      sha256: "9b14c04f9a35e99f6de6bcbc453a556bb98345aecb481c7a0e843c94c2bee1f8"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.27"
   cross_file:
     dependency: transitive
     description:
@@ -376,6 +392,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.2"
+  dotted_border:
+    dependency: "direct main"
+    description:
+      name: dotted_border
+      sha256: "108837e11848ca776c53b30bc870086f84b62ed6e01c503ed976e8f8c7df9c04"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.0"
   equatable:
     dependency: transitive
     description:
@@ -541,6 +565,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_animate:
+    dependency: "direct main"
+    description:
+      name: flutter_animate
+      sha256: "7befe2d3252728afb77aecaaea1dec88a89d35b9b1d2eea6d04479e8af9117b5"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.5.2"
   flutter_app_group_directory:
     dependency: transitive
     description:
@@ -738,6 +770,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.0"
+  flutter_shaders:
+    dependency: transitive
+    description:
+      name: flutter_shaders
+      sha256: "34794acadd8275d971e02df03afee3dee0f98dbfb8c4837082ad0034f612a3e2"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.3"
   flutter_svg:
     dependency: "direct main"
     description:
@@ -948,6 +988,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.13.2"
+  google_mlkit_text_recognition:
+    dependency: transitive
+    description:
+      name: google_mlkit_text_recognition
+      sha256: "10a8d1a64fa21efda89514f6df88bbb7885be3ae1bfb7a6d229132d802a20d22"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.15.1"
   gsettings:
     dependency: transitive
     description:
@@ -1307,6 +1355,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.2.1"
+  passport_mrz_capture:
+    dependency: "direct main"
+    description:
+      path: "packages/passport_mrz_capture"
+      relative: true
+    source: path
+    version: "1.0.0"
   path:
     dependency: transitive
     description:
@@ -1315,6 +1370,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.9.1"
+  path_drawing:
+    dependency: transitive
+    description:
+      name: path_drawing
+      sha256: bbb1934c0cbb03091af082a6389ca2080345291ef07a5fa6d6e078ba8682f977
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
   path_parsing:
     dependency: transitive
     description:
@@ -1539,6 +1602,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.0"
+  selcom_identy_plugin:
+    dependency: "direct main"
+    description:
+      path: "packages/selcom_identy_plugin"
+      relative: true
+    source: path
+    version: "0.0.1"
+  selcom_passport_plugin:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: new_plugin_changes
+      resolved-ref: fbda1f5a1c0e3d9d209d0910390d9c3de11382e1
+      url: "https://gitlabsrv.selcom.dev/selcom/selcom_passport_scanner.git"
+    source: git
+    version: "0.0.1"
   share_plus:
     dependency: "direct main"
     description:

@@ -6,6 +6,20 @@ class AppColors {
     0xFFFFCC00,
   ); // Brand accent — pins, links, field focus
   static const Color secondary = Color(0xFF22B573);
+
+  static const Color whiteColor = Color(0xffffffff);
+  static const Color lightGreyColor = Color(0xff1B1C2F);
+  static const Color boxGray = Color(0xffF2F5F9);
+  static const Color lightGreyTextColor = Color(0xff808080);
+  static const Color blackColor = Color(0xff000000);
+  static const Color greenColor = Color(0xff5DB90D);
+  static const Color lightGreenColor = Color(0xffE3F3E4);
+  static const Color lightThemeSecondaryColor = Color(0xffFFFFFF);
+  static const Color lightThemeLightGreyTextColor = Color(0xff939394);
+  static const Color textGrayAskleois = Color(0xff5D6A85);
+  static const Color grey595959 = Color(0xff595959);
+  static const Color greyColor242E49 = Color(0xff242E49);
+  static const Color borderColor = Color(0xffD1D5D8);
   static const Color primaryButton = Color(
     0xFF5CB75E,
   ); // Buttons & solid actions (unchanged green)
@@ -184,4 +198,8 @@ class AppColors {
   static const Color textVisaBrand = textBrandVisaPrimary;
   static const Color textVisaBrandAlt = textBrandVisaSecondary;
   static const Color dangerStrong = dangerDeep;
+
+  static const Color walletColor = Color(0xff6629B2);
+  static const Color greyE4E4E4 = Color(0xffE4E4E4);
+  static const Color greyD0D0D0 = Color(0xffD0D0D0);
 }
