@@ -633,6 +633,11 @@ class LanguageEn extends Languages {
     'wallet_link_passport_camera_cta': 'Open camera',
     'wallet_link_nfc_coming_soon': 'NFC passport scan will be available soon.',
     'wallet_link_enter_your_name': 'Enter your name',
+    'wallet_active_form_title': 'Complete your details',
+    'wallet_active_address1': 'Address',
+    'wallet_active_address2': 'Address line 2',
+    'active_wallet_subtitle': 'Activate your Go wallet to pay for rides',
+    'activate_wallet': 'Activate wallet',
     'wallet_number_label': 'Wallet Number',
     'recent_transactions': 'Recent Transactions',
     'recent_transaction_title': 'Recent Transaction',
@@ -2593,6 +2598,22 @@ class LanguageEn extends Languages {
   @override
   String get walletLinkEnterYourName =>
       values['wallet_link_enter_your_name'] ?? '';
+
+  @override
+  String get walletActiveFormTitle =>
+      values['wallet_active_form_title'] ?? '';
+
+  @override
+  String get walletActiveAddress1 => values['wallet_active_address1'] ?? '';
+
+  @override
+  String get walletActiveAddress2 => values['wallet_active_address2'] ?? '';
+
+  @override
+  String get activeWalletSubtitle => values['active_wallet_subtitle'] ?? '';
+
+  @override
+  String get activateWallet => values['activate_wallet'] ?? '';
 
   @override
   String get walletNumberLabel => values['wallet_number_label'] ?? '';

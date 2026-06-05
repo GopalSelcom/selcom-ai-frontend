@@ -718,6 +718,11 @@ class AppStrings {
       'wallet_link_passport_camera_cta';
   static const String walletLinkNfcComingSoon = 'wallet_link_nfc_coming_soon';
   static const String walletLinkEnterYourName = 'wallet_link_enter_your_name';
+  static const String walletActiveFormTitle = 'wallet_active_form_title';
+  static const String walletActiveAddress1 = 'wallet_active_address1';
+  static const String walletActiveAddress2 = 'wallet_active_address2';
+  static const String activeWalletSubtitle = 'active_wallet_subtitle';
+  static const String activateWallet = 'activate_wallet';
   static const String walletNumberLabel = 'wallet_number_label';
   static const String recentTransactions = 'recent_transactions';
   static const String recentTransactionTitle = 'recent_transaction_title';

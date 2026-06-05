@@ -3,7 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:selcom_rides_frontend/features/wallet/presentation/screens/registration/enter_nida_number_screen.dart';
+import 'package:selcom_rides_frontend/features/wallet/presentation/bindings/active_wallet_binding.dart';
+import 'package:selcom_rides_frontend/features/wallet/presentation/screens/registration/active_wallet_form_screen.dart';
 
 import '../../../../core/config/app_config.dart';
 import '../../../../core/data/models/user_model.dart';
@@ -164,16 +165,15 @@ class ProfileController extends GetxController {
 
   void onWalletCardTap() {
     if (!isWalletLinked.value) {
-      openWalletLinkFlow();
+      openWalletActiveFlow();
       return;
     }
     openWallet();
   }
 
-  Future<void> openWalletLinkFlow() async {
-    await Get.to(
-      () => const EnterNidaNumberScreen(),
-    );
+  Future<void> openWalletActiveFlow() async {
+    ActiveWalletBinding().dependencies();
+    await Get.to(() => const ActiveWalletFormScreen());
     await fetchWalletBalance();
   }
 

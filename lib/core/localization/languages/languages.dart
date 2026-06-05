@@ -540,6 +540,11 @@ abstract class Languages {
   String get walletLinkPassportCameraCta;
   String get walletLinkNfcComingSoon;
   String get walletLinkEnterYourName;
+  String get walletActiveFormTitle;
+  String get walletActiveAddress1;
+  String get walletActiveAddress2;
+  String get activeWalletSubtitle;
+  String get activateWallet;
   String get walletNumberLabel;
   String get recentTransactions;
   String get recentTransactionTitle;

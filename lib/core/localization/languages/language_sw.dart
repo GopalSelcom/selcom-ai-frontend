@@ -545,6 +545,11 @@ class LanguageSw extends Languages {
     'wallet_link_passport_camera_cta': '',
     'wallet_link_nfc_coming_soon': '',
     'wallet_link_enter_your_name': '',
+    'wallet_active_form_title': '',
+    'wallet_active_address1': '',
+    'wallet_active_address2': '',
+    'active_wallet_subtitle': '',
+    'activate_wallet': '',
     'wallet_number_label': '',
     'recent_transactions': '',
     'recent_transaction_title': '',
@@ -2474,6 +2479,22 @@ class LanguageSw extends Languages {
   @override
   String get walletLinkEnterYourName =>
       values['wallet_link_enter_your_name'] ?? '';
+
+  @override
+  String get walletActiveFormTitle =>
+      values['wallet_active_form_title'] ?? '';
+
+  @override
+  String get walletActiveAddress1 => values['wallet_active_address1'] ?? '';
+
+  @override
+  String get walletActiveAddress2 => values['wallet_active_address2'] ?? '';
+
+  @override
+  String get activeWalletSubtitle => values['active_wallet_subtitle'] ?? '';
+
+  @override
+  String get activateWallet => values['activate_wallet'] ?? '';
 
   @override
   String get walletNumberLabel => values['wallet_number_label'] ?? '';

@@ -26,10 +26,10 @@ class ClientSuccessModel {
   factory ClientSuccessModel.fromJson(Map<String, dynamic> json) =>
       ClientSuccessModel(
         statusCode: json["status_code"],
-        message: json["message"],
-        response: json["response"] == null
-            ? null
-            : Response.fromJson(json["response"]),
+        message: json["message"]?.toString(),
+        response: json["response"] is Map<String, dynamic>
+            ? Response.fromJson(json["response"] as Map<String, dynamic>)
+            : null,
       );
 
   Map<String, dynamic> toJson() => {
