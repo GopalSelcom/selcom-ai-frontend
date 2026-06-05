@@ -8,6 +8,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:passport_mrz_capture/passport_mrz_capture.dart';
 import 'package:selcom_identy_plugin/selcom_identy_plugin.dart';
 import 'package:selcom_rides_frontend/core/constants/app_assets.dart';
 import 'package:selcom_rides_frontend/shared/utils/app_dialogs.dart';
@@ -16,6 +17,8 @@ import '../../../../core/data/models/user_model.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/storage_service.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../home/presentation/screens/home_screen.dart';
 import '../../domain/repositories/registration_repository.dart';
 import '../models/nida_card_model.dart';
@@ -35,6 +38,7 @@ import '../models/user_add_card_details_model.dart';
 import '../screens/registration/biometric_authentication_screen.dart';
 import '../screens/registration/document_confirmation_screen.dart';
 import '../screens/registration/liveliness_screen.dart';
+import '../screens/registration/model/response/passport_data_model.dart';
 import '../screens/registration/passport_scan_confirmation_screen.dart';
 import '../screens/registration/selcom_id_confirmation_screen.dart';
 import '../screens/registration/verification_success_screen.dart';
@@ -60,7 +64,7 @@ class RegistrationController extends GetxController {
 
   // Rx<CityConfigModel> cityConfigModel = CityConfigModel().obs;
   final RegistrationRepository registrationRepository =
-  RegistrationRepository();
+      RegistrationRepository();
 
   void resetMissingFingers() {
     SelcomIdentyPlugin selcomIdentyPlugin = SelcomIdentyPlugin();
@@ -352,7 +356,9 @@ class RegistrationController extends GetxController {
       // showLoaderDialog(Get.context);
       Loader.instance.show();
 
-      final userData = UserModel.fromJson(jsonDecode(await StorageService().read(StorageKeys.user)??""));
+      final userData = UserModel.fromJson(
+        jsonDecode(await StorageService().read(StorageKeys.user) ?? ""),
+      );
 
       // final userData = UserController().userData.value;
 
@@ -389,7 +395,7 @@ class RegistrationController extends GetxController {
         }
 
         Get.offAll(
-            ()=> const FaceDetectionScreen(leadingIcon: AppAssets.home),
+          () => const FaceDetectionScreen(leadingIcon: AppAssets.home),
         );
       }
     } catch (e, stackTrace) {
@@ -545,9 +551,11 @@ class RegistrationController extends GetxController {
 
   Future<bool> selcomIdUserDataExist() async {
     isDataGotFromSelcomId = false;
-    final accessToken  = await StorageService().read(StorageKeys.accessToken);
-    final userData = UserModel.fromJson(jsonDecode(await StorageService().read(StorageKeys.user)??""));
-    if ((accessToken??"").isEmpty) {
+    final accessToken = await StorageService().read(StorageKeys.accessToken);
+    final userData = UserModel.fromJson(
+      jsonDecode(await StorageService().read(StorageKeys.user) ?? ""),
+    );
+    if ((accessToken ?? "").isEmpty) {
       return false;
     }
 
@@ -556,9 +564,7 @@ class RegistrationController extends GetxController {
 
     final response = await RegistrationRepository.selcomIdUserDataExistAPI(
       SelcomIdUserDataExistRequest(
-        mobileNumber:
-        userData?.mobileNumber?.toString() ??
-            "",
+        mobileNumber: userData?.mobileNumber?.toString() ?? "",
       ),
     );
     Loader.instance.hide();
@@ -632,7 +638,9 @@ class RegistrationController extends GetxController {
       String dob = "";
       String nidaNumber = "";
       String passportNumber = "";
-      final user = UserModel.fromJson(jsonDecode(await StorageService().read(StorageKeys.user)??""));
+      final user = UserModel.fromJson(
+        jsonDecode(await StorageService().read(StorageKeys.user) ?? ""),
+      );
 
       if ( /*todo Features().selcomIdImpl*/ true) {
         if (isDataGotFromSelcomId) {
@@ -674,7 +682,7 @@ class RegistrationController extends GetxController {
                 false) {
               nidaNumber =
                   selcomIdUserData?.response?.response?.nidaNumber ?? "";
-              email =user?.emailId ?? "";
+              email = user?.emailId ?? "";
               address =
                   selcomIdUserData?.response?.response?.residentStreet ?? "";
               city = selcomIdUserData?.response?.response?.residentRegion ?? "";
@@ -730,8 +738,9 @@ class RegistrationController extends GetxController {
             gender = nidaDocumentSelectedGenderController.text;
             dob = nidaDocumentBithdateController.text;
           } else {
-
-            final userData = UserModel.fromJson(jsonDecode(await StorageService().read(StorageKeys.user)??""));
+            final userData = UserModel.fromJson(
+              jsonDecode(await StorageService().read(StorageKeys.user) ?? ""),
+            );
 
             passportNumber =
                 passportScanningData.value.data?.documentNumber ?? "";
@@ -748,20 +757,19 @@ class RegistrationController extends GetxController {
         }
       }
 
-      ClientSuccessModel?
-      response = await registrationRepository.uploadOcrDocumentApi(
-        email: email,
-        address: (address.isNotEmpty) ? address : "DAR ES SALAAM",
-        city: (city.isNotEmpty) ? city : "DAR ES SALAAM",
-        referralCode: registerAddressInfoReferralController.text,
-        firstName: firstName,
-        lastName: lastName,
-        gender: gender,
-        dob: dob,
-        externalId: externalId,
-        msisdn:
-            "+255 ${user?.mobileNumber.toString()}",
-      );
+      ClientSuccessModel? response = await registrationRepository
+          .uploadOcrDocumentApi(
+            email: email,
+            address: (address.isNotEmpty) ? address : "DAR ES SALAAM",
+            city: (city.isNotEmpty) ? city : "DAR ES SALAAM",
+            referralCode: registerAddressInfoReferralController.text,
+            firstName: firstName,
+            lastName: lastName,
+            gender: gender,
+            dob: dob,
+            externalId: externalId,
+            msisdn: "+255 ${user?.mobileNumber.toString()}",
+          );
 
       if (response != null && response.response?.resultcode == "200") {
         // UserAddCardDetailModel? userAddCardDetailsResponse =
@@ -998,7 +1006,9 @@ class RegistrationController extends GetxController {
       uploadDocumentsModel.refresh();
       documentConfirmationAttemptedCount = 0.obs;
 
-      var userData = UserModel.fromJson(jsonDecode(await StorageService().read(StorageKeys.user)??""));
+      var userData = UserModel.fromJson(
+        jsonDecode(await StorageService().read(StorageKeys.user) ?? ""),
+      );
 
       for (DocumentDetail document
           in response.data?.firstOrNull?.documentDetails ??
@@ -1076,15 +1086,14 @@ class RegistrationController extends GetxController {
     // showLoaderDialog(Get.context);
     Loader.instance.show();
     final userData = UserModel.fromJson(
-      jsonDecode(await StorageService().read(StorageKeys.user)??""),
+      jsonDecode(await StorageService().read(StorageKeys.user) ?? ""),
     );
     final response = await RegistrationRepository.createSupportTicketAPI(
       CreateSupportTicketSelcomIdRequest(
         title: "Selfie Verification Match Failed Despite Existing Selcom ID",
         description:
             "Users encounter a “Selfie Verification Match Failed” error even when their Selcom ID exists. This issue may arise due to mismatched facial data, poor image quality, or backend verification discrepancies.",
-        mobileNumber:
-        userData.mobileNumber.toString() ?? "",
+        mobileNumber: userData.mobileNumber.toString() ?? "",
         selfieImage: await fileToBase64(verifyDocumentPath),
         selfieVerificationMatch:
             verifySelfieResponse.response?.selfieVerificationData?.similarity
@@ -1375,5 +1384,66 @@ class RegistrationController extends GetxController {
       Loader.instance.hide();
       debugPrint("verifyDocumentSelfie Exception: $e");
     }
+  }
+
+  /// Launches package camera and maps MRZ result into app state.
+  void openPassportCameraScan(BuildContext context) {
+    PassportMrzCapture.capture(
+      context: context,
+      config: PassportMrzCaptureConfig(
+        screenTitle: '',
+        includeFaceImage: true,
+        includeMrzCropInResult: kDebugMode,
+        captureButtonColor: AppTheme.isDarkMode.value
+            ? AppColors.darkThemeTextFieldColor
+            : Colors.white,
+        captureIconColor: AppTheme.isDarkMode.value
+            ? Colors.white
+            : AppColors.blackColor,
+      ),
+      onSuccess: (success) {
+        _mergeCaptureSuccess(success);
+        Get.to(
+          () => const PassportScanConfirmationScreen(),
+          preventDuplicates: false,
+        );
+      },
+      onFailure: (failure) {
+        if (failure.code == PassportMrzCaptureErrorCode.cancelled) {
+          return;
+        }
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(failure.message)));
+      },
+    );
+  }
+
+  void _mergeCaptureSuccess(PassportMrzCaptureSuccess success) {
+    final d = success.data;
+    final ocr = PassportDataModel(
+      fullName: d.fullName,
+      surname: d.surname,
+      givenNames: d.givenNames,
+      passportNumber: d.passportNumber,
+      issuingCountry: d.issuingCountry,
+      nationality: d.nationality,
+      placeOfBirth: '',
+      dateOfBirth: d.dateOfBirth,
+      expiryDate: d.expiryDate,
+      gender: d.gender,
+      personalNumber: d.personalNumber,
+      mrzLine1: d.mrzLine1,
+      mrzLine2: d.mrzLine2,
+      faceImage: success.faceImage,
+    );
+
+    // final controller = BiometricController();
+    // controller.ocrPassportData = ocr;
+    // controller.passportScanningData.value = PassportScanningModel();
+    // controller.fullPassportImage = success.passportPageImage;
+    // controller.mergeOcrIntoPassportScanningData();
+    // controller.nfcPassportImage ??= success.passportPageImage;
+    // controller.debugMrzCroppedImage = success.mrzCroppedImage;
   }
 }
