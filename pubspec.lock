@@ -1613,9 +1613,11 @@ packages:
   selcom_identy_plugin:
     dependency: "direct main"
     description:
-      path: "packages/selcom_identy_plugin"
-      relative: true
-    source: path
+      path: "."
+      ref: debug
+      resolved-ref: "5a58c5eaea88cd2209d4a403ce20c0e7fbceee00"
+      url: "https://gitlabsrv.selcom.dev/selcom/selcom_identy_plugin.git"
+    source: git
     version: "0.0.1"
   selcom_passport_plugin:
     dependency: "direct main"

@@ -105,7 +105,7 @@ class _BiometricsSelectionScreeState extends State<BiometricsSelectionScree> {
                           borderRadius: BorderRadius.circular(15.0.sp),
                           color: registrationController.isLeftHandSelected.value
                               ? AppColors.lightGreenColor
-                              : AppColors.textGrey,
+                              : AppColors.grey535353,
                           border: Border.all(
                             color:
                                 registrationController.isLeftHandSelected.value
@@ -164,7 +164,7 @@ class _BiometricsSelectionScreeState extends State<BiometricsSelectionScree> {
                       Text(
                         "Right Hand",
                         style: AppTextStyles.screenTitle.copyWith(
-                          color: AppColors.textGrey,
+                          color: AppColors.greyColor,
                           // fontFamily: FontName.NunitoSansRegular,
                           fontSize: 15.0.sp,
                           height: 1.2,
@@ -179,7 +179,7 @@ class _BiometricsSelectionScreeState extends State<BiometricsSelectionScree> {
                           color:
                               registrationController.isRightHandSelected.value
                               ? AppColors.lightGreenColor
-                              : AppColors.textGrey,
+                              : AppColors.greyColor,
                           border: Border.all(
                             color:
                                 registrationController.isRightHandSelected.value

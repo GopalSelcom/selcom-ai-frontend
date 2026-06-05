@@ -79,12 +79,16 @@ dependencies:
   card_swiper: ^3.0.1
   passport_mrz_capture:
     path: ./packages/passport_mrz_capture
-  selcom_identy_plugin:
-    path: ./packages/selcom_identy_plugin
+#  selcom_identy_plugin:
+#    path: ./packages/selcom_identy_plugin
   selcom_passport_plugin:
     git:
       url: https://gitlabsrv.selcom.dev/selcom/selcom_passport_scanner.git
       ref: new_plugin_changes
+  selcom_identy_plugin:
+    git:
+      url: https://gitlabsrv.selcom.dev/selcom/selcom_identy_plugin.git
+      ref: debug
 
 
 dev_dependencies:

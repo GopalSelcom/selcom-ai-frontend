@@ -765,10 +765,11 @@ class RegistrationController extends GetxController {
             referralCode: registerAddressInfoReferralController.text,
             firstName: firstName,
             lastName: lastName,
-            gender: gender,
+            expiry: "",
+        idNumber: nidaNumber.isEmpty?passportNumber.trim():nidaNumber.trim().replaceAll("-", ""),gender: gender,
             dob: dob,
             externalId: externalId,
-            msisdn: "+255 ${user?.mobileNumber.toString()}",
+            msisdn: "255${user?.mobileNumber.toString().replaceAll(" ", "")}",
           );
 
       if (response != null && response.response?.resultcode == "200") {
@@ -830,7 +831,6 @@ class RegistrationController extends GetxController {
         // }
       } else {
         Get.back();
-        ;
         AppDialogs.showErrorDialog(
           message: kDebugMode
               ? (response?.response?.message ?? "")
@@ -966,12 +966,12 @@ class RegistrationController extends GetxController {
   String get getIdentyLicense {
     if (Platform.isAndroid) {
       switch (AppInfo().package.packageName) {
-        case "com.app.dukadirect":
-          return "3871-com.app.dukadirect-31-03-2025";
+        case "com.selcom.go":
+          return "5471-com.selcom.go-31-12-2026";
         case "com.app.dukadirect.dev":
           return "3872-com.app.dukadirect.dev-31-03-2025";
         default:
-          return "3871-com.app.dukadirect-31-03-2025";
+          return "5471-com.selcom.go-31-12-2026";
       }
     } else {
       switch (AppInfo().package.packageName) {

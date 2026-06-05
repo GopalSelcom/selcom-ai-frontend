@@ -12,6 +12,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'core/utils/device_info.dart';
+import 'features/wallet/presentation/utils/app_info.dart';
 import 'firebase_options.dart';
 import 'core/config/app_config.dart';
 import 'core/di/injection_container.dart' as di;
@@ -102,6 +103,7 @@ void main() async {
       );
 
       await DeviceInfo().get();
+      await AppInfo().get();
       // Initialize Error Reporter
       await ErrorReporter.instance.init();
 

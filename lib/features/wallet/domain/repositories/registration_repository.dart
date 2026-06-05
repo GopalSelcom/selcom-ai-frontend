@@ -80,6 +80,8 @@ class Params {
   static String fName = "fname";
   static String lName = "lname";
   static String address = "address";
+  static String address1 = "address1";
+  static String address2 = "address2";
   static String city = "city";
   static String state = "state";
   static String country = "country";
@@ -118,16 +120,16 @@ class Params {
   static const pageSize = "pageSize";
   static const pageIndex = "pageIndex";
 
-  static const firstName = "firstname";
-  static const lastName = "lastname";
+  static const firstName = "first_name";
+  static const lastName = "last_name";
   static const first_name = "first_name";
   static const last_name = "last_name";
   static const gender = "gender";
   static const referralCode = "referralCode";
-  static const locationCity = "location.city";
-  static const locationStreet = "location.street";
-  static const locationCountry = "location.country";
-  static const locationGpsCoordinates = "location.gpsCoordinates";
+  static const locationCity = "city";
+  static const locationStreet = "street";
+  static const locationCountry = "country";
+  static const locationGpsCoordinates = "gpsCoordinates";
   static const active = "active";
   static const vendor = "vendor";
   static const msisdn = "msisdn";
@@ -177,9 +179,14 @@ class Params {
   static String insuredName = "insuredName";
   static String providerId = "provider_id";
   static String identityType = "identity_type";
+  static String id_type = "id_type";
   static String insurerId = "insurerId";
   static String motorData = "motorData";
   static String isActive = "isActive";
+
+  static String idExpiry = "id_expiry";
+
+  static String phone ="phone";
 }
 
 class RegistrationRepository {
@@ -209,6 +216,8 @@ class RegistrationRepository {
   Future<ClientSuccessModel?> uploadOcrDocumentApi({
     required String email,
     String? referralCode,
+    String? expiry,
+    required String idNumber,
     required String city,
     required String address,
     required String firstName,
@@ -218,24 +227,16 @@ class RegistrationRepository {
     required String externalId,
     required String msisdn,
   }) async {
-    String languageCode =
-         "en";
     final body = {
-      Params.firstName: firstName,
-      Params.lastName: lastName,
-      Params.gender: gender.toUpperCase(),
+      Params.first_name: firstName,
+      Params.last_name: lastName,
+      Params.id_type:"NATIONAL_ID",
+      Params.idNumber: idNumber,
+      Params.idExpiry:expiry,
       Params.dob: dob,
-      Params.email: email,
-      Params.referralCode: referralCode,
-      Params.locationCity: city,
-      Params.locationStreet: address,
-      Params.externalId: externalId,
-      Params.locationCountry: "TZ",
-      Params.locationGpsCoordinates: ",",
-      Params.active: "1",
-      Params.vendor: "duka.direct",
-      Params.msisdn: msisdn,
-      Params.language: languageCode,
+      Params.phone: msisdn,
+      Params.address1: address,
+      Params.address2:city
     };
     try {
       var response = await ApiService().call(
