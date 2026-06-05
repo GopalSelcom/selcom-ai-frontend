@@ -42,6 +42,8 @@ class AuthController extends GetxController {
   final errorMessage = ''.obs;
 
   final resendTimer = 59.obs;
+  final pendingSignUpName = ''.obs;
+  final pendingSignUpEmail = ''.obs;
   Timer? _timer;
 
   @override
@@ -223,17 +225,23 @@ class AuthController extends GetxController {
 
             final isUserAlreadyRegistered =
                 verifyData.isUserAlreadyRegistered == true;
+            final walletNotCreated = verifyData.isWalletNotCreated;
+            final needsSignUp = !isUserAlreadyRegistered || walletNotCreated;
+
+            pendingSignUpName.value = verifyData.signUpName;
+            pendingSignUpEmail.value = verifyData.signUpEmail;
+
             await StorageService().write(
               StorageKeys.signupCompleted,
-              isUserAlreadyRegistered ? 'true' : 'false',
+              needsSignUp ? 'false' : 'true',
             );
 
             await VoipCallkitBridgeService.instance.syncCachedTokenToBackend();
             SessionExpiryService.resetOnLogin();
 
-            postVerifyRoute = isUserAlreadyRegistered
-                ? AppRoutes.profileLoading
-                : AppRoutes.signUp;
+            postVerifyRoute = needsSignUp
+                ? AppRoutes.signUp
+                : AppRoutes.profileLoading;
             return true;
           }
           errorMessage.value =

@@ -36,6 +36,11 @@ class VerifyOtpData {
   String? refreshToken;
   bool? isUserAlreadyRegistered;
   bool? isUserAddressAdded;
+  /// `true` when wallet is not created; `false` when wallet exists.
+  bool? walletStatusFlag;
+  String? walletStatus;
+  String? name;
+  String? email;
 
   VerifyOtpData({
     this.user,
@@ -43,6 +48,10 @@ class VerifyOtpData {
     this.refreshToken,
     this.isUserAlreadyRegistered,
     this.isUserAddressAdded,
+    this.walletStatusFlag,
+    this.walletStatus,
+    this.name,
+    this.email,
   });
 
   VerifyOtpData.fromJson(Map<String, dynamic> json) {
@@ -55,7 +64,24 @@ class VerifyOtpData {
     refreshToken = (json['refresh_token'] ?? json['refreshToken'])?.toString();
     isUserAlreadyRegistered = json['is_user_already_registered'];
     isUserAddressAdded = json['is_user_address_added'];
+    walletStatusFlag = json['wallet_status_flag'];
+    walletStatus = json['wallet_status']?.toString();
+    name = json['name']?.toString();
+    email = json['email']?.toString();
   }
+
+  /// Wallet is missing when API sets [walletStatusFlag] to `true`.
+  bool get isWalletNotCreated => walletStatusFlag == true;
+
+  String get signUpName =>
+      (name?.trim().isNotEmpty == true ? name!.trim() : null) ??
+      user?.name?.trim() ??
+      '';
+
+  String get signUpEmail =>
+      (email?.trim().isNotEmpty == true ? email!.trim() : null) ??
+      user?.emailId?.trim() ??
+      '';
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
@@ -66,6 +92,10 @@ class VerifyOtpData {
     data['refresh_token'] = refreshToken;
     data['is_user_already_registered'] = isUserAlreadyRegistered;
     data['is_user_address_added'] = isUserAddressAdded;
+    data['wallet_status_flag'] = walletStatusFlag;
+    data['wallet_status'] = walletStatus;
+    data['name'] = name;
+    data['email'] = email;
     return data;
   }
 }

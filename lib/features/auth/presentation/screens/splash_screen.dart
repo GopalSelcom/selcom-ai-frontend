@@ -46,7 +46,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (token != null && token.isNotEmpty) {
       await VoipCallkitBridgeService.instance.syncCachedTokenToBackend();
       if (signupCompleted == 'false') {
-        Get.offAllNamed(AppRoutes.phone);
+        Get.offAllNamed(AppRoutes.signUp);
       } else {
         // For existing logged-in users where this flag may be absent,
         // default to home to preserve prior behavior.
