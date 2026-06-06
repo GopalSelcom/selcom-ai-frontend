@@ -45,6 +45,7 @@ class WalletScreen extends GetView<WalletController> {
                       child: WalletRecentTransactionsSection(
                         transactions: controller.recentTransactions,
                         onViewAll: controller.openTransactionHistory,
+                        onRefresh: controller.refreshWallet,
                       ),
                     ),
                   ],

@@ -89,6 +89,11 @@ class WalletRepositoryImpl implements WalletRepository {
     return List.unmodifiable(filtered);
   }
 
+  @override
+  void invalidateStatementCache() {
+    _statementCache = null;
+  }
+
   Future<List<WalletTransactionEntity>> _loadStatementTransactions() async {
     if (_statementCache != null) {
       return _statementCache!;

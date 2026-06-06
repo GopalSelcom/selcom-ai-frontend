@@ -38,6 +38,7 @@ import '../../features/ride/presentation/screens/ride_message_screen.dart';
 import '../../features/ride/presentation/screens/stop_editor_screen.dart';
 import '../../features/ride/presentation/screens/vehicle_selection_screen.dart';
 import '../../features/wallet/presentation/bindings/wallet_binding.dart';
+import '../../features/wallet/presentation/bindings/wallet_route_middleware.dart';
 import '../../features/wallet/presentation/bindings/wallet_history_binding.dart';
 import '../../features/wallet/presentation/screens/wallet_history_screen.dart';
 import '../../features/wallet/presentation/screens/wallet_screen.dart';
@@ -175,6 +176,7 @@ class AppRoutes {
       name: wallet,
       page: () => const WalletScreen(),
       binding: WalletBinding(),
+      middlewares: [WalletRouteMiddleware()],
     ),
     GetPage(
       name: walletTransactions,

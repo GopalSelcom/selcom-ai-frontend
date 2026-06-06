@@ -17,7 +17,7 @@ import '../../../../shared/utils/phone_national_rules.dart';
 import '../../../../shared/utils/thousands_separator_input_formatter.dart';
 import '../../../wallet/domain/entities/wallet_details_entity.dart';
 import '../../../wallet/domain/repositories/wallet_repository.dart';
-import '../../../wallet/presentation/controllers/wallet_controller.dart';
+import '../../../wallet/presentation/utils/wallet_refresh.dart';
 import '../../data/datasources/wallet_payment_remote_data_source.dart';
 import '../../data/models/selcom_pesa_topup_models.dart';
 import '../../domain/wallet_top_up_limits.dart';
@@ -331,7 +331,7 @@ class SelcomPesaTopupController extends GetxController
     _stopTimers();
     _dismissPendingDialog();
 
-    await WalletController().loadWallet();
+    await WalletRefresh.afterBalanceChange();
 
     if (Get.currentRoute != AppRoutes.wallet) {
       await Get.toNamed(AppRoutes.wallet);

@@ -10,11 +10,13 @@ import '../../../payment/data/models/go_other_payment_methods_models.dart';
 import '../../../payment/presentation/widgets/add_money_to_wallet_bottom_sheet.dart';
 import '../../domain/entities/wallet_summary_entity.dart';
 import '../../domain/entities/wallet_transaction_filter.dart';
+import '../../domain/repositories/wallet_repository.dart';
 import '../../domain/usecases/get_wallet_summary_usecase.dart';
 import '../../domain/usecases/get_wallet_transactions_usecase.dart';
 import '../../domain/utils/wallet_statement_utils.dart';
 import '../models/wallet_transaction_item.dart';
 import '../utils/wallet_format_utils.dart';
+import '../utils/wallet_refresh.dart';
 import '../utils/wallet_transaction_mapper.dart';
 
 class WalletController extends GetxController {
@@ -47,9 +49,12 @@ class WalletController extends GetxController {
     unawaited(loadWallet());
   }
 
-  Future<void> loadWallet() async {
-    isLoading.value = true;
+  Future<void> loadWallet({bool showLoading = true}) async {
+    if (showLoading || summary.value == null) {
+      isLoading.value = true;
+    }
     try {
+      sl<WalletRepository>().invalidateStatementCache();
       final walletSummary = await _getWalletSummaryUseCase();
       final transactions = await _getWalletTransactionsUseCase(
         filter: WalletTransactionFilter.all,
@@ -80,6 +85,8 @@ class WalletController extends GetxController {
   String get walletNumberForCopy =>
       summary.value?.walletNumber.replaceAll(RegExp(r'\s+'), '') ?? '';
 
+  Future<void> refreshWallet() => loadWallet(showLoading: false);
+
   void goBack() => Get.back<void>();
 
   void openTransactionHistory() {
@@ -93,7 +100,7 @@ class WalletController extends GetxController {
   Future<void> _openAddMoney() async {
     final result = await AddMoneyToWalletBottomSheet.show();
     if (result == TanQrTopupResult.success) {
-      await loadWallet();
+      await WalletRefresh.afterBalanceChange();
     }
   }
 

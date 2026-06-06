@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:card_swiper/card_swiper.dart';
 import 'package:get/get.dart';
 
+import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../domain/entities/wallet_transaction_filter.dart';
+import '../../domain/repositories/wallet_repository.dart';
 import '../../domain/usecases/get_wallet_transactions_usecase.dart';
 import '../models/wallet_transaction_item.dart';
 import '../utils/wallet_transaction_mapper.dart';
@@ -42,13 +44,22 @@ class WalletHistoryController extends GetxController {
   Future<void> loadAllFilters() async {
     isLoading.value = true;
     try {
-      final transactions = await _getWalletTransactionsUseCase(
-        filter: WalletTransactionFilter.all,
-      );
-      transactionsByFilter.assignAll(groupWalletTransactionsByFilter(transactions));
+      await _fetchTransactions();
     } finally {
       isLoading.value = false;
     }
+  }
+
+  Future<void> refreshTransactions() async {
+    sl<WalletRepository>().invalidateStatementCache();
+    await _fetchTransactions();
+  }
+
+  Future<void> _fetchTransactions() async {
+    final transactions = await _getWalletTransactionsUseCase(
+      filter: WalletTransactionFilter.all,
+    );
+    transactionsByFilter.assignAll(groupWalletTransactionsByFilter(transactions));
   }
 
   List<WalletTransactionItem> transactionsForFilter(

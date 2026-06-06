@@ -291,7 +291,12 @@ class ProfileController extends GetxController {
   }
 
   void openWallet() {
-    Get.toNamed(AppRoutes.wallet);
+    unawaited(_openWallet());
+  }
+
+  Future<void> _openWallet() async {
+    await Get.toNamed(AppRoutes.wallet);
+    await fetchWalletBalance();
   }
 
   void openContactUs() {

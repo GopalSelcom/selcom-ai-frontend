@@ -14,8 +14,9 @@ import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/thousands_separator_input_formatter.dart';
 import '../../../wallet/domain/repositories/wallet_repository.dart';
 import '../../../wallet/domain/usecases/get_wallet_summary_usecase.dart';
-import '../../../wallet/presentation/utils/wallet_format_utils.dart';
 import '../../../wallet/presentation/controllers/wallet_controller.dart';
+import '../../../wallet/presentation/utils/wallet_format_utils.dart';
+import '../../../wallet/presentation/utils/wallet_refresh.dart';
 import '../../data/datasources/wallet_payment_remote_data_source.dart';
 import '../../data/models/go_other_payment_methods_models.dart';
 import '../../domain/wallet_top_up_limits.dart';
@@ -282,7 +283,7 @@ class TanQrWalletTopupController extends GetxController {
 
     Get.back(result: TanQrTopupResult.success);
 
-    await WalletController().loadWallet();
+    await WalletRefresh.afterBalanceChange();
 
     if (Get.currentRoute != AppRoutes.wallet) {
       await Get.toNamed(AppRoutes.wallet);

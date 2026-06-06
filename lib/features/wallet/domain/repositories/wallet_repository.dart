@@ -14,6 +14,8 @@ abstract class WalletRepository {
     WalletTransactionFilter filter = WalletTransactionFilter.all,
   });
 
+  void invalidateStatementCache();
+
   Future<TanQrPaymentSession> initiateTanQrTopUp(
     GoOtherPaymentMethodsRequest request,
   );

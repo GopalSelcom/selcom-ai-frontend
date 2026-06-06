@@ -53,6 +53,7 @@ class WalletHistoryScreen extends GetView<WalletHistoryController> {
                   return WalletTransactionList(
                     items: controller.transactionsForFilter(filter),
                     padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 32.h),
+                    onRefresh: controller.refreshTransactions,
                   );
                 },
               );
