@@ -9,6 +9,81 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
+import '../../../../shared/widgets/app_qr_code.dart';
+
+/// TanQR tips layout: decorative card, live QR, account row, optional timer.
+class TanQrTipsContent extends StatelessWidget {
+  const TanQrTipsContent({
+    super.key,
+    required this.qrData,
+    required this.accountName,
+    required this.accountNumber,
+    this.countdownText,
+  });
+
+  final String qrData;
+  final String accountName;
+  final String accountNumber;
+  final String? countdownText;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          margin: EdgeInsets.symmetric(horizontal: 10.w),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceSubtle,
+            borderRadius: BorderRadius.circular(31.r),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Padding(
+              //   padding: EdgeInsets.only(left: 22.w, top: 18.h),
+              //   child: SvgPictureAsset(
+              //     AppAssets.icTips,
+              //     width: 92.w,
+              //     height: 28.h,
+              //     fit: BoxFit.contain,
+              //   ),
+              // ),
+              // SizedBox(height: 18.h),
+              _TanQrPaymentCard(
+                qrData: qrData,
+                accountName: accountName,
+                accountNumber: accountNumber,
+              ),
+            ],
+          ),
+        ),
+        if (countdownText != null && countdownText!.isNotEmpty) ...[
+          SizedBox(height: 20.h),
+          Text(
+            AppStrings.tanQrScanQrInstruction.tr,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.homeSubtitle.copyWith(
+              color: AppColors.textMutedStrong,
+            ),
+          ),
+          SizedBox(height: 12.h),
+          Text(
+            countdownText!,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.homeTitle.copyWith(
+              fontSize: 16.sp,
+              color: AppColors.textHeading,
+            ),
+          ),
+        ],
+        SizedBox(height: 8.h),
+      ],
+    );
+  }
+}
 
 class TanQrTipsBottomSheet extends StatelessWidget {
   const TanQrTipsBottomSheet({super.key});
@@ -30,40 +105,25 @@ class TanQrTipsBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Container(
-          margin: EdgeInsets.symmetric(horizontal: 10.w),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceSubtle,
-            borderRadius: BorderRadius.circular(31.r),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: EdgeInsets.only(left: 22.w, top: 18.h),
-                child: SvgPictureAsset(
-                  AppAssets.icTips,
-                  width: 92.w,
-                  height: 28.h,
-                  fit: BoxFit.contain,
-                ),
-              ),
-              SizedBox(height: 18.h),
-              _QrCard(),
-            ],
-          ),
-        ),
-      ],
+    return const TanQrTipsContent(
+      qrData: '',
+      accountName: '',
+      accountNumber: '',
     );
   }
 }
 
-class _QrCard extends StatelessWidget {
+class _TanQrPaymentCard extends StatelessWidget {
+  const _TanQrPaymentCard({
+    required this.qrData,
+    required this.accountName,
+    required this.accountNumber,
+  });
+
+  final String qrData;
+  final String accountName;
+  final String accountNumber;
+
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
@@ -80,21 +140,12 @@ class _QrCard extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              padding: EdgeInsets.all(28.w),
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(31.r),
-              ),
-              child: Image.asset(
-                AppAssets.imgQrCode,
-                width: 220.w,
-                height: 220.w,
-                fit: BoxFit.contain,
-              ),
-            ),
+            AppQrCode(data: qrData),
             SizedBox(height: 27.h),
-            _AccountCard(),
+            _TanQrAccountCard(
+              accountName: accountName,
+              accountNumber: accountNumber,
+            ),
           ],
         ),
       ),
@@ -102,9 +153,20 @@ class _QrCard extends StatelessWidget {
   }
 }
 
-class _AccountCard extends StatelessWidget {
+class _TanQrAccountCard extends StatelessWidget {
+  const _TanQrAccountCard({
+    required this.accountName,
+    required this.accountNumber,
+  });
+
+  final String accountName;
+  final String accountNumber;
+
   @override
   Widget build(BuildContext context) {
+    final name = accountName.trim().isNotEmpty ? accountName.trim() : '—';
+    final number = accountNumber.trim().isNotEmpty ? accountNumber.trim() : '—';
+
     return Container(
       width: double.infinity,
       margin: EdgeInsets.symmetric(horizontal: 12.w),
@@ -116,7 +178,7 @@ class _AccountCard extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            'Rosario Arun George',
+            name,
             style: AppTextStyles.homeSubtitle.copyWith(
               color: AppColors.black,
               fontSize: 14.sp,
@@ -127,7 +189,7 @@ class _AccountCard extends StatelessWidget {
           ),
           SizedBox(height: 4.h),
           Text(
-            '6056 1255',
+            number,
             style: AppTextStyles.homeSubtitle.copyWith(
               color: AppColors.textQrMeta,
               fontSize: 14.sp,

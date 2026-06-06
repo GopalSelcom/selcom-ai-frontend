@@ -13,6 +13,8 @@ import '../../../../core/services/storage_service.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/thousands_separator_input_formatter.dart';
 import '../../../wallet/domain/repositories/wallet_repository.dart';
+import '../../../wallet/domain/usecases/get_wallet_summary_usecase.dart';
+import '../../../wallet/presentation/utils/wallet_format_utils.dart';
 import '../../../wallet/presentation/controllers/wallet_controller.dart';
 import '../../data/datasources/wallet_payment_remote_data_source.dart';
 import '../../data/models/go_other_payment_methods_models.dart';
@@ -36,6 +38,8 @@ class TanQrWalletTopupController extends GetxController {
   final session = Rxn<TanQrPaymentSession>();
   final countdownSeconds = countdownDurationSeconds.obs;
   final isSubmitting = false.obs;
+  final displayName = ''.obs;
+  final displayWalletNumber = ''.obs;
 
   late final TextEditingController amountController;
 
@@ -61,6 +65,7 @@ class TanQrWalletTopupController extends GetxController {
     super.onInit();
     amountController = TextEditingController();
     unawaited(_loadRegisteredPhone());
+    unawaited(_loadDisplayAccountDetails());
   }
 
   @override
@@ -74,6 +79,37 @@ class TanQrWalletTopupController extends GetxController {
     _registeredPhone = await _readRegisteredPhoneFromStorage();
     if (_registeredPhone == null || _registeredPhone!.isEmpty) {
       apiError.value = AppStrings.tanQrMissingRegisteredPhone.tr;
+    }
+  }
+
+  Future<void> _loadDisplayAccountDetails() async {
+    final raw = await StorageService().read(StorageKeys.user);
+    if (raw != null && raw.trim().isNotEmpty) {
+      try {
+        final json = jsonDecode(raw);
+        if (json is Map<String, dynamic>) {
+          final user = UserModel.fromJson(json);
+          displayName.value = user.name?.trim() ?? '';
+        }
+      } catch (_) {
+        displayName.value = '';
+      }
+    }
+
+    try {
+      final summary = await sl<GetWalletSummaryUseCase>()();
+      final walletNumber = summary.walletNumber.trim();
+      if (walletNumber.isNotEmpty) {
+        displayWalletNumber.value = formatWalletAccountNumber(walletNumber);
+        return;
+      }
+    } catch (_) {}
+
+    if (Get.isRegistered<WalletController>()) {
+      final formatted = WalletController().formattedWalletNumber.trim();
+      if (formatted.isNotEmpty) {
+        displayWalletNumber.value = formatted;
+      }
     }
   }
 
@@ -171,6 +207,7 @@ class TanQrWalletTopupController extends GetxController {
         ),
       );
       session.value = result;
+      await _loadDisplayAccountDetails();
       step.value = TanQrTopupStep.qrDisplay;
       _startQrTimers();
     } on WalletPaymentException catch (e) {

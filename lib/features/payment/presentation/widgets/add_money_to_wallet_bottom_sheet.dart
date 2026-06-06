@@ -13,7 +13,6 @@ import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/thousands_separator_input_formatter.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
-import '../../../../shared/widgets/app_qr_code.dart';
 import '../../../../shared/widgets/app_standard_bottom_sheet.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../controllers/tanqr_wallet_topup_controller.dart';
@@ -21,6 +20,7 @@ import '../../data/models/go_other_payment_methods_models.dart';
 import 'mobile_money_topup_bottom_sheet.dart';
 import 'selcom_pesa_to_wallet_bottom_sheet.dart';
 import 'steps_to_load_go_wallet_bottom_sheet.dart';
+import 'tanqr_tips_bottom_sheet.dart';
 
 /// Add-money options after insufficient-balance "Top up Wallet" (Figma sheet).
 class AddMoneyToWalletBottomSheet extends StatelessWidget {
@@ -33,7 +33,7 @@ class AddMoneyToWalletBottomSheet extends StatelessWidget {
     Get.put(TanQrWalletTopupController(), tag: tag);
     return AppDialogs.showStandardBottomSheet<TanQrTopupResult?>(
       sheet: AddMoneyToWalletBottomSheet(controllerTag: tag),
-      barrierDismissible: true,
+      barrierDismissible: false,
     ).whenComplete(() {
       if (Get.isRegistered<TanQrWalletTopupController>(tag: tag)) {
         final controller = Get.find<TanQrWalletTopupController>(tag: tag);
@@ -60,7 +60,9 @@ class AddMoneyToWalletBottomSheet extends StatelessWidget {
         child: AppStandardBottomSheet(
           title: _titleForStep(step),
           headerTextAlign: TextAlign.center,
-          showHeaderDivider: step != TanQrTopupStep.options,
+          showHeaderDivider:
+              step != TanQrTopupStep.options &&
+              step != TanQrTopupStep.qrDisplay,
           content: _contentForStep(step),
           footer: _footerForStep(step),
         ),
@@ -86,7 +88,7 @@ class AddMoneyToWalletBottomSheet extends StatelessWidget {
       case TanQrTopupStep.amountEntry:
         return _AmountEntryContent(controllerTag: controllerTag);
       case TanQrTopupStep.qrDisplay:
-        return _QrDisplayContent(controllerTag: controllerTag);
+        return _TanQrDisplayContent(controllerTag: controllerTag);
     }
   }
 
@@ -283,8 +285,8 @@ class _AmountEntryFooter extends StatelessWidget {
   }
 }
 
-class _QrDisplayContent extends StatelessWidget {
-  const _QrDisplayContent({required this.controllerTag});
+class _TanQrDisplayContent extends StatelessWidget {
+  const _TanQrDisplayContent({required this.controllerTag});
 
   final String controllerTag;
 
@@ -294,34 +296,14 @@ class _QrDisplayContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final qrData = _controller.session.value?.qr ?? '';
       final seconds = _controller.countdownSeconds.value;
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Center(child: AppQrCode(data: qrData)),
-          SizedBox(height: 20.h),
-          Text(
-            AppStrings.tanQrScanQrInstruction.tr,
-            textAlign: TextAlign.center,
-            style: AppTextStyles.homeSubtitle.copyWith(
-              color: AppColors.textMutedStrong,
-            ),
-          ),
-          SizedBox(height: 12.h),
-          Text(
-            AppStrings.expiresInTimer.trParams({
-              'timer': _controller.formatCountdown(seconds),
-            }),
-            textAlign: TextAlign.center,
-            style: AppTextStyles.homeTitle.copyWith(
-              fontSize: 16.sp,
-              color: AppColors.textHeading,
-            ),
-          ),
-          SizedBox(height: 24.h),
-        ],
+      return TanQrTipsContent(
+        qrData: _controller.session.value?.qr ?? '',
+        accountName: _controller.displayName.value,
+        accountNumber: _controller.displayWalletNumber.value,
+        countdownText: AppStrings.expiresInTimer.trParams({
+          'timer': _controller.formatCountdown(seconds),
+        }),
       );
     });
   }
