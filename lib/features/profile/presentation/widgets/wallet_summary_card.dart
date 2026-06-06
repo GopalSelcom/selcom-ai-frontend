@@ -54,14 +54,13 @@ class WalletSummaryCard extends StatelessWidget {
     return formatWalletAccountNumber(clean, groupSize: 5);
   }
 
-  String _accountNumberForCopy() =>
-      walletNumber.replaceAll(RegExp(r'\s+'), '');
+  String _accountNumberForCopy() => walletNumber.replaceAll(RegExp(r'\s+'), '');
 
   TextStyle get _amountStyle => AppTextStyles.price.copyWith(
     color: AppColors.primary,
     fontWeight: FontWeight.w600,
-    fontSize: 19.03.sp,
-    height: 23.11 / 19.03,
+    fontSize: 17.sp,
+    height: 23.11 / 17,
     letterSpacing: -0.27,
   );
 
@@ -72,10 +71,7 @@ class WalletSummaryCard extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 9.w, vertical: 6.h),
       decoration: BoxDecoration(
         color: AppColors.surfaceSubtle,
-        border: Border.all(
-          color: AppColors.borderWalletCard,
-          width: 0.8,
-        ),
+        border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
         borderRadius: BorderRadius.circular(27.r),
       ),
       child: Row(
@@ -157,9 +153,7 @@ class WalletSummaryCard extends StatelessWidget {
           SizedBox(width: 2.w),
           GestureDetector(
             onTap: () {
-              Clipboard.setData(
-                ClipboardData(text: _accountNumberForCopy()),
-              );
+              Clipboard.setData(ClipboardData(text: _accountNumberForCopy()));
             },
             child: SvgPictureAsset(
               AppAssets.icCopy,
