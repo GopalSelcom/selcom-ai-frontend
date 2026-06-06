@@ -32,6 +32,7 @@
 		<array>
 			<string>tel</string>
 			<string>sms</string>
+			<string>selcompesa</string>
 		</array>
 		<key>LSRequiresIPhoneOS</key>
 		<true/>

@@ -11,6 +11,8 @@ class AppConfig {
   /// `none` (default) | `ride_api` POST mint per brain guide | `api` GET legacy **or** POST if endpoint contains `{rideId}`.
   static late String agoraTokenMode;
   static late String agoraTokenEndpoint;
+  static late String selcomPesaDeepLinkHost;
+  static const String selcomPesaDownloadUrl = 'https://get.selcompesa.app/';
 
   static const String _agoraAppIdDefine = String.fromEnvironment(
     'AGORA_APP_ID',
@@ -40,14 +42,17 @@ class AppConfig {
       case Environment.dev:
         baseUrl = 'https://dukastaging.selcom.dev:7443/api';
         socketUrl = 'ws://localhost:5010';
+        selcomPesaDeepLinkHost = 'spuatdlink.selcommobile.com';
         break;
       case Environment.staging:
         baseUrl = 'https://dukastaging.selcom.dev:7443/api/';
         socketUrl = 'wss://staging-socket.duka.direct';
+        selcomPesaDeepLinkHost = 'spuatdlink.selcommobile.com';
         break;
       case Environment.prod:
         baseUrl = 'https://api.duka.direct';
         socketUrl = 'wss://socket.duka.direct';
+        selcomPesaDeepLinkHost = 'spd.selcommobile.com';
         break;
     }
   }

@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../shared/utils/currency_formatter.dart';
+import '../../../payment/data/models/go_other_payment_methods_models.dart';
 import '../../../payment/presentation/widgets/add_money_to_wallet_bottom_sheet.dart';
 import '../../domain/entities/wallet_summary_entity.dart';
 import '../../domain/entities/wallet_transaction_filter.dart';
@@ -86,7 +87,14 @@ class WalletController extends GetxController {
   }
 
   void openAddMoney() {
-    unawaited(AddMoneyToWalletBottomSheet.show());
+    unawaited(_openAddMoney());
+  }
+
+  Future<void> _openAddMoney() async {
+    final result = await AddMoneyToWalletBottomSheet.show();
+    if (result == TanQrTopupResult.success) {
+      await loadWallet();
+    }
   }
 
   void openEStatement() {

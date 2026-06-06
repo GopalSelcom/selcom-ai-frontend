@@ -104,5 +104,24 @@
             <data
                 android:scheme="tel"/>
         </intent>
+        <!-- Selcom Pesa: package visibility (Android 11+) -->
+        <package android:name="com.selcompesa"/>
+        <package android:name="com.selcombank.dev"/>
+        <!-- Selcom Pesa: open wallet top-up handoff (production) -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data
+                android:scheme="https"
+                android:host="spd.selcommobile.com"
+                android:pathPrefix="/pcode"/>
+        </intent>
+        <!-- Selcom Pesa: open wallet top-up handoff (dev/staging) -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data
+                android:scheme="https"
+                android:host="spuatdlink.selcommobile.com"
+                android:pathPrefix="/pcode"/>
+        </intent>
     </queries>
 </manifest>

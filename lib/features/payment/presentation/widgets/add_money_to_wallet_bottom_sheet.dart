@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -9,24 +11,104 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/thousands_separator_input_formatter.dart';
+import '../../../../shared/widgets/app_primary_button.dart';
+import '../../../../shared/widgets/app_qr_code.dart';
+import '../../../../shared/widgets/app_standard_bottom_sheet.dart';
+import '../../../../shared/widgets/app_text_field.dart';
+import '../controllers/tanqr_wallet_topup_controller.dart';
+import '../../data/models/go_other_payment_methods_models.dart';
 import 'mobile_money_topup_bottom_sheet.dart';
 import 'selcom_pesa_to_wallet_bottom_sheet.dart';
 import 'steps_to_load_go_wallet_bottom_sheet.dart';
-import 'tanqr_tips_bottom_sheet.dart';
 
 /// Add-money options after insufficient-balance "Top up Wallet" (Figma sheet).
 class AddMoneyToWalletBottomSheet extends StatelessWidget {
-  const AddMoneyToWalletBottomSheet({super.key});
+  const AddMoneyToWalletBottomSheet({super.key, required this.controllerTag});
 
-  static Future<void> show() {
-    return AppDialogs.showStandardBottomSheet<void>(
-      title: AppStrings.addMoneyToWallet.tr,
-      headerTextAlign: TextAlign.center,
-      showHeaderDivider: true,
+  final String controllerTag;
+
+  static Future<TanQrTopupResult?> show() {
+    final tag = 'tanqr_wallet_${DateTime.now().millisecondsSinceEpoch}';
+    Get.put(TanQrWalletTopupController(), tag: tag);
+    return AppDialogs.showStandardBottomSheet<TanQrTopupResult?>(
+      sheet: AddMoneyToWalletBottomSheet(controllerTag: tag),
       barrierDismissible: true,
-      content: const AddMoneyToWalletBottomSheet(),
-    );
+    ).whenComplete(() {
+      if (Get.isRegistered<TanQrWalletTopupController>(tag: tag)) {
+        final controller = Get.find<TanQrWalletTopupController>(tag: tag);
+        controller.handleSheetDismissed();
+        Get.delete<TanQrWalletTopupController>(tag: tag);
+      }
+    });
   }
+
+  TanQrWalletTopupController get _controller =>
+      Get.find<TanQrWalletTopupController>(tag: controllerTag);
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final step = _controller.step.value;
+      return PopScope(
+        canPop: step != TanQrTopupStep.qrDisplay,
+        onPopInvokedWithResult: (didPop, _) {
+          if (didPop) {
+            _controller.handleSheetDismissed();
+          }
+        },
+        child: AppStandardBottomSheet(
+          title: _titleForStep(step),
+          headerTextAlign: TextAlign.center,
+          showHeaderDivider: step != TanQrTopupStep.options,
+          content: _contentForStep(step),
+          footer: _footerForStep(step),
+        ),
+      );
+    });
+  }
+
+  String? _titleForStep(TanQrTopupStep step) {
+    switch (step) {
+      case TanQrTopupStep.options:
+        return AppStrings.addMoneyToWallet.tr;
+      case TanQrTopupStep.amountEntry:
+        return AppStrings.addMoneyTanQrTips.tr;
+      case TanQrTopupStep.qrDisplay:
+        return AppStrings.addMoneyTanQrTips.tr;
+    }
+  }
+
+  Widget _contentForStep(TanQrTopupStep step) {
+    switch (step) {
+      case TanQrTopupStep.options:
+        return _OptionsContent(controllerTag: controllerTag);
+      case TanQrTopupStep.amountEntry:
+        return _AmountEntryContent(controllerTag: controllerTag);
+      case TanQrTopupStep.qrDisplay:
+        return _QrDisplayContent(controllerTag: controllerTag);
+    }
+  }
+
+  Widget? _footerForStep(TanQrTopupStep step) {
+    switch (step) {
+      case TanQrTopupStep.options:
+        return null;
+      case TanQrTopupStep.amountEntry:
+        return _AmountEntryFooter(controllerTag: controllerTag);
+      case TanQrTopupStep.qrDisplay:
+        return null;
+    }
+  }
+}
+
+class _OptionsContent extends StatelessWidget {
+  const _OptionsContent({required this.controllerTag});
+
+  final String controllerTag;
+
+  TanQrWalletTopupController get _controller =>
+      Get.find<TanQrWalletTopupController>(tag: controllerTag);
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +124,7 @@ class AddMoneyToWalletBottomSheet extends StatelessWidget {
         _AddMoneyOptionTile(
           title: AppStrings.addMoneyTanQrTips.tr,
           subtitle: AppStrings.addMoneyTanQrTipsSubtitle.tr,
-          onTap: () => _onOptionTap(_AddMoneyOption.tanQrTips),
+          onTap: _controller.openTanQrAmountEntry,
         ),
         SizedBox(height: 12.h),
         _AddMoneyOptionTile(
@@ -72,9 +154,6 @@ class AddMoneyToWalletBottomSheet extends StatelessWidget {
       case _AddMoneyOption.stepsToLoad:
         StepsToLoadGoWalletBottomSheet.show();
         break;
-      case _AddMoneyOption.tanQrTips:
-        TanQrTipsBottomSheet.show();
-        break;
       case _AddMoneyOption.mobileMoney:
         MobileMoneyTopupBottomSheet.show();
         break;
@@ -82,7 +161,173 @@ class AddMoneyToWalletBottomSheet extends StatelessWidget {
   }
 }
 
-enum _AddMoneyOption { tanQrTips, mobileMoney, stepsToLoad }
+class _AmountEntryContent extends StatelessWidget {
+  const _AmountEntryContent({required this.controllerTag});
+
+  final String controllerTag;
+
+  TanQrWalletTopupController get _controller =>
+      Get.find<TanQrWalletTopupController>(tag: controllerTag);
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final apiError = _controller.apiError.value;
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            AppStrings.amount.tr,
+            style: AppTextStyles.homeSubtitle.copyWith(
+              color: AppColors.textMutedStrong,
+            ),
+          ),
+          SizedBox(height: 4.h),
+          AppTextField(
+            readOnly: false,
+            enabled: !_controller.isSubmitting.value,
+            hintText: '5,000',
+            keyboardType: TextInputType.number,
+            inputFormatters: [ThousandsSeparatorInputFormatter()],
+            textFieldBackgroundColor: AppColors.surfaceSubtle,
+            borderColor: AppColors.borderWalletCard,
+            controller: _controller.amountController,
+            errorText: _controller.amountError.value,
+            onChanged: _controller.onAmountChanged,
+            prefixIcon: Padding(
+              padding: EdgeInsets.only(left: 16.w, right: 8.w),
+              child: Center(
+                widthFactor: 1,
+                child: Text(
+                  AppStrings.defaultCurrencyTzs.tr,
+                  style: AppTextStyles.homeTitle.copyWith(
+                    fontSize: 16.sp,
+                    height: 22 / 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textHeading,
+                  ),
+                ),
+              ),
+            ),
+            textColor: AppColors.iconHeartFilled,
+            fontSize: 16.sp,
+            fontWeight: FontWeight.w700,
+          ),
+          if (apiError != null && apiError.isNotEmpty) ...[
+            SizedBox(height: 8.h),
+            Text(
+              apiError,
+              style: AppTextStyles.homeSubtitle.copyWith(
+                color: AppColors.error,
+                fontSize: 13.sp,
+              ),
+            ),
+          ],
+          SizedBox(height: 42.h),
+        ],
+      );
+    });
+  }
+}
+
+class _AmountEntryFooter extends StatelessWidget {
+  const _AmountEntryFooter({required this.controllerTag});
+
+  final String controllerTag;
+
+  TanQrWalletTopupController get _controller =>
+      Get.find<TanQrWalletTopupController>(tag: controllerTag);
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final canContinue = _controller.canContinue;
+      return Row(
+        children: [
+          Expanded(
+            child: AppPrimaryButton(
+              label: AppStrings.back.tr,
+              onPressed: _controller.isSubmitting.value
+                  ? null
+                  : _controller.backToOptions,
+              outlined: true,
+              backgroundColor: AppColors.white,
+              outlinedTextColor: AppColors.black,
+              outlinedBorderColor: AppColors.black,
+              outlinedBorderWidth: 1,
+              borderRadius: 16.r,
+              height: 56.h,
+            ),
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: AppPrimaryButton(
+              label: AppStrings.continueLabel.tr,
+              onPressed: canContinue ? _onContinuePressed : null,
+              isLoading: _controller.isSubmitting.value,
+              borderRadius: 16.r,
+              height: 56.h,
+            ),
+          ),
+        ],
+      );
+    });
+  }
+
+  void _onContinuePressed() {
+    final validation = _controller.validateAmountForDisplay();
+    _controller.amountError.value = validation;
+    if (validation != null) return;
+    unawaited(_controller.submitAmount());
+  }
+}
+
+class _QrDisplayContent extends StatelessWidget {
+  const _QrDisplayContent({required this.controllerTag});
+
+  final String controllerTag;
+
+  TanQrWalletTopupController get _controller =>
+      Get.find<TanQrWalletTopupController>(tag: controllerTag);
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final qrData = _controller.session.value?.qr ?? '';
+      final seconds = _controller.countdownSeconds.value;
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(child: AppQrCode(data: qrData)),
+          SizedBox(height: 20.h),
+          Text(
+            AppStrings.tanQrScanQrInstruction.tr,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.homeSubtitle.copyWith(
+              color: AppColors.textMutedStrong,
+            ),
+          ),
+          SizedBox(height: 12.h),
+          Text(
+            AppStrings.expiresInTimer.trParams({
+              'timer': _controller.formatCountdown(seconds),
+            }),
+            textAlign: TextAlign.center,
+            style: AppTextStyles.homeTitle.copyWith(
+              fontSize: 16.sp,
+              color: AppColors.textHeading,
+            ),
+          ),
+          SizedBox(height: 24.h),
+        ],
+      );
+    });
+  }
+}
+
+enum _AddMoneyOption { mobileMoney, stepsToLoad }
 
 class _AddMoneyOptionTile extends StatelessWidget {
   const _AddMoneyOptionTile({

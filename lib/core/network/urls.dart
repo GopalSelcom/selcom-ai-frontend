@@ -170,6 +170,10 @@ class _WalletEndpoints {
   final balance = "go/wallet/balance";
   final details = "go_wallet/go_wallet_details";
   final cardBalance = "go_wallet/go_card_balance";
+  final otherPaymentMethods = "go_wallet/go_other_payment_methods";
+  final checkWalletPayment = "go_wallet/check_wallet_payment";
+  final sendTransferRequestSelcomPesa =
+      "go_wallet/go_send_transfer_request_selcom_pesa";
   final cardStatement = "go_wallet/go_card_statement";
 }
 

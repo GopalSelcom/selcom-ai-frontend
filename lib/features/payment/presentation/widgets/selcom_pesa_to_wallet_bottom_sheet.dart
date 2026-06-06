@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
@@ -9,19 +8,49 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/thousands_separator_input_formatter.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../../../profile/presentation/controllers/payment_methods_controller.dart';
-import 'mobile_money_topup_status_dialog.dart';
+import '../controllers/selcom_pesa_topup_controller.dart';
 import 'selcom_pesa_another_number_bottom_sheet.dart';
 
-class SelcomPesaToWalletBottomSheet extends StatefulWidget {
-  const SelcomPesaToWalletBottomSheet({super.key});
+class SelcomPesaToWalletBottomSheet extends GetView<SelcomPesaTopupController> {
+  const SelcomPesaToWalletBottomSheet({
+    super.key,
+    required this.controllerTag,
+    required this.paymentController,
+  });
 
-  static final ValueNotifier<String> _amountInput = ValueNotifier<String>('');
-  static final ValueNotifier<String?> _amountError = ValueNotifier<String?>(
-    null,
-  );
+  final String controllerTag;
+  final PaymentMethodsController paymentController;
+
+  static Future<void> show() {
+    final tag = 'selcom_pesa_self_${DateTime.now().millisecondsSinceEpoch}';
+    final paymentController = _paymentController();
+    Get.put(
+      SelcomPesaTopupController(controllerTag: tag),
+      tag: tag,
+    );
+    return AppDialogs.showStandardBottomSheet<void>(
+      title: AppStrings.selcomPesaToGoWallet.tr,
+      headerTextAlign: TextAlign.center,
+      showHeaderDivider: true,
+      barrierDismissible: true,
+      content: SelcomPesaToWalletBottomSheet(
+        controllerTag: tag,
+        paymentController: paymentController,
+      ),
+      footer: _SelcomPesaSelfFooter(controllerTag: tag),
+    ).whenComplete(() async {
+      await Future<void>.delayed(Duration.zero);
+      if (!Get.isRegistered<SelcomPesaTopupController>(tag: tag)) return;
+      final selcomController = Get.find<SelcomPesaTopupController>(tag: tag);
+      if (selcomController.shouldRetainAfterSheetClose) return;
+      selcomController.handleSheetDismissed();
+      Get.delete<SelcomPesaTopupController>(tag: tag);
+    });
+  }
 
   static PaymentMethodsController _paymentController() {
     if (Get.isRegistered<PaymentMethodsController>()) {
@@ -30,103 +59,8 @@ class SelcomPesaToWalletBottomSheet extends StatefulWidget {
     return Get.put(PaymentMethodsController(), permanent: true);
   }
 
-  static Future<void> show() {
-    _amountInput.value = '';
-    _amountError.value = null;
-    _paymentController();
-    return AppDialogs.showStandardBottomSheet<void>(
-      title: AppStrings.selcomPesaToGoWallet.tr,
-      headerTextAlign: TextAlign.center,
-      showHeaderDivider: true,
-      barrierDismissible: true,
-      content: const SelcomPesaToWalletBottomSheet(),
-      footer: AppPrimaryButton(
-        label: AppStrings.done.tr,
-        onPressed: _startRequestFlow,
-        borderRadius: 16.r,
-        height: 56.h,
-      ),
-    );
-  }
-
-  static Future<void> _startRequestFlow() async {
-    final amount = _amountInput.value.trim();
-    if (amount.isEmpty) {
-      _amountError.value = AppStrings.amount.tr;
-      return;
-    }
-    _amountError.value = null;
-
-    Get.back<void>();
-    final countdown = ValueNotifier<int>(120);
-    final status = ValueNotifier<MobileMoneyTopupDialogType>(
-      MobileMoneyTopupDialogType.request,
-    );
-    final dialogFuture = AppDialogs.showAnimatedDialog<void>(
-      barrierDismissible: false,
-      child: ValueListenableBuilder<MobileMoneyTopupDialogType>(
-        valueListenable: status,
-        builder: (_, value, __) => PopScope(
-          canPop: value == MobileMoneyTopupDialogType.success,
-          child: MobileMoneyTopupStatusDialog(
-            type: value,
-            requestTitle: AppStrings
-                .requestSentPleaseCompletePaymentOnSelcomPesaToBookYourRide
-                .tr,
-            requestSubtitle: AppStrings.expiresInWithTime.trParams({
-              'time': '2:00',
-            }),
-            secondsListenable: value == MobileMoneyTopupDialogType.request
-                ? countdown
-                : null,
-          ),
-        ),
-      ),
-    );
-
-    // TODO(payment-backend): replace timer with request-money API callback.
-    for (var i = 0; i < 5; i++) {
-      await Future<void>.delayed(const Duration(seconds: 1));
-      countdown.value = (countdown.value - 1).clamp(0, 120);
-    }
-    status.value = MobileMoneyTopupDialogType.success;
-    countdown.dispose();
-    await Future<void>.delayed(const Duration(seconds: 2));
-    final navigator = Get.key.currentState;
-    if (navigator != null) {
-      navigator.maybePop();
-    } else if (Get.isDialogOpen == true) {
-      Get.back<void>();
-    }
-    status.dispose();
-    await dialogFuture.timeout(
-      const Duration(milliseconds: 600),
-      onTimeout: () {},
-    );
-  }
-
   @override
-  State<SelcomPesaToWalletBottomSheet> createState() =>
-      _SelcomPesaToWalletBottomSheetState();
-}
-
-class _SelcomPesaToWalletBottomSheetState
-    extends State<SelcomPesaToWalletBottomSheet> {
-  late final PaymentMethodsController _paymentController;
-  late final TextEditingController _amountController;
-
-  @override
-  void initState() {
-    super.initState();
-    _paymentController = SelcomPesaToWalletBottomSheet._paymentController();
-    _amountController = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _amountController.dispose();
-    super.dispose();
-  }
+  String? get tag => controllerTag;
 
   @override
   Widget build(BuildContext context) {
@@ -139,14 +73,17 @@ class _SelcomPesaToWalletBottomSheetState
           style: AppTextStyles.homeSubtitle,
         ),
         SizedBox(height: 8.h),
-        Obx(() => _selcomCard(_paymentController)),
+        Obx(() => _selcomCard(paymentController)),
         SizedBox(height: 8.h),
         Align(
           alignment: Alignment.centerRight,
           child: GestureDetector(
             onTap: () async {
+              controller.retainForOtherNumberSheet();
               Get.back<void>();
-              await SelcomPesaAnotherNumberBottomSheet.show();
+              await SelcomPesaAnotherNumberBottomSheet.show(
+                controllerTag: controllerTag,
+              );
             },
             child: Text(
               AppStrings.useAnotherNumber.tr,
@@ -157,59 +94,68 @@ class _SelcomPesaToWalletBottomSheetState
           ),
         ),
         SizedBox(height: 14.h),
-        Text(
-          AppStrings.amount.tr,
-          style: AppTextStyles.homeSubtitle.copyWith(
-            color: AppColors.textMutedStrong,
-          ),
-        ),
-        SizedBox(height: 4.h),
-        ValueListenableBuilder<String?>(
-          valueListenable: SelcomPesaToWalletBottomSheet._amountError,
-          builder: (_, amountError, __) => AppTextField(
-            readOnly: false,
-            enabled: true,
-            hintText: '43,000',
-            keyboardType: TextInputType.number,
-            maxLength: 8,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            textFieldBackgroundColor: AppColors.surfaceSubtle,
-            borderColor: AppColors.borderWalletCard,
-            controller: _amountController,
-            errorText: amountError,
-            onChanged: (value) {
-              SelcomPesaToWalletBottomSheet._amountInput.value = value;
-              if (SelcomPesaToWalletBottomSheet._amountError.value != null) {
-                SelcomPesaToWalletBottomSheet._amountError.value = null;
-              }
-            },
-            prefixIcon: Padding(
-              padding: EdgeInsets.only(left: 16.w, right: 8.w),
-              child: Center(
-                widthFactor: 1,
-                child: Text(
-                  AppStrings.defaultCurrencyTzs.tr,
-                  style: AppTextStyles.homeTitle.copyWith(
-                    fontSize: 16.sp,
-                    height: 22 / 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textHeading,
-                  ),
+        Obx(() {
+          final apiError = controller.apiError.value;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                AppStrings.amount.tr,
+                style: AppTextStyles.homeSubtitle.copyWith(
+                  color: AppColors.textMutedStrong,
                 ),
               ),
-            ),
-            textColor: AppColors.iconPaymentSuccess,
-            fontSize: 16.sp,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        SizedBox(height: 25.h),
+              SizedBox(height: 4.h),
+              AppTextField(
+                readOnly: false,
+                enabled: !controller.isSubmitting.value,
+                hintText: '5,000',
+                keyboardType: TextInputType.number,
+                inputFormatters: [ThousandsSeparatorInputFormatter()],
+                textFieldBackgroundColor: AppColors.surfaceSubtle,
+                borderColor: AppColors.borderWalletCard,
+                controller: controller.amountController,
+                errorText: controller.amountError.value,
+                onChanged: controller.onAmountChanged,
+                prefixIcon: Padding(
+                  padding: EdgeInsets.only(left: 16.w, right: 8.w),
+                  child: Center(
+                    widthFactor: 1,
+                    child: Text(
+                      AppStrings.defaultCurrencyTzs.tr,
+                      style: AppTextStyles.homeTitle.copyWith(
+                        fontSize: 16.sp,
+                        height: 22 / 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textHeading,
+                      ),
+                    ),
+                  ),
+                ),
+                textColor: AppColors.iconPaymentSuccess,
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w700,
+              ),
+              if (apiError != null && apiError.isNotEmpty) ...[
+                SizedBox(height: 8.h),
+                Text(
+                  apiError,
+                  style: AppTextStyles.homeSubtitle.copyWith(
+                    color: AppColors.error,
+                    fontSize: 13.sp,
+                  ),
+                ),
+              ],
+              SizedBox(height: 25.h),
+            ],
+          );
+        }),
       ],
     );
   }
 
-  Widget _selcomCard(PaymentMethodsController controller) {
-    final linked = controller.isSelcomPesaLinked.value;
+  Widget _selcomCard(PaymentMethodsController paymentMethodsController) {
+    final linked = paymentMethodsController.isSelcomPesaLinked.value;
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 17.w, vertical: 18.h),
       decoration: BoxDecoration(
@@ -219,8 +165,8 @@ class _SelcomPesaToWalletBottomSheetState
       ),
       child: InkWell(
         onTap: linked
-            ? controller.openLinkedAccountSheet
-            : controller.linkSelcomPesa,
+            ? paymentMethodsController.openLinkedAccountSheet
+            : paymentMethodsController.linkSelcomPesa,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -290,5 +236,33 @@ class _SelcomPesaToWalletBottomSheetState
         ),
       ),
     );
+  }
+}
+
+class _SelcomPesaSelfFooter extends GetView<SelcomPesaTopupController> {
+  const _SelcomPesaSelfFooter({required this.controllerTag});
+
+  final String controllerTag;
+
+  @override
+  String? get tag => controllerTag;
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      return AppPrimaryButton(
+        label: AppStrings.done.tr,
+        onPressed: controller.canSubmitSelf ? _onDonePressed : null,
+        isLoading: controller.isSubmitting.value,
+        borderRadius: 16.r,
+        height: 56.h,
+      );
+    });
+  }
+
+  void _onDonePressed() {
+    controller.amountError.value = controller.validateAmountForDisplay();
+    if (controller.amountError.value != null) return;
+    unawaited(controller.submitSelfTopUp(closeSheetFirst: true));
   }
 }

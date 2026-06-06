@@ -64,6 +64,21 @@ class AppStrings {
   static const String requestSentCompleteSelcomTopup =
       'request_sent_complete_selcom_topup';
   static const String expiresInWithTime = 'expires_in_with_time';
+  static const String tanQrAmountRequired = 'tanqr_amount_required';
+  static const String tanQrAmountMustBeGreaterThanZero =
+      'tanqr_amount_must_be_greater_than_zero';
+  static const String tanQrAmountExceedsMax = 'tanqr_amount_exceeds_max';
+  static const String tanQrScanQrInstruction = 'tanqr_scan_qr_instruction';
+  static const String tanQrPaymentRequestFailed = 'tanqr_payment_request_failed';
+  static const String tanQrTimerExpiredTitle = 'tanqr_timer_expired_title';
+  static const String tanQrTimerExpiredMessage = 'tanqr_timer_expired_message';
+  static const String tanQrMissingRegisteredPhone =
+      'tanqr_missing_registered_phone';
+  static const String selcomPesaAppNotInstalled =
+      'selcom_pesa_app_not_installed';
+  static const String selcomPesaInstallPrompt = 'selcom_pesa_install_prompt';
+  static const String walletAccountUnavailable = 'wallet_account_unavailable';
+  static const String downloadApp = 'download_app';
   static const String mobileMoneyPhoneValue = 'mobile_money_phone_value';
   static const String mobileMoneyAmountValue = 'mobile_money_amount_value';
   static const String selectAVehicle = 'select_a_vehicle';

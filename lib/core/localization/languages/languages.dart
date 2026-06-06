@@ -59,6 +59,18 @@ abstract class Languages {
   String get enterSelcomPesaCustomerPhoneHint;
   String get requestSentCompleteSelcomTopup;
   String get expiresInWithTime;
+  String get tanQrAmountRequired;
+  String get tanQrAmountMustBeGreaterThanZero;
+  String get tanQrAmountExceedsMax;
+  String get tanQrScanQrInstruction;
+  String get tanQrPaymentRequestFailed;
+  String get tanQrTimerExpiredTitle;
+  String get tanQrTimerExpiredMessage;
+  String get tanQrMissingRegisteredPhone;
+  String get selcomPesaAppNotInstalled;
+  String get selcomPesaInstallPrompt;
+  String get walletAccountUnavailable;
+  String get downloadApp;
   String get mobileMoneyPhoneValue;
   String get mobileMoneyAmountValue;
   String get selectAVehicle;

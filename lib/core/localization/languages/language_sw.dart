@@ -49,6 +49,21 @@ class LanguageSw extends Languages {
     'enter_selcom_pesa_customer_phone_hint': '',
     'request_sent_complete_selcom_topup': '',
     'expires_in_with_time': '',
+    'tanqr_amount_required': '',
+    'tanqr_amount_must_be_greater_than_zero': '',
+    'tanqr_amount_exceeds_max': '',
+    'tanqr_scan_qr_instruction': '',
+    'tanqr_payment_request_failed': '',
+    'tanqr_timer_expired_title': '',
+    'tanqr_timer_expired_message': '',
+    'tanqr_missing_registered_phone': '',
+    'selcom_pesa_app_not_installed':
+        'Programu ya Selcom Pesa haijasakinishwa',
+    'selcom_pesa_install_prompt':
+        'Sakinisha Selcom Pesa ili kukamilisha malipo kwenye kifaa chako.',
+    'wallet_account_unavailable':
+        'Mkoba wako wa Go haupatikani. Tafadhali jaribu tena baadaye.',
+    'download_app': 'Pakua programu',
     'mobile_money_phone_value': '',
     'mobile_money_amount_value': '',
     'select_a_vehicle': '',
@@ -824,6 +839,51 @@ class LanguageSw extends Languages {
 
   @override
   String get expiresInWithTime => values['expires_in_with_time'] ?? '';
+
+  @override
+  String get tanQrAmountRequired => values['tanqr_amount_required'] ?? '';
+
+  @override
+  String get tanQrAmountMustBeGreaterThanZero =>
+      values['tanqr_amount_must_be_greater_than_zero'] ?? '';
+
+  @override
+  String get tanQrAmountExceedsMax => values['tanqr_amount_exceeds_max'] ?? '';
+
+  @override
+  String get tanQrScanQrInstruction =>
+      values['tanqr_scan_qr_instruction'] ?? '';
+
+  @override
+  String get tanQrPaymentRequestFailed =>
+      values['tanqr_payment_request_failed'] ?? '';
+
+  @override
+  String get tanQrTimerExpiredTitle =>
+      values['tanqr_timer_expired_title'] ?? '';
+
+  @override
+  String get tanQrTimerExpiredMessage =>
+      values['tanqr_timer_expired_message'] ?? '';
+
+  @override
+  String get tanQrMissingRegisteredPhone =>
+      values['tanqr_missing_registered_phone'] ?? '';
+
+  @override
+  String get selcomPesaAppNotInstalled =>
+      values['selcom_pesa_app_not_installed'] ?? '';
+
+  @override
+  String get selcomPesaInstallPrompt =>
+      values['selcom_pesa_install_prompt'] ?? '';
+
+  @override
+  String get walletAccountUnavailable =>
+      values['wallet_account_unavailable'] ?? '';
+
+  @override
+  String get downloadApp => values['download_app'] ?? '';
 
   @override
   String get mobileMoneyPhoneValue => values['mobile_money_phone_value'] ?? '';

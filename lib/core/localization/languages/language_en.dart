@@ -34,9 +34,9 @@ class LanguageEn extends Languages {
     'amount': 'Amount',
     'back': 'Back',
     'add_money_selcom_pesa_subtitle': 'Request money from selcom pesa',
-    'add_money_tan_qr_tips': 'TanQR/TIPS',
-    'add_money_tan_qr_tips_subtitle': 'Add Money using TanQR/Tips',
-    'add_money_mobile_money_subtitle': 'Add Money using TanQR/Tips',
+    'add_money_tan_qr_tips': 'TanQR',
+    'add_money_tan_qr_tips_subtitle': 'Add Money using TanQR',
+    'add_money_mobile_money_subtitle': 'Add Money using TanQR',
     'add_money_steps_to_load_go_wallet': 'Steps to load your Go wallet',
     'add_money_steps_to_load_go_wallet_subtitle':
         'Add Money using your bank app or USSD',
@@ -56,6 +56,26 @@ class LanguageEn extends Languages {
     'request_sent_complete_selcom_topup':
         'Request sent. Please complete payment on Selcom Pesa to Topup your Go wallet',
     'expires_in_with_time': 'Expires in ... @time',
+    'tanqr_amount_required': 'Please enter an amount',
+    'tanqr_amount_must_be_greater_than_zero':
+        'Amount must be greater than 0',
+    'tanqr_amount_exceeds_max':
+        'Amount cannot exceed TZS @max',
+    'tanqr_scan_qr_instruction':
+        'Scan this QR code with your mobile money app to complete the top-up',
+    'tanqr_payment_request_failed':
+        'Could not start the payment. Please try again.',
+    'tanqr_timer_expired_title': 'Payment time expired',
+    'tanqr_timer_expired_message':
+        'The QR code has expired. Would you like to try again?',
+    'tanqr_missing_registered_phone':
+        'Your registered phone number is missing. Please update your profile.',
+    'selcom_pesa_app_not_installed': 'Selcom Pesa app not installed',
+    'selcom_pesa_install_prompt':
+        'Install Selcom Pesa to complete this payment on your device.',
+    'wallet_account_unavailable':
+        'Your Go wallet is not available. Please try again later.',
+    'download_app': 'Download app',
     'mobile_money_phone_value': '+255 711 410 410',
     'mobile_money_amount_value': 'TZS 43,000',
     'select_a_vehicle': 'Please select a vehicle.',
@@ -927,6 +947,51 @@ class LanguageEn extends Languages {
 
   @override
   String get expiresInWithTime => values['expires_in_with_time'] ?? '';
+
+  @override
+  String get tanQrAmountRequired => values['tanqr_amount_required'] ?? '';
+
+  @override
+  String get tanQrAmountMustBeGreaterThanZero =>
+      values['tanqr_amount_must_be_greater_than_zero'] ?? '';
+
+  @override
+  String get tanQrAmountExceedsMax => values['tanqr_amount_exceeds_max'] ?? '';
+
+  @override
+  String get tanQrScanQrInstruction =>
+      values['tanqr_scan_qr_instruction'] ?? '';
+
+  @override
+  String get tanQrPaymentRequestFailed =>
+      values['tanqr_payment_request_failed'] ?? '';
+
+  @override
+  String get tanQrTimerExpiredTitle =>
+      values['tanqr_timer_expired_title'] ?? '';
+
+  @override
+  String get tanQrTimerExpiredMessage =>
+      values['tanqr_timer_expired_message'] ?? '';
+
+  @override
+  String get tanQrMissingRegisteredPhone =>
+      values['tanqr_missing_registered_phone'] ?? '';
+
+  @override
+  String get selcomPesaAppNotInstalled =>
+      values['selcom_pesa_app_not_installed'] ?? '';
+
+  @override
+  String get selcomPesaInstallPrompt =>
+      values['selcom_pesa_install_prompt'] ?? '';
+
+  @override
+  String get walletAccountUnavailable =>
+      values['wallet_account_unavailable'] ?? '';
+
+  @override
+  String get downloadApp => values['download_app'] ?? '';
 
   @override
   String get mobileMoneyPhoneValue => values['mobile_money_phone_value'] ?? '';

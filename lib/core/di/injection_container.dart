@@ -35,6 +35,8 @@ import '../../features/settings/data/datasources/settings_remote_data_source.dar
 import '../../features/settings/data/repositories/settings_repository_impl.dart';
 import '../../features/settings/domain/repositories/settings_repository.dart';
 import '../../features/settings/domain/usecases/settings_usecase.dart';
+import '../../features/payment/data/datasources/selcom_pesa_topup_remote_data_source.dart';
+import '../../features/payment/data/datasources/wallet_payment_remote_data_source.dart';
 import '../../features/wallet/data/datasources/wallet_remote_data_source.dart';
 import '../../features/wallet/data/repositories/wallet_repository_impl.dart';
 import '../../features/wallet/domain/repositories/wallet_repository.dart';
@@ -52,6 +54,7 @@ import '../services/app_settings_service.dart';
 import '../services/live_activity/live_activity_manager.dart';
 import '../services/nearby_drivers_socket_service.dart';
 import '../services/notification_service.dart';
+import '../services/selcom_pesa/selcom_pesa_app_launcher_service.dart';
 
 final sl = GetIt.instance; // sl: Service Locator
 
@@ -62,6 +65,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => NotificationService());
   sl.registerLazySingleton(() => AppSocketService());
   sl.registerLazySingleton(() => LiveActivityManager());
+  sl.registerLazySingleton(() => SelcomPesaAppLauncherService());
 
   // ── External ──
   sl.registerLazySingleton(() => const FlutterSecureStorage());
@@ -158,12 +162,23 @@ Future<void> init() async {
   sl.registerLazySingleton(() => SubmitRideRatingUseCase(sl()));
   sl.registerLazySingleton(() => SkipRideRatingUseCase(sl()));
 
+  // ── Wallet Feature (dummy local data until API) ──
+  sl.registerLazySingleton<WalletPaymentRemoteDataSource>(
+    () => WalletPaymentRemoteDataSourceImpl(),
+  );
+  sl.registerLazySingleton<SelcomPesaTopupRemoteDataSource>(
+    () => SelcomPesaTopupRemoteDataSourceImpl(),
+  );
   // ── Wallet Feature ──
   sl.registerLazySingleton<WalletRemoteDataSource>(
     () => WalletRemoteDataSourceImpl(),
   );
   sl.registerLazySingleton<WalletRepository>(
-    () => WalletRepositoryImpl(remoteDataSource: sl()),
+    () => WalletRepositoryImpl(
+      remoteDataSource: sl(),
+      paymentRemoteDataSource: sl(),
+      selcomPesaTopupRemoteDataSource: sl(),
+    ),
   );
   sl.registerLazySingleton(() => GetWalletDetailsUseCase(sl()));
   sl.registerLazySingleton(() => GetWalletSummaryUseCase(sl()));
