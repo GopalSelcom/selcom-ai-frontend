@@ -122,6 +122,10 @@ class WalletRepositoryImpl implements WalletRepository {
       _paymentRemoteDataSource.checkPaymentStatus(transid: transid);
 
   @override
+  Future<void> cancelUssdOrder({required String transid}) =>
+      _paymentRemoteDataSource.cancelUssdOrder(transid: transid);
+
+  @override
   Future<SelcomPesaTopupResult> sendSelcomPesaTopUpRequest(
     SelcomPesaTopupRequest request, {
     required bool requireShortCode,

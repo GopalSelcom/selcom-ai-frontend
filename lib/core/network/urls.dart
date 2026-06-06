@@ -172,6 +172,7 @@ class _WalletEndpoints {
   final cardBalance = "go_wallet/go_card_balance";
   final otherPaymentMethods = "go_wallet/go_other_payment_methods";
   final checkWalletPayment = "go_wallet/check_wallet_payment";
+  final cancelUssdOrder = "go_wallet/go_cancel_ussd_order";
   final sendTransferRequestSelcomPesa =
       "go_wallet/go_send_transfer_request_selcom_pesa";
   final cardStatement = "go_wallet/go_card_statement";

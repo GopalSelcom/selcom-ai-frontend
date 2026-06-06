@@ -57,6 +57,7 @@ class LanguageSw extends Languages {
     'tanqr_timer_expired_title': '',
     'tanqr_timer_expired_message': '',
     'tanqr_missing_registered_phone': '',
+    'tanqr_cancel_request': '',
     'selcom_pesa_app_not_installed':
         'Programu ya Selcom Pesa haijasakinishwa',
     'selcom_pesa_install_prompt':
@@ -869,6 +870,9 @@ class LanguageSw extends Languages {
   @override
   String get tanQrMissingRegisteredPhone =>
       values['tanqr_missing_registered_phone'] ?? '';
+
+  @override
+  String get tanQrCancelRequest => values['tanqr_cancel_request'] ?? '';
 
   @override
   String get selcomPesaAppNotInstalled =>

@@ -35,26 +35,38 @@ class AddMoneyToWalletBottomSheet extends StatelessWidget {
       sheet: AddMoneyToWalletBottomSheet(controllerTag: tag),
       barrierDismissible: false,
     ).whenComplete(() {
-      if (Get.isRegistered<TanQrWalletTopupController>(tag: tag)) {
-        final controller = Get.find<TanQrWalletTopupController>(tag: tag);
-        controller.handleSheetDismissed();
-        Get.delete<TanQrWalletTopupController>(tag: tag);
-      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (Get.isRegistered<TanQrWalletTopupController>(tag: tag)) {
+          final controller = Get.find<TanQrWalletTopupController>(tag: tag);
+          controller.handleSheetDismissed();
+          Get.delete<TanQrWalletTopupController>(tag: tag);
+        }
+      });
     });
   }
 
-  TanQrWalletTopupController get _controller =>
-      Get.find<TanQrWalletTopupController>(tag: controllerTag);
+  TanQrWalletTopupController get _controller {
+    if (!Get.isRegistered<TanQrWalletTopupController>(tag: controllerTag)) {
+      throw FlutterError(
+        'TanQrWalletTopupController(tag: $controllerTag) is not registered.',
+      );
+    }
+    return Get.find<TanQrWalletTopupController>(tag: controllerTag);
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (!Get.isRegistered<TanQrWalletTopupController>(tag: controllerTag)) {
+      return const SizedBox.shrink();
+    }
+    final controller = _controller;
     return Obx(() {
-      final step = _controller.step.value;
+      final step = controller.step.value;
       return PopScope(
         canPop: step != TanQrTopupStep.qrDisplay,
         onPopInvokedWithResult: (didPop, _) {
           if (didPop) {
-            _controller.handleSheetDismissed();
+            controller.handleSheetDismissed();
           }
         },
         child: AppStandardBottomSheet(
@@ -63,8 +75,8 @@ class AddMoneyToWalletBottomSheet extends StatelessWidget {
           showHeaderDivider:
               step != TanQrTopupStep.options &&
               step != TanQrTopupStep.qrDisplay,
-          content: _contentForStep(step),
-          footer: _footerForStep(step),
+          content: _contentForStep(step, controller),
+          footer: _footerForStep(step, controller),
         ),
       );
     });
@@ -81,36 +93,36 @@ class AddMoneyToWalletBottomSheet extends StatelessWidget {
     }
   }
 
-  Widget _contentForStep(TanQrTopupStep step) {
+  Widget _contentForStep(TanQrTopupStep step, TanQrWalletTopupController controller) {
     switch (step) {
       case TanQrTopupStep.options:
-        return _OptionsContent(controllerTag: controllerTag);
+        return _OptionsContent(controller: controller);
       case TanQrTopupStep.amountEntry:
-        return _AmountEntryContent(controllerTag: controllerTag);
+        return _AmountEntryContent(controller: controller);
       case TanQrTopupStep.qrDisplay:
-        return _TanQrDisplayContent(controllerTag: controllerTag);
+        return _TanQrDisplayContent(controller: controller);
     }
   }
 
-  Widget? _footerForStep(TanQrTopupStep step) {
+  Widget? _footerForStep(
+    TanQrTopupStep step,
+    TanQrWalletTopupController controller,
+  ) {
     switch (step) {
       case TanQrTopupStep.options:
         return null;
       case TanQrTopupStep.amountEntry:
-        return _AmountEntryFooter(controllerTag: controllerTag);
+        return _AmountEntryFooter(controller: controller);
       case TanQrTopupStep.qrDisplay:
-        return null;
+        return _TanQrDisplayFooter(controller: controller);
     }
   }
 }
 
 class _OptionsContent extends StatelessWidget {
-  const _OptionsContent({required this.controllerTag});
+  const _OptionsContent({required this.controller});
 
-  final String controllerTag;
-
-  TanQrWalletTopupController get _controller =>
-      Get.find<TanQrWalletTopupController>(tag: controllerTag);
+  final TanQrWalletTopupController controller;
 
   @override
   Widget build(BuildContext context) {
@@ -126,7 +138,7 @@ class _OptionsContent extends StatelessWidget {
         _AddMoneyOptionTile(
           title: AppStrings.addMoneyTanQrTips.tr,
           subtitle: AppStrings.addMoneyTanQrTipsSubtitle.tr,
-          onTap: _controller.openTanQrAmountEntry,
+          onTap: controller.openTanQrAmountEntry,
         ),
         SizedBox(height: 12.h),
         _AddMoneyOptionTile(
@@ -164,17 +176,14 @@ class _OptionsContent extends StatelessWidget {
 }
 
 class _AmountEntryContent extends StatelessWidget {
-  const _AmountEntryContent({required this.controllerTag});
+  const _AmountEntryContent({required this.controller});
 
-  final String controllerTag;
-
-  TanQrWalletTopupController get _controller =>
-      Get.find<TanQrWalletTopupController>(tag: controllerTag);
+  final TanQrWalletTopupController controller;
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final apiError = _controller.apiError.value;
+      final apiError = controller.apiError.value;
       return Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -188,15 +197,15 @@ class _AmountEntryContent extends StatelessWidget {
           SizedBox(height: 4.h),
           AppTextField(
             readOnly: false,
-            enabled: !_controller.isSubmitting.value,
+            enabled: !controller.isSubmitting.value,
             hintText: '5,000',
             keyboardType: TextInputType.number,
             inputFormatters: [ThousandsSeparatorInputFormatter()],
             textFieldBackgroundColor: AppColors.surfaceSubtle,
             borderColor: AppColors.borderWalletCard,
-            controller: _controller.amountController,
-            errorText: _controller.amountError.value,
-            onChanged: _controller.onAmountChanged,
+            controller: controller.amountController,
+            errorText: controller.amountError.value,
+            onChanged: controller.onAmountChanged,
             prefixIcon: Padding(
               padding: EdgeInsets.only(left: 16.w, right: 8.w),
               child: Center(
@@ -234,25 +243,22 @@ class _AmountEntryContent extends StatelessWidget {
 }
 
 class _AmountEntryFooter extends StatelessWidget {
-  const _AmountEntryFooter({required this.controllerTag});
+  const _AmountEntryFooter({required this.controller});
 
-  final String controllerTag;
-
-  TanQrWalletTopupController get _controller =>
-      Get.find<TanQrWalletTopupController>(tag: controllerTag);
+  final TanQrWalletTopupController controller;
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final canContinue = _controller.canContinue;
+      final canContinue = controller.canContinue;
       return Row(
         children: [
           Expanded(
             child: AppPrimaryButton(
               label: AppStrings.back.tr,
-              onPressed: _controller.isSubmitting.value
+              onPressed: controller.isSubmitting.value
                   ? null
-                  : _controller.backToOptions,
+                  : controller.backToOptions,
               outlined: true,
               backgroundColor: AppColors.white,
               outlinedTextColor: AppColors.black,
@@ -267,7 +273,7 @@ class _AmountEntryFooter extends StatelessWidget {
             child: AppPrimaryButton(
               label: AppStrings.continueLabel.tr,
               onPressed: canContinue ? _onContinuePressed : null,
-              isLoading: _controller.isSubmitting.value,
+              isLoading: controller.isSubmitting.value,
               borderRadius: 16.r,
               height: 56.h,
             ),
@@ -278,32 +284,53 @@ class _AmountEntryFooter extends StatelessWidget {
   }
 
   void _onContinuePressed() {
-    final validation = _controller.validateAmountForDisplay();
-    _controller.amountError.value = validation;
+    final validation = controller.validateAmountForDisplay();
+    controller.amountError.value = validation;
     if (validation != null) return;
-    unawaited(_controller.submitAmount());
+    unawaited(controller.submitAmount());
   }
 }
 
 class _TanQrDisplayContent extends StatelessWidget {
-  const _TanQrDisplayContent({required this.controllerTag});
+  const _TanQrDisplayContent({required this.controller});
 
-  final String controllerTag;
-
-  TanQrWalletTopupController get _controller =>
-      Get.find<TanQrWalletTopupController>(tag: controllerTag);
+  final TanQrWalletTopupController controller;
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final seconds = _controller.countdownSeconds.value;
+      final seconds = controller.countdownSeconds.value;
       return TanQrTipsContent(
-        qrData: _controller.session.value?.qr ?? '',
-        accountName: _controller.displayName.value,
-        accountNumber: _controller.displayWalletNumber.value,
+        qrData: controller.session.value?.qr ?? '',
+        accountName: controller.displayName.value,
+        accountNumber: controller.displayWalletNumber.value,
         countdownText: AppStrings.expiresInTimer.trParams({
-          'timer': _controller.formatCountdown(seconds),
+          'timer': controller.formatCountdown(seconds),
         }),
+      );
+    });
+  }
+}
+
+class _TanQrDisplayFooter extends StatelessWidget {
+  const _TanQrDisplayFooter({required this.controller});
+
+  final TanQrWalletTopupController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final hasTransid =
+          (controller.session.value?.transid.trim().isNotEmpty ?? false);
+      return AppPrimaryButton(
+        label: AppStrings.tanQrCancelRequest.tr,
+        onPressed: hasTransid && !controller.isCancelling.value
+            ? () => unawaited(controller.cancelPaymentRequest())
+            : null,
+        isLoading: controller.isCancelling.value,
+        width: double.infinity,
+        height: 56.h,
+        borderRadius: 16.r,
       );
     });
   }

@@ -74,6 +74,7 @@ class AppStrings {
   static const String tanQrTimerExpiredMessage = 'tanqr_timer_expired_message';
   static const String tanQrMissingRegisteredPhone =
       'tanqr_missing_registered_phone';
+  static const String tanQrCancelRequest = 'tanqr_cancel_request';
   static const String selcomPesaAppNotInstalled =
       'selcom_pesa_app_not_installed';
   static const String selcomPesaInstallPrompt = 'selcom_pesa_install_prompt';

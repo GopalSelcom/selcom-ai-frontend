@@ -70,6 +70,7 @@ class LanguageEn extends Languages {
         'The QR code has expired. Would you like to try again?',
     'tanqr_missing_registered_phone':
         'Your registered phone number is missing. Please update your profile.',
+    'tanqr_cancel_request': 'Cancel request',
     'selcom_pesa_app_not_installed': 'Selcom Pesa app not installed',
     'selcom_pesa_install_prompt':
         'Install Selcom Pesa to complete this payment on your device.',
@@ -977,6 +978,9 @@ class LanguageEn extends Languages {
   @override
   String get tanQrMissingRegisteredPhone =>
       values['tanqr_missing_registered_phone'] ?? '';
+
+  @override
+  String get tanQrCancelRequest => values['tanqr_cancel_request'] ?? '';
 
   @override
   String get selcomPesaAppNotInstalled =>

@@ -23,6 +23,8 @@ abstract class WalletPaymentRemoteDataSource {
   Future<PaymentStatusResult> checkPaymentStatus({
     required String transid,
   });
+
+  Future<void> cancelUssdOrder({required String transid});
 }
 
 class WalletPaymentRemoteDataSourceImpl
@@ -111,6 +113,46 @@ class WalletPaymentRemoteDataSourceImpl
           );
         }
         return PaymentStatusResult.fromJson(data);
+      }
+    }
+
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      throw WalletPaymentException(
+        _messageFromResponse(response.data) ??
+            AppStrings.tanQrPaymentRequestFailed,
+      );
+    }
+
+    throw WalletPaymentException(AppStrings.tanQrPaymentRequestFailed);
+  }
+
+  @override
+  Future<void> cancelUssdOrder({required String transid}) async {
+    final trimmedTransid = transid.trim();
+    if (trimmedTransid.isEmpty) {
+      throw WalletPaymentException(AppStrings.tanQrPaymentRequestFailed);
+    }
+
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.wallet.cancelUssdOrder,
+        method: ApiMethod.post,
+        body: {'transid': trimmedTransid},
+        errorPresentationType: ErrorPresentationType.none,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      final data = response.data;
+      if (data is Map<String, dynamic>) {
+        final status = data['status'] ?? data['status_code'];
+        if (status is int && status != 200) {
+          throw WalletPaymentException(
+            _messageFromResponse(data) ??
+                AppStrings.tanQrPaymentRequestFailed,
+          );
+        }
+        return;
       }
     }
 

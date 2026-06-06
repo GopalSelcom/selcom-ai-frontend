@@ -67,6 +67,7 @@ abstract class Languages {
   String get tanQrTimerExpiredTitle;
   String get tanQrTimerExpiredMessage;
   String get tanQrMissingRegisteredPhone;
+  String get tanQrCancelRequest;
   String get selcomPesaAppNotInstalled;
   String get selcomPesaInstallPrompt;
   String get walletAccountUnavailable;

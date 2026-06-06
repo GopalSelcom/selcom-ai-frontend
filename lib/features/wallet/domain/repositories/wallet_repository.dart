@@ -26,6 +26,8 @@ abstract class WalletRepository {
     required String transid,
   });
 
+  Future<void> cancelUssdOrder({required String transid});
+
   Future<SelcomPesaTopupResult> sendSelcomPesaTopUpRequest(
     SelcomPesaTopupRequest request, {
     required bool requireShortCode,

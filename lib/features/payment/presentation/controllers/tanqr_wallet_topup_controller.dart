@@ -38,6 +38,7 @@ class TanQrWalletTopupController extends GetxController {
   final session = Rxn<TanQrPaymentSession>();
   final countdownSeconds = countdownDurationSeconds.obs;
   final isSubmitting = false.obs;
+  final isCancelling = false.obs;
   final displayName = ''.obs;
   final displayWalletNumber = ''.obs;
 
@@ -307,6 +308,36 @@ class TanQrWalletTopupController extends GetxController {
   void closeWithCancel() {
     _stopTimers();
     Get.back(result: TanQrTopupResult.cancelled);
+  }
+
+  Future<void> cancelPaymentRequest() async {
+    if (isCancelling.value) return;
+
+    final transid = session.value?.transid.trim() ?? '';
+    if (transid.isEmpty) return;
+
+    isCancelling.value = true;
+    Loader.instance.show();
+
+    var dismissed = false;
+    try {
+      await _walletRepository.cancelUssdOrder(transid: transid);
+      _paymentHandled = true;
+      _stopTimers();
+      dismissed = true;
+      Get.back(result: TanQrTopupResult.cancelled);
+    } on WalletPaymentException catch (e) {
+      AppDialogs.showErrorDialog(message: e.message.tr);
+    } catch (_) {
+      AppDialogs.showErrorDialog(
+        message: AppStrings.couldNotCancelTryAgain.tr,
+      );
+    } finally {
+      Loader.instance.hide();
+      if (!dismissed) {
+        isCancelling.value = false;
+      }
+    }
   }
 
   void handleSheetDismissed() {
