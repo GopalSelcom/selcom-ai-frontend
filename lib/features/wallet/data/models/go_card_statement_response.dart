@@ -31,6 +31,7 @@ class GoCardStatementData {
     this.resultCode,
     this.pan,
     this.currency,
+    this.records,
     this.transactions = const [],
   });
 
@@ -38,15 +39,17 @@ class GoCardStatementData {
   final String? resultCode;
   final String? pan;
   final String? currency;
+  final int? records;
   final List<GoCardStatementTransaction> transactions;
 
   factory GoCardStatementData.fromJson(Map<String, dynamic> json) {
-    final rows = json['transactions'];
+    final rows = json['data'] ?? json['transactions'];
     return GoCardStatementData(
       result: json['result']?.toString(),
       resultCode: json['resultcode']?.toString(),
       pan: json['pan']?.toString(),
       currency: json['currency']?.toString(),
+      records: json['records'] is num ? (json['records'] as num).toInt() : null,
       transactions: rows is List
           ? rows
                 .whereType<Map>()
@@ -74,43 +77,54 @@ class GoCardStatementTransaction {
     this.type,
     this.amount,
     this.reference,
+    this.transId,
     this.merchant,
     this.comment,
+    this.utilityCode,
   });
 
   final String? date;
   final String? type;
   final String? amount;
   final String? reference;
+  final String? transId;
   final String? merchant;
   final String? comment;
+  final String? utilityCode;
 
   factory GoCardStatementTransaction.fromJson(Map<String, dynamic> json) {
     return GoCardStatementTransaction(
-      date: json['date']?.toString(),
-      type: json['type']?.toString(),
+      date: json['fulltimestamp']?.toString() ?? json['date']?.toString(),
+      type: json['transtype']?.toString() ?? json['type']?.toString(),
       amount: json['amount']?.toString(),
       reference: json['reference']?.toString(),
+      transId: json['transid']?.toString(),
       merchant: json['merchant']?.toString(),
       comment: json['comment']?.toString(),
+      utilityCode: json['utilitycode']?.toString(),
     );
   }
 
   WalletTransactionEntity? toEntity() {
-    final parsedDate = DateTime.tryParse(date ?? '');
+    final parsedDate = _parseStatementDate(date);
     if (parsedDate == null) return null;
 
     final normalizedType = (type ?? '').trim().toUpperCase();
     final isCredit = normalizedType == 'CREDIT';
     final merchantLabel = merchant?.trim();
-    final commentLabel = comment?.trim();
+    final utilityLabel = utilityCode?.trim();
+    final commentLabel = comment?.trim().isNotEmpty == true
+        ? comment!.trim()
+        : utilityLabel;
     final parsedAmount = double.tryParse((amount ?? '').trim()) ?? 0;
 
     final merchantName = isCredit
         ? (commentLabel?.isNotEmpty == true
               ? commentLabel!
               : (merchantLabel?.isNotEmpty == true ? merchantLabel! : 'Credit'))
-        : (merchantLabel?.isNotEmpty == true ? merchantLabel! : 'Debit');
+        : (merchantLabel?.isNotEmpty == true
+              ? merchantLabel!
+              : (commentLabel?.isNotEmpty == true ? commentLabel! : 'Debit'));
 
     final categoryLabel = isCredit
         ? (commentLabel?.isNotEmpty == true
@@ -118,12 +132,15 @@ class GoCardStatementTransaction {
               : 'Credit')
         : (merchantLabel?.isNotEmpty == true
               ? 'Debit - $merchantLabel'
-              : 'Debit');
+              : (commentLabel?.isNotEmpty == true
+                    ? 'Debit - $commentLabel'
+                    : 'Debit'));
 
-    final id =
-        reference?.trim().isNotEmpty == true
-            ? reference!.trim()
-            : '${date}_${normalizedType}_$parsedAmount';
+    final id = transId?.trim().isNotEmpty == true
+        ? transId!.trim()
+        : reference?.trim().isNotEmpty == true
+        ? reference!.trim()
+        : '${date}_${normalizedType}_$parsedAmount';
 
     return WalletTransactionEntity(
       id: id,
@@ -133,5 +150,13 @@ class GoCardStatementTransaction {
       isCredit: isCredit,
       createdAt: parsedDate,
     );
+  }
+
+  static DateTime? _parseStatementDate(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    final trimmed = value.trim();
+    final direct = DateTime.tryParse(trimmed);
+    if (direct != null) return direct;
+    return DateTime.tryParse(trimmed.replaceFirst(' ', 'T'));
   }
 }
