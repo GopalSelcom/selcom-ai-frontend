@@ -25,14 +25,14 @@ class MyRidesController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    fetchPastRides();
+    fetchPastRides(isLoader: true);
   }
 
-  Future<void> fetchPastRides() async {
+  Future<void> fetchPastRides({bool? isLoader = false}) async {
     try {
       _page.value = 1;
       hasMoreData.value = true;
-      isLoading.value = true;
+      isLoading.value = isLoader??true;
       final result = await rideUseCase.getRideHistory(
         page: _page.value,
         limit: _limit,

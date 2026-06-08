@@ -9,7 +9,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-import '../../../../core/data/models/requests/create_saved_place_request.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
@@ -851,37 +850,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     currentMapAddress.value = description;
   }
 
-  Future<void> savePlace({
-    required String label,
-    required String name,
-    required String placeId,
-    double? lat,
-    double? lng,
-  }) async {
-    if (isSavingPlace.value) return;
-    isSavingPlace.value = true;
-    try {
-      await Loader.run(() async {
-        final request = CreateSavedPlaceRequest(
-          label: label,
-          name: name,
-          placeId: placeId,
-          lat: lat ?? mapCenter.value.latitude,
-          lng: lng ?? mapCenter.value.longitude,
-        );
-
-        final result = await profileRepository.addSavedPlace(request);
-        await result.fold((_) => null, (ok) async {
-          if (ok) {
-            await loadSavedPlaces();
-          }
-        });
-      });
-    } finally {
-      isSavingPlace.value = false;
-    }
-  }
-
   Future<void> saveRecentAsFavorite({
     required RecentDestinationModel loc,
     required String label,
@@ -901,7 +869,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         final result = await profileRepository.saveRecentAsFavorite(request);
         await result.fold((failure) => null, (success) async {
           if (success) {
-            await loadSavedPlaces();
+            await refreshSavedPlacesAfterMutation();
           }
         });
       });

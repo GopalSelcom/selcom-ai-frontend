@@ -1,6 +1,5 @@
 import 'package:dartz/dartz.dart';
 
-import '../../../../core/data/models/requests/create_saved_place_request.dart';
 import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
 import '../../../../core/data/models/user_model.dart';
@@ -46,19 +45,6 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<Either<Failure, GetSavedPlacesResponseModel?>> getSavedPlaces() async {
     try {
       final result = await remoteDataSource.getSavedPlaces();
-      return Right(result);
-    } catch (e, stackTrace) {
-      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      return Left(ServerFailure(e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, bool>> addSavedPlace(
-    CreateSavedPlaceRequest request,
-  ) async {
-    try {
-      final result = await remoteDataSource.addSavedPlace(request);
       return Right(result);
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);

@@ -305,10 +305,12 @@ class _CheckPickupPointScreenState extends State<CheckPickupPointScreen> {
                         title: _title.value,
                         subtitle: _subtitle.value,
                         onConfirm: () async {
-                          await controller.savePlace(
+                          final address = _subtitle.value.trim().isNotEmpty
+                              ? _subtitle.value.trim()
+                              : _title.value.trim();
+                          await controller.saveAddressFromAddress(
+                            address: address,
                             label: label,
-                            name: _title.value,
-                            placeId: placeId,
                             lat: _lat.value,
                             lng: _lng.value,
                           );

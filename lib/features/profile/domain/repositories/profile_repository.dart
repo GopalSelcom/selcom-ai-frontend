@@ -1,6 +1,5 @@
 import 'package:dartz/dartz.dart';
 
-import '../../../../core/data/models/requests/create_saved_place_request.dart';
 import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
 import '../../../../core/data/models/user_model.dart';
@@ -20,8 +19,6 @@ abstract class ProfileRepository {
   Future<Either<Failure, GetSavedPlacesResponseModel?>> getSavedPlaces();
 
   Future<Either<Failure, GetSavedPlacesResponseModel?>> getFavoritePlaces();
-
-  Future<Either<Failure, bool>> addSavedPlace(CreateSavedPlaceRequest request);
 
   Future<Either<Failure, bool>> saveRecentAsFavorite(
     SaveRecentAsFavoriteRequest request,
