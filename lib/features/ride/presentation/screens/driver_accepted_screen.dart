@@ -184,6 +184,12 @@ class DriverAcceptedScreen extends StatelessWidget {
               final initialSize = _sheetSizeWithNavInset(context, baseInitial);
               final minSize = _sheetSizeWithNavInset(context, baseMin);
 
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (c.sheetSize.value != initialSize) {
+                  c.sheetSize.value = initialSize;
+                }
+              });
+
               switch (state) {
                 case RideBottomSheetState.driverAssigned:
                   maxSheetSize = _sheetMaxDriverAssigned;
