@@ -268,6 +268,10 @@ class AppDialogs {
     }
   }
 
+  /// Pops the top overlay route (e.g. [showAnimatedDialog], bottom sheets).
+  /// Use instead of [Get.back] — GetX does not track [showGeneralDialog] routes.
+  static void dismissTopOverlay() => _dismissActiveDialog();
+
   /// Shows a common error dialog with an OK button.
   static void showErrorDialog({
     String title = AppStrings.error,

@@ -78,6 +78,7 @@ class AppStrings {
   static const String selcomPesaAppNotInstalled =
       'selcom_pesa_app_not_installed';
   static const String selcomPesaInstallPrompt = 'selcom_pesa_install_prompt';
+  static const String selcomPesaHandoffFailed = 'selcom_pesa_handoff_failed';
   static const String walletAccountUnavailable = 'wallet_account_unavailable';
   static const String downloadApp = 'download_app';
   static const String mobileMoneyPhoneValue = 'mobile_money_phone_value';

@@ -62,6 +62,8 @@ class LanguageSw extends Languages {
         'Programu ya Selcom Pesa haijasakinishwa',
     'selcom_pesa_install_prompt':
         'Sakinisha Selcom Pesa ili kukamilisha malipo kwenye kifaa chako.',
+    'selcom_pesa_handoff_failed':
+        'Imeshindikana kufungua Selcom Pesa. Hakikisha programu imesakinishwa na ujaribu tena.',
     'wallet_account_unavailable':
         'Mkoba wako wa Go haupatikani. Tafadhali jaribu tena baadaye.',
     'download_app': 'Pakua programu',
@@ -881,6 +883,10 @@ class LanguageSw extends Languages {
   @override
   String get selcomPesaInstallPrompt =>
       values['selcom_pesa_install_prompt'] ?? '';
+
+  @override
+  String get selcomPesaHandoffFailed =>
+      values['selcom_pesa_handoff_failed'] ?? '';
 
   @override
   String get walletAccountUnavailable =>

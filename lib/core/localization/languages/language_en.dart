@@ -33,10 +33,10 @@ class LanguageEn extends Languages {
     'add_money': 'Add Money',
     'amount': 'Amount',
     'back': 'Back',
-    'add_money_selcom_pesa_subtitle': 'Request money from selcom pesa',
+    'add_money_selcom_pesa_subtitle': 'Request money from Selcom Pesa',
     'add_money_tan_qr_tips': 'TanQR',
     'add_money_tan_qr_tips_subtitle': 'Add Money using TanQR',
-    'add_money_mobile_money_subtitle': 'Add Money using TanQR',
+    'add_money_mobile_money_subtitle': 'Add Money using Mobile Money',
     'add_money_steps_to_load_go_wallet': 'Steps to load your Go wallet',
     'add_money_steps_to_load_go_wallet_subtitle':
         'Add Money using your bank app or USSD',
@@ -74,6 +74,8 @@ class LanguageEn extends Languages {
     'selcom_pesa_app_not_installed': 'Selcom Pesa app not installed',
     'selcom_pesa_install_prompt':
         'Install Selcom Pesa to complete this payment on your device.',
+    'selcom_pesa_handoff_failed':
+        'Unable to open Selcom Pesa. Please make sure the app is installed and try again.',
     'wallet_account_unavailable':
         'Your Go wallet is not available. Please try again later.',
     'download_app': 'Download app',
@@ -111,7 +113,7 @@ class LanguageEn extends Languages {
     'contacts_access_needed':
         'We need contacts access to let you select a passenger from your contact list. Please enable it in Settings.',
     'cancel_update': 'Cancel Update',
-    'cancel_and_pay': 'Cancel & Pay',
+    'cancel_and_pay': 'Accept & Pay',
     'cancel_dialogs_gallery': 'Cancel Dialogs Gallery',
     'cancel_failed': 'Cancel failed',
     'cancel_ride': 'Cancel Ride',
@@ -989,6 +991,10 @@ class LanguageEn extends Languages {
   @override
   String get selcomPesaInstallPrompt =>
       values['selcom_pesa_install_prompt'] ?? '';
+
+  @override
+  String get selcomPesaHandoffFailed =>
+      values['selcom_pesa_handoff_failed'] ?? '';
 
   @override
   String get walletAccountUnavailable =>

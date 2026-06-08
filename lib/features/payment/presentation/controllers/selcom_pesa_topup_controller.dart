@@ -290,22 +290,21 @@ class SelcomPesaTopupController extends GetxController
   Future<void> _startSelfFlow(SelcomPesaTopupResult result) async {
     _selfFlowHandled = false;
     _awaitingSelcomPesaReturn = false;
-    _showSelfPendingDialog();
-    _startSelfTimeout();
 
-    final launched = await _selcomPesaLauncher.openPcodePayment(
+    final launchResult = await _selcomPesaLauncher.openPcodePayment(
       result.shortCode,
     );
-    if (!launched) {
-      _stopTimers();
-      _dismissPendingDialog();
+    if (!launchResult.launched) {
       AppDialogs.showErrorDialog(
-        message: AppStrings.tanQrPaymentRequestFailed.tr,
+        message: AppStrings.selcomPesaHandoffFailed.tr,
       );
+      _finishFlow();
       return;
     }
 
     _awaitingSelcomPesaReturn = true;
+    _showSelfPendingDialog();
+    _startSelfTimeout();
   }
 
   Future<void> _startOtherFlow(SelcomPesaTopupResult result) async {
@@ -397,9 +396,7 @@ class SelcomPesaTopupController extends GetxController
   void _dismissPendingDialog() {
     if (!_pendingDialogVisible) return;
     _pendingDialogVisible = false;
-    if (Get.isDialogOpen == true) {
-      Get.back<void>();
-    }
+    AppDialogs.dismissTopOverlay();
   }
 
   void _startSelfTimeout() {

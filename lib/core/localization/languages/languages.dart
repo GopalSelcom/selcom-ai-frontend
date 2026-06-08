@@ -70,6 +70,7 @@ abstract class Languages {
   String get tanQrCancelRequest;
   String get selcomPesaAppNotInstalled;
   String get selcomPesaInstallPrompt;
+  String get selcomPesaHandoffFailed;
   String get walletAccountUnavailable;
   String get downloadApp;
   String get mobileMoneyPhoneValue;

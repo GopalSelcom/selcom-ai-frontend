@@ -11,7 +11,10 @@ class AppConfig {
   /// `none` (default) | `ride_api` POST mint per brain guide | `api` GET legacy **or** POST if endpoint contains `{rideId}`.
   static late String agoraTokenMode;
   static late String agoraTokenEndpoint;
+  /// Host for Selcom Pesa pcode handoff (`https://{host}/pcode/{shortCode}`).
+  /// Decoupled from API environment — production Selcom Pesa uses `spd.selcommobile.com`.
   static late String selcomPesaDeepLinkHost;
+  static const String selcomPesaDeepLinkHostDefault = 'spd.selcommobile.com';
   static const String selcomPesaDownloadUrl = 'https://get.selcompesa.app/';
 
   static const String _agoraAppIdDefine = String.fromEnvironment(
@@ -24,6 +27,10 @@ class AppConfig {
   );
   static const String _agoraTokenEndpointDefine = String.fromEnvironment(
     'AGORA_TOKEN_ENDPOINT',
+    defaultValue: '',
+  );
+  static const String _selcomPesaDeepLinkHostDefine = String.fromEnvironment(
+    'SELCOM_PESA_DEEPLINK_HOST',
     defaultValue: '',
   );
 
@@ -42,18 +49,23 @@ class AppConfig {
       case Environment.dev:
         baseUrl = 'https://dukastaging.selcom.dev:7443/api';
         socketUrl = 'ws://localhost:5010';
-        selcomPesaDeepLinkHost = 'spuatdlink.selcommobile.com';
         break;
       case Environment.staging:
         baseUrl = 'https://dukastaging.selcom.dev:7443/api/';
         socketUrl = 'wss://staging-socket.duka.direct';
-        selcomPesaDeepLinkHost = 'spuatdlink.selcommobile.com';
         break;
       case Environment.prod:
         baseUrl = 'https://api.duka.direct';
         socketUrl = 'wss://socket.duka.direct';
-        selcomPesaDeepLinkHost = 'spd.selcommobile.com';
         break;
+    }
+
+    selcomPesaDeepLinkHost = _readEnv(
+      'SELCOM_PESA_DEEPLINK_HOST',
+      _selcomPesaDeepLinkHostDefine,
+    ).trim();
+    if (selcomPesaDeepLinkHost.isEmpty) {
+      selcomPesaDeepLinkHost = selcomPesaDeepLinkHostDefault;
     }
   }
 

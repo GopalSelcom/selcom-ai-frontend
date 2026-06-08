@@ -40,6 +40,7 @@ class MobileMoneyTopupController extends GetxController {
   final amountError = RxnString();
   final apiError = RxnString();
   final isSubmitting = false.obs;
+  final isCancelling = false.obs;
 
   late final TextEditingController phoneController;
   late final TextEditingController amountController;
@@ -250,9 +251,13 @@ class MobileMoneyTopupController extends GetxController {
       barrierDismissible: false,
       child: PopScope(
         canPop: false,
-        child: MobileMoneyTopupStatusDialog(
-          type: MobileMoneyTopupDialogType.request,
-          secondsListenable: pendingCountdown,
+        child: Obx(
+          () => MobileMoneyTopupStatusDialog(
+            type: MobileMoneyTopupDialogType.request,
+            secondsListenable: pendingCountdown,
+            onCancel: () => unawaited(cancelPaymentRequest()),
+            isCancelling: isCancelling.value,
+          ),
         ),
       ),
     );
@@ -261,9 +266,7 @@ class MobileMoneyTopupController extends GetxController {
   void _dismissPendingDialog() {
     if (!_pendingDialogVisible) return;
     _pendingDialogVisible = false;
-    if (Get.isDialogOpen == true) {
-      Get.back<void>();
-    }
+    AppDialogs.dismissTopOverlay();
   }
 
   void _startPollingTimers() {
@@ -346,6 +349,40 @@ class MobileMoneyTopupController extends GetxController {
     _stopTimers();
     _dismissPendingDialog();
     _disposeRegisteredController();
+  }
+
+  Future<void> cancelPaymentRequest() async {
+    if (isCancelling.value || _paymentHandled) return;
+
+    final transid = _session?.transid.trim() ?? '';
+    if (transid.isEmpty) return;
+
+    isCancelling.value = true;
+    Loader.instance.show();
+
+    var dismissed = false;
+    try {
+      await _walletRepository.cancelUssdOrder(transid: transid);
+      _paymentHandled = true;
+      _stopTimers();
+      dismissed = true;
+      await Loader.instance.hideAsync();
+      _dismissPendingDialog();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _disposeRegisteredController();
+      });
+    } on WalletPaymentException catch (e) {
+      AppDialogs.showErrorDialog(message: e.message.tr);
+    } catch (_) {
+      AppDialogs.showErrorDialog(
+        message: AppStrings.couldNotCancelTryAgain.tr,
+      );
+    } finally {
+      Loader.instance.hide();
+      if (!dismissed) {
+        isCancelling.value = false;
+      }
+    }
   }
 
   void handleSheetDismissed() {

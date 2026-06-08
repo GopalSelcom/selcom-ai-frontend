@@ -883,13 +883,13 @@ class VehicleSelectionController extends GetxController {
               );
             });
 
-            final blockOk = await _waitForPaymentBlockStatus(
-              timeout: Duration(
-                seconds: di.sl<AppSettingsService>().paymentWaitSeconds.value,
-              ),
-            );
+            // final blockOk = await _waitForPaymentBlockStatus(
+            //   timeout: Duration(
+            //     seconds: di.sl<AppSettingsService>().paymentWaitSeconds.value,
+            //   ),
+            // );
 
-            if (blockOk) {
+            if (true) {
               break;
             }
 
