@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../core/config/app_config.dart';
 import '../../../../core/data/models/requests/book_ride_request.dart';
 import '../../../../core/data/models/user_profile_models.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
@@ -871,25 +872,29 @@ class VehicleSelectionController extends GetxController {
           while (true) {
             final roomValidationId = blockValidationId;
             _socketService.joinPaymentRoom(validationId: roomValidationId);
-            final txnId = generateTransactionId();
 
-            Future.delayed(const Duration(seconds: 5), () {
-              rideRepository.walletDummyPaymentRequest(
-                DummyPaymentRequest(
-                  result: "SUCCESS",
-                  transId: txnId,
-                  validationId: roomValidationId,
+            var paymentConfirmed = false;
+            if (AppConfig.ridePaymentBypass) {
+              final txnId = generateTransactionId();
+              Future.delayed(const Duration(seconds: 5), () {
+                rideRepository.walletDummyPaymentRequest(
+                  DummyPaymentRequest(
+                    result: 'SUCCESS',
+                    transId: txnId,
+                    validationId: roomValidationId,
+                  ),
+                );
+              });
+              paymentConfirmed = true;
+            } else {
+              paymentConfirmed = await _waitForPaymentBlockStatus(
+                timeout: Duration(
+                  seconds: di.sl<AppSettingsService>().paymentWaitSeconds.value,
                 ),
               );
-            });
+            }
 
-            // final blockOk = await _waitForPaymentBlockStatus(
-            //   timeout: Duration(
-            //     seconds: di.sl<AppSettingsService>().paymentWaitSeconds.value,
-            //   ),
-            // );
-
-            if (true) {
+            if (paymentConfirmed) {
               break;
             }
 
@@ -1041,25 +1046,24 @@ class VehicleSelectionController extends GetxController {
   ///
   /// See [WalletRideBalanceGuard] TODOs for backend migration.
   Future<bool> _guardWalletBalanceBeforePayment(int requiredAmount) async {
-    // TODO(payment-backend): re-enable insufficient-balance blocking when
-    // backend wallet sufficiency APIs are fully ready.
-    //
-    // Kept previous client-guard logic below for quick restoration:
-    // final walletResult = await profileRepository.getWalletBalance();
-    // return walletResult.fold(
-    //   (_) => true,
-    //   (wallet) {
-    //     final details = WalletRideBalanceGuard.insufficientDetails(
-    //       currentBalance: wallet.balance,
-    //       requiredAmount: requiredAmount,
-    //       currency: wallet.currency,
-    //     );
-    //     if (details == null) return true;
-    //     unawaited(_showInsufficientWalletDialog(details));
-    //     return false;
-    //   },
-    // );
-    return true;
+    if (AppConfig.ridePaymentBypass) {
+      return true;
+    }
+
+    final walletResult = await profileRepository.getWalletBalance();
+    return walletResult.fold(
+      (_) => true,
+      (wallet) {
+        final details = WalletRideBalanceGuard.insufficientDetails(
+          currentBalance: wallet.balance,
+          requiredAmount: requiredAmount,
+          currency: wallet.currency,
+        );
+        if (details == null) return true;
+        unawaited(_showInsufficientWalletDialog(details));
+        return false;
+      },
+    );
   }
 
   Future<void> _showInsufficientWalletDialog(

@@ -11,6 +11,7 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../../core/config/app_config.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/driver_location_socker_response.dart';
@@ -2294,14 +2295,19 @@ class DriverAcceptedController extends GetxController
   ) async {
     if (direction == 'up') {
       stopUpdateProgressStep.value = 1; // Show payment step
-      // For development, we use dummy payment as per guide
-      await rideRepository.walletDummyPaymentRequest(
-        DummyPaymentRequest(
-          result: "SUCCESS",
-          transId: 'TXN-${const Uuid().v4()}',
-          validationId: validationId,
-        ),
-      );
+      if (!_socketService.isConnected) {
+        await _socketService.connect();
+      }
+      _socketService.joinPaymentRoom(validationId: validationId);
+      if (AppConfig.ridePaymentBypass) {
+        await rideRepository.walletDummyPaymentRequest(
+          DummyPaymentRequest(
+            result: 'SUCCESS',
+            transId: 'TXN-${const Uuid().v4()}',
+            validationId: validationId,
+          ),
+        );
+      }
     } else if (direction == 'down') {
       stopUpdateProgressStep.value = 2; // Jump to route update (silent payment)
     } else {
@@ -2526,13 +2532,19 @@ class DriverAcceptedController extends GetxController
     // - down/flat: skip to route sync step
     if (direction == 'up') {
       stopUpdateProgressStep.value = 1;
-      await rideRepository.walletDummyPaymentRequest(
-        DummyPaymentRequest(
-          result: 'SUCCESS',
-          transId: 'TXN-${const Uuid().v4()}',
-          validationId: validationId,
-        ),
-      );
+      if (!_socketService.isConnected) {
+        await _socketService.connect();
+      }
+      _socketService.joinPaymentRoom(validationId: validationId);
+      if (AppConfig.ridePaymentBypass) {
+        await rideRepository.walletDummyPaymentRequest(
+          DummyPaymentRequest(
+            result: 'SUCCESS',
+            transId: 'TXN-${const Uuid().v4()}',
+            validationId: validationId,
+          ),
+        );
+      }
     } else if (direction == 'down') {
       stopUpdateProgressStep.value = 2;
     } else {

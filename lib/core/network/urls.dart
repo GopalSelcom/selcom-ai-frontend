@@ -136,6 +136,8 @@ class _PaymentEndpoints {
   const _PaymentEndpoints();
 
   final validateRidePayment = "go/validate_ride_payment";
+  final validateRidePaymentNew = "go/validate_ride_payment_new";
+  final devPaymentCallback = "go/dev/payment_callback";
   final makePayment = "unified_payment";
   final checkPaymentStatus = "check_payment_status";
 }

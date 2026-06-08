@@ -11,11 +11,17 @@ class AppConfig {
   /// `none` (default) | `ride_api` POST mint per brain guide | `api` GET legacy **or** POST if endpoint contains `{rideId}`.
   static late String agoraTokenMode;
   static late String agoraTokenEndpoint;
+
   /// Host for Selcom Pesa pcode handoff (`https://{host}/pcode/{shortCode}`).
   /// Decoupled from API environment — production Selcom Pesa uses `spd.selcommobile.com`.
   static late String selcomPesaDeepLinkHost;
   static const String selcomPesaDeepLinkHostDefault = 'spd.selcommobile.com';
   static const String selcomPesaDownloadUrl = 'https://get.selcompesa.app/';
+
+  /// In-memory dev toggle only (not persisted).
+  /// `true` → `go/validate_ride_payment` + `go/dev/payment_callback`.
+  /// `false` → `go/validate_ride_payment_new`, no dev callback.
+  static bool ridePaymentBypass = true;
 
   static const String _agoraAppIdDefine = String.fromEnvironment(
     'AGORA_APP_ID',

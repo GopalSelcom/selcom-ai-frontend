@@ -2,6 +2,7 @@ import 'dart:developer' as developer;
 
 import 'package:dio/dio.dart';
 
+import '../../../../core/config/app_config.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/data/models/responses/chat_quick_replies_response.dart';
 import '../../../../core/data/models/responses/rides/active_ride_response.dart';
@@ -383,9 +384,12 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
 
   @override
   Future<String> validateRidePayment(ValidateRidePaymentRequest request) async {
+    final endpoint = AppConfig.ridePaymentBypass
+        ? URLS.payment.validateRidePayment
+        : URLS.payment.validateRidePaymentNew;
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: URLS.payment.validateRidePayment,
+        endpoint: endpoint,
         method: ApiMethod.post,
         body: request.toJson(),
         errorPresentationType: ErrorPresentationType.none,
@@ -465,12 +469,12 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
 
   @override
   Future<bool> walletDummyPaymentRequest(DummyPaymentRequest request) async {
+    if (!AppConfig.ridePaymentBypass) {
+      return false;
+    }
     final response = await ApiService().call(
       request: ApiRequest(
-        customBaseUrl:
-            "https://dukastaging.selcom.dev:7443/api/v4/go/dev/payment_callback",
-        // endpoint: "${URLS.ride.base}/$rideId/messages",
-        endpoint: "",
+        endpoint: URLS.payment.devPaymentCallback,
         method: ApiMethod.post,
         body: request.toJson(),
       ),
