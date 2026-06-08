@@ -181,6 +181,38 @@ class DriverAcceptedController extends GetxController
     sheetSize.value = size;
   }
 
+  double _targetSheetFractionForStatus(String status) {
+    if (status == 'near_destination') {
+      return 0.35;
+    }
+    if (status == 'ride_in_progress' || status == 'ride_started') {
+      return 0.40;
+    }
+    return 0.3;
+  }
+
+  void _syncSheetLayoutForCurrentStatus() {
+    final target = _targetSheetFractionForStatus(currentRideStatus.value);
+    // Keep map chrome in sync before the draggable listener catches up.
+    updateSheetSize(target);
+    if (sheetController.isAttached) {
+      if ((sheetController.size - target).abs() > 0.01) {
+        Future.microtask(() {
+          if (!sheetController.isAttached) return;
+          sheetController.animateTo(
+            target,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        });
+      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!sheetController.isAttached) return;
+        updateSheetSize(sheetController.size);
+      });
+    }
+  }
+
   String get formattedSpeedLabel {
     final speedKmh = (assignedDriverSpeed.value * 3.6).round();
     return speedKmh > 1 ? '$speedKmh km/h' : '';
@@ -212,29 +244,8 @@ class DriverAcceptedController extends GetxController
         _markInitialRouteReady();
       }
     });
-    ever(currentRideStatus, (status) {
-      if (sheetController.isAttached) {
-        final double target;
-        if (status == 'near_destination') {
-          target = 0.35;
-        } else if (status == 'ride_in_progress' || status == 'ride_started') {
-          target = 0.40;
-        } else {
-          target = 0.3;
-        }
-        if ((sheetController.size - target).abs() > 0.01) {
-          Future.microtask(() {
-            if (sheetController.isAttached) {
-              sheetController.animateTo(
-                target,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOut,
-              );
-            }
-          });
-        }
-      }
-    });
+    ever(currentRideStatus, (_) => _syncSheetLayoutForCurrentStatus());
+    ever(rideBottomSheetState, (_) => _syncSheetLayoutForCurrentStatus());
     _loadPersistedIdempotencyKey();
     arrivalLabel.value = AppStrings.driverWillArrivingInMinutes.trParams({
       'minutes': '1',
@@ -1126,21 +1137,6 @@ class DriverAcceptedController extends GetxController
     }
   }
 
-  Future<void> focusOnUserLocation() async {
-    final ctrl = mapController;
-    if (ctrl == null) return;
-
-    try {
-      // We rely on the Google Map internal "my location" feature to animate
-      // but we can also manually trigger it if we have the coordinates.
-      // For now, we'll trigger a fitBounds on the whole route as a fallback
-      // but the UI button is now decoupled from Rider Tracking.
-      _fitRouteBounds(force: true);
-    } catch (e) {
-      developer.log("Error focusing on user location: $e");
-    }
-  }
-
   Future<void> _fitRouteBounds({bool force = false}) async {
     final ctrl = mapController;
     if (ctrl == null) return;
@@ -1418,6 +1414,7 @@ class DriverAcceptedController extends GetxController
     }
 
     rideBottomSheetState.value = nextState;
+    _syncSheetLayoutForCurrentStatus();
     if (normalizedStatus == 'driver_arrived') {
       _syncDriverArrivedPickupMessages();
     }

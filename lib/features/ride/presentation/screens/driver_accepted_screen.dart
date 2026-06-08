@@ -26,7 +26,6 @@ import '../widgets/ride_common_widgets.dart';
 class DriverAcceptedScreen extends StatelessWidget {
   const DriverAcceptedScreen({super.key});
 
-  static const double _sheetInitial = 0.3;
   static const double _sheetMin = 0.3;
   static const double _sheetMaxDriverAssigned = 0.52;
   static const double _sheetMaxRideStarted = 0.68;
@@ -47,6 +46,30 @@ class DriverAcceptedScreen extends StatelessWidget {
 
   static double _scrollBottomPad(BuildContext context) {
     return _systemBottomInsetPx(context) > 0 ? 2.h : 0;
+  }
+
+  static double _baseMinSheetSizeForStatus(String status) {
+    if (status == 'near_destination') {
+      return 0.35;
+    }
+    if (status == 'ride_in_progress' || status == 'ride_started') {
+      return 0.40;
+    }
+    return _sheetMin;
+  }
+
+  /// Keeps map chrome above the sheet when status raises the sheet minimum
+  /// before [DraggableScrollableController] reports the new size.
+  static double _resolvedSheetSizeForActionRow(
+    BuildContext context,
+    DriverAcceptedController c,
+  ) {
+    final minSize = _sheetSizeWithNavInset(
+      context,
+      _baseMinSheetSizeForStatus(c.currentRideStatus.value),
+    );
+    final liveSize = c.sheetSize.value;
+    return liveSize < minSize ? minSize : liveSize;
   }
 
   void _minimizeSheet(DriverAcceptedController c) {
@@ -153,33 +176,11 @@ class DriverAcceptedScreen extends StatelessWidget {
               );
             }),
             Obx(() {
-              final screenHeight = MediaQuery.sizeOf(context).height;
-              final sheetTopOffset = screenHeight * c.sheetSize.value;
-              return Positioned(
-                left: 16.w,
-                right: 16.w,
-                bottom: sheetTopOffset + 12.h,
-                child: _rideActionRow(context, c, shareController),
-              );
-            }),
-            Obx(() {
               final state = c.rideBottomSheetState.value;
               final status = c.currentRideStatus.value;
               final double maxSheetSize;
-              final double baseInitial;
-              final double baseMin;
-
-              if (status == 'near_destination') {
-                baseInitial = 0.35;
-                baseMin = 0.35;
-              } else if (status == 'ride_in_progress' ||
-                  status == 'ride_started') {
-                baseInitial = 0.40;
-                baseMin = 0.40;
-              } else {
-                baseInitial = _sheetInitial;
-                baseMin = _sheetMin;
-              }
+              final baseMin = _baseMinSheetSizeForStatus(status);
+              final baseInitial = baseMin;
 
               final initialSize = _sheetSizeWithNavInset(context, baseInitial);
               final minSize = _sheetSizeWithNavInset(context, baseMin);
@@ -192,6 +193,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                   maxSheetSize = _sheetMaxRideStarted;
                   break;
               }
+
               return AppDraggableBottomSheet(
                 controller: sheetController,
                 reserveSystemBottomInset: true,
@@ -200,6 +202,20 @@ class DriverAcceptedScreen extends StatelessWidget {
                 maxChildSize: _sheetSizeWithNavInset(context, maxSheetSize),
                 childBuilder: (scrollController) =>
                     _bottomSheet(c, scrollController),
+              );
+            }),
+            // Above the sheet in the stack so ride-start sheet growth cannot cover chips.
+            Obx(() {
+              final screenHeight = MediaQuery.sizeOf(context).height;
+              final sheetTopOffset =
+                  screenHeight * _resolvedSheetSizeForActionRow(context, c);
+              // Also depend on sheet state so layout refreshes when the sheet variant changes.
+              c.rideBottomSheetState.value;
+              return Positioned(
+                left: 16.w,
+                right: 16.w,
+                bottom: sheetTopOffset + 12.h,
+                child: _rideActionRow(context, c, shareController),
               );
             }),
           ],
@@ -225,8 +241,7 @@ class DriverAcceptedScreen extends StatelessWidget {
           return Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Navigation / Track Rider Chip
-              // Navigation / Track Rider Chip
+              // Navigation / Track Rider Chip (zoom in on driver)
               Obx(() {
                 final isTracking = c.assignedDriverLocation.value != null;
                 // Use the controller's state instead of the map's key state
@@ -236,7 +251,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                   return Padding(
                     padding: EdgeInsets.only(right: 8.w),
                     child: _iconActionChip(
-                      icon: Icons.navigation,
+                      icon: Icons.gps_fixed,
                       onTap: () {
                         c.mapWidgetKey.currentState?.retrack();
                         _minimizeSheet(c);
@@ -247,16 +262,6 @@ class DriverAcceptedScreen extends StatelessWidget {
                 }
                 return const SizedBox.shrink();
               }),
-              // Current Location GPS Chip
-              _iconActionChip(
-                icon: Icons.gps_fixed,
-                onTap: () {
-                  c.mapWidgetKey.currentState?.stopTracking();
-                  c.focusOnUserLocation();
-                  _minimizeSheet(c);
-                },
-                color: AppColors.textMapHint,
-              ),
               SizedBox(width: 8.w),
               _iconActionChip(
                 icon: isSharing ? Icons.hourglass_top : Icons.share_outlined,
@@ -539,8 +544,6 @@ class DriverAcceptedScreen extends StatelessWidget {
             },
             onCameraMove: (_) => c.scheduleAssignedEtaOverlayRefresh(),
             onCameraIdle: c.scheduleAssignedEtaOverlayRefresh,
-            showGpsButton: true,
-            onGpsPressed: c.focusOnUserLocation,
             onUserInteraction: () => _minimizeSheet(c),
             trackRider: c.isTrackingRider.value,
             onTrackingChanged: (tracking) => c.isTrackingRider.value = tracking,
