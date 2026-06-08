@@ -232,7 +232,6 @@ class RideRepositoryImpl implements RideRepository {
   Future<Either<Failure, bool>> walletDummyPaymentRequest(
     DummyPaymentRequest request,
   ) async {
-    return const Right(true);
     try {
       final result = await remoteDataSource.walletDummyPaymentRequest(request);
       return Right(result);

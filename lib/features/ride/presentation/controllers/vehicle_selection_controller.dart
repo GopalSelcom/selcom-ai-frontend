@@ -873,26 +873,14 @@ class VehicleSelectionController extends GetxController {
             final roomValidationId = blockValidationId;
             _socketService.joinPaymentRoom(validationId: roomValidationId);
 
-            var paymentConfirmed = false;
-            if (AppConfig.ridePaymentBypass) {
-              final txnId = generateTransactionId();
-              Future.delayed(const Duration(seconds: 5), () {
-                rideRepository.walletDummyPaymentRequest(
-                  DummyPaymentRequest(
-                    result: 'SUCCESS',
-                    transId: txnId,
-                    validationId: roomValidationId,
-                  ),
-                );
-              });
-              paymentConfirmed = true;
-            } else {
-              paymentConfirmed = await _waitForPaymentBlockStatus(
-                timeout: Duration(
-                  seconds: di.sl<AppSettingsService>().paymentWaitSeconds.value,
-                ),
-              );
-            }
+            final paymentConfirmed = AppConfig.ridePaymentBypass
+                ? await _confirmDevPaymentCallback(roomValidationId)
+                : await _waitForPaymentBlockStatus(
+                    timeout: Duration(
+                      seconds:
+                          di.sl<AppSettingsService>().paymentWaitSeconds.value,
+                    ),
+                  );
 
             if (paymentConfirmed) {
               break;
@@ -1115,6 +1103,21 @@ class VehicleSelectionController extends GetxController {
       },
     );
     return completer.future;
+  }
+
+  /// Dev bypass: join room, await `payment_callback`, then allow book ride.
+  Future<bool> _confirmDevPaymentCallback(String validationId) async {
+    // Brief pause so `join_payment_room` can register before the callback.
+    await Future.delayed(const Duration(milliseconds: 800));
+    final txnId = generateTransactionId();
+    final result = await rideRepository.walletDummyPaymentRequest(
+      DummyPaymentRequest(
+        result: 'SUCCESS',
+        transId: txnId,
+        validationId: validationId,
+      ),
+    );
+    return result.fold((_) => false, (ok) => ok);
   }
 
   Future<bool> _waitForPaymentBlockStatus({
