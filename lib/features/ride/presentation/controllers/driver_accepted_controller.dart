@@ -108,6 +108,9 @@ class DriverAcceptedController extends GetxController
   final unreadCount = 0.obs;
   final rideBottomSheetState = RideBottomSheetState.driverAssigned.obs;
 
+  bool get shouldShowMapSafetyAction =>
+      rideBottomSheetState.value == RideBottomSheetState.rideStarted;
+
   // Normalized ride status from socket/API — use [normalizeRideStatusString] when writing.
   final currentRideStatus = 'driver_assigned'.obs;
   final isReasonProcessing = false.obs;

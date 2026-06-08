@@ -283,12 +283,19 @@ class DriverAcceptedScreen extends StatelessWidget {
             ],
           );
         }),
-        SizedBox(width: 10.w),
-        _iconActionChip(
-          icon: Icons.shield_outlined,
-          onTap: () => _showSafetyBottomSheet(context, c, shareController),
-          color: AppColors.textHeading,
-        ),
+        Obx(() {
+          if (!c.shouldShowMapSafetyAction) {
+            return const SizedBox.shrink();
+          }
+          return Padding(
+            padding: EdgeInsets.only(left: 10.w),
+            child: _iconActionChip(
+              icon: Icons.shield_outlined,
+              onTap: () => _showSafetyBottomSheet(context, c, shareController),
+              color: AppColors.textHeading,
+            ),
+          );
+        }),
       ],
     );
   }
