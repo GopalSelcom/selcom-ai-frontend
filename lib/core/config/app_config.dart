@@ -18,9 +18,10 @@ class AppConfig {
   static const String selcomPesaDeepLinkHostDefault = 'spd.selcommobile.com';
   static const String selcomPesaDownloadUrl = 'https://get.selcompesa.app/';
 
-  /// In-memory dev toggle only (not persisted).
-  /// `true` → `go/validate_ride_payment` + `go/dev/payment_callback`.
-  /// `false` → `go/validate_ride_payment_new`, no dev callback.
+  /// In-memory toggle only (not persisted, not env-derived).
+  ///
+  /// `true` → `go/validate_ride_payment` + `go/dev/payment_callback` + unsuffixed ride paths.
+  /// `false` → `go/validate_ride_payment_new` + socket payment block + `_new` ride paths.
   static bool ridePaymentBypass = true;
 
   static const String _agoraAppIdDefine = String.fromEnvironment(
@@ -61,6 +62,7 @@ class AppConfig {
         socketUrl = 'wss://staging-socket.duka.direct';
         break;
       case Environment.prod:
+        ridePaymentBypass = false;
         baseUrl = 'https://api.duka.direct';
         socketUrl = 'wss://socket.duka.direct';
         break;

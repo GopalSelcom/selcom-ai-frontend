@@ -6,6 +6,7 @@ import '../../../../core/data/models/responses/rides/promo_available_response.da
 import '../../../../core/data/models/responses/rides/promo_validate_response.dart';
 import '../../../../core/data/models/responses/rides/vehicle_types_response.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
+import '../../../../core/config/ride_payment_endpoints.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
@@ -203,7 +204,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   Future<BookRideResponse> bookRide(BookRideRequest request) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: URLS.ride.bookRide,
+        endpoint: RidePaymentEndpoints.bookRide,
         method: ApiMethod.post,
         body: request.toJson(),
       ),

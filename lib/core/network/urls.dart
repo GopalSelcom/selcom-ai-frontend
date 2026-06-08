@@ -56,17 +56,32 @@ class _RideEndpoints {
   final activeRide = "go/rides/active";
   final pendingReview = "go/rides/pending-review";
   final reviewTags = "go/review-tags";
+
   String cancelRide(String rideId) => "$base/$rideId/cancel";
+
   String rateRide(String rideId) => "$base/$rideId/rate";
+
   String skipRideRating(String rideId) => "$base/$rideId/skip-review";
+
   String activityToken(String rideId) => "$base/$rideId/activity-token";
+
   String cancellationCharges(String rideId) =>
       "$base/$rideId/cancellation-charges";
+
   String shareRide(String rideId) => "$base/$rideId/share";
+
+  String updateDestination(String rideId) => "$base/$rideId/update-destination";
+
+  String updatePickup(String rideId) => "$base/$rideId/update-pickup";
+
+  String increaseFare(String rideId) => "$base/$rideId/increase-fare";
+
   String updateStops(String rideId) => "$base/$rideId/stops";
+
   String cancelPendingStops(String rideId) => "$base/$rideId/stops/pending";
   final checkBookMode = "go/check-book-mode";
   final emergencyContacts = "go/emergency-contacts";
+
   String cancelVoiceCall(String rideId) => "$base/$rideId/call/cancel";
   final base = "go/rides";
 }
@@ -136,7 +151,6 @@ class _PaymentEndpoints {
   const _PaymentEndpoints();
 
   final validateRidePayment = "go/validate_ride_payment";
-  final validateRidePaymentNew = "go/validate_ride_payment_new";
   final devPaymentCallback = "go/dev/payment_callback";
   final makePayment = "unified_payment";
   final checkPaymentStatus = "check_payment_status";
@@ -188,6 +202,7 @@ class _NotificationEndpoints {
 
   final list = "go/notifications";
   final readAll = "go/notifications/read-all";
+
   String readById(String notificationId) =>
       "go/notifications/$notificationId/read";
 }
