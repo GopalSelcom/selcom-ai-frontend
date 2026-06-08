@@ -37,6 +37,7 @@ import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/address_display_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/currency_formatter.dart';
+import '../../../../shared/utils/map_route_marker_utils.dart';
 import '../../../../shared/utils/map_vehicle_marker_utils.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../../../shared/utils/ride_pickup_status_labels.dart';
@@ -117,6 +118,10 @@ class DriverAcceptedController extends GetxController
   final Rxn<BitmapDescriptor> pickupIcon = Rxn<BitmapDescriptor>();
   final Rxn<BitmapDescriptor> dropIcon = Rxn<BitmapDescriptor>();
   final stopIcons = <BitmapDescriptor>[].obs;
+  final Map<String, BitmapDescriptor> _redRouteLetterIcons = {};
+  final Map<String, BitmapDescriptor> _greenRouteLetterIcons = {};
+  bool _routeLetterIconsLoaded = false;
+  int _markerIconLoadToken = 0;
   final Rxn<Offset> assignedDriverEtaScreenPx = Rxn<Offset>();
   final assignedDriverHeading = 0.0.obs;
   final assignedDriverSpeed = 0.0.obs; // m/s
@@ -349,9 +354,88 @@ class DriverAcceptedController extends GetxController
     }
   }
 
+  List<RideStopEntity> get mapIntermediateStops {
+    final stops = ride.value?.stops ?? const <RideStopEntity>[];
+    if (stops.isEmpty) return const [];
+
+    final filtered = stops
+        .where(
+          (stop) =>
+              !MapRouteMarkerUtils.stopMatchesDestination(
+                stopLat: stop.lat,
+                stopLng: stop.lng,
+                stopAddress: stop.address,
+                destinationLat: destinationLatLng.latitude,
+                destinationLng: destinationLatLng.longitude,
+                destinationAddress: destinationAddress,
+              ) &&
+              !MapRouteMarkerUtils.stopMatchesPickup(
+                stopLat: stop.lat,
+                stopLng: stop.lng,
+                stopAddress: stop.address,
+                pickupLat: pickupLatLng.latitude,
+                pickupLng: pickupLatLng.longitude,
+                pickupAddress: pickupAddress,
+              ),
+        )
+        .toList();
+
+    final orderedEntries = filtered.asMap().entries.toList()
+      ..sort((a, b) {
+        final byRouteIndex = a.value.index.compareTo(b.value.index);
+        if (byRouteIndex != 0) return byRouteIndex;
+        return a.key.compareTo(b.key);
+      });
+
+    return MapRouteMarkerUtils.dedupeByLocation(
+      items: orderedEntries.map((entry) => entry.value).toList(),
+      lat: (stop) => stop.lat,
+      lng: (stop) => stop.lng,
+      address: (stop) => stop.address,
+    );
+  }
+
+  String routeLetterForIntermediateIndex(int sequentialIndex) =>
+      MapRouteMarkerUtils.letterAt(sequentialIndex + 1);
+
+  BitmapDescriptor redRouteLetterIconForSequentialIndex(int sequentialIndex) {
+    final letter = routeLetterForIntermediateIndex(sequentialIndex);
+    return _redRouteLetterIcons[letter] ??
+        dropIcon.value ??
+        BitmapDescriptor.defaultMarker;
+  }
+
+  bool get usesMultiStopRouteMarkers {
+    return MapRouteMarkerUtils.usesMultiStopMarkers(
+      isMultiStopFlag: ride.value?.isMultiStop ?? false,
+      intermediateStopCount: mapIntermediateStops.length,
+    );
+  }
+
+  Future<void> _ensureRouteLetterIcons() async {
+    if (_routeLetterIconsLoaded) return;
+
+    for (int i = 1; i < MapRouteMarkerUtils.routeLetters.length; i++) {
+      final letter = MapRouteMarkerUtils.routeLetters[i];
+      _redRouteLetterIcons[letter] = await MapMarkerUtils.createTextMarker(
+        text: letter,
+        color: AppColors.mapStopMarkerRed,
+      );
+      _greenRouteLetterIcons[letter] = await MapMarkerUtils.createTextMarker(
+        text: letter,
+        color: AppColors.mapDropMarkerGreen,
+      );
+    }
+
+    _routeLetterIconsLoaded = true;
+  }
+
   Future<void> _loadMarkerIcons() async {
-    final bool isMulti = ride.value?.isMultiStop ?? false;
-    const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+    final loadToken = ++_markerIconLoadToken;
+    await _ensureRouteLetterIcons();
+    if (loadToken != _markerIconLoadToken) return;
+
+    final bool isMulti = usesMultiStopRouteMarkers;
 
     if (!isMulti) {
       // Single Stop: P (Blue) and D (Green)
@@ -364,35 +448,29 @@ class DriverAcceptedController extends GetxController
         color: AppColors.mapDropMarkerGreen,
       );
       stopIcons.clear();
-    } else {
-      // Multi Stop: A (Blue), B, C... (Red), Last (Green)
-      pickupIcon.value = await MapMarkerUtils.createTextMarker(
-        text: 'A',
-        color: AppColors.mapPickupMarkerBlue,
-      );
-
-      stopIcons.clear();
-      // Intermediate stops are Red
-      for (int i = 1; i < letters.length; i++) {
-        final icon = await MapMarkerUtils.createTextMarker(
-          text: letters[i],
-          color: AppColors.mapStopMarkerRed,
-        );
-        stopIcons.add(icon);
-      }
-
-      // Final destination icon (Green)
-      final sList = ride.value?.stops ?? [];
-      final destIndex = sList.length + 1; // 1 for pickup + number of stops
-      final label = (destIndex < letters.length)
-          ? letters[destIndex]
-          : letters.last;
-
-      dropIcon.value = await MapMarkerUtils.createTextMarker(
-        text: label,
-        color: AppColors.mapDropMarkerGreen,
-      );
+      return;
     }
+
+    // Multi Stop: A (Blue), B, C... (Red), Last (Green)
+    pickupIcon.value = await MapMarkerUtils.createTextMarker(
+      text: 'A',
+      color: AppColors.mapPickupMarkerBlue,
+    );
+
+    final intermediateCount = mapIntermediateStops.length;
+    final destLetter = MapRouteMarkerUtils.letterAt(
+      MapRouteMarkerUtils.destinationLetterIndex(
+        intermediateStopCount: intermediateCount,
+      ),
+    );
+    dropIcon.value = _greenRouteLetterIcons[destLetter];
+
+    final icons = List<BitmapDescriptor>.generate(
+      intermediateCount,
+      (i) => _redRouteLetterIcons[
+          MapRouteMarkerUtils.letterAt(i + 1)]!,
+    );
+    stopIcons.assignAll(icons);
   }
 
   @override
@@ -585,24 +663,11 @@ class DriverAcceptedController extends GetxController
       summaryIntermediateStops.clear();
       return;
     }
-    final normalizedDestinationAddress = destinationAddress
-        .trim()
-        .toLowerCase();
-    final last = stops.last;
-    final lastMatchesDestinationByAddress =
-        normalizedDestinationAddress.isNotEmpty &&
-        last.address.trim().toLowerCase() == normalizedDestinationAddress;
-    final lastMatchesDestinationByCoord =
-        (last.lat - destinationLatLng.latitude).abs() < 0.000001 &&
-        (last.lng - destinationLatLng.longitude).abs() < 0.000001;
-    // If backend stops includes final destination, exclude it from
-    // intermediate summary list to avoid duplicate rendering in header card.
-    final lastIsDestination =
-        lastMatchesDestinationByAddress || lastMatchesDestinationByCoord;
-
-    final intermediates = lastIsDestination
-        ? stops.take(stops.length - 1).toList()
-        : stops;
+    final intermediates = mapIntermediateStops;
+    if (intermediates.isEmpty) {
+      summaryIntermediateStops.clear();
+      return;
+    }
     summaryIntermediateStops.assignAll(
       intermediates
           .map((s) => s.address.trim())
@@ -620,12 +685,12 @@ class DriverAcceptedController extends GetxController
     }
     isLoadingRide.value = true;
     final result = await rideRepository.getRideDetails(rideId);
-    result.fold(
-      (f) {
+    await result.fold(
+      (f) async {
         _applyMockContent();
         assignedDriverLocation.value ??= const LatLng(-6.7921, 39.2101);
       },
-      (r) {
+      (r) async {
         ride.value = r;
         _applyRide(r);
         _syncDestinationFromRide(r);
@@ -633,7 +698,7 @@ class DriverAcceptedController extends GetxController
         // keep bottom-sheet state and completion navigation in sync with the model.
         _applyBottomSheetStateForStatus(rideStatusToApiValue(r.status));
         _syncLiveActivityFromDetails(r);
-        _loadMarkerIcons(); // Refresh icons with new ride context
+        await _loadMarkerIcons();
 
         // Debug logging for the "Stuck" state issues
         if (isUpdatingStops.value) {

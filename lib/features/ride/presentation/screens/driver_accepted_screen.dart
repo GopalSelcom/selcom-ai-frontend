@@ -468,33 +468,32 @@ class DriverAcceptedScreen extends StatelessWidget {
       }
 
       // Destinations/Stops Markers
-      final stops = c.ride.value?.stops ?? [];
-      final isMultiStop = c.ride.value?.isMultiStop ?? false;
+      final intermediateStops = c.mapIntermediateStops;
+      final usesMultiStopMarkers = c.usesMultiStopRouteMarkers;
+      final showDestinationMarker =
+          c.dropIcon.value != null &&
+          c.rideBottomSheetState.value != RideBottomSheetState.driverAssigned;
 
-      if (isMultiStop && stops.isNotEmpty) {
-        for (var i = 0; i < stops.length; i++) {
-          final stop = stops[i];
-
-          // Use stopIcons[i] which corresponds to B, C, D...
-          // because stopIcons index 0 is 'B', 1 is 'C' etc.
-          final icon = (i < c.stopIcons.length)
-              ? c.stopIcons[i]
-              : (c.dropIcon.value ?? BitmapDescriptor.defaultMarker);
+      if (usesMultiStopMarkers) {
+        for (var i = 0; i < intermediateStops.length; i++) {
+          final stop = intermediateStops[i];
+          final letter = c.routeLetterForIntermediateIndex(i);
 
           markers.add(
             Marker(
-              markerId: MarkerId('stop_$i'),
+              markerId: MarkerId(
+                'stop_${letter}_'
+                '${stop.lat.toStringAsFixed(5)}_'
+                '${stop.lng.toStringAsFixed(5)}',
+              ),
               position: LatLng(stop.lat, stop.lng),
-              icon: icon,
+              icon: c.redRouteLetterIconForSequentialIndex(i),
               anchor: const Offset(0.5, 0.5),
             ),
           );
         }
-      } else {
-        // Standard Single-Stop Ride logic
-        if (c.dropIcon.value != null &&
-            c.rideBottomSheetState.value !=
-                RideBottomSheetState.driverAssigned) {
+
+        if (showDestinationMarker) {
           markers.add(
             Marker(
               markerId: const MarkerId('drop'),
@@ -504,6 +503,15 @@ class DriverAcceptedScreen extends StatelessWidget {
             ),
           );
         }
+      } else if (showDestinationMarker) {
+        markers.add(
+          Marker(
+            markerId: const MarkerId('drop'),
+            position: destination,
+            icon: c.dropIcon.value!,
+            anchor: const Offset(0.5, 0.5),
+          ),
+        );
       }
 
       final polylines = <Polyline>{};
