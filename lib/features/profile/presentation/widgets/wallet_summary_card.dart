@@ -57,7 +57,7 @@ class WalletSummaryCard extends StatelessWidget {
   String _accountNumberForCopy() => walletNumber.replaceAll(RegExp(r'\s+'), '');
 
   TextStyle get _amountStyle => AppTextStyles.price.copyWith(
-    color: AppColors.primary,
+    color: AppColors.black,
     fontWeight: FontWeight.w600,
     fontSize: 17.sp,
     height: 23.11 / 17,

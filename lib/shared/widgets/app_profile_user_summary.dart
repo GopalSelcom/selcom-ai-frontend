@@ -57,7 +57,7 @@ class AppProfileUserSummary extends StatelessWidget {
                       child: Text(
                         name,
                         style: AppTextStyles.homeTitle.copyWith(
-                          color: AppColors.white,
+                          color: AppColors.black,
                           fontWeight: FontWeight.w700,
                           fontSize: 20.sp,
                           height: 34 / 20,
@@ -73,12 +73,12 @@ class AppProfileUserSummary extends StatelessWidget {
                         onTap: onEditTap,
                         child: SvgPictureAsset(
                           AppAssets.icProfileEdit,
-                          color: AppColors.white,
+                          color: AppColors.black,
                           width: 22.w,
                           height: 24.75.h,
                           placeholderBuilder: (_) => Icon(
                             Iconsax.user_edit,
-                            color: AppColors.white,
+                            color: AppColors.black,
                             size: 22.w,
                           ),
                         ),
@@ -92,7 +92,7 @@ class AppProfileUserSummary extends StatelessWidget {
                   Text(
                     phone,
                     style: AppTextStyles.homeSubtitle.copyWith(
-                      color: AppColors.white,
+                      color: AppColors.black,
                       fontSize: 15.sp,
                       fontWeight: FontWeight.w500,
                       height: 20 / 15,
@@ -107,10 +107,10 @@ class AppProfileUserSummary extends StatelessWidget {
                       AppAssets.icRatingStar,
                       width: 14.w,
                       height: 14.w,
-                      color: AppColors.white.withValues(alpha: 0.9),
+                      color: AppColors.black.withValues(alpha: 0.9),
                       placeholderBuilder: (_) => Icon(
                         Icons.star,
-                        color: AppColors.white.withValues(alpha: 0.9),
+                        color: AppColors.black.withValues(alpha: 0.9),
                         size: 14.sp,
                       ),
                     ),
@@ -118,7 +118,7 @@ class AppProfileUserSummary extends StatelessWidget {
                     Text(
                       rating.toStringAsFixed(1),
                       style: AppTextStyles.homeCaption.copyWith(
-                        color: AppColors.white.withValues(alpha: 0.9),
+                        color: AppColors.black.withValues(alpha: 0.9),
                         fontSize: 12.sp,
                         fontWeight: FontWeight.w600,
                       ),

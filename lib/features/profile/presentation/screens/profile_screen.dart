@@ -250,7 +250,7 @@ class ProfileScreen extends StatelessWidget {
         Text(
           label,
           style: AppTextStyles.caption.copyWith(
-            color: AppColors.white,
+            color: AppColors.black,
             fontSize: 12.sp,
           ),
         ),
@@ -261,8 +261,9 @@ class ProfileScreen extends StatelessWidget {
           keyboardType: isPhone ? TextInputType.phone : TextInputType.name,
           textInputAction: textInputAction,
           onSubmitted: onSubmitted,
+          cursorColor: AppColors.black,
           style: AppTextStyles.screenTitle.copyWith(
-            color: AppColors.white,
+            color: AppColors.black,
             fontSize: 30.sp,
             fontWeight: FontWeight.w800,
             letterSpacing: -1.0,
@@ -273,12 +274,12 @@ class ProfileScreen extends StatelessWidget {
             contentPadding: EdgeInsets.only(bottom: 8.h),
             enabledBorder: UnderlineInputBorder(
               borderSide: BorderSide(
-                color: AppColors.white.withValues(alpha: 0.3),
+                color: AppColors.black.withValues(alpha: 0.3),
                 width: 1.0,
               ),
             ),
             focusedBorder: const UnderlineInputBorder(
-              borderSide: BorderSide(color: AppColors.white, width: 2.0),
+              borderSide: BorderSide(color: AppColors.black, width: 2.0),
             ),
           ),
         ),

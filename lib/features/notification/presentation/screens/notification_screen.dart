@@ -59,7 +59,7 @@ class NotificationScreen extends StatelessWidget {
                                     .toString(),
                               }),
                               style: AppTextStyles.homeCaption.copyWith(
-                                color: AppColors.white,
+                                color: AppColors.black,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),

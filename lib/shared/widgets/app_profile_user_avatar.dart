@@ -84,12 +84,13 @@ class AppProfileUserAvatar extends StatelessWidget {
               ),
               child: SvgPictureAsset(
                 AppAssets.icProfileEdit,
-                color: AppColors.white,
-                width: AppProfileAvatarStyle.profileEditIconWidthFor(side),
-                height: AppProfileAvatarStyle.profileEditIconHeightFor(side),
+                color: AppColors.primary,
+                width: AppProfileAvatarStyle.profileEditIconWidthFor(side) / 2,
+                height:
+                    AppProfileAvatarStyle.profileEditIconHeightFor(side) / 2,
                 placeholderBuilder: (_) => Icon(
                   Icons.edit_outlined,
-                  color: AppColors.white,
+                  color: AppColors.primary,
                   size: AppProfileAvatarStyle.profileEditIconWidthFor(side),
                 ),
               ),
