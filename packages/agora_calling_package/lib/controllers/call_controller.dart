@@ -251,7 +251,8 @@ class CallController extends GetxController {
     if (kDebugMode) {
       debugPrint('[AGORA_CTRL] placeCall rideId=$rideId state=${state.value}');
     }
-    if (state.value == CallState.dialing ||
+    if (state.value == CallState.ringing ||
+        state.value == CallState.dialing ||
         state.value == CallState.connecting ||
         state.value == CallState.connected) {
       if (kDebugMode) {
@@ -279,7 +280,11 @@ class CallController extends GetxController {
         peerAvatarUrl: peerAvatarUrl,
       );
 
-      final mint = await api.mintToken(rideId);
+      // User tapped "Call" — starting a fresh outgoing call.
+      final mint = await api.mintToken(
+        rideId,
+        intent: CallTokenIntent.initiate,
+      );
       currentCall.value = currentCall.value!.copyWith(
         appId: mint.appId,
         channel: mint.channel.isNotEmpty
@@ -477,10 +482,26 @@ class CallController extends GetxController {
     }
 
     final call = currentCall.value;
-    if (call == null || state.value != CallState.ringing) {
+    if (call == null) {
+      if (kDebugMode) {
+        debugPrint('[AGORA_CTRL] _acceptIncoming bail: no current call');
+      }
+      return;
+    }
+    if (state.value == CallState.dialing ||
+        state.value == CallState.connecting ||
+        state.value == CallState.connected) {
+      if (kDebugMode) {
+        debugPrint('[AGORA_CTRL] _acceptIncoming dedup — call already active '
+            'state=${state.value} rideId=${call.rideId}');
+      }
+      _openActiveCallScreen();
+      return;
+    }
+    if (state.value != CallState.ringing) {
       if (kDebugMode) {
         debugPrint('[AGORA_CTRL] _acceptIncoming bail: '
-            'call=${call?.rideId} state=${state.value}');
+            'call=${call.rideId} state=${state.value}');
       }
       return;
     }
@@ -494,6 +515,21 @@ class CallController extends GetxController {
     _acceptMutex = true;
 
     try {
+      // placeCall may have won the race while we waited for the mutex.
+      if (state.value == CallState.dialing ||
+          state.value == CallState.connecting ||
+          state.value == CallState.connected) {
+        if (kDebugMode) {
+          debugPrint('[AGORA_CTRL] _acceptIncoming dedup after mutex — '
+              'already active state=${state.value}');
+        }
+        _openActiveCallScreen();
+        return;
+      }
+      if (state.value != CallState.ringing) {
+        return;
+      }
+
       final mic = await PermissionsHelper.ensureMicrophone();
       if (mic != PermissionOutcome.granted) {
         if (kDebugMode) {
@@ -523,7 +559,33 @@ class CallController extends GetxController {
       await _silenceNativeIncomingUi(call.rideId);
 
       try {
-        final mint = await api.mintToken(call.rideId);
+        final authHeaders = await config.getAuthHeaders();
+        final accessToken = authHeaders['access_token']?.trim() ?? '';
+        final authorization = authHeaders['authorization']?.trim() ?? '';
+        final bearerToken = authorization.toLowerCase().startsWith('bearer ')
+            ? authorization.substring(7).trim()
+            : '';
+        final hasBearer = bearerToken.isNotEmpty;
+        if (kDebugMode) {
+          debugPrint(
+            '[AGORA_CTRL] _acceptIncoming mint auth '
+            'access_token=${accessToken.isEmpty ? "EMPTY" : "len=${accessToken.length}"} '
+            'authorization=${hasBearer ? "present" : "EMPTY"}',
+          );
+        }
+        if (accessToken.isEmpty && !hasBearer) {
+          _failWith(
+            'Could not join the call — session not loaded. Open the app and try again.',
+            StateError('missing auth on accept'),
+          );
+          return;
+        }
+
+        // User tapped Accept on the incoming-call sheet.
+        final mint = await api.mintToken(
+          call.rideId,
+          intent: CallTokenIntent.answer,
+        );
         currentCall.value = call.copyWith(
           appId: mint.appId,
           channel: mint.channel.isNotEmpty
@@ -731,16 +793,30 @@ class CallController extends GetxController {
       }
       return;
     }
-    await agora.joinChannel(
-      channelName: channel,
-      token: token,
-      uid: call.uid ?? 0,
-    );
+    try {
+      await agora.joinChannel(
+        channelName: channel,
+        token: token,
+        uid: call.uid ?? 0,
+      );
+    } catch (e) {
+      if (_joinedChannelName == channel) {
+        if (kDebugMode) {
+          debugPrint('[AGORA_CTRL] _joinChannelFor join error ignored — '
+              'already joined channel=$channel err=$e');
+        }
+        return;
+      }
+      rethrow;
+    }
     _joinedChannelName = channel;
   }
 
   void _onLocalJoined() {
-    // No-op — caller already considered "dialing" until the peer signals.
+    final channel = currentCall.value?.channel;
+    if (channel != null && channel.isNotEmpty) {
+      _joinedChannelName = channel;
+    }
   }
 
   void _onRemoteJoined(int _) {

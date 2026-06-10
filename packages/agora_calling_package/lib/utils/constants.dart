@@ -15,6 +15,14 @@ class PushTypes {
   static const String callCancelled = 'call_cancelled';
 }
 
+/// Body field for POST .../call/token — tells the backend whether the user is
+/// starting a fresh call or answering an incoming ring.
+class CallTokenIntent {
+  CallTokenIntent._();
+  static const String initiate = 'initiate';
+  static const String answer = 'answer';
+}
+
 /// Builds the deterministic ride-scoped channel name used by both clients
 /// when the backend's mint response doesn't include `channel` (defensive —
 /// the backend always returns one).

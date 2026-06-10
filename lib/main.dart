@@ -18,6 +18,7 @@ import 'core/localization/delegate.dart';
 import 'core/localization/getx_languages_translations.dart';
 import 'core/localization/localization.dart';
 import 'core/services/agora_calling_bootstrap.dart';
+import 'core/services/session_auth_service.dart';
 import 'core/services/analytics_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/voip_callkit_bridge_service.dart';
@@ -145,9 +146,12 @@ void main() async {
       // Initialize Notification Service
       await di.sl<NotificationService>().initialize();
 
+      // Load saved session before calling init so CallKit Accept from
+      // killed/background state can mint tokens (splash has not run yet).
+      // Mirrors delivery_agent_app/docs/AGORA_CALLING_BACKGROUND_FIX.md.
+      await SessionAuthService.instance.preloadFromStorage();
+
       // Initialize Agora calling package (REST + FCM + Android FG service).
-      // Identity comes from the JWT on each request — `getAuthHeaders` is
-      // called per-call via Dio interceptor, so it picks up post-login state.
       await AgoraCallingBootstrap.init();
 
       // Bridge native iOS PushKit/CallKit events into the calling package.
