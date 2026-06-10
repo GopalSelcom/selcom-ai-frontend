@@ -90,6 +90,7 @@ class DriverAcceptedController extends GetxController
   late final String pickupAddress;
   late String destinationAddress;
   final summaryIntermediateStops = <String>[].obs;
+  final routeDestinations = <LocationEntity>[].obs;
   int? _seedRideCharge;
   int? _seedBookingFee;
   int? _seedTotalAmount;
@@ -435,6 +436,12 @@ class DriverAcceptedController extends GetxController
   }
 
   List<RideStopEntity> get mapIntermediateStops {
+    final fromRide = _intermediateStopsFromRideStops();
+    if (fromRide.isNotEmpty) return fromRide;
+    return _intermediateStopsFromRouteDestinations();
+  }
+
+  List<RideStopEntity> _intermediateStopsFromRideStops() {
     final stops = ride.value?.stops ?? const <RideStopEntity>[];
     if (stops.isEmpty) return const [];
 
@@ -475,6 +482,52 @@ class DriverAcceptedController extends GetxController
     );
   }
 
+  List<RideStopEntity> _intermediateStopsFromRouteDestinations() {
+    if (routeDestinations.length <= 1) return const [];
+
+    final candidates = routeDestinations
+        .take(routeDestinations.length - 1)
+        .toList()
+        .asMap()
+        .entries
+        .map(
+          (entry) => RideStopEntity(
+            index: entry.key + 1,
+            lat: entry.value.lat,
+            lng: entry.value.lng,
+            address: entry.value.address,
+            status: 'pending',
+          ),
+        )
+        .where(
+          (stop) =>
+              !MapRouteMarkerUtils.stopMatchesDestination(
+                stopLat: stop.lat,
+                stopLng: stop.lng,
+                stopAddress: stop.address,
+                destinationLat: destinationLatLng.latitude,
+                destinationLng: destinationLatLng.longitude,
+                destinationAddress: destinationAddress,
+              ) &&
+              !MapRouteMarkerUtils.stopMatchesPickup(
+                stopLat: stop.lat,
+                stopLng: stop.lng,
+                stopAddress: stop.address,
+                pickupLat: pickupLatLng.latitude,
+                pickupLng: pickupLatLng.longitude,
+                pickupAddress: pickupAddress,
+              ),
+        )
+        .toList();
+
+    return MapRouteMarkerUtils.dedupeByLocation(
+      items: candidates,
+      lat: (stop) => stop.lat,
+      lng: (stop) => stop.lng,
+      address: (stop) => stop.address,
+    );
+  }
+
   String routeLetterForIntermediateIndex(int sequentialIndex) =>
       MapRouteMarkerUtils.letterAt(sequentialIndex + 1);
 
@@ -487,7 +540,8 @@ class DriverAcceptedController extends GetxController
 
   bool get usesMultiStopRouteMarkers {
     return MapRouteMarkerUtils.usesMultiStopMarkers(
-      isMultiStopFlag: ride.value?.isMultiStop ?? false,
+      isMultiStopFlag:
+          ride.value?.isMultiStop ?? routeDestinations.length > 1,
       intermediateStopCount: mapIntermediateStops.length,
     );
   }
@@ -629,6 +683,7 @@ class DriverAcceptedController extends GetxController
             .toList();
 
         if (locs.isNotEmpty) {
+          routeDestinations.assignAll(locs);
           final finalDestination = locs.last;
           if (finalDestination.lat != 0 && finalDestination.lng != 0) {
             destinationLatLng = LatLng(

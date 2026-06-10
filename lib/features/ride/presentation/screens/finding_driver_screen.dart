@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
+import '../../../../shared/utils/map_route_marker_utils.dart';
 import '../../../../shared/utils/tracking_route_geometry_utils.dart';
 import '../../../../shared/widgets/app_map_route_one_line_bar.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
@@ -192,8 +193,30 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
         );
       }
 
-      // Drop/Destination Marker
-      if (c.dropIcon.value != null) {
+      if (c.usesMultiStopRouteMarkers) {
+        for (var i = 0; i < c.destinations.length; i++) {
+          final stop = c.destinations[i];
+          final isLast = i == c.destinations.length - 1;
+          final icon = isLast
+              ? (c.dropIcon.value ?? BitmapDescriptor.defaultMarker)
+              : (i < c.stopIcons.length
+                    ? c.stopIcons[i]
+                    : c.redRouteLetterIconForSequentialIndex(i));
+
+          markers.add(
+            Marker(
+              markerId: MarkerId(
+                'stop_${MapRouteMarkerUtils.letterAt(i + 1)}_'
+                '${stop.lat.toStringAsFixed(5)}_'
+                '${stop.lng.toStringAsFixed(5)}',
+              ),
+              position: LatLng(stop.lat, stop.lng),
+              icon: icon,
+              anchor: const Offset(0.5, 0.5),
+            ),
+          );
+        }
+      } else if (c.dropIcon.value != null) {
         markers.add(
           Marker(
             markerId: const MarkerId('destination'),

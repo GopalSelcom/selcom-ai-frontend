@@ -28,6 +28,7 @@ import '../../../../shared/utils/driver_search_timeout_from_cancel_time.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../../../shared/utils/ride_pickup_status_labels.dart';
 import '../../../../shared/utils/ride_status_normalizer.dart';
+import '../../../../shared/utils/map_route_marker_utils.dart';
 import '../../../../shared/utils/map_vehicle_marker_utils.dart';
 import '../../../../shared/utils/tracking_route_geometry_utils.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
@@ -84,6 +85,13 @@ class FindingDriverController extends GetxController {
       Rxn<BitmapDescriptor>();
   final Rxn<BitmapDescriptor> pickupIcon = Rxn<BitmapDescriptor>();
   final Rxn<BitmapDescriptor> dropIcon = Rxn<BitmapDescriptor>();
+  final stopIcons = <BitmapDescriptor>[].obs;
+  final Map<String, BitmapDescriptor> _redRouteLetterIcons = {};
+  final Map<String, BitmapDescriptor> _greenRouteLetterIcons = {};
+  bool _routeLetterIconsLoaded = false;
+
+  bool get usesMultiStopRouteMarkers => destinations.length > 1;
+
   final routeTarget = ''.obs;
   final activeRoutePoints = <LatLng>[].obs;
 
@@ -308,15 +316,66 @@ class FindingDriverController extends GetxController {
     });
   }
 
+  Future<void> _ensureRouteLetterIcons() async {
+    if (_routeLetterIconsLoaded) return;
+
+    for (int i = 1; i < MapRouteMarkerUtils.routeLetters.length; i++) {
+      final letter = MapRouteMarkerUtils.routeLetters[i];
+      _redRouteLetterIcons[letter] = await MapMarkerUtils.createTextMarker(
+        text: letter,
+        color: AppColors.mapStopMarkerRed,
+      );
+      _greenRouteLetterIcons[letter] = await MapMarkerUtils.createTextMarker(
+        text: letter,
+        color: AppColors.mapDropMarkerGreen,
+      );
+    }
+
+    _routeLetterIconsLoaded = true;
+  }
+
+  BitmapDescriptor redRouteLetterIconForSequentialIndex(int sequentialIndex) {
+    final letter = MapRouteMarkerUtils.letterAt(sequentialIndex + 1);
+    return _redRouteLetterIcons[letter] ??
+        dropIcon.value ??
+        BitmapDescriptor.defaultMarker;
+  }
+
   Future<void> _loadMarkerIcons() async {
-    pickupIcon.value = await MapMarkerUtils.createTextMarker(
-      text: 'P',
-      color: AppColors.mapPickupMarkerBlue,
-    );
-    dropIcon.value = await MapMarkerUtils.createTextMarker(
-      text: 'D',
-      color: AppColors.mapDropMarkerGreen,
-    );
+    await _ensureRouteLetterIcons();
+
+    if (usesMultiStopRouteMarkers) {
+      pickupIcon.value = await MapMarkerUtils.createTextMarker(
+        text: 'A',
+        color: AppColors.mapPickupMarkerBlue,
+      );
+
+      final intermediateCount = destinations.length - 1;
+      final destLetter = MapRouteMarkerUtils.letterAt(
+        MapRouteMarkerUtils.destinationLetterIndex(
+          intermediateStopCount: intermediateCount,
+        ),
+      );
+      dropIcon.value = _greenRouteLetterIcons[destLetter];
+
+      stopIcons.assignAll(
+        List<BitmapDescriptor>.generate(
+          intermediateCount,
+          (i) => _redRouteLetterIcons[MapRouteMarkerUtils.letterAt(i + 1)]!,
+        ),
+      );
+    } else {
+      pickupIcon.value = await MapMarkerUtils.createTextMarker(
+        text: 'P',
+        color: AppColors.mapPickupMarkerBlue,
+      );
+      dropIcon.value = await MapMarkerUtils.createTextMarker(
+        text: 'D',
+        color: AppColors.mapDropMarkerGreen,
+      );
+      stopIcons.clear();
+    }
+
     // Initial attempt to load the icon for the requested vehicle type
     await _loadDriverMarkerIcon(vehicleType: requestedVehicleType);
   }

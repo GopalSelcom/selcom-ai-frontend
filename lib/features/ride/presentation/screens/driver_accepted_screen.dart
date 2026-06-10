@@ -484,7 +484,9 @@ class DriverAcceptedScreen extends StatelessWidget {
       final usesMultiStopMarkers = c.usesMultiStopRouteMarkers;
       final showDestinationMarker =
           c.dropIcon.value != null &&
-          c.rideBottomSheetState.value != RideBottomSheetState.driverAssigned;
+          (usesMultiStopMarkers ||
+              c.rideBottomSheetState.value !=
+                  RideBottomSheetState.driverAssigned);
 
       if (usesMultiStopMarkers) {
         for (var i = 0; i < intermediateStops.length; i++) {

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../core/data/models/ride_model.dart';
 import '../../core/domain/entities/ride_entity.dart';
 import '../../core/routes/app_routes.dart';
+import 'map_route_marker_utils.dart';
 
 /// Terminal / inactive rides — show details sheet instead of live ride UI.
 bool rideStatusIsOngoingActive(RideStatus status) {
@@ -23,6 +24,63 @@ String rideStatusToApiValue(RideStatus status) {
     (m) => '${m.group(1)}_${m.group(2)}',
   );
   return withUnderscores.toLowerCase();
+}
+
+List<Map<String, dynamic>> routeDestinationsPayloadFromRide(RideModel ride) {
+  final destination = {
+    'lat': ride.destination.lat,
+    'lng': ride.destination.lng,
+    'address': ride.destination.address,
+  };
+
+  if (!ride.isMultiStop && ride.stops.isEmpty) {
+    return [destination];
+  }
+
+  final intermediates = ride.stops
+      .where(
+        (stop) =>
+            !MapRouteMarkerUtils.stopMatchesDestination(
+              stopLat: stop.lat,
+              stopLng: stop.lng,
+              stopAddress: stop.address,
+              destinationLat: ride.destination.lat,
+              destinationLng: ride.destination.lng,
+              destinationAddress: ride.destination.address,
+            ) &&
+            !MapRouteMarkerUtils.stopMatchesPickup(
+              stopLat: stop.lat,
+              stopLng: stop.lng,
+              stopAddress: stop.address,
+              pickupLat: ride.pickup.lat,
+              pickupLng: ride.pickup.lng,
+              pickupAddress: ride.pickup.address,
+            ),
+      )
+      .toList()
+    ..sort((a, b) => a.index.compareTo(b.index));
+
+  final deduped = MapRouteMarkerUtils.dedupeByLocation(
+    items: intermediates,
+    lat: (stop) => stop.lat,
+    lng: (stop) => stop.lng,
+    address: (stop) => stop.address,
+  );
+
+  if (deduped.isEmpty) {
+    return [destination];
+  }
+
+  return [
+    ...deduped.map(
+      (stop) => {
+        'lat': stop.lat,
+        'lng': stop.lng,
+        'address': stop.address,
+      },
+    ),
+    destination,
+  ];
 }
 
 /// Same navigation payload as [HomeController.openActiveRide].
@@ -46,6 +104,7 @@ void navigateToDriverAcceptedForRide(
       'destinationLat': rideValue.destination.lat,
       'destinationLng': rideValue.destination.lng,
       'destinationAddress': rideValue.destination.address,
+      'destinations': routeDestinationsPayloadFromRide(rideValue),
       'statusPayload': {
         'ride_id': rideValue.id,
         'status': rideStatusToApiValue(rideValue.status),
