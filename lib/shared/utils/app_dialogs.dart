@@ -228,6 +228,20 @@ class AppDialogs {
     );
   }
 
+  /// Runs [action] after [showStandardBottomSheet] / [showAnimatedBottomSheet]
+  /// finishes its dismiss transition.
+  ///
+  /// Call this from `.whenComplete` before `Get.delete` when the controller
+  /// owns [TextEditingController]s still bound to fields in the closing sheet.
+  static Future<void> runAfterBottomSheetDismissed(
+    Future<void> Function() action,
+  ) async {
+    await WidgetsBinding.instance.endOfFrame;
+    // Match [showAnimatedBottomSheet] transitionDuration (300ms) + buffer.
+    await Future<void>.delayed(const Duration(milliseconds: 320));
+    await action();
+  }
+
   static void closeActiveDialog() {
     _dismissActiveDialog();
   }

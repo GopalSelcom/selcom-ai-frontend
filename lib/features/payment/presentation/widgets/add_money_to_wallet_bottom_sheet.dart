@@ -34,13 +34,14 @@ class AddMoneyToWalletBottomSheet extends StatelessWidget {
     return AppDialogs.showStandardBottomSheet<TanQrTopupResult?>(
       sheet: AddMoneyToWalletBottomSheet(controllerTag: tag),
     ).whenComplete(() {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (Get.isRegistered<TanQrWalletTopupController>(tag: tag)) {
+      unawaited(
+        AppDialogs.runAfterBottomSheetDismissed(() async {
+          if (!Get.isRegistered<TanQrWalletTopupController>(tag: tag)) return;
           final controller = Get.find<TanQrWalletTopupController>(tag: tag);
           controller.handleSheetDismissed();
           Get.delete<TanQrWalletTopupController>(tag: tag);
-        }
-      });
+        }),
+      );
     });
   }
 

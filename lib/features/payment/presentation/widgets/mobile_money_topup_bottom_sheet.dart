@@ -32,13 +32,16 @@ class MobileMoneyTopupBottomSheet extends GetView<MobileMoneyTopupController> {
       barrierDismissible: true,
       content: MobileMoneyTopupBottomSheet(controllerTag: tag),
       footer: _MobileMoneyFooter(controllerTag: tag),
-    ).whenComplete(() async {
-      await Future<void>.delayed(Duration.zero);
-      if (!Get.isRegistered<MobileMoneyTopupController>(tag: tag)) return;
-      final mobileController = Get.find<MobileMoneyTopupController>(tag: tag);
-      if (mobileController.isAwaitingPaymentResult) return;
-      mobileController.handleSheetDismissed();
-      Get.delete<MobileMoneyTopupController>(tag: tag);
+    ).whenComplete(() {
+      unawaited(
+        AppDialogs.runAfterBottomSheetDismissed(() async {
+          if (!Get.isRegistered<MobileMoneyTopupController>(tag: tag)) return;
+          final mobileController = Get.find<MobileMoneyTopupController>(tag: tag);
+          if (mobileController.isAwaitingPaymentResult) return;
+          mobileController.handleSheetDismissed();
+          Get.delete<MobileMoneyTopupController>(tag: tag);
+        }),
+      );
     });
   }
 

@@ -37,18 +37,21 @@ class SelcomPesaAnotherNumberBottomSheet extends StatefulWidget {
       barrierDismissible: true,
       content: SelcomPesaAnotherNumberBottomSheet(controllerTag: controllerTag),
       footer: _SelcomPesaOtherFooter(controllerTag: controllerTag),
-    ).whenComplete(() async {
-      await Future<void>.delayed(Duration.zero);
-      if (!Get.isRegistered<SelcomPesaTopupController>(tag: controllerTag)) {
-        return;
-      }
-      final selcomController = Get.find<SelcomPesaTopupController>(
-        tag: controllerTag,
+    ).whenComplete(() {
+      unawaited(
+        AppDialogs.runAfterBottomSheetDismissed(() async {
+          if (!Get.isRegistered<SelcomPesaTopupController>(tag: controllerTag)) {
+            return;
+          }
+          final selcomController = Get.find<SelcomPesaTopupController>(
+            tag: controllerTag,
+          );
+          selcomController.clearRetainForFollowUpSheet();
+          if (selcomController.shouldRetainAfterSheetClose) return;
+          selcomController.handleSheetDismissed();
+          Get.delete<SelcomPesaTopupController>(tag: controllerTag);
+        }),
       );
-      selcomController.clearRetainForFollowUpSheet();
-      if (selcomController.shouldRetainAfterSheetClose) return;
-      selcomController.handleSheetDismissed();
-      Get.delete<SelcomPesaTopupController>(tag: controllerTag);
     });
   }
 

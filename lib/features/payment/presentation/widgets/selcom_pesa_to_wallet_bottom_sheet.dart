@@ -39,13 +39,16 @@ class SelcomPesaToWalletBottomSheet extends GetView<SelcomPesaTopupController> {
         paymentController: paymentController,
       ),
       footer: _SelcomPesaSelfFooter(controllerTag: tag),
-    ).whenComplete(() async {
-      await Future<void>.delayed(Duration.zero);
-      if (!Get.isRegistered<SelcomPesaTopupController>(tag: tag)) return;
-      final selcomController = Get.find<SelcomPesaTopupController>(tag: tag);
-      if (selcomController.shouldRetainAfterSheetClose) return;
-      selcomController.handleSheetDismissed();
-      Get.delete<SelcomPesaTopupController>(tag: tag);
+    ).whenComplete(() {
+      unawaited(
+        AppDialogs.runAfterBottomSheetDismissed(() async {
+          if (!Get.isRegistered<SelcomPesaTopupController>(tag: tag)) return;
+          final selcomController = Get.find<SelcomPesaTopupController>(tag: tag);
+          if (selcomController.shouldRetainAfterSheetClose) return;
+          selcomController.handleSheetDismissed();
+          Get.delete<SelcomPesaTopupController>(tag: tag);
+        }),
+      );
     });
   }
 
