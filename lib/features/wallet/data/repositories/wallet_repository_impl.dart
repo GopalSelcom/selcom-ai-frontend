@@ -3,12 +3,15 @@ import '../../../payment/data/datasources/selcom_pesa_topup_remote_data_source.d
 import '../../../payment/data/datasources/wallet_payment_remote_data_source.dart';
 import '../../../payment/data/models/go_other_payment_methods_models.dart';
 import '../../../payment/data/models/selcom_pesa_topup_models.dart';
+import '../../../payment/data/models/selcom_pesa_topup_status_models.dart';
+import '../../domain/entities/wallet_statement_email_result.dart';
 import '../../domain/entities/wallet_summary_entity.dart';
 import '../../domain/entities/wallet_transaction_entity.dart';
 import '../../domain/entities/wallet_transaction_filter.dart';
 import '../../domain/repositories/wallet_repository.dart';
 import '../../domain/utils/wallet_statement_utils.dart';
 import '../datasources/wallet_remote_data_source.dart';
+import '../models/go_email_card_statement_models.dart';
 
 class WalletRepositoryImpl implements WalletRepository {
   WalletRepositoryImpl({
@@ -94,6 +97,23 @@ class WalletRepositoryImpl implements WalletRepository {
     _statementCache = null;
   }
 
+  @override
+  Future<WalletStatementEmailResult> emailWalletStatement({
+    required String email,
+    required String startDate,
+    required String endDate,
+    required String currency,
+  }) {
+    return _remoteDataSource.emailCardStatement(
+      EmailCardStatementRequest(
+        email: email,
+        startDate: startDate,
+        endDate: endDate,
+        currency: currency,
+      ),
+    );
+  }
+
   Future<List<WalletTransactionEntity>> _loadStatementTransactions() async {
     if (_statementCache != null) {
       return _statementCache!;
@@ -138,4 +158,9 @@ class WalletRepositoryImpl implements WalletRepository {
     request,
     requireShortCode: requireShortCode,
   );
+
+  @override
+  Future<SelcomPesaTopupStatusResult> checkSelcomPesaTopUpStatus({
+    required String transid,
+  }) => _selcomPesaTopupRemoteDataSource.checkTopUpStatus(transid: transid);
 }

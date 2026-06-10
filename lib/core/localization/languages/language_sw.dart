@@ -64,6 +64,9 @@ class LanguageSw extends Languages {
         'Sakinisha Selcom Pesa ili kukamilisha malipo kwenye kifaa chako.',
     'selcom_pesa_handoff_failed':
         'Imeshindikana kufungua Selcom Pesa. Hakikisha programu imesakinishwa na ujaribu tena.',
+    'selcom_pesa_status_not_found': '',
+    'selcom_pesa_payment_rejected': '',
+    'selcom_pesa_payment_processing': '',
     'wallet_account_unavailable':
         'Mkoba wako wa Go haupatikani. Tafadhali jaribu tena baadaye.',
     'download_app': 'Pakua programu',
@@ -515,6 +518,9 @@ class LanguageSw extends Languages {
     'recent_transaction_title': '',
     'view_all': '',
     'e_statement': '',
+    'wallet_statement_emailed_success': '',
+    'wallet_statement_email_failed': '',
+    'wallet_statement_range_capped_hint': '',
     'show_vcn': '',
     'no_transactions_yet': '',
     'filter_all': '',
@@ -887,6 +893,18 @@ class LanguageSw extends Languages {
   @override
   String get selcomPesaHandoffFailed =>
       values['selcom_pesa_handoff_failed'] ?? '';
+
+  @override
+  String get selcomPesaStatusNotFound =>
+      values['selcom_pesa_status_not_found'] ?? '';
+
+  @override
+  String get selcomPesaPaymentRejected =>
+      values['selcom_pesa_payment_rejected'] ?? '';
+
+  @override
+  String get selcomPesaPaymentProcessing =>
+      values['selcom_pesa_payment_processing'] ?? '';
 
   @override
   String get walletAccountUnavailable =>
@@ -2314,6 +2332,18 @@ class LanguageSw extends Languages {
 
   @override
   String get eStatement => values['e_statement'] ?? '';
+
+  @override
+  String get walletStatementEmailedSuccess =>
+      values['wallet_statement_emailed_success'] ?? '';
+
+  @override
+  String get walletStatementEmailFailed =>
+      values['wallet_statement_email_failed'] ?? '';
+
+  @override
+  String get walletStatementRangeCappedHint =>
+      values['wallet_statement_range_capped_hint'] ?? '';
 
   @override
   String get showVcn => values['show_vcn'] ?? '';

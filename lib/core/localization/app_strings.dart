@@ -79,6 +79,11 @@ class AppStrings {
       'selcom_pesa_app_not_installed';
   static const String selcomPesaInstallPrompt = 'selcom_pesa_install_prompt';
   static const String selcomPesaHandoffFailed = 'selcom_pesa_handoff_failed';
+  static const String selcomPesaStatusNotFound = 'selcom_pesa_status_not_found';
+  static const String selcomPesaPaymentRejected =
+      'selcom_pesa_payment_rejected';
+  static const String selcomPesaPaymentProcessing =
+      'selcom_pesa_payment_processing';
   static const String walletAccountUnavailable = 'wallet_account_unavailable';
   static const String downloadApp = 'download_app';
   static const String mobileMoneyPhoneValue = 'mobile_money_phone_value';
@@ -669,6 +674,12 @@ class AppStrings {
   static const String recentTransactionTitle = 'recent_transaction_title';
   static const String viewAll = 'view_all';
   static const String eStatement = 'e_statement';
+  static const String walletStatementEmailedSuccess =
+      'wallet_statement_emailed_success';
+  static const String walletStatementEmailFailed =
+      'wallet_statement_email_failed';
+  static const String walletStatementRangeCappedHint =
+      'wallet_statement_range_capped_hint';
   static const String showVcn = 'show_vcn';
   static const String noTransactionsYet = 'no_transactions_yet';
   static const String filterAll = 'filter_all';

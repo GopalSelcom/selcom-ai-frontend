@@ -33,7 +33,6 @@ class AddMoneyToWalletBottomSheet extends StatelessWidget {
     Get.put(TanQrWalletTopupController(), tag: tag);
     return AppDialogs.showStandardBottomSheet<TanQrTopupResult?>(
       sheet: AddMoneyToWalletBottomSheet(controllerTag: tag),
-      barrierDismissible: false,
     ).whenComplete(() {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (Get.isRegistered<TanQrWalletTopupController>(tag: tag)) {
@@ -135,24 +134,24 @@ class _OptionsContent extends StatelessWidget {
           onTap: _onSelcomPesaTap,
         ),
         SizedBox(height: 12.h),
-        _AddMoneyOptionTile(
-          title: AppStrings.addMoneyTanQrTips.tr,
-          subtitle: AppStrings.addMoneyTanQrTipsSubtitle.tr,
-          onTap: controller.openTanQrAmountEntry,
-        ),
-        SizedBox(height: 12.h),
+        // _AddMoneyOptionTile(
+        //   title: AppStrings.addMoneyTanQrTips.tr,
+        //   subtitle: AppStrings.addMoneyTanQrTipsSubtitle.tr,
+        //   onTap: controller.openTanQrAmountEntry,
+        // ),
+        // SizedBox(height: 12.h),
         _AddMoneyOptionTile(
           title: AppStrings.mobileMoney.tr,
           subtitle: AppStrings.addMoneyMobileMoneySubtitle.tr,
           onTap: () => _onOptionTap(_AddMoneyOption.mobileMoney),
         ),
-        SizedBox(height: 12.h),
-        _AddMoneyOptionTile(
-          title: AppStrings.addMoneyStepsToLoadGoWallet.tr,
-          subtitle: AppStrings.addMoneyStepsToLoadGoWalletSubtitle.tr,
-          onTap: () => _onOptionTap(_AddMoneyOption.stepsToLoad),
-        ),
         SizedBox(height: 8.h),
+        // _AddMoneyOptionTile(
+        //   title: AppStrings.addMoneyStepsToLoadGoWallet.tr,
+        //   subtitle: AppStrings.addMoneyStepsToLoadGoWalletSubtitle.tr,
+        //   onTap: () => _onOptionTap(_AddMoneyOption.stepsToLoad),
+        // ),
+        // SizedBox(height: 8.h),
       ],
     );
   }

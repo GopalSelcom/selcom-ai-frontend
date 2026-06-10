@@ -38,7 +38,7 @@ class WalletPaymentRemoteDataSourceImpl
   }) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: URLS.wallet.otherPaymentMethods,
+        endpoint: URLS.wallet.walletTopUp,
         method: ApiMethod.post,
         body: request.toJson(),
         errorPresentationType: ErrorPresentationType.none,
@@ -95,7 +95,7 @@ class WalletPaymentRemoteDataSourceImpl
 
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: URLS.wallet.checkWalletPayment,
+        endpoint: URLS.wallet.checkWalletPaymentTopUpStatus,
         method: ApiMethod.post,
         body: {'transid': trimmedTransid},
         errorPresentationType: ErrorPresentationType.none,

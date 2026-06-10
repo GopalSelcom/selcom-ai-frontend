@@ -7,7 +7,6 @@ import 'package:get/get.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_strings.dart';
-import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/app_region_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/selcom_pesa/selcom_pesa_app_launcher_service.dart';
@@ -25,8 +24,7 @@ import '../widgets/mobile_money_topup_status_dialog.dart';
 
 enum SelcomPesaTopupFlow { self, other }
 
-class SelcomPesaTopupController extends GetxController
-    with WidgetsBindingObserver {
+class SelcomPesaTopupController extends GetxController {
   SelcomPesaTopupController({
     this.controllerTag,
     WalletRepository? walletRepository,
@@ -42,8 +40,8 @@ class SelcomPesaTopupController extends GetxController
   final AppRegionService _appRegionService;
   final SelcomPesaAppLauncherService _selcomPesaLauncher;
 
-  static const int selfTimeoutSeconds = 120;
-  static const int otherDialogAutoCloseSeconds = 2;
+  static const int paymentTimeoutSeconds = 300;
+  static const Duration pollInterval = Duration(seconds: 3);
 
   final amountRaw = ''.obs;
   final phoneRaw = ''.obs;
@@ -51,22 +49,24 @@ class SelcomPesaTopupController extends GetxController
   final phoneError = RxnString();
   final apiError = RxnString();
   final isSubmitting = false.obs;
+  final isCancelling = false.obs;
 
   late final TextEditingController amountController;
   TextEditingController? phoneController;
 
   final ValueNotifier<int> pendingCountdown = ValueNotifier<int>(
-    selfTimeoutSeconds,
+    paymentTimeoutSeconds,
   );
 
   Timer? _countdownTimer;
-  Timer? _otherDialogTimer;
+  Timer? _pollTimer;
   bool _pendingDialogVisible = false;
-  bool _awaitingSelcomPesaReturn = false;
-  bool _selfFlowHandled = false;
+  bool _paymentHandled = false;
   bool _retainForFollowUpSheet = false;
   SelcomPesaTopupFlow? _activeFlow;
   int? _lastSelfAmount;
+  SelcomPesaTopupResult? _session;
+  String _pendingRequestTitle = '';
 
   String get countryDialCode =>
       _appRegionService.selected.dialCode.replaceAll('+', '');
@@ -76,9 +76,7 @@ class SelcomPesaTopupController extends GetxController
   String get countryIso => _appRegionService.selected.code;
 
   bool get isAwaitingPaymentResult =>
-      _pendingDialogVisible ||
-      _awaitingSelcomPesaReturn ||
-      (_activeFlow == SelcomPesaTopupFlow.self && !_selfFlowHandled);
+      _pendingDialogVisible || (_session != null && !_paymentHandled);
 
   bool get shouldRetainAfterSheetClose =>
       isAwaitingPaymentResult ||
@@ -113,7 +111,6 @@ class SelcomPesaTopupController extends GetxController
   @override
   void onInit() {
     super.onInit();
-    WidgetsBinding.instance.addObserver(this);
     amountController = TextEditingController();
   }
 
@@ -123,18 +120,10 @@ class SelcomPesaTopupController extends GetxController
 
   @override
   void onClose() {
-    WidgetsBinding.instance.removeObserver(this);
     _stopTimers();
     pendingCountdown.dispose();
     amountController.dispose();
     super.onClose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state != AppLifecycleState.resumed) return;
-    if (!_awaitingSelcomPesaReturn || _selfFlowHandled) return;
-    unawaited(_onSelfFlowReturned());
   }
 
   void onAmountChanged(String value) {
@@ -226,6 +215,11 @@ class SelcomPesaTopupController extends GetxController
     );
   }
 
+  Future<void> retryOtherTopUp() async {
+    if (_activeFlow != SelcomPesaTopupFlow.other) return;
+    await submitOtherTopUp(closeSheetFirst: false);
+  }
+
   Future<void> _sendTopUpRequest({
     required int amount,
     required String mobileNumber,
@@ -288,8 +282,11 @@ class SelcomPesaTopupController extends GetxController
   }
 
   Future<void> _startSelfFlow(SelcomPesaTopupResult result) async {
-    _selfFlowHandled = false;
-    _awaitingSelcomPesaReturn = false;
+    _session = result;
+    _paymentHandled = false;
+    _pendingRequestTitle = AppStrings
+        .requestSentPleaseCompletePaymentOnSelcomPesaToBookYourRide
+        .tr;
 
     final launchResult = await _selcomPesaLauncher.openPcodePayment(
       result.shortCode,
@@ -302,92 +299,37 @@ class SelcomPesaTopupController extends GetxController
       return;
     }
 
-    _awaitingSelcomPesaReturn = true;
-    _showSelfPendingDialog();
-    _startSelfTimeout();
+    _showPaymentPendingDialog();
+    _startPaymentPolling();
   }
 
   Future<void> _startOtherFlow(SelcomPesaTopupResult result) async {
-    final message = result.message.trim().isNotEmpty
+    _session = result;
+    _paymentHandled = false;
+    _pendingRequestTitle = result.message.trim().isNotEmpty
         ? result.message
         : AppStrings.requestSentCompleteSelcomTopup.tr;
 
-    _showOtherPendingDialog(message);
-    _otherDialogTimer?.cancel();
-    _otherDialogTimer = Timer(
-      const Duration(seconds: otherDialogAutoCloseSeconds),
-      () {
-        _dismissPendingDialog();
-        _finishFlow();
-      },
-    );
+    _showPaymentPendingDialog();
+    _startPaymentPolling();
   }
 
-  Future<void> _onSelfFlowReturned() async {
-    if (_selfFlowHandled) return;
-    _selfFlowHandled = true;
-    _awaitingSelcomPesaReturn = false;
-    _stopTimers();
-    _dismissPendingDialog();
-
-    await WalletRefresh.afterBalanceChange();
-
-    if (Get.currentRoute != AppRoutes.wallet) {
-      await Get.toNamed(AppRoutes.wallet);
-    }
-
-    AppDialogs.showSuccessDialog(
-      title: AppStrings.walletFundsReceivedTitle.tr,
-      message: AppStrings.walletFundsReceivedSubtitle.tr,
-    );
-    _finishFlow();
-  }
-
-  void _onSelfTimeoutExpired() {
-    if (_selfFlowHandled) return;
-    _awaitingSelcomPesaReturn = false;
-    _stopTimers();
-    _dismissPendingDialog();
-
-    AppDialogs.showConfirmationDialog(
-      title: AppStrings.tanQrTimerExpiredTitle.tr,
-      message: AppStrings.tanQrTimerExpiredMessage.tr,
-      confirmText: AppStrings.retry,
-      cancelText: AppStrings.cancel,
-      onConfirm: retrySelfTopUp,
-      onCancel: _finishFlow,
-    );
-  }
-
-  void _showSelfPendingDialog() {
-    pendingCountdown.value = selfTimeoutSeconds;
+  void _showPaymentPendingDialog() {
+    pendingCountdown.value = paymentTimeoutSeconds;
     _pendingDialogVisible = true;
 
     AppDialogs.showAnimatedDialog<void>(
       barrierDismissible: false,
       child: PopScope(
         canPop: false,
-        child: MobileMoneyTopupStatusDialog(
-          type: MobileMoneyTopupDialogType.request,
-          requestTitle: AppStrings
-              .requestSentPleaseCompletePaymentOnSelcomPesaToBookYourRide
-              .tr,
-          secondsListenable: pendingCountdown,
-        ),
-      ),
-    );
-  }
-
-  void _showOtherPendingDialog(String message) {
-    _pendingDialogVisible = true;
-
-    AppDialogs.showAnimatedDialog<void>(
-      barrierDismissible: false,
-      child: PopScope(
-        canPop: false,
-        child: MobileMoneyTopupStatusDialog(
-          type: MobileMoneyTopupDialogType.request,
-          requestTitle: message,
+        child: Obx(
+          () => MobileMoneyTopupStatusDialog(
+            type: MobileMoneyTopupDialogType.request,
+            requestTitle: _pendingRequestTitle,
+            secondsListenable: pendingCountdown,
+            onCancel: () => unawaited(cancelPaymentRequest()),
+            isCancelling: isCancelling.value,
+          ),
         ),
       ),
     );
@@ -399,19 +341,139 @@ class SelcomPesaTopupController extends GetxController
     AppDialogs.dismissTopOverlay();
   }
 
-  void _startSelfTimeout() {
+  void _startPaymentPolling() {
     _stopTimers();
-    pendingCountdown.value = selfTimeoutSeconds;
+    pendingCountdown.value = paymentTimeoutSeconds;
+    _paymentHandled = false;
 
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       final next = pendingCountdown.value - 1;
       if (next <= 0) {
         pendingCountdown.value = 0;
-        _onSelfTimeoutExpired();
+        _onPaymentTimeoutExpired();
         return;
       }
       pendingCountdown.value = next;
     });
+
+    _pollTimer = Timer.periodic(pollInterval, (_) {
+      unawaited(_pollSelcomPesaStatus());
+    });
+    unawaited(_pollSelcomPesaStatus());
+  }
+
+  Future<void> _pollSelcomPesaStatus() async {
+    if (_paymentHandled) return;
+
+    final transid = _session?.transid.trim() ?? '';
+    if (transid.isEmpty) return;
+
+    try {
+      final status = await _walletRepository.checkSelcomPesaTopUpStatus(
+        transid: transid,
+      );
+
+      if (status.isPaid) {
+        await _onPaymentSucceeded();
+        return;
+      }
+
+      if (status.isUssdTerminalFailure) {
+        final message = status.message.trim().isNotEmpty
+            ? status.message.trim()
+            : AppStrings.selcomPesaPaymentRejected.tr;
+        await _onPaymentTerminalError(message);
+        return;
+      }
+
+      if (status.isFundCreditTerminalFailure) {
+        await _onPaymentTerminalError(
+          AppStrings.selcomPesaPaymentProcessing.tr,
+        );
+      }
+    } on WalletPaymentException catch (e) {
+      if (e.message == AppStrings.selcomPesaStatusNotFound) {
+        await _onPaymentTerminalError(AppStrings.selcomPesaStatusNotFound.tr);
+      }
+    } catch (_) {
+      // Keep polling until timeout or a terminal state.
+    }
+  }
+
+  void _onPaymentTimeoutExpired() {
+    if (_paymentHandled) return;
+    _stopTimers();
+    _dismissPendingDialog();
+
+    AppDialogs.showConfirmationDialog(
+      title: AppStrings.tanQrTimerExpiredTitle.tr,
+      message: AppStrings.tanQrTimerExpiredMessage.tr,
+      confirmText: AppStrings.retry,
+      cancelText: AppStrings.cancel,
+      onConfirm: _activeFlow == SelcomPesaTopupFlow.other
+          ? retryOtherTopUp
+          : retrySelfTopUp,
+      onCancel: _finishFlow,
+    );
+  }
+
+  Future<void> _onPaymentSucceeded() async {
+    if (_paymentHandled) return;
+    _paymentHandled = true;
+    _stopTimers();
+    _dismissPendingDialog();
+
+    await WalletRefresh.afterBalanceChange();
+
+    AppDialogs.showSuccessDialog(
+      title: AppStrings.walletFundsReceivedTitle.tr,
+      message: AppStrings.walletFundsReceivedSubtitle.tr,
+    );
+    _finishFlow();
+  }
+
+  Future<void> _onPaymentTerminalError(String message) async {
+    if (_paymentHandled) return;
+    _paymentHandled = true;
+    _stopTimers();
+    _dismissPendingDialog();
+
+    AppDialogs.showErrorDialog(message: message);
+    _finishFlow();
+  }
+
+  Future<void> cancelPaymentRequest() async {
+    if (isCancelling.value || _paymentHandled) return;
+
+    final transid = _session?.transid.trim() ?? '';
+    if (transid.isEmpty) return;
+
+    isCancelling.value = true;
+    Loader.instance.show();
+
+    var dismissed = false;
+    try {
+      await _walletRepository.cancelUssdOrder(transid: transid);
+      _paymentHandled = true;
+      _stopTimers();
+      dismissed = true;
+      await Loader.instance.hideAsync();
+      _dismissPendingDialog();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _finishFlow();
+      });
+    } on WalletPaymentException catch (e) {
+      AppDialogs.showErrorDialog(message: e.message.tr);
+    } catch (_) {
+      AppDialogs.showErrorDialog(
+        message: AppStrings.couldNotCancelTryAgain.tr,
+      );
+    } finally {
+      Loader.instance.hide();
+      if (!dismissed) {
+        isCancelling.value = false;
+      }
+    }
   }
 
   Future<void> _showInstallSelcomPesaDialog() async {
@@ -511,9 +573,9 @@ class SelcomPesaTopupController extends GetxController
   }
 
   void _finishFlow() {
-    _selfFlowHandled = true;
-    _awaitingSelcomPesaReturn = false;
+    _paymentHandled = true;
     _activeFlow = null;
+    _session = null;
     _stopTimers();
     _dismissPendingDialog();
     _disposeRegisteredController();
@@ -530,8 +592,8 @@ class SelcomPesaTopupController extends GetxController
   void _stopTimers() {
     _countdownTimer?.cancel();
     _countdownTimer = null;
-    _otherDialogTimer?.cancel();
-    _otherDialogTimer = null;
+    _pollTimer?.cancel();
+    _pollTimer = null;
   }
 }
 

@@ -50,7 +50,7 @@ class SelcomPesaTopupResult {
     final dataMap = data is Map<String, dynamic> ? data : null;
 
     return SelcomPesaTopupResult(
-      transid: json['transid']?.toString() ?? '',
+      transid: _readTransid(json, nested),
       message: json['message']?.toString() ?? '',
       shortCode: nested?['shortCode']?.toString() ??
           nested?['short_code']?.toString() ??
@@ -62,5 +62,17 @@ class SelcomPesaTopupResult {
       utilityRef: dataMap?['utility_ref']?.toString() ?? '',
       cardId: dataMap?['card_id']?.toString() ?? '',
     );
+  }
+
+  static String _readTransid(
+    Map<String, dynamic> json,
+    Map<String, dynamic>? nested,
+  ) {
+    for (final source in [json, nested]) {
+      if (source == null) continue;
+      final value = source['transid']?.toString().trim() ?? '';
+      if (value.isNotEmpty) return value;
+    }
+    return '';
   }
 }

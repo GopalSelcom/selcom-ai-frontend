@@ -71,6 +71,9 @@ abstract class Languages {
   String get selcomPesaAppNotInstalled;
   String get selcomPesaInstallPrompt;
   String get selcomPesaHandoffFailed;
+  String get selcomPesaStatusNotFound;
+  String get selcomPesaPaymentRejected;
+  String get selcomPesaPaymentProcessing;
   String get walletAccountUnavailable;
   String get downloadApp;
   String get mobileMoneyPhoneValue;
@@ -506,6 +509,9 @@ abstract class Languages {
   String get recentTransactionTitle;
   String get viewAll;
   String get eStatement;
+  String get walletStatementEmailedSuccess;
+  String get walletStatementEmailFailed;
+  String get walletStatementRangeCappedHint;
   String get showVcn;
   String get noTransactionsYet;
   String get filterAll;

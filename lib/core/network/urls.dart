@@ -187,11 +187,17 @@ class _WalletEndpoints {
   final details = "go_wallet/go_wallet_details";
   final cardBalance = "go_wallet/go_card_balance";
   final otherPaymentMethods = "go_wallet/go_other_payment_methods";
+  final walletTopUp = "go_wallet/wallet_push_ussd";
+  final checkWalletPaymentTopUpStatus = "check_wallet_push_ussd_status";
+
   final checkWalletPayment = "go_wallet/check_wallet_payment";
   final cancelUssdOrder = "go_wallet/go_cancel_ussd_order";
   final sendTransferRequestSelcomPesa =
       "go_wallet/go_send_transfer_request_selcom_pesa";
+  final checkSelcomPesaTopUpStatus =
+      "go_wallet/check_selcom_pesa_status";
   final cardStatement = "go_wallet/go_card_statement";
+  final emailCardStatement = "go_wallet/go_email_card_statement";
 }
 
 /// ─────────────────────────────────

@@ -158,7 +158,7 @@ class MobileMoneyTopupController extends GetxController {
     if (digits.startsWith('0')) {
       digits = digits.substring(1);
     }
-    return '$countryDialCode$digits';
+    return digits;
   }
 
   Future<void> submit() async {
@@ -210,7 +210,7 @@ class MobileMoneyTopupController extends GetxController {
         GoOtherPaymentMethodsRequest(
           totalPrice: amount,
           ussdPhoneNumber: ussdPhone,
-          paymentMode: GoOtherPaymentMethodsRequest.paymentModeMobileMoney,
+          // paymentMode: GoOtherPaymentMethodsRequest.paymentModeMobileMoney,
         ),
       );
 

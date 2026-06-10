@@ -76,6 +76,12 @@ class LanguageEn extends Languages {
         'Install Selcom Pesa to complete this payment on your device.',
     'selcom_pesa_handoff_failed':
         'Unable to open Selcom Pesa. Please make sure the app is installed and try again.',
+    'selcom_pesa_status_not_found':
+        'We could not find this payment. Please try again.',
+    'selcom_pesa_payment_rejected':
+        'Payment was declined or failed. Please try again.',
+    'selcom_pesa_payment_processing':
+        'Payment received, processing your top-up. Contact support if your balance does not update.',
     'wallet_account_unavailable':
         'Your Go wallet is not available. Please try again later.',
     'download_app': 'Download app',
@@ -592,6 +598,12 @@ class LanguageEn extends Languages {
     'recent_transaction_title': 'Recent Transaction',
     'view_all': 'View All',
     'e_statement': 'E-Statement',
+    'wallet_statement_emailed_success':
+        'Your wallet statement has been emailed to you.',
+    'wallet_statement_email_failed':
+        'Could not email your wallet statement. Please try again.',
+    'wallet_statement_range_capped_hint':
+        'The statement covers the last 30 days ending on the selected end date.',
     'show_vcn': 'Show VCN',
     'no_transactions_yet': 'No transactions yet',
     'filter_all': 'All',
@@ -995,6 +1007,18 @@ class LanguageEn extends Languages {
   @override
   String get selcomPesaHandoffFailed =>
       values['selcom_pesa_handoff_failed'] ?? '';
+
+  @override
+  String get selcomPesaStatusNotFound =>
+      values['selcom_pesa_status_not_found'] ?? '';
+
+  @override
+  String get selcomPesaPaymentRejected =>
+      values['selcom_pesa_payment_rejected'] ?? '';
+
+  @override
+  String get selcomPesaPaymentProcessing =>
+      values['selcom_pesa_payment_processing'] ?? '';
 
   @override
   String get walletAccountUnavailable =>
@@ -2422,6 +2446,18 @@ class LanguageEn extends Languages {
 
   @override
   String get eStatement => values['e_statement'] ?? '';
+
+  @override
+  String get walletStatementEmailedSuccess =>
+      values['wallet_statement_emailed_success'] ?? '';
+
+  @override
+  String get walletStatementEmailFailed =>
+      values['wallet_statement_email_failed'] ?? '';
+
+  @override
+  String get walletStatementRangeCappedHint =>
+      values['wallet_statement_range_capped_hint'] ?? '';
 
   @override
   String get showVcn => values['show_vcn'] ?? '';

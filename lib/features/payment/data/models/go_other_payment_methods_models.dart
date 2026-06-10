@@ -16,9 +16,9 @@ class GoOtherPaymentMethodsRequest {
 
   Map<String, dynamic> toJson() {
     return {
-      'total_price': totalPrice,
-      'payment_mode': paymentMode,
-      'ussd_phone_number': ussdPhoneNumber,
+      'amount': totalPrice,
+      // 'payment_mode': paymentMode,
+      'mobile_number': ussdPhoneNumber,
       // 'sqr_amount': sqrAmount,
     };
   }
