@@ -14,6 +14,7 @@ import '../../../../shared/widgets/app_text_field.dart';
 import '../../../profile/presentation/controllers/payment_methods_controller.dart';
 import '../controllers/selcom_pesa_topup_controller.dart';
 import 'selcom_pesa_another_number_bottom_sheet.dart';
+import 'wallet_topup_sheet_lifecycle.dart';
 
 class SelcomPesaToWalletBottomSheet extends GetView<SelcomPesaTopupController> {
   const SelcomPesaToWalletBottomSheet({
@@ -39,14 +40,7 @@ class SelcomPesaToWalletBottomSheet extends GetView<SelcomPesaTopupController> {
         paymentController: paymentController,
       ),
       footer: _SelcomPesaSelfFooter(controllerTag: tag),
-    ).whenComplete(() async {
-      await Future<void>.delayed(Duration.zero);
-      if (!Get.isRegistered<SelcomPesaTopupController>(tag: tag)) return;
-      final selcomController = Get.find<SelcomPesaTopupController>(tag: tag);
-      if (selcomController.shouldRetainAfterSheetClose) return;
-      selcomController.handleSheetDismissed();
-      Get.delete<SelcomPesaTopupController>(tag: tag);
-    });
+    ).whenComplete(() => disposeSelcomPesaTopupAfterSheetClosed(tag));
   }
 
   static PaymentMethodsController _paymentController() {
@@ -61,6 +55,10 @@ class SelcomPesaToWalletBottomSheet extends GetView<SelcomPesaTopupController> {
 
   @override
   Widget build(BuildContext context) {
+    if (!Get.isRegistered<SelcomPesaTopupController>(tag: controllerTag) ||
+        controller.textFieldsDisposed) {
+      return const SizedBox.shrink();
+    }
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -92,6 +90,10 @@ class SelcomPesaToWalletBottomSheet extends GetView<SelcomPesaTopupController> {
         ),
         SizedBox(height: 14.h),
         Obx(() {
+          if (!Get.isRegistered<SelcomPesaTopupController>(tag: controllerTag) ||
+              controller.textFieldsDisposed) {
+            return const SizedBox.shrink();
+          }
           final apiError = controller.apiError.value;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -247,6 +249,10 @@ class _SelcomPesaSelfFooter extends GetView<SelcomPesaTopupController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
+      if (!Get.isRegistered<SelcomPesaTopupController>(tag: controllerTag) ||
+          controller.textFieldsDisposed) {
+        return const SizedBox.shrink();
+      }
       return AppPrimaryButton(
         label: AppStrings.done.tr,
         onPressed: controller.canSubmitSelf ? _onDonePressed : null,

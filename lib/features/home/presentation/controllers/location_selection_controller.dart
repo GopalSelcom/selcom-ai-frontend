@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/constants/ride_stop_limits.dart';
+import '../../../../core/localization/app_strings.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 import '../controllers/home_controller.dart';
 
 class LocationSelectionController extends GetxController {
@@ -40,13 +44,31 @@ class LocationSelectionController extends GetxController {
   bool get shouldShowPlaceListShimmer =>
       isLoadingInitialContent.value || homeController.isLoadingHomeData.value;
 
+  bool get _isPickupSegmentReady {
+    final text = pickupController.text.trim();
+    if (text.isEmpty || homeController.isNonSelectableMapAddress(text)) {
+      return false;
+    }
+    if (homeController.isPickupSelected.value) return true;
+    return routePickupLat.value != null && routePickupLng.value != null;
+  }
+
+  bool get _isDestinationSegmentReady {
+    final text = destinationController.text.trim();
+    if (text.isEmpty) return false;
+    if (homeController.isDestinationSelected.value) return true;
+    return routeDestinationLat.value != null &&
+        routeDestinationLng.value != null;
+  }
+
   /// Pickup + final destination + every intermediate row (if any) confirmed from search/recent/saved.
   bool get areAllSegmentsReadyForBooking {
-    if (!homeController.isPickupSelected.value) return false;
-    if (!homeController.isDestinationSelected.value) return false;
+    if (!_isPickupSegmentReady) return false;
+    if (!_isDestinationSegmentReady) return false;
     final n = extraDestinationControllers.length;
     if (extraStopSelected.length != n) return false;
     for (var i = 0; i < n; i++) {
+      if (extraDestinationControllers[i].text.trim().isEmpty) return false;
       if (!extraStopSelected[i]) return false;
     }
     return true;
@@ -61,13 +83,110 @@ class LocationSelectionController extends GetxController {
       final i = segmentIndex - 2;
       if (i >= 0 && i < extraStopSelected.length) {
         extraStopSelected[i] = true;
+        extraStopSelected.refresh();
       }
     }
+    _scheduleAutoProceedIfAllSegmentsReady();
+  }
+
+  void _scheduleAutoProceedIfAllSegmentsReady() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_isDisposed) return;
+      if (!areAllSegmentsReadyForBooking) return;
+      unawaited(proceedWithBooking());
+    });
+  }
+
+  Future<void> proceedWithBooking() async {
+    if (!areAllSegmentsReadyForBooking) return;
+    if (homeController.isProceedingToBooking.value) return;
+
+    final destinations = <String>[];
+    for (final c in extraDestinationControllers) {
+      final t = c.text.trim();
+      if (t.isNotEmpty) destinations.add(t);
+    }
+    final finalDestination = destinationController.text.trim();
+    if (finalDestination.isNotEmpty) {
+      destinations.add(finalDestination);
+    }
+
+    if (isVehicleSelectionEditMode.value) {
+      final payload = await buildVehicleSelectionEditResult(
+        pickupText: pickupController.text.trim(),
+        destinationTexts: destinations,
+      );
+      if (payload == null) {
+        AppDialogs.showErrorDialog(
+          message: AppStrings.pleaseSelectValidPickupAndDestinationLocations.tr,
+        );
+        return;
+      }
+      Get.back(result: payload);
+      return;
+    }
+
+    await homeController.proceedToBookingFromLocationSelection(
+      pickup: pickupController.text.trim(),
+      destinations: destinations,
+      destinationPlaceId: destinationPlaceId.value,
+      routePickupLat: routePickupLat.value,
+      routePickupLng: routePickupLng.value,
+      routeDestinationLat: routeDestinationLat.value,
+      routeDestinationLng: routeDestinationLng.value,
+      preferredVehicleTypeId: preferredVehicleTypeId.value,
+      preferredVehicleName: preferredVehicleName.value,
+    );
+  }
+
+  Future<Map<String, dynamic>?> buildVehicleSelectionEditResult({
+    required String pickupText,
+    required List<String> destinationTexts,
+  }) async {
+    final cleanedDestinations = destinationTexts
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+    if (pickupText.isEmpty || cleanedDestinations.isEmpty) return null;
+
+    final pickupLatLng =
+        (routePickupLat.value != null && routePickupLng.value != null)
+        ? null
+        : await homeController.getLatLngFromAddress(pickupText);
+    final pickupLat = routePickupLat.value ?? pickupLatLng?.latitude;
+    final pickupLng = routePickupLng.value ?? pickupLatLng?.longitude;
+    if (pickupLat == null || pickupLng == null) return null;
+
+    final resultDestinations = <Map<String, dynamic>>[];
+    for (var i = 0; i < cleanedDestinations.length; i++) {
+      final text = cleanedDestinations[i];
+      double? lat;
+      double? lng;
+      if (i == cleanedDestinations.length - 1) {
+        lat = routeDestinationLat.value;
+        lng = routeDestinationLng.value;
+      }
+      if (lat == null || lng == null) {
+        final resolved = await homeController.getLatLngFromAddress(text);
+        lat = resolved?.latitude;
+        lng = resolved?.longitude;
+      }
+      if (lat == null || lng == null) return null;
+      resultDestinations.add({'address': text, 'lat': lat, 'lng': lng});
+    }
+
+    return {
+      'pickup': pickupText,
+      'pickupLat': pickupLat,
+      'pickupLng': pickupLng,
+      'destinations': resultDestinations,
+    };
   }
 
   void markExtraStopUnconfirmed(int index) {
     if (index >= 0 && index < extraStopSelected.length) {
       extraStopSelected[index] = false;
+      extraStopSelected.refresh();
     }
   }
 

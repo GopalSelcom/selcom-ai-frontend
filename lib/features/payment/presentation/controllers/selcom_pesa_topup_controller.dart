@@ -53,6 +53,9 @@ class SelcomPesaTopupController extends GetxController {
 
   late final TextEditingController amountController;
   TextEditingController? phoneController;
+  bool _textFieldsDisposed = false;
+
+  bool get textFieldsDisposed => _textFieldsDisposed;
 
   final ValueNotifier<int> pendingCountdown = ValueNotifier<int>(
     paymentTimeoutSeconds,
@@ -118,11 +121,24 @@ class SelcomPesaTopupController extends GetxController {
     phoneController = controller;
   }
 
+  void unbindPhoneController() {
+    phoneController = null;
+  }
+
+  void disposeTextFields() {
+    if (_textFieldsDisposed) return;
+    _textFieldsDisposed = true;
+    phoneController = null;
+    amountController.dispose();
+  }
+
   @override
   void onClose() {
     _stopTimers();
     pendingCountdown.dispose();
-    amountController.dispose();
+    if (!_textFieldsDisposed) {
+      disposeTextFields();
+    }
     super.onClose();
   }
 

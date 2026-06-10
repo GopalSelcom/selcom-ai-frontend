@@ -13,6 +13,7 @@ import '../../../../shared/utils/thousands_separator_input_formatter.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../controllers/mobile_money_topup_controller.dart';
+import 'wallet_topup_sheet_lifecycle.dart';
 
 class MobileMoneyTopupBottomSheet extends GetView<MobileMoneyTopupController> {
   const MobileMoneyTopupBottomSheet({super.key, required this.controllerTag});
@@ -32,14 +33,7 @@ class MobileMoneyTopupBottomSheet extends GetView<MobileMoneyTopupController> {
       barrierDismissible: true,
       content: MobileMoneyTopupBottomSheet(controllerTag: tag),
       footer: _MobileMoneyFooter(controllerTag: tag),
-    ).whenComplete(() async {
-      await Future<void>.delayed(Duration.zero);
-      if (!Get.isRegistered<MobileMoneyTopupController>(tag: tag)) return;
-      final mobileController = Get.find<MobileMoneyTopupController>(tag: tag);
-      if (mobileController.isAwaitingPaymentResult) return;
-      mobileController.handleSheetDismissed();
-      Get.delete<MobileMoneyTopupController>(tag: tag);
-    });
+    ).whenComplete(() => disposeMobileMoneyTopupAfterSheetClosed(tag));
   }
 
   @override
@@ -47,7 +41,15 @@ class MobileMoneyTopupBottomSheet extends GetView<MobileMoneyTopupController> {
 
   @override
   Widget build(BuildContext context) {
+    if (!Get.isRegistered<MobileMoneyTopupController>(tag: controllerTag) ||
+        controller.textFieldsDisposed) {
+      return const SizedBox.shrink();
+    }
     return Obx(() {
+      if (!Get.isRegistered<MobileMoneyTopupController>(tag: controllerTag) ||
+          controller.textFieldsDisposed) {
+        return const SizedBox.shrink();
+      }
       final apiError = controller.apiError.value;
       final iso = controller.countryIso;
 
@@ -159,6 +161,10 @@ class _MobileMoneyFooter extends GetView<MobileMoneyTopupController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
+      if (!Get.isRegistered<MobileMoneyTopupController>(tag: controllerTag) ||
+          controller.textFieldsDisposed) {
+        return const SizedBox.shrink();
+      }
       return Row(
         children: [
           Expanded(

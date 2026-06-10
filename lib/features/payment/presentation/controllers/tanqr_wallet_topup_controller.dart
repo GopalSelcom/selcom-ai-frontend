@@ -44,6 +44,9 @@ class TanQrWalletTopupController extends GetxController {
   final displayWalletNumber = ''.obs;
 
   late final TextEditingController amountController;
+  bool _textFieldsDisposed = false;
+
+  bool get textFieldsDisposed => _textFieldsDisposed;
 
   Timer? _countdownTimer;
   Timer? _pollTimer;
@@ -70,10 +73,18 @@ class TanQrWalletTopupController extends GetxController {
     unawaited(_loadDisplayAccountDetails());
   }
 
+  void disposeTextFields() {
+    if (_textFieldsDisposed) return;
+    _textFieldsDisposed = true;
+    amountController.dispose();
+  }
+
   @override
   void onClose() {
     _stopTimers();
-    amountController.dispose();
+    if (!_textFieldsDisposed) {
+      disposeTextFields();
+    }
     super.onClose();
   }
 

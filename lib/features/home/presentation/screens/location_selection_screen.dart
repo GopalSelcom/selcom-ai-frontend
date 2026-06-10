@@ -65,15 +65,6 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
 
   RxnDouble get _routeDestinationLng => locationController.routeDestinationLng;
 
-  RxnString get _preferredVehicleTypeId =>
-      locationController.preferredVehicleTypeId;
-
-  RxnString get _preferredVehicleName =>
-      locationController.preferredVehicleName;
-
-  bool get _isVehicleSelectionEditMode =>
-      locationController.isVehicleSelectionEditMode.value;
-
   int get _maxExtraStops => RideStopLimits.maxIntermediateStops;
 
   void _onAddDestinationStop() => locationController.onAddDestinationStop();
@@ -913,90 +904,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         iconAsset: AppAssets.locationIcArrowRight,
         iconColor: AppColors.white,
         isLoading: controller.isProceedingToBooking.value,
-        onPressed: () async {
-          final destinations = <String>[];
-          for (final c in _extraDestinationControllers) {
-            final t = c.text.trim();
-            if (t.isNotEmpty) destinations.add(t);
-          }
-          final finalDestination = destinationController.text.trim();
-          if (finalDestination.isNotEmpty) {
-            destinations.add(finalDestination);
-          }
-          if (_isVehicleSelectionEditMode) {
-            final payload = await _buildVehicleSelectionEditResult(
-              pickupText: pickupController.text.trim(),
-              destinationTexts: destinations,
-            );
-            if (payload == null) {
-              AppDialogs.showErrorDialog(
-                message: AppStrings
-                    .pleaseSelectValidPickupAndDestinationLocations
-                    .tr,
-              );
-              return;
-            }
-            Get.back(result: payload);
-            return;
-          }
-          controller.proceedToBookingFromLocationSelection(
-            pickup: pickupController.text.trim(),
-            destinations: destinations,
-            destinationPlaceId: _destinationPlaceId.value,
-            routePickupLat: _routePickupLat.value,
-            routePickupLng: _routePickupLng.value,
-            routeDestinationLat: _routeDestinationLat.value,
-            routeDestinationLng: _routeDestinationLng.value,
-            preferredVehicleTypeId: _preferredVehicleTypeId.value,
-            preferredVehicleName: _preferredVehicleName.value,
-          );
-        },
+        onPressed: locationController.proceedWithBooking,
       );
     });
-  }
-
-  Future<Map<String, dynamic>?> _buildVehicleSelectionEditResult({
-    required String pickupText,
-    required List<String> destinationTexts,
-  }) async {
-    final cleanedDestinations = destinationTexts
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toList();
-    if (pickupText.isEmpty || cleanedDestinations.isEmpty) return null;
-
-    final pickupLatLng =
-        (_routePickupLat.value != null && _routePickupLng.value != null)
-        ? null
-        : await controller.getLatLngFromAddress(pickupText);
-    final pickupLat = _routePickupLat.value ?? pickupLatLng?.latitude;
-    final pickupLng = _routePickupLng.value ?? pickupLatLng?.longitude;
-    if (pickupLat == null || pickupLng == null) return null;
-
-    final resultDestinations = <Map<String, dynamic>>[];
-    for (var i = 0; i < cleanedDestinations.length; i++) {
-      final text = cleanedDestinations[i];
-      double? lat;
-      double? lng;
-      if (i == cleanedDestinations.length - 1) {
-        lat = _routeDestinationLat.value;
-        lng = _routeDestinationLng.value;
-      }
-      if (lat == null || lng == null) {
-        final resolved = await controller.getLatLngFromAddress(text);
-        lat = resolved?.latitude;
-        lng = resolved?.longitude;
-      }
-      if (lat == null || lng == null) return null;
-      resultDestinations.add({'address': text, 'lat': lat, 'lng': lng});
-    }
-
-    return {
-      'pickup': pickupText,
-      'pickupLat': pickupLat,
-      'pickupLng': pickupLng,
-      'destinations': resultDestinations,
-    };
   }
 
   Future<void> _handleStopSelection({
@@ -1055,7 +965,8 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       destinationPlaceId: _destinationPlaceId,
     );
     locationController.confirmSelectionForSegment(_activeSegmentIndex.value);
-    controller.suggestions.clear();
+
+    // controller.suggestions.clear();
   }
 
   Widget _buildSearchContent() {

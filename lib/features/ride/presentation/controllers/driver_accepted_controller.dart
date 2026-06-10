@@ -59,6 +59,19 @@ import 'ride_details_controller.dart';
 /// SCR-11 — Driver accepted: live map, driver details, OTP.
 enum RideBottomSheetState { driverAssigned, rideStarted }
 
+const _reachedStatusesForSpeedHide = {
+  'driver_arrived',
+  'driverarrived',
+  'near_destination',
+  'neardestination',
+  'completed',
+  'ride_completed',
+  'ridecompleted',
+};
+
+/// Hide speed once the driver is within this radius of pickup (pickup phase).
+const _driverAtPickupProximityMeters = 75.0;
+
 class DriverAcceptedController extends GetxController
     with GetSingleTickerProviderStateMixin, WidgetsBindingObserver {
   DriverAcceptedController({
@@ -216,9 +229,62 @@ class DriverAcceptedController extends GetxController
     }
   }
 
+  bool _isDriverArrivedAtPickupStatus(String rawStatus) {
+    final normalized = normalizeRideStatusString(rawStatus);
+    return normalized == 'driver_arrived' ||
+        normalized == 'driverarrived' ||
+        normalized.contains('driver_arrived') ||
+        normalized.contains('driverarrived');
+  }
+
+  bool _isReachedStatusForSpeedHide(String rawStatus) {
+    final normalized = normalizeRideStatusString(rawStatus);
+    if (_reachedStatusesForSpeedHide.contains(normalized)) return true;
+    if (_isDriverArrivedAtPickupStatus(rawStatus)) return true;
+    if (normalized.contains('near_destination') ||
+        normalized.contains('neardestination')) {
+      return true;
+    }
+    return normalized == 'completed' ||
+        normalized == 'ride_completed' ||
+        normalized.contains('ride_completed');
+  }
+
+  bool _isDriverAtPickupProximity(LatLng? driverPosition) {
+    if (rideBottomSheetState.value != RideBottomSheetState.driverAssigned) {
+      return false;
+    }
+    if (driverPosition == null) return false;
+    return _calculateDistanceInMeters(driverPosition, pickupLatLng) <=
+        _driverAtPickupProximityMeters;
+  }
+
+  bool _shouldHideDriverSpeedFor({
+    required String status,
+    required LatLng? driverPosition,
+    required double speedMps,
+  }) {
+    if (_isReachedStatusForSpeedHide(status)) return true;
+    if (_isDriverAtPickupProximity(driverPosition)) return true;
+    return speedMps <= 0.5;
+  }
+
+  bool get _shouldHideDriverSpeedLabel {
+    // Read reactive deps so Obx rebuilds on status, speed, and driver position.
+    final status = currentRideStatus.value;
+    final driverPosition = assignedDriverLocation.value;
+    rideBottomSheetState.value;
+    return _shouldHideDriverSpeedFor(
+      status: status,
+      driverPosition: driverPosition,
+      speedMps: assignedDriverSpeed.value,
+    );
+  }
+
   String get formattedSpeedLabel {
+    if (_shouldHideDriverSpeedLabel) return '';
     final speedKmh = (assignedDriverSpeed.value * 3.6).round();
-    return speedKmh > 1 ? '$speedKmh km/h' : '';
+    return speedKmh > 0 ? '$speedKmh km/h' : '';
   }
 
   final DraggableScrollableController sheetController =
@@ -923,7 +989,15 @@ class DriverAcceptedController extends GetxController
 
       // 1. Update the base location with RAW GPS
       assignedDriverLocation.value = rawPos;
-      assignedDriverSpeed.value = speed;
+      if (_shouldHideDriverSpeedFor(
+        status: currentRideStatus.value,
+        driverPosition: rawPos,
+        speedMps: speed,
+      )) {
+        assignedDriverSpeed.value = 0;
+      } else {
+        assignedDriverSpeed.value = speed;
+      }
 
       // 2. High-Fidelity Interpolation:
       // We calculate duration based on REAL speed for a butter-smooth glide.
@@ -1392,6 +1466,9 @@ class DriverAcceptedController extends GetxController
     final normalizedStatus = normalizeRideStatusString(rawStatus);
     if (normalizedStatus.isEmpty) return;
     currentRideStatus.value = normalizedStatus;
+    if (_isReachedStatusForSpeedHide(normalizedStatus)) {
+      assignedDriverSpeed.value = 0;
+    }
 
     if (normalizedStatus == 'cancelled' ||
         normalizedStatus == 'no_driver_found') {
@@ -1418,7 +1495,7 @@ class DriverAcceptedController extends GetxController
 
     rideBottomSheetState.value = nextState;
     _syncSheetLayoutForCurrentStatus();
-    if (normalizedStatus == 'driver_arrived') {
+    if (_isDriverArrivedAtPickupStatus(normalizedStatus)) {
       _syncDriverArrivedPickupMessages();
     }
     final isCompletedStatus =
@@ -1436,6 +1513,7 @@ class DriverAcceptedController extends GetxController
 
   /// Pickup sheet + map chip copy when the driver is at pickup ([driver_arrived]).
   void _syncDriverArrivedPickupMessages() {
+    assignedDriverSpeed.value = 0;
     arrivalLabel.value = AppStrings.driverArrivedPickupPrimary.tr;
     etaLabel.value = AppStrings.driverArrivedMapBadge.tr;
   }
@@ -1716,7 +1794,7 @@ class DriverAcceptedController extends GetxController
       return;
     }
 
-    final isPickupArrived = trackingStatus == 'driver_arrived';
+    final isPickupArrived = _isDriverArrivedAtPickupStatus(trackingStatus);
     if (isPickupArrived) {
       _syncDriverArrivedPickupMessages();
     }

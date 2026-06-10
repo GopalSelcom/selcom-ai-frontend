@@ -862,25 +862,22 @@ class VehicleSelectionController extends GetxController {
             return;
           }
 
-          // Join payment room and wait for block callback before booking.
-          if (!_socketService.isConnected) {
-            await _socketService.connect();
-          }
+          // // Join payment room and wait for block callback before booking.
+          // if (!_socketService.isConnected) {
+          //   await _socketService.connect();
+          // }
 
           var blockValidationId = validationId;
           Loader.instance.show();
           while (true) {
-            final roomValidationId = blockValidationId;
-            _socketService.joinPaymentRoom(validationId: roomValidationId);
-
+            String? roomValidationId;
+            if (AppConfig.ridePaymentBypass) {
+              roomValidationId = blockValidationId;
+              _socketService.joinPaymentRoom(validationId: roomValidationId);
+            }
             final paymentConfirmed = AppConfig.ridePaymentBypass
-                ? await _confirmDevPaymentCallback(roomValidationId)
-                : await _waitForPaymentBlockStatus(
-                    timeout: Duration(
-                      seconds:
-                          di.sl<AppSettingsService>().paymentWaitSeconds.value,
-                    ),
-                  );
+                ? await _confirmDevPaymentCallback(roomValidationId??"")
+                : true;
 
             if (paymentConfirmed) {
               break;
@@ -1039,19 +1036,16 @@ class VehicleSelectionController extends GetxController {
     }
 
     final walletResult = await profileRepository.getWalletBalance();
-    return walletResult.fold(
-      (_) => true,
-      (wallet) {
-        final details = WalletRideBalanceGuard.insufficientDetails(
-          currentBalance: wallet.balance,
-          requiredAmount: requiredAmount,
-          currency: wallet.currency,
-        );
-        if (details == null) return true;
-        unawaited(_showInsufficientWalletDialog(details));
-        return false;
-      },
-    );
+    return walletResult.fold((_) => true, (wallet) {
+      final details = WalletRideBalanceGuard.insufficientDetails(
+        currentBalance: double.parse(wallet.response?.balance ?? "0.0"),
+        requiredAmount: requiredAmount,
+        currency: wallet.response?.currency ?? "",
+      );
+      if (details == null) return true;
+      unawaited(_showInsufficientWalletDialog(details));
+      return false;
+    });
   }
 
   Future<void> _showInsufficientWalletDialog(
