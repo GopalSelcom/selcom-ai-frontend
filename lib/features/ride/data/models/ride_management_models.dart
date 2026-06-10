@@ -252,9 +252,7 @@ class CheckBookModeResult {
     final data = (json['data'] ?? json) as Map<String, dynamic>;
     return CheckBookModeResult(
       showBookForOtherOption:
-          data['show_book_for_other_option'] as bool? ??
-          data['is_booked_for_other'] as bool? ??
-          false,
+          data['show_book_for_other_option'] as bool? ?? false,
       distanceKm: (data['distance_km'] as num?)?.toDouble(),
       thresholdKm: (data['threshold_km'] as num?)?.toDouble() ?? 1.0,
     );

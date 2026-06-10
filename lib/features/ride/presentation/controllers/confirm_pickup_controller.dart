@@ -117,8 +117,9 @@ class ConfirmPickupController extends GetxController {
     });
   }
 
-  /// No permission or location service off → always prompt.
-  /// Location available → prompt only when check-book-mode flag is true.
+  /// No location permission/service → always prompt.
+  /// Location available → prompt only when `go/check-book-mode` returns
+  /// `show_book_for_other_option: true`.
   Future<bool> _shouldPromptBookingForSomeoneElse() async {
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     final permission = await Geolocator.checkPermission();
