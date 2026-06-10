@@ -324,6 +324,10 @@ class AppStrings {
   static const String orderLabelWithId = 'order_label_with_id';
   static const String unauthorized = 'unauthorized';
   static const String openSettings = 'open_settings';
+  static const String callNotificationPermissionMsg =
+      'call_notification_permission_msg';
+  static const String callFullScreenPermissionMsg =
+      'call_full_screen_permission_msg';
   static const String pleaseEnterLabel = 'please_enter_label';
   static const String otpResentSuccessfully = 'otp_resent_successfully';
   static const String past = 'past';

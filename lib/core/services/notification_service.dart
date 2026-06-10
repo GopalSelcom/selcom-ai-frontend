@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:agora_calling_package/utils/constants.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -211,6 +212,17 @@ class NotificationService {
 
   void _onForegroundMessage(RemoteMessage message) {
     _logger.d("Foreground Message received: ${message.messageId}");
+
+    // Call pushes use CallKit / in-app UI — not a generic banner.
+    final callType = PushTypes.typeFromData(message.data);
+    if (PushTypes.isLiveCallSignaling(callType)) {
+      _logger.d(
+        'Skipping host notification for call push type=$callType '
+        '— handled by agora_calling_package',
+      );
+      return;
+    }
+
     final data = FCMNotificationData.fromJson(message.data);
 
     String? title = message.notification?.title ?? data.title;

@@ -36,7 +36,7 @@ dependencies:
   # notification + Telecom-based phoneCall foreground service for incoming
   # calls — that's our background-continuity story; we don't need a second
   # generic FG service from flutter_background_service.
-  flutter_callkit_incoming: ">=2.10.0 <4.0.0"
+  flutter_callkit_incoming: 3.1.1
 
   # Permissions, audio, vibration
   permission_handler: ">=11.3.0 <13.0.0"

@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 
 import '../models/agora_config.dart';
 import '../models/call_model.dart';
+import '../utils/agora_call_log.dart';
 
 /// REST client for the call signaling endpoints.
 ///
@@ -25,8 +25,8 @@ class CallApiService {
       InterceptorsWrapper(onRequest: (options, handler) async {
         final headers = await config.getAuthHeaders();
         options.headers.addAll(headers);
-        if (kDebugMode && _isCallSignalingPath(options.path)) {
-          debugPrint(
+        if (_isCallSignalingPath(options.path)) {
+          agoraCallLog(
             '[AGORA_API] onRequest ${options.method} ${options.path} '
             'access_token=${_tokenDebugLabel(headers['access_token'])}',
           );
@@ -51,28 +51,22 @@ class CallApiService {
     String? intent,
   }) async {
     final path = config.endpoints.tokenPath(rideId);
-    if (kDebugMode) {
-      debugPrint(
-        '[AGORA_API] POST $path (mintToken rideId=$rideId intent=$intent)',
-      );
-    }
+    agoraCallLog(
+      '[AGORA_API] POST $path (mintToken rideId=$rideId intent=$intent)',
+    );
     try {
       final body = intent != null ? <String, dynamic>{'intent': intent} : null;
       final res = await _dio.post(path, data: body);
-      if (kDebugMode) {
-        debugPrint('[AGORA_API] POST $path -> ${res.statusCode}');
-      }
+      agoraCallLog('[AGORA_API] POST $path -> ${res.statusCode}');
       return TokenMintResponse.fromJson(_unwrapData(res));
     } on DioException catch (e) {
-      if (kDebugMode) {
-        final sentToken =
-            e.requestOptions.headers['access_token']?.toString() ?? '';
-        debugPrint(
-          '[AGORA_API] POST $path FAILED status=${e.response?.statusCode} '
-          'type=${e.type} body=${e.response?.data} '
-          'sent_access_token=${_tokenDebugLabel(sentToken)}',
-        );
-      }
+      final sentToken =
+          e.requestOptions.headers['access_token']?.toString() ?? '';
+      agoraCallLog(
+        '[AGORA_API] POST $path FAILED status=${e.response?.statusCode} '
+        'type=${e.type} body=${e.response?.data} '
+        'sent_access_token=${_tokenDebugLabel(sentToken)}',
+      );
       rethrow;
     }
   }
@@ -83,15 +77,13 @@ class CallApiService {
   /// regardless of API outcome (so cancel failures never strand the user).
   Future<void> cancelCall(String rideId) async {
     final path = config.endpoints.cancelPath(rideId);
-    if (kDebugMode) {
-      debugPrint('[AGORA_API] POST $path (cancelCall rideId=$rideId)');
-    }
+    agoraCallLog('[AGORA_API] POST $path (cancelCall rideId=$rideId)');
     try {
       await _dio.post(path);
     } on DioException catch (e) {
-      if (kDebugMode) {
-        debugPrint('[AGORA_API] POST $path FAILED status=${e.response?.statusCode}');
-      }
+      agoraCallLog(
+        '[AGORA_API] POST $path FAILED status=${e.response?.statusCode}',
+      );
       rethrow;
     }
   }
@@ -100,18 +92,17 @@ class CallApiService {
   Future<void> registerVoipToken(String token) async {
     if (token.isEmpty) return;
     final path = config.endpoints.voipTokenPath;
-    if (kDebugMode) {
-      debugPrint('[AGORA_API] PATCH $path (registerVoipToken '
-          'tokenLen=${token.length})');
-    }
+    agoraCallLog(
+      '[AGORA_API] PATCH $path (registerVoipToken tokenLen=${token.length})',
+    );
     try {
       final authHeaders = await config.getAuthHeaders();
       final accessToken = authHeaders['access_token']?.trim() ?? '';
       if (accessToken.isEmpty) {
-        if (kDebugMode) {
-          debugPrint('[AGORA_API] PATCH $path skipped — missing access_token '
-              '(likely pre-login/fresh-user flow)');
-        }
+        agoraCallLog(
+          '[AGORA_API] PATCH $path skipped — missing access_token '
+          '(likely pre-login/fresh-user flow)',
+        );
         return;
       }
       final payload = <String, dynamic>{'voip_push_token': token};
@@ -127,14 +118,12 @@ class CallApiService {
           },
         ),
       );
-      if (kDebugMode) {
-        debugPrint('[AGORA_API] PATCH $path -> ${res.statusCode}');
-      }
+      agoraCallLog('[AGORA_API] PATCH $path -> ${res.statusCode}');
     } on DioException catch (e) {
-      if (kDebugMode) {
-        debugPrint('[AGORA_API] PATCH $path FAILED status=${e.response?.statusCode} '
-            'type=${e.type} body=${e.response?.data}');
-      }
+      agoraCallLog(
+        '[AGORA_API] PATCH $path FAILED status=${e.response?.statusCode} '
+        'type=${e.type} body=${e.response?.data}',
+      );
       rethrow;
     }
   }

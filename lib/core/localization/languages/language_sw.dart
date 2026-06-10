@@ -257,6 +257,10 @@ class LanguageSw extends Languages {
     'ok': '',
     'order_label_with_id': '',
     'open_settings': '',
+    'call_notification_permission_msg':
+        'Ruhusa ya arifa inahitajika kupokea simu za dereva. Tafadhali iwashe katika mipangilio ya programu.',
+    'call_full_screen_permission_msg':
+        'Arifa za skrini kamili zinahitajika kujibu simu simu yako ikiwa imefungwa. Tafadhali iwashe katika mipangilio ya programu.',
     'please_enter_label': '',
     'otp_resent_successfully': '',
     'past': '',
@@ -1522,6 +1526,14 @@ class LanguageSw extends Languages {
 
   @override
   String get openSettings => values['open_settings'] ?? '';
+
+  @override
+  String get callNotificationPermissionMsg =>
+      values['call_notification_permission_msg'] ?? '';
+
+  @override
+  String get callFullScreenPermissionMsg =>
+      values['call_full_screen_permission_msg'] ?? '';
 
   @override
   String get pleaseEnterLabel => values['please_enter_label'] ?? '';

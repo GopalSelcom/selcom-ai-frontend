@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
+import '../utils/agora_call_log.dart';
 
 /// Android-only foreground service that keeps the OS from killing the audio
 /// session while the app is backgrounded during an active call.
@@ -59,8 +59,8 @@ class CallBackgroundService {
         'title': 'Call in progress',
         'body': 'Connected with $peerName',
       });
-    } else if (kDebugMode) {
-      debugPrint('[AGORA_BG] failed to start foreground service');
+    } else {
+      agoraCallLog('[AGORA_BG] failed to start foreground service');
     }
   }
 

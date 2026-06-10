@@ -297,6 +297,10 @@ class LanguageEn extends Languages {
     'ok': 'OK',
     'order_label_with_id': 'Order: @orderId',
     'open_settings': 'Open Settings',
+    'call_notification_permission_msg':
+        'Notification permission is required to receive incoming driver calls. Please enable it in the app settings.',
+    'call_full_screen_permission_msg':
+        'Full screen notifications are required to answer calls when your phone is locked. Please enable it in the app settings.',
     'please_enter_label': 'Please enter label',
     'otp_resent_successfully': 'OTP resent successfully',
     'past': 'Past',
@@ -1636,6 +1640,14 @@ class LanguageEn extends Languages {
 
   @override
   String get openSettings => values['open_settings'] ?? '';
+
+  @override
+  String get callNotificationPermissionMsg =>
+      values['call_notification_permission_msg'] ?? '';
+
+  @override
+  String get callFullScreenPermissionMsg =>
+      values['call_full_screen_permission_msg'] ?? '';
 
   @override
   String get pleaseEnterLabel => values['please_enter_label'] ?? '';

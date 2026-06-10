@@ -65,6 +65,8 @@ export 'ui/widgets/call_controls.dart';
 export 'utils/permissions_helper.dart';
 export 'utils/audio_helper.dart';
 export 'utils/constants.dart';
+export 'utils/agora_call_log.dart';
+export 'utils/full_screen_call_permission_prompt.dart';
 
 // Facade
 export 'agora_calling.dart';

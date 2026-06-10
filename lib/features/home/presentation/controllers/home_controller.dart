@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:developer' as developer;
+import 'dart:io';
 
+import 'package:agora_calling_package/agora_calling.dart';
 import 'package:app_settings/app_settings.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -163,6 +165,16 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
     // Request Notification Permission (Best practice: delayed until Home Screen)
     _checkNotificationPermission();
+
+    // Android: prompt for call notification + full-screen intent permissions.
+    if (Platform.isAndroid) {
+      unawaited(
+        Future<void>.delayed(
+          const Duration(milliseconds: 400),
+          AgoraCalling.ensureAndroidCallPermissions,
+        ),
+      );
+    }
 
     // 300ms debounce with 2-char threshold for location autocomplete.
     debounce(searchQuery, (query) {

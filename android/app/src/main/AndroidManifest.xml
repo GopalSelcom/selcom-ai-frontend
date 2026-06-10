@@ -27,6 +27,9 @@
         android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL"/>
     <uses-permission
         android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
+    <!-- flutter_callkit_incoming 3.1.x: self-managed Telecom ConnectionService -->
+    <uses-permission
+        android:name="android.permission.MANAGE_OWN_CALLS"/>
     <uses-feature
         android:name="android.hardware.camera"/>
     <uses-feature
@@ -46,8 +49,6 @@
             android:launchMode="singleTop"
             android:taskAffinity=""
             android:theme="@style/LaunchTheme"
-            android:showWhenLocked="true"
-            android:turnScreenOn="true"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize">

@@ -1,7 +1,8 @@
 import 'dart:async';
+import 'dart:ui' show DartPluginRegistrant;
 
-import 'package:agora_calling_package/agora_calling.dart';
-import 'package:agora_calling_package/services/notification_service.dart';
+import 'package:agora_calling_package/agora_calling_package.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -31,25 +32,65 @@ import 'core/data/models/notification_model.dart';
 import 'core/services/error_reporting/error_reporter.dart';
 import 'package:screenshot/screenshot.dart';
 
+void _registerKillCallLogSink() {
+  registerAgoraLogSink((line) {
+    try {
+      FirebaseCrashlytics.instance.log(line);
+    } catch (_) {}
+  });
+}
+
+/// FCM handler for **background and killed** app state.
+///
+/// Runs in a separate Dart isolate — logcat filter: `KILL_CALL` or `adb logcat -s flutter`.
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  debugPrint('📩 Background FCM: ${message.data}');
-  debugPrint("Handling a background message: ${message.messageId}");
+  WidgetsFlutterBinding.ensureInitialized();
+  DartPluginRegistrant.ensureInitialized();
 
-  // Hand off Agora calling pushes (incoming_call / call_joined / call_cancelled)
-  // to the package — it owns the full-screen-intent / CallKit-fallback rendering.
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  _registerKillCallLogSink();
+
+  killStateCallLog(
+    'FCM_BG',
+    'isolate woke — messageId=${message.messageId} '
+    'has_notification=${message.notification != null} '
+    'release=$kReleaseMode',
+  );
+  if (message.notification != null) {
+    killStateCallLog(
+      'FCM_BG',
+      'WARNING: push has notification block — Android may NOT run '
+      'CallKit in killed state. title=${message.notification?.title}',
+    );
+  }
+
   final type = (message.data['type'] ?? '').toString().toLowerCase().trim();
+  final resolvedType = PushTypes.typeFromData(message.data) ?? '';
+  killStateCallLog(
+    'FCM_BG',
+    'data keys=${message.data.keys.toList()} '
+    'directType="$type" resolvedType="$resolvedType"',
+  );
+
+  // Hand off Agora calling pushes to the package — CallKit / CallStyle UI.
   if (type == 'incoming_call' ||
       type == 'call_joined' ||
       type == 'call_cancelled') {
-    await AgoraCallingNotificationService.firebaseBackgroundHandler(
-      message,
-      iosCallKitIconName: AgoraCallingBootstrap.iosCallKitIconName,
-      callKitCallIdNamespace: AgoraCallingBootstrap.callKitCallIdNamespace,
-      backgroundCallKitAppName:
-          AgoraCallingBootstrap.fcmBackgroundCallKitAppName,
-    );
+    killStateCallLog('FCM_BG', 'routing to Agora background handler type=$type');
+    try {
+      await AgoraCallingNotificationService.firebaseBackgroundHandler(
+        message,
+        iosCallKitIconName: AgoraCallingBootstrap.iosCallKitIconName,
+        callKitCallIdNamespace: AgoraCallingBootstrap.callKitCallIdNamespace,
+        backgroundCallKitAppName:
+            AgoraCallingBootstrap.fcmBackgroundCallKitAppName,
+      );
+      killStateCallLog('FCM_BG', 'Agora background handler finished type=$type');
+    } catch (e, st) {
+      killStateCallLog('FCM_BG', 'Agora background handler FAILED type=$type err=$e');
+      killStateCallLog('FCM_BG', 'stack=$st');
+    }
     return;
   }
 
@@ -148,11 +189,14 @@ void main() async {
 
       // Load saved session before calling init so CallKit Accept from
       // killed/background state can mint tokens (splash has not run yet).
-      // Mirrors delivery_agent_app/docs/AGORA_CALLING_BACKGROUND_FIX.md.
       await SessionAuthService.instance.preloadFromStorage();
 
+      _registerKillCallLogSink();
+
       // Initialize Agora calling package (REST + FCM + Android FG service).
+      killStateCallLog('COLD_START', 'AgoraCallingBootstrap.init starting');
       await AgoraCallingBootstrap.init();
+      killStateCallLog('COLD_START', 'AgoraCallingBootstrap.init done');
 
       // Bridge native iOS PushKit/CallKit events into the calling package.
       // Token registration goes through `AgoraCalling.registerVoipToken`,

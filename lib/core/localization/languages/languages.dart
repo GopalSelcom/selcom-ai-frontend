@@ -259,6 +259,8 @@ abstract class Languages {
   String get orderLabelWithId;
   String get unauthorized;
   String get openSettings;
+  String get callNotificationPermissionMsg;
+  String get callFullScreenPermissionMsg;
   String get pleaseEnterLabel;
   String get otpResentSuccessfully;
   String get past;

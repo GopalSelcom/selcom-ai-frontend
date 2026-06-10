@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import '../config/app_config.dart';
 import '../network/api_constants.dart';
 import '../network/headers.dart';
+import 'call_permission_prompt_service.dart';
 import 'session_auth_service.dart';
 
 /// Wires `agora_calling_package` for the Selcom Go (rider) app.
@@ -34,6 +35,8 @@ class AgoraCallingBootstrap {
         iosCallKitIconName: iosCallKitIconName,
         callKitCallIdNamespace: callKitCallIdNamespace,
         callerRingbackAsset: 'assets/sound/ringback.mp3',
+        ensureCallPermissionsUi:
+            CallPermissionPromptService.ensureAndroidCallPermissions,
         endpoints: CallEndpoints(
           tokenPath: (rideId) => '/v4/go/rides/$rideId/call/token',
           cancelPath: (rideId) => '/v4/go/rides/$rideId/call/cancel',
