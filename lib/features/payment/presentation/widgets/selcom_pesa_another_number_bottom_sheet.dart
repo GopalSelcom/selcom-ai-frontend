@@ -42,8 +42,9 @@ class SelcomPesaAnotherNumberBottomSheet extends StatefulWidget {
       if (!Get.isRegistered<SelcomPesaTopupController>(tag: controllerTag)) {
         return;
       }
-      final selcomController =
-          Get.find<SelcomPesaTopupController>(tag: controllerTag);
+      final selcomController = Get.find<SelcomPesaTopupController>(
+        tag: controllerTag,
+      );
       selcomController.clearRetainForFollowUpSheet();
       if (selcomController.shouldRetainAfterSheetClose) return;
       selcomController.handleSheetDismissed();
@@ -120,7 +121,7 @@ class _SelcomPesaAnotherNumberBottomSheetState
                 ),
               ),
             ),
-            textColor: AppColors.iconHeartFilled,
+            textColor: AppColors.textHeading,
             fontSize: 16.sp,
             fontWeight: FontWeight.w700,
           ),
@@ -158,7 +159,7 @@ class _SelcomPesaAnotherNumberBottomSheetState
                 ),
               ),
             ),
-            textColor: AppColors.iconHeartFilled,
+            textColor: AppColors.textHeading,
             fontSize: 16.sp,
             fontWeight: FontWeight.w700,
           ),

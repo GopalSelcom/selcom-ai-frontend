@@ -28,10 +28,7 @@ class SelcomPesaToWalletBottomSheet extends GetView<SelcomPesaTopupController> {
   static Future<void> show() {
     final tag = 'selcom_pesa_self_${DateTime.now().millisecondsSinceEpoch}';
     final paymentController = _paymentController();
-    Get.put(
-      SelcomPesaTopupController(controllerTag: tag),
-      tag: tag,
-    );
+    Get.put(SelcomPesaTopupController(controllerTag: tag), tag: tag);
     return AppDialogs.showStandardBottomSheet<void>(
       title: AppStrings.selcomPesaToGoWallet.tr,
       headerTextAlign: TextAlign.center,
@@ -132,7 +129,7 @@ class SelcomPesaToWalletBottomSheet extends GetView<SelcomPesaTopupController> {
                     ),
                   ),
                 ),
-                textColor: AppColors.iconPaymentSuccess,
+                textColor: AppColors.textHeading,
                 fontSize: 16.sp,
                 fontWeight: FontWeight.w700,
               ),
