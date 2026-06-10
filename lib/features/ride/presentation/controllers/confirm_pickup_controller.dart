@@ -117,35 +117,29 @@ class ConfirmPickupController extends GetxController {
     });
   }
 
-  Future<void> confirmPickup() async {
-    if (isSubmitting.value) return;
-    isSubmitting.value = true;
+  /// No permission or location service off → always prompt.
+  /// Location available → prompt only when check-book-mode flag is true.
+  Future<bool> _shouldPromptBookingForSomeoneElse() async {
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    final permission = await Geolocator.checkPermission();
+    final hasLocationPermission =
+        permission == LocationPermission.always ||
+        permission == LocationPermission.whileInUse;
+
+    if (!serviceEnabled || !hasLocationPermission) {
+      return true;
+    }
 
     try {
       final position = await Loader.run(
-        () =>
-            Geolocator.getCurrentPosition(
-              locationSettings: const LocationSettings(
-                accuracy: LocationAccuracy.high,
-              ),
-            ).timeout(
-              const Duration(seconds: 5),
-              onTimeout: () => Position(
-                latitude: selectedLatLng.value.latitude,
-                longitude: selectedLatLng.value.longitude,
-                timestamp: DateTime.now(),
-                accuracy: 0,
-                altitude: 0,
-                heading: 0,
-                speed: 0,
-                speedAccuracy: 0,
-                altitudeAccuracy: 0,
-                headingAccuracy: 0,
-              ),
-            ),
+        () => Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+          ),
+        ).timeout(const Duration(seconds: 5)),
       );
 
-      await Loader.run(
+      final checkResult = await Loader.run(
         () => rideRepository.checkBookMode(
           riderLat: position.latitude,
           riderLng: position.longitude,
@@ -154,53 +148,78 @@ class ConfirmPickupController extends GetxController {
         ),
       );
 
-      final result = await BookingForSomeoneElseFlowBottomSheet.show();
+      return checkResult.fold(
+        (_) => false,
+        (result) => result.showBookForOtherOption,
+      );
+    } catch (_) {
+      return true;
+    }
+  }
 
-      if (result == null) {
-        return;
-      }
+  Future<void> _finishWithBookingPrompt() async {
+    final result = await BookingForSomeoneElseFlowBottomSheet.show();
+    if (result == null) return;
 
-      final mode = result['mode'] as BookingMode;
-      bookingMode.value = mode;
+    final mode = result['mode'] as BookingMode;
+    final isBookedForOther = mode == BookingMode.other;
+    bookingMode.value = mode;
 
-      if (mode == BookingMode.other) {
-        passengerName.value = (result['name'] as String).trim();
-        passengerPhone.value = result['phone'] as String;
-        await SchedulerBinding.instance.endOfFrame;
+    if (isBookedForOther) {
+      passengerName.value = (result['name'] as String).trim();
+      passengerPhone.value = result['phone'] as String;
+      await SchedulerBinding.instance.endOfFrame;
+    } else {
+      passengerName.value = '';
+      passengerPhone.value = '';
+    }
+
+    Get.back(
+      result: {
+        'pickupLat': selectedLatLng.value.latitude,
+        'pickupLng': selectedLatLng.value.longitude,
+        'pickupAddress': address.value.trim().isEmpty
+            ? 'Selected pickup point'
+            : address.value.trim(),
+        'note': noteForDriverController.text.trim(),
+        'isBookedForOther': isBookedForOther,
+        'passengerName': isBookedForOther ? passengerName.value.trim() : null,
+        'passengerPhone': isBookedForOther ? passengerPhone.value : null,
+      },
+    );
+  }
+
+  void _finishAsSelfBooking() {
+    bookingMode.value = BookingMode.self;
+    passengerName.value = '';
+    passengerPhone.value = '';
+
+    Get.back(
+      result: {
+        'pickupLat': selectedLatLng.value.latitude,
+        'pickupLng': selectedLatLng.value.longitude,
+        'pickupAddress': address.value.trim().isEmpty
+            ? 'Selected pickup point'
+            : address.value.trim(),
+        'note': noteForDriverController.text.trim(),
+        'isBookedForOther': false,
+        'passengerName': null,
+        'passengerPhone': null,
+      },
+    );
+  }
+
+  Future<void> confirmPickup() async {
+    if (isSubmitting.value) return;
+    isSubmitting.value = true;
+
+    try {
+      final shouldAsk = await _shouldPromptBookingForSomeoneElse();
+      if (shouldAsk) {
+        await _finishWithBookingPrompt();
       } else {
-        passengerName.value = '';
-        passengerPhone.value = '';
+        _finishAsSelfBooking();
       }
-
-      Get.back(
-        result: {
-          'pickupLat': selectedLatLng.value.latitude,
-          'pickupLng': selectedLatLng.value.longitude,
-          'pickupAddress': address.value.trim().isEmpty
-              ? 'Selected pickup point'
-              : address.value.trim(),
-          'note': noteForDriverController.text.trim(),
-          'isBookedForOther': bookingMode.value == BookingMode.other,
-          'passengerName': bookingMode.value == BookingMode.other
-              ? passengerName.value.trim()
-              : null,
-          'passengerPhone': bookingMode.value == BookingMode.other
-              ? passengerPhone.value
-              : null,
-        },
-      );
-    } catch (e) {
-      Get.back(
-        result: {
-          'pickupLat': selectedLatLng.value.latitude,
-          'pickupLng': selectedLatLng.value.longitude,
-          'pickupAddress': address.value.trim().isEmpty
-              ? 'Selected pickup point'
-              : address.value.trim(),
-          'note': noteForDriverController.text.trim(),
-          'isBookedForOther': false,
-        },
-      );
     } finally {
       isSubmitting.value = false;
     }
