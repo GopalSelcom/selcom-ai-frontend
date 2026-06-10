@@ -600,13 +600,9 @@ class SelcomPesaTopupController extends GetxController {
   void _disposeRegisteredController() {
     final tag = controllerTag;
     if (tag == null) return;
-    unawaited(
-      AppDialogs.runAfterBottomSheetDismissed(() async {
-        if (Get.isRegistered<SelcomPesaTopupController>(tag: tag)) {
-          Get.delete<SelcomPesaTopupController>(tag: tag);
-        }
-      }),
-    );
+    if (Get.isRegistered<SelcomPesaTopupController>(tag: tag)) {
+      Get.delete<SelcomPesaTopupController>(tag: tag);
+    }
   }
 
   void _stopTimers() {

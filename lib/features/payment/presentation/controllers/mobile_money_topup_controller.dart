@@ -379,7 +379,9 @@ class MobileMoneyTopupController extends GetxController {
       dismissed = true;
       await Loader.instance.hideAsync();
       _dismissPendingDialog();
-      _disposeRegisteredController();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _disposeRegisteredController();
+      });
     } on WalletPaymentException catch (e) {
       AppDialogs.showErrorDialog(message: e.message.tr);
     } catch (_) {
@@ -402,13 +404,9 @@ class MobileMoneyTopupController extends GetxController {
   void _disposeRegisteredController() {
     final tag = controllerTag;
     if (tag == null) return;
-    unawaited(
-      AppDialogs.runAfterBottomSheetDismissed(() async {
-        if (Get.isRegistered<MobileMoneyTopupController>(tag: tag)) {
-          Get.delete<MobileMoneyTopupController>(tag: tag);
-        }
-      }),
-    );
+    if (Get.isRegistered<MobileMoneyTopupController>(tag: tag)) {
+      Get.delete<MobileMoneyTopupController>(tag: tag);
+    }
   }
 
   void _finishPaymentFlow() {
