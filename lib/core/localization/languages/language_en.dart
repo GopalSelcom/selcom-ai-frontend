@@ -92,7 +92,7 @@ class LanguageEn extends Languages {
     'booking_fees_and_convenience_charges':
         'Booking Fees & Convenience Charges',
     'booking_for_name': 'Booking for @name',
-    'booking_for_someone_else_prompt': 'Are you booking this for someone else?',
+    'booking_for_someone_else_prompt': 'Are you booking for someone else?',
     'booking_for_someone_else_subtitle':
         'You can enter their details so that we can directly send them ride information.',
     'booking_ride_option_for_me': 'No, booking for me',

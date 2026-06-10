@@ -237,6 +237,10 @@ class _BookingForSomeoneElseFlowBottomSheetState
           keyboardType: TextInputType.name,
           errorText: _nameError,
           onChanged: (_) {},
+          suffixIcon: IconButton(
+            icon: Icon(Iconsax.user_add, color: AppColors.primary, size: 22.sp),
+            onPressed: _pickContact,
+          ),
         ),
         SizedBox(height: 16.h),
         AppTextField(
@@ -273,10 +277,6 @@ class _BookingForSomeoneElseFlowBottomSheetState
                 ),
               ],
             ),
-          ),
-          suffixIcon: IconButton(
-            icon: Icon(Iconsax.user_add, color: AppColors.primary, size: 22.sp),
-            onPressed: _pickContact,
           ),
           errorText: _phoneError,
           onChanged: (_) {},

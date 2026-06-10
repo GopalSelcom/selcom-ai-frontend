@@ -57,7 +57,7 @@ class InsufficientWalletBalanceDialog extends StatelessWidget {
               borderRadius: 28.r,
             ),
             AppCupertinoTextButton.insufficientBalanceDismiss(
-              label: AppStrings.no.tr,
+              label: AppStrings.cancelRide.tr,
               onPressed: onDismiss,
             ),
           ],

@@ -524,6 +524,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
   }) {
     final img = controller.vehicleImage(item);
     final eta = item.durationMinutes ?? 0;
+    final km = item.distanceKm ?? 0;
     final drop = DateTime.now().add(Duration(minutes: eta));
     final dropLabel =
         '${drop.hour.toString().padLeft(2, '0')}:${drop.minute.toString().padLeft(2, '0')}';
