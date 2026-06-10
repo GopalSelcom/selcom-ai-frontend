@@ -25,7 +25,6 @@ import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/app_map_service.dart';
 import '../../../../core/services/app_region_service.dart';
-import '../../../../core/services/app_settings_service.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';

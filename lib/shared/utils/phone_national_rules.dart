@@ -33,6 +33,16 @@ class PhoneNationalRules {
     return c.maxLength + spaces;
   }
 
+  /// E.164 digits without `+`, e.g. `255712345678`, or `null` if invalid.
+  static String? e164DigitsOrNull(String? iso2, String rawDisplay) {
+    final nsn = rawDisplay.replaceAll(RegExp(r'\D'), '');
+    if (!isCompleteValidNational(iso2, nsn)) return null;
+    final dial = findByIso(iso2).dialCode.replaceAll('+', '');
+    return '$dial$nsn';
+  }
+
+  static CountryData findByIso(String? iso2) => Countries.findByIsoCode(iso2);
+
   /// Hint matches visible grouping (digits shown as `x`).
   static String hintForIso(String? iso2) {
     final c = Countries.findByIsoCode(iso2);
