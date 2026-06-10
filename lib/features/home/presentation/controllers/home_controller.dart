@@ -1731,6 +1731,12 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       pickupController.selection = TextSelection.fromPosition(
         TextPosition(offset: pickupController.text.length),
       );
+      getLatLngFromAddress(description).then((latLng) {
+        if (latLng != null) {
+          routePickupLat.value = latLng.latitude;
+          routePickupLng.value = latLng.longitude;
+        }
+      });
       return;
     }
 

@@ -21,6 +21,7 @@ import 'mobile_money_topup_bottom_sheet.dart';
 import 'selcom_pesa_to_wallet_bottom_sheet.dart';
 import 'steps_to_load_go_wallet_bottom_sheet.dart';
 import 'tanqr_tips_bottom_sheet.dart';
+import 'wallet_topup_sheet_lifecycle.dart';
 
 /// Add-money options after insufficient-balance "Top up Wallet" (Figma sheet).
 class AddMoneyToWalletBottomSheet extends StatelessWidget {
@@ -33,16 +34,7 @@ class AddMoneyToWalletBottomSheet extends StatelessWidget {
     Get.put(TanQrWalletTopupController(), tag: tag);
     return AppDialogs.showStandardBottomSheet<TanQrTopupResult?>(
       sheet: AddMoneyToWalletBottomSheet(controllerTag: tag),
-    ).whenComplete(() {
-      unawaited(
-        AppDialogs.runAfterBottomSheetDismissed(() async {
-          if (!Get.isRegistered<TanQrWalletTopupController>(tag: tag)) return;
-          final controller = Get.find<TanQrWalletTopupController>(tag: tag);
-          controller.handleSheetDismissed();
-          Get.delete<TanQrWalletTopupController>(tag: tag);
-        }),
-      );
-    });
+    ).whenComplete(() => disposeTanQrTopupAfterSheetClosed(tag));
   }
 
   TanQrWalletTopupController get _controller {
@@ -183,6 +175,9 @@ class _AmountEntryContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
+      if (controller.textFieldsDisposed) {
+        return const SizedBox.shrink();
+      }
       final apiError = controller.apiError.value;
       return Column(
         mainAxisSize: MainAxisSize.min,

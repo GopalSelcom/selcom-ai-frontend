@@ -13,6 +13,7 @@ import '../../../../shared/utils/thousands_separator_input_formatter.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../controllers/selcom_pesa_topup_controller.dart';
+import 'wallet_topup_sheet_lifecycle.dart';
 
 class SelcomPesaAnotherNumberBottomSheet extends StatefulWidget {
   const SelcomPesaAnotherNumberBottomSheet({
@@ -37,21 +38,15 @@ class SelcomPesaAnotherNumberBottomSheet extends StatefulWidget {
       barrierDismissible: true,
       content: SelcomPesaAnotherNumberBottomSheet(controllerTag: controllerTag),
       footer: _SelcomPesaOtherFooter(controllerTag: controllerTag),
-    ).whenComplete(() {
-      unawaited(
-        AppDialogs.runAfterBottomSheetDismissed(() async {
-          if (!Get.isRegistered<SelcomPesaTopupController>(tag: controllerTag)) {
-            return;
-          }
-          final selcomController = Get.find<SelcomPesaTopupController>(
-            tag: controllerTag,
-          );
-          selcomController.clearRetainForFollowUpSheet();
-          if (selcomController.shouldRetainAfterSheetClose) return;
-          selcomController.handleSheetDismissed();
-          Get.delete<SelcomPesaTopupController>(tag: controllerTag);
-        }),
+    ).whenComplete(() async {
+      if (!Get.isRegistered<SelcomPesaTopupController>(tag: controllerTag)) {
+        return;
+      }
+      final selcomController = Get.find<SelcomPesaTopupController>(
+        tag: controllerTag,
       );
+      selcomController.clearRetainForFollowUpSheet();
+      await disposeSelcomPesaTopupAfterSheetClosed(controllerTag);
     });
   }
 
@@ -76,7 +71,13 @@ class _SelcomPesaAnotherNumberBottomSheetState
 
   @override
   void dispose() {
-    _phoneController.dispose();
+    if (Get.isRegistered<SelcomPesaTopupController>(tag: widget.controllerTag)) {
+      _controller.unbindPhoneController();
+    }
+    final phone = _phoneController;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      phone.dispose();
+    });
     super.dispose();
   }
 
@@ -85,6 +86,13 @@ class _SelcomPesaAnotherNumberBottomSheetState
     final iso = _controller.countryIso;
 
     return Obx(() {
+      if (!mounted ||
+          !Get.isRegistered<SelcomPesaTopupController>(
+            tag: widget.controllerTag,
+          ) ||
+          _controller.textFieldsDisposed) {
+        return const SizedBox.shrink();
+      }
       final apiError = _controller.apiError.value;
       return Column(
         mainAxisSize: MainAxisSize.min,
@@ -201,6 +209,10 @@ class _SelcomPesaOtherFooter extends GetView<SelcomPesaTopupController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
+      if (!Get.isRegistered<SelcomPesaTopupController>(tag: controllerTag) ||
+          controller.textFieldsDisposed) {
+        return const SizedBox.shrink();
+      }
       return Row(
         children: [
           Expanded(

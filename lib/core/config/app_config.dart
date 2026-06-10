@@ -22,7 +22,7 @@ class AppConfig {
   ///
   /// `true` → `go/validate_ride_payment` + `go/dev/payment_callback` + unsuffixed ride paths.
   /// `false` → `go/validate_ride_payment_new` + socket payment block + `_new` ride paths.
-  static bool ridePaymentBypass = true;
+  static bool ridePaymentBypass = false;
 
   static const String _agoraAppIdDefine = String.fromEnvironment(
     'AGORA_APP_ID',

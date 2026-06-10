@@ -6,6 +6,7 @@ import '../../../../core/data/models/user_model.dart';
 import '../../../../core/data/models/user_profile_models.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
+import '../../../wallet/data/models/go_card_balance_response.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../datasources/profile_remote_data_source.dart';
 import '../models/contact_us_models.dart';
@@ -77,7 +78,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
-  Future<Either<Failure, WalletBalanceModel>> getWalletBalance() async {
+  Future<Either<Failure, GoCardBalanceResponseModel>> getWalletBalance() async {
     try {
       final result = await remoteDataSource.getWalletBalance();
       return Right(result);

@@ -10,6 +10,7 @@ import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
+import '../../../wallet/data/models/go_card_balance_response.dart';
 import '../models/contact_us_models.dart';
 import '../models/profile_response_model.dart';
 import '../models/request/update_profile_request.dart';
@@ -30,7 +31,7 @@ abstract class ProfileRemoteDataSource {
 
   Future<bool> deleteSavedPlace(String id);
 
-  Future<WalletBalanceModel> getWalletBalance();
+  Future<GoCardBalanceResponseModel> getWalletBalance();
 
   Future<List<PaymentMethodModel>> getPaymentMethods();
 
@@ -162,7 +163,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   }
 
   @override
-  Future<WalletBalanceModel> getWalletBalance() async {
+  Future<GoCardBalanceResponseModel> getWalletBalance() async {
     try {
       final response = await ApiService().call(
         request: ApiRequest(
@@ -173,13 +174,17 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       );
 
       if (response.statusCode == 200 && response.data != null) {
-        return WalletBalanceModel.fromJson(response.data['data'] ?? {});
+        return GoCardBalanceResponseModel.fromJson(
+          Map<String, dynamic>.from(response.data),
+        );
       }
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       debugPrint("getWalletBalance error (suppressed): $e");
     }
-    return WalletBalanceModel(balance: 0.0, currency: CurrencyCode.tzs);
+    return GoCardBalanceResponseModel(
+      response: GoCardBalanceData(balance: "0", currency: CurrencyCode.tzs),
+    );
   }
 
   @override

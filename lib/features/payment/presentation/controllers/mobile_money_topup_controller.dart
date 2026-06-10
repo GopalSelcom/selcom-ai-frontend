@@ -44,6 +44,9 @@ class MobileMoneyTopupController extends GetxController {
 
   late final TextEditingController phoneController;
   late final TextEditingController amountController;
+  bool _textFieldsDisposed = false;
+
+  bool get textFieldsDisposed => _textFieldsDisposed;
 
   final ValueNotifier<int> pendingCountdown = ValueNotifier<int>(
     countdownDurationSeconds,
@@ -86,12 +89,20 @@ class MobileMoneyTopupController extends GetxController {
     amountController = TextEditingController();
   }
 
+  void disposeTextFields() {
+    if (_textFieldsDisposed) return;
+    _textFieldsDisposed = true;
+    phoneController.dispose();
+    amountController.dispose();
+  }
+
   @override
   void onClose() {
     _stopTimers();
     pendingCountdown.dispose();
-    phoneController.dispose();
-    amountController.dispose();
+    if (!_textFieldsDisposed) {
+      disposeTextFields();
+    }
     super.onClose();
   }
 
