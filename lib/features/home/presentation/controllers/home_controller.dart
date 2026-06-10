@@ -31,6 +31,7 @@ import '../../../../core/services/session_expiry_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/distance_display.dart';
 import '../../../../shared/utils/saved_places_ordering.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
@@ -1446,11 +1447,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     );
 
     final km = distanceMeters / 1000;
-    if (km < 0.1) return AppStrings.distanceMinKm.tr;
-    if (km > 999) return AppStrings.distanceMaxKm.tr;
-    return AppStrings.distanceKmFormat.trParams({
-      'value': km.toStringAsFixed(1),
-    });
+    return DistanceDisplay.formatKm(km);
   }
 
   // ── Home screen UI orchestration (keep branching / navigation out of widgets) ──

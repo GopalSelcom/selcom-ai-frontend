@@ -523,11 +523,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
     required bool selected,
   }) {
     final img = controller.vehicleImage(item);
-    final eta = item.durationMinutes ?? 0;
-    final km = item.distanceKm ?? 0;
-    final drop = DateTime.now().add(Duration(minutes: eta));
-    final dropLabel =
-        '${drop.hour.toString().padLeft(2, '0')}:${drop.minute.toString().padLeft(2, '0')}';
+    final tripLines = controller.vehicleTripSubtitleLines(item);
 
     return Material(
       color: selected
@@ -594,14 +590,22 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                         ),
                       ],
                     ),
-                    Text(
-                      AppStrings.etaMinutesAwayDropTime.trParams({
-                        'minutes': '$eta',
-                        'time': dropLabel,
-                      }),
-                      style: AppTextStyles.homeCaption.copyWith(
-                        height: 20 / 12,
-                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          tripLines.distanceEtaLine,
+                          style: AppTextStyles.homeCaption.copyWith(
+                            height: 20 / 12,
+                          ),
+                        ),
+                        Text(
+                          tripLines.dropTimeLine,
+                          style: AppTextStyles.homeCaption.copyWith(
+                            height: 20 / 12,
+                          ),
+                        ),
+                      ],
                     ),
                     if ((item.waypointCharge ?? 0) > 0 ||
                         controller.destinations.length > 1) ...[

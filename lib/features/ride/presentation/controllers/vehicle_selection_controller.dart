@@ -33,6 +33,7 @@ import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/address_display_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/country_region_defaults.dart';
+import '../../../../shared/utils/distance_display.dart';
 import '../../../../shared/utils/map_vehicle_marker_utils.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../home/domain/repositories/home_repository.dart';
@@ -1385,6 +1386,37 @@ class VehicleSelectionController extends GetxController {
   String dropMapLabelAt(int index) {
     if (index < 0 || index >= destinations.length) return destinationMapLabel;
     return compactAddress(destinations[index].address);
+  }
+
+  String formatTripDistanceKm(double? km) => DistanceDisplay.formatKm(km);
+
+  ({String distanceEtaLine, String dropTimeLine}) vehicleTripSubtitleLines(
+    FareEstimateItem item,
+  ) {
+    final eta = item.durationMinutes ?? 0;
+    final drop = DateTime.now().add(Duration(minutes: eta));
+    final dropLabel =
+        '${drop.hour.toString().padLeft(2, '0')}:${drop.minute.toString().padLeft(2, '0')}';
+
+    final combined = AppStrings.etaMinutesAwayDropTime.trParams({
+      'minutes': '$eta',
+      'time': dropLabel,
+    });
+    final parts = combined.split('•').map((s) => s.trim()).toList();
+
+    var distanceEtaLine = parts.isNotEmpty && parts.first.isNotEmpty
+        ? parts.first
+        : '$eta min away';
+    final dropTimeLine = parts.length > 1 && parts[1].isNotEmpty
+        ? parts[1]
+        : 'Drop $dropLabel';
+
+    final distanceLabel = formatTripDistanceKm(item.distanceKm);
+    if (distanceLabel.isNotEmpty) {
+      distanceEtaLine = '$distanceLabel • $distanceEtaLine';
+    }
+
+    return (distanceEtaLine: distanceEtaLine, dropTimeLine: dropTimeLine);
   }
 
   String get destinationEtaBadgeText {
