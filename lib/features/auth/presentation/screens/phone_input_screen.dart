@@ -12,6 +12,8 @@ import '../../../../shared/data/countries_phone_data.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
 import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_focus_input_field.dart';
+import '../../../../shared/widgets/app_facebook_sign_in_button.dart';
+import '../../../../shared/widgets/app_google_sign_in_button.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/phone_country_picker_chip.dart';
 import '../controllers/auth_controller.dart';
@@ -207,9 +209,7 @@ class PhoneInputScreen extends GetView<AuthController> {
                         SizedBox(height: 16.h),
 
                         Obx(
-                          () => AppPrimaryButton(
-                            label: AppStrings.continueWithGoogle.tr,
-                            outlined: true,
+                          () => AppGoogleSignInButton(
                             isLoading: controller.isLoading.value,
                             onPressed: controller.isLoading.value
                                 ? null
@@ -220,9 +220,7 @@ class PhoneInputScreen extends GetView<AuthController> {
                         SizedBox(height: 12.h),
 
                         Obx(
-                          () => AppPrimaryButton(
-                            label: AppStrings.continueWithFacebook.tr,
-                            outlined: true,
+                          () => AppFacebookSignInButton(
                             isLoading: controller.isLoading.value,
                             onPressed: controller.isLoading.value
                                 ? null

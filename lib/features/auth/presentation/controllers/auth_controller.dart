@@ -512,8 +512,8 @@ class AuthController extends GetxController {
     await Loader.withFlag(isLoading, () async {
       final result = await signInWithFacebookUseCase(NoParams());
 
-      result.fold(
-        (failure) {
+      await result.fold(
+        (failure) async {
           if (failure is FacebookSignInFailure && failure.isCancelled) {
             errorMessage.value = AppStrings.facebookSignInCancelled.tr;
             return;
@@ -526,22 +526,11 @@ class AuthController extends GetxController {
             errorMessage.value = failure.message;
             return;
           }
-          errorMessage.value = AppStrings.facebookSignInFailed.tr;
+          errorMessage.value = failure.message.isNotEmpty
+              ? failure.message
+              : AppStrings.facebookSignInFailed.tr;
         },
-        (user) {
-          final email = user.email?.trim() ?? '';
-          if (email.isEmpty) {
-            errorMessage.value = AppStrings.facebookSignInFailed.tr;
-            return;
-          }
-
-          // TODO: exchange Firebase ID token with Selcom backend when API exists.
-
-          Get.snackbar(
-            AppStrings.accountVerified.tr,
-            AppStrings.facebookSignInSuccess.trParams({'email': email}),
-          );
-        },
+        (user) => _completeSocialSignIn(user),
       );
     });
   }
