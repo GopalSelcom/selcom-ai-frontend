@@ -8,6 +8,7 @@ import '../../../../core/data/models/responses/send_otp_response.dart';
 import '../../../../core/data/models/responses/verify_otp_response.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/errors/failures.dart';
+import '../entities/social_auth_user.dart';
 
 abstract class AuthRepository {
   Future<Either<Failure, SendOtpResponseModel?>> sendOtp({
@@ -31,4 +32,8 @@ abstract class AuthRepository {
   Future<Either<Failure, bool>> logout();
 
   Future<Either<Failure, List<OnboardingBannerItem>>> getOnboardingBanners();
+
+  Future<Either<Failure, SocialAuthUser>> signInWithApple();
+
+  Future<Either<Failure, void>> signOutFirebase();
 }

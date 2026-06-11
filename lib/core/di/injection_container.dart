@@ -1,7 +1,9 @@
 import 'package:get_it/get_it.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import '../../features/auth/data/datasources/apple_auth_local_data_source.dart';
 import '../../features/auth/data/datasources/auth_remote_data_source.dart';
+import '../../features/auth/data/datasources/firebase_auth_data_source.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/notification/data/datasources/notification_remote_data_source.dart';
@@ -55,6 +57,8 @@ import '../services/app_settings_service.dart';
 import '../services/live_activity/live_activity_manager.dart';
 import '../services/nearby_drivers_socket_service.dart';
 import '../services/notification_service.dart';
+import '../services/apple_sign_in_service.dart';
+import '../services/google_sign_in_service.dart';
 import '../services/selcom_pesa/selcom_pesa_app_launcher_service.dart';
 
 final sl = GetIt.instance; // sl: Service Locator
@@ -67,6 +71,12 @@ Future<void> init() async {
   sl.registerLazySingleton(() => AppSocketService());
   sl.registerLazySingleton(() => LiveActivityManager());
   sl.registerLazySingleton(() => SelcomPesaAppLauncherService());
+  sl.registerLazySingleton(() => GoogleSignInService());
+  sl.registerLazySingleton(() => AppleSignInService());
+  sl.registerLazySingleton(() => FirebaseAuthDataSource());
+  sl.registerLazySingleton<AppleAuthLocalDataSource>(
+    () => AppleAuthLocalDataSourceImpl(secureStorage: sl()),
+  );
 
   // ── External ──
   sl.registerLazySingleton(() => const FlutterSecureStorage());
@@ -90,7 +100,12 @@ Future<void> init() async {
     () => AuthRemoteDataSourceImpl(),
   );
   sl.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(remoteDataSource: sl()),
+    () => AuthRepositoryImpl(
+      remoteDataSource: sl(),
+      appleSignInService: sl(),
+      firebaseAuthDataSource: sl(),
+      appleAuthLocalDataSource: sl(),
+    ),
   );
 
   // ── Ride Feature ──

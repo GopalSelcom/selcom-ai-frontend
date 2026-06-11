@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
@@ -168,6 +171,67 @@ class PhoneInputScreen extends GetView<AuthController> {
                             ),
                           ),
                         ),
+
+                        SizedBox(height: 16.h),
+
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Divider(
+                                color: AppColors.textBody.withValues(
+                                  alpha: 0.3,
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 12.w),
+                              child: Text(
+                                AppStrings.orDivider.tr,
+                                style: AppTextStyles.homeCaption.copyWith(
+                                  fontSize: 13.sp,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.textBody,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Divider(
+                                color: AppColors.textBody.withValues(
+                                  alpha: 0.3,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        SizedBox(height: 16.h),
+
+                        Obx(
+                          () => AppPrimaryButton(
+                            label: AppStrings.continueWithGoogle.tr,
+                            outlined: true,
+                            isLoading: controller.isLoading.value,
+                            onPressed: controller.isLoading.value
+                                ? null
+                                : controller.signInWithGoogle,
+                          ),
+                        ),
+
+                        if (Platform.isIOS) ...[
+                          SizedBox(height: 12.h),
+                          Obx(
+                            () => AbsorbPointer(
+                              absorbing: controller.isLoading.value,
+                              child: Opacity(
+                                opacity: controller.isLoading.value ? 0.6 : 1,
+                                child: SignInWithAppleButton(
+                                  onPressed: controller.signInWithApple,
+                                  style: SignInWithAppleButtonStyle.black,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
 
                         SizedBox(height: 12.h),
                       ],

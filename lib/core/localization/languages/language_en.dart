@@ -145,6 +145,7 @@ class LanguageEn extends Languages {
     'connection_error': 'Connection Error',
     'contact_us': 'Contact Us',
     'continue': 'Continue',
+    'continue_with_google': 'Continue with Google',
     'didnt_receive_the_code': "Didn't receive the code?",
     'could_not_cancel_try_again': 'Could not cancel. Try again.',
     'could_not_resolve_vehicle_type_id_please_try_again':
@@ -230,6 +231,21 @@ class LanguageEn extends Languages {
     'havent_got_the_confirmation_code_yet':
         "Haven't got the confirmation code yet? ",
     'got_it': 'Got it',
+    'google_sign_in_cancelled': 'Sign-in cancelled',
+    'google_sign_in_config_error':
+        'Google Sign-In is not configured correctly',
+    'google_sign_in_failed': 'Google Sign-In failed. Please try again.',
+    'google_sign_in_success': 'Signed in as @email',
+    'google_sign_in_unsupported':
+        'Google Sign-In is not supported on this device',
+    'continue_with_apple': 'Continue with Apple',
+    'apple_sign_in_success': 'Signed in as @email',
+    'apple_sign_in_cancelled': 'Sign-in cancelled',
+    'apple_sign_in_failed': 'Apple Sign-In failed. Please try again.',
+    'apple_sign_in_account_exists':
+        'An account already exists with this email. Sign in with your original method first.',
+    'apple_sign_in_not_available':
+        'Apple Sign-In is only available on iOS devices',
     'help': 'Help',
     'help_selcom_go_do_better_by_rating_this_trip':
         'Help Selcom Go do better by rating this trip',
@@ -302,6 +318,7 @@ class LanguageEn extends Languages {
     'call_full_screen_permission_msg':
         'Full screen notifications are required to answer calls when your phone is locked. Please enable it in the app settings.',
     'please_enter_label': 'Please enter label',
+    'or_divider': 'or',
     'otp_resent_successfully': 'OTP resent successfully',
     'past': 'Past',
     'pay_using': 'Pay Using',
@@ -1182,6 +1199,9 @@ class LanguageEn extends Languages {
   String get continueLabel => values['continue'] ?? '';
 
   @override
+  String get continueWithGoogle => values['continue_with_google'] ?? '';
+
+  @override
   String get didntReceiveTheCode => values['didnt_receive_the_code'] ?? '';
 
   @override
@@ -1428,6 +1448,43 @@ class LanguageEn extends Languages {
   String get gotIt => values['got_it'] ?? '';
 
   @override
+  String get googleSignInCancelled => values['google_sign_in_cancelled'] ?? '';
+
+  @override
+  String get googleSignInConfigError =>
+      values['google_sign_in_config_error'] ?? '';
+
+  @override
+  String get googleSignInFailed => values['google_sign_in_failed'] ?? '';
+
+  @override
+  String get googleSignInSuccess => values['google_sign_in_success'] ?? '';
+
+  @override
+  String get googleSignInUnsupported =>
+      values['google_sign_in_unsupported'] ?? '';
+
+  @override
+  String get continueWithApple => values['continue_with_apple'] ?? '';
+
+  @override
+  String get appleSignInSuccess => values['apple_sign_in_success'] ?? '';
+
+  @override
+  String get appleSignInCancelled => values['apple_sign_in_cancelled'] ?? '';
+
+  @override
+  String get appleSignInFailed => values['apple_sign_in_failed'] ?? '';
+
+  @override
+  String get appleSignInAccountExists =>
+      values['apple_sign_in_account_exists'] ?? '';
+
+  @override
+  String get appleSignInNotAvailable =>
+      values['apple_sign_in_not_available'] ?? '';
+
+  @override
   String get help => values['help'] ?? '';
 
   @override
@@ -1651,6 +1708,9 @@ class LanguageEn extends Languages {
 
   @override
   String get pleaseEnterLabel => values['please_enter_label'] ?? '';
+
+  @override
+  String get orDivider => values['or_divider'] ?? '';
 
   @override
   String get otpResentSuccessfully => values['otp_resent_successfully'] ?? '';

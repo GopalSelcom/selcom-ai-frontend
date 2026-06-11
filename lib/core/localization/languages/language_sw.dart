@@ -124,6 +124,7 @@ class LanguageSw extends Languages {
     'connection_error': '',
     'contact_us': '',
     'continue': '',
+    'continue_with_google': '',
     'didnt_receive_the_code': '',
     'could_not_cancel_try_again': '',
     'could_not_resolve_vehicle_type_id_please_try_again': '',
@@ -198,6 +199,17 @@ class LanguageSw extends Languages {
     'get_verification_code': '',
     'havent_got_the_confirmation_code_yet': '',
     'got_it': '',
+    'google_sign_in_cancelled': '',
+    'google_sign_in_config_error': '',
+    'google_sign_in_failed': '',
+    'google_sign_in_success': '',
+    'google_sign_in_unsupported': '',
+    'continue_with_apple': '',
+    'apple_sign_in_success': '',
+    'apple_sign_in_cancelled': '',
+    'apple_sign_in_failed': '',
+    'apple_sign_in_account_exists': '',
+    'apple_sign_in_not_available': '',
     'help': '',
     'help_selcom_go_do_better_by_rating_this_trip': '',
     'how_can_we_help_you': '',
@@ -262,6 +274,7 @@ class LanguageSw extends Languages {
     'call_full_screen_permission_msg':
         'Arifa za skrini kamili zinahitajika kujibu simu simu yako ikiwa imefungwa. Tafadhali iwashe katika mipangilio ya programu.',
     'please_enter_label': '',
+    'or_divider': '',
     'otp_resent_successfully': '',
     'past': '',
     'pay_using': '',
@@ -1068,6 +1081,9 @@ class LanguageSw extends Languages {
   String get continueLabel => values['continue'] ?? '';
 
   @override
+  String get continueWithGoogle => values['continue_with_google'] ?? '';
+
+  @override
   String get didntReceiveTheCode => values['didnt_receive_the_code'] ?? '';
 
   @override
@@ -1314,6 +1330,43 @@ class LanguageSw extends Languages {
   String get gotIt => values['got_it'] ?? '';
 
   @override
+  String get googleSignInCancelled => values['google_sign_in_cancelled'] ?? '';
+
+  @override
+  String get googleSignInConfigError =>
+      values['google_sign_in_config_error'] ?? '';
+
+  @override
+  String get googleSignInFailed => values['google_sign_in_failed'] ?? '';
+
+  @override
+  String get googleSignInSuccess => values['google_sign_in_success'] ?? '';
+
+  @override
+  String get googleSignInUnsupported =>
+      values['google_sign_in_unsupported'] ?? '';
+
+  @override
+  String get continueWithApple => values['continue_with_apple'] ?? '';
+
+  @override
+  String get appleSignInSuccess => values['apple_sign_in_success'] ?? '';
+
+  @override
+  String get appleSignInCancelled => values['apple_sign_in_cancelled'] ?? '';
+
+  @override
+  String get appleSignInFailed => values['apple_sign_in_failed'] ?? '';
+
+  @override
+  String get appleSignInAccountExists =>
+      values['apple_sign_in_account_exists'] ?? '';
+
+  @override
+  String get appleSignInNotAvailable =>
+      values['apple_sign_in_not_available'] ?? '';
+
+  @override
   String get help => values['help'] ?? '';
 
   @override
@@ -1537,6 +1590,9 @@ class LanguageSw extends Languages {
 
   @override
   String get pleaseEnterLabel => values['please_enter_label'] ?? '';
+
+  @override
+  String get orDivider => values['or_divider'] ?? '';
 
   @override
   String get otpResentSuccessfully => values['otp_resent_successfully'] ?? '';

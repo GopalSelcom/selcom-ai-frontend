@@ -151,6 +151,7 @@ class AppStrings {
       'connection_timed_out_please_check_internet';
   static const String contactUs = 'contact_us';
   static const String continueLabel = 'continue';
+  static const String continueWithGoogle = 'continue_with_google';
   static const String didntReceiveTheCode = 'didnt_receive_the_code';
   static const String couldNotCancelTryAgain = 'could_not_cancel_try_again';
   static const String couldNotResolveVehicleTypeIdPleaseTryAgain =
@@ -246,6 +247,17 @@ class AppStrings {
   static const String haventGotTheConfirmationCodeYet =
       'havent_got_the_confirmation_code_yet';
   static const String gotIt = 'got_it';
+  static const String googleSignInCancelled = 'google_sign_in_cancelled';
+  static const String googleSignInConfigError = 'google_sign_in_config_error';
+  static const String googleSignInFailed = 'google_sign_in_failed';
+  static const String googleSignInSuccess = 'google_sign_in_success';
+  static const String googleSignInUnsupported = 'google_sign_in_unsupported';
+  static const String continueWithApple = 'continue_with_apple';
+  static const String appleSignInSuccess = 'apple_sign_in_success';
+  static const String appleSignInCancelled = 'apple_sign_in_cancelled';
+  static const String appleSignInFailed = 'apple_sign_in_failed';
+  static const String appleSignInAccountExists = 'apple_sign_in_account_exists';
+  static const String appleSignInNotAvailable = 'apple_sign_in_not_available';
   static const String help = 'help';
   static const String helpSelcomGoDoBetterByRatingThisTrip =
       'help_selcom_go_do_better_by_rating_this_trip';
@@ -329,6 +341,7 @@ class AppStrings {
   static const String callFullScreenPermissionMsg =
       'call_full_screen_permission_msg';
   static const String pleaseEnterLabel = 'please_enter_label';
+  static const String orDivider = 'or_divider';
   static const String otpResentSuccessfully = 'otp_resent_successfully';
   static const String past = 'past';
   static const String payUsing = 'pay_using';

@@ -12,7 +12,20 @@
           "package_name": "com.selcom.go"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "235920604285-bve2fmhbospvaafknhq61dqt293g0qck.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.selcom.go",
+            "certificate_hash": "ab9ff05cb3a87214d603db53267e50bc80ad1084"
+          }
+        },
+        {
+          "client_id": "235920604285-5bt78fkuo4n4bsrg987vupb1tgnfvdcl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAY9TzBQJlMff1yw63gw4aQr6KfWhts1bI"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "235920604285-5bt78fkuo4n4bsrg987vupb1tgnfvdcl.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "235920604285-4j2vipqlc1mv6il1hbpd5pot9kd0pas5.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.selcomgo"
+              }
+            }
+          ]
         }
       }
     },
@@ -31,7 +56,12 @@
           "package_name": "com.selcomgo"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "235920604285-5bt78fkuo4n4bsrg987vupb1tgnfvdcl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAY9TzBQJlMff1yw63gw4aQr6KfWhts1bI"
@@ -39,7 +69,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "235920604285-5bt78fkuo4n4bsrg987vupb1tgnfvdcl.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "235920604285-4j2vipqlc1mv6il1hbpd5pot9kd0pas5.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.selcomgo"
+              }
+            }
+          ]
         }
       }
     }

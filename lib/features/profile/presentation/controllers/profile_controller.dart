@@ -6,6 +6,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/config/app_config.dart';
+import '../../../../core/di/injection_container.dart' as di;
+import '../../../auth/domain/repositories/auth_repository.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/network/urls.dart';
@@ -335,6 +337,7 @@ class ProfileController extends GetxController {
       confirmText: AppStrings.logout.tr,
       onConfirm: () async {
         SessionExpiryService.teardownOnLogout();
+        await di.sl<AuthRepository>().signOutFirebase();
         await StorageService().deleteAll();
         Get.offAllNamed(AppRoutes.phone);
       },

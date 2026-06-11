@@ -21,6 +21,22 @@ class AuthFailure extends Failure {
   const AuthFailure(super.message);
 }
 
+class AppleSignInFailure extends Failure {
+  const AppleSignInFailure(super.message, {this.isCancelled = false});
+
+  final bool isCancelled;
+}
+
+class FirebaseAuthFailure extends Failure {
+  const FirebaseAuthFailure(super.message, {this.code});
+
+  final String? code;
+}
+
+class AccountLinkingFailure extends Failure {
+  const AccountLinkingFailure(super.message);
+}
+
 /// Promo validate (`POST go/promo/validate`) — carries server [errorCode].
 class PromoValidationFailure extends Failure {
   final String? errorCode;

@@ -121,6 +121,7 @@ abstract class Languages {
   String get connectionError;
   String get contactUs;
   String get continueLabel;
+  String get continueWithGoogle;
   String get didntReceiveTheCode;
   String get couldNotCancelTryAgain;
   String get couldNotResolveVehicleTypeIdPleaseTryAgain;
@@ -195,6 +196,17 @@ abstract class Languages {
   String get getVerificationCode;
   String get haventGotTheConfirmationCodeYet;
   String get gotIt;
+  String get googleSignInCancelled;
+  String get googleSignInConfigError;
+  String get googleSignInFailed;
+  String get googleSignInSuccess;
+  String get googleSignInUnsupported;
+  String get continueWithApple;
+  String get appleSignInSuccess;
+  String get appleSignInCancelled;
+  String get appleSignInFailed;
+  String get appleSignInAccountExists;
+  String get appleSignInNotAvailable;
   String get help;
   String get helpSelcomGoDoBetterByRatingThisTrip;
   String get howCanWeHelpYou;
@@ -262,6 +274,7 @@ abstract class Languages {
   String get callNotificationPermissionMsg;
   String get callFullScreenPermissionMsg;
   String get pleaseEnterLabel;
+  String get orDivider;
   String get otpResentSuccessfully;
   String get past;
   String get enterPassengerFullName;
