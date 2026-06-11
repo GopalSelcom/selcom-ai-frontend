@@ -8,7 +8,6 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../shared/utils/phone_formatter.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/app_profile_user_avatar.dart';
 import '../../../../shared/widgets/app_profile_user_summary.dart';
@@ -146,11 +145,7 @@ class ProfileScreen extends StatelessWidget {
       final name = (user?.name ?? '').trim().isNotEmpty
           ? (user?.name ?? '')
           : AppStrings.user.tr;
-      final mobile = user?.mobileNumber != null
-          ? TanzaniaPhoneFormatter.formatInternational(
-              user!.mobileNumber.toString(),
-            )
-          : '';
+      final mobile = controller.displayPhone;
       final balance = controller.walletBalance.value;
       final walletNum = controller.walletNumber.value;
       final avgRating = (user?.goAvgRating ?? 0).toDouble();

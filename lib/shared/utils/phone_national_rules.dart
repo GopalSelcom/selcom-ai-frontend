@@ -53,4 +53,28 @@ class PhoneNationalRules {
     );
     return formatted.replaceAll(RegExp(r'[0-9]'), 'x');
   }
+
+  /// Formats [mobileNumber] for display using API [countryCode] (`255`, `+255`, etc.).
+  static String formatMobileForDisplay({
+    String? countryCode,
+    int? mobileNumber,
+  }) {
+    if (mobileNumber == null || mobileNumber == 0) return '';
+
+    final country = Countries.findByDialCode(countryCode ?? '');
+    final dialDigits = country.dialCode.replaceAll('+', '');
+    var digits = mobileNumber.toString().replaceAll(RegExp(r'\D'), '');
+
+    if (digits.startsWith(dialDigits) && digits.length > country.maxLength) {
+      digits = digits.substring(dialDigits.length);
+    } else if (digits.startsWith('0')) {
+      digits = digits.substring(1);
+    }
+
+    final grouped = GroupedPhoneNumberFormatter.formatDigits(
+      digits,
+      country.format,
+    );
+    return '${country.dialCode} $grouped';
+  }
 }

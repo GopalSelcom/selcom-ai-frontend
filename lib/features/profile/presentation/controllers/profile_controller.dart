@@ -17,7 +17,7 @@ import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/session_expiry_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../shared/utils/app_dialogs.dart';
-import '../../../../shared/utils/phone_formatter.dart';
+import '../../../../shared/utils/phone_national_rules.dart';
 import '../../../../shared/widgets/web_view_screen.dart';
 import '../../../ride/presentation/screens/my_rides_screen.dart';
 import '../../../wallet/domain/usecases/get_wallet_summary_usecase.dart';
@@ -120,20 +120,18 @@ class ProfileController extends GetxController {
     );
   }
 
+  String get displayPhone => PhoneNationalRules.formatMobileForDisplay(
+    countryCode: userModel.value?.countryCode,
+    mobileNumber: userModel.value?.mobileNumber,
+  );
+
   void _updateLocalUserState(UserModel user) {
     userModel.value = user;
     nameTextController.text = user.name ?? '';
-    final mobile = user.mobileNumber?.toString() ?? '';
-    phoneTextController.text = _formatPhoneForDisplay(mobile);
-  }
-
-  String _formatPhoneForDisplay(String number) {
-    if (number.isEmpty) return '';
-    String clean = number
-        .replaceAll('+${userModel.value?.countryCode ?? ""}', '')
-        .replaceAll(' ', '');
-    final formatted = TanzaniaPhoneFormatter.formatString(clean);
-    return '+${userModel.value?.countryCode ?? ""} $formatted';
+    phoneTextController.text = PhoneNationalRules.formatMobileForDisplay(
+      countryCode: user.countryCode,
+      mobileNumber: user.mobileNumber,
+    );
   }
 
   @override
