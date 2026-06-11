@@ -1119,6 +1119,18 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       return;
     }
 
+    if (!hasLocationPermission.value) {
+      await _openLocationSelectionWithDestination(
+        destAddr: destAddr,
+        destLat: dLat,
+        destLng: dLng,
+        destinationPlaceId: place.id,
+        analyticsEvent: 'home_saved_chip_location_selection',
+        analyticsParams: {'label': label},
+      );
+      return;
+    }
+
     await analyticsService.logEvent(
       'home_saved_chip_vehicle_selection',
       parameters: {'label': label},
@@ -1181,6 +1193,18 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       return;
     }
 
+    if (!hasLocationPermission.value) {
+      await _openLocationSelectionWithDestination(
+        destAddr: destAddr,
+        destLat: dLat,
+        destLng: dLng,
+        destinationPlaceId: place.id,
+        analyticsEvent: 'home_saved_item_location_selection',
+        analyticsParams: {'id': place.id},
+      );
+      return;
+    }
+
     await analyticsService.logEvent(
       'home_saved_item_vehicle_selection',
       parameters: {'id': place.id},
@@ -1213,29 +1237,51 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     );
   }
 
+  Future<void> _openLocationSelectionWithDestination({
+    required String destAddr,
+    required double destLat,
+    required double destLng,
+    String? destinationPlaceId,
+    String? analyticsEvent,
+    Map<String, dynamic>? analyticsParams,
+  }) async {
+    final trimmed = destAddr.trim();
+    if (trimmed.isEmpty) return;
+
+    if (analyticsEvent != null) {
+      await analyticsService.logEvent(
+        analyticsEvent,
+        parameters: analyticsParams,
+      );
+    }
+
+    final args = <String, dynamic>{
+      'destination': trimmed,
+      'destinationLat': destLat,
+      'destinationLng': destLng,
+      'activeSegmentIndex': 0,
+      'clearPickupOnOpen': true,
+    };
+    if (destinationPlaceId != null && destinationPlaceId.isNotEmpty) {
+      args['destinationPlaceId'] = destinationPlaceId;
+    }
+    if (Get.isRegistered<LocationSelectionController>()) {
+      Get.delete<LocationSelectionController>();
+    }
+    await Get.toNamed(AppRoutes.locationSelection, arguments: args);
+  }
+
   /// Opens location selection with [loc] as destination; pickup empty (GPS off).
   Future<void> openLocationSelectionForRecentDestination(
     RecentDestinationModel loc,
   ) async {
-    final destAddr = loc.address.trim();
-    if (destAddr.isEmpty) return;
-
-    await analyticsService.logEvent(
-      'home_recent_item_location_selection',
-      parameters: {'address': destAddr},
+    await _openLocationSelectionWithDestination(
+      destAddr: loc.address,
+      destLat: loc.lat,
+      destLng: loc.lng,
+      analyticsEvent: 'home_recent_item_location_selection',
+      analyticsParams: {'address': loc.address.trim()},
     );
-
-    final args = <String, dynamic>{
-      'destination': destAddr,
-      'destinationLat': loc.lat,
-      'destinationLng': loc.lng,
-      'activeSegmentIndex': 0,
-      'clearPickupOnOpen': true,
-    };
-    if (Get.isRegistered<LocationSelectionController>()) {
-      Get.delete<LocationSelectionController>();
-    }
-    Get.toNamed(AppRoutes.locationSelection, arguments: args);
   }
 
   /// Pickup = current map center; destination = [RecentDestinationModel].
