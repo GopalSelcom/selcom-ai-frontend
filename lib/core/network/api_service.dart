@@ -843,7 +843,7 @@ class ApiService {
                   await StorageService().deleteAll();
                   SessionExpiryService.resetOnLogin();
                   Get.back();
-                  Get.offAllNamed(AppRoutes.phone);
+                  Get.offAllNamed(AppRoutes.login);
                 },
                 child: Container(
                   height: 54.h,

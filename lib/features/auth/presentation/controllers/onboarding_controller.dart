@@ -88,11 +88,11 @@ class OnboardingController extends GetxController {
   }
 
   void onGetStarted() {
-    Get.offAllNamed(AppRoutes.phone);
+    Get.offAllNamed(AppRoutes.login);
   }
 
   void onSkip() {
-    Get.offAllNamed(AppRoutes.phone);
+    Get.offAllNamed(AppRoutes.login);
   }
 }
 

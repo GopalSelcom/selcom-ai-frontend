@@ -339,7 +339,7 @@ class ProfileController extends GetxController {
         SessionExpiryService.teardownOnLogout();
         await di.sl<AuthRepository>().signOutFirebase();
         await StorageService().deleteAll();
-        Get.offAllNamed(AppRoutes.phone);
+        Get.offAllNamed(AppRoutes.login);
       },
     );
   }

@@ -5,6 +5,7 @@ import '../../features/auth/presentation/bindings/auth_binding.dart';
 import '../../features/auth/presentation/screens/onboarding_screen.dart';
 import '../../features/auth/presentation/screens/otp_screen.dart';
 import '../../features/auth/presentation/screens/phone_input_screen.dart';
+import '../../features/auth/presentation/screens/social_login_screen.dart';
 import '../../features/auth/presentation/screens/profile_loading_screen.dart';
 import '../../features/auth/presentation/screens/sign_up.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
@@ -46,6 +47,7 @@ import '../../features/wallet/presentation/screens/wallet_screen.dart';
 class AppRoutes {
   static const String splash = '/';
   static const String onboarding = '/onboarding';
+  static const String login = '/auth/login';
   static const String phone = '/auth/phone';
   static const String otp = '/auth/otp';
   static const String profileLoading = '/auth/profile-loading';
@@ -80,6 +82,11 @@ class AppRoutes {
     GetPage(
       name: onboarding,
       page: () => const OnboardingScreen(),
+      binding: AuthBinding(),
+    ),
+    GetPage(
+      name: login,
+      page: () => const SocialLoginScreen(),
       binding: AuthBinding(),
     ),
     GetPage(

@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 
 import '../../../../core/config/app_config.dart';
 import '../../../../core/data/models/requests/go_phone_otp_request.dart';
+import '../../../../core/data/models/user_model.dart';
 import '../../../../core/data/models/requests/go_phone_verify_otp_request.dart';
 import '../../../../core/data/models/requests/send_otp_request.dart';
 import '../../../../core/data/models/requests/verify_otp_request.dart';
@@ -81,6 +82,12 @@ class AuthController extends GetxController {
     final c = appRegionService.selected;
     selectedCountryIso.value = c.code.toUpperCase();
     countryCode.value = c.dialCode;
+  }
+
+  @override
+  void onReady() {
+    super.onReady();
+    unawaited(_configurePhoneAttachMode());
   }
 
   @override
@@ -291,12 +298,35 @@ class AuthController extends GetxController {
 
     if (!verified || postVerifyRoute == null) return false;
 
-    if (postVerifyRoute == AppRoutes.profileLoading) {
-      Get.offAllNamed(AppRoutes.profileLoading);
-    } else {
-      Get.offNamed(postVerifyRoute!);
-    }
+    _navigateAfterAuth(postVerifyRoute!);
     return true;
+  }
+
+  static bool userNeedsPhone(String? userJson) {
+    if (userJson == null || userJson.trim().isEmpty) return true;
+    try {
+      final user = UserModel.fromJson(
+        jsonDecode(userJson) as Map<String, dynamic>,
+      );
+      return user.isVerify != 1 ||
+          user.mobileNumber == null ||
+          user.mobileNumber == 0;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  Future<void> _configurePhoneAttachMode() async {
+    final token = await StorageService().read(StorageKeys.authorizationToken);
+    isPhoneAttachFlow.value = token != null && token.isNotEmpty;
+  }
+
+  void _navigateAfterAuth(String route) {
+    if (route == AppRoutes.phone) {
+      Get.offAllNamed(AppRoutes.phone);
+      return;
+    }
+    Get.offAllNamed(AppRoutes.home);
   }
 
   void onOtpChanged(String value) {
@@ -432,15 +462,7 @@ class AuthController extends GetxController {
         final route = await _persistLoginSession(response!);
         if (route == null) return;
 
-        if (route == AppRoutes.phone) {
-          return;
-        }
-
-        if (route == AppRoutes.profileLoading) {
-          Get.offAllNamed(AppRoutes.profileLoading);
-        } else {
-          Get.offNamed(route);
-        }
+        _navigateAfterAuth(route);
       },
     );
   }
@@ -482,27 +504,18 @@ class AuthController extends GetxController {
 
     if (verifyData.needsPhone == true) {
       isPhoneAttachFlow.value = true;
-      await StorageService().write(StorageKeys.signupCompleted, 'false');
+      await StorageService().write(StorageKeys.signupCompleted, 'true');
       await VoipCallkitBridgeService.instance.syncCachedTokenToBackend();
       SessionExpiryService.resetOnLogin();
       return AppRoutes.phone;
     }
 
     isPhoneAttachFlow.value = false;
-
-    final isUserAlreadyRegistered = verifyData.isUserAlreadyRegistered == true;
-    final walletNotCreated = verifyData.isWalletNotCreated;
-    final needsSignUp = !isUserAlreadyRegistered || walletNotCreated;
-
-    await StorageService().write(
-      StorageKeys.signupCompleted,
-      needsSignUp ? 'false' : 'true',
-    );
-
+    await StorageService().write(StorageKeys.signupCompleted, 'true');
     await VoipCallkitBridgeService.instance.syncCachedTokenToBackend();
     SessionExpiryService.resetOnLogin();
 
-    return needsSignUp ? AppRoutes.signUp : AppRoutes.profileLoading;
+    return AppRoutes.home;
   }
 
   Future<void> signInWithFacebook() async {

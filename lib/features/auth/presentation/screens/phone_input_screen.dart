@@ -1,7 +1,4 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
@@ -40,8 +37,6 @@ class PhoneInputScreen extends GetView<AuthController> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         SizedBox(height: 103.h - kToolbarHeight),
-
-                        // Title
                         Text(
                           AppStrings.enterPhoneNumberForVerification.tr,
                           style: AppTextStyles.onboardingTitle.copyWith(
@@ -50,10 +45,7 @@ class PhoneInputScreen extends GetView<AuthController> {
                             letterSpacing: -0.4,
                           ),
                         ),
-
                         SizedBox(height: 8.h),
-
-                        // Subtitle
                         Text(
                           AppStrings.weLlTextACodeToVerifyYourPhoneNumber.tr,
                           style: AppTextStyles.homeSubtitle.copyWith(
@@ -63,9 +55,7 @@ class PhoneInputScreen extends GetView<AuthController> {
                             height: 20 / 15,
                           ),
                         ),
-
                         SizedBox(height: 22.h),
-
                         Obx(() {
                           final iso = controller.selectedCountryIso.value;
                           final resetV =
@@ -127,12 +117,10 @@ class PhoneInputScreen extends GetView<AuthController> {
                             ],
                           );
                         }),
-
-                        // Error Message
                         Obx(
                           () => controller.errorMessage.isNotEmpty
                               ? Padding(
-                                  padding: EdgeInsets.only(bottom: 16.h),
+                                  padding: EdgeInsets.only(top: 12.h),
                                   child: Text(
                                     controller.errorMessage.value,
                                     style: TextStyle(
@@ -143,9 +131,7 @@ class PhoneInputScreen extends GetView<AuthController> {
                                 )
                               : const SizedBox.shrink(),
                         ),
-
                         const Spacer(),
-
                         Padding(
                           padding: EdgeInsets.only(bottom: 14.h),
                           child: Text(
@@ -160,7 +146,6 @@ class PhoneInputScreen extends GetView<AuthController> {
                             ),
                           ),
                         ),
-
                         Obx(
                           () => AppAnimatedReveal(
                             show: controller.canRequestOtp,
