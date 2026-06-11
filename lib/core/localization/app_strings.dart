@@ -258,6 +258,10 @@ class AppStrings {
   static const String appleSignInFailed = 'apple_sign_in_failed';
   static const String appleSignInAccountExists = 'apple_sign_in_account_exists';
   static const String appleSignInNotAvailable = 'apple_sign_in_not_available';
+  static const String continueWithFacebook = 'continue_with_facebook';
+  static const String facebookSignInSuccess = 'facebook_sign_in_success';
+  static const String facebookSignInCancelled = 'facebook_sign_in_cancelled';
+  static const String facebookSignInFailed = 'facebook_sign_in_failed';
   static const String help = 'help';
   static const String helpSelcomGoDoBetterByRatingThisTrip =
       'help_selcom_go_do_better_by_rating_this_trip';

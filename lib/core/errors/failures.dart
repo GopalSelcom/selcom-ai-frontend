@@ -27,6 +27,12 @@ class AppleSignInFailure extends Failure {
   final bool isCancelled;
 }
 
+class FacebookSignInFailure extends Failure {
+  const FacebookSignInFailure(super.message, {this.isCancelled = false});
+
+  final bool isCancelled;
+}
+
 class FirebaseAuthFailure extends Failure {
   const FirebaseAuthFailure(super.message, {this.code});
 

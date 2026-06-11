@@ -210,6 +210,10 @@ class LanguageSw extends Languages {
     'apple_sign_in_failed': '',
     'apple_sign_in_account_exists': '',
     'apple_sign_in_not_available': '',
+    'continue_with_facebook': '',
+    'facebook_sign_in_success': '',
+    'facebook_sign_in_cancelled': '',
+    'facebook_sign_in_failed': '',
     'help': '',
     'help_selcom_go_do_better_by_rating_this_trip': '',
     'how_can_we_help_you': '',
@@ -1365,6 +1369,18 @@ class LanguageSw extends Languages {
   @override
   String get appleSignInNotAvailable =>
       values['apple_sign_in_not_available'] ?? '';
+
+  @override
+  String get continueWithFacebook => values['continue_with_facebook'] ?? '';
+
+  @override
+  String get facebookSignInSuccess => values['facebook_sign_in_success'] ?? '';
+
+  @override
+  String get facebookSignInCancelled => values['facebook_sign_in_cancelled'] ?? '';
+
+  @override
+  String get facebookSignInFailed => values['facebook_sign_in_failed'] ?? '';
 
   @override
   String get help => values['help'] ?? '';

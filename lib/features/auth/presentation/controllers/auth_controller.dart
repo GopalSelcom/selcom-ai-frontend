@@ -22,6 +22,7 @@ import '../../../../shared/utils/phone_national_rules.dart';
 import '../../domain/usecases/resend_otp_use_case.dart';
 import '../../domain/usecases/send_otp_use_case.dart';
 import '../../domain/usecases/sign_in_with_apple_use_case.dart';
+import '../../domain/usecases/sign_in_with_facebook_use_case.dart';
 import '../../domain/usecases/verify_otp_use_case.dart';
 
 class AuthController extends GetxController {
@@ -30,6 +31,7 @@ class AuthController extends GetxController {
     required this.resendOtpUseCase,
     required this.verifyOtpUseCase,
     required this.signInWithAppleUseCase,
+    required this.signInWithFacebookUseCase,
     required this.appRegionService,
     required this.googleSignInService,
   });
@@ -38,6 +40,7 @@ class AuthController extends GetxController {
   final ResendOtpUseCase resendOtpUseCase;
   final VerifyOtpUseCase verifyOtpUseCase;
   final SignInWithAppleUseCase signInWithAppleUseCase;
+  final SignInWithFacebookUseCase signInWithFacebookUseCase;
   final AppRegionService appRegionService;
   final GoogleSignInService googleSignInService;
 
@@ -404,6 +407,47 @@ class AuthController extends GetxController {
           Get.snackbar(
             AppStrings.accountVerified.tr,
             AppStrings.appleSignInSuccess.trParams({'email': email}),
+          );
+        },
+      );
+    });
+  }
+
+  Future<void> signInWithFacebook() async {
+    if (isLoading.value) return;
+    errorMessage.value = '';
+
+    await Loader.withFlag(isLoading, () async {
+      final result = await signInWithFacebookUseCase(NoParams());
+
+      result.fold(
+        (failure) {
+          if (failure is FacebookSignInFailure && failure.isCancelled) {
+            errorMessage.value = AppStrings.facebookSignInCancelled.tr;
+            return;
+          }
+          if (failure is AccountLinkingFailure) {
+            errorMessage.value = AppStrings.appleSignInAccountExists.tr;
+            return;
+          }
+          if (failure is NetworkFailure) {
+            errorMessage.value = failure.message;
+            return;
+          }
+          errorMessage.value = AppStrings.facebookSignInFailed.tr;
+        },
+        (user) {
+          final email = user.email?.trim() ?? '';
+          if (email.isEmpty) {
+            errorMessage.value = AppStrings.facebookSignInFailed.tr;
+            return;
+          }
+
+          // TODO: exchange Firebase ID token with Selcom backend when API exists.
+
+          Get.snackbar(
+            AppStrings.accountVerified.tr,
+            AppStrings.facebookSignInSuccess.trParams({'email': email}),
           );
         },
       );

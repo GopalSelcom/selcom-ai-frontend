@@ -35,5 +35,7 @@ abstract class AuthRepository {
 
   Future<Either<Failure, SocialAuthUser>> signInWithApple();
 
+  Future<Either<Failure, SocialAuthUser>> signInWithFacebook();
+
   Future<Either<Failure, void>> signOutFirebase();
 }

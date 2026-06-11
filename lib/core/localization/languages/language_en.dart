@@ -246,6 +246,10 @@ class LanguageEn extends Languages {
         'An account already exists with this email. Sign in with your original method first.',
     'apple_sign_in_not_available':
         'Apple Sign-In is only available on iOS devices',
+    'continue_with_facebook': 'Continue with Facebook',
+    'facebook_sign_in_success': 'Signed in as @email',
+    'facebook_sign_in_cancelled': 'Sign-in cancelled',
+    'facebook_sign_in_failed': 'Facebook Sign-In failed. Please try again.',
     'help': 'Help',
     'help_selcom_go_do_better_by_rating_this_trip':
         'Help Selcom Go do better by rating this trip',
@@ -1483,6 +1487,18 @@ class LanguageEn extends Languages {
   @override
   String get appleSignInNotAvailable =>
       values['apple_sign_in_not_available'] ?? '';
+
+  @override
+  String get continueWithFacebook => values['continue_with_facebook'] ?? '';
+
+  @override
+  String get facebookSignInSuccess => values['facebook_sign_in_success'] ?? '';
+
+  @override
+  String get facebookSignInCancelled => values['facebook_sign_in_cancelled'] ?? '';
+
+  @override
+  String get facebookSignInFailed => values['facebook_sign_in_failed'] ?? '';
 
   @override
   String get help => values['help'] ?? '';

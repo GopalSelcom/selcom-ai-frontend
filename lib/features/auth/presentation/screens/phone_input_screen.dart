@@ -217,6 +217,19 @@ class PhoneInputScreen extends GetView<AuthController> {
                           ),
                         ),
 
+                        SizedBox(height: 12.h),
+
+                        Obx(
+                          () => AppPrimaryButton(
+                            label: AppStrings.continueWithFacebook.tr,
+                            outlined: true,
+                            isLoading: controller.isLoading.value,
+                            onPressed: controller.isLoading.value
+                                ? null
+                                : controller.signInWithFacebook,
+                          ),
+                        ),
+
                         if (Platform.isIOS) ...[
                           SizedBox(height: 12.h),
                           Obx(

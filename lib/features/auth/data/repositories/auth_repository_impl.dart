@@ -11,6 +11,7 @@ import '../../../../core/data/models/responses/verify_otp_response.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/services/apple_sign_in_service.dart';
+import '../../../../core/services/facebook_sign_in_service.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/utils/apple_sign_in_debug_log.dart';
 import '../../../../core/utils/apple_sign_in_nonce.dart';
@@ -25,12 +26,14 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl({
     required this.remoteDataSource,
     required this.appleSignInService,
+    required this.facebookSignInService,
     required this.firebaseAuthDataSource,
     required this.appleAuthLocalDataSource,
   });
 
   final AuthRemoteDataSource remoteDataSource;
   final AppleSignInService appleSignInService;
+  final FacebookSignInService facebookSignInService;
   final FirebaseAuthDataSource firebaseAuthDataSource;
   final AppleAuthLocalDataSource appleAuthLocalDataSource;
 
@@ -353,6 +356,95 @@ class AuthRepositoryImpl implements AuthRepository {
     return message.contains('network') ||
         message.contains('socket') ||
         message.contains('connection');
+  }
+
+  @override
+  Future<Either<Failure, SocialAuthUser>> signInWithFacebook() async {
+    try {
+      final facebookToken = await facebookSignInService.signIn();
+      final oauthCredential = FacebookAuthProvider.credential(facebookToken.tokenString);
+
+      final userCredential = await _signInOrLinkFacebookCredential(oauthCredential);
+      final firebaseUser = userCredential.user;
+
+      if (firebaseUser == null) {
+        return const Left(
+          FirebaseAuthFailure('Unable to complete Facebook Sign-In.'),
+        );
+      }
+
+      final socialUser = SocialAuthUserModel.fromFirebaseUser(
+        user: firebaseUser,
+        isNewUser: userCredential.additionalUserInfo?.isNewUser ?? false,
+      );
+
+      return Right(socialUser);
+    } on FacebookSignInServiceException catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(_mapFacebookSignInException(e));
+    } on FirebaseAuthException catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(_mapFirebaseAuthException(e));
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      if (_isNetworkError(e)) {
+        return const Left(
+          NetworkFailure(
+            'Network error during Facebook Sign-In. Please try again.',
+          ),
+        );
+      }
+      return const Left(
+        FacebookSignInFailure('Facebook Sign-In failed. Please try again.'),
+      );
+    }
+  }
+
+  Future<UserCredential> _signInOrLinkFacebookCredential(
+    AuthCredential credential,
+  ) async {
+    final currentUser = firebaseAuthDataSource.currentUser;
+
+    if (currentUser != null) {
+      try {
+        return await firebaseAuthDataSource.linkWithCredential(credential);
+      } on FirebaseAuthException catch (e) {
+        if (e.code != 'provider-already-linked' &&
+            e.code != 'credential-already-in-use') {
+          rethrow;
+        }
+      }
+    }
+
+    try {
+      return await firebaseAuthDataSource.signInWithCredential(credential);
+    } on FirebaseAuthException catch (e) {
+      if (e.code != 'account-exists-with-different-credential') {
+        rethrow;
+      }
+
+      if (firebaseAuthDataSource.currentUser != null) {
+        return firebaseAuthDataSource.linkWithCredential(credential);
+      }
+
+      throw FirebaseAuthException(
+        code: e.code,
+        message:
+            'An account already exists with this email. Sign in with your original method first.',
+      );
+    }
+  }
+
+  Failure _mapFacebookSignInException(FacebookSignInServiceException exception) {
+    switch (exception.type) {
+      case FacebookSignInErrorType.cancelled:
+        return const FacebookSignInFailure('Sign-in cancelled', isCancelled: true);
+      case FacebookSignInErrorType.failed:
+      case FacebookSignInErrorType.unknown:
+        return FacebookSignInFailure(
+          exception.message ?? 'Facebook Sign-In failed. Please try again.',
+        );
+    }
   }
 
   bool _hasValue(String? value) => value != null && value.trim().isNotEmpty;

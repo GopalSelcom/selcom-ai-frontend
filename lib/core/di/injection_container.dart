@@ -59,6 +59,7 @@ import '../services/nearby_drivers_socket_service.dart';
 import '../services/notification_service.dart';
 import '../services/apple_sign_in_service.dart';
 import '../services/google_sign_in_service.dart';
+import '../services/facebook_sign_in_service.dart';
 import '../services/selcom_pesa/selcom_pesa_app_launcher_service.dart';
 
 final sl = GetIt.instance; // sl: Service Locator
@@ -73,6 +74,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => SelcomPesaAppLauncherService());
   sl.registerLazySingleton(() => GoogleSignInService());
   sl.registerLazySingleton(() => AppleSignInService());
+  sl.registerLazySingleton(() => FacebookSignInService());
   sl.registerLazySingleton(() => FirebaseAuthDataSource());
   sl.registerLazySingleton<AppleAuthLocalDataSource>(
     () => AppleAuthLocalDataSourceImpl(secureStorage: sl()),
@@ -103,6 +105,7 @@ Future<void> init() async {
     () => AuthRepositoryImpl(
       remoteDataSource: sl(),
       appleSignInService: sl(),
+      facebookSignInService: sl(),
       firebaseAuthDataSource: sl(),
       appleAuthLocalDataSource: sl(),
     ),

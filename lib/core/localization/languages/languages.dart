@@ -207,6 +207,10 @@ abstract class Languages {
   String get appleSignInFailed;
   String get appleSignInAccountExists;
   String get appleSignInNotAvailable;
+  String get continueWithFacebook;
+  String get facebookSignInSuccess;
+  String get facebookSignInCancelled;
+  String get facebookSignInFailed;
   String get help;
   String get helpSelcomGoDoBetterByRatingThisTrip;
   String get howCanWeHelpYou;

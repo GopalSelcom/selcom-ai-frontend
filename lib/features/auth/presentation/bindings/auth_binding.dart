@@ -4,6 +4,7 @@ import '../../../../core/di/injection_container.dart' as di;
 import '../../../../core/services/app_region_service.dart';
 import '../../../../core/services/apple_sign_in_service.dart';
 import '../../../../core/services/google_sign_in_service.dart';
+import '../../../../core/services/facebook_sign_in_service.dart';
 import '../../data/datasources/apple_auth_local_data_source.dart';
 import '../../data/datasources/auth_remote_data_source.dart';
 import '../../data/datasources/firebase_auth_data_source.dart';
@@ -13,6 +14,7 @@ import '../../domain/usecases/resend_otp_use_case.dart';
 import '../../domain/usecases/save_user_additional_details_use_case.dart';
 import '../../domain/usecases/send_otp_use_case.dart';
 import '../../domain/usecases/sign_in_with_apple_use_case.dart';
+import '../../domain/usecases/sign_in_with_facebook_use_case.dart';
 import '../../domain/usecases/sign_out_firebase_use_case.dart';
 import '../../domain/usecases/verify_otp_use_case.dart';
 import '../controllers/auth_controller.dart';
@@ -28,6 +30,7 @@ class AuthBinding extends Bindings {
       () => AuthRepositoryImpl(
         remoteDataSource: Get.find(),
         appleSignInService: di.sl<AppleSignInService>(),
+        facebookSignInService: di.sl<FacebookSignInService>(),
         firebaseAuthDataSource: di.sl<FirebaseAuthDataSource>(),
         appleAuthLocalDataSource: di.sl<AppleAuthLocalDataSource>(),
       ),
@@ -38,6 +41,7 @@ class AuthBinding extends Bindings {
     Get.lazyPut(() => VerifyOtpUseCase(Get.find()));
     Get.lazyPut(() => SaveUserAdditionalDetailsUseCase(Get.find()));
     Get.lazyPut(() => SignInWithAppleUseCase(Get.find()));
+    Get.lazyPut(() => SignInWithFacebookUseCase(Get.find()));
     Get.lazyPut(() => SignOutFirebaseUseCase(Get.find()));
 
     Get.lazyPut(
@@ -46,6 +50,7 @@ class AuthBinding extends Bindings {
         resendOtpUseCase: Get.find(),
         verifyOtpUseCase: Get.find(),
         signInWithAppleUseCase: Get.find(),
+        signInWithFacebookUseCase: Get.find(),
         appRegionService: di.sl<AppRegionService>(),
         googleSignInService: di.sl<GoogleSignInService>(),
       ),
