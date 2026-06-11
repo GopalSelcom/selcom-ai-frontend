@@ -44,6 +44,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (token != null && token.isNotEmpty) {
       await VoipCallkitBridgeService.instance.syncCachedTokenToBackend();
       if (AuthController.userNeedsPhone(userJson)) {
+        // Resume phone attach after a prior SSO + firebase_login session.
         Get.offAllNamed(AppRoutes.phone);
       } else {
         Get.offAllNamed(AppRoutes.home);

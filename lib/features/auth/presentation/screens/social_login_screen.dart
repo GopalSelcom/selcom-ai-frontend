@@ -8,7 +8,8 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../shared/widgets/app_primary_button.dart';
+import '../../../../shared/widgets/app_facebook_sign_in_button.dart';
+import '../../../../shared/widgets/app_google_sign_in_button.dart';
 import '../controllers/auth_controller.dart';
 
 class SocialLoginScreen extends GetView<AuthController> {
@@ -59,9 +60,7 @@ class SocialLoginScreen extends GetView<AuthController> {
                     : const SizedBox.shrink(),
               ),
               Obx(
-                () => AppPrimaryButton(
-                  label: AppStrings.continueWithGoogle.tr,
-                  outlined: true,
+                () => AppGoogleSignInButton(
                   isLoading: controller.isLoading.value,
                   onPressed: controller.isLoading.value
                       ? null
@@ -70,9 +69,7 @@ class SocialLoginScreen extends GetView<AuthController> {
               ),
               SizedBox(height: 12.h),
               Obx(
-                () => AppPrimaryButton(
-                  label: AppStrings.continueWithFacebook.tr,
-                  outlined: true,
+                () => AppFacebookSignInButton(
                   isLoading: controller.isLoading.value,
                   onPressed: controller.isLoading.value
                       ? null

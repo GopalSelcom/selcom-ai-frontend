@@ -7,8 +7,6 @@ import '../../../../core/config/app_config.dart';
 import '../../../../core/data/models/requests/go_phone_otp_request.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/data/models/requests/go_phone_verify_otp_request.dart';
-import '../../../../core/data/models/requests/send_otp_request.dart';
-import '../../../../core/data/models/requests/verify_otp_request.dart';
 import '../../../../core/data/models/responses/verify_otp_response.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/localization/app_strings.dart';
@@ -118,34 +116,7 @@ class AuthController extends GetxController {
     errorMessage.value = '';
 
     return Loader.withFlag(isLoading, () async {
-      if (isPhoneAttachFlow.value) {
-        final result = await sendPhoneOtpUseCase(_goPhoneOtpRequest);
-        return result.fold(
-          (failure) {
-            errorMessage.value = failure.message;
-            generatedOtp.value = '';
-            return false;
-          },
-          (response) {
-            if (response?.isSuccess == true) {
-              generatedOtp.value = response?.response?.otp ?? '';
-              return true;
-            }
-            errorMessage.value =
-                response?.message ?? AppStrings.failedToSendOtp.tr;
-            generatedOtp.value = '';
-            return false;
-          },
-        );
-      }
-
-      final result = await sendOtpUseCase(
-        SendOtpRequest(
-          mobileNumber: mobileNumber.value.replaceAll(RegExp(r'\D'), ''),
-          countryCode: countryCode.value.replaceAll('+', ''),
-        ),
-      );
-
+      final result = await sendPhoneOtpUseCase(_goPhoneOtpRequest);
       return result.fold(
         (failure) {
           errorMessage.value = failure.message;
@@ -156,12 +127,11 @@ class AuthController extends GetxController {
           if (response?.isSuccess == true) {
             generatedOtp.value = response?.response?.otp ?? '';
             return true;
-          } else {
-            errorMessage.value =
-                response?.message ?? AppStrings.failedToSendOtp.tr;
-            generatedOtp.value = '';
-            return false;
           }
+          errorMessage.value =
+              response?.message ?? AppStrings.failedToSendOtp.tr;
+          generatedOtp.value = '';
+          return false;
         },
       );
     });
@@ -205,35 +175,7 @@ class AuthController extends GetxController {
     startResendTimer();
 
     return Loader.withFlag(isLoading, () async {
-      if (isPhoneAttachFlow.value) {
-        final result = await resendPhoneOtpUseCase(_goPhoneOtpRequest);
-        return result.fold(
-          (failure) {
-            errorMessage.value = failure.message;
-            generatedOtp.value = '';
-            return false;
-          },
-          (response) {
-            if (response?.isSuccess == true) {
-              generatedOtp.value = response?.response?.otp ?? '';
-              return true;
-            }
-            errorMessage.value =
-                response?.message ?? AppStrings.failedToResendOtp.tr;
-            resendTimer.value = 0;
-            generatedOtp.value = '';
-            return false;
-          },
-        );
-      }
-
-      final result = await resendOtpUseCase(
-        SendOtpRequest(
-          mobileNumber: mobileNumber.value.replaceAll(RegExp(r'\D'), ''),
-          countryCode: countryCode.value.replaceAll('+', ''),
-        ),
-      );
-
+      final result = await resendPhoneOtpUseCase(_goPhoneOtpRequest);
       return result.fold(
         (failure) {
           errorMessage.value = failure.message;
@@ -244,13 +186,12 @@ class AuthController extends GetxController {
           if (response?.isSuccess == true) {
             generatedOtp.value = response?.response?.otp ?? '';
             return true;
-          } else {
-            errorMessage.value =
-                response?.message ?? AppStrings.failedToResendOtp.tr;
-            resendTimer.value = 0;
-            generatedOtp.value = '';
-            return false;
           }
+          errorMessage.value =
+              response?.message ?? AppStrings.failedToResendOtp.tr;
+          resendTimer.value = 0;
+          generatedOtp.value = '';
+          return false;
         },
       );
     });
@@ -263,21 +204,13 @@ class AuthController extends GetxController {
     String? postVerifyRoute;
 
     final verified = await Loader.withFlag(isLoading, () async {
-      final result = isPhoneAttachFlow.value
-          ? await verifyPhoneOtpUseCase(
-              GoPhoneVerifyOtpRequest(
-                mobileNumber: mobileNumber.value.replaceAll(RegExp(r'\D'), ''),
-                countryCode: countryCode.value,
-                otp: otp.value,
-              ),
-            )
-          : await verifyOtpUseCase(
-              VerifyOtpRequest(
-                mobileNumber: mobileNumber.value.replaceAll(RegExp(r'\D'), ''),
-                countryCode: countryCode.value.replaceAll('+', ''),
-                otp: otp.value,
-              ),
-            );
+      final result = await verifyPhoneOtpUseCase(
+        GoPhoneVerifyOtpRequest(
+          mobileNumber: mobileNumber.value.replaceAll(RegExp(r'\D'), ''),
+          countryCode: countryCode.value,
+          otp: otp.value,
+        ),
+      );
 
       return await result.fold(
         (failure) async {
@@ -326,7 +259,11 @@ class AuthController extends GetxController {
       Get.offAllNamed(AppRoutes.phone);
       return;
     }
-    Get.offAllNamed(AppRoutes.home);
+    if (route == AppRoutes.profileLoading) {
+      Get.offAllNamed(AppRoutes.profileLoading);
+      return;
+    }
+    Get.offAllNamed(route);
   }
 
   void onOtpChanged(String value) {
@@ -515,7 +452,7 @@ class AuthController extends GetxController {
     await VoipCallkitBridgeService.instance.syncCachedTokenToBackend();
     SessionExpiryService.resetOnLogin();
 
-    return AppRoutes.home;
+    return AppRoutes.profileLoading;
   }
 
   Future<void> signInWithFacebook() async {

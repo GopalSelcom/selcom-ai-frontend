@@ -95,7 +95,11 @@ class AppRoutes {
       binding: AuthBinding(),
     ),
     GetPage(name: otp, page: () => const OtpScreen(), binding: AuthBinding()),
-    GetPage(name: profileLoading, page: () => const ProfileLoadingScreen()),
+    GetPage(
+      name: profileLoading,
+      page: () => const ProfileLoadingScreen(),
+      binding: AuthBinding(),
+    ),
     GetPage(
       name: signUp,
       page: () => const SignUpScreen(),

@@ -9,8 +9,6 @@ import '../../../../shared/data/countries_phone_data.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
 import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_focus_input_field.dart';
-import '../../../../shared/widgets/app_facebook_sign_in_button.dart';
-import '../../../../shared/widgets/app_google_sign_in_button.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/phone_country_picker_chip.dart';
 import '../controllers/auth_controller.dart';
@@ -149,86 +147,15 @@ class PhoneInputScreen extends GetView<AuthController> {
                         Obx(
                           () => AppAnimatedReveal(
                             show: controller.canRequestOtp,
-                            visibleKey: const ValueKey('otp-button-visible'),
-                            hiddenKey: const ValueKey('otp-button-hidden'),
+                            visibleKey: const ValueKey('continue-button-visible'),
+                            hiddenKey: const ValueKey('continue-button-hidden'),
                             child: AppPrimaryButton(
-                              label: AppStrings.getVerificationCode.tr,
+                              label: AppStrings.continueLabel.tr,
                               isLoading: controller.isLoading.value,
                               onPressed: controller.sendOtpAndNavigate,
                             ),
                           ),
                         ),
-
-                        SizedBox(height: 16.h),
-
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Divider(
-                                color: AppColors.textBody.withValues(
-                                  alpha: 0.3,
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 12.w),
-                              child: Text(
-                                AppStrings.orDivider.tr,
-                                style: AppTextStyles.homeCaption.copyWith(
-                                  fontSize: 13.sp,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.textBody,
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Divider(
-                                color: AppColors.textBody.withValues(
-                                  alpha: 0.3,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        SizedBox(height: 16.h),
-
-                        Obx(
-                          () => AppGoogleSignInButton(
-                            isLoading: controller.isLoading.value,
-                            onPressed: controller.isLoading.value
-                                ? null
-                                : controller.signInWithGoogle,
-                          ),
-                        ),
-
-                        SizedBox(height: 12.h),
-
-                        Obx(
-                          () => AppFacebookSignInButton(
-                            isLoading: controller.isLoading.value,
-                            onPressed: controller.isLoading.value
-                                ? null
-                                : controller.signInWithFacebook,
-                          ),
-                        ),
-
-                        if (Platform.isIOS) ...[
-                          SizedBox(height: 12.h),
-                          Obx(
-                            () => AbsorbPointer(
-                              absorbing: controller.isLoading.value,
-                              child: Opacity(
-                                opacity: controller.isLoading.value ? 0.6 : 1,
-                                child: SignInWithAppleButton(
-                                  onPressed: controller.signInWithApple,
-                                  style: SignInWithAppleButtonStyle.black,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-
                         SizedBox(height: 12.h),
                       ],
                     ),
