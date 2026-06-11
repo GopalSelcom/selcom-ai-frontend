@@ -194,6 +194,8 @@ class _WalletEndpoints {
   final cancelUssdOrder = "go_wallet/go_cancel_ussd_order";
   final sendTransferRequestSelcomPesa =
       "go_wallet/go_send_transfer_request_selcom_pesa";
+  final simulateSelcomPesaTopUp =
+      "go_wallet/go_simulate_selcom_pesa_top_up";
   final checkSelcomPesaTopUpStatus =
       "go_wallet/check_selcom_pesa_status";
   final cardStatement = "go_wallet/go_card_statement";

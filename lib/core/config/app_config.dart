@@ -24,6 +24,12 @@ class AppConfig {
   /// `false` → `go/validate_ride_payment_new` + socket payment block + `_new` ride paths.
   static bool ridePaymentBypass = false;
 
+  /// In-memory toggle only (not persisted, not env-derived).
+  ///
+  /// `true` → `go_simulate_selcom_pesa_top_up` (dev/staging); skips USSD / app handoff.
+  /// `false` → real `go_send_transfer_request_selcom_pesa` + status polling.
+  static bool selcomPesaBypass = false;
+
   static const String _agoraAppIdDefine = String.fromEnvironment(
     'AGORA_APP_ID',
     defaultValue: '',
@@ -63,6 +69,7 @@ class AppConfig {
         break;
       case Environment.prod:
         ridePaymentBypass = false;
+        selcomPesaBypass = false;
         baseUrl = 'https://api.duka.direct';
         socketUrl = 'wss://socket.duka.direct';
         break;

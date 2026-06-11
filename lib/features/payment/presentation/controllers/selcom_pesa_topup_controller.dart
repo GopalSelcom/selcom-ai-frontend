@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../../core/config/app_config.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_strings.dart';
@@ -176,11 +177,13 @@ class SelcomPesaTopupController extends GetxController {
     final amount = parsedAmount;
     if (amount == null) return;
 
-    final installed = await _selcomPesaLauncher.isSelcomPesaInstalled();
-    if (!installed) {
-      apiError.value = AppStrings.selcomPesaAppNotInstalled.tr;
-      await _showInstallSelcomPesaDialog();
-      return;
+    if (!AppConfig.selcomPesaBypass) {
+      final installed = await _selcomPesaLauncher.isSelcomPesaInstalled();
+      if (!installed) {
+        apiError.value = AppStrings.selcomPesaAppNotInstalled.tr;
+        await _showInstallSelcomPesaDialog();
+        return;
+      }
     }
 
     _lastSelfAmount = amount;
@@ -260,14 +263,26 @@ class SelcomPesaTopupController extends GetxController {
         return;
       }
 
+      final request = SelcomPesaTopupRequest(
+        cardNo: walletContext.accountNo,
+        amount: amount,
+        accountNo: walletContext.accountNo,
+        mobileNumber: mobileNumber,
+        name: walletContext.displayName,
+      );
+
+      if (AppConfig.selcomPesaBypass) {
+        await _walletRepository.simulateSelcomPesaTopUp(request);
+        if (closeSheetFirst) {
+          Get.back<void>();
+        }
+        await Future<void>.delayed(Duration.zero);
+        await _onPaymentSucceeded();
+        return;
+      }
+
       final result = await _walletRepository.sendSelcomPesaTopUpRequest(
-        SelcomPesaTopupRequest(
-          cardNo: walletContext.accountNo,
-          amount: amount,
-          accountNo: walletContext.accountNo,
-          mobileNumber: mobileNumber,
-          name: walletContext.displayName,
-        ),
+        request,
         requireShortCode: requireShortCode,
       );
 

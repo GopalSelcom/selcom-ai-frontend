@@ -160,6 +160,11 @@ class WalletRepositoryImpl implements WalletRepository {
   );
 
   @override
+  Future<SelcomPesaTopupStatusResult> simulateSelcomPesaTopUp(
+    SelcomPesaTopupRequest request,
+  ) => _selcomPesaTopupRemoteDataSource.simulateTopUp(request);
+
+  @override
   Future<SelcomPesaTopupStatusResult> checkSelcomPesaTopUpStatus({
     required String transid,
   }) => _selcomPesaTopupRemoteDataSource.checkTopUpStatus(transid: transid);

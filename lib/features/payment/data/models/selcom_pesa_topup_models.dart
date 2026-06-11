@@ -14,13 +14,16 @@ class SelcomPesaTopupRequest {
   final String name;
 
   Map<String, dynamic> toJson() {
-    return {
-      // 'card_no': cardNo,
+    final json = <String, dynamic>{
       'amount': amount,
       'account_no': accountNo,
-      'mobile_number': mobileNumber,
       'name': name,
     };
+    final phone = mobileNumber.trim();
+    if (phone.isNotEmpty) {
+      json['mobile_number'] = phone;
+    }
+    return json;
   }
 }
 
