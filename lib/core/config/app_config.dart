@@ -22,7 +22,7 @@ class AppConfig {
   ///
   /// `true` → `go/validate_ride_payment` + `go/dev/payment_callback` + unsuffixed ride paths.
   /// `false` → `go/validate_ride_payment_new` + socket payment block + `_new` ride paths.
-  static bool ridePaymentBypass = false;
+  static bool ridePaymentBypass = true;
 
   /// In-memory toggle only (not persisted, not env-derived).
   ///

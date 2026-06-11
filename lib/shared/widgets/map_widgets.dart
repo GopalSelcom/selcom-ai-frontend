@@ -14,6 +14,7 @@ library;
 export 'package:selcom_rides_frontend/core/services/app_map_service.dart';
 
 export 'app_google_map.dart';
+export 'app_map_route_polyline.dart';
 export 'app_map_gps_button.dart';
 export 'app_map_location_summary_card.dart';
 export 'app_map_profile_chip.dart';

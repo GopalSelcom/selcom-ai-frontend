@@ -9,8 +9,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
+import '../../../../shared/widgets/app_map_route_polyline.dart';
 import '../../../../shared/utils/map_route_marker_utils.dart';
-import '../../../../shared/utils/tracking_route_geometry_utils.dart';
 import '../../../../shared/widgets/app_map_route_one_line_bar.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../controllers/finding_driver_controller.dart';
@@ -279,15 +279,10 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
             );
           }
         },
-        polylines: {
-          if (TrackingRouteGeometryUtils.shouldDrawPolyline(routePoints))
-            Polyline(
-              polylineId: const PolylineId('active_route'),
-              points: routePoints,
-              color: AppColors.inputBorderActive,
-              width: 5,
-            ),
-        },
+        polylines: AppMapRoutePolyline.set(
+          polylineId: 'active_route',
+          points: routePoints,
+        ),
         circles: circles,
       );
     });

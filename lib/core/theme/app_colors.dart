@@ -165,6 +165,10 @@ class AppColors {
     0xFF9AA8BA,
   ); // Disabled % icon (placeholder + SVG accent)
   static const Color routeBlue = Color(0xFF3073E8);
+
+  /// Trip route on maps — black line on white casing for pale yellow roads.
+  static const Color mapRouteLine = Color(0xFF000000);
+  static const Color mapRouteLineCasing = Color(0xFFFFFFFF);
   static const Color pinRed = Color(0xFFF52D56);
   static const Color dangerDeep = Color(0xFFE31E24);
   static const Color successMint = Color(0xFF10B981);

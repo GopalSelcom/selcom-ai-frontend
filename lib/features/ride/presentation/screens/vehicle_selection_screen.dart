@@ -12,6 +12,7 @@ import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
+import '../../../../shared/widgets/app_map_route_polyline.dart';
 import '../../../../shared/widgets/app_map_route_one_line_bar.dart';
 import '../../../../shared/widgets/app_shimmer.dart';
 import '../../../../shared/widgets/vehicle_type_image.dart';
@@ -58,7 +59,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
         ? loadingShimmerCount
         : visibleItems;
     listHeight =
-        (listItemsCount * 73.h) +
+        (listItemsCount * 78.h) +
         ((listItemsCount - 1).clamp(0, 2) * 10.h) +
         4.h;
 
@@ -262,14 +263,10 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                 devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
               );
             },
-            polylines: {
-              Polyline(
-                polylineId: const PolylineId('route'),
-                points: points,
-                color: AppColors.inputBorderActive,
-                width: 5,
-              ),
-            },
+            polylines: AppMapRoutePolyline.set(
+              polylineId: 'route',
+              points: points,
+            ),
             markers: markers,
           ),
           IgnorePointer(
