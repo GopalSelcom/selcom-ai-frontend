@@ -604,7 +604,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                         ),
                       ],
                     ),
-                    if ((item.waypointCharge ?? 0) > 0 ||
+                    /*if ((item.waypointCharge ?? 0) > 0 ||
                         controller.destinations.length > 1) ...[
                       SizedBox(height: 2.h),
                       Text(
@@ -615,7 +615,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ],
+                    ],*/
                     if (controller.appliedPromoCode.value.trim().isNotEmpty &&
                         item.promoApplied != true &&
                         (item.promoError?.trim().isNotEmpty ?? false)) ...[
