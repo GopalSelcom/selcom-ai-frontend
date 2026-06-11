@@ -41,6 +41,8 @@ class VerifyOtpData {
   String? walletStatus;
   String? name;
   String? email;
+  bool? needsPhone;
+  bool? isNewUser;
 
   VerifyOtpData({
     this.user,
@@ -52,6 +54,8 @@ class VerifyOtpData {
     this.walletStatus,
     this.name,
     this.email,
+    this.needsPhone,
+    this.isNewUser,
   });
 
   VerifyOtpData.fromJson(Map<String, dynamic> json) {
@@ -61,13 +65,21 @@ class VerifyOtpData {
                 json['authorization_token'] ??
                 json['accessToken'])
             ?.toString();
-    refreshToken = (json['refresh_token'] ?? json['refreshToken'])?.toString();
-    isUserAlreadyRegistered = json['is_user_already_registered'];
+    refreshToken =
+        (json['refresh_token'] ??
+                json['refreshToken'] ??
+                json['newRefreshToken'])
+            ?.toString();
+    isNewUser = json['is_new_user'] as bool?;
+    isUserAlreadyRegistered =
+        json['is_user_already_registered'] as bool? ??
+        (isNewUser != null ? !isNewUser! : null);
     isUserAddressAdded = json['is_user_address_added'];
     walletStatusFlag = json['wallet_status_flag'];
     walletStatus = json['wallet_status']?.toString();
     name = json['name']?.toString();
     email = json['email']?.toString();
+    needsPhone = json['needs_phone'] as bool?;
   }
 
   /// Wallet is missing when API sets [walletStatusFlag] to `true`.
@@ -96,6 +108,8 @@ class VerifyOtpData {
     data['wallet_status'] = walletStatus;
     data['name'] = name;
     data['email'] = email;
+    data['needs_phone'] = needsPhone;
+    data['is_new_user'] = isNewUser;
     return data;
   }
 }

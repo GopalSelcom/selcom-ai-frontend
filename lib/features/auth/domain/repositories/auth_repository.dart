@@ -1,5 +1,8 @@
 import 'package:dartz/dartz.dart';
 
+import '../../../../core/data/models/requests/firebase_login_request.dart';
+import '../../../../core/data/models/requests/go_phone_otp_request.dart';
+import '../../../../core/data/models/requests/go_phone_verify_otp_request.dart';
 import '../../../../core/data/models/requests/save_user_additional_details_request.dart';
 import '../../../../core/data/models/requests/send_otp_request.dart';
 import '../../../../core/data/models/requests/verify_otp_request.dart';
@@ -23,6 +26,28 @@ abstract class AuthRepository {
     required VerifyOtpRequest request,
   });
 
+  Future<Either<Failure, VerifyOtpResponseModel?>> firebaseLogin({
+    required FirebaseLoginRequest request,
+  });
+
+  Future<Either<Failure, VerifyOtpResponseModel?>> exchangeFirebaseSession({
+    String? name,
+    double? latitude,
+    double? longitude,
+  });
+
+  Future<Either<Failure, SendOtpResponseModel?>> sendPhoneOtp({
+    required GoPhoneOtpRequest request,
+  });
+
+  Future<Either<Failure, SendOtpResponseModel?>> resendPhoneOtp({
+    required GoPhoneOtpRequest request,
+  });
+
+  Future<Either<Failure, VerifyOtpResponseModel?>> verifyPhoneOtp({
+    required GoPhoneVerifyOtpRequest request,
+  });
+
   Future<Either<Failure, UserModel>> saveUserAdditionalDetails({
     required SaveUserAdditionalDetailsRequest request,
   });
@@ -36,6 +61,8 @@ abstract class AuthRepository {
   Future<Either<Failure, SocialAuthUser>> signInWithApple();
 
   Future<Either<Failure, SocialAuthUser>> signInWithFacebook();
+
+  Future<Either<Failure, SocialAuthUser>> signInWithGoogle();
 
   Future<Either<Failure, void>> signOutFirebase();
 }

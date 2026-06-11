@@ -106,6 +106,7 @@ Future<void> init() async {
       remoteDataSource: sl(),
       appleSignInService: sl(),
       facebookSignInService: sl(),
+      googleSignInService: sl(),
       firebaseAuthDataSource: sl(),
       appleAuthLocalDataSource: sl(),
     ),

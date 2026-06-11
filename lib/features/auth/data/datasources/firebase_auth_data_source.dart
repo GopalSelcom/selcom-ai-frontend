@@ -82,5 +82,25 @@ class FirebaseAuthDataSource {
 
   Future<void> signOut() => _firebaseAuth.signOut();
 
+  Future<String> getIdToken({bool forceRefresh = false}) async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) {
+      throw FirebaseAuthException(
+        code: 'no-current-user',
+        message: 'No signed-in Firebase user.',
+      );
+    }
+
+    final token = await user.getIdToken(forceRefresh);
+    if (token == null || token.isEmpty) {
+      throw FirebaseAuthException(
+        code: 'no-id-token',
+        message: 'Unable to obtain Firebase ID token.',
+      );
+    }
+
+    return token;
+  }
+
   bool _hasValue(String? value) => value != null && value.trim().isNotEmpty;
 }

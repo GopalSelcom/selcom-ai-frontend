@@ -4,13 +4,15 @@ import 'dart:convert';
 import 'package:get/get.dart';
 
 import '../../../../core/config/app_config.dart';
+import '../../../../core/data/models/requests/go_phone_otp_request.dart';
+import '../../../../core/data/models/requests/go_phone_verify_otp_request.dart';
 import '../../../../core/data/models/requests/send_otp_request.dart';
 import '../../../../core/data/models/requests/verify_otp_request.dart';
+import '../../../../core/data/models/responses/verify_otp_response.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/app_region_service.dart';
-import '../../../../core/services/google_sign_in_service.dart';
 import '../../../../core/usecases/usecase.dart';
 import '../../../../core/utils/apple_sign_in_debug_log.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
@@ -19,30 +21,44 @@ import '../../../../core/services/storage_service.dart';
 import '../../../../core/services/voip_callkit_bridge_service.dart';
 import '../../../../shared/data/countries_phone_data.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
+import '../../domain/entities/social_auth_user.dart';
+import '../../domain/usecases/exchange_firebase_session_use_case.dart';
 import '../../domain/usecases/resend_otp_use_case.dart';
+import '../../domain/usecases/resend_phone_otp_use_case.dart';
 import '../../domain/usecases/send_otp_use_case.dart';
+import '../../domain/usecases/send_phone_otp_use_case.dart';
 import '../../domain/usecases/sign_in_with_apple_use_case.dart';
+import '../../domain/usecases/sign_in_with_google_use_case.dart';
 import '../../domain/usecases/sign_in_with_facebook_use_case.dart';
 import '../../domain/usecases/verify_otp_use_case.dart';
+import '../../domain/usecases/verify_phone_otp_use_case.dart';
 
 class AuthController extends GetxController {
   AuthController({
     required this.sendOtpUseCase,
     required this.resendOtpUseCase,
     required this.verifyOtpUseCase,
+    required this.sendPhoneOtpUseCase,
+    required this.resendPhoneOtpUseCase,
+    required this.verifyPhoneOtpUseCase,
     required this.signInWithAppleUseCase,
     required this.signInWithFacebookUseCase,
+    required this.signInWithGoogleUseCase,
+    required this.exchangeFirebaseSessionUseCase,
     required this.appRegionService,
-    required this.googleSignInService,
   });
 
   final SendOtpUseCase sendOtpUseCase;
   final ResendOtpUseCase resendOtpUseCase;
   final VerifyOtpUseCase verifyOtpUseCase;
+  final SendPhoneOtpUseCase sendPhoneOtpUseCase;
+  final ResendPhoneOtpUseCase resendPhoneOtpUseCase;
+  final VerifyPhoneOtpUseCase verifyPhoneOtpUseCase;
   final SignInWithAppleUseCase signInWithAppleUseCase;
   final SignInWithFacebookUseCase signInWithFacebookUseCase;
+  final SignInWithGoogleUseCase signInWithGoogleUseCase;
+  final ExchangeFirebaseSessionUseCase exchangeFirebaseSessionUseCase;
   final AppRegionService appRegionService;
-  final GoogleSignInService googleSignInService;
 
   final mobileNumber = ''.obs;
   final countryCode = '+255'.obs;
@@ -52,6 +68,7 @@ class AuthController extends GetxController {
   final generatedOtp = ''.obs;
   final isLoading = false.obs;
   final errorMessage = ''.obs;
+  final isPhoneAttachFlow = false.obs;
 
   final resendTimer = 59.obs;
   final pendingSignUpName = ''.obs;
@@ -84,11 +101,37 @@ class AuthController extends GetxController {
     });
   }
 
+  GoPhoneOtpRequest get _goPhoneOtpRequest => GoPhoneOtpRequest(
+    mobileNumber: mobileNumber.value.replaceAll(RegExp(r'\D'), ''),
+    countryCode: countryCode.value,
+  );
+
   Future<bool> sendOtp() async {
     if (isLoading.value) return false;
     errorMessage.value = '';
 
     return Loader.withFlag(isLoading, () async {
+      if (isPhoneAttachFlow.value) {
+        final result = await sendPhoneOtpUseCase(_goPhoneOtpRequest);
+        return result.fold(
+          (failure) {
+            errorMessage.value = failure.message;
+            generatedOtp.value = '';
+            return false;
+          },
+          (response) {
+            if (response?.isSuccess == true) {
+              generatedOtp.value = response?.response?.otp ?? '';
+              return true;
+            }
+            errorMessage.value =
+                response?.message ?? AppStrings.failedToSendOtp.tr;
+            generatedOtp.value = '';
+            return false;
+          },
+        );
+      }
+
       final result = await sendOtpUseCase(
         SendOtpRequest(
           mobileNumber: mobileNumber.value.replaceAll(RegExp(r'\D'), ''),
@@ -152,10 +195,31 @@ class AuthController extends GetxController {
     if (isLoading.value) return false;
     errorMessage.value = '';
 
-    // Start timer immediately for better user feedback
     startResendTimer();
 
     return Loader.withFlag(isLoading, () async {
+      if (isPhoneAttachFlow.value) {
+        final result = await resendPhoneOtpUseCase(_goPhoneOtpRequest);
+        return result.fold(
+          (failure) {
+            errorMessage.value = failure.message;
+            generatedOtp.value = '';
+            return false;
+          },
+          (response) {
+            if (response?.isSuccess == true) {
+              generatedOtp.value = response?.response?.otp ?? '';
+              return true;
+            }
+            errorMessage.value =
+                response?.message ?? AppStrings.failedToResendOtp.tr;
+            resendTimer.value = 0;
+            generatedOtp.value = '';
+            return false;
+          },
+        );
+      }
+
       final result = await resendOtpUseCase(
         SendOtpRequest(
           mobileNumber: mobileNumber.value.replaceAll(RegExp(r'\D'), ''),
@@ -167,9 +231,6 @@ class AuthController extends GetxController {
         (failure) {
           errorMessage.value = failure.message;
           generatedOtp.value = '';
-          // If it failed, we might want to stop the timer, but usually keeping it
-          // prevents spamming. If you want to allow retry immediately on error:
-          // resendTimer.value = 0;
           return false;
         },
         (response) {
@@ -179,8 +240,7 @@ class AuthController extends GetxController {
           } else {
             errorMessage.value =
                 response?.message ?? AppStrings.failedToResendOtp.tr;
-            resendTimer.value =
-                0; // Show resend button again if API specifically failed
+            resendTimer.value = 0;
             generatedOtp.value = '';
             return false;
           }
@@ -196,13 +256,21 @@ class AuthController extends GetxController {
     String? postVerifyRoute;
 
     final verified = await Loader.withFlag(isLoading, () async {
-      final result = await verifyOtpUseCase(
-        VerifyOtpRequest(
-          mobileNumber: mobileNumber.value.replaceAll(RegExp(r'\D'), ''),
-          countryCode: countryCode.value.replaceAll('+', ''),
-          otp: otp.value,
-        ),
-      );
+      final result = isPhoneAttachFlow.value
+          ? await verifyPhoneOtpUseCase(
+              GoPhoneVerifyOtpRequest(
+                mobileNumber: mobileNumber.value.replaceAll(RegExp(r'\D'), ''),
+                countryCode: countryCode.value,
+                otp: otp.value,
+              ),
+            )
+          : await verifyOtpUseCase(
+              VerifyOtpRequest(
+                mobileNumber: mobileNumber.value.replaceAll(RegExp(r'\D'), ''),
+                countryCode: countryCode.value.replaceAll('+', ''),
+                otp: otp.value,
+              ),
+            );
 
       return await result.fold(
         (failure) async {
@@ -211,50 +279,8 @@ class AuthController extends GetxController {
         },
         (response) async {
           if (response?.isSuccess == true && response?.response != null) {
-            final verifyData = response!.response!;
-
-            if (verifyData.accessToken != null) {
-              await StorageService().write(
-                StorageKeys.authorizationToken,
-                verifyData.accessToken!,
-              );
-              await StorageService().write(
-                StorageKeys.accessToken,
-                verifyData.accessToken!,
-              );
-            }
-            if (verifyData.refreshToken != null) {
-              await StorageService().write(
-                StorageKeys.refreshToken,
-                verifyData.refreshToken!,
-              );
-            }
-
-            await StorageService().write(
-              StorageKeys.user,
-              jsonEncode(verifyData.user!.toJson()),
-            );
-
-            final isUserAlreadyRegistered =
-                verifyData.isUserAlreadyRegistered == true;
-            final walletNotCreated = verifyData.isWalletNotCreated;
-            final needsSignUp = !isUserAlreadyRegistered || walletNotCreated;
-
-            pendingSignUpName.value = verifyData.signUpName;
-            pendingSignUpEmail.value = verifyData.signUpEmail;
-
-            await StorageService().write(
-              StorageKeys.signupCompleted,
-              needsSignUp ? 'false' : 'true',
-            );
-
-            await VoipCallkitBridgeService.instance.syncCachedTokenToBackend();
-            SessionExpiryService.resetOnLogin();
-
-            postVerifyRoute = needsSignUp
-                ? AppRoutes.signUp
-                : AppRoutes.profileLoading;
-            return true;
+            postVerifyRoute = await _persistLoginSession(response!);
+            return postVerifyRoute != null;
           }
           errorMessage.value =
               response?.message ?? AppStrings.otpVerificationFailed.tr;
@@ -289,35 +315,19 @@ class AuthController extends GetxController {
     errorMessage.value = '';
 
     await Loader.withFlag(isLoading, () async {
-      try {
-        final account = await googleSignInService.signIn();
-        final email = account.email.trim();
-
-        if (email.isEmpty) {
-          errorMessage.value = AppStrings.googleSignInFailed.tr;
-          return;
-        }
-
-        // TODO: call backend Google-auth API with id token when available.
-
-        Get.snackbar(
-          AppStrings.accountVerified.tr,
-          AppStrings.googleSignInSuccess.trParams({'email': email}),
-        );
-      } on GoogleSignInServiceException catch (e) {
-        switch (e.type) {
-          case GoogleSignInErrorType.canceled:
+      final signInResult = await signInWithGoogleUseCase(NoParams());
+      await signInResult.fold(
+        (failure) async {
+          if (failure is AppleSignInFailure && failure.isCancelled) {
             errorMessage.value = AppStrings.googleSignInCancelled.tr;
-          case GoogleSignInErrorType.configurationError:
-            errorMessage.value = AppStrings.googleSignInConfigError.tr;
-          case GoogleSignInErrorType.unsupported:
-            errorMessage.value = AppStrings.googleSignInUnsupported.tr;
-          case GoogleSignInErrorType.other:
-            errorMessage.value = AppStrings.googleSignInFailed.tr;
-        }
-      } catch (_) {
-        errorMessage.value = AppStrings.googleSignInFailed.tr;
-      }
+            return;
+          }
+          errorMessage.value = failure.message.isNotEmpty
+              ? failure.message
+              : AppStrings.googleSignInFailed.tr;
+        },
+        (user) => _completeSocialSignIn(user),
+      );
     });
   }
 
@@ -329,8 +339,8 @@ class AuthController extends GetxController {
       appleSignInDebugLog('controller_sign_in_started');
       final result = await signInWithAppleUseCase(NoParams());
 
-      result.fold(
-        (failure) {
+      await result.fold(
+        (failure) async {
           if (failure is AppleSignInFailure && failure.isCancelled) {
             appleSignInDebugLog(
               'controller_failed',
@@ -379,38 +389,120 @@ class AuthController extends GetxController {
           }
           errorMessage.value = AppStrings.appleSignInFailed.tr;
         },
-        (user) {
-          final email = user.email?.trim() ?? '';
-          if (email.isEmpty) {
-            appleSignInDebugLog(
-              'controller_failed',
-              metadata: {
-                'reason': 'empty_email_after_success',
-                'hasDisplayName': (user.displayName?.trim().isNotEmpty ?? false),
-                'isNewUser': user.isNewUser,
-              },
-            );
-            errorMessage.value = AppStrings.appleSignInFailed.tr;
-            return;
-          }
-
-          appleSignInDebugLog(
-            'controller_sign_in_succeeded',
-            metadata: {
-              'hasDisplayName': (user.displayName?.trim().isNotEmpty ?? false),
-              'isNewUser': user.isNewUser,
-            },
-          );
-
-          // TODO: exchange Firebase ID token with Selcom backend when API exists.
-
-          Get.snackbar(
-            AppStrings.accountVerified.tr,
-            AppStrings.appleSignInSuccess.trParams({'email': email}),
-          );
-        },
+        (user) => _completeSocialSignIn(user),
       );
     });
+  }
+
+  Future<void> _completeSocialSignIn(SocialAuthUser user) async {
+    appleSignInDebugLog(
+      'controller_exchange_firebase_session_started',
+      metadata: {
+        'hasDisplayName': (user.displayName?.trim().isNotEmpty ?? false),
+        'isNewUser': user.isNewUser,
+      },
+    );
+
+    final exchangeResult = await exchangeFirebaseSessionUseCase(
+      ExchangeFirebaseSessionParams(
+        name: user.displayName?.trim().isNotEmpty == true
+            ? user.displayName!.trim()
+            : null,
+      ),
+    );
+
+    await exchangeResult.fold(
+      (failure) async {
+        appleSignInDebugLog(
+          'controller_exchange_firebase_session_failed',
+          metadata: {'failureType': failure.runtimeType.toString()},
+        );
+        errorMessage.value = failure.message.isNotEmpty
+            ? failure.message
+            : AppStrings.somethingWentWrongPleaseTryAgain.tr;
+      },
+      (response) async {
+        appleSignInDebugLog('controller_exchange_firebase_session_succeeded');
+        if (response?.isSuccess != true || response?.response == null) {
+          errorMessage.value =
+              response?.message ?? AppStrings.somethingWentWrongPleaseTryAgain.tr;
+          return;
+        }
+
+        final route = await _persistLoginSession(response!);
+        if (route == null) return;
+
+        if (route == AppRoutes.phone) {
+          return;
+        }
+
+        if (route == AppRoutes.profileLoading) {
+          Get.offAllNamed(AppRoutes.profileLoading);
+        } else {
+          Get.offNamed(route);
+        }
+      },
+    );
+  }
+
+  /// Persists tokens/user and returns the next route, or `null` on failure.
+  /// Returns [AppRoutes.phone] when the rider must attach a phone number.
+  Future<String?> _persistLoginSession(VerifyOtpResponseModel response) async {
+    final verifyData = response.response!;
+    final user = verifyData.user;
+    if (user == null) {
+      errorMessage.value = AppStrings.somethingWentWrongPleaseTryAgain.tr;
+      return null;
+    }
+
+    if (verifyData.accessToken != null) {
+      await StorageService().write(
+        StorageKeys.authorizationToken,
+        verifyData.accessToken!,
+      );
+      await StorageService().write(
+        StorageKeys.accessToken,
+        verifyData.accessToken!,
+      );
+    }
+    if (verifyData.refreshToken != null) {
+      await StorageService().write(
+        StorageKeys.refreshToken,
+        verifyData.refreshToken!,
+      );
+    }
+
+    await StorageService().write(
+      StorageKeys.user,
+      jsonEncode(user.toJson()),
+    );
+
+    pendingSignUpName.value = verifyData.signUpName;
+    pendingSignUpEmail.value = verifyData.signUpEmail;
+
+    if (verifyData.needsPhone == true) {
+      isPhoneAttachFlow.value = true;
+      await StorageService().write(StorageKeys.signupCompleted, 'false');
+      await VoipCallkitBridgeService.instance.syncCachedTokenToBackend();
+      SessionExpiryService.resetOnLogin();
+      return AppRoutes.phone;
+    }
+
+    isPhoneAttachFlow.value = false;
+
+    final isUserAlreadyRegistered = verifyData.isUserAlreadyRegistered == true;
+    final walletNotCreated = verifyData.isWalletNotCreated;
+    final needsSignUp = !isUserAlreadyRegistered || walletNotCreated;
+
+    await StorageService().write(
+      StorageKeys.signupCompleted,
+      needsSignUp ? 'false' : 'true',
+    );
+
+    await VoipCallkitBridgeService.instance.syncCachedTokenToBackend();
+    SessionExpiryService.resetOnLogin();
+
+    return needsSignUp ? AppRoutes.signUp : AppRoutes.profileLoading;
   }
 
   Future<void> signInWithFacebook() async {

@@ -38,6 +38,11 @@ class _AuthEndpoints {
   final saveUserDetails = "save_user_additional_details";
   final refreshToken = "refresh_token";
   final logout = "logout";
+
+  final firebaseLogin = "go/auth/firebase_login";
+  final phoneSendOtp = "go/auth/phone/send_otp";
+  final phoneResendOtp = "go/auth/phone/resend_otp";
+  final phoneVerifyOtp = "go/auth/phone/verify_otp";
 }
 
 /// ─────────────────────────────────

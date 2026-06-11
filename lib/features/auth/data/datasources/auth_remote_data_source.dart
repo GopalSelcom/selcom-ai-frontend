@@ -1,3 +1,8 @@
+import 'package:dio/dio.dart';
+
+import '../../../../core/data/models/requests/firebase_login_request.dart';
+import '../../../../core/data/models/requests/go_phone_otp_request.dart';
+import '../../../../core/data/models/requests/go_phone_verify_otp_request.dart';
 import '../../../../core/data/models/requests/save_user_additional_details_request.dart';
 import '../../../../core/data/models/requests/send_otp_request.dart';
 import '../../../../core/data/models/requests/verify_otp_request.dart';
@@ -16,6 +21,22 @@ abstract class AuthRemoteDataSource {
 
   Future<VerifyOtpResponseModel?> verifyOtp({
     required VerifyOtpRequest request,
+  });
+
+  Future<VerifyOtpResponseModel?> firebaseLogin({
+    required FirebaseLoginRequest request,
+  });
+
+  Future<SendOtpResponseModel?> sendPhoneOtp({
+    required GoPhoneOtpRequest request,
+  });
+
+  Future<SendOtpResponseModel?> resendPhoneOtp({
+    required GoPhoneOtpRequest request,
+  });
+
+  Future<VerifyOtpResponseModel?> verifyPhoneOtp({
+    required GoPhoneVerifyOtpRequest request,
   });
 
   Future<UserModel> saveUserAdditionalDetails({
@@ -100,6 +121,95 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
+  Future<VerifyOtpResponseModel?> firebaseLogin({
+    required FirebaseLoginRequest request,
+  }) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.auth.firebaseLogin,
+        method: ApiMethod.post,
+        body: request.toJson(),
+        skipAuthInterceptor: true,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      return VerifyOtpResponseModel.fromJson(
+        _responseMap(response.data),
+      );
+    }
+
+    _throwIfErrorResponse(response, URLS.auth.firebaseLogin);
+  }
+
+  @override
+  Future<SendOtpResponseModel?> sendPhoneOtp({
+    required GoPhoneOtpRequest request,
+  }) async {
+    try {
+      final response = await ApiService().call(
+        request: ApiRequest(
+          endpoint: URLS.auth.phoneSendOtp,
+          method: ApiMethod.post,
+          body: request.toJson(),
+          skipAuthInterceptor: true,
+        ),
+      );
+
+      if (response.data != null) {
+        return SendOtpResponseModel.fromJson(_responseMap(response.data));
+      }
+    } catch (_) {
+      // Intentionally avoid logging request payload details.
+    }
+    return null;
+  }
+
+  @override
+  Future<SendOtpResponseModel?> resendPhoneOtp({
+    required GoPhoneOtpRequest request,
+  }) async {
+    try {
+      final response = await ApiService().call(
+        request: ApiRequest(
+          endpoint: URLS.auth.phoneResendOtp,
+          method: ApiMethod.post,
+          body: request.toJson(),
+          skipAuthInterceptor: true,
+        ),
+      );
+
+      if (response.data != null) {
+        return SendOtpResponseModel.fromJson(_responseMap(response.data));
+      }
+    } catch (_) {
+      // Intentionally avoid logging request payload details.
+    }
+    return null;
+  }
+
+  @override
+  Future<VerifyOtpResponseModel?> verifyPhoneOtp({
+    required GoPhoneVerifyOtpRequest request,
+  }) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.auth.phoneVerifyOtp,
+        method: ApiMethod.post,
+        body: request.toJson(),
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      return VerifyOtpResponseModel.fromJson(
+        _responseMap(response.data),
+      );
+    }
+
+    _throwIfErrorResponse(response, URLS.auth.phoneVerifyOtp);
+  }
+
+  @override
   Future<UserModel> saveUserAdditionalDetails({
     required SaveUserAdditionalDetailsRequest request,
   }) async {
@@ -177,5 +287,19 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
     } catch (_) {}
     return const [];
+  }
+
+  Map<String, dynamic> _responseMap(dynamic data) {
+    return data is Map<String, dynamic>
+        ? data
+        : Map<String, dynamic>.from(data as Map);
+  }
+
+  Never _throwIfErrorResponse(Response<dynamic> response, String endpoint) {
+    throw DioException(
+      requestOptions: RequestOptions(path: endpoint),
+      response: response,
+      type: DioExceptionType.badResponse,
+    );
   }
 }

@@ -34,6 +34,7 @@ class UserModel extends UserEntity {
     super.goAvgRating,
     super.goRatingCount,
     super.lastUsedPaymentMethod,
+    super.firebaseUid,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -75,6 +76,7 @@ class UserModel extends UserEntity {
       goAvgRating: json['go_avg_rating'] as num?,
       goRatingCount: (json['go_rating_count'] as num?)?.toInt(),
       lastUsedPaymentMethod: json['last_used_payment_method']?.toString(),
+      firebaseUid: json['firebase_uid']?.toString(),
     );
   }
 
@@ -114,6 +116,7 @@ class UserModel extends UserEntity {
       'go_avg_rating': goAvgRating,
       'go_rating_count': goRatingCount,
       'last_used_payment_method': lastUsedPaymentMethod,
+      'firebase_uid': firebaseUid,
     };
   }
 }

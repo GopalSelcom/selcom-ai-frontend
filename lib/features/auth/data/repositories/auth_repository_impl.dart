@@ -1,16 +1,22 @@
 import 'package:dartz/dartz.dart';
+import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
+import '../../../../core/data/models/requests/firebase_login_request.dart';
+import '../../../../core/data/models/requests/go_phone_otp_request.dart';
+import '../../../../core/data/models/requests/go_phone_verify_otp_request.dart';
 import '../../../../core/data/models/requests/save_user_additional_details_request.dart';
 import '../../../../core/data/models/requests/send_otp_request.dart';
 import '../../../../core/data/models/requests/verify_otp_request.dart';
+import '../../../../core/errors/error_mapper.dart';
 import '../../../../core/data/models/responses/onboarding_banners_response.dart';
 import '../../../../core/data/models/responses/send_otp_response.dart';
 import '../../../../core/data/models/responses/verify_otp_response.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/services/apple_sign_in_service.dart';
+import '../../../../core/services/google_sign_in_service.dart';
 import '../../../../core/services/facebook_sign_in_service.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/utils/apple_sign_in_debug_log.dart';
@@ -27,6 +33,7 @@ class AuthRepositoryImpl implements AuthRepository {
     required this.remoteDataSource,
     required this.appleSignInService,
     required this.facebookSignInService,
+    required this.googleSignInService,
     required this.firebaseAuthDataSource,
     required this.appleAuthLocalDataSource,
   });
@@ -34,6 +41,7 @@ class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
   final AppleSignInService appleSignInService;
   final FacebookSignInService facebookSignInService;
+  final GoogleSignInService googleSignInService;
   final FirebaseAuthDataSource firebaseAuthDataSource;
   final AppleAuthLocalDataSource appleAuthLocalDataSource;
 
@@ -70,6 +78,101 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final result = await remoteDataSource.verifyOtp(request: request);
       return Right(result);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, VerifyOtpResponseModel?>> firebaseLogin({
+    required FirebaseLoginRequest request,
+  }) async {
+    try {
+      final result = await remoteDataSource.firebaseLogin(request: request);
+      if (result == null) {
+        return const Left(
+          ServerFailure('Sign-in failed. Please try again.'),
+        );
+      }
+      return Right(result);
+    } on DioException catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ErrorMapper.mapDioExceptionToFailure(e));
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, VerifyOtpResponseModel?>> exchangeFirebaseSession({
+    String? name,
+    double? latitude,
+    double? longitude,
+  }) async {
+    try {
+      final idToken = await firebaseAuthDataSource.getIdToken();
+      return firebaseLogin(
+        request: FirebaseLoginRequest(
+          idToken: idToken,
+          name: name,
+          latitude: latitude,
+          longitude: longitude,
+        ),
+      );
+    } on FirebaseAuthException catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(_mapFirebaseAuthException(e));
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return const Left(
+        ServerFailure('Sign-in failed. Please try again.'),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, SendOtpResponseModel?>> sendPhoneOtp({
+    required GoPhoneOtpRequest request,
+  }) async {
+    try {
+      final result = await remoteDataSource.sendPhoneOtp(request: request);
+      return Right(result);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, SendOtpResponseModel?>> resendPhoneOtp({
+    required GoPhoneOtpRequest request,
+  }) async {
+    try {
+      final result = await remoteDataSource.resendPhoneOtp(request: request);
+      return Right(result);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, VerifyOtpResponseModel?>> verifyPhoneOtp({
+    required GoPhoneVerifyOtpRequest request,
+  }) async {
+    try {
+      final result = await remoteDataSource.verifyPhoneOtp(request: request);
+      if (result == null) {
+        return const Left(
+          ServerFailure('Phone verification failed. Please try again.'),
+        );
+      }
+      return Right(result);
+    } on DioException catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ErrorMapper.mapDioExceptionToFailure(e));
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
@@ -239,6 +342,58 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, SocialAuthUser>> signInWithGoogle() async {
+    try {
+      final account = await googleSignInService.signIn();
+      final googleIdToken = account.authentication.idToken;
+      if (googleIdToken == null || googleIdToken.isEmpty) {
+        return const Left(
+          FirebaseAuthFailure('Google Sign-In failed. Please try again.'),
+        );
+      }
+
+      final credential = GoogleAuthProvider.credential(
+        idToken: googleIdToken,
+      );
+      final userCredential =
+          await firebaseAuthDataSource.signInWithCredential(credential);
+      final firebaseUser = userCredential.user;
+      if (firebaseUser == null) {
+        return const Left(
+          FirebaseAuthFailure('Unable to complete Google Sign-In.'),
+        );
+      }
+
+      return Right(
+        SocialAuthUserModel.fromFirebaseUser(
+          user: firebaseUser,
+          isNewUser: userCredential.additionalUserInfo?.isNewUser ?? false,
+          emailOverride: account.email,
+          displayNameOverride: account.displayName ?? firebaseUser.displayName,
+        ),
+      );
+    } on GoogleSignInServiceException catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(_mapGoogleSignInException(e));
+    } on FirebaseAuthException catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(_mapFirebaseAuthException(e));
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      if (_isNetworkError(e)) {
+        return const Left(
+          NetworkFailure(
+            'Network error during Google Sign-In. Please try again.',
+          ),
+        );
+      }
+      return const Left(
+        FirebaseAuthFailure('Google Sign-In failed. Please try again.'),
+      );
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> signOutFirebase() async {
     try {
       await firebaseAuthDataSource.signOut();
@@ -316,6 +471,19 @@ class AuthRepositoryImpl implements AuthRepository {
     ];
     if (parts.isEmpty) return null;
     return parts.join(' ');
+  }
+
+  Failure _mapGoogleSignInException(GoogleSignInServiceException exception) {
+    switch (exception.type) {
+      case GoogleSignInErrorType.canceled:
+        return const AppleSignInFailure('Sign-in cancelled', isCancelled: true);
+      case GoogleSignInErrorType.configurationError:
+      case GoogleSignInErrorType.unsupported:
+      case GoogleSignInErrorType.other:
+        return const FirebaseAuthFailure(
+          'Google Sign-In failed. Please try again.',
+        );
+    }
   }
 
   Failure _mapAppleSignInException(AppleSignInServiceException exception) {
