@@ -18,11 +18,13 @@ class WalletSummaryCard extends StatelessWidget {
     super.key,
     required this.balance,
     required this.walletNumber,
+    this.currencyCode,
     this.isLoading = false,
   });
 
   final String balance;
   final String walletNumber;
+  final String? currencyCode;
   final bool isLoading;
 
   static const String _accountNumberWidthTemplate = '00000 00000';
@@ -171,8 +173,24 @@ class WalletSummaryCard extends StatelessWidget {
     );
   }
 
+  String _formatBalanceLabel() {
+    if (balance.isEmpty) return '—';
+    final code = currencyCode?.trim();
+    if (code != null && code.isNotEmpty) {
+      final amount = double.tryParse(balance.replaceAll(',', '')) ?? 0;
+      return CurrencyFormatter.formatWithApiCurrency(amount, code);
+    }
+    return '${CurrencyFormatter.displaySymbol} $balance';
+  }
+
+  String _loadingCurrencySymbol() {
+    final code = currencyCode?.trim();
+    if (code != null && code.isNotEmpty) return code;
+    return CurrencyFormatter.displaySymbol;
+  }
+
   Widget _buildAmountRow() {
-    final amountLabel = balance.isNotEmpty ? balance : '—';
+    final amountLabel = _formatBalanceLabel();
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -183,7 +201,7 @@ class WalletSummaryCard extends StatelessWidget {
               ? Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Text(CurrencyFormatter.displaySymbol, style: _amountStyle),
+                    Text(_loadingCurrencySymbol(), style: _amountStyle),
                     SizedBox(width: 4.w),
                     AppShimmer(
                       child: AppShimmerBox(
@@ -197,7 +215,7 @@ class WalletSummaryCard extends StatelessWidget {
               : Align(
                   alignment: Alignment.centerRight,
                   child: Text(
-                    '${CurrencyFormatter.displaySymbol} $amountLabel',
+                    amountLabel,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: _amountStyle,

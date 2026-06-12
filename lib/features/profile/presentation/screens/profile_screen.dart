@@ -178,6 +178,7 @@ class ProfileScreen extends StatelessWidget {
                   child: WalletSummaryCard(
                     balance: balance,
                     walletNumber: walletNum,
+                    currencyCode: controller.walletCurrency.value,
                     isLoading: controller.isLoadingWallet.value,
                   ),
                 ),

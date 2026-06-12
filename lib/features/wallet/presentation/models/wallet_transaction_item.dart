@@ -5,6 +5,7 @@ class WalletTransactionItem {
     required this.amount,
     required this.isCredit,
     required this.createdAtLabel,
+    required this.currency,
   });
 
   final String merchantName;
@@ -12,4 +13,5 @@ class WalletTransactionItem {
   final double amount;
   final bool isCredit;
   final String createdAtLabel;
+  final String currency;
 }

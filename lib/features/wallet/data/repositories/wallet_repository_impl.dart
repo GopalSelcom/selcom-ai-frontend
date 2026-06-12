@@ -120,9 +120,14 @@ class WalletRepositoryImpl implements WalletRepository {
     }
 
     final (startDate, endDate) = defaultWalletStatementDateRange();
+    final balance = await _remoteDataSource.getCardBalance();
+    final currency = balance?.currency.trim().isNotEmpty == true
+        ? balance!.currency.trim()
+        : 'TZS';
     final transactions = await _remoteDataSource.getCardStatement(
       startDate: startDate,
       endDate: endDate,
+      currency: currency,
     );
 
     final sorted = List<WalletTransactionEntity>.from(transactions)

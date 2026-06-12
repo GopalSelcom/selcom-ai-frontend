@@ -45,6 +45,7 @@ class ProfileController extends GetxController {
   // User Data
   final Rxn<UserModel> userModel = Rxn<UserModel>();
   final RxString walletBalance = ''.obs;
+  final RxString walletCurrency = ''.obs;
   final RxString walletNumber = ''.obs;
   final RxBool isWalletLinked = false.obs;
   final RxBool isLoadingWallet = true.obs;
@@ -154,6 +155,7 @@ class ProfileController extends GetxController {
       }
       isWalletLinked.value = true;
       walletBalance.value = NumberFormat('#,##0', 'en_US').format(summary.balance);
+      walletCurrency.value = summary.currency.trim();
       walletNumber.value = formatWalletAccountNumber(account);
     } catch (_) {
       _setWalletUnlinked();
@@ -165,6 +167,7 @@ class ProfileController extends GetxController {
   void _setWalletUnlinked() {
     isWalletLinked.value = false;
     walletBalance.value = '';
+    walletCurrency.value = '';
     walletNumber.value = '';
   }
 

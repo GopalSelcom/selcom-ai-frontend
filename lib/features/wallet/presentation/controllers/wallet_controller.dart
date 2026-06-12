@@ -85,7 +85,10 @@ class WalletController extends GetxController {
   String get formattedBalance {
     final value = summary.value?.balance;
     if (value == null) return '';
-    return CurrencyFormatter.format(value);
+    return CurrencyFormatter.formatWithApiCurrency(
+      value,
+      summary.value?.currency,
+    );
   }
 
   String get formattedWalletNumber {

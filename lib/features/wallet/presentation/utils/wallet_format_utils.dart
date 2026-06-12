@@ -18,9 +18,14 @@ String formatWalletAccountNumber(String account, {int groupSize = 5}) {
 String formatWalletTransactionAmount({
   required double amount,
   required bool isCredit,
+  required String currency,
 }) {
   final sign = isCredit ? '+' : '-';
-  return '$sign${CurrencyFormatter.format(amount.abs())}';
+  final formatted = CurrencyFormatter.formatWithApiCurrency(
+    amount.abs(),
+    currency,
+  );
+  return '$sign$formatted';
 }
 
 /// Matches duka_direct_4_flutter [getFractionFromHeight] (safe area + offset).

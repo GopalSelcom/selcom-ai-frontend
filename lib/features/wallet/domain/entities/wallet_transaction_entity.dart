@@ -6,6 +6,7 @@ class WalletTransactionEntity {
     required this.amount,
     required this.isCredit,
     required this.createdAt,
+    required this.currency,
   });
 
   final String id;
@@ -14,4 +15,5 @@ class WalletTransactionEntity {
   final double amount;
   final bool isCredit;
   final DateTime createdAt;
+  final String currency;
 }

@@ -64,8 +64,9 @@ class GoCardStatementData {
   }
 
   List<WalletTransactionEntity> toEntities() {
+    final code = currency?.trim().isNotEmpty == true ? currency!.trim() : 'TZS';
     return transactions
-        .map((transaction) => transaction.toEntity())
+        .map((transaction) => transaction.toEntity(currency: code))
         .whereType<WalletTransactionEntity>()
         .toList(growable: false);
   }
@@ -105,7 +106,7 @@ class GoCardStatementTransaction {
     );
   }
 
-  WalletTransactionEntity? toEntity() {
+  WalletTransactionEntity? toEntity({required String currency}) {
     final parsedDate = _parseStatementDate(date);
     if (parsedDate == null) return null;
 
@@ -149,6 +150,7 @@ class GoCardStatementTransaction {
       amount: parsedAmount,
       isCredit: isCredit,
       createdAt: parsedDate,
+      currency: currency,
     );
   }
 

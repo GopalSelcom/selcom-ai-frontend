@@ -16,6 +16,7 @@ class WalletTransactionRow extends StatelessWidget {
     final amountText = formatWalletTransactionAmount(
       amount: item.amount,
       isCredit: item.isCredit,
+      currency: item.currency,
     );
     final amountColor = item.isCredit
         ? AppColors.success
