@@ -43,8 +43,8 @@ import '../../../payment/domain/wallet_ride_balance_guard.dart';
 import '../../../payment/presentation/controllers/payment_method_controller.dart';
 import '../../../payment/presentation/widgets/add_money_to_wallet_bottom_sheet.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
-import '../../../wallet/data/models/go_card_balance_response.dart';
 import '../../../promotions/presentation/promo_code_route_args.dart';
+import '../../../wallet/data/models/go_card_balance_response.dart';
 import '../../domain/repositories/ride_repository.dart';
 
 enum BookingMode { self, other }

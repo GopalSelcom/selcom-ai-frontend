@@ -1,9 +1,9 @@
-import '../../domain/entities/wallet_details_entity.dart';
 import '../../../payment/data/datasources/selcom_pesa_topup_remote_data_source.dart';
 import '../../../payment/data/datasources/wallet_payment_remote_data_source.dart';
 import '../../../payment/data/models/go_other_payment_methods_models.dart';
 import '../../../payment/data/models/selcom_pesa_topup_models.dart';
 import '../../../payment/data/models/selcom_pesa_topup_status_models.dart';
+import '../../domain/entities/wallet_details_entity.dart';
 import '../../domain/entities/wallet_statement_email_result.dart';
 import '../../domain/entities/wallet_summary_entity.dart';
 import '../../domain/entities/wallet_transaction_entity.dart';

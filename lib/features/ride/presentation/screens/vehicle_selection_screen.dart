@@ -17,8 +17,8 @@ import '../../../../shared/widgets/app_map_route_one_line_bar.dart';
 import '../../../../shared/widgets/app_shimmer.dart';
 import '../../../../shared/widgets/vehicle_type_image.dart';
 import '../../../../shared/widgets/vehicle_selection_promo_chip.dart';
-import '../widgets/book_ride_wallet_footer.dart';
 import '../controllers/vehicle_selection_controller.dart';
+import '../widgets/book_ride_wallet_footer.dart';
 
 /// SCR-09 — vehicle selection, fare, payment + Book Ride.
 class VehicleSelectionScreen extends StatefulWidget {

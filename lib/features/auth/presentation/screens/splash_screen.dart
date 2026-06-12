@@ -8,10 +8,10 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/app_settings_service.dart';
 import '../../../../core/services/storage_service.dart';
-import '../controllers/auth_controller.dart';
 import '../../../../core/services/voip_callkit_bridge_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
+import '../controllers/auth_controller.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

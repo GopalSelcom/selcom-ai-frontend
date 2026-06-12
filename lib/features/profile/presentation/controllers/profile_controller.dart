@@ -24,6 +24,7 @@ import '../../../wallet/domain/usecases/get_wallet_summary_usecase.dart';
 import '../../../wallet/presentation/utils/wallet_format_utils.dart';
 import '../../data/models/request/update_profile_request.dart';
 import '../../domain/usecases/profile_usecase.dart';
+
 class ProfileController extends GetxController {
   final ProfileUseCase profileUseCase;
   final AppSettingsService appSettingsService;

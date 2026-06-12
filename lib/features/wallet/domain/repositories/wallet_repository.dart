@@ -1,7 +1,7 @@
-import '../entities/wallet_details_entity.dart';
 import '../../../payment/data/models/go_other_payment_methods_models.dart';
 import '../../../payment/data/models/selcom_pesa_topup_models.dart';
 import '../../../payment/data/models/selcom_pesa_topup_status_models.dart';
+import '../entities/wallet_details_entity.dart';
 import '../entities/wallet_statement_email_result.dart';
 import '../entities/wallet_summary_entity.dart';
 import '../entities/wallet_transaction_entity.dart';
