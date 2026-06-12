@@ -28,7 +28,18 @@ class FavoriteLocationChipsRow extends StatelessWidget {
     this.chipBackgroundColor = AppColors.white,
     this.chipBorderColor = AppColors.secondary,
     this.contentHorizontalPadding,
+    this.highlightedChipKey,
   });
+
+  static String presetChipKey(String canonicalLabel) =>
+      'preset:$canonicalLabel';
+
+  static String extraChipKey(SavedPlace place) {
+    final id = place.id?.trim();
+    if (id != null && id.isNotEmpty) return 'extra:id:$id';
+    final raw = (place.label ?? place.name ?? '').trim();
+    return 'extra:label:$raw';
+  }
 
   final SavedPlace? Function(String canonicalLabel) resolvePlace;
 
@@ -49,6 +60,9 @@ class FavoriteLocationChipsRow extends StatelessWidget {
 
   /// Inset for the first/last chip inside the horizontal scroll (matches sheet padding).
   final double? contentHorizontalPadding;
+
+  /// Home-only: key of the chip tapped before navigating away (slight highlight on return).
+  final String? highlightedChipKey;
 
   String _displayTitle(FavoriteLocationSlotId id) {
     switch (id) {
@@ -72,6 +86,7 @@ class FavoriteLocationChipsRow extends StatelessWidget {
   Widget _presetChip(FavoriteLocationSlotId id, {required bool hasSaved}) {
     final canonical = FavoriteLocationChipCatalog.canonicalLabel(id);
     final place = resolvePlace(canonical);
+    final chipKey = presetChipKey(canonical);
     return Padding(
       padding: EdgeInsets.only(right: 8.w),
       child: AppSavedPlaceChip(
@@ -82,6 +97,7 @@ class FavoriteLocationChipsRow extends StatelessWidget {
         iconColor: hasSaved ? null : AppColors.primary,
         backgroundColor: chipBackgroundColor,
         borderColor: chipBorderColor,
+        isHighlighted: highlightedChipKey == chipKey,
         onTap: () => onChipTap(canonical, place),
         onLongPress: hasSaved && onSavedChipLongPress != null
             ? () => onSavedChipLongPress!(canonical)
@@ -91,6 +107,7 @@ class FavoriteLocationChipsRow extends StatelessWidget {
   }
 
   Widget _extraChip(SavedPlace place) {
+    final chipKey = extraChipKey(place);
     return Padding(
       padding: EdgeInsets.only(right: 8.w),
       child: AppSavedPlaceChip(
@@ -98,6 +115,7 @@ class FavoriteLocationChipsRow extends StatelessWidget {
         iconAsset: AppAssets.icOtherChip,
         backgroundColor: chipBackgroundColor,
         borderColor: chipBorderColor,
+        isHighlighted: highlightedChipKey == chipKey,
         onTap: () => onExtraChipTap?.call(place),
         onLongPress: onExtraChipLongPress != null
             ? () => onExtraChipLongPress!(place)

@@ -36,6 +36,7 @@ import '../../../../shared/utils/saved_places_ordering.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../../shared/widgets/add_favorite_location_sheet.dart';
+import '../../../../shared/widgets/favorite_location_chips_row.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../../ride/data/models/ride_management_models.dart';
@@ -91,6 +92,9 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   final recentDestinationsScreen = <RecentDestinationModel>[].obs;
   final savedPlaces = <SavedPlace>[].obs;
   final activeRide = Rxn<RideModel>();
+
+  /// Home chips only: last tapped chip before leaving home (highlight on return).
+  final RxnString recentHomeChipKey = RxnString();
 
   /// Picked saved address for pickup (header dropdown). Map + chips use this when set.
   final selectedPickupSavedPlaceId = Rxn<String>(_currentLocationPlaceId);
@@ -1078,6 +1082,38 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       return AppStrings.unableToEstimateFareForThisRoute.tr;
     }
     return message;
+  }
+
+  void markRecentHomeChip(String key) {
+    recentHomeChipKey.value = key;
+  }
+
+  void onHomePresetChipTap(String canonical, SavedPlace? place) {
+    markRecentHomeChip(FavoriteLocationChipsRow.presetChipKey(canonical));
+    if (place == null) {
+      Get.toNamed(AppRoutes.selectSavedLocation, arguments: canonical);
+      return;
+    }
+    unawaited(navigateToVehicleSelectionForSavedLabel(canonical));
+  }
+
+  void onHomeExtraChipTap(SavedPlace place) {
+    markRecentHomeChip(FavoriteLocationChipsRow.extraChipKey(place));
+    unawaited(navigateToVehicleSelectionForSavedPlace(place));
+  }
+
+  void onHomePresetChipLongPress(String canonical) {
+    markRecentHomeChip(FavoriteLocationChipsRow.presetChipKey(canonical));
+    Get.toNamed(AppRoutes.selectSavedLocation, arguments: canonical);
+  }
+
+  void onHomeExtraChipLongPress(SavedPlace place) {
+    markRecentHomeChip(FavoriteLocationChipsRow.extraChipKey(place));
+    final raw = (place.label ?? place.name ?? '').trim();
+    Get.toNamed(
+      AppRoutes.selectSavedLocation,
+      arguments: raw.isEmpty ? AppStrings.saved.tr : raw,
+    );
   }
 
   /// Pickup = current map center; destination = saved place for [label] (Home / Office / Work / Other).

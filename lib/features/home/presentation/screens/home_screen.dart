@@ -8,7 +8,6 @@ import '../../../../core/constants/app_assets.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/localization/app_strings.dart';
-import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
@@ -307,30 +306,18 @@ class HomeScreen extends GetView<HomeController> {
       SizedBox(height: 8.h),
       Obx(() {
         controller.savedPlaces.length;
+        controller.recentHomeChipKey.value;
         final extras = controller.savedPlacesBeyondPresetSlots;
         return FavoriteLocationChipsRow(
           contentHorizontalPadding: _sheetHorizontalPadding.w,
           chipBackgroundColor: AppColors.surfaceSubtle,
+          highlightedChipKey: controller.recentHomeChipKey.value,
           resolvePlace: controller.getSavedPlaceByLabel,
           extraSavedPlaces: extras,
-          onChipTap: (canonical, place) {
-            if (place == null) {
-              Get.toNamed(AppRoutes.selectSavedLocation, arguments: canonical);
-            } else {
-              controller.navigateToVehicleSelectionForSavedLabel(canonical);
-            }
-          },
-          onSavedChipLongPress: (canonical) =>
-              Get.toNamed(AppRoutes.selectSavedLocation, arguments: canonical),
-          onExtraChipTap: (place) =>
-              controller.navigateToVehicleSelectionForSavedPlace(place),
-          onExtraChipLongPress: (place) {
-            final raw = (place.label ?? place.name ?? '').trim();
-            Get.toNamed(
-              AppRoutes.selectSavedLocation,
-              arguments: raw.isEmpty ? AppStrings.saved.tr : raw,
-            );
-          },
+          onChipTap: controller.onHomePresetChipTap,
+          onSavedChipLongPress: controller.onHomePresetChipLongPress,
+          onExtraChipTap: controller.onHomeExtraChipTap,
+          onExtraChipLongPress: controller.onHomeExtraChipLongPress,
         );
       }),
       Padding(

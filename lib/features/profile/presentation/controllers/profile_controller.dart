@@ -7,7 +7,6 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/config/app_config.dart';
 import '../../../../core/di/injection_container.dart' as di;
-import '../../../auth/domain/repositories/auth_repository.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/network/urls.dart';
@@ -19,6 +18,7 @@ import '../../../../core/services/storage_service.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
 import '../../../../shared/widgets/web_view_screen.dart';
+import '../../../auth/domain/repositories/auth_repository.dart';
 import '../../../ride/presentation/screens/my_rides_screen.dart';
 import '../../../wallet/domain/usecases/get_wallet_summary_usecase.dart';
 import '../../../wallet/presentation/utils/wallet_format_utils.dart';
