@@ -102,6 +102,14 @@ class AppColors {
   static const Color borderNeutralStrong = Color(0xFFCBD5E1);
   static const Color borderGray = Color(0xFFD9D9D9);
 
+  // Social sign-in (provider brand tokens)
+  static const Color socialSignInGoogleBackground = Color(0xFFFFFFFF);
+  static const Color socialSignInGoogleBorder = Color(0xFF747775);
+  static const Color socialSignInGoogleText = Color(0xFF1F1F1F);
+  static const Color socialSignInFacebookBackground = Color(0xFF1877F2);
+  static const Color socialSignInAppleBackground = Color(0xFF000000);
+  static const Color socialSignInLabelOnDark = Color(0xFFFFFFFF);
+
   // Base colors
   static const Color white = Color(0xFFFFFFFF);
   static const Color black = Color(0xFF000000);

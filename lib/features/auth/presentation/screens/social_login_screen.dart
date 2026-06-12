@@ -4,15 +4,11 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
-import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/widgets/svg_picture_asset.dart';
-import '../../../../shared/widgets/app_facebook_sign_in_button.dart';
-import '../../../../shared/widgets/app_google_sign_in_button.dart';
+import '../../../../shared/widgets/app_social_sign_in_button.dart';
 import '../controllers/auth_controller.dart';
 
 class SocialLoginScreen extends GetView<AuthController> {
@@ -31,13 +27,22 @@ class SocialLoginScreen extends GetView<AuthController> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SizedBox(height: 28.h),
-                  const _SocialLoginHero(),
-                  SizedBox(height: 28.h),
                   Expanded(
-                    child: _SocialLoginActionsCard(controller: controller),
+                    child: Center(
+                      child: SingleChildScrollView(
+                        padding: EdgeInsets.symmetric(vertical: 24.h),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const _SocialLoginHero(),
+                            SizedBox(height: 28.h),
+                            _SocialLoginActionsCard(controller: controller),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
-                  Expanded(child: Container()),
                   Padding(
                     padding: EdgeInsets.only(top: 12.h, bottom: 12.h),
                     child: Text(
@@ -144,62 +149,8 @@ class _SocialLoginHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // Container(
-        //   padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-        //   decoration: BoxDecoration(
-        //     color: AppColors.white.withValues(alpha: 0.72),
-        //     borderRadius: BorderRadius.circular(999.r),
-        //     border: Border.all(
-        //       color: AppColors.primary.withValues(alpha: 0.45),
-        //     ),
-        //     boxShadow: [
-        //       BoxShadow(
-        //         color: AppColors.primary.withValues(alpha: 0.12),
-        //         blurRadius: 16,
-        //         offset: const Offset(0, 6),
-        //       ),
-        //     ],
-        //   ),
-        //   child: Text(
-        //     AppStrings.login.tr,
-        //     style: AppTextStyles.caption.copyWith(
-        //       fontSize: 12.sp,
-        //       fontWeight: FontWeight.w700,
-        //       letterSpacing: 0.6,
-        //       color: AppColors.textHeading,
-        //     ),
-        //   ),
-        // ),
-        // SizedBox(height: 20.h),
-        // Container(
-        //   width: 88.w,
-        //   height: 88.w,
-        //   padding: EdgeInsets.all(16.w),
-        //   decoration: BoxDecoration(
-        //     color: AppColors.white,
-        //     shape: BoxShape.circle,
-        //     border: Border.all(
-        //       color: AppColors.primary.withValues(alpha: 0.35),
-        //       width: 2,
-        //     ),
-        //     boxShadow: [
-        //       const BoxShadow(
-        //         color: AppColors.shadowCard,
-        //         blurRadius: 24,
-        //         offset: Offset(0, 10),
-        //       ),
-        //       BoxShadow(
-        //         color: AppColors.primary.withValues(alpha: 0.18),
-        //         blurRadius: 28,
-        //         offset: const Offset(0, 12),
-        //       ),
-        //     ],
-        //   ),
-        //   child: const SvgPictureAsset(AppAssets.selcomGoLogoPrimaryColor),
-        // ),
-        SizedBox(height: 22.h),
         ShaderMask(
           blendMode: BlendMode.srcIn,
           shaderCallback: (bounds) => const LinearGradient(
@@ -207,25 +158,14 @@ class _SocialLoginHero extends StatelessWidget {
           ).createShader(bounds),
           child: Text(
             AppStrings.welcomeToSelcomGo.tr,
+            textAlign: TextAlign.center,
             style: AppTextStyles.onboardingTitle.copyWith(
-              fontSize: 34.sp,
-              height: 38 / 34,
               letterSpacing: -0.8,
               fontWeight: FontWeight.w700,
               color: AppColors.white,
             ),
           ),
         ),
-        SizedBox(height: 10.h),
-        // Text(
-        //   AppStrings.continueLabel.tr,
-        //   style: AppTextStyles.homeSubtitle.copyWith(
-        //     fontSize: 16.sp,
-        //     fontWeight: FontWeight.w500,
-        //     color: AppColors.textSlate,
-        //     height: 22 / 16,
-        //   ),
-        // ),
       ],
     );
   }
@@ -258,6 +198,7 @@ class _SocialLoginActionsCard extends StatelessWidget {
             ],
           ),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
@@ -281,9 +222,15 @@ class _SocialLoginActionsCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Obx(
-                () => controller.errorMessage.isNotEmpty
-                    ? Padding(
+              Obx(() {
+                final isBusy = controller.isLoading.value;
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (controller.errorMessage.isNotEmpty)
+                      Padding(
                         padding: EdgeInsets.only(bottom: 14.h),
                         child: Container(
                           width: double.infinity,
@@ -311,43 +258,26 @@ class _SocialLoginActionsCard extends StatelessWidget {
                             ),
                           ),
                         ),
-                      )
-                    : const SizedBox.shrink(),
-              ),
-              Obx(
-                () => AppGoogleSignInButton(
-                  isLoading: controller.isLoading.value,
-                  onPressed: controller.isLoading.value
-                      ? null
-                      : controller.signInWithGoogle,
-                ),
-              ),
-              SizedBox(height: 12.h),
-              Obx(
-                () => AppFacebookSignInButton(
-                  isLoading: controller.isLoading.value,
-                  onPressed: controller.isLoading.value
-                      ? null
-                      : controller.signInWithFacebook,
-                ),
-              ),
-              if (Platform.isIOS) ...[
-                SizedBox(height: 12.h),
-                Obx(
-                  () => AbsorbPointer(
-                    absorbing: controller.isLoading.value,
-                    child: Opacity(
-                      opacity: controller.isLoading.value ? 0.6 : 1,
-                      child: SignInWithAppleButton(
-                        onPressed: controller.signInWithApple,
-                        style: SignInWithAppleButtonStyle.black,
-                        borderRadius: BorderRadius.circular(8.r),
                       ),
+                    AppSocialSignInButton(
+                      provider: SocialSignInProvider.google,
+                      onPressed: isBusy ? null : controller.signInWithGoogle,
                     ),
-                  ),
-                ),
-              ],
-              const Spacer(),
+                    SizedBox(height: 12.h),
+                    AppSocialSignInButton(
+                      provider: SocialSignInProvider.facebook,
+                      onPressed: isBusy ? null : controller.signInWithFacebook,
+                    ),
+                    if (Platform.isIOS) ...[
+                      SizedBox(height: 12.h),
+                      AppSocialSignInButton(
+                        provider: SocialSignInProvider.apple,
+                        onPressed: isBusy ? null : controller.signInWithApple,
+                      ),
+                    ],
+                  ],
+                );
+              }),
             ],
           ),
         ),

@@ -129,6 +129,16 @@ class AppTextStyles {
     fontFamily: metropolisFont,
   );
 
+  /// Google / Facebook / Apple sign-in CTA label (white on dark fills).
+  static TextStyle socialSignInButtonLabel = TextStyle(
+    fontSize: 16.sp,
+    fontWeight: FontWeight.w600,
+    color: AppColors.socialSignInLabelOnDark,
+    fontFamily: metropolisFont,
+    height: 1.2,
+    letterSpacing: -0.16,
+  );
+
   static TextStyle homeCaption = TextStyle(
     fontSize: 12.sp,
     fontWeight: FontWeight.w500,
