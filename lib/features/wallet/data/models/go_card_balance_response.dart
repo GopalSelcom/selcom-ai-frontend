@@ -85,8 +85,10 @@ class GoCardBalanceData {
   WalletCardBalanceEntity toEntity() {
     final availableAmount = _parseAmount(available);
     final balanceAmount = _parseAmount(balance);
+    final hasAvailableField =
+        available != null && available!.trim().isNotEmpty;
     return WalletCardBalanceEntity(
-      available: availableAmount > 0 ? availableAmount : balanceAmount,
+      available: hasAvailableField ? availableAmount : balanceAmount,
       reserved: _parseAmount(reserved),
       currency: currency?.trim().isNotEmpty == true ? currency!.trim() : 'TZS',
       pan: pan?.trim() ?? '',

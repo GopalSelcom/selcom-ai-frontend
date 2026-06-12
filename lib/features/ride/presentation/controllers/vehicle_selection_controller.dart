@@ -43,6 +43,7 @@ import '../../../payment/domain/wallet_ride_balance_guard.dart';
 import '../../../payment/presentation/controllers/payment_method_controller.dart';
 import '../../../payment/presentation/widgets/add_money_to_wallet_bottom_sheet.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
+import '../../../wallet/data/models/go_card_balance_response.dart';
 import '../../../promotions/presentation/promo_code_route_args.dart';
 import '../../domain/repositories/ride_repository.dart';
 
@@ -1027,7 +1028,16 @@ class VehicleSelectionController extends GetxController {
     }
   }
 
-  /// Client-side check via `go/wallet/balance` until payment API returns breakdown.
+  double _walletSpendableBalance(GoCardBalanceData? data) {
+    if (data == null) return 0;
+    final available = data.available?.trim();
+    if (available != null && available.isNotEmpty) {
+      return double.tryParse(available) ?? 0;
+    }
+    return double.tryParse(data.balance ?? '0') ?? 0;
+  }
+
+  /// Client-side check via `go_wallet/go_card_balance` until payment API returns breakdown.
   ///
   /// See [WalletRideBalanceGuard] TODOs for backend migration.
   Future<bool> _guardWalletBalanceBeforePayment(int requiredAmount) async {
@@ -1038,7 +1048,7 @@ class VehicleSelectionController extends GetxController {
     final walletResult = await profileRepository.getWalletBalance();
     return walletResult.fold((_) => true, (wallet) {
       final details = WalletRideBalanceGuard.insufficientDetails(
-        currentBalance: double.parse(wallet.response?.balance ?? "0.0"),
+        currentBalance: _walletSpendableBalance(wallet.response),
         requiredAmount: requiredAmount,
         currency: wallet.response?.currency ?? "",
       );

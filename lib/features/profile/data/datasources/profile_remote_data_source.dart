@@ -167,7 +167,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     try {
       final response = await ApiService().call(
         request: ApiRequest(
-          endpoint: URLS.wallet.balance,
+          endpoint: URLS.wallet.cardBalance,
           method: ApiMethod.get,
           errorPresentationType: ErrorPresentationType.none,
         ),
