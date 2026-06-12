@@ -4,8 +4,6 @@ import '../../../../core/data/models/requests/firebase_login_request.dart';
 import '../../../../core/data/models/requests/go_phone_otp_request.dart';
 import '../../../../core/data/models/requests/go_phone_verify_otp_request.dart';
 import '../../../../core/data/models/requests/save_user_additional_details_request.dart';
-import '../../../../core/data/models/requests/send_otp_request.dart';
-import '../../../../core/data/models/requests/verify_otp_request.dart';
 import '../../../../core/data/models/responses/onboarding_banners_response.dart';
 import '../../../../core/data/models/responses/send_otp_response.dart';
 import '../../../../core/data/models/responses/verify_otp_response.dart';
@@ -14,18 +12,6 @@ import '../../../../core/errors/failures.dart';
 import '../entities/social_auth_user.dart';
 
 abstract class AuthRepository {
-  Future<Either<Failure, SendOtpResponseModel?>> sendOtp({
-    required SendOtpRequest request,
-  });
-
-  Future<Either<Failure, SendOtpResponseModel?>> resendOtp({
-    required SendOtpRequest request,
-  });
-
-  Future<Either<Failure, VerifyOtpResponseModel?>> verifyOtp({
-    required VerifyOtpRequest request,
-  });
-
   Future<Either<Failure, VerifyOtpResponseModel?>> firebaseLogin({
     required FirebaseLoginRequest request,
   });

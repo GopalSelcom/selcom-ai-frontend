@@ -4,8 +4,6 @@ import '../../../../core/data/models/requests/firebase_login_request.dart';
 import '../../../../core/data/models/requests/go_phone_otp_request.dart';
 import '../../../../core/data/models/requests/go_phone_verify_otp_request.dart';
 import '../../../../core/data/models/requests/save_user_additional_details_request.dart';
-import '../../../../core/data/models/requests/send_otp_request.dart';
-import '../../../../core/data/models/requests/verify_otp_request.dart';
 import '../../../../core/data/models/responses/onboarding_banners_response.dart';
 import '../../../../core/data/models/responses/send_otp_response.dart';
 import '../../../../core/data/models/responses/verify_otp_response.dart';
@@ -15,14 +13,6 @@ import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
 
 abstract class AuthRemoteDataSource {
-  Future<SendOtpResponseModel?> sendOtp({required SendOtpRequest request});
-
-  Future<SendOtpResponseModel?> resendOtp({required SendOtpRequest request});
-
-  Future<VerifyOtpResponseModel?> verifyOtp({
-    required VerifyOtpRequest request,
-  });
-
   Future<VerifyOtpResponseModel?> firebaseLogin({
     required FirebaseLoginRequest request,
   });
@@ -53,72 +43,6 @@ abstract class AuthRemoteDataSource {
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   AuthRemoteDataSourceImpl();
-
-  @override
-  Future<SendOtpResponseModel?> sendOtp({
-    required SendOtpRequest request,
-  }) async {
-    try {
-      final response = await ApiService().call(
-        request: ApiRequest(
-          endpoint: URLS.auth.sendOtp,
-          method: ApiMethod.post,
-          body: request.toJson(),
-        ),
-      );
-
-      if (response.data != null) {
-        return SendOtpResponseModel.fromJson(response.data);
-      }
-    } catch (e) {
-      // Intentionally avoid logging request payload details.
-    }
-    return null;
-  }
-
-  @override
-  Future<SendOtpResponseModel?> resendOtp({
-    required SendOtpRequest request,
-  }) async {
-    try {
-      final response = await ApiService().call(
-        request: ApiRequest(
-          endpoint: URLS.auth.resendOtp,
-          method: ApiMethod.post,
-          body: request.toJson(),
-        ),
-      );
-
-      if (response.data != null) {
-        return SendOtpResponseModel.fromJson(response.data);
-      }
-    } catch (e) {
-      // Intentionally avoid logging request payload details.
-    }
-    return null;
-  }
-
-  @override
-  Future<VerifyOtpResponseModel?> verifyOtp({
-    required VerifyOtpRequest request,
-  }) async {
-    try {
-      final response = await ApiService().call(
-        request: ApiRequest(
-          endpoint: URLS.auth.verifyOtp,
-          method: ApiMethod.post,
-          body: request.toJson(),
-        ),
-      );
-
-      if (response.data != null) {
-        return VerifyOtpResponseModel.fromJson(response.data);
-      }
-    } catch (e) {
-      // Intentionally avoid logging request payload details.
-    }
-    return null;
-  }
 
   @override
   Future<VerifyOtpResponseModel?> firebaseLogin({

@@ -22,21 +22,15 @@ import '../../../../shared/data/countries_phone_data.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
 import '../../domain/entities/social_auth_user.dart';
 import '../../domain/usecases/exchange_firebase_session_use_case.dart';
-import '../../domain/usecases/resend_otp_use_case.dart';
 import '../../domain/usecases/resend_phone_otp_use_case.dart';
-import '../../domain/usecases/send_otp_use_case.dart';
 import '../../domain/usecases/send_phone_otp_use_case.dart';
 import '../../domain/usecases/sign_in_with_apple_use_case.dart';
 import '../../domain/usecases/sign_in_with_google_use_case.dart';
 import '../../domain/usecases/sign_in_with_facebook_use_case.dart';
-import '../../domain/usecases/verify_otp_use_case.dart';
 import '../../domain/usecases/verify_phone_otp_use_case.dart';
 
 class AuthController extends GetxController {
   AuthController({
-    required this.sendOtpUseCase,
-    required this.resendOtpUseCase,
-    required this.verifyOtpUseCase,
     required this.sendPhoneOtpUseCase,
     required this.resendPhoneOtpUseCase,
     required this.verifyPhoneOtpUseCase,
@@ -47,9 +41,6 @@ class AuthController extends GetxController {
     required this.appRegionService,
   });
 
-  final SendOtpUseCase sendOtpUseCase;
-  final ResendOtpUseCase resendOtpUseCase;
-  final VerifyOtpUseCase verifyOtpUseCase;
   final SendPhoneOtpUseCase sendPhoneOtpUseCase;
   final ResendPhoneOtpUseCase resendPhoneOtpUseCase;
   final VerifyPhoneOtpUseCase verifyPhoneOtpUseCase;

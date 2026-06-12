@@ -1,5 +1,5 @@
 /// Centralized endpoint registry.
-/// Access via: `URLS.auth.sendOtp`, `URLS.ride.estimateFare`, etc.
+/// Access via: `URLS.auth.firebaseLogin`, `URLS.ride.estimateFare`, etc.
 abstract class URLS {
   // ── Grouped endpoint accessors ──
   static const auth = _AuthEndpoints();
@@ -32,9 +32,6 @@ class _PdfEndpoints {
 class _AuthEndpoints {
   const _AuthEndpoints();
 
-  final sendOtp = "send_otp";
-  final resendOtp = "resend_otp";
-  final verifyOtp = "verify_otp";
   final saveUserDetails = "save_user_additional_details";
   final refreshToken = "refresh_token";
   final logout = "logout";

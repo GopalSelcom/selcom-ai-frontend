@@ -7,8 +7,6 @@ import '../../../../core/data/models/requests/firebase_login_request.dart';
 import '../../../../core/data/models/requests/go_phone_otp_request.dart';
 import '../../../../core/data/models/requests/go_phone_verify_otp_request.dart';
 import '../../../../core/data/models/requests/save_user_additional_details_request.dart';
-import '../../../../core/data/models/requests/send_otp_request.dart';
-import '../../../../core/data/models/requests/verify_otp_request.dart';
 import '../../../../core/errors/error_mapper.dart';
 import '../../../../core/data/models/responses/onboarding_banners_response.dart';
 import '../../../../core/data/models/responses/send_otp_response.dart';
@@ -44,45 +42,6 @@ class AuthRepositoryImpl implements AuthRepository {
   final GoogleSignInService googleSignInService;
   final FirebaseAuthDataSource firebaseAuthDataSource;
   final AppleAuthLocalDataSource appleAuthLocalDataSource;
-
-  @override
-  Future<Either<Failure, SendOtpResponseModel?>> sendOtp({
-    required SendOtpRequest request,
-  }) async {
-    try {
-      final result = await remoteDataSource.sendOtp(request: request);
-      return Right(result);
-    } catch (e, stackTrace) {
-      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      return Left(ServerFailure(e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, SendOtpResponseModel?>> resendOtp({
-    required SendOtpRequest request,
-  }) async {
-    try {
-      final result = await remoteDataSource.resendOtp(request: request);
-      return Right(result);
-    } catch (e, stackTrace) {
-      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      return Left(ServerFailure(e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, VerifyOtpResponseModel?>> verifyOtp({
-    required VerifyOtpRequest request,
-  }) async {
-    try {
-      final result = await remoteDataSource.verifyOtp(request: request);
-      return Right(result);
-    } catch (e, stackTrace) {
-      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      return Left(ServerFailure(e.toString()));
-    }
-  }
 
   @override
   Future<Either<Failure, VerifyOtpResponseModel?>> firebaseLogin({
