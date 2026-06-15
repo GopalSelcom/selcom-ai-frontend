@@ -338,6 +338,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }
 
   Future<void> _loadHomeData() async {
+    if (SessionExpiryService.isHandling) return;
     isLoadingHomeData.value = true;
     try {
       // Fetch vehicle types, recent destinations, saved places, and profile in parallel.
@@ -380,12 +381,16 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       });
 
       // Handle Profile (header avatar)
-      results[4].fold((_) => null, (user) {
-        _applyProfileImage(user as UserModel);
-      });
+      if (!SessionExpiryService.isHandling) {
+        results[4].fold((_) => null, (user) {
+          _applyProfileImage(user as UserModel);
+        });
+      }
     } finally {
-      isLoadingHomeData.value = false;
-      invalidateHomeSheetMeasurement();
+      if (!SessionExpiryService.isHandling) {
+        isLoadingHomeData.value = false;
+        invalidateHomeSheetMeasurement();
+      }
     }
   }
 
@@ -1603,10 +1608,12 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
   Future<void> openProfile() async {
     await Get.to(() => ProfileScreen());
+    if (SessionExpiryService.isHandling) return;
     await refreshProfileImage();
   }
 
   Future<void> refreshProfileImage() async {
+    if (SessionExpiryService.isHandling) return;
     final result = await profileRepository.getProfile();
     result.fold((_) {}, _applyProfileImage);
   }

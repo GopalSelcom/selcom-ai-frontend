@@ -794,6 +794,7 @@ class ApiService {
   // ── Session Expired Popup ──
 
   void showLogoutPopup() {
+    if (SessionExpiryService.isHandling) return;
     if (AuthInterceptor.isLoggingOutDueToAuthFailure) return;
     AuthInterceptor.isLoggingOutDueToAuthFailure = true;
 
@@ -926,6 +927,23 @@ class AuthInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     developer.log("dioError => ${err.error}", name: 'AuthInterceptor');
+
+    if (SessionExpiryService.isHandling) {
+      developer.log(
+        "⏭️ Session already ended — skipping auth refresh",
+        name: 'AuthInterceptor',
+      );
+      return handler.resolve(
+        Response(
+          requestOptions: err.requestOptions,
+          statusCode: err.response?.statusCode ?? 401,
+          data:
+              err.response?.data ??
+              {'message': AppStrings.sessionExpiredPleaseLoginAgain.tr},
+        ),
+      );
+    }
+
     final responseData = err.response?.data;
     final errorCode = (responseData is Map<String, dynamic>)
         ? responseData['error_code'] as String?
