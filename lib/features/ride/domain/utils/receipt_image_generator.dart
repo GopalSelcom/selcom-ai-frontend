@@ -28,9 +28,7 @@ class ReceiptImageGenerator {
   static Future<ReceiptPngCapture> generateReceiptPngBytes({
     required ReceiptModel receipt,
   }) async {
-    final logoSvg = await loadReceiptSvgAsset(
-      AppAssets.selcomGoLogoPrimaryColor,
-    );
+    final logoSvg = await loadReceiptSvgAsset(AppAssets.selcomGoLogo);
     final screenshotController = ScreenshotController();
 
     final captureContext = Get.context;
@@ -116,7 +114,8 @@ class ReceiptImageGenerator {
     const dateStyle = TextStyle(fontSize: 10, color: _textMid);
 
     return Container(
-      padding: const EdgeInsets.only(left: 36, right: 36, top: 48, bottom: 12),
+      color: AppColors.primary,
+      padding: const EdgeInsets.only(left: 36, right: 36, top: 36, bottom: 24),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
