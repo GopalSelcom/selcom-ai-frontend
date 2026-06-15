@@ -2357,12 +2357,7 @@ class DriverAcceptedController extends GetxController
     );
 
     result.fold(
-      (f) {
-        AppDialogs.showErrorDialog(
-          title: AppStrings.error.tr,
-          message: f.message,
-        );
-      },
+      (f) => _showStopUpdateError(f.message),
       (res) {
         if (res is StopUpdatePreviewModel) {
           stopUpdatePreview.value = res;
@@ -2399,10 +2394,7 @@ class DriverAcceptedController extends GetxController
       (f) {
         _clearIdempotencyKey();
         stopUpdateProgressStep.value = 0;
-        AppDialogs.showErrorDialog(
-          title: AppStrings.error.tr,
-          message: f.message,
-        );
+        _showStopUpdateError(f.message);
         return false;
       },
       (res) {
@@ -2453,6 +2445,41 @@ class DriverAcceptedController extends GetxController
     stopUpdateProgressStep.value = 0;
     isUpdatingStops.value = false;
     await _fetchRideDetails();
+  }
+
+  void _showStopUpdateError(String rawMessage) {
+    _showLocationUpdateValidationError(
+      rawMessage,
+      clearStopPreview: true,
+    );
+  }
+
+  void _showDestinationUpdateError(String rawMessage) {
+    _showLocationUpdateValidationError(
+      rawMessage,
+      clearDestinationPreview: true,
+    );
+  }
+
+  void _showLocationUpdateValidationError(
+    String rawMessage, {
+    bool clearStopPreview = false,
+    bool clearDestinationPreview = false,
+  }) {
+    if (clearStopPreview) stopUpdatePreview.value = null;
+    if (clearDestinationPreview) destinationUpdatePreview.value = null;
+
+    final parts = rawMessage.split('|');
+    final hasErrorCode = parts.length > 1;
+    final errorCode = hasErrorCode ? parts.first.trim() : '';
+    final message = hasErrorCode ? parts.sublist(1).join('|').trim() : rawMessage.trim();
+
+    AppDialogs.showErrorDialog(
+      title: errorCode == 'VALID_PICKUP_DROP_TOO_CLOSE'
+          ? AppStrings.validation.tr
+          : AppStrings.error.tr,
+      message: message.isNotEmpty ? message : AppStrings.somethingWentWrongPleaseTryAgain.tr,
+    );
   }
 
   List<Map<String, dynamic>> _buildStopsPayloadForUpdate(
@@ -2596,10 +2623,7 @@ class DriverAcceptedController extends GetxController
       dest,
     );
     previewRes.fold(
-      (f) => AppDialogs.showErrorDialog(
-        title: AppStrings.error.tr,
-        message: f.message,
-      ),
+      (f) => _showDestinationUpdateError(f.message),
       (preview) {
         destinationUpdatePreview.value = preview;
       },
@@ -2671,10 +2695,7 @@ class DriverAcceptedController extends GetxController
         _pendingDestinationTargetLat = null;
         _pendingDestinationTargetLng = null;
         _pendingDestinationAppliedAfterConfirm = null;
-        AppDialogs.showErrorDialog(
-          title: AppStrings.error.tr,
-          message: f.message,
-        );
+        _showDestinationUpdateError(f.message);
         return false;
       },
       (DestinationUpdateAppliedModel applied) {

@@ -272,6 +272,10 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       }
     }
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      final message = _businessErrorMessage(response.data);
+      if (message != null) {
+        throw Exception(message);
+      }
       return DestinationUpdatePreviewModel.fromJson({});
     }
     throw Exception(
@@ -304,6 +308,10 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       }
     }
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      final message = _businessErrorMessage(response.data);
+      if (message != null) {
+        throw Exception(message);
+      }
       return DestinationUpdateAppliedModel.fromJson({});
     }
     throw Exception(
@@ -543,12 +551,30 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       }
     }
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      final message = _businessErrorMessage(response.data);
+      if (message != null) {
+        throw Exception(message);
+      }
       if (confirm) {
         return StopUpdateAppliedModel.fromJson({});
       }
       return StopUpdatePreviewModel.fromJson({});
     }
     throw Exception(response.data?['message'] ?? 'Failed to update stops');
+  }
+
+  String? _businessErrorMessage(dynamic data) {
+    if (data is! Map) return null;
+    final map = data is Map<String, dynamic>
+        ? data
+        : Map<String, dynamic>.from(data);
+    final message = map['message']?.toString().trim();
+    if (message == null || message.isEmpty) return null;
+    final errorCode = map['error_code']?.toString().trim();
+    if (errorCode != null && errorCode.isNotEmpty) {
+      return '$errorCode|$message';
+    }
+    return message;
   }
 
   @override

@@ -119,7 +119,7 @@ class RideRepositoryImpl implements RideRepository {
       return Right(result);
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(_exceptionMessage(e)));
     }
   }
 
@@ -137,7 +137,7 @@ class RideRepositoryImpl implements RideRepository {
       return Right(result);
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(_exceptionMessage(e)));
     }
   }
 
@@ -276,8 +276,20 @@ class RideRepositoryImpl implements RideRepository {
       return Right(result);
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(_exceptionMessage(e)));
     }
+  }
+
+  String _exceptionMessage(Object error) {
+    if (error is Exception) {
+      final raw = error.toString();
+      const prefix = 'Exception: ';
+      if (raw.startsWith(prefix)) {
+        return raw.substring(prefix.length);
+      }
+      return raw;
+    }
+    return error.toString();
   }
 
   @override
