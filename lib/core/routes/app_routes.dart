@@ -5,9 +5,11 @@ import '../../features/auth/presentation/bindings/auth_binding.dart';
 import '../../features/auth/presentation/screens/onboarding_screen.dart';
 import '../../features/auth/presentation/screens/otp_screen.dart';
 import '../../features/auth/presentation/screens/phone_input_screen.dart';
-import '../../features/auth/presentation/screens/social_login_screen.dart';
+import '../../features/auth/presentation/bindings/login_support_binding.dart';
+import '../../features/auth/presentation/screens/login_support_screen.dart';
 import '../../features/auth/presentation/screens/profile_loading_screen.dart';
 import '../../features/auth/presentation/screens/sign_up.dart';
+import '../../features/auth/presentation/screens/social_login_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/home/presentation/bindings/home_binding.dart';
 import '../../features/home/presentation/screens/check_pickup_point_screen.dart';
@@ -48,6 +50,7 @@ class AppRoutes {
   static const String splash = '/';
   static const String onboarding = '/onboarding';
   static const String login = '/auth/login';
+  static const String loginSupport = '/auth/login-support';
   static const String phone = '/auth/phone';
   static const String otp = '/auth/otp';
   static const String profileLoading = '/auth/profile-loading';
@@ -88,6 +91,11 @@ class AppRoutes {
       name: login,
       page: () => const SocialLoginScreen(),
       binding: AuthBinding(),
+    ),
+    GetPage(
+      name: loginSupport,
+      page: () => const LoginSupportScreen(),
+      binding: LoginSupportBinding(),
     ),
     GetPage(
       name: phone,

@@ -4,8 +4,11 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../features/auth/data/datasources/apple_auth_local_data_source.dart';
 import '../../features/auth/data/datasources/auth_remote_data_source.dart';
 import '../../features/auth/data/datasources/firebase_auth_data_source.dart';
+import '../../features/auth/data/datasources/support_remote_data_source.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
+import '../../features/auth/data/repositories/support_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
+import '../../features/auth/domain/repositories/support_repository.dart';
 import '../../features/notification/data/datasources/notification_remote_data_source.dart';
 import '../../features/notification/data/repositories/notification_repository_impl.dart';
 import '../../features/notification/domain/repositories/notification_repository.dart';
@@ -110,6 +113,12 @@ Future<void> init() async {
       firebaseAuthDataSource: sl(),
       appleAuthLocalDataSource: sl(),
     ),
+  );
+  sl.registerLazySingleton<SupportRemoteDataSource>(
+    () => SupportRemoteDataSourceImpl(),
+  );
+  sl.registerLazySingleton<SupportRepository>(
+    () => SupportRepositoryImpl(remoteDataSource: sl()),
   );
 
   // ── Ride Feature ──

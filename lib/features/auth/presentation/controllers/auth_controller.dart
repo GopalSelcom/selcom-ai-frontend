@@ -269,7 +269,7 @@ class AuthController extends GetxController {
   }
 
   void openContactSupport() {
-    Get.toNamed(AppRoutes.contactUs);
+    Get.toNamed(AppRoutes.loginSupport);
   }
 
   Future<void> signInWithGoogle() async {

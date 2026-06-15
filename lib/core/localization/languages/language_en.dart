@@ -692,6 +692,9 @@ class LanguageEn extends Languages {
     'cvv': 'CVV',
     'set_a_nick_name': 'Set a Nick name',
     'please_enter_your_phone_number': 'Please enter your phone number',
+    'please_provide_email_or_phone':
+        'Please provide an email or phone number so we can reach you',
+    'enter_phone_number_optional': 'Enter phone number (optional)',
     'please_enter_a_valid_phone_number': 'Please enter a valid phone number',
     'invalid_otp_please_try_again': 'Invalid OTP. Please try again.',
     'camera_access_needed_for_selfie_verification':
@@ -2727,6 +2730,14 @@ class LanguageEn extends Languages {
   @override
   String get pleaseEnterYourPhoneNumber =>
       values['please_enter_your_phone_number'] ?? '';
+
+  @override
+  String get pleaseProvideEmailOrPhone =>
+      values['please_provide_email_or_phone'] ?? '';
+
+  @override
+  String get enterPhoneNumberOptional =>
+      values['enter_phone_number_optional'] ?? '';
 
   @override
   String get pleaseEnterAValidPhoneNumber =>

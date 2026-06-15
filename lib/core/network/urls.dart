@@ -15,6 +15,7 @@ abstract class URLS {
   static const wallet = _WalletEndpoints();
   static const notification = _NotificationEndpoints();
   static const pdf = _PdfEndpoints();
+  static const support = _SupportEndpoints();
 }
 
 /// ─────────────────────────────────
@@ -24,6 +25,16 @@ class _PdfEndpoints {
   const _PdfEndpoints();
 
   final upload = "go/pdf/upload";
+}
+
+/// ─────────────────────────────────
+/// SUPPORT ENDPOINTS (pre-login)
+/// ─────────────────────────────────
+class _SupportEndpoints {
+  const _SupportEndpoints();
+
+  final reasons = "go/support/reasons";
+  final tickets = "go/support/tickets";
 }
 
 /// ─────────────────────────────────

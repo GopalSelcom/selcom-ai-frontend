@@ -584,6 +584,8 @@ abstract class Languages {
   String get cvv;
   String get setANickName;
   String get pleaseEnterYourPhoneNumber;
+  String get pleaseProvideEmailOrPhone;
+  String get enterPhoneNumberOptional;
   String get pleaseEnterAValidPhoneNumber;
   String get invalidOtpPleaseTryAgain;
   String get cameraAccessNeededForSelfieVerification;

@@ -772,6 +772,10 @@ class AppStrings {
   static const String setANickName = 'set_a_nick_name';
   static const String pleaseEnterYourPhoneNumber =
       'please_enter_your_phone_number';
+  static const String pleaseProvideEmailOrPhone =
+      'please_provide_email_or_phone';
+  static const String enterPhoneNumberOptional =
+      'enter_phone_number_optional';
   static const String pleaseEnterAValidPhoneNumber =
       'please_enter_a_valid_phone_number';
   static const String invalidOtpPleaseTryAgain = 'invalid_otp_please_try_again';

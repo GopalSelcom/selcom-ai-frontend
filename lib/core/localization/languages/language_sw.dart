@@ -597,6 +597,8 @@ class LanguageSw extends Languages {
     'cvv': '',
     'set_a_nick_name': '',
     'please_enter_your_phone_number': '',
+    'please_provide_email_or_phone': '',
+    'enter_phone_number_optional': '',
     'please_enter_a_valid_phone_number': '',
     'invalid_otp_please_try_again': '',
     'camera_access_needed_for_selfie_verification': '',
@@ -2608,6 +2610,14 @@ class LanguageSw extends Languages {
   @override
   String get pleaseEnterYourPhoneNumber =>
       values['please_enter_your_phone_number'] ?? '';
+
+  @override
+  String get pleaseProvideEmailOrPhone =>
+      values['please_provide_email_or_phone'] ?? '';
+
+  @override
+  String get enterPhoneNumberOptional =>
+      values['enter_phone_number_optional'] ?? '';
 
   @override
   String get pleaseEnterAValidPhoneNumber =>
