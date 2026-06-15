@@ -10,7 +10,7 @@ import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../shared/data/countries_phone_data.dart' show CountryData;
+import '../../../../shared/data/countries_phone_data.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/grouped_phone_number_formatter.dart';
 import '../../../../shared/utils/phone_contact_import.dart';
@@ -47,7 +47,7 @@ class _BookingForSomeoneElseFlowBottomSheetState
   final TextEditingController _phone = TextEditingController();
   String? _nameError;
   String? _phoneError;
-  CountryData? _selectedCountry;
+  CountryData _selectedCountry = Countries.findByIsoCode('TZ');
   int _phoneFieldKey = 0;
 
   final FlutterNativeContactPicker _contactPicker =
@@ -86,7 +86,7 @@ class _BookingForSomeoneElseFlowBottomSheetState
               _name.text = name;
             }
             // Only auto-select when contact number has + / 00 country code.
-            _selectedCountry = parsed.country;
+            _selectedCountry = parsed.country ?? Countries.findByIsoCode('TZ');
             _phone.text = parsed.formattedNational;
             if (parsed.country != null) {
               _phoneFieldKey++;
@@ -113,7 +113,7 @@ class _BookingForSomeoneElseFlowBottomSheetState
   }
 
   void _onCountrySelected(CountryData country) {
-    if (_selectedCountry?.code == country.code) return;
+    if (_selectedCountry.code == country.code) return;
     setState(() {
       final existingDigits = _phone.text.replaceAll(RegExp(r'\D'), '');
       _selectedCountry = country;
@@ -136,11 +136,9 @@ class _BookingForSomeoneElseFlowBottomSheetState
   }
 
   bool get _canConfirm {
-    final country = _selectedCountry;
-    if (country == null) return false;
     return _name.text.trim().isNotEmpty &&
         PhoneNationalRules.isCompleteValidNational(
-          country.code,
+          _selectedCountry.code,
           _phone.text.replaceAll(RegExp(r'\D'), ''),
         );
   }
@@ -257,22 +255,15 @@ class _BookingForSomeoneElseFlowBottomSheetState
         SizedBox(height: 16.h),
         AppTextField(
           key: ValueKey(
-            'passenger-phone-${_selectedCountry?.code ?? 'none'}-$_phoneFieldKey',
+            'passenger-phone-${_selectedCountry.code}-$_phoneFieldKey',
           ),
           controller: _phone,
           label: AppStrings.passengerPhoneLabel.tr,
-          hintText: _selectedCountry == null
-              ? AppStrings.eG7XxXxxXxx.tr
-              : PhoneNationalRules.hintForIso(_selectedCountry!.code),
+          hintText: PhoneNationalRules.hintForIso(_selectedCountry.code),
           keyboardType: TextInputType.phone,
-          inputFormatters: _selectedCountry == null
-              ? [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(15),
-                ]
-              : PhoneNationalRules.inputFormattersForIso(
-                  _selectedCountry!.code,
-                ),
+          inputFormatters: PhoneNationalRules.inputFormattersForIso(
+            _selectedCountry.code,
+          ),
           prefixIcon: Container(
             padding: EdgeInsets.only(left: 12.w, right: 2.w),
             child: PhoneCountryPickerChip(
@@ -297,15 +288,10 @@ class _BookingForSomeoneElseFlowBottomSheetState
       return;
     }
 
-    final country = _selectedCountry;
-    if (country == null) {
-      setState(() {
-        _phoneError = AppStrings.selectCountry.tr;
-      });
-      return;
-    }
-
-    final e164 = PhoneNationalRules.e164DigitsOrNull(country.code, _phone.text);
+    final e164 = PhoneNationalRules.e164DigitsOrNull(
+      _selectedCountry.code,
+      _phone.text,
+    );
     if (e164 == null) {
       setState(() {
         _phoneError = _phone.text.trim().isEmpty
