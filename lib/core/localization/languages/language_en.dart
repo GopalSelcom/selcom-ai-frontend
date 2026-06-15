@@ -119,7 +119,7 @@ class LanguageEn extends Languages {
     'contacts_access_needed':
         'We need contacts access to let you select a passenger from your contact list. Please enable it in Settings.',
     'cancel_update': 'Cancel Update',
-    'cancel_and_pay': 'Accept & Pay',
+    'cancel_and_pay': 'Cancel & Pay',
     'cancel_dialogs_gallery': 'Cancel Dialogs Gallery',
     'cancel_failed': 'Cancel failed',
     'cancel_ride': 'Cancel Ride',
