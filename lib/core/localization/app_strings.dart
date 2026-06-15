@@ -151,7 +151,8 @@ class AppStrings {
       'connection_timed_out_please_check_internet';
   static const String contactUs = 'contact_us';
   static const String continueLabel = 'continue';
-  static const String continueWithGoogle = 'continue_with_google';
+  static const String signInWithGoogle = 'sign_in_with_google';
+  static const String contactSupport = 'contact_support';
   static const String didntReceiveTheCode = 'didnt_receive_the_code';
   static const String couldNotCancelTryAgain = 'could_not_cancel_try_again';
   static const String couldNotResolveVehicleTypeIdPleaseTryAgain =
@@ -252,17 +253,18 @@ class AppStrings {
   static const String googleSignInFailed = 'google_sign_in_failed';
   static const String googleSignInSuccess = 'google_sign_in_success';
   static const String googleSignInUnsupported = 'google_sign_in_unsupported';
-  static const String continueWithApple = 'continue_with_apple';
+  static const String signInWithApple = 'sign_in_with_apple';
   static const String appleSignInSuccess = 'apple_sign_in_success';
   static const String appleSignInCancelled = 'apple_sign_in_cancelled';
   static const String appleSignInFailed = 'apple_sign_in_failed';
   static const String appleSignInAccountExists = 'apple_sign_in_account_exists';
   static const String appleSignInNotAvailable = 'apple_sign_in_not_available';
-  static const String continueWithFacebook = 'continue_with_facebook';
+  static const String signInWithFacebook = 'sign_in_with_facebook';
   static const String facebookSignInSuccess = 'facebook_sign_in_success';
   static const String facebookSignInCancelled = 'facebook_sign_in_cancelled';
   static const String facebookSignInFailed = 'facebook_sign_in_failed';
   static const String help = 'help';
+  static const String havingTroubleLoggingIn = 'having_trouble_logging_in';
   static const String helpSelcomGoDoBetterByRatingThisTrip =
       'help_selcom_go_do_better_by_rating_this_trip';
   static const String howCanWeHelpYou = 'how_can_we_help_you';
@@ -294,6 +296,7 @@ class AppStrings {
   static const String sessionExpiredPleaseLoginAgain =
       'session_expired_please_login_again';
   static const String sessionExpiredRefreshing = 'session_expired_refreshing';
+  static const String socialLoginSubtitle = 'social_login_subtitle';
   static const String logout = 'logout';
   static const String loremIpsumDolorSitAmetConsectetur =
       'lorem_ipsum_dolor_sit_amet_consectetur';

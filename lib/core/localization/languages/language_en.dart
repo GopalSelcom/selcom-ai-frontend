@@ -144,8 +144,9 @@ class LanguageEn extends Languages {
     'confirm_pickup': 'Confirm pickup',
     'connection_error': 'Connection Error',
     'contact_us': 'Contact Us',
+    'contact_support': 'Contact Support',
     'continue': 'Continue',
-    'continue_with_google': 'Continue with Google',
+    'sign_in_with_google': 'Sign in with Google',
     'didnt_receive_the_code': "Didn't receive the code?",
     'could_not_cancel_try_again': 'Could not cancel. Try again.',
     'could_not_resolve_vehicle_type_id_please_try_again':
@@ -238,7 +239,7 @@ class LanguageEn extends Languages {
     'google_sign_in_success': 'Signed in as @email',
     'google_sign_in_unsupported':
         'Google Sign-In is not supported on this device',
-    'continue_with_apple': 'Continue with Apple',
+    'sign_in_with_apple': 'Sign in with Apple',
     'apple_sign_in_success': 'Signed in as @email',
     'apple_sign_in_cancelled': 'Sign-in cancelled',
     'apple_sign_in_failed': 'Apple Sign-In failed. Please try again.',
@@ -246,11 +247,12 @@ class LanguageEn extends Languages {
         'An account already exists with this email. Sign in with your original method first.',
     'apple_sign_in_not_available':
         'Apple Sign-In is only available on iOS devices',
-    'continue_with_facebook': 'Continue with Facebook',
+    'sign_in_with_facebook': 'Sign in with Facebook',
     'facebook_sign_in_success': 'Signed in as @email',
     'facebook_sign_in_cancelled': 'Sign-in cancelled',
     'facebook_sign_in_failed': 'Facebook Sign-In failed. Please try again.',
     'help': 'Help',
+    'having_trouble_logging_in': 'Having Trouble Logging In?',
     'help_selcom_go_do_better_by_rating_this_trip':
         'Help Selcom Go do better by rating this trip',
     'how_can_we_help_you': 'How can we help you?',
@@ -661,7 +663,7 @@ class LanguageEn extends Languages {
     'your_ride_was_cancelled': 'Your ride was cancelled.',
     'thanks_for_using_go': 'Thanks for using Go!',
     'your_rides': 'Your Rides',
-    'welcome_to_selcom_go': 'Welcome to Selcom Go',
+    'welcome_to_selcom_go': 'Welcome to Selcom GO',
     'full_name': 'Full name',
     'enter_your_full_name': 'Enter your full name',
     'email': 'Email',
@@ -744,6 +746,8 @@ class LanguageEn extends Languages {
     'session_expired_please_login_again':
         'Session expired. Please login again.',
     'session_expired_refreshing': 'Session expired. Refreshing...',
+    'social_login_subtitle':
+        'Create an account or log in to explore our app',
     'request_queue_full_please_try_again_later':
         'Request queue is full. Please try again later.',
     'duplicate_request_already_queued': 'Duplicate request already queued',
@@ -1200,10 +1204,13 @@ class LanguageEn extends Languages {
   String get contactUs => values['contact_us'] ?? '';
 
   @override
+  String get contactSupport => values['contact_support'] ?? '';
+
+  @override
   String get continueLabel => values['continue'] ?? '';
 
   @override
-  String get continueWithGoogle => values['continue_with_google'] ?? '';
+  String get signInWithGoogle => values['sign_in_with_google'] ?? '';
 
   @override
   String get didntReceiveTheCode => values['didnt_receive_the_code'] ?? '';
@@ -1469,7 +1476,7 @@ class LanguageEn extends Languages {
       values['google_sign_in_unsupported'] ?? '';
 
   @override
-  String get continueWithApple => values['continue_with_apple'] ?? '';
+  String get signInWithApple => values['sign_in_with_apple'] ?? '';
 
   @override
   String get appleSignInSuccess => values['apple_sign_in_success'] ?? '';
@@ -1489,7 +1496,7 @@ class LanguageEn extends Languages {
       values['apple_sign_in_not_available'] ?? '';
 
   @override
-  String get continueWithFacebook => values['continue_with_facebook'] ?? '';
+  String get signInWithFacebook => values['sign_in_with_facebook'] ?? '';
 
   @override
   String get facebookSignInSuccess => values['facebook_sign_in_success'] ?? '';
@@ -1502,6 +1509,10 @@ class LanguageEn extends Languages {
 
   @override
   String get help => values['help'] ?? '';
+
+  @override
+  String get havingTroubleLoggingIn =>
+      values['having_trouble_logging_in'] ?? '';
 
   @override
   String get helpSelcomGoDoBetterByRatingThisTrip =>
@@ -2856,6 +2867,9 @@ class LanguageEn extends Languages {
   @override
   String get sessionExpiredRefreshing =>
       values['session_expired_refreshing'] ?? '';
+
+  @override
+  String get socialLoginSubtitle => values['social_login_subtitle'] ?? '';
 
   @override
   String get requestQueueFullPleaseTryAgainLater =>

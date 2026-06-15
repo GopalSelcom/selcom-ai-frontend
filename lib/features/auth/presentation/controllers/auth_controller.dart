@@ -268,6 +268,10 @@ class AuthController extends GetxController {
     Get.offAllNamed(AppRoutes.home);
   }
 
+  void openContactSupport() {
+    Get.toNamed(AppRoutes.contactUs);
+  }
+
   Future<void> signInWithGoogle() async {
     if (isLoading.value) return;
     errorMessage.value = '';

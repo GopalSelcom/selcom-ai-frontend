@@ -123,8 +123,9 @@ class LanguageSw extends Languages {
     'confirm_pickup': '',
     'connection_error': '',
     'contact_us': '',
+    'contact_support': '',
     'continue': '',
-    'continue_with_google': '',
+    'sign_in_with_google': '',
     'didnt_receive_the_code': '',
     'could_not_cancel_try_again': '',
     'could_not_resolve_vehicle_type_id_please_try_again': '',
@@ -204,17 +205,18 @@ class LanguageSw extends Languages {
     'google_sign_in_failed': '',
     'google_sign_in_success': '',
     'google_sign_in_unsupported': '',
-    'continue_with_apple': '',
+    'sign_in_with_apple': '',
     'apple_sign_in_success': '',
     'apple_sign_in_cancelled': '',
     'apple_sign_in_failed': '',
     'apple_sign_in_account_exists': '',
     'apple_sign_in_not_available': '',
-    'continue_with_facebook': '',
+    'sign_in_with_facebook': '',
     'facebook_sign_in_success': '',
     'facebook_sign_in_cancelled': '',
     'facebook_sign_in_failed': '',
     'help': '',
+    'having_trouble_logging_in': '',
     'help_selcom_go_do_better_by_rating_this_trip': '',
     'how_can_we_help_you': '',
     'how_do_you_rate_the_driver': '',
@@ -636,6 +638,7 @@ class LanguageSw extends Languages {
     'no_internet_connection': '',
     'session_expired_please_login_again': '',
     'session_expired_refreshing': '',
+    'social_login_subtitle': '',
     'request_queue_full_please_try_again_later': '',
     'duplicate_request_already_queued': '',
     'request_queue_cleared': '',
@@ -1082,10 +1085,13 @@ class LanguageSw extends Languages {
   String get contactUs => values['contact_us'] ?? '';
 
   @override
+  String get contactSupport => values['contact_support'] ?? '';
+
+  @override
   String get continueLabel => values['continue'] ?? '';
 
   @override
-  String get continueWithGoogle => values['continue_with_google'] ?? '';
+  String get signInWithGoogle => values['sign_in_with_google'] ?? '';
 
   @override
   String get didntReceiveTheCode => values['didnt_receive_the_code'] ?? '';
@@ -1351,7 +1357,7 @@ class LanguageSw extends Languages {
       values['google_sign_in_unsupported'] ?? '';
 
   @override
-  String get continueWithApple => values['continue_with_apple'] ?? '';
+  String get signInWithApple => values['sign_in_with_apple'] ?? '';
 
   @override
   String get appleSignInSuccess => values['apple_sign_in_success'] ?? '';
@@ -1371,7 +1377,7 @@ class LanguageSw extends Languages {
       values['apple_sign_in_not_available'] ?? '';
 
   @override
-  String get continueWithFacebook => values['continue_with_facebook'] ?? '';
+  String get signInWithFacebook => values['sign_in_with_facebook'] ?? '';
 
   @override
   String get facebookSignInSuccess => values['facebook_sign_in_success'] ?? '';
@@ -1384,6 +1390,10 @@ class LanguageSw extends Languages {
 
   @override
   String get help => values['help'] ?? '';
+
+  @override
+  String get havingTroubleLoggingIn =>
+      values['having_trouble_logging_in'] ?? '';
 
   @override
   String get helpSelcomGoDoBetterByRatingThisTrip =>
@@ -2738,6 +2748,9 @@ class LanguageSw extends Languages {
   @override
   String get sessionExpiredRefreshing =>
       values['session_expired_refreshing'] ?? '';
+
+  @override
+  String get socialLoginSubtitle => values['social_login_subtitle'] ?? '';
 
   @override
   String get requestQueueFullPleaseTryAgainLater =>

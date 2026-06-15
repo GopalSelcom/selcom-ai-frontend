@@ -27,7 +27,8 @@ class AppAssets {
   static const String gariPlus = imgCab;
 
   // Auth / Onboarding
-  static const String icFacebookLogo = '$_imagePath/ic_facebook_logo.svg';
+  static const String icFacebook = '$_imagePath/ic_facebook.svg';
+  static const String icGoogle = '$_imagePath/ic_google.svg';
   static const String icGoogleLogo = '$_imagePath/ic_google_logo.svg';
   static const String onboarding1 = '$_imagePath/onboarding_1.svg';
   static const String onboarding2 = '$_imagePath/onboarding_2.svg';

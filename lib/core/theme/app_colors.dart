@@ -6,6 +6,7 @@ class AppColors {
     0xFFFFCC00,
   ); // Brand accent — pins, links, field focus
   static const Color secondary = Color(0xFF22B573);
+  static const Color brandRed = Color(0xFFE80032);
   static const Color primaryButton = Color(
     0xFF5CB75E,
   ); // Buttons & solid actions (unchanged green)
@@ -103,12 +104,15 @@ class AppColors {
   static const Color borderGray = Color(0xFFD9D9D9);
 
   // Social sign-in (provider brand tokens)
+  static const Color socialSignInNeutralBackground = Color(0xFFE8E8E8);
   static const Color socialSignInGoogleBackground = Color(0xFFFFFFFF);
   static const Color socialSignInGoogleBorder = Color(0xFF747775);
   static const Color socialSignInGoogleText = Color(0xFF1F1F1F);
   static const Color socialSignInFacebookBackground = Color(0xFF1877F2);
   static const Color socialSignInAppleBackground = Color(0xFF000000);
   static const Color socialSignInLabelOnDark = Color(0xFFFFFFFF);
+  static const Color socialLoginSupportLink = brandRed;
+  static const Color socialLoginHashtag = brandRed;
 
   // Base colors
   static const Color white = Color(0xFFFFFFFF);
