@@ -74,6 +74,9 @@ class HomeScreen extends GetView<HomeController> {
                 top: MediaQuery.of(context).padding.top + 10.h,
                 addressWidget: _buildModernAddressBox(),
                 onProfileTap: controller.openProfile,
+                profileImageUrl: controller.profileImageUrl.value.isEmpty
+                    ? null
+                    : controller.profileImageUrl.value,
                 isLoading: controller.isLoadingHomeData.value,
                 isExpanded: controller.isSavedPlacesExpanded.value,
               ),

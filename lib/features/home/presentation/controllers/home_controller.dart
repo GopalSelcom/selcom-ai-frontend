@@ -11,6 +11,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '../../../../core/data/models/user_model.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
@@ -101,6 +102,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   final isSavedPlacesExpanded = false.obs;
   final isLoadingHomeData = false.obs;
   final isLoadingRecentLocationsScreen = false.obs;
+  final profileImageUrl = ''.obs;
   final mapCenter = const LatLng(-6.7924, 39.2083).obs;
   final currentMapAddress = AppStrings.locating.tr.obs;
   final isMapReady = false.obs;
@@ -338,12 +340,13 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   Future<void> _loadHomeData() async {
     isLoadingHomeData.value = true;
     try {
-      // Fetch vehicle types, recent destinations, and saved places in parallel.
+      // Fetch vehicle types, recent destinations, saved places, and profile in parallel.
       final results = await Future.wait([
         homeRepository.getVehicleTypes(),
         rideRepository.getRecentDestinations(),
         profileRepository.getSavedPlaces(),
         rideRepository.getActiveRide(),
+        profileRepository.getProfile(),
       ]);
 
       // Handle Vehicle Types
@@ -374,6 +377,11 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       results[3].fold((_) => null, (response) {
         final activeRideResponse = response as ActiveRideResponseModel?;
         _applyActiveRideResponse(activeRideResponse);
+      });
+
+      // Handle Profile (header avatar)
+      results[4].fold((_) => null, (user) {
+        _applyProfileImage(user as UserModel);
       });
     } finally {
       isLoadingHomeData.value = false;
@@ -1593,8 +1601,18 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     return openLocationSelection(preferredVehicle: vehicle);
   }
 
-  void openProfile() {
-    Get.to(() => ProfileScreen());
+  Future<void> openProfile() async {
+    await Get.to(() => ProfileScreen());
+    await refreshProfileImage();
+  }
+
+  Future<void> refreshProfileImage() async {
+    final result = await profileRepository.getProfile();
+    result.fold((_) {}, _applyProfileImage);
+  }
+
+  void _applyProfileImage(UserModel user) {
+    profileImageUrl.value = user.image?.trim() ?? '';
   }
 
   void closeLocationSelection() {
