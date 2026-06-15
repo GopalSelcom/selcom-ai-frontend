@@ -136,6 +136,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   bool _skipNextVisibleRefresh = true;
   DateTime? _lastActiveRideRefreshAt;
   bool _isResolvingLocationPermission = false;
+  double _cachedMapZoom = 16;
+  Timer? _sheetCameraSettleTimer;
 
   final pickupMarkerIcon = Rxn<BitmapDescriptor>();
 
@@ -220,6 +222,64 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     } finally {
       _isResolvingLocationPermission = false;
     }
+  }
+
+  bool get _isFollowingDeviceGps =>
+      selectedPickupSavedPlaceId.value == _currentLocationPlaceId;
+
+  /// Keeps the GPS dot in the center of the map area above the bottom sheet.
+  Future<void> _recenterCameraOnDeviceGps({
+    bool animated = false,
+    double? zoom,
+  }) async {
+    final controller = _mapController;
+    final location = deviceGpsLocation.value;
+    if (controller == null || location == null || !_isFollowingDeviceGps) {
+      return;
+    }
+    if (!hasLocationPermission.value || activeRide.value != null) return;
+
+    try {
+      final cameraZoom = zoom ?? _cachedMapZoom;
+      if (zoom != null) {
+        _cachedMapZoom = zoom;
+      }
+      final update = CameraUpdate.newLatLngZoom(location, cameraZoom);
+      if (animated) {
+        await controller.animateCamera(update);
+      } else {
+        await controller.moveCamera(update);
+      }
+    } catch (_) {
+      // Map may be disposed mid-drag.
+    }
+  }
+
+  /// Smooth incremental pan while the sheet drags (avoids full recenter each frame).
+  void _nudgeCameraForSheetDelta(double previousSize, double newSize) {
+    final controller = _mapController;
+    if (controller == null || deviceGpsLocation.value == null) return;
+    if (!_isFollowingDeviceGps) return;
+    if (!hasLocationPermission.value || activeRide.value != null) return;
+
+    final deltaPx = (newSize - previousSize) * _homeSheetScreenHeight;
+    if (deltaPx.abs() < 0.5) return;
+
+    try {
+      // Positive scrollY moves the map up as the sheet covers more from the bottom.
+      controller.moveCamera(CameraUpdate.scrollBy(0, deltaPx / 2));
+    } catch (_) {
+      // Map may be disposed mid-drag.
+    }
+
+    _scheduleSheetCameraSettle();
+  }
+
+  void _scheduleSheetCameraSettle() {
+    _sheetCameraSettleTimer?.cancel();
+    _sheetCameraSettleTimer = Timer(const Duration(milliseconds: 150), () {
+      unawaited(_recenterCameraOnDeviceGps(animated: false));
+    });
   }
 
   void _showLocationPermissionSettingsDialog() {
@@ -319,8 +379,21 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   void onMapCreated(GoogleMapController controller) {
     _mapController = controller;
     isMapReady.value = true;
+    _cachedMapZoom = 16;
     _mapController!.animateCamera(
-      CameraUpdate.newLatLngZoom(mapCenter.value, 16),
+      CameraUpdate.newLatLngZoom(mapCenter.value, _cachedMapZoom),
+    );
+  }
+
+  void onHomeMapCameraIdle() {
+    final controller = _mapController;
+    if (controller == null) return;
+    unawaited(
+      controller.getZoomLevel().then((zoom) {
+        if (zoom.isFinite && zoom > 0) {
+          _cachedMapZoom = zoom;
+        }
+      }),
     );
   }
 
@@ -657,7 +730,12 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }
 
   void updateHomeSheetSize(double size) {
+    final previousSize = sheetSize.value;
+    if ((size - previousSize).abs() < 0.0001) return;
     sheetSize.value = size;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _nudgeCameraForSheetDelta(previousSize, size);
+    });
   }
 
   void _onHomeSheetChanged() {
@@ -850,6 +928,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
   @override
   void onClose() {
+    _sheetCameraSettleTimer?.cancel();
     homeSheetController.removeListener(_onHomeSheetChanged);
     homeSheetController.dispose();
     WidgetsBinding.instance.removeObserver(this);
@@ -941,7 +1020,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         mapCenter.value = target;
 
         if (_mapController != null) {
-          _mapController!.animateCamera(CameraUpdate.newLatLngZoom(target, 16));
+          await _recenterCameraOnDeviceGps(animated: true, zoom: 16);
         }
       }
 
@@ -957,9 +1036,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       mapCenter.value = target;
 
       if (_mapController != null) {
-        await _mapController!.animateCamera(
-          CameraUpdate.newLatLngZoom(target, 16),
-        );
+        await _recenterCameraOnDeviceGps(animated: true, zoom: 16);
       }
 
       // Final attempt to geocode the fresh position.
