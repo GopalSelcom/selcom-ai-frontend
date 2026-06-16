@@ -33,13 +33,13 @@ class CallPermissionPromptService {
     if (!await waitUntilUiReady()) return;
 
     final fullScreenGranted = await AgoraCalling.isFullScreenIntentGranted();
-    if (!fullScreenGranted) {
+    /*if (!fullScreenGranted) {
       await _showPermissionDialog(
         message: AppStrings.callFullScreenPermissionMsg.tr,
         forCallFullScreen: true,
         onOpenSettings: AgoraCalling.openFullScreenIntentSettings,
       );
-    }
+    }*/
   }
 
   /// Waits until overlay context exists and no modal is open.
