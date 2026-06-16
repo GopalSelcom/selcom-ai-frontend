@@ -39,6 +39,7 @@ class LocationSelectionController extends GetxController {
   final RxnString preferredVehicleTypeId = RxnString();
   final RxnString preferredVehicleName = RxnString();
   final RxBool isVehicleSelectionEditMode = false.obs;
+  final RxBool isReorderingRows = false.obs;
 
   /// True while saved places / recents refresh for this screen.
   final isLoadingInitialContent = true.obs;
@@ -49,6 +50,99 @@ class LocationSelectionController extends GetxController {
       isLoadingInitialContent.value || homeController.isLoadingHomeData.value;
 
   bool get hasIntermediateStops => extraDestinationControllers.isNotEmpty;
+  int get totalRouteRows => extraDestinationControllers.length + 2;
+
+  int segmentIndexForRowIndex(int rowIndex) {
+    final last = totalRouteRows - 1;
+    if (rowIndex <= 0) return 0;
+    if (rowIndex >= last) return 1;
+    return 2 + (rowIndex - 1);
+  }
+
+  int rowIndexForSegmentIndex(int segmentIndex) {
+    final last = totalRouteRows - 1;
+    if (segmentIndex <= 0) return 0;
+    if (segmentIndex == 1) return last;
+    return (segmentIndex - 2) + 1;
+  }
+
+  List<_RouteRowDraft> _buildOrderedRows() {
+    final rows = <_RouteRowDraft>[
+      _RouteRowDraft(
+        text: pickupController.text,
+        selected: homeController.isPickupSelected.value,
+        lat: routePickupLat.value,
+        lng: routePickupLng.value,
+      ),
+    ];
+
+    for (var i = 0; i < extraDestinationControllers.length; i++) {
+      rows.add(
+        _RouteRowDraft(
+          text: extraDestinationControllers[i].text,
+          selected: i < extraStopSelected.length ? extraStopSelected[i] : false,
+        ),
+      );
+    }
+
+    rows.add(
+      _RouteRowDraft(
+        text: destinationController.text,
+        selected: homeController.isDestinationSelected.value,
+        lat: routeDestinationLat.value,
+        lng: routeDestinationLng.value,
+        placeId: destinationPlaceId.value,
+      ),
+    );
+
+    return rows;
+  }
+
+  void _applyOrderedRows(List<_RouteRowDraft> rows) {
+    if (rows.length < 2) return;
+    final middle = rows.length - 2;
+
+    pickupController.text = rows.first.text;
+    destinationController.text = rows.last.text;
+
+    routePickupLat.value = rows.first.lat;
+    routePickupLng.value = rows.first.lng;
+    routeDestinationLat.value = rows.last.lat;
+    routeDestinationLng.value = rows.last.lng;
+    destinationPlaceId.value = rows.last.placeId;
+
+    while (extraDestinationControllers.length > middle) {
+      extraDestinationControllers.removeLast().dispose();
+      extraDestinationFocusNodes.removeLast().dispose();
+      if (extraStopSelected.isNotEmpty) {
+        extraStopSelected.removeLast();
+      }
+    }
+    while (extraDestinationControllers.length < middle) {
+      extraDestinationControllers.add(TextEditingController());
+      extraDestinationFocusNodes.add(FocusNode());
+      extraStopSelected.add(false);
+    }
+
+    for (var i = 0; i < middle; i++) {
+      final row = rows[i + 1];
+      extraDestinationControllers[i].text = row.text;
+      if (i < extraStopSelected.length) {
+        extraStopSelected[i] = row.selected;
+      }
+    }
+    extraStopSelected.refresh();
+
+    homeController.isPickupSelected.value = rows.first.selected;
+    homeController.isDestinationSelected.value = rows.last.selected;
+    pickupEditedByUser.value = true;
+  }
+
+  List<Object?> exportOrderedRowsForReorder() => _buildOrderedRows();
+
+  void applyOrderedRowsFromReorder(List<Object?> rows) {
+    _applyOrderedRows(rows.cast<_RouteRowDraft>());
+  }
 
   ({String letter, Color color}) routeLetterStyleForPickup() {
     if (!hasIntermediateStops) {
@@ -475,6 +569,15 @@ class LocationSelectionController extends GetxController {
     }
   }
 
+  void unfocusAllLocationFields() {
+    FocusManager.instance.primaryFocus?.unfocus();
+    pickupFocusNode.unfocus();
+    destinationFocusNode.unfocus();
+    for (final node in extraDestinationFocusNodes.toList()) {
+      node.unfocus();
+    }
+  }
+
   void syncPickupFromLiveAddress() {
     if (pickupEditedByUser.value) return;
     final liveAddress = homeController.currentMapAddress.value.trim();
@@ -590,4 +693,20 @@ class LocationSelectionController extends GetxController {
     destinationFocusNode.dispose();
     super.onClose();
   }
+}
+
+class _RouteRowDraft {
+  _RouteRowDraft({
+    required this.text,
+    required this.selected,
+    this.lat,
+    this.lng,
+    this.placeId,
+  });
+
+  String text;
+  bool selected;
+  double? lat;
+  double? lng;
+  String? placeId;
 }
