@@ -9,17 +9,17 @@ import 'package:permission_handler/permission_handler.dart';
 import '../localization/app_strings.dart';
 import '../../shared/utils/app_dialogs.dart';
 
-/// Android call permissions for incoming driver calls (notification + full-screen).
+/// Android in-app prompts for call notification (settings) and full-screen intent.
 ///
-/// Mirrors delivery_agent_app `CallPermissionPromptService` — prompts run
-/// from [HomeController] after login when the user reaches Home.
+/// Invoked by [NotificationService.runHomePermissionFlow] after the system
+/// notification sheet has been shown or skipped.
 class CallPermissionPromptService {
   CallPermissionPromptService._();
 
   static Future<void> ensureAndroidCallPermissions() async {
     if (!Platform.isAndroid) return;
 
-    if (!await _waitUntilUiReady()) return;
+    if (!await waitUntilUiReady()) return;
 
     final notificationStatus = await Permission.notification.status;
     if (!notificationStatus.isGranted) {
@@ -30,7 +30,7 @@ class CallPermissionPromptService {
       );
     }
 
-    if (!await _waitUntilUiReady()) return;
+    if (!await waitUntilUiReady()) return;
 
     final fullScreenGranted = await AgoraCalling.isFullScreenIntentGranted();
     if (!fullScreenGranted) {
@@ -42,14 +42,29 @@ class CallPermissionPromptService {
     }
   }
 
+  /// Waits until overlay context exists and no modal is open.
+  static Future<bool> waitUntilUiReady() async {
+    for (var i = 0; i < 150; i++) {
+      final hasContext =
+          Get.overlayContext != null ||
+          Get.context != null ||
+          Get.key.currentContext != null;
+      final dialogOpen = Get.isDialogOpen ?? false;
+      if (hasContext && !dialogOpen) return true;
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    }
+    return Get.overlayContext != null || Get.context != null;
+  }
+
   static Future<void> _showPermissionDialog({
     required String message,
     bool forCallNotification = false,
     bool forCallFullScreen = false,
     required Future<void> Function() onOpenSettings,
   }) async {
-    if (Get.isDialogOpen ?? false) return;
+    if (!await waitUntilUiReady()) return;
 
+    var openedSettings = false;
     var checkingPermission = false;
     final observer = _PermissionResumeObserver(() async {
       if (!checkingPermission) return;
@@ -64,37 +79,44 @@ class CallPermissionPromptService {
     });
     WidgetsBinding.instance.addObserver(observer);
 
-    AppDialogs.showPermissionDialog(
-      title: AppStrings.notification,
-      message: message,
-      icon: forCallFullScreen
-          ? Icons.fullscreen
-          : Icons.notifications_active_outlined,
-      onOpenSettings: () {
-        checkingPermission = true;
-        unawaited(onOpenSettings());
-      },
-    );
+    try {
+      await AppDialogs.showPermissionDialog(
+        title: AppStrings.notification,
+        message: message,
+        icon: forCallFullScreen
+            ? Icons.fullscreen
+            : Icons.notifications_active_outlined,
+        onOpenSettings: () {
+          checkingPermission = true;
+          openedSettings = true;
+          unawaited(onOpenSettings());
+        },
+      );
 
-    // Clean up observer when dialog closes (poll briefly after show).
-    unawaited(Future<void>.delayed(const Duration(milliseconds: 500), () {
-      if (!(Get.isDialogOpen ?? false)) {
-        WidgetsBinding.instance.removeObserver(observer);
+      if (openedSettings) {
+        await _waitForAppResume();
       }
-    }));
+    } finally {
+      WidgetsBinding.instance.removeObserver(observer);
+    }
+
+    await waitUntilUiReady();
   }
 
-  static Future<bool> _waitUntilUiReady() async {
-    for (var i = 0; i < 100; i++) {
-      final hasContext =
-          Get.overlayContext != null ||
-          Get.context != null ||
-          Get.key.currentContext != null;
-      final dialogOpen = Get.isDialogOpen ?? false;
-      if (hasContext && !dialogOpen) return true;
-      await Future<void>.delayed(const Duration(milliseconds: 100));
-    }
-    return Get.overlayContext != null || Get.context != null;
+  static Future<void> _waitForAppResume() async {
+    final completer = Completer<void>();
+    late final _PermissionResumeObserver observer;
+    observer = _PermissionResumeObserver(() async {
+      if (!completer.isCompleted) completer.complete();
+      WidgetsBinding.instance.removeObserver(observer);
+    });
+    WidgetsBinding.instance.addObserver(observer);
+    await completer.future.timeout(
+      const Duration(minutes: 10),
+      onTimeout: () {
+        WidgetsBinding.instance.removeObserver(observer);
+      },
+    );
   }
 }
 

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../features/ride/domain/repositories/ride_repository.dart';
 import '../../shared/utils/app_dialogs.dart';
@@ -15,6 +16,7 @@ import '../../shared/utils/ride_active_navigation.dart';
 import '../data/models/notification_model.dart';
 import '../di/injection_container.dart';
 import '../localization/app_strings.dart';
+import 'call_permission_prompt_service.dart';
 import 'error_reporting/error_reporter.dart';
 import 'live_activity/android_order_tracking_manager.dart';
 import 'progress_indicator/loader.dart';
@@ -33,6 +35,7 @@ class NotificationService {
   final Logger _logger = Logger();
 
   bool _isInitialized = false;
+  bool _homePermissionFlowRunning = false;
   String? _deviceToken;
   Map<String, dynamic>? _pendingNavigationRaw;
   static const String _defaultChannelId = 'high_importance_channel';
@@ -158,6 +161,38 @@ class NotificationService {
       _logger.w('User declined or has not accepted permission');
     }
     return settings;
+  }
+
+  /// Home entry: system notification sheet, then Android call/full-screen prompts.
+  /// Runs strictly one step at a time (no overlapping dialogs).
+  Future<void> runHomePermissionFlow() async {
+    if (_homePermissionFlowRunning) return;
+    _homePermissionFlowRunning = true;
+    try {
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+      if (!await CallPermissionPromptService.waitUntilUiReady()) return;
+
+      await _requestSystemNotificationPermission();
+      if (!await CallPermissionPromptService.waitUntilUiReady()) return;
+
+      if (Platform.isAndroid) {
+        await CallPermissionPromptService.ensureAndroidCallPermissions();
+      }
+    } finally {
+      _homePermissionFlowRunning = false;
+    }
+  }
+
+  Future<void> _requestSystemNotificationPermission() async {
+    if (Platform.isAndroid) {
+      final current = await Permission.notification.status;
+      if (!current.isGranted && !current.isPermanentlyDenied) {
+        await Permission.notification.request();
+      }
+    } else {
+      await requestPermission();
+    }
+    unawaited(getToken());
   }
 
   Future<bool> isPermissionDenied() async {

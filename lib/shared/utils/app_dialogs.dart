@@ -630,7 +630,7 @@ class AppDialogs {
   }
 
   /// Settings prompt for denied permissions (notifications, location, camera, …).
-  static void showPermissionDialog({
+  static Future<void> showPermissionDialog({
     required String title,
     required String message,
     required VoidCallback onOpenSettings,
@@ -638,7 +638,7 @@ class AppDialogs {
     IconData icon = Icons.notifications_off,
     IconData? secondaryIcon,
   }) {
-    showAnimatedDialog(
+    return showAnimatedDialog<void>(
       child: Dialog(
         backgroundColor: AppColors.cardBackground,
         surfaceTintColor: AppColors.transparent,
