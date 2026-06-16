@@ -1124,7 +1124,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     return value;
   }
 
-  Future<bool> _validateEstimateBeforeBookingNavigation({
+  Future<EstimateValidationOutcome> _validateEstimateBeforeBookingNavigation({
     required String pickupAddress,
     required double pickupLat,
     required double pickupLng,
@@ -1146,13 +1146,13 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
       final result = await homeRepository.estimateFare(req);
 
-      bool canProceed = false;
-      result.fold((failure) {
-        AppDialogs.showErrorDialog(
-          message: _extractEstimateErrorMessage(failure.message),
+      return result.fold((failure) {
+        final parsed = _parseEstimateFailure(failure.message);
+        return EstimateValidationOutcome.failure(
+          message: parsed.message,
+          errorCode: parsed.errorCode,
         );
-      }, (_) => canProceed = true);
-      return canProceed;
+      }, (_) => EstimateValidationOutcome.success());
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       rethrow;
@@ -1163,15 +1163,77 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     }
   }
 
-  String _extractEstimateErrorMessage(String rawMessage) {
-    final message = rawMessage
+  ({String? errorCode, String message}) _parseEstimateFailure(
+    String rawMessage,
+  ) {
+    final cleaned = rawMessage
         .replaceFirst('Exception:', '')
         .replaceFirst('Failure:', '')
         .trim();
-    if (message.isEmpty) {
-      return AppStrings.unableToEstimateFareForThisRoute.tr;
+    if (cleaned.isEmpty) {
+      return (
+        errorCode: null,
+        message: AppStrings.unableToEstimateFareForThisRoute.tr,
+      );
     }
-    return message;
+
+    final parts = cleaned.split('|');
+    if (parts.length > 1) {
+      final code = parts.first.trim();
+      final message = parts.sublist(1).join('|').trim();
+      if (code.isNotEmpty) {
+        return (
+          errorCode: code,
+          message: message.isEmpty
+              ? AppStrings.unableToEstimateFareForThisRoute.tr
+              : message,
+        );
+      }
+    }
+
+    return (errorCode: null, message: cleaned);
+  }
+
+  Future<void> _showEstimateValidationErrorAfterLoaderDismiss({
+    required String message,
+    String? errorCode,
+  }) async {
+    await Loader.instance.hideAsync();
+    _showEstimateValidationError(message, errorCode: errorCode);
+  }
+
+  void _showEstimateValidationError(String message, {String? errorCode}) {
+    AppDialogs.showErrorDialog(
+      title: errorCode == 'VALID_PICKUP_DROP_TOO_CLOSE'
+          ? AppStrings.validation.tr
+          : AppStrings.error.tr,
+      message: message,
+    );
+  }
+
+  /// Fare estimate gate for location flows (including vehicle-selection edit).
+  Future<EstimateValidationOutcome> validateEstimateForRoute({
+    required String pickupAddress,
+    required double pickupLat,
+    required double pickupLng,
+    required List<LocationEntity> destinations,
+  }) {
+    return _validateEstimateBeforeBookingNavigation(
+      pickupAddress: pickupAddress,
+      pickupLat: pickupLat,
+      pickupLng: pickupLng,
+      destinations: destinations,
+    );
+  }
+
+  Future<void> presentEstimateValidationError(
+    EstimateValidationOutcome outcome,
+  ) async {
+    if (outcome.canProceed || outcome.errorMessage == null) return;
+    await _showEstimateValidationErrorAfterLoaderDismiss(
+      message: outcome.errorMessage!,
+      errorCode: outcome.errorCode,
+    );
   }
 
   void markRecentHomeChip(String key) {
@@ -1264,14 +1326,20 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
     final pickupAddr = activePickupAddress;
     final pickupLL = activePickupLatLng;
-    final canProceed = await _validateEstimateBeforeBookingNavigation(
+    final validation = await _validateEstimateBeforeBookingNavigation(
       pickupAddress: pickupAddr,
       pickupLat: pickupLL.latitude,
       pickupLng: pickupLL.longitude,
       destinations: [LocationEntity(lat: dLat, lng: dLng, address: destAddr)],
       showHomeFareEstimateLoader: true,
     );
-    if (!canProceed) return;
+    if (!validation.canProceed) {
+      await _showEstimateValidationErrorAfterLoaderDismiss(
+        message: validation.errorMessage!,
+        errorCode: validation.errorCode,
+      );
+      return;
+    }
 
     // GetX lifecycle managed via AppRoutes and VehicleSelectionBinding.
     Get.toNamed(
@@ -1338,14 +1406,20 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
     final pickupAddr = activePickupAddress;
     final pickupLL = activePickupLatLng;
-    final canProceed = await _validateEstimateBeforeBookingNavigation(
+    final validation = await _validateEstimateBeforeBookingNavigation(
       pickupAddress: pickupAddr,
       pickupLat: pickupLL.latitude,
       pickupLng: pickupLL.longitude,
       destinations: [LocationEntity(lat: dLat, lng: dLng, address: destAddr)],
       showHomeFareEstimateLoader: true,
     );
-    if (!canProceed) return;
+    if (!validation.canProceed) {
+      await _showEstimateValidationErrorAfterLoaderDismiss(
+        message: validation.errorMessage!,
+        errorCode: validation.errorCode,
+      );
+      return;
+    }
 
     // GetX lifecycle managed via AppRoutes and VehicleSelectionBinding.
     Get.toNamed(
@@ -1436,7 +1510,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
     final pickupAddr = activePickupAddress;
     final pickupLL = activePickupLatLng;
-    final canProceed = await _validateEstimateBeforeBookingNavigation(
+    final validation = await _validateEstimateBeforeBookingNavigation(
       pickupAddress: pickupAddr,
       pickupLat: pickupLL.latitude,
       pickupLng: pickupLL.longitude,
@@ -1445,7 +1519,13 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       ],
       showHomeFareEstimateLoader: showHomeFareEstimateLoader,
     );
-    if (!canProceed) return;
+    if (!validation.canProceed) {
+      await _showEstimateValidationErrorAfterLoaderDismiss(
+        message: validation.errorMessage!,
+        errorCode: validation.errorCode,
+      );
+      return;
+    }
 
     // GetX lifecycle managed via AppRoutes and VehicleSelectionBinding.
     Get.toNamed(
@@ -1739,6 +1819,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     isProceedingToBooking.value = true;
 
     Map<String, dynamic>? bookingArguments;
+    EstimateValidationOutcome? estimateValidationFailure;
     try {
       bookingArguments = await Loader.run(() async {
         double? pLat = routePickupLat;
@@ -1791,13 +1872,16 @@ class HomeController extends GetxController with WidgetsBindingObserver {
           return null;
         }
 
-        final canProceed = await _validateEstimateBeforeBookingNavigation(
+        final validation = await _validateEstimateBeforeBookingNavigation(
           pickupAddress: pickup,
           pickupLat: pLat,
           pickupLng: pLng,
           destinations: resolvedDestinations,
         );
-        if (!canProceed) return null;
+        if (!validation.canProceed) {
+          estimateValidationFailure = validation;
+          return null;
+        }
 
         if (kDebugMode) {
           debugPrint(
@@ -1821,6 +1905,14 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       });
     } finally {
       isProceedingToBooking.value = false;
+    }
+
+    if (estimateValidationFailure != null) {
+      await _showEstimateValidationErrorAfterLoaderDismiss(
+        message: estimateValidationFailure!.errorMessage!,
+        errorCode: estimateValidationFailure!.errorCode,
+      );
+      return;
     }
 
     if (bookingArguments == null) return;
@@ -2378,5 +2470,32 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     } finally {
       isSavingPlace.value = false;
     }
+  }
+}
+
+class EstimateValidationOutcome {
+  const EstimateValidationOutcome._({
+    required this.canProceed,
+    this.errorMessage,
+    this.errorCode,
+  });
+
+  final bool canProceed;
+  final String? errorMessage;
+  final String? errorCode;
+
+  factory EstimateValidationOutcome.success() {
+    return const EstimateValidationOutcome._(canProceed: true);
+  }
+
+  factory EstimateValidationOutcome.failure({
+    required String message,
+    String? errorCode,
+  }) {
+    return EstimateValidationOutcome._(
+      canProceed: false,
+      errorMessage: message,
+      errorCode: errorCode,
+    );
   }
 }

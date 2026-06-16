@@ -85,7 +85,11 @@ class HomeRepositoryImpl implements HomeRepository {
         final display = msg.isEmpty
             ? 'Unable to estimate fare for this route.'
             : msg;
-        return Left(ServerFailure(display));
+        final code = response.errorCode?.trim();
+        final failureMessage = (code != null && code.isNotEmpty)
+            ? '$code|$display'
+            : display;
+        return Left(ServerFailure(failureMessage));
       }
       return Right(FareEstimateModel.fromResponse(response));
     } catch (e, stackTrace) {

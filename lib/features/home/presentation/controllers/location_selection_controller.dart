@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/constants/ride_stop_limits.dart';
+import '../../../../core/domain/entities/location_entity.dart';
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/map_route_marker_utils.dart';
@@ -149,13 +151,45 @@ class LocationSelectionController extends GetxController {
     }
 
     if (isVehicleSelectionEditMode.value) {
-      final payload = await buildVehicleSelectionEditResult(
-        pickupText: pickupController.text.trim(),
-        destinationTexts: destinations,
-      );
+      EstimateValidationOutcome? validationFailure;
+      Map<String, dynamic>? payload;
+      homeController.isProceedingToBooking.value = true;
+      try {
+        payload = await Loader.run(() async {
+          final built = await buildVehicleSelectionEditResult(
+            pickupText: pickupController.text.trim(),
+            destinationTexts: destinations,
+          );
+          if (built == null) return null;
+
+          final destEntities = _locationEntitiesFromEditPayload(built);
+          if (destEntities.isEmpty) return null;
+
+          final validation = await homeController.validateEstimateForRoute(
+            pickupAddress: (built['pickup'] as String?)?.trim() ?? '',
+            pickupLat: (built['pickupLat'] as num).toDouble(),
+            pickupLng: (built['pickupLng'] as num).toDouble(),
+            destinations: destEntities,
+          );
+          if (!validation.canProceed) {
+            validationFailure = validation;
+            return null;
+          }
+          return built;
+        });
+      } finally {
+        homeController.isProceedingToBooking.value = false;
+      }
+
+      if (validationFailure != null) {
+        await homeController.presentEstimateValidationError(validationFailure!);
+        return;
+      }
       if (payload == null) {
         AppDialogs.showErrorDialog(
-          message: AppStrings.pleaseSelectValidPickupAndDestinationLocations.tr,
+          message: AppStrings
+              .pleaseSelectValidPickupAndDestinationLocations
+              .tr,
         );
         return;
       }
@@ -218,6 +252,25 @@ class LocationSelectionController extends GetxController {
       'pickupLng': pickupLng,
       'destinations': resultDestinations,
     };
+  }
+
+  List<LocationEntity> _locationEntitiesFromEditPayload(
+    Map<String, dynamic> payload,
+  ) {
+    final rawDestinations = payload['destinations'];
+    if (rawDestinations is! List) return const [];
+
+    final entities = <LocationEntity>[];
+    for (final item in rawDestinations) {
+      if (item is! Map) continue;
+      final map = Map<String, dynamic>.from(item);
+      final lat = (map['lat'] as num?)?.toDouble();
+      final lng = (map['lng'] as num?)?.toDouble();
+      final address = (map['address'] as String?)?.trim() ?? '';
+      if (lat == null || lng == null || address.isEmpty) continue;
+      entities.add(LocationEntity(lat: lat, lng: lng, address: address));
+    }
+    return entities;
   }
 
   void markExtraStopUnconfirmed(int index) {
