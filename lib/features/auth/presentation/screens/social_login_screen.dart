@@ -31,7 +31,7 @@ class SocialLoginScreen extends GetView<AuthController> {
                   child: Center(
                     child: Padding(
                       padding: EdgeInsets.symmetric(
-                        horizontal: 20.w,
+                        horizontal: 15.w,
                         vertical: 24.h,
                       ),
                       child: _SocialLoginCard(controller: controller),
@@ -56,7 +56,7 @@ class _SocialLoginCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(14.w, 26.h, 14.w, 26.h),
+      padding: EdgeInsets.fromLTRB(13.97.w, 26.71.h, 13.97.w, 26.71.h),
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(27.13.r),
@@ -74,10 +74,10 @@ class _SocialLoginCard extends StatelessWidget {
         children: [
           SvgPictureAsset(
             AppAssets.selcomGoLogoPrimaryColor,
-            height: 48.h,
+            height: 58.h,
             fit: BoxFit.contain,
           ),
-          SizedBox(height: 20.h),
+          SizedBox(height: 26.71.h),
           Text(
             AppStrings.welcomeToSelcomGo.tr,
             textAlign: TextAlign.center,
@@ -93,60 +93,63 @@ class _SocialLoginCard extends StatelessWidget {
           Obx(() {
             final isBusy = controller.isLoading.value;
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (controller.errorMessage.isNotEmpty)
-                  Padding(
-                    padding: EdgeInsets.only(bottom: 14.h),
-                    child: Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 14.w,
-                        vertical: 12.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.otpErrorBackground,
-                        borderRadius: BorderRadius.circular(14.r),
-                        border: Border.all(
-                          color: AppColors.otpErrorBorder.withValues(
-                            alpha: 0.35,
+            return Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12.74.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (controller.errorMessage.isNotEmpty)
+                    Padding(
+                      padding: EdgeInsets.only(bottom: 14.h),
+                      child: Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 14.w,
+                          vertical: 12.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.otpErrorBackground,
+                          borderRadius: BorderRadius.circular(14.r),
+                          border: Border.all(
+                            color: AppColors.otpErrorBorder.withValues(
+                              alpha: 0.35,
+                            ),
+                          ),
+                        ),
+                        child: Text(
+                          controller.errorMessage.value,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: AppColors.error,
+                            fontSize: 13.sp,
+                            fontWeight: FontWeight.w600,
+                            height: 18 / 13,
                           ),
                         ),
                       ),
-                      child: Text(
-                        controller.errorMessage.value,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: AppColors.error,
-                          fontSize: 13.sp,
-                          fontWeight: FontWeight.w600,
-                          height: 18 / 13,
-                        ),
-                      ),
                     ),
-                  ),
-                AppSocialSignInButton(
-                  provider: SocialSignInProvider.google,
-                  onPressed: isBusy ? null : controller.signInWithGoogle,
-                ),
-                SizedBox(height: 12.h),
-                AppSocialSignInButton(
-                  provider: SocialSignInProvider.facebook,
-                  onPressed: isBusy ? null : controller.signInWithFacebook,
-                ),
-                if (Platform.isIOS) ...[
-                  SizedBox(height: 12.h),
                   AppSocialSignInButton(
-                    provider: SocialSignInProvider.apple,
-                    onPressed: isBusy ? null : controller.signInWithApple,
+                    provider: SocialSignInProvider.google,
+                    onPressed: isBusy ? null : controller.signInWithGoogle,
                   ),
+                  SizedBox(height: 13.36.h),
+                  AppSocialSignInButton(
+                    provider: SocialSignInProvider.facebook,
+                    onPressed: isBusy ? null : controller.signInWithFacebook,
+                  ),
+                  if (Platform.isIOS) ...[
+                    SizedBox(height: 13.36.h),
+                    AppSocialSignInButton(
+                      provider: SocialSignInProvider.apple,
+                      onPressed: isBusy ? null : controller.signInWithApple,
+                    ),
+                  ],
                 ],
-              ],
+              ),
             );
           }),
-          SizedBox(height: 20.h),
+          SizedBox(height: 26.71.h),
           _ContactSupportFooter(
             onContactSupportTap: controller.openContactSupport,
           ),
@@ -169,18 +172,18 @@ class _ContactSupportFooter extends StatelessWidget {
       height: 20 / 14,
     );
 
-    return Wrap(
-      alignment: WrapAlignment.center,
-      crossAxisAlignment: WrapCrossAlignment.center,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
       children: [
         Text('${AppStrings.havingTroubleLoggingIn.tr} ', style: baseStyle),
-        AppCupertinoTextButton(
+        AppCupertinoTextButton.inlineBodyLink(
           label: AppStrings.contactSupport.tr,
           onPressed: onContactSupportTap,
-          textStyle: baseStyle.copyWith(
-            color: AppColors.brandRed,
-            fontWeight: FontWeight.w600,
-          ),
+          color: AppColors.iconHeartFilled,
+          baseTextStyle: baseStyle,
         ),
       ],
     );

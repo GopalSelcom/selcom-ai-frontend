@@ -258,6 +258,29 @@ class AppCupertinoTextButton extends StatelessWidget {
     );
   }
 
+  /// Inline body link beside plain text (e.g. social login contact support).
+  factory AppCupertinoTextButton.inlineBodyLink({
+    Key? key,
+    required String label,
+    required VoidCallback? onPressed,
+    required Color color,
+    TextStyle? baseTextStyle,
+  }) {
+    final style = (baseTextStyle ?? AppTextStyles.bodySecondary).copyWith(
+      fontWeight: FontWeight.w500,
+      color: color,
+      height: 20 / 14,
+    );
+    return AppCupertinoTextButton(
+      key: key,
+      label: label,
+      onPressed: onPressed,
+      padding: EdgeInsets.zero,
+      alignment: Alignment.centerLeft,
+      textStyle: style,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final button = CupertinoButton(

@@ -30,10 +30,10 @@ class AppSocialSignInButton extends StatelessWidget {
 
     return SizedBox(
       width: double.infinity,
-      height: 52.h,
+      height: 53.42.h,
       child: Material(
         color: AppColors.socialSignInNeutralBackground,
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(11.13.r),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: isDisabled ? null : onPressed,
@@ -53,16 +53,11 @@ class AppSocialSignInButton extends StatelessWidget {
                     height: _iconSize.w,
                     child: Center(child: icon),
                   ),
-                  SizedBox(width: 16.w),
+                  SizedBox(width: 11.13.w),
                   Text(
                     _labelFor(provider),
-                    textAlign: TextAlign.center,
-                    style: AppTextStyles.socialSignInButtonLabel.copyWith(
-                      color: AppColors.socialSignInGoogleText,
-                      fontWeight: FontWeight.w500,
-                    ),
+                    style: AppTextStyles.socialSignInButtonLabel,
                   ),
-                  SizedBox(width: _iconSize.w),
                 ],
               ),
             ),
