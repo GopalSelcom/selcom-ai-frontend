@@ -246,10 +246,16 @@ class VehicleSelectionController extends GetxController {
     final trimmed = appliedPromoCode.value.trim();
     return FareEstimateRequest(
       pickup: pickupEntity,
-      destinations: destinations.toList(),
+      destination: destinationEntity,
+      stops: routeStops,
       promoCode: trimmed.isEmpty ? null : trimmed,
     );
   }
+
+  /// Intermediate stops only — final destination is [destinationEntity].
+  List<LocationEntity> get routeStops => destinations.length > 1
+      ? destinations.sublist(0, destinations.length - 1)
+      : const [];
 
   Future<void> _loadEstimates({
     bool silent = false,
@@ -840,7 +846,11 @@ class VehicleSelectionController extends GetxController {
         paymentMethod: pay.type,
         vehicleTypeId: resolvedVehicleTypeId,
         pickup: pickupEntity,
-        destinations: destinations.toList(),
+        destination: destinationEntity,
+        stops: routeStops,
+        isBookedForOther: isBookedForOther,
+        passengerName: isBookedForOther ? passengerName : null,
+        passengerPhone: isBookedForOther ? passengerPhone : null,
       );
       final validationResult = await rideRepository.validateRidePayment(
         validateRequest,
@@ -932,7 +942,8 @@ class VehicleSelectionController extends GetxController {
                 validationId: blockValidationId,
                 idempotencyKey: 'idem_${DateTime.now().millisecondsSinceEpoch}',
                 pickup: pickupEntity,
-                destinations: destinations.toList(),
+                destination: destinationEntity,
+                stops: routeStops,
                 vehicleTypeId: resolvedVehicleTypeId,
                 paymentMethod: pay.type,
                 isBookedForOther: isBookedForOther,

@@ -50,6 +50,7 @@ class LocationSelectionController extends GetxController {
       isLoadingInitialContent.value || homeController.isLoadingHomeData.value;
 
   bool get hasIntermediateStops => extraDestinationControllers.isNotEmpty;
+
   int get totalRouteRows => extraDestinationControllers.length + 2;
 
   int segmentIndexForRowIndex(int rowIndex) {
@@ -263,7 +264,10 @@ class LocationSelectionController extends GetxController {
             pickupAddress: (built['pickup'] as String?)?.trim() ?? '',
             pickupLat: (built['pickupLat'] as num).toDouble(),
             pickupLng: (built['pickupLng'] as num).toDouble(),
-            destinations: destEntities,
+            destination: destEntities.last,
+            stops: destEntities.length > 1
+                ? destEntities.sublist(0, destEntities.length - 1)
+                : const [],
           );
           if (!validation.canProceed) {
             validationFailure = validation;
@@ -281,9 +285,7 @@ class LocationSelectionController extends GetxController {
       }
       if (payload == null) {
         AppDialogs.showErrorDialog(
-          message: AppStrings
-              .pleaseSelectValidPickupAndDestinationLocations
-              .tr,
+          message: AppStrings.pleaseSelectValidPickupAndDestinationLocations.tr,
         );
         return;
       }

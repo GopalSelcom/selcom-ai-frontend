@@ -5,38 +5,52 @@ class ValidateRidePaymentRequest {
   final String paymentMethod;
   final String vehicleTypeId;
   final LocationEntity pickup;
-
-  /// Ordered drop points: last item is the final destination.
-  /// Single-stop rides send one entry; multi-stop sends intermediates then final.
-  final List<LocationEntity> destinations;
+  final LocationEntity destination;
+  final List<LocationEntity> stops;
+  final bool isBookedForOther;
+  final String? passengerName;
+  final String? passengerPhone;
 
   const ValidateRidePaymentRequest({
     required this.fareEstimate,
     required this.paymentMethod,
     required this.vehicleTypeId,
     required this.pickup,
-    required this.destinations,
+    required this.destination,
+    this.stops = const [],
+    this.isBookedForOther = false,
+    this.passengerName,
+    this.passengerPhone,
   });
 
   Map<String, dynamic> toJson() {
-    return {
+    final data = <String, dynamic>{
       'fare_estimate': fareEstimate,
       'payment_method': paymentMethod,
       'vehicle_type_id': vehicleTypeId,
-      'pickup': {
-        'coordinates': [pickup.lng, pickup.lat],
-      },
-      'destinations': destinations
-          .map(
-            (d) => {
-              'lat': d.lat,
-              'lng': d.lng,
-              'address': d.address,
-            },
-          )
-          .toList(),
+      'pickup': _locationJson(pickup),
     };
+
+    if (stops.isNotEmpty) {
+      data['stops'] = stops.map(_locationJson).toList();
+    }
+
+    data['destination'] = _locationJson(destination);
+
+    if (isBookedForOther) {
+      data['is_booked_for_other'] = true;
+      if (passengerName != null) data['passenger_name'] = passengerName;
+      if (passengerPhone != null) data['passenger_phone'] = passengerPhone;
+    }
+
+    return data;
   }
+
+  static Map<String, dynamic> _locationJson(LocationEntity location) => {
+        'lat': location.lat,
+        'lng': location.lng,
+        'address': location.address,
+      };
 }
 
 class DummyPaymentRequest {

@@ -1112,7 +1112,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     required String pickupAddress,
     required double pickupLat,
     required double pickupLng,
-    required List<LocationEntity> destinations,
+    required LocationEntity destination,
+    List<LocationEntity> stops = const [],
     bool showHomeFareEstimateLoader = false,
   }) async {
     if (showHomeFareEstimateLoader) {
@@ -1125,7 +1126,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
           lng: pickupLng,
           address: pickupAddress,
         ),
-        destinations: destinations,
+        destination: destination,
+        stops: stops,
       );
 
       final result = await homeRepository.estimateFare(req);
@@ -1200,13 +1202,15 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     required String pickupAddress,
     required double pickupLat,
     required double pickupLng,
-    required List<LocationEntity> destinations,
+    required LocationEntity destination,
+    List<LocationEntity> stops = const [],
   }) {
     return _validateEstimateBeforeBookingNavigation(
       pickupAddress: pickupAddress,
       pickupLat: pickupLat,
       pickupLng: pickupLng,
-      destinations: destinations,
+      destination: destination,
+      stops: stops,
     );
   }
 
@@ -1314,7 +1318,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       pickupAddress: pickupAddr,
       pickupLat: pickupLL.latitude,
       pickupLng: pickupLL.longitude,
-      destinations: [LocationEntity(lat: dLat, lng: dLng, address: destAddr)],
+      destination: LocationEntity(lat: dLat, lng: dLng, address: destAddr),
       showHomeFareEstimateLoader: true,
     );
     if (!validation.canProceed) {
@@ -1394,7 +1398,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       pickupAddress: pickupAddr,
       pickupLat: pickupLL.latitude,
       pickupLng: pickupLL.longitude,
-      destinations: [LocationEntity(lat: dLat, lng: dLng, address: destAddr)],
+      destination: LocationEntity(lat: dLat, lng: dLng, address: destAddr),
       showHomeFareEstimateLoader: true,
     );
     if (!validation.canProceed) {
@@ -1498,9 +1502,11 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       pickupAddress: pickupAddr,
       pickupLat: pickupLL.latitude,
       pickupLng: pickupLL.longitude,
-      destinations: [
-        LocationEntity(lat: loc.lat, lng: loc.lng, address: destAddr),
-      ],
+      destination: LocationEntity(
+        lat: loc.lat,
+        lng: loc.lng,
+        address: destAddr,
+      ),
       showHomeFareEstimateLoader: showHomeFareEstimateLoader,
     );
     if (!validation.canProceed) {
@@ -1860,7 +1866,10 @@ class HomeController extends GetxController with WidgetsBindingObserver {
           pickupAddress: pickup,
           pickupLat: pLat,
           pickupLng: pLng,
-          destinations: resolvedDestinations,
+          destination: resolvedDestinations.last,
+          stops: resolvedDestinations.length > 1
+              ? resolvedDestinations.sublist(0, resolvedDestinations.length - 1)
+              : const [],
         );
         if (!validation.canProceed) {
           estimateValidationFailure = validation;

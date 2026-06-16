@@ -51,10 +51,9 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
         : <String, dynamic>{};
     _isDestinationEditor = args['editorMode'] == 'destination';
     final ride = args['ride'] as RideEntity?;
-    final destAddr = controller.destinationAddress.trim().toLowerCase();
-    final confirmedStops = (ride?.stops ?? [])
-        .where((s) => s.address.trim().toLowerCase() != destAddr)
-        .toList();
+    final confirmedStops = controller.mapIntermediateStops.isNotEmpty
+        ? controller.mapIntermediateStops
+        : (ride?.stops ?? const <RideStopEntity>[]);
 
     if (controller.stopUpdateWorkingStops.isNotEmpty) {
       // Use recovered stops if available

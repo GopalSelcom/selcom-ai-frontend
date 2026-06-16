@@ -2485,33 +2485,15 @@ class DriverAcceptedController extends GetxController
   List<Map<String, dynamic>> _buildStopsPayloadForUpdate(
     List<RideStopEntity> stops,
   ) {
-    final destination = ride.value?.destination;
-    final destinationLat = destination?.lat ?? destinationLatLng.latitude;
-    final destinationLng = destination?.lng ?? destinationLatLng.longitude;
-    final destinationAddr = (destination?.address ?? destinationAddress).trim();
-
-    final payload = <Map<String, dynamic>>[];
-
-    for (final stop in stops) {
-      final sameAsDestinationByCoord =
-          (stop.lat - destinationLat).abs() < 0.000001 &&
-          (stop.lng - destinationLng).abs() < 0.000001;
-      final sameAsDestinationByAddress =
-          stop.address.trim().toLowerCase() == destinationAddr.toLowerCase();
-      if (sameAsDestinationByCoord || sameAsDestinationByAddress) {
-        continue;
-      }
-      payload.add({'lat': stop.lat, 'lng': stop.lng, 'address': stop.address});
-    }
-
-    // requires destination to always be the last element.
-    payload.add({
-      'lat': destinationLat,
-      'lng': destinationLng,
-      'address': destinationAddr,
-    });
-
-    return payload;
+    return stops
+        .map(
+          (stop) => {
+            'lat': stop.lat,
+            'lng': stop.lng,
+            'address': stop.address,
+          },
+        )
+        .toList();
   }
 
   Future<void> _processPaymentHold(
