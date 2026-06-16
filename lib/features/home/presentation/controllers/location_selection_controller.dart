@@ -5,7 +5,9 @@ import 'package:get/get.dart';
 
 import '../../../../core/constants/ride_stop_limits.dart';
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/map_route_marker_utils.dart';
 import '../controllers/home_controller.dart';
 
 class LocationSelectionController extends GetxController {
@@ -43,6 +45,41 @@ class LocationSelectionController extends GetxController {
 
   bool get shouldShowPlaceListShimmer =>
       isLoadingInitialContent.value || homeController.isLoadingHomeData.value;
+
+  bool get hasIntermediateStops => extraDestinationControllers.isNotEmpty;
+
+  ({String letter, Color color}) routeLetterStyleForPickup() {
+    if (!hasIntermediateStops) {
+      return (letter: 'P', color: AppColors.mapPickupMarkerBlue);
+    }
+    return (
+      letter: MapRouteMarkerUtils.letterAt(0),
+      color: AppColors.mapPickupMarkerBlue,
+    );
+  }
+
+  ({String letter, Color color}) routeLetterStyleForIntermediateStop(
+    int stopIndex,
+  ) {
+    return (
+      letter: MapRouteMarkerUtils.letterAt(stopIndex + 1),
+      color: AppColors.mapStopMarkerRed,
+    );
+  }
+
+  ({String letter, Color color}) routeLetterStyleForDestination() {
+    if (!hasIntermediateStops) {
+      return (letter: 'D', color: AppColors.mapDropMarkerGreen);
+    }
+    return (
+      letter: MapRouteMarkerUtils.letterAt(
+        MapRouteMarkerUtils.destinationLetterIndex(
+          intermediateStopCount: extraDestinationControllers.length,
+        ),
+      ),
+      color: AppColors.mapDropMarkerGreen,
+    );
+  }
 
   bool get _isPickupSegmentReady {
     final text = pickupController.text.trim();

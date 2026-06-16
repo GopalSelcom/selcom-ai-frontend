@@ -15,6 +15,7 @@ import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/favorite_location_chips_row.dart';
+import '../../../../shared/widgets/app_route_letter_icon.dart';
 import '../../data/models/places_models.dart';
 import '../controllers/home_controller.dart';
 import '../controllers/location_selection_controller.dart';
@@ -117,6 +118,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                           padding: EdgeInsets.symmetric(horizontal: 16.w),
                           child: Obx(() {
                             locationController.syncPickupFromLiveAddress();
+                            locationController.extraDestinationControllers.length;
                             return _pickupDestinationCard();
                           }),
                         ),
@@ -295,15 +297,12 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     final List<Widget> rows = [];
 
     // 1. Pickup
+    final pickupLetter = locationController.routeLetterStyleForPickup();
     rows.add(
       _pinFieldRow(
-        icon: SvgPictureAsset(
-          AppAssets.locationIcPickupPin,
-          width: 12.6.w,
-          height: 16.4.h,
-          color: AppColors.primary,
-          placeholderBuilder: (_) =>
-              const Icon(Icons.location_on, color: AppColors.primary, size: 16),
+        icon: AppRouteLetterIcon(
+          letter: pickupLetter.letter,
+          color: pickupLetter.color,
         ),
         field: TextField(
           controller: pickupController,
@@ -336,15 +335,14 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     // 2. Extra stops (shown between pickup and final destination)
     for (var i = 0; i < _extraDestinationControllers.length; i++) {
       final segment = 2 + i;
+      final stopLetter = locationController.routeLetterStyleForIntermediateStop(
+        i,
+      );
       rows.add(
         _pinFieldRow(
-          icon: SvgPictureAsset(
-            AppAssets.locationIcDestinationPin,
-            width: 12.6.w,
-            height: 16.4.h,
-            color: AppColors.secondary,
-            placeholderBuilder: (_) =>
-                Icon(Icons.push_pin, color: AppColors.secondary, size: 16.w),
+          icon: AppRouteLetterIcon(
+            letter: stopLetter.letter,
+            color: stopLetter.color,
           ),
           trailing: Material(
             color: AppColors.transparent,
@@ -392,18 +390,12 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     }
 
     // 3. Final destination (always the last row)
+    final destinationLetter = locationController.routeLetterStyleForDestination();
     rows.add(
       _pinFieldRow(
-        icon: SvgPictureAsset(
-          AppAssets.locationIcDestinationPin,
-          width: 12.6.w,
-          height: 16.4.h,
-          color: AppColors.secondary,
-          placeholderBuilder: (_) => Icon(
-            Icons.push_pin,
-            color: AppColors.mapDropMarkerGreen,
-            size: 16.w,
-          ),
+        icon: AppRouteLetterIcon(
+          letter: destinationLetter.letter,
+          color: destinationLetter.color,
         ),
         field: TextField(
           controller: destinationController,
