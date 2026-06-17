@@ -5,14 +5,12 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../core/constants/app_assets.dart';
-import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
-import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/widgets/app_cupertino_text_button.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
@@ -23,6 +21,8 @@ import '../../../../shared/widgets/app_vehicle_explore_tile.dart';
 import '../../../../shared/widgets/favorite_location_chips_row.dart';
 import '../../../ride/data/models/ride_management_models.dart';
 import '../controllers/home_controller.dart';
+import '../widgets/home_active_ride_card.dart';
+import '../widgets/home_active_rides_panel.dart';
 import '../widgets/home_address_header_skeleton.dart';
 import '../widgets/home_sheet_layout.dart';
 import '../widgets/home_sheet_loading_content.dart';
@@ -49,21 +49,32 @@ class HomeScreen extends GetView<HomeController> {
             // 1. Map Layer (Static Image from Figma)
             Positioned.fill(
               child: Obx(
-                () => AppGoogleMap(
-                  initialCameraPosition: CameraPosition(
-                    target: controller.mapCenter.value,
-                    zoom: 16,
-                  ),
-                  // Keep map focal content above the draggable sheet peek area.
-                  padding: EdgeInsets.only(
-                    bottom: screenHeight * controller.sheetSize.value,
-                  ),
-                  myLocationEnabled: controller.hasLocationPermission.value,
-                  circles: controller.nearbyPickupRadiusCircles,
-                  // markers: controller.selectedPickupMarkers,
-                  onMapCreated: controller.onMapCreated,
-                  onCameraIdle: controller.onHomeMapCameraIdle,
-                ),
+                () {
+                  final activeRide = controller.activeRide.value;
+                  final showsMoreBadge = controller.hasMultipleActiveRides;
+                  final activeRideFootprint = activeRide == null
+                      ? 0.0
+                      : HomeActiveRideCard.footprintAboveSheet(
+                          showsMoreBadge: showsMoreBadge,
+                        );
+                  return AppGoogleMap(
+                    initialCameraPosition: CameraPosition(
+                      target: controller.mapCenter.value,
+                      zoom: 16,
+                    ),
+                    // Keep map focal content above the draggable sheet peek area.
+                    padding: EdgeInsets.only(
+                      bottom:
+                          screenHeight * controller.sheetSize.value +
+                          activeRideFootprint,
+                    ),
+                    myLocationEnabled: controller.hasLocationPermission.value,
+                    circles: controller.nearbyPickupRadiusCircles,
+                    // markers: controller.selectedPickupMarkers,
+                    onMapCreated: controller.onMapCreated,
+                    onCameraIdle: controller.onHomeMapCameraIdle,
+                  );
+                },
               ),
             ),
 
@@ -81,15 +92,19 @@ class HomeScreen extends GetView<HomeController> {
               ),
             ),
 
-            // 3. GPS button — lifts with the draggable bottom sheet.
+            // 3. GPS button — lifts with the draggable bottom sheet / active ride card.
             Obx(() {
-              if (controller.isLoadingHomeData.value) {
+              if (controller.isLoadingHomeData.value ||
+                  controller.isActiveRidesExpanded.value) {
                 return const SizedBox.shrink();
               }
               final activeRide = controller.activeRide.value;
-              final bottomOffset = activeRide != null
-                  ? MediaQuery.paddingOf(context).bottom + 12.h + 120.h
-                  : screenHeight * controller.sheetSize.value;
+              final sheetBottom = screenHeight * controller.sheetSize.value;
+              final bottomOffset = activeRide == null
+                  ? sheetBottom + 12.h
+                  : HomeActiveRideCard.gpsButtonBottom(
+                      sheetBottomFromScreenBottom: sheetBottom,
+                    );
               return Positioned(
                 bottom: bottomOffset,
                 right: 20.w,
@@ -98,20 +113,67 @@ class HomeScreen extends GetView<HomeController> {
                 ),
               );
             }),
+            _buildFigmaDraggableSheet(context),
             Obx(() {
               if (controller.isLoadingHomeData.value) {
-                return _buildFigmaDraggableSheet(context);
+                return const SizedBox.shrink();
               }
               final activeRide = controller.activeRide.value;
-              if (activeRide != null) {
+              if (activeRide == null) return const SizedBox.shrink();
+
+              final rides = controller.activeRides.toList(growable: false);
+              final sheetBottom = screenHeight * controller.sheetSize.value;
+              final cardBottom = sheetBottom + HomeActiveRideCard.gapAboveSheet.h;
+
+              if (!controller.hasMultipleActiveRides) {
                 return Positioned(
                   left: 16.w,
                   right: 16.w,
-                  bottom: MediaQuery.of(context).padding.bottom + 12.h,
-                  child: _activeRideCard(activeRide),
+                  bottom: cardBottom,
+                  child: HomeActiveRideCard(
+                    vehicleAssetPath: controller.activeRideVehicleImageAsset(
+                      activeRide,
+                    ),
+                    routeTitle: controller.activeRideRouteTitle(activeRide),
+                    remainingLabel: controller.activeRideRemainingLabel(
+                      activeRide,
+                    ),
+                    additionalRidesCount: 0,
+                    onViewRide: controller.openActiveRide,
+                  ),
                 );
               }
-              return _buildFigmaDraggableSheet(context);
+
+              final isExpanded = controller.isActiveRidesExpanded.value;
+
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned.fill(
+                    child: HomeActiveRidesBlurBarrier(
+                      isExpanded: isExpanded,
+                      onClose: controller.collapseActiveRidesStack,
+                    ),
+                  ),
+                  Positioned(
+                    left: 16.w,
+                    right: 16.w,
+                    bottom: cardBottom,
+                    child: HomeActiveRidesPanel(
+                      isExpanded: isExpanded,
+                      rides: rides,
+                      additionalRidesCount: controller.additionalActiveRidesCount,
+                      onExpand: controller.expandActiveRidesStack,
+                      onCollapse: controller.collapseActiveRidesStack,
+                      vehicleAssetPathFor:
+                          controller.activeRideVehicleImageAsset,
+                      routeTitleFor: controller.activeRideRouteTitle,
+                      remainingLabelFor: controller.activeRideRemainingLabel,
+                      onViewRide: controller.openActiveRide,
+                    ),
+                  ),
+                ],
+              );
             }),
           ],
         ),
@@ -517,130 +579,6 @@ class HomeScreen extends GetView<HomeController> {
         ),
       ),
     );
-  }
-
-  Widget _activeRideCard(RideModel ride) {
-    return Material(
-      color: AppColors.white,
-      borderRadius: BorderRadius.circular(16.r),
-      elevation: 4,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16.r),
-        onTap: controller.openActiveRide,
-        child: Container(
-          padding: EdgeInsets.all(12.w),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: AppColors.skeletonBase),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 8.w,
-                      vertical: 4.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryLight,
-                      borderRadius: BorderRadius.circular(10.r),
-                    ),
-                    child: Text(
-                      _activeRideStatusLabel(ride.status.name),
-                      style: AppTextStyles.homeCaption.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  Icon(
-                    Icons.directions_car_filled,
-                    color: AppColors.primary,
-                    size: 18.sp,
-                  ),
-                  SizedBox(width: 4.w),
-                  Text(
-                    (ride.vehicleDisplayName ?? '').trim().isNotEmpty
-                        ? (ride.vehicleDisplayName ?? '').trim()
-                        : AppStrings.fallbackRideName.tr,
-                    style: AppTextStyles.homeCaption.copyWith(
-                      color: AppColors.textHeading,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 10.h),
-              Text(
-                ride.pickup.address,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.homeSubtitle.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textHeading,
-                ),
-              ),
-              SizedBox(height: 2.h),
-              Text(
-                ride.destination.address,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.homeCaption.copyWith(
-                  color: AppColors.textBody,
-                ),
-              ),
-              SizedBox(height: 10.h),
-              Row(
-                children: [
-                  Text(
-                    CurrencyFormatter.format(ride.fareEstimate),
-                    style: AppTextStyles.homeSubtitle.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textHeading,
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    AppStrings.viewTrip.tr,
-                    style: AppTextStyles.homeCaption.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  SizedBox(width: 4.w),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    size: 14.sp,
-                    color: AppColors.primary,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  String _activeRideStatusLabel(String status) {
-    switch (status.toLowerCase()) {
-      case 'driverassigned':
-        return AppStrings.driverAssigned.tr;
-      case 'driverarriving':
-        return AppStrings.driverArriving.tr;
-      case 'driverarrived':
-        return AppStrings.driverArrived.tr;
-      case 'ridestarted':
-      case 'rideinprogress':
-        return AppStrings.rideInProgress.tr;
-      case 'neardestination':
-        return AppStrings.nearDestination.tr;
-      default:
-        return AppStrings.activeRide.tr;
-    }
   }
 
   void _showExitDialog(BuildContext context) {
