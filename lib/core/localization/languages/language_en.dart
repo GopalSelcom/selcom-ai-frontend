@@ -617,6 +617,9 @@ class LanguageEn extends Languages {
     'verify_phone_number': 'Verify Phone Number',
     'verify_your_selfie': 'Verify your Selfie',
     'view_trip': 'View trip',
+    'view_ride': 'View Ride',
+    'active_ride_min_remains': '@minutes Min remains',
+    'active_ride_more_count': '+@count more',
     'visa': 'VISA',
     'wallet': 'Wallet',
     'wallet_number_copied': 'Wallet number copied',
@@ -2523,6 +2526,15 @@ class LanguageEn extends Languages {
 
   @override
   String get viewTrip => values['view_trip'] ?? '';
+
+  @override
+  String get viewRide => values['view_ride'] ?? '';
+
+  @override
+  String get activeRideMinRemains => values['active_ride_min_remains'] ?? '';
+
+  @override
+  String get activeRideMoreCount => values['active_ride_more_count'] ?? '';
 
   @override
   String get visa => values['visa'] ?? '';

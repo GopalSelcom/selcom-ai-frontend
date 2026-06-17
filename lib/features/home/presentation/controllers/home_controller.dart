@@ -13,7 +13,8 @@ import '../../../../core/data/models/user_model.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
-import '../../../../core/data/models/responses/rides/active_ride_response.dart';
+import '../../../../core/data/models/responses/rides/active_ride_response.dart'
+    as active_ride_api;
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/domain/entities/location_entity.dart';
@@ -91,6 +92,13 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   final recentDestinationsScreen = <RecentDestinationModel>[].obs;
   final savedPlaces = <SavedPlace>[].obs;
   final activeRide = Rxn<RideModel>();
+  final activeRides = <RideModel>[].obs;
+  final isActiveRidesExpanded = false.obs;
+
+  int get additionalActiveRidesCount =>
+      activeRides.length > 1 ? activeRides.length - 1 : 0;
+
+  bool get hasMultipleActiveRides => activeRides.length > 1;
 
   /// Home chips only: last tapped chip before leaving home (highlight on return).
   final RxnString recentHomeChipKey = RxnString();
@@ -433,7 +441,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
       // Handle Active Ride
       results[3].fold((_) => null, (response) {
-        final activeRideResponse = response as ActiveRideResponseModel?;
+        final activeRideResponse = response as active_ride_api.ActiveRideResponseModel?;
         _applyActiveRideResponse(activeRideResponse);
       });
 
@@ -557,6 +565,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   void onSessionExpired() {
     stopActiveRidePolling();
     activeRide.value = null;
+    activeRides.clear();
+    isActiveRidesExpanded.value = false;
     _didHandleActiveRideFlow = false;
     _homeSocketConnectionSub?.cancel();
     _homeSocketConnectionSub = null;
@@ -590,18 +600,98 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     });
   }
 
-  void _applyActiveRideResponse(ActiveRideResponseModel? activeRideResponse) {
-    final activeRideData = activeRideResponse?.data?.ride;
-    if (activeRideData == null) {
+  void _applyActiveRideResponse(
+    active_ride_api.ActiveRideResponseModel? activeRideResponse,
+  ) {
+    final rides = _parseActiveRides(activeRideResponse?.data);
+    if (rides.isEmpty) {
       activeRide.value = null;
+      activeRides.clear();
+      isActiveRidesExpanded.value = false;
       _didHandleActiveRideFlow = false;
       return;
     }
 
-    final rideModel = RideModel.fromJson(activeRideData.toJson());
-    activeRide.value = rideModel;
-    _connectAndJoinActiveRideRoom(rideModel);
-    _syncLiveActivity(rideModel);
+    activeRides.assignAll(rides);
+    final primaryRide = rides.first;
+    activeRide.value = primaryRide;
+    if (!hasMultipleActiveRides) {
+      isActiveRidesExpanded.value = false;
+    }
+    _connectAndJoinActiveRideRoom(primaryRide);
+    _syncLiveActivity(primaryRide);
+  }
+
+  List<RideModel> _parseActiveRides(active_ride_api.Data? data) {
+    if (data == null) return const [];
+
+    final fromList = data.rides;
+    if (fromList != null && fromList.isNotEmpty) {
+      return fromList
+          .map((ride) => RideModel.fromJson(ride.toJson()))
+          .toList(growable: false);
+    }
+
+    final parsed = <RideModel>[];
+    final primary = data.ride;
+    if (primary != null) {
+      parsed.add(RideModel.fromJson(primary.toJson()));
+    }
+
+    final extras = data.additionalRides;
+    if (extras != null) {
+      for (final ride in extras) {
+        parsed.add(RideModel.fromJson(ride.toJson()));
+      }
+    }
+
+    return parsed;
+  }
+
+  bool get canExpandActiveRides => hasMultipleActiveRides;
+
+  void expandActiveRidesStack() {
+    if (!canExpandActiveRides || isActiveRidesExpanded.value) return;
+    isActiveRidesExpanded.value = true;
+  }
+
+  void collapseActiveRidesStack() {
+    if (!isActiveRidesExpanded.value) return;
+    isActiveRidesExpanded.value = false;
+  }
+
+  String activeRideRouteTitle(RideModel ride) {
+    final pickup = _shortPlaceLabel(ride.pickup.address);
+    final destination = _shortPlaceLabel(ride.destination.address);
+    if (pickup.isEmpty && destination.isEmpty) {
+      return AppStrings.activeRide.tr;
+    }
+    if (pickup.isEmpty) return destination;
+    if (destination.isEmpty) return pickup;
+    return '$pickup to $destination';
+  }
+
+  String activeRideRemainingLabel(RideModel ride) {
+    final minutes = ride.durationMinutes;
+    if (minutes <= 0) return '';
+    return AppStrings.activeRideMinRemains.trParams({'minutes': '$minutes'});
+  }
+
+  String activeRideVehicleImageAsset(RideModel ride) {
+    final type =
+        ride.vehicleDisplayName ??
+        ride.vehicleSnapshot?.vehicleType ??
+        ride.vehicleKey ??
+        '';
+    return vehicleExploreImageAsset(type);
+  }
+
+  String _shortPlaceLabel(String address) {
+    final trimmed = address.trim();
+    if (trimmed.isEmpty) return '';
+    final parts = trimmed.split(',');
+    final first = parts.first.trim();
+    return first.isEmpty ? trimmed : first;
   }
 
   Future<void> _syncLiveActivity(RideModel ride) async {
@@ -640,8 +730,9 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     }
   }
 
-  Future<void> openActiveRide() async {
-    final rideValue = activeRide.value;
+  Future<void> openActiveRide([RideModel? ride]) async {
+    collapseActiveRidesStack();
+    final rideValue = ride ?? activeRide.value;
     if (rideValue == null) return;
     final rideId = rideValue.id.trim();
     if (rideId.isEmpty) return;

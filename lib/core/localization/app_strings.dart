@@ -690,6 +690,9 @@ class AppStrings {
   static const String verifyPhoneNumber = 'verify_phone_number';
   static const String verifyYourSelfie = 'verify_your_selfie';
   static const String viewTrip = 'view_trip';
+  static const String viewRide = 'view_ride';
+  static const String activeRideMinRemains = 'active_ride_min_remains';
+  static const String activeRideMoreCount = 'active_ride_more_count';
   static const String visa = 'visa';
   static const String wallet = 'wallet';
   static const String walletNumberCopied = 'wallet_number_copied';

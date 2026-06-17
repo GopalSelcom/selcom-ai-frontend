@@ -29,20 +29,48 @@ class ActiveRideResponseModel {
 
 class Data {
   ActiveRide? ride;
+  List<ActiveRide>? rides;
+  List<ActiveRide>? additionalRides;
   SocketRooms? socketRooms;
+  int? activeRidesCount;
+  int? additionalActiveRidesCount;
 
-  Data({this.ride, this.socketRooms});
+  Data({
+    this.ride,
+    this.rides,
+    this.additionalRides,
+    this.socketRooms,
+    this.activeRidesCount,
+    this.additionalActiveRidesCount,
+  });
 
   factory Data.fromJson(Map<String, dynamic> json) => Data(
     ride: json["ride"] == null ? null : ActiveRide.fromJson(json["ride"]),
+    rides: _parseActiveRideList(json["rides"]),
+    additionalRides: _parseActiveRideList(json["additional_rides"]),
     socketRooms: json["socket_rooms"] == null
         ? null
         : SocketRooms.fromJson(json["socket_rooms"]),
+    activeRidesCount: (json["active_rides_count"] as num?)?.toInt(),
+    additionalActiveRidesCount:
+        (json["additional_active_rides_count"] as num?)?.toInt(),
   );
+
+  static List<ActiveRide>? _parseActiveRideList(dynamic raw) {
+    if (raw is! List) return null;
+    return raw
+        .whereType<Map>()
+        .map((e) => ActiveRide.fromJson(Map<String, dynamic>.from(e)))
+        .toList(growable: false);
+  }
 
   Map<String, dynamic> toJson() => {
     "ride": ride?.toJson(),
+    "rides": rides?.map((e) => e.toJson()).toList(),
+    "additional_rides": additionalRides?.map((e) => e.toJson()).toList(),
     "socket_rooms": socketRooms?.toJson(),
+    "active_rides_count": activeRidesCount,
+    "additional_active_rides_count": additionalActiveRidesCount,
   };
 }
 

@@ -522,6 +522,9 @@ abstract class Languages {
   String get verifyPhoneNumber;
   String get verifyYourSelfie;
   String get viewTrip;
+  String get viewRide;
+  String get activeRideMinRemains;
+  String get activeRideMoreCount;
   String get visa;
   String get wallet;
   String get walletNumberCopied;
