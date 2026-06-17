@@ -24,6 +24,7 @@ class AppStrings {
       'are_you_sure_you_want_to_cancel';
   static const String blinkYourEyes = 'blink_your_eyes';
   static const String bookRide = 'book_ride';
+  static const String bookAny = 'book_any';
   static const String bookRideWalletDeductionNotice =
       'book_ride_wallet_deduction_notice';
   static const String insufficientBalanceTitle = 'insufficient_balance_title';

@@ -19,6 +19,7 @@ class LanguageSw extends Languages {
     'are_you_sure_you_want_to_cancel': '',
     'blink_your_eyes': '',
     'book_ride': '',
+    'book_any': 'Yoyote',
     'book_ride_wallet_deduction_notice': '',
     'insufficient_balance_title': '',
     'insufficient_balance_message': '',
@@ -770,6 +771,9 @@ class LanguageSw extends Languages {
 
   @override
   String get bookRide => values['book_ride'] ?? '';
+
+  @override
+  String get bookAny => values['book_any'] ?? '';
 
   @override
   String get bookRideWalletDeductionNotice =>

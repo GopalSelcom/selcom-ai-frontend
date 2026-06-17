@@ -20,6 +20,7 @@ class LanguageEn extends Languages {
     'are_you_sure_you_want_to_cancel': 'Are you sure you want to cancel?',
     'blink_your_eyes': 'Blink Your Eyes',
     'book_ride': 'Book Ride',
+    'book_any': 'Any',
     'book_ride_wallet_deduction_notice':
         'The amount will be deducted from your wallet.',
     'insufficient_balance_title': 'Insufficient Balance',
@@ -890,6 +891,9 @@ class LanguageEn extends Languages {
 
   @override
   String get bookRide => values['book_ride'] ?? '';
+
+  @override
+  String get bookAny => values['book_any'] ?? '';
 
   @override
   String get bookRideWalletDeductionNotice =>

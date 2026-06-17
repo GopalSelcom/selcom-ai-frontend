@@ -111,20 +111,12 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
             ),
           Obx(() {
             final double factor = _calculateInitialSheetSize(context);
-            final int estimatesCount = controller.estimates.length;
-            final bool hasMoreThan3 = estimatesCount > 3;
-            final double initialFactor = hasMoreThan3
-                ? factor.clamp(0.0, 0.6)
-                : factor;
-            final double maxFactor = hasMoreThan3 ? 0.6 : factor;
-            final bool canSnap = hasMoreThan3 && (maxFactor > initialFactor);
             return AppDraggableBottomSheet(
-              key: ValueKey('vehicle_selection_sheet_$estimatesCount'),
-              initialChildSize: initialFactor,
-              minChildSize: initialFactor,
-              maxChildSize: maxFactor,
-              snap: canSnap,
-              snapSizes: canSnap ? [initialFactor, maxFactor] : null,
+              key: ValueKey('vehicle_selection_sheet_${controller.estimates.length}'),
+              initialChildSize: factor,
+              minChildSize: factor,
+              maxChildSize: factor,
+              snap: false,
               childBuilder: (scrollController) =>
                   _bottomSheet(context, scrollController),
             );
@@ -150,13 +142,8 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
       }
 
       final double factor = _calculateInitialSheetSize(context);
-      final int estimatesCount = controller.estimates.length;
-      final bool hasMoreThan3 = estimatesCount > 3;
-      final double initialFactor = hasMoreThan3
-          ? factor.clamp(0.0, 0.6)
-          : factor;
       final double mapBottomPadding =
-          MediaQuery.sizeOf(context).height * initialFactor;
+          MediaQuery.sizeOf(context).height * factor;
 
       final points = controller.routePoints.toList();
       final pickup = LatLng(
@@ -171,20 +158,23 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
         (pickup.latitude + lastDrop.latitude) / 2,
         (pickup.longitude + lastDrop.longitude) / 2,
       );
-      final drivers = controller.driverMarkerPoints.toList();
+      final nearbyDriversList = controller.nearbyDrivers.toList();
       final markers = <Marker>{};
       controller.scheduleOverlayProjection(
         pickup: pickup,
         drops: drops,
         devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
       );
-      for (var i = 0; i < drivers.length; i++) {
-        final jitter = drivers[i];
+      for (var i = 0; i < nearbyDriversList.length; i++) {
+        final driver = nearbyDriversList[i];
+        final markerId = driver.fleetId.isNotEmpty
+            ? 'driver_${driver.fleetId}'
+            : 'driver_$i';
         markers.add(
           Marker(
-            markerId: MarkerId('driver_$i'),
-            position: jitter,
-            icon: controller.driverIcon ?? controller.pickupIcon!,
+            markerId: MarkerId(markerId),
+            position: LatLng(driver.lat, driver.lng),
+            icon: controller.nearbyDriverMarkerIcon(driver.vehicleType),
             anchor: const Offset(0.5, 0.5),
           ),
         );
@@ -724,6 +714,15 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
   }
 
   Widget _vehicleFarePrice(FareEstimateItem item) {
+    if (item.isBookAnyOption) {
+      return Text(
+        controller.vehicleFareDisplay(item),
+        style: AppTextStyles.homeTitle.copyWith(
+          fontSize: 16.sp,
+          letterSpacing: -0.4,
+        ),
+      );
+    }
     final showPromo =
         item.promoApplied == true &&
         (item.discountedFare != null) &&

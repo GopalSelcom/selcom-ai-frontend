@@ -60,12 +60,14 @@ class FareEstimateData {
   final RouteGeometry? routeGeometry;
   final List<FareLeg>? legs;
   final bool? isMultiStop;
+  final BookAnyEstimate? bookAny;
 
   FareEstimateData({
     this.estimates,
     this.routeGeometry,
     this.legs,
     this.isMultiStop,
+    this.bookAny,
   });
 
   factory FareEstimateData.fromJson(Map<String, dynamic> json) {
@@ -82,6 +84,13 @@ class FareEstimateData {
           ? (json['legs'] as List).map((e) => FareLeg.fromJson(e)).toList()
           : null,
       isMultiStop: json['is_multi_stop'],
+      bookAny: json['book_any'] != null
+          ? BookAnyEstimate.fromJson(
+              json['book_any'] is Map<String, dynamic>
+                  ? json['book_any'] as Map<String, dynamic>
+                  : Map<String, dynamic>.from(json['book_any'] as Map),
+            )
+          : null,
     );
   }
 
@@ -91,6 +100,57 @@ class FareEstimateData {
       'route_geometry': routeGeometry?.toJson(),
       'legs': legs?.map((e) => e.toJson()).toList(),
       'is_multi_stop': isMultiStop,
+      'book_any': bookAny?.toJson(),
+    };
+  }
+}
+
+class BookAnyEstimate {
+  final bool eligible;
+  final int minFare;
+  final int maxFare;
+  final int blockAmount;
+  final List<String> vehicleTypeIds;
+  final String? currency;
+
+  BookAnyEstimate({
+    required this.eligible,
+    required this.minFare,
+    required this.maxFare,
+    required this.blockAmount,
+    this.vehicleTypeIds = const [],
+    this.currency,
+  });
+
+  factory BookAnyEstimate.fromJson(Map<String, dynamic> json) {
+    final range = json['fare_range'];
+    int minFare = 0;
+    int maxFare = 0;
+    if (range is Map) {
+      minFare = (range['min'] as num?)?.toInt() ?? 0;
+      maxFare = (range['max'] as num?)?.toInt() ?? 0;
+    }
+    return BookAnyEstimate(
+      eligible: json['eligible'] == true,
+      minFare: minFare,
+      maxFare: maxFare,
+      blockAmount: (json['block_amount'] as num?)?.toInt() ?? maxFare,
+      vehicleTypeIds: json['vehicle_type_ids'] != null
+          ? (json['vehicle_type_ids'] as List)
+                .map((e) => e.toString())
+                .toList()
+          : const [],
+      currency: json['currency']?.toString(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'eligible': eligible,
+      'fare_range': {'min': minFare, 'max': maxFare},
+      'block_amount': blockAmount,
+      'vehicle_type_ids': vehicleTypeIds,
+      'currency': currency,
     };
   }
 }
@@ -131,6 +191,9 @@ class FareEstimateItem {
   final int? promoDiscount;
   final int? discountedFare;
   final String? promoError;
+  final bool isBookAnyOption;
+  final int? bookAnyMinFare;
+  final int? bookAnyMaxFare;
 
   FareEstimateItem({
     this.vehicleTypeId,
@@ -150,6 +213,9 @@ class FareEstimateItem {
     this.promoDiscount,
     this.discountedFare,
     this.promoError,
+    this.isBookAnyOption = false,
+    this.bookAnyMinFare,
+    this.bookAnyMaxFare,
   });
 
   /// Amount the rider pays when a promo applies; otherwise base estimate.
@@ -191,6 +257,9 @@ class FareEstimateItem {
       promoDiscount: (json['promo_discount'] as num?)?.toInt(),
       discountedFare: (json['discounted_fare'] as num?)?.toInt(),
       promoError: json['promo_error']?.toString(),
+      isBookAnyOption: json['is_book_any_option'] == true,
+      bookAnyMinFare: (json['book_any_min_fare'] as num?)?.toInt(),
+      bookAnyMaxFare: (json['book_any_max_fare'] as num?)?.toInt(),
     );
   }
 
@@ -213,6 +282,9 @@ class FareEstimateItem {
       'promo_discount': promoDiscount,
       'discounted_fare': discountedFare,
       'promo_error': promoError,
+      'is_book_any_option': isBookAnyOption,
+      'book_any_min_fare': bookAnyMinFare,
+      'book_any_max_fare': bookAnyMaxFare,
     };
   }
 }

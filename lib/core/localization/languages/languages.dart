@@ -29,6 +29,7 @@ abstract class Languages {
   String get areYouSureYouWantToCancel;
   String get blinkYourEyes;
   String get bookRide;
+  String get bookAny;
   String get bookRideWalletDeductionNotice;
   String get insufficientBalanceTitle;
   String get insufficientBalanceMessage;

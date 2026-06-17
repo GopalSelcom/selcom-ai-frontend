@@ -33,6 +33,7 @@ import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/address_display_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/country_region_defaults.dart';
+import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/utils/distance_display.dart';
 import '../../../../shared/utils/map_vehicle_marker_utils.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
@@ -48,6 +49,9 @@ import '../../../wallet/data/models/go_card_balance_response.dart';
 import '../../domain/repositories/ride_repository.dart';
 
 enum BookingMode { self, other }
+
+/// Sentinel id for the synthetic "Book Any" row in [estimates].
+const String kBookAnyVehicleTypeId = '__book_any__';
 
 /// SCR-09 — vehicle + fare selection.
 class VehicleSelectionController extends GetxController {
@@ -87,8 +91,8 @@ class VehicleSelectionController extends GetxController {
   /// Full route for polyline (API).
   final routePoints = <LatLng>[].obs;
 
-  /// Nearby “driver” markers (dummy positions along/near route).
-  final driverMarkerPoints = <LatLng>[].obs;
+  /// Nearby driver markers from `go:nearby_drivers:result` (position + vehicle type).
+  final nearbyDrivers = <NearbyDriverPoint>[].obs;
 
   late LocationEntity pickupEntity;
   late LocationEntity destinationEntity;
@@ -97,7 +101,6 @@ class VehicleSelectionController extends GetxController {
   String? _preferredVehicleTypeId;
   String? _preferredVehicleName;
   final _vehicleTypes = <VehicleTypeModel>[];
-
   AppSocketService get _socketService => Get.find<AppSocketService>();
   StreamSubscription<List<Driver>>? _nearbyDriversSub;
   StreamSubscription<String>? _nearbyDriversErrorSub;
@@ -120,6 +123,7 @@ class VehicleSelectionController extends GetxController {
   BitmapDescriptor? pickupIcon;
   BitmapDescriptor? dropIcon;
   final stopIcons = <BitmapDescriptor>[].obs;
+  final Map<String, BitmapDescriptor> _nearbyDriverIconCache = {};
 
   static PaymentMethodModel get _walletPaymentMethod => PaymentMethodModel(
     id: 'wallet',
@@ -267,7 +271,7 @@ class VehicleSelectionController extends GetxController {
     if (!preserveRoute) {
       isRouteReady.value = false;
       routePoints.clear();
-      driverMarkerPoints.clear();
+      nearbyDrivers.clear();
     }
     final req = _fareEstimateRequest();
 
@@ -302,7 +306,9 @@ class VehicleSelectionController extends GetxController {
           final normalized = model.estimates
               .map((e) => _withResolvedVehicleTypeId(e, vehicleTypes))
               .toList();
-          estimates.assignAll(normalized);
+          estimates.assignAll(
+            _estimatesWithBookAny(normalized, model.bookAny),
+          );
           final pending = _pendingPromoApplyResult;
           if (pending != null) {
             _applyPromoValidationToEstimates(pending);
@@ -368,7 +374,8 @@ class VehicleSelectionController extends GetxController {
   }
 
   Future<void> loadDriverIcon() async {
-    final vehicleType = estimates[selectedVehicleIndex.value].vehicleName;
+    final item = estimates[selectedVehicleIndex.value];
+    final vehicleType = item.isBookAnyOption ? 'cab' : item.vehicleName;
     final asset = MapVehicleMarkerUtils.markerAssetForVehicleType(vehicleType);
     driverIcon = await MapMarkerUtils.getSvgMarker(
       asset,
@@ -432,7 +439,74 @@ class VehicleSelectionController extends GetxController {
   bool get isMapDataReady => isRouteReady.value && routePoints.length >= 2;
 
   String vehicleImage(FareEstimateItem e) {
+    if (e.isBookAnyOption) return VehicleImageUtils.imageAssetForVehicleType('cab');
     return VehicleImageUtils.imageAssetForVehicleType(e.vehicleName);
+  }
+
+  bool get isBookAnySelected => selectedEstimate?.isBookAnyOption == true;
+
+  String vehicleFareDisplay(FareEstimateItem item) {
+    if (item.isBookAnyOption) {
+      final min = item.bookAnyMinFare ?? 0;
+      final max = item.bookAnyMaxFare ?? item.fareEstimate ?? 0;
+      return '${CurrencyFormatter.formatWithApiCurrency(min, item.currency)} - ${CurrencyFormatter.formatWithApiCurrency(max, item.currency)}';
+    }
+    return CurrencyFormatter.formatWithApiCurrency(
+      item.fareEstimate ?? 0,
+      item.currency,
+    );
+  }
+
+  List<FareEstimateItem> _estimatesWithBookAny(
+    List<FareEstimateItem> items,
+    BookAnyEstimate? bookAny,
+  ) {
+    if (bookAny == null || !bookAny.eligible || items.length < 2) {
+      return items;
+    }
+    final first = items.first;
+    final maxPassengers = items
+        .map((e) => e.maxPassengers ?? 1)
+        .fold<int>(1, (a, b) => a > b ? a : b);
+    final anyItem = FareEstimateItem(
+      vehicleTypeId: kBookAnyVehicleTypeId,
+      vehicleName: 'any',
+      displayName: AppStrings.bookAny.tr,
+      fareEstimate: bookAny.blockAmount,
+      distanceKm: first.distanceKm,
+      durationMinutes: first.durationMinutes,
+      currency: bookAny.currency ?? first.currency,
+      maxPassengers: maxPassengers,
+      isBookAnyOption: true,
+      bookAnyMinFare: bookAny.minFare,
+      bookAnyMaxFare: bookAny.maxFare,
+    );
+    return [...items, anyItem];
+  }
+
+  void _restoreVehicleSelectionAfterRefresh({
+    required bool wasBookAny,
+    required String? previousVehicleTypeId,
+    required int previousIndex,
+  }) {
+    if (wasBookAny) {
+      final bookAnyIndex = estimates.indexWhere((e) => e.isBookAnyOption);
+      if (bookAnyIndex >= 0) {
+        selectedVehicleIndex.value = bookAnyIndex;
+        return;
+      }
+    }
+    final resolvedId = (previousVehicleTypeId ?? '').trim();
+    if (resolvedId.isNotEmpty) {
+      final keepIndex = estimates.indexWhere(
+        (e) => (e.vehicleTypeId ?? '').trim() == resolvedId,
+      );
+      if (keepIndex >= 0) {
+        selectedVehicleIndex.value = keepIndex;
+        return;
+      }
+    }
+    selectedVehicleIndex.value = previousIndex.clamp(0, estimates.length - 1);
   }
 
   /// Backend expects `vehicle_type_id` as the catalog id (e.g. Mongo `_id`), not a slug like `cab`.
@@ -491,6 +565,9 @@ class VehicleSelectionController extends GetxController {
       promoDiscount: promoDiscount ?? e.promoDiscount,
       discountedFare: discountedFare ?? e.discountedFare,
       promoError: promoError,
+      isBookAnyOption: e.isBookAnyOption,
+      bookAnyMinFare: e.bookAnyMinFare,
+      bookAnyMaxFare: e.bookAnyMaxFare,
     );
   }
 
@@ -540,6 +617,7 @@ class VehicleSelectionController extends GetxController {
     FareEstimateItem e,
     List<VehicleTypeModel> types,
   ) {
+    if (e.isBookAnyOption) return e;
     if (types.isEmpty) return e;
     final raw = (e.vehicleTypeId ?? '').trim();
     if (raw.isNotEmpty && _looksLikeBackendVehicleTypeId(raw)) {
@@ -567,6 +645,9 @@ class VehicleSelectionController extends GetxController {
       promoDiscount: e.promoDiscount,
       discountedFare: e.discountedFare,
       promoError: e.promoError,
+      isBookAnyOption: e.isBookAnyOption,
+      bookAnyMinFare: e.bookAnyMinFare,
+      bookAnyMaxFare: e.bookAnyMaxFare,
     );
   }
 
@@ -663,10 +744,16 @@ class VehicleSelectionController extends GetxController {
 
   Future<void> selectVehicle(int index) async {
     if (index < 0 || index >= estimates.length) return;
+    final item = estimates[index];
+    if (item.isBookAnyOption && appliedPromoCode.value.trim().isNotEmpty) {
+      appliedPromoCode.value = '';
+      promoValidatedAt.value = null;
+      _pendingPromoApplyResult = null;
+    }
     selectedVehicleIndex.value = index;
     await loadDriverIcon();
     _requestNearbyDriversForCurrentSelection();
-    if (appliedPromoCode.value.trim().isNotEmpty) {
+    if (appliedPromoCode.value.trim().isNotEmpty && !item.isBookAnyOption) {
       _scheduleSilentPromoEstimateRefresh();
     }
   }
@@ -691,13 +778,15 @@ class VehicleSelectionController extends GetxController {
     }
     _ensureWalletPaymentSelected();
     final pay = _walletPayment;
+    final isBookAny = est.isBookAnyOption;
 
     isBooking.value = true;
     Loader.instance.show();
     try {
       var resolvedVehicleTypeId = (est.vehicleTypeId ?? '').trim();
-      if (resolvedVehicleTypeId.isEmpty ||
-          !_looksLikeBackendVehicleTypeId(resolvedVehicleTypeId)) {
+      if (!isBookAny &&
+          (resolvedVehicleTypeId.isEmpty ||
+              !_looksLikeBackendVehicleTypeId(resolvedVehicleTypeId))) {
         AppDialogs.showErrorDialog(
           title: AppStrings.vehicleType.tr,
           message: AppStrings.couldNotResolveVehicleTypeIdPleaseTryAgain.tr,
@@ -773,24 +862,22 @@ class VehicleSelectionController extends GetxController {
           final normalized = model.estimates
               .map((e) => _withResolvedVehicleTypeId(e, _vehicleTypes))
               .toList();
-          estimates.assignAll(normalized);
-
-          final keepIndex = normalized.indexWhere(
-            (e) => (e.vehicleTypeId ?? '').trim() == resolvedVehicleTypeId,
+          estimates.assignAll(
+            _estimatesWithBookAny(normalized, model.bookAny),
           );
-          if (keepIndex >= 0) {
-            selectedVehicleIndex.value = keepIndex;
-          } else {
-            selectedVehicleIndex.value = selectedVehicleIndex.value.clamp(
-              0,
-              normalized.length - 1,
-            );
-          }
+
+          _restoreVehicleSelectionAfterRefresh(
+            wasBookAny: isBookAny,
+            previousVehicleTypeId: resolvedVehicleTypeId,
+            previousIndex: selectedVehicleIndex.value,
+          );
 
           final selectedNow = selectedEstimate;
-          final selectedNowId = (selectedNow?.vehicleTypeId ?? '').trim();
-          if (selectedNowId.isNotEmpty) {
-            resolvedVehicleTypeId = selectedNowId;
+          if (!isBookAny) {
+            final selectedNowId = (selectedNow?.vehicleTypeId ?? '').trim();
+            if (selectedNowId.isNotEmpty) {
+              resolvedVehicleTypeId = selectedNowId;
+            }
           }
 
           if (model.routeGeometry?.coordinates != null &&
@@ -817,10 +904,6 @@ class VehicleSelectionController extends GetxController {
       );
       if (!refreshedOk) return;
 
-      if (!await _awaitPromoStalenessGuardIfNeeded()) {
-        return;
-      }
-
       final isBookedForOther =
           (confirmed['isBookedForOther'] as bool?) ?? false;
       final passengerName = confirmed['passengerName'] as String?;
@@ -832,26 +915,45 @@ class VehicleSelectionController extends GetxController {
                 ? rawRideNote.trim()
                 : rawRideNote.toString().trim());
 
-      // 1) Wallet sufficiency (client guard until payment backend is ready).
+      if (!await _awaitPromoStalenessGuardIfNeeded()) {
+        return;
+      }
+
       final refreshedSelectedEstimate = selectedEstimate;
-      final requiredFare =
-          refreshedSelectedEstimate?.displayFare ?? est.displayFare;
+      final bookingBookAny = refreshedSelectedEstimate?.isBookAnyOption == true;
+      final requiredFare = bookingBookAny
+          ? (refreshedSelectedEstimate?.fareEstimate ??
+                refreshedSelectedEstimate?.displayFare ??
+                est.fareEstimate ??
+                est.displayFare)
+          : (refreshedSelectedEstimate?.displayFare ?? est.displayFare);
       if (!await _guardWalletBalanceBeforePayment(requiredFare)) {
         return;
       }
 
       // 2) Validate payment (block flow — dummy callback until real payment).
-      final validateRequest = ValidateRidePaymentRequest(
-        fareEstimate: requiredFare,
-        paymentMethod: pay.type,
-        vehicleTypeId: resolvedVehicleTypeId,
-        pickup: pickupEntity,
-        destination: destinationEntity,
-        stops: routeStops,
-        isBookedForOther: isBookedForOther,
-        passengerName: isBookedForOther ? passengerName : null,
-        passengerPhone: isBookedForOther ? passengerPhone : null,
-      );
+      final validateRequest = bookingBookAny
+          ? ValidateRidePaymentRequest(
+              bookAny: true,
+              paymentMethod: pay.type,
+              pickup: pickupEntity,
+              destination: destinationEntity,
+              stops: routeStops,
+              isBookedForOther: isBookedForOther,
+              passengerName: isBookedForOther ? passengerName : null,
+              passengerPhone: isBookedForOther ? passengerPhone : null,
+            )
+          : ValidateRidePaymentRequest(
+              fareEstimate: requiredFare,
+              paymentMethod: pay.type,
+              vehicleTypeId: resolvedVehicleTypeId,
+              pickup: pickupEntity,
+              destination: destinationEntity,
+              stops: routeStops,
+              isBookedForOther: isBookedForOther,
+              passengerName: isBookedForOther ? passengerName : null,
+              passengerPhone: isBookedForOther ? passengerPhone : null,
+            );
       final validationResult = await rideRepository.validateRidePayment(
         validateRequest,
       );
@@ -938,23 +1040,39 @@ class VehicleSelectionController extends GetxController {
             if (bookingSubmitInFlight) return;
             bookingSubmitInFlight = true;
             try {
-              final request = BookRideRequest(
-                validationId: blockValidationId,
-                idempotencyKey: 'idem_${DateTime.now().millisecondsSinceEpoch}',
-                pickup: pickupEntity,
-                destination: destinationEntity,
-                stops: routeStops,
-                vehicleTypeId: resolvedVehicleTypeId,
-                paymentMethod: pay.type,
-                isBookedForOther: isBookedForOther,
-                passengerName: isBookedForOther ? passengerName : null,
-                passengerPhone: isBookedForOther ? passengerPhone : null,
-                note: rideNote,
-                fareEstimate: selectedOriginalFareAmount,
-                promoCode: appliedPromoCode.value.trim().isEmpty
-                    ? null
-                    : appliedPromoCode.value.trim(),
-              );
+              final request = bookingBookAny
+                  ? BookRideRequest(
+                      validationId: blockValidationId,
+                      idempotencyKey:
+                          'idem_${DateTime.now().millisecondsSinceEpoch}',
+                      pickup: pickupEntity,
+                      destination: destinationEntity,
+                      stops: routeStops,
+                      bookAny: true,
+                      paymentMethod: pay.type,
+                      isBookedForOther: isBookedForOther,
+                      passengerName: isBookedForOther ? passengerName : null,
+                      passengerPhone: isBookedForOther ? passengerPhone : null,
+                      note: rideNote,
+                    )
+                  : BookRideRequest(
+                      validationId: blockValidationId,
+                      idempotencyKey:
+                          'idem_${DateTime.now().millisecondsSinceEpoch}',
+                      pickup: pickupEntity,
+                      destination: destinationEntity,
+                      stops: routeStops,
+                      vehicleTypeId: resolvedVehicleTypeId,
+                      paymentMethod: pay.type,
+                      isBookedForOther: isBookedForOther,
+                      passengerName: isBookedForOther ? passengerName : null,
+                      passengerPhone: isBookedForOther ? passengerPhone : null,
+                      note: rideNote,
+                      fareEstimate: selectedOriginalFareAmount,
+                      promoCode: appliedPromoCode.value.trim().isEmpty
+                          ? null
+                          : appliedPromoCode.value.trim(),
+                    );
               final result = await homeRepository.bookRide(request);
               await result.fold<Future<void>>(
                 (f) async {
@@ -1178,19 +1296,7 @@ class VehicleSelectionController extends GetxController {
     _nearbyDriversConnectionSub?.cancel();
 
     _nearbyDriversSub = _socketService.nearbyDriversStream.listen((drivers) {
-      if (drivers.isEmpty) {
-        driverMarkerPoints.clear();
-      } else {
-        driverMarkerPoints.assignAll(
-          drivers.map(
-            (d) => LatLng(double.parse(d.lat ?? ""), double.parse(d.lng ?? "")),
-          ),
-        );
-      }
-      nearbyDriverCount.value = drivers.length;
-      nearbyDriversUnavailable.value = false;
-      isLoadingNearbyDrivers.value = false;
-      _logNearbyDriversResult(drivers);
+      unawaited(_syncNearbyDriversFromSocket(drivers));
     });
 
     _nearbyDriversErrorSub = _socketService.errorStream.listen((message) {
@@ -1219,7 +1325,7 @@ class VehicleSelectionController extends GetxController {
     isLoadingNearbyDrivers.value = true;
     nearbyDriversUnavailable.value = false;
     nearbyDriverCount.value = 0;
-    driverMarkerPoints.clear();
+    nearbyDrivers.clear();
     final vehicleType = _socketVehicleTypeForEstimate(selectedEstimate);
     _pendingNearbyDriversVehicleType = vehicleType ?? 'any';
     _lastLoggedNearbyDriversCount = null;
@@ -1300,8 +1406,67 @@ class VehicleSelectionController extends GetxController {
     );
   }
 
+  Future<void> _syncNearbyDriversFromSocket(List<Driver> drivers) async {
+    if (drivers.isEmpty) {
+      nearbyDrivers.clear();
+      nearbyDriverCount.value = 0;
+      nearbyDriversUnavailable.value = false;
+      isLoadingNearbyDrivers.value = false;
+      _logNearbyDriversResult(drivers);
+      return;
+    }
+
+    final parsed = <NearbyDriverPoint>[];
+    for (final d in drivers) {
+      final lat = double.tryParse((d.lat ?? '').trim());
+      final lng = double.tryParse((d.lng ?? '').trim());
+      if (lat == null || lng == null) continue;
+      parsed.add(
+        NearbyDriverPoint(
+          fleetId: d.fleetId ?? '',
+          lat: lat,
+          lng: lng,
+          vehicleType: d.vehicleType,
+          distanceKm: d.distanceKm,
+        ),
+      );
+    }
+
+    await _preloadNearbyDriverIcons(parsed);
+    nearbyDrivers.assignAll(parsed);
+    nearbyDriverCount.value = parsed.length;
+    nearbyDriversUnavailable.value = false;
+    isLoadingNearbyDrivers.value = false;
+    _logNearbyDriversResult(drivers);
+  }
+
+  Future<void> _preloadNearbyDriverIcons(List<NearbyDriverPoint> drivers) async {
+    final types = drivers
+        .map((d) => (d.vehicleType ?? '').trim().toLowerCase())
+        .where((t) => t.isNotEmpty)
+        .toSet();
+    for (final type in types) {
+      if (_nearbyDriverIconCache.containsKey(type)) continue;
+      final asset = MapVehicleMarkerUtils.markerAssetForVehicleType(type);
+      _nearbyDriverIconCache[type] = await MapMarkerUtils.getSvgMarker(
+        asset,
+        MapVehicleMarkerUtils.defaultMarkerWidth,
+      );
+    }
+  }
+
+  BitmapDescriptor nearbyDriverMarkerIcon(String? vehicleType) {
+    final key = (vehicleType ?? '').trim().toLowerCase();
+    if (key.isNotEmpty) {
+      final cached = _nearbyDriverIconCache[key];
+      if (cached != null) return cached;
+    }
+    return driverIcon ?? pickupIcon ?? BitmapDescriptor.defaultMarker;
+  }
+
   String? _socketVehicleTypeForEstimate(FareEstimateItem? item) {
     if (item == null) return null;
+    if (item.isBookAnyOption) return 'any';
 
     // Pass API vehicle_types.key directly in socket event payload.
     final estimateTypeId = (item.vehicleTypeId ?? '').trim();

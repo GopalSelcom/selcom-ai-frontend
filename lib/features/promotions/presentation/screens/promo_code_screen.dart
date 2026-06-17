@@ -151,6 +151,7 @@ class PromoCodeScreen extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 24.h),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
             message,
