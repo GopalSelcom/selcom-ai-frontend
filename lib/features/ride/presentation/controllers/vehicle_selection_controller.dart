@@ -1690,7 +1690,23 @@ class VehicleSelectionController extends GetxController {
 
   Future<void> openPromotions() async {
     final est = selectedEstimate;
-    final vid = (est?.vehicleTypeId ?? '').trim();
+    if (est == null) return;
+
+    if (est.isBookAnyOption) {
+      final result = await Get.toNamed<dynamic>(
+        AppRoutes.promotions,
+        arguments: PromoCodeRouteArgs(
+          fareEstimate: est.fareEstimate ?? est.originalFare,
+          bookAny: true,
+        ).toMap(),
+      );
+      final applyResult = PromoCodeApplyResult.tryFrom(result);
+      if (applyResult == null) return;
+      await commitPromoApplyResult(applyResult);
+      return;
+    }
+
+    final vid = (est.vehicleTypeId ?? '').trim();
     if (vid.isEmpty || !_looksLikeBackendVehicleTypeId(vid)) {
       AppDialogs.showErrorDialog(
         title: AppStrings.vehicleType.tr,
@@ -1703,7 +1719,7 @@ class VehicleSelectionController extends GetxController {
       AppRoutes.promotions,
       arguments: PromoCodeRouteArgs(
         vehicleTypeId: vid,
-        fareEstimate: est!.originalFare,
+        fareEstimate: est.originalFare,
         appliedCode: appliedPromoCode.value.trim(),
       ).toMap(),
     );

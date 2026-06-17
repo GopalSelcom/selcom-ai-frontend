@@ -148,27 +148,30 @@ class PromoCodeScreen extends StatelessWidget {
     required bool showRetry,
     required VoidCallback onRetry,
   }) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 24.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: AppTextStyles.bodySecondary.copyWith(
-              fontSize: 14.sp,
-              color: AppColors.textBody,
+    return SizedBox(
+      width: double.infinity,
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 24.h),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.bodySecondary.copyWith(
+                fontSize: 14.sp,
+                color: AppColors.textBody,
+              ),
             ),
-          ),
-          if (showRetry) ...[
-            SizedBox(height: 12.h),
-            AppCupertinoTextButton.retry(
-              label: AppStrings.retry.tr,
-              onPressed: onRetry,
-            ),
+            if (showRetry) ...[
+              SizedBox(height: 12.h),
+              AppCupertinoTextButton.retry(
+                label: AppStrings.retry.tr,
+                onPressed: onRetry,
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

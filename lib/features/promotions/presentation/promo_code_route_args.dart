@@ -1,30 +1,34 @@
 /// Route arguments for [AppRoutes.promotions] from vehicle selection.
 class PromoCodeRouteArgs {
   const PromoCodeRouteArgs({
-    required this.vehicleTypeId,
     required this.fareEstimate,
+    this.vehicleTypeId = '',
     this.appliedCode = '',
+    this.bookAny = false,
   });
 
   final String vehicleTypeId;
   final int fareEstimate;
   final String appliedCode;
+  final bool bookAny;
 
   Map<String, dynamic> toMap() => {
     'from_ride_booking': true,
     'vehicle_type_id': vehicleTypeId,
     'fare_estimate': fareEstimate,
     'applied_code': appliedCode,
+    if (bookAny) 'book_any': true,
   };
 
   static PromoCodeRouteArgs? tryFrom(dynamic arguments) {
     if (arguments is! Map) return null;
     final fromRide = arguments['from_ride_booking'] == true;
     if (!fromRide) return null;
+    final bookAny = arguments['book_any'] == true;
     final vid = (arguments['vehicle_type_id'] ?? arguments['vehicleTypeId'])
         ?.toString()
         .trim();
-    if (vid == null || vid.isEmpty) return null;
+    if (!bookAny && (vid == null || vid.isEmpty)) return null;
     final fareRaw = arguments['fare_estimate'] ?? arguments['fareEstimate'];
     final fare = fareRaw is num
         ? fareRaw.toInt()
@@ -33,9 +37,10 @@ class PromoCodeRouteArgs {
         (arguments['applied_code'] ?? arguments['appliedCode'])?.toString() ??
         '';
     return PromoCodeRouteArgs(
-      vehicleTypeId: vid,
+      vehicleTypeId: vid ?? '',
       fareEstimate: fare,
       appliedCode: applied,
+      bookAny: bookAny,
     );
   }
 }

@@ -72,6 +72,9 @@ class PromoCodeController extends GetxController {
     if (item.minRideAmount > 0 && args.fareEstimate < item.minRideAmount) {
       return false;
     }
+    if (args.bookAny) {
+      return false;
+    }
     if (item.applicableVehicleTypes.isNotEmpty &&
         !item.applicableVehicleTypes.contains(args.vehicleTypeId)) {
       return false;
@@ -88,6 +91,9 @@ class PromoCodeController extends GetxController {
       return AppStrings.promoMinRideAmount.trParams({
         'amount': CurrencyFormatter.format(item.minRideAmount),
       });
+    }
+    if (args.bookAny) {
+      return AppStrings.promoCodeNotValidForVehicle.tr;
     }
     if (item.applicableVehicleTypes.isNotEmpty &&
         !item.applicableVehicleTypes.contains(args.vehicleTypeId)) {
@@ -178,6 +184,10 @@ class PromoCodeController extends GetxController {
     if (isApplying.value) return;
 
     final args = _rideArgs!;
+    if (args.bookAny) {
+      applyInlineError.value = AppStrings.promoCodeNotValidForVehicle.tr;
+      return;
+    }
 
     PromoCodeApplyResult? applyResult;
     try {
