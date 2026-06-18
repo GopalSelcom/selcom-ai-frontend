@@ -562,6 +562,8 @@ class LanguageEn extends Languages {
     'booked_for_someone_else': 'Booked for someone else',
     'booked_for_other_limit_reached':
         'You have reached the limit for rides booked for others.',
+    'booked_for_other_no_multi_stop':
+        'Multi-stop rides are not allowed when booking for another person.',
     'book_any_fare_settled_title': 'Payment updated',
     'book_any_fare_settled_blocked_lead': 'We temporarily blocked ',
     'book_any_fare_settled_middle_with_vehicle':
@@ -2428,6 +2430,10 @@ class LanguageEn extends Languages {
   @override
   String get bookedForOtherLimitReached =>
       values['booked_for_other_limit_reached'] ?? '';
+
+  @override
+  String get bookedForOtherNoMultiStop =>
+      values['booked_for_other_no_multi_stop'] ?? '';
 
   @override
   String get bookAnyFareSettledTitle =>

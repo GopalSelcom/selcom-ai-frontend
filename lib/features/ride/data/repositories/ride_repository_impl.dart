@@ -9,6 +9,7 @@ import '../../../../core/errors/failures.dart';
 import '../../../../core/errors/insufficient_wallet_balance_exception.dart';
 import '../../../../core/errors/ride_payment_validation_exception.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
+import '../../../../shared/utils/ride_payment_validation_messages.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../datasources/ride_remote_data_source.dart';
 import '../models/destination_update_models.dart';
@@ -224,14 +225,12 @@ class RideRepositoryImpl implements RideRepository {
         InsufficientWalletBalanceFailure('', details: e.details),
       );
     } on RidePaymentValidationException catch (e) {
-      final message = e.message.trim().isNotEmpty
-          ? e.message
-          : (e.errorCode == 'BOOKED_FOR_OTHER_LIMIT_REACHED'
-                ? 'You have reached the limit for rides booked for others.'
-                : 'You already have an active ride.');
       return Left(
         RidePaymentValidationFailure(
-          message,
+          RidePaymentValidationMessages.displayMessage(
+            errorCode: e.errorCode,
+            apiMessage: e.message,
+          ),
           errorCode: e.errorCode,
           activeRideId: e.activeRideId,
           activeRideStatus: e.activeRideStatus,

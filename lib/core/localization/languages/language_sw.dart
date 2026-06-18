@@ -485,6 +485,7 @@ class LanguageSw extends Languages {
     'booked_for_passenger': '',
     'booked_for_someone_else': '',
     'booked_for_other_limit_reached': '',
+    'booked_for_other_no_multi_stop': '',
     'book_any_fare_settled_title': '',
     'book_any_fare_settled_blocked_lead': '',
     'book_any_fare_settled_middle_with_vehicle': '',
@@ -2304,6 +2305,10 @@ class LanguageSw extends Languages {
   @override
   String get bookedForOtherLimitReached =>
       values['booked_for_other_limit_reached'] ?? '';
+
+  @override
+  String get bookedForOtherNoMultiStop =>
+      values['booked_for_other_no_multi_stop'] ?? '';
 
   @override
   String get bookAnyFareSettledTitle =>

@@ -485,6 +485,7 @@ abstract class Languages {
   String get bookedForPassenger;
   String get bookedForSomeoneElse;
   String get bookedForOtherLimitReached;
+  String get bookedForOtherNoMultiStop;
   String get bookAnyFareSettledTitle;
   String get bookAnyFareSettledBlockedLead;
   String get bookAnyFareSettledMiddleWithVehicle;

@@ -63,13 +63,11 @@ class ErrorMapper {
             case 'AUTH_PIN_WRONG':
               return AuthFailure(message ?? AppStrings.incorrectPin.tr);
             case 'RIDE_ALREADY_ACTIVE':
-              return ServerFailure(
-                message ?? AppStrings.youAlreadyHaveAnActiveRide.tr,
-              );
+              return ServerFailure(AppStrings.youAlreadyHaveAnActiveRide.tr);
             case 'BOOKED_FOR_OTHER_LIMIT_REACHED':
-              return ServerFailure(
-                message ?? AppStrings.bookedForOtherLimitReached.tr,
-              );
+              return ServerFailure(AppStrings.bookedForOtherLimitReached.tr);
+            case 'BOOKED_FOR_OTHER_NO_MULTI_STOP':
+              return ServerFailure(AppStrings.bookedForOtherNoMultiStop.tr);
             case 'PAY_INSUFFICIENT_FUNDS': {
               final details =
                   InsufficientWalletBalanceDetails.tryParseFromApiResponse(data);

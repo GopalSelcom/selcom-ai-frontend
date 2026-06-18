@@ -39,6 +39,7 @@ import '../../../../shared/utils/country_region_defaults.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/utils/distance_display.dart';
 import '../../../../shared/utils/map_vehicle_marker_utils.dart';
+import '../../../../shared/utils/ride_payment_validation_messages.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../home/domain/repositories/home_repository.dart';
 import '../../../home/presentation/controllers/location_selection_controller.dart';
@@ -938,6 +939,10 @@ class VehicleSelectionController extends GetxController {
         return;
       }
 
+      if (!await _guardBookForOtherMultiStop(isBookedForOther: isBookedForOther)) {
+        return;
+      }
+
       // 2) Validate payment (block flow — dummy callback until real payment).
       final validateRequest = bookingBookAny
           ? ValidateRidePaymentRequest(
@@ -1216,7 +1221,10 @@ class VehicleSelectionController extends GetxController {
     if (failure is RidePaymentValidationFailure) {
       AppDialogs.showErrorDialog(
         title: AppStrings.paymentValidationFailed.tr,
-        message: failure.message,
+        message: RidePaymentValidationMessages.displayMessage(
+          errorCode: failure.errorCode,
+          apiMessage: failure.message,
+        ),
       );
       return true;
     }
@@ -1262,6 +1270,17 @@ class VehicleSelectionController extends GetxController {
     }
 
     return true;
+  }
+
+  /// Book-for-other cannot include intermediate stops (backend: `BOOKED_FOR_OTHER_NO_MULTI_STOP`).
+  Future<bool> _guardBookForOtherMultiStop({required bool isBookedForOther}) async {
+    if (!isBookedForOther) return true;
+    if (routeStops.isEmpty) return true;
+
+    AppDialogs.showErrorDialog(
+      message: AppStrings.bookedForOtherNoMultiStop.tr,
+    );
+    return false;
   }
 
   String generateTransactionId() {

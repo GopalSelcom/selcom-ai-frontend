@@ -405,25 +405,32 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      return response.data['data']?['validation_id'] ?? '';
+      final body = _apiResponseMap(response.data);
+      if (body != null) {
+        return body['data']?['validation_id']?.toString() ?? '';
+      }
+      return '';
     }
 
-    final body = response.data;
-    if (body is Map<String, dynamic>) {
+    final body = _apiResponseMap(response.data);
+    if (body != null) {
       final insufficient =
           InsufficientWalletBalanceDetails.tryParseFromApiResponse(body);
       if (insufficient != null) {
         throw InsufficientWalletBalanceException(insufficient);
       }
 
-      final errorCode = body['error_code']?.toString() ?? '';
-      final message = body['message']?.toString() ?? '';
-      // 409 business errors — surfaced in vehicle selection before/during book flow.
-      if (errorCode == 'RIDE_ALREADY_ACTIVE' ||
-          errorCode == 'BOOKED_FOR_OTHER_LIMIT_REACHED') {
+      final errorCode = body['error_code']?.toString().trim() ?? '';
+      final message = body['message']?.toString().trim() ?? '';
+      final statusCode = response.statusCode;
+
+      // Business rejections from validate payment (400/409) — never return empty validation_id.
+      if (_isValidateRidePaymentBusinessRejection(statusCode, errorCode, message)) {
         final payload = body['data'];
         throw RidePaymentValidationException(
-          errorCode: errorCode,
+          errorCode: errorCode.isNotEmpty
+              ? errorCode
+              : 'VALIDATE_PAYMENT_REJECTED',
           message: message,
           activeRideId: payload is Map
               ? payload['active_ride_id']?.toString()
@@ -437,9 +444,6 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       if (message.isNotEmpty) {
         throw Exception(message);
       }
-    }
-    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
-      return '';
     }
     throw Exception('Payment validation failed');
   }
@@ -715,4 +719,20 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
     }
     throw Exception(response.data?['message'] ?? 'Failed to upload PDF');
   }
+}
+
+Map<String, dynamic>? _apiResponseMap(dynamic raw) {
+  if (raw is Map<String, dynamic>) return raw;
+  if (raw is Map) return Map<String, dynamic>.from(raw);
+  return null;
+}
+
+bool _isValidateRidePaymentBusinessRejection(
+  int? statusCode,
+  String errorCode,
+  String message,
+) {
+  if (statusCode == 409) return errorCode.isNotEmpty || message.isNotEmpty;
+  if (statusCode == 400) return errorCode.isNotEmpty || message.isNotEmpty;
+  return false;
 }
