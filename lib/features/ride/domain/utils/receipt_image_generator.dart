@@ -19,8 +19,10 @@ class ReceiptImageGenerator {
   /// Allow vector assets (logo + route pins) to finish rasterizing before capture.
   static const Duration _captureDelay = Duration(milliseconds: 500);
 
-  static const double _routePinSize = 16;
-  static const double _routeIconColumnWidth = 18;
+  /// Receipt route pins — fixed px (no ScreenUtil) for PNG/PDF capture.
+  static const double _routePinSize = 13;
+  static const double _routePinSlotHeight = 16;
+  static const double _routeIconColumnWidth = 16;
 
   static Future<ReceiptPngCapture> generateReceiptPngBytes({
     required ReceiptModel receipt,
@@ -166,6 +168,7 @@ class ReceiptImageGenerator {
         address: receipt.pickupAddress,
         icon: AppRouteLocationPinIcon.pickup(size: _routePinSize),
         showConnectorBelow: true,
+        iconTopInset: 0,
       ),
     ];
 
@@ -176,6 +179,7 @@ class ReceiptImageGenerator {
           address: filteredStops[i].address,
           icon: AppRouteLocationPinIcon.stop(i, size: _routePinSize),
           showConnectorBelow: true,
+          iconTopInset: 2,
         ),
       );
     }
@@ -186,6 +190,7 @@ class ReceiptImageGenerator {
         address: receipt.destinationAddress,
         icon: AppRouteLocationPinIcon.destination(size: _routePinSize),
         showConnectorBelow: false,
+        iconTopInset: 2,
       ),
     );
 
@@ -211,6 +216,7 @@ class ReceiptImageGenerator {
     required String address,
     required Widget icon,
     required bool showConnectorBelow,
+    double iconTopInset = 0,
   }) {
     return IntrinsicHeight(
       child: Row(
@@ -220,13 +226,23 @@ class ReceiptImageGenerator {
             width: _routeIconColumnWidth,
             child: Column(
               children: [
-                Center(child: icon),
+                if (iconTopInset > 0) SizedBox(height: iconTopInset),
+                SizedBox(
+                  height: _routePinSlotHeight,
+                  width: _routeIconColumnWidth,
+                  child: Center(
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      child: icon,
+                    ),
+                  ),
+                ),
                 if (showConnectorBelow)
                   Expanded(
                     child: Center(
                       child: Container(
                         width: 2,
-                        margin: const EdgeInsets.symmetric(vertical: 2),
+                        margin: const EdgeInsets.symmetric(vertical: 1.5),
                         color: AppColors.receiptDivider,
                       ),
                     ),
@@ -234,10 +250,13 @@ class ReceiptImageGenerator {
               ],
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 9),
           Expanded(
             child: Padding(
-              padding: EdgeInsets.only(bottom: showConnectorBelow ? 10 : 0),
+              padding: EdgeInsets.only(
+                top: iconTopInset,
+                bottom: showConnectorBelow ? 9 : 0,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
