@@ -45,6 +45,7 @@ import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../../../shared/utils/ride_pickup_status_labels.dart';
 import '../../../../shared/utils/ride_status_normalizer.dart';
 import '../../../../shared/utils/tanzania_license_plate_formatter.dart';
+import '../../../../shared/utils/socket_ride_scope.dart';
 import '../../../../shared/utils/tracking_route_geometry_utils.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../../shared/widgets/app_google_map.dart';
@@ -1001,6 +1002,7 @@ class DriverAcceptedController extends GetxController
 
     // Primary realtime status feed — always normalize before comparing.
     _rideStatusSub = _socketService.rideStatusStream.listen((payload) async {
+      if (!_isSocketEventForThisRide(payload.rideId)) return;
       developer.log(
         "📥 Socket Event: ride_status_stream - Status: ${payload.status} for ride $rideId",
         name: 'ORDER_TRACKING',
@@ -1025,6 +1027,7 @@ class DriverAcceptedController extends GetxController
 
     _rideStopSub = _socketService.rideStopUpdateStream.listen((payload) {
       if (_navigatedAway) return;
+      if (!_isSocketEventForThisRide(payload.rideId)) return;
       _applyStatusPayload(payload);
     });
 
@@ -1116,6 +1119,7 @@ class DriverAcceptedController extends GetxController
       payload,
     ) async {
       if (payload != null) {
+        if (!_isSocketEventForThisRide(payload.rideId)) return;
         _hasReceivedTrackingUpdate = true;
         developer.log(
           "📥 Socket Event: tracking_update_socket - Target: ${payload.routeTarget} for ride $rideId",
@@ -1194,6 +1198,14 @@ class DriverAcceptedController extends GetxController
             message: userMessage,
           );
         });
+  }
+
+  /// Ignores socket ticks from other active rides when Home joined multiple rooms.
+  bool _isSocketEventForThisRide(String? payloadRideId) {
+    return socketPayloadIsForRide(
+      activeRideId: rideId,
+      payloadRideId: payloadRideId,
+    );
   }
 
   void _joinRideRoomIfNeeded() {

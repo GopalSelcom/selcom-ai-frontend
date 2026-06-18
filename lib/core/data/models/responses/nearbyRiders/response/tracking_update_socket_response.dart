@@ -12,12 +12,14 @@ String trackingUpdateSocketResponseToJson(TrackingUpdateSocketResponse data) =>
     json.encode(data.toJson());
 
 class TrackingUpdateSocketResponse {
+  String? rideId;
   String? status;
   int? eta;
   RouteGeometry? routeGeometry;
   String? routeTarget;
 
   TrackingUpdateSocketResponse({
+    this.rideId,
     this.status,
     this.eta,
     this.routeGeometry,
@@ -26,6 +28,7 @@ class TrackingUpdateSocketResponse {
 
   factory TrackingUpdateSocketResponse.fromJson(Map<String, dynamic> json) =>
       TrackingUpdateSocketResponse(
+        rideId: json["ride_id"]?.toString() ?? json["rideId"]?.toString(),
         status: json["status"],
         eta: json["eta"],
         routeGeometry: (json["route_geometry"] ?? json["routeGeometry"]) == null
@@ -37,6 +40,7 @@ class TrackingUpdateSocketResponse {
       );
 
   Map<String, dynamic> toJson() => {
+    "ride_id": rideId,
     "status": status,
     "eta": eta,
     "route_geometry": routeGeometry?.toJson(),

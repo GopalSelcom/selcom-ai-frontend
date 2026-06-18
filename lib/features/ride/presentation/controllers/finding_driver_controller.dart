@@ -32,6 +32,7 @@ import '../../../../shared/utils/ride_pickup_status_labels.dart';
 import '../../../../shared/utils/ride_status_normalizer.dart';
 import '../../../../shared/utils/map_route_marker_utils.dart';
 import '../../../../shared/utils/map_vehicle_marker_utils.dart';
+import '../../../../shared/utils/socket_ride_scope.dart';
 import '../../../../shared/utils/tracking_route_geometry_utils.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../domain/repositories/ride_repository.dart';
@@ -634,6 +635,12 @@ class FindingDriverController extends GetxController {
     });
 
     _rideStatusSub = _socketService.rideStatusStream.listen((payload) async {
+      if (!socketPayloadIsForRide(
+        activeRideId: rideId,
+        payloadRideId: payload.rideId,
+      )) {
+        return;
+      }
       developer.log(
         "📥 Socket Event: ride_status_stream - Status: ${payload.status} for ride $rideId",
         name: 'ORDER_TRACKING',
@@ -658,6 +665,12 @@ class FindingDriverController extends GetxController {
 
     _trackingSub = _socketService.trackingUpdateStatusStream.listen((payload) {
       if (payload == null) return;
+      if (!socketPayloadIsForRide(
+        activeRideId: rideId,
+        payloadRideId: payload.rideId,
+      )) {
+        return;
+      }
       _hasReceivedTrackingUpdate = true;
       latestTrackingPayload.value = payload;
       _applyTrackingPayload(payload);
