@@ -403,6 +403,7 @@ class LanguageSw extends Languages {
     'someone': '',
     'could_not_fetch_receipt_details': '',
     'ride_details_are_missing': '',
+    'failed_to_load_ride_details': '',
     'could_not_open_pdf_with_message': '',
     'could_not_download_slip_please_try_again_later': '',
     'check_out_my_ride_receipt_share_url': '',
@@ -2038,6 +2039,10 @@ class LanguageSw extends Languages {
 
   @override
   String get rideDetailsAreMissing => values['ride_details_are_missing'] ?? '';
+
+  @override
+  String get failedToLoadRideDetails =>
+      values['failed_to_load_ride_details'] ?? '';
 
   @override
   String get couldNotOpenPdfWithMessage =>

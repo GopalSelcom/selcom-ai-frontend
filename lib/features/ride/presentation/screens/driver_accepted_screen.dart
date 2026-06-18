@@ -140,6 +140,10 @@ class DriverAcceptedScreen extends StatelessWidget {
               ),
             ),
             Obx(() {
+              // ETA badge is meaningless until ride details load successfully.
+              if (c.hasRideLoadError) {
+                return const SizedBox.shrink();
+              }
               final eta = c.etaLabel.value;
 
               return Positioned(
@@ -206,6 +210,10 @@ class DriverAcceptedScreen extends StatelessWidget {
             }),
             // Above the sheet in the stack so ride-start sheet growth cannot cover chips.
             Obx(() {
+              // Share/track chips require a loaded ride — hide during load-error state.
+              if (c.hasRideLoadError) {
+                return const SizedBox.shrink();
+              }
               final screenHeight = MediaQuery.sizeOf(context).height;
               final sheetTopOffset =
                   screenHeight * _resolvedSheetSizeForActionRow(context, c);
@@ -637,6 +645,78 @@ class DriverAcceptedScreen extends StatelessWidget {
     );
   }
 
+  /// Bottom-sheet content when [DriverAcceptedController.rideLoadError] is set.
+  /// Retry only when [DriverAcceptedController.canRetryRideLoad] (valid rideId).
+  Widget _rideLoadErrorSheet(DriverAcceptedController c) {
+    final message =
+        c.rideLoadError.value ?? AppStrings.failedToLoadRideDetails.tr;
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(20.w, 28.h, 20.w, 12.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Container(
+              width: 72.w,
+              height: 72.w,
+              decoration: const BoxDecoration(
+                color: AppColors.errorBackground,
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Icon(
+                Icons.cloud_off_outlined,
+                size: 36.sp,
+                color: AppColors.error,
+              ),
+            ),
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            AppStrings.unableToOpenRideDetails.tr,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.homeTitle.copyWith(
+              fontSize: 18.sp,
+              height: 24 / 18,
+              letterSpacing: -0.3,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.homeSubtitle.copyWith(
+              fontSize: 14.sp,
+              height: 20 / 14,
+              color: AppColors.textBody,
+            ),
+          ),
+          SizedBox(height: 28.h),
+          if (c.canRetryRideLoad) ...[
+            AppPrimaryButton(
+              label: AppStrings.retry.tr,
+              onPressed: c.retryLoadRideDetails,
+              width: double.infinity,
+              borderRadius: 28.r,
+            ),
+            SizedBox(height: 12.h),
+          ],
+          AppPrimaryButton(
+            label: AppStrings.back.tr,
+            onPressed: c.leaveAfterRideLoadFailure,
+            width: double.infinity,
+            outlined: true,
+            borderRadius: 28.r,
+            outlinedBorderColor: AppColors.borderMedium,
+            outlinedTextColor: AppColors.textHeading,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _bottomSheet(
     DriverAcceptedController c,
     ScrollController scrollController,
@@ -670,6 +750,28 @@ class DriverAcceptedScreen extends StatelessWidget {
                       ? c.otpDigits.length
                       : 4,
                 ),
+              ],
+            );
+          }
+
+          // Shown after loading finishes when details are missing or the API failed.
+          if (c.hasRideLoadError) {
+            return _sheetScroll(
+              context: context,
+              scrollController: scrollController,
+              children: [
+                Center(
+                  child: Container(
+                    width: 64.w,
+                    height: 5.h,
+                    decoration: BoxDecoration(
+                      color: AppColors.skeletonBase,
+                      borderRadius: BorderRadius.circular(37.r),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20.h),
+                _rideLoadErrorSheet(c),
               ],
             );
           }

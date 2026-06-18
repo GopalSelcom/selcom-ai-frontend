@@ -529,6 +529,7 @@ class AppStrings {
   static const String couldNotFetchReceiptDetails =
       'could_not_fetch_receipt_details';
   static const String rideDetailsAreMissing = 'ride_details_are_missing';
+  static const String failedToLoadRideDetails = 'failed_to_load_ride_details';
   static const String couldNotOpenPdfWithMessage =
       'could_not_open_pdf_with_message';
   static const String couldNotDownloadSlipPleaseTryAgainLater =

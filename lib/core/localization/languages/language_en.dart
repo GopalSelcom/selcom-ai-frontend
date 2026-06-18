@@ -462,6 +462,8 @@ class LanguageEn extends Languages {
     'someone': 'Someone',
     'could_not_fetch_receipt_details': 'Could not fetch receipt details.',
     'ride_details_are_missing': 'Ride details are missing.',
+    'failed_to_load_ride_details':
+        'Could not load ride details. Please try again.',
     'could_not_open_pdf_with_message': 'Could not open PDF: @message',
     'could_not_download_slip_please_try_again_later':
         'Could not download slip. Please try again later.',
@@ -2163,6 +2165,10 @@ class LanguageEn extends Languages {
 
   @override
   String get rideDetailsAreMissing => values['ride_details_are_missing'] ?? '';
+
+  @override
+  String get failedToLoadRideDetails =>
+      values['failed_to_load_ride_details'] ?? '';
 
   @override
   String get couldNotOpenPdfWithMessage =>

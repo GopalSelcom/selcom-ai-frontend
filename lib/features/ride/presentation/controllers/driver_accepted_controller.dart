@@ -105,6 +105,10 @@ class DriverAcceptedController extends GetxController
   final routeTarget = 'pick_up'.obs;
 
   final isLoadingRide = false.obs;
+
+  /// User-facing message when ride details cannot be loaded (missing rideId or API failure).
+  /// Drives the error sheet on [DriverAcceptedScreen]; never show placeholder driver data.
+  final rideLoadError = RxnString();
   final Rxn<RideModel> ride = Rxn<RideModel>();
 
   final driverName = ''.obs;
@@ -549,8 +553,7 @@ class DriverAcceptedController extends GetxController
 
   bool get usesMultiStopRouteMarkers {
     return MapRouteMarkerUtils.usesMultiStopMarkers(
-      isMultiStopFlag:
-          ride.value?.isMultiStop ?? routeDestinations.length > 1,
+      isMultiStopFlag: ride.value?.isMultiStop ?? routeDestinations.length > 1,
       intermediateStopCount: mapIntermediateStops.length,
     );
   }
@@ -614,8 +617,7 @@ class DriverAcceptedController extends GetxController
 
     final icons = List<BitmapDescriptor>.generate(
       intermediateCount,
-      (i) => _redRouteLetterIcons[
-          MapRouteMarkerUtils.letterAt(i + 1)]!,
+      (i) => _redRouteLetterIcons[MapRouteMarkerUtils.letterAt(i + 1)]!,
     );
     stopIcons.assignAll(icons);
   }
@@ -826,20 +828,26 @@ class DriverAcceptedController extends GetxController
   }
 
   Future<void> _fetchRideDetails() async {
+    // Missing rideId is not recoverable via retry — surface error and keep fields empty.
     if (rideId.isEmpty) {
-      _applyMockContent();
-      isLoadingRide.value = false;
-      assignedDriverLocation.value ??= const LatLng(-6.7921, 39.2101);
+      _setRideLoadFailure(AppStrings.rideDetailsAreMissing.tr);
       return;
     }
     isLoadingRide.value = true;
+    rideLoadError.value = null;
     final result = await rideRepository.getRideDetails(rideId);
     await result.fold(
       (f) async {
-        _applyMockContent();
-        assignedDriverLocation.value ??= const LatLng(-6.7921, 39.2101);
+        // Generic localized copy for UI; technical detail stays in logs only.
+        _setRideLoadFailure(AppStrings.failedToLoadRideDetails.tr);
+        developer.log(
+          'ride_details request failed',
+          name: 'DriverAcceptedController',
+          error: f.message,
+        );
       },
       (r) async {
+        rideLoadError.value = null;
         ride.value = r;
         _applyRide(r);
         _syncDestinationFromRide(r);
@@ -896,22 +904,43 @@ class DriverAcceptedController extends GetxController
     // Removed automatic _fitRouteBounds here to prevent unwanted zoom-out during navigation.
   }
 
-  void _applyMockContent() {
-    driverName.value = 'John Doe';
+  /// Retry is only offered when navigation supplied a [rideId].
+  bool get canRetryRideLoad => rideId.isNotEmpty;
+
+  bool get hasRideLoadError {
+    final err = rideLoadError.value;
+    return err != null && err.trim().isNotEmpty;
+  }
+
+  /// Bound to the error sheet primary action on [DriverAcceptedScreen].
+  Future<void> retryLoadRideDetails() => _fetchRideDetails();
+
+  /// Bound to the error sheet back action — leaves SCR-11 without fake ride content.
+  void leaveAfterRideLoadFailure() {
+    if (Get.isRegistered<DriverAcceptedController>()) {
+      Get.back();
+    }
+  }
+
+  void _setRideLoadFailure(String message) {
+    rideLoadError.value = message;
+    _clearRideDriverFields();
+    isLoadingRide.value = false;
+  }
+
+  /// Clears driver/OTP/map state so a failed load never shows stale or mock content.
+  void _clearRideDriverFields() {
+    ride.value = null;
+    driverName.value = '';
     driverPhone.value = '';
     driverAvatarUrl.value = '';
-    bottomSheetVehicleImageAsset.value = AppAssets.imgBoda;
-    driverRating.value = '4';
-    driverVehicleLine.value = 'Volkswagen';
-    plateDisplayFormatted.value = TanzaniaLicensePlateFormatter.formatDisplay(
-      'T772BBE',
-    );
-    vehicleSubtitle.value = 'Toyota corolla, White';
-    otpDigits.assignAll(['2', '7', '5', '6']);
-    arrivalLabel.value = AppStrings.driverWillArrivingInMinutes.trParams({
-      'minutes': '1',
-    });
-    currentRideStatus.value = 'driver_assigned';
+    driverRating.value = '';
+    driverVehicleLine.value = '';
+    plateDisplayFormatted.value = '';
+    vehicleSubtitle.value = '';
+    otpDigits.clear();
+    assignedDriverLocation.value = null;
+    isTrackingRider.value = false;
   }
 
   void _applyRide(RideModel r) {
@@ -2386,19 +2415,16 @@ class DriverAcceptedController extends GetxController
       idempotencyKey: stopUpdateIdempotencyKey.value,
     );
 
-    result.fold(
-      (f) => _showStopUpdateError(f.message),
-      (res) {
-        if (res is StopUpdatePreviewModel) {
-          stopUpdatePreview.value = res;
-          // Generate key if not present and save it
-          if (stopUpdateIdempotencyKey.value.isEmpty) {
-            stopUpdateIdempotencyKey.value = const Uuid().v4();
-          }
-          _saveIdempotencyKey(stopUpdateIdempotencyKey.value);
+    result.fold((f) => _showStopUpdateError(f.message), (res) {
+      if (res is StopUpdatePreviewModel) {
+        stopUpdatePreview.value = res;
+        // Generate key if not present and save it
+        if (stopUpdateIdempotencyKey.value.isEmpty) {
+          stopUpdateIdempotencyKey.value = const Uuid().v4();
         }
-      },
-    );
+        _saveIdempotencyKey(stopUpdateIdempotencyKey.value);
+      }
+    });
   }
 
   Future<bool> applyStopsUpdate(List<RideStopEntity> stops) async {
@@ -2478,10 +2504,7 @@ class DriverAcceptedController extends GetxController
   }
 
   void _showStopUpdateError(String rawMessage) {
-    _showLocationUpdateValidationError(
-      rawMessage,
-      clearStopPreview: true,
-    );
+    _showLocationUpdateValidationError(rawMessage, clearStopPreview: true);
   }
 
   void _showDestinationUpdateError(String rawMessage) {
@@ -2502,13 +2525,17 @@ class DriverAcceptedController extends GetxController
     final parts = rawMessage.split('|');
     final hasErrorCode = parts.length > 1;
     final errorCode = hasErrorCode ? parts.first.trim() : '';
-    final message = hasErrorCode ? parts.sublist(1).join('|').trim() : rawMessage.trim();
+    final message = hasErrorCode
+        ? parts.sublist(1).join('|').trim()
+        : rawMessage.trim();
 
     AppDialogs.showErrorDialog(
       title: errorCode == 'VALID_PICKUP_DROP_TOO_CLOSE'
           ? AppStrings.validation.tr
           : AppStrings.error.tr,
-      message: message.isNotEmpty ? message : AppStrings.somethingWentWrongPleaseTryAgain.tr,
+      message: message.isNotEmpty
+          ? message
+          : AppStrings.somethingWentWrongPleaseTryAgain.tr,
     );
   }
 
@@ -2517,11 +2544,7 @@ class DriverAcceptedController extends GetxController
   ) {
     return stops
         .map(
-          (stop) => {
-            'lat': stop.lat,
-            'lng': stop.lng,
-            'address': stop.address,
-          },
+          (stop) => {'lat': stop.lat, 'lng': stop.lng, 'address': stop.address},
         )
         .toList();
   }
@@ -2634,12 +2657,9 @@ class DriverAcceptedController extends GetxController
       rideId,
       dest,
     );
-    previewRes.fold(
-      (f) => _showDestinationUpdateError(f.message),
-      (preview) {
-        destinationUpdatePreview.value = preview;
-      },
-    );
+    previewRes.fold((f) => _showDestinationUpdateError(f.message), (preview) {
+      destinationUpdatePreview.value = preview;
+    });
   }
 
   Future<bool> applyDropLocationUpdate(Map<String, dynamic> destination) async {

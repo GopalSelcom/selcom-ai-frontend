@@ -407,6 +407,7 @@ abstract class Languages {
   String get someone;
   String get couldNotFetchReceiptDetails;
   String get rideDetailsAreMissing;
+  String get failedToLoadRideDetails;
   String get couldNotOpenPdfWithMessage;
   String get couldNotDownloadSlipPleaseTryAgainLater;
   String get checkOutMyRideReceiptShareUrl;
