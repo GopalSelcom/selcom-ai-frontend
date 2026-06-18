@@ -35,6 +35,7 @@ import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/distance_display.dart';
 import '../../../../shared/utils/saved_places_ordering.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
+import '../../../../shared/utils/active_ride_vehicle_image_resolver.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../../shared/widgets/add_favorite_location_sheet.dart';
 import '../../../../shared/widgets/favorite_location_chips_row.dart';
@@ -662,12 +663,10 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }
 
   String activeRideVehicleImageAsset(RideModel ride) {
-    final type =
-        ride.vehicleDisplayName ??
-        ride.vehicleSnapshot?.vehicleType ??
-        ride.vehicleKey ??
-        '';
-    return vehicleExploreImageAsset(type);
+    return ActiveRideVehicleImageResolver.resolveAsset(
+      ride: ride,
+      vehicleTypeCatalog: vehicleTypes,
+    );
   }
 
   String _shortPlaceLabel(String address) {

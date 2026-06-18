@@ -439,7 +439,9 @@ class VehicleSelectionController extends GetxController {
   bool get isMapDataReady => isRouteReady.value && routePoints.length >= 2;
 
   String vehicleImage(FareEstimateItem e) {
-    if (e.isBookAnyOption) return VehicleImageUtils.imageAssetForVehicleType('cab');
+    if (e.isBookAnyOption) {
+      return VehicleImageUtils.imageAssetForVehicleType('van');
+    }
     return VehicleImageUtils.imageAssetForVehicleType(e.vehicleName);
   }
 
