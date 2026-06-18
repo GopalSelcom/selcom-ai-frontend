@@ -123,33 +123,40 @@ class _HomeActiveRidesPanelState extends State<HomeActiveRidesPanel>
           onViewRide: () => widget.onViewRide(primaryRide),
           onMoreBadgeTap: _handleMoreBadgeTap,
         ),
-        ClipRect(
-          child: Align(
-            alignment: Alignment.topCenter,
-            heightFactor: _expandAnimation.value,
-            child: FadeTransition(
-              opacity: _expandAnimation,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (var i = 0; i < _additionalRides.length; i++) ...[
-                    SizedBox(height: HomeActiveRidesExpandedLayout.cardGap.h),
-                    HomeActiveRideCardContent(
-                      vehicleAssetPath: widget.vehicleAssetPathFor(
-                        _additionalRides[i],
-                      ),
-                      routeTitle: widget.routeTitleFor(_additionalRides[i]),
-                      remainingLabel: widget.remainingLabelFor(
-                        _additionalRides[i],
-                      ),
-                      onViewRide: () => widget.onViewRide(_additionalRides[i]),
-                    ),
-                  ],
-                  SizedBox(height: HomeActiveRidesExpandedLayout.closeButtonGap.h),
-                  _CloseButton(onPressed: _handleClose),
-                ],
+        // AnimatedBuilder required so +1-more expand animates (heightFactor updates each frame).
+        AnimatedBuilder(
+          animation: _expandAnimation,
+          builder: (context, child) {
+            return ClipRect(
+              child: Align(
+                alignment: Alignment.topCenter,
+                heightFactor: _expandAnimation.value,
+                child: FadeTransition(
+                  opacity: _expandAnimation,
+                  child: child,
+                ),
               ),
-            ),
+            );
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (var i = 0; i < _additionalRides.length; i++) ...[
+                SizedBox(height: HomeActiveRidesExpandedLayout.cardGap.h),
+                HomeActiveRideCardContent(
+                  vehicleAssetPath: widget.vehicleAssetPathFor(
+                    _additionalRides[i],
+                  ),
+                  routeTitle: widget.routeTitleFor(_additionalRides[i]),
+                  remainingLabel: widget.remainingLabelFor(
+                    _additionalRides[i],
+                  ),
+                  onViewRide: () => widget.onViewRide(_additionalRides[i]),
+                ),
+              ],
+              SizedBox(height: HomeActiveRidesExpandedLayout.closeButtonGap.h),
+              _CloseButton(onPressed: _handleClose),
+            ],
           ),
         ),
       ],

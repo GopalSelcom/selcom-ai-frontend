@@ -16,6 +16,7 @@ import '../../../../core/data/models/responses/nearbyRiders/response/near_by_rid
 import '../../../../core/data/models/responses/payment_status_response/payment_status_response.dart';
 import '../../../../core/data/models/responses/rides/book_rides_response.dart';
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
+import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../../../../core/domain/entities/location_entity.dart';
@@ -25,11 +26,13 @@ import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/app_map_service.dart';
 import '../../../../core/services/app_region_service.dart';
+import '../../../../core/services/app_settings_service.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/map_marker_utils.dart';
+import '../../../../shared/utils/active_rides_parser.dart';
 import '../../../../shared/utils/address_display_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/country_region_defaults.dart';
@@ -931,6 +934,10 @@ class VehicleSelectionController extends GetxController {
         return;
       }
 
+      if (!await _guardActiveRideLimits(isBookedForOther: isBookedForOther)) {
+        return;
+      }
+
       // 2) Validate payment (block flow — dummy callback until real payment).
       final validateRequest = bookingBookAny
           ? ValidateRidePaymentRequest(
@@ -1202,8 +1209,58 @@ class VehicleSelectionController extends GetxController {
   }
 
   bool _handlePaymentValidationFailure(Failure failure) {
-    if (failure is! InsufficientWalletBalanceFailure) return false;
-    unawaited(_showInsufficientWalletDialog(failure.details));
+    if (failure is InsufficientWalletBalanceFailure) {
+      unawaited(_showInsufficientWalletDialog(failure.details));
+      return true;
+    }
+    if (failure is RidePaymentValidationFailure) {
+      AppDialogs.showErrorDialog(
+        title: AppStrings.paymentValidationFailed.tr,
+        message: failure.message,
+      );
+      return true;
+    }
+    return false;
+  }
+
+  /// Client guard before `POST go/validate_ride_payment`.
+  ///
+  /// Self booking: blocked when any active self ride exists (backend: `RIDE_ALREADY_ACTIVE`).
+  /// Book-for-other: blocked when active book-for-other count >= `max_active` from settings
+  /// (backend: `BOOKED_FOR_OTHER_LIMIT_REACHED`).
+  Future<bool> _guardActiveRideLimits({required bool isBookedForOther}) async {
+    final settingsService = di.sl<AppSettingsService>();
+    await settingsService.preload();
+
+    final activeResult = await rideRepository.getActiveRide();
+    final rides = activeResult.fold(
+      (_) => <RideModel>[],
+      (response) => parseActiveRidesFromResponse(response?.data),
+    );
+
+    if (!isBookedForOther) {
+      if (hasSelfActiveRide(rides)) {
+        AppDialogs.showErrorDialog(
+          message: AppStrings.youAlreadyHaveAnActiveRide.tr,
+        );
+        return false;
+      }
+      return true;
+    }
+
+    if (!settingsService.bookForOtherEnabled) {
+      return true;
+    }
+
+    final maxBookForOther = settingsService.maxActiveBookForOtherRides;
+    final bookedForOtherCount = countBookedForOtherRides(rides);
+    if (bookedForOtherCount >= maxBookForOther) {
+      AppDialogs.showErrorDialog(
+        message: AppStrings.bookedForOtherLimitReached.tr,
+      );
+      return false;
+    }
+
     return true;
   }
 

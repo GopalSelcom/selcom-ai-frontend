@@ -10,6 +10,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/driver_location_socker_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/near_by_rider_response.dart';
+import '../../../../core/data/models/responses/nearbyRiders/response/ride_fare_settled_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
 import '../../../../core/data/models/ride_model.dart';
@@ -24,6 +25,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/address_display_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/book_any_fare_settled_ui.dart';
 import '../../../../shared/utils/driver_search_timeout_from_cancel_time.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../../../shared/utils/ride_pickup_status_labels.dart';
@@ -132,6 +134,7 @@ class FindingDriverController extends GetxController {
   StreamSubscription<EventRiderStatusUpdateResponse>? _rideStatusSub;
   StreamSubscription<DriverLocationSocketResponse>? _driverLocSub;
   StreamSubscription<TrackingUpdateSocketResponse?>? _trackingSub;
+  StreamSubscription<RideFareSettledResponse>? _fareSettledSub;
   StreamSubscription<List<Driver>>? _nearbyDriversSub;
   StreamSubscription<String>? _nearbyDriversErrorSub;
 
@@ -406,6 +409,7 @@ class FindingDriverController extends GetxController {
     _rideStatusSub?.cancel();
     _driverLocSub?.cancel();
     _trackingSub?.cancel();
+    _fareSettledSub?.cancel();
     _nearbyDriversSub?.cancel();
     _nearbyDriversErrorSub?.cancel();
     super.onClose();
@@ -622,6 +626,7 @@ class FindingDriverController extends GetxController {
     _rideStatusSub?.cancel();
     _driverLocSub?.cancel();
     _trackingSub?.cancel();
+    _fareSettledSub?.cancel();
 
     _connectionSub = _socketService.connectionStream.listen((connected) {
       if (!connected) return;
@@ -656,6 +661,10 @@ class FindingDriverController extends GetxController {
       _hasReceivedTrackingUpdate = true;
       latestTrackingPayload.value = payload;
       _applyTrackingPayload(payload);
+    });
+
+    _fareSettledSub = _socketService.rideFareSettledStream.listen((payload) {
+      BookAnyFareSettledUi.maybeShow(payload: payload, rideId: rideId);
     });
 
     if (_socketService.isConnected) {

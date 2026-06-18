@@ -30,6 +30,7 @@ import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/session_expiry_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/map_marker_utils.dart';
+import '../../../../shared/utils/active_rides_parser.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/distance_display.dart';
 import '../../../../shared/utils/saved_places_ordering.dart';
@@ -133,7 +134,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   final fareEstimate = Rxn<FareEstimateModel>();
   GoogleMapController? _mapController;
   final AppSocketService _socketService = AppSocketService();
-  bool _didHandleActiveRideFlow = false;
+  final Set<String> _joinedActiveRideRoomIds = <String>{};
   bool _ignoreSelectionReset = false;
   StreamSubscription<bool>? _homeSocketConnectionSub;
   Timer? _activeRidePollingTimer;
@@ -567,7 +568,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     activeRide.value = null;
     activeRides.clear();
     isActiveRidesExpanded.value = false;
-    _didHandleActiveRideFlow = false;
+    _joinedActiveRideRoomIds.clear();
     _homeSocketConnectionSub?.cancel();
     _homeSocketConnectionSub = null;
   }
@@ -603,12 +604,15 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   void _applyActiveRideResponse(
     active_ride_api.ActiveRideResponseModel? activeRideResponse,
   ) {
-    final rides = _parseActiveRides(activeRideResponse?.data);
+    // API shape: `{ count, rides: [{ ride, socket_rooms }, ...] }` (legacy fields still supported).
+    final rides = parseActiveRidesFromResponse(activeRideResponse?.data);
     if (rides.isEmpty) {
       activeRide.value = null;
       activeRides.clear();
       isActiveRidesExpanded.value = false;
-      _didHandleActiveRideFlow = false;
+      _joinedActiveRideRoomIds.clear();
+      _homeSocketConnectionSub?.cancel();
+      _homeSocketConnectionSub = null;
       return;
     }
 
@@ -618,34 +622,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     if (!hasMultipleActiveRides) {
       isActiveRidesExpanded.value = false;
     }
-    _connectAndJoinActiveRideRoom(primaryRide);
+    unawaited(_joinAllActiveRideRooms(rides));
     _syncLiveActivity(primaryRide);
-  }
-
-  List<RideModel> _parseActiveRides(active_ride_api.Data? data) {
-    if (data == null) return const [];
-
-    final fromList = data.rides;
-    if (fromList != null && fromList.isNotEmpty) {
-      return fromList
-          .map((ride) => RideModel.fromJson(ride.toJson()))
-          .toList(growable: false);
-    }
-
-    final parsed = <RideModel>[];
-    final primary = data.ride;
-    if (primary != null) {
-      parsed.add(RideModel.fromJson(primary.toJson()));
-    }
-
-    final extras = data.additionalRides;
-    if (extras != null) {
-      for (final ride in extras) {
-        parsed.add(RideModel.fromJson(ride.toJson()));
-      }
-    }
-
-    return parsed;
   }
 
   bool get canExpandActiveRides => hasMultipleActiveRides;
@@ -661,20 +639,26 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }
 
   String activeRideRouteTitle(RideModel ride) {
-    final pickup = _shortPlaceLabel(ride.pickup.address);
-    final destination = _shortPlaceLabel(ride.destination.address);
-    if (pickup.isEmpty && destination.isEmpty) {
-      return AppStrings.activeRide.tr;
-    }
-    if (pickup.isEmpty) return destination;
-    if (destination.isEmpty) return pickup;
-    return '$pickup to $destination';
+    final route = _activeRideRouteSummary(ride);
+    if (route.isNotEmpty) return route;
+    return AppStrings.activeRide.tr;
   }
 
   String activeRideRemainingLabel(RideModel ride) {
     final minutes = ride.durationMinutes;
     if (minutes <= 0) return '';
     return AppStrings.activeRideMinRemains.trParams({'minutes': '$minutes'});
+  }
+
+  String _activeRideRouteSummary(RideModel ride) {
+    final pickup = _shortPlaceLabel(ride.pickup.address);
+    final destination = _shortPlaceLabel(ride.destination.address);
+    if (pickup.isEmpty && destination.isEmpty) {
+      return '';
+    }
+    if (pickup.isEmpty) return destination;
+    if (destination.isEmpty) return pickup;
+    return '$pickup to $destination';
   }
 
   String activeRideVehicleImageAsset(RideModel ride) {
@@ -756,35 +740,38 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     );
   }
 
-  Future<void> _connectAndJoinActiveRideRoom(RideModel ride) async {
-    if (_didHandleActiveRideFlow) return;
-    await _connectAndJoinActiveRideRoomInternal(ride, force: false);
-  }
-
-  Future<void> _connectAndJoinActiveRideRoomInternal(
-    RideModel ride, {
-    required bool force,
+  Future<void> _joinAllActiveRideRooms(
+    List<RideModel> rides, {
+    bool force = false,
   }) async {
-    if (_didHandleActiveRideFlow && !force) return;
-    _didHandleActiveRideFlow = true;
+    // Join every active ride room so status updates work for self + book-for-other rides.
+    final rideIds = rides
+        .map((ride) => ride.id.trim())
+        .where((id) => id.isNotEmpty)
+        .toList(growable: false);
+    if (rideIds.isEmpty) return;
 
-    final riderId = ride.id.trim();
-    if (riderId.isEmpty) return;
+    final currentIds = rideIds.toSet();
+    _joinedActiveRideRoomIds.removeWhere((id) => !currentIds.contains(id));
+
+    Future<void> joinPending() async {
+      for (final id in rideIds) {
+        if (!force && _joinedActiveRideRoomIds.contains(id)) continue;
+        _joinedActiveRideRoomIds.add(id);
+        _socketService.joinRideRoom(rideId: id);
+      }
+    }
 
     _homeSocketConnectionSub?.cancel();
     _homeSocketConnectionSub = _socketService.connectionStream.listen((
       connected,
     ) {
       if (!connected) return;
-      _socketService.joinRideRoom(rideId: riderId);
-      _homeSocketConnectionSub?.cancel();
-      _homeSocketConnectionSub = null;
+      joinPending();
     });
     await _socketService.connect();
     if (_socketService.isConnected) {
-      _socketService.joinRideRoom(rideId: riderId);
-      _homeSocketConnectionSub?.cancel();
-      _homeSocketConnectionSub = null;
+      await joinPending();
     }
   }
 
@@ -797,9 +784,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         await _getCurrentLocation();
       }
       await refreshActiveRide(force: true);
-      final active = activeRide.value;
-      if (active != null) {
-        await _connectAndJoinActiveRideRoomInternal(active, force: true);
+      if (activeRides.isNotEmpty) {
+        await _joinAllActiveRideRooms(activeRides.toList(), force: true);
       }
     });
   }

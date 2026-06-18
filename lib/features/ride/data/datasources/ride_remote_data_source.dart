@@ -9,6 +9,7 @@ import '../../../../core/data/models/responses/chat_quick_replies_response.dart'
 import '../../../../core/data/models/responses/rides/active_ride_response.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/errors/insufficient_wallet_balance_exception.dart';
+import '../../../../core/errors/ride_payment_validation_exception.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
@@ -406,14 +407,38 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
     if (response.statusCode == 200 && response.data != null) {
       return response.data['data']?['validation_id'] ?? '';
     }
-    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+
+    final body = response.data;
+    if (body is Map<String, dynamic>) {
       final insufficient =
-          InsufficientWalletBalanceDetails.tryParseFromApiResponse(
-            response.data,
-          );
+          InsufficientWalletBalanceDetails.tryParseFromApiResponse(body);
       if (insufficient != null) {
         throw InsufficientWalletBalanceException(insufficient);
       }
+
+      final errorCode = body['error_code']?.toString() ?? '';
+      final message = body['message']?.toString() ?? '';
+      // 409 business errors — surfaced in vehicle selection before/during book flow.
+      if (errorCode == 'RIDE_ALREADY_ACTIVE' ||
+          errorCode == 'BOOKED_FOR_OTHER_LIMIT_REACHED') {
+        final payload = body['data'];
+        throw RidePaymentValidationException(
+          errorCode: errorCode,
+          message: message,
+          activeRideId: payload is Map
+              ? payload['active_ride_id']?.toString()
+              : null,
+          activeRideStatus: payload is Map
+              ? payload['active_ride_status']?.toString()
+              : null,
+        );
+      }
+
+      if (message.isNotEmpty) {
+        throw Exception(message);
+      }
+    }
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
       return '';
     }
     throw Exception('Payment validation failed');

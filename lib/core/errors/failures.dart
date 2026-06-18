@@ -59,3 +59,17 @@ class InsufficientWalletBalanceFailure extends Failure {
     required this.details,
   });
 }
+
+/// `POST go/validate_ride_payment` business rejection (409, etc.).
+class RidePaymentValidationFailure extends Failure {
+  final String errorCode;
+  final String? activeRideId;
+  final String? activeRideStatus;
+
+  const RidePaymentValidationFailure(
+    super.message, {
+    required this.errorCode,
+    this.activeRideId,
+    this.activeRideStatus,
+  });
+}

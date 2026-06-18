@@ -7,6 +7,7 @@ import 'package:socket_io_client/socket_io_client.dart' as io;
 
 import '../data/models/responses/nearbyRiders/response/driver_location_socker_response.dart';
 import '../data/models/responses/nearbyRiders/response/near_by_rider_response.dart';
+import '../data/models/responses/nearbyRiders/response/ride_fare_settled_response.dart';
 import '../data/models/responses/nearbyRiders/response/ride_stops_update_response.dart';
 import '../data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
 import '../data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
@@ -60,6 +61,7 @@ class AppSocketService {
   static const String evtRideStopsUpdated = 'ride:stops_updated';
   static const String evtRideStopsUpdateFailed = 'ride:stops_update_failed';
   static const String evtRideDriverLocation = 'ride:driver_location';
+  static const String evtRideFareSettled = 'ride:fare_settled';
   static const String trackingDriverLocation = 'ride:tracking_update';
 
   // Payment
@@ -94,6 +96,8 @@ class AppSocketService {
       StreamController<PaymentStatusUpdateResponse>.broadcast();
   final _trackingUpdateStatusController =
       StreamController<TrackingUpdateSocketResponse?>.broadcast();
+  final _fareSettledController =
+      StreamController<RideFareSettledResponse>.broadcast();
 
   // 💬 Chat controller
   final _chatController = StreamController<Map<String, dynamic>>.broadcast();
@@ -111,6 +115,9 @@ class AppSocketService {
 
   Stream<TrackingUpdateSocketResponse?> get trackingUpdateStatusStream =>
       _trackingUpdateStatusController.stream;
+
+  Stream<RideFareSettledResponse> get rideFareSettledStream =>
+      _fareSettledController.stream;
 
   Stream<DriverLocationSocketResponse> get rideDriverLocationStream =>
       _rideDriverLocationController.stream;
@@ -242,6 +249,13 @@ class AppSocketService {
       print("this is the evtRideDriverLocation---->${jsonEncode(payload)}");
       final data = driverLocationSocketResponseFromJson(jsonEncode(payload));
       _rideDriverLocationController.add(data);
+    });
+    _socket!.on(evtRideFareSettled, (payload) {
+      if (payload is! Map) return;
+      final data = RideFareSettledResponse.fromJson(
+        Map<String, dynamic>.from(payload),
+      );
+      _fareSettledController.add(data);
     });
     _socket!.on(evtPaymentStatusUpdate, (payload) {
       final data = PaymentStatusUpdateResponse.fromJson(

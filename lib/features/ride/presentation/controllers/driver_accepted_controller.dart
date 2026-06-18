@@ -15,6 +15,7 @@ import '../../../../core/config/app_config.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/driver_location_socker_response.dart';
+import '../../../../core/data/models/responses/nearbyRiders/response/ride_fare_settled_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/ride_stops_update_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
@@ -36,6 +37,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/address_display_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/book_any_fare_settled_ui.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/utils/map_route_marker_utils.dart';
 import '../../../../shared/utils/map_vehicle_marker_utils.dart';
@@ -163,6 +165,7 @@ class DriverAcceptedController extends GetxController
   StreamSubscription<RideStopsUpdatedResponse>? _rideStopsUpdatedSub;
   StreamSubscription<RideStopsUpdateFailedResponse>? _rideStopsUpdateFailedSub;
   StreamSubscription<PaymentStatusUpdateResponse>? _paymentStatusSub;
+  StreamSubscription<RideFareSettledResponse>? _fareSettledSub;
   bool _didJoinRideRoom = false;
   bool _isHandlingAppResume = false;
   bool _emergencyContactsLoadedOnce = false;
@@ -616,6 +619,7 @@ class DriverAcceptedController extends GetxController
     _driverLocSub?.cancel();
     _trackingSub?.cancel();
     _chatSub?.cancel();
+    _fareSettledSub?.cancel();
     super.onClose();
   }
 
@@ -987,6 +991,7 @@ class DriverAcceptedController extends GetxController
     _rideStopsUpdatedSub?.cancel();
     _rideStopsUpdateFailedSub?.cancel();
     _paymentStatusSub?.cancel();
+    _fareSettledSub?.cancel();
     _didJoinRideRoom = false;
 
     _connectionSub = _socketService.connectionStream.listen((connected) {
@@ -1119,6 +1124,10 @@ class DriverAcceptedController extends GetxController
         );
         _applyTrackingPayload(payload);
       }
+    });
+
+    _fareSettledSub = _socketService.rideFareSettledStream.listen((payload) {
+      BookAnyFareSettledUi.maybeShow(payload: payload, rideId: rideId);
     });
 
     // Ensure socket is connected for the active-ride entry path too.

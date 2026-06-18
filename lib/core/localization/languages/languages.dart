@@ -481,6 +481,16 @@ abstract class Languages {
   String get rideInProgress;
   String get nearDestination;
   String get activeRide;
+  String get yourRide;
+  String get bookedForPassenger;
+  String get bookedForSomeoneElse;
+  String get bookedForOtherLimitReached;
+  String get bookAnyFareSettledTitle;
+  String get bookAnyFareSettledBlockedLead;
+  String get bookAnyFareSettledMiddleWithVehicle;
+  String get bookAnyFareSettledMiddleNoVehicle;
+  String get bookAnyFareSettledReleasedTrail;
+  String get bookAnyFareSettledFinalChargeLabel;
   String get ongoing;
   String get completed;
   String get noDriverFound;

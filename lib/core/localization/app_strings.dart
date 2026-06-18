@@ -621,6 +621,22 @@ class AppStrings {
   static const String rideInProgress = 'ride_in_progress';
   static const String nearDestination = 'near_destination';
   static const String activeRide = 'active_ride';
+  static const String yourRide = 'your_ride';
+  static const String bookedForPassenger = 'booked_for_passenger';
+  static const String bookedForSomeoneElse = 'booked_for_someone_else';
+  static const String bookedForOtherLimitReached =
+      'booked_for_other_limit_reached';
+  static const String bookAnyFareSettledTitle = 'book_any_fare_settled_title';
+  static const String bookAnyFareSettledBlockedLead =
+      'book_any_fare_settled_blocked_lead';
+  static const String bookAnyFareSettledMiddleWithVehicle =
+      'book_any_fare_settled_middle_with_vehicle';
+  static const String bookAnyFareSettledMiddleNoVehicle =
+      'book_any_fare_settled_middle_no_vehicle';
+  static const String bookAnyFareSettledReleasedTrail =
+      'book_any_fare_settled_released_trail';
+  static const String bookAnyFareSettledFinalChargeLabel =
+      'book_any_fare_settled_final_charge_label';
   static const String ongoing = 'ongoing';
   static const String completed = 'completed';
   static const String noDriverFound = 'no_driver_found';

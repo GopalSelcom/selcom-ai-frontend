@@ -13,6 +13,13 @@ class AppSettingsService {
 
   /// `/go/settings` `payment_timer` (seconds). Default 5 minutes until loaded.
   final paymentWaitSeconds = AppSettingsModel.defaultPaymentTimerSeconds.obs;
+  final bookForOtherSettings = Rxn<BookForOtherSettings>();
+
+  bool get bookForOtherEnabled => bookForOtherSettings.value?.enabled ?? false;
+
+  /// `features.book_for_other.max_active` — cap on rides booked for someone else.
+  int get maxActiveBookForOtherRides =>
+      bookForOtherSettings.value?.maxActive ?? 1;
 
   bool get hasAnyFeatureEnabled => features.values.any((v) => v == true);
 
@@ -29,10 +36,12 @@ class AppSettingsService {
     result.fold(
       (_) {
         features.clear();
+        bookForOtherSettings.value = null;
         paymentWaitSeconds.value = AppSettingsModel.defaultPaymentTimerSeconds;
       },
       (settings) {
         features.assignAll(settings.features);
+        bookForOtherSettings.value = settings.bookForOther;
         paymentWaitSeconds.value = settings.paymentTimerSeconds;
       },
     );

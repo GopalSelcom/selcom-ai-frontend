@@ -557,6 +557,20 @@ class LanguageEn extends Languages {
     'unknown_location': 'Unknown location',
     'near_destination': 'Near Destination',
     'active_ride': 'Active Ride',
+    'your_ride': 'Your ride',
+    'booked_for_passenger': 'Booked for @name',
+    'booked_for_someone_else': 'Booked for someone else',
+    'booked_for_other_limit_reached':
+        'You have reached the limit for rides booked for others.',
+    'book_any_fare_settled_title': 'Payment updated',
+    'book_any_fare_settled_blocked_lead': 'We temporarily blocked ',
+    'book_any_fare_settled_middle_with_vehicle':
+        ' for your Book Any ride. A @vehicle was assigned at a lower fare, so ',
+    'book_any_fare_settled_middle_no_vehicle':
+        ' for your Book Any ride. A lower fare vehicle was assigned, so ',
+    'book_any_fare_settled_released_trail':
+        ' has been released back to your wallet.',
+    'book_any_fare_settled_final_charge_label': 'Final charge: ',
     'unable_to_get_location_coordinates': 'Unable to get location coordinates',
     'please_select_valid_pickup_and_destination_locations':
         'Please select valid pickup and destination locations.',
@@ -2401,6 +2415,43 @@ class LanguageEn extends Languages {
 
   @override
   String get activeRide => values['active_ride'] ?? '';
+
+  @override
+  String get yourRide => values['your_ride'] ?? '';
+
+  @override
+  String get bookedForPassenger => values['booked_for_passenger'] ?? '';
+
+  @override
+  String get bookedForSomeoneElse => values['booked_for_someone_else'] ?? '';
+
+  @override
+  String get bookedForOtherLimitReached =>
+      values['booked_for_other_limit_reached'] ?? '';
+
+  @override
+  String get bookAnyFareSettledTitle =>
+      values['book_any_fare_settled_title'] ?? '';
+
+  @override
+  String get bookAnyFareSettledBlockedLead =>
+      values['book_any_fare_settled_blocked_lead'] ?? '';
+
+  @override
+  String get bookAnyFareSettledMiddleWithVehicle =>
+      values['book_any_fare_settled_middle_with_vehicle'] ?? '';
+
+  @override
+  String get bookAnyFareSettledMiddleNoVehicle =>
+      values['book_any_fare_settled_middle_no_vehicle'] ?? '';
+
+  @override
+  String get bookAnyFareSettledReleasedTrail =>
+      values['book_any_fare_settled_released_trail'] ?? '';
+
+  @override
+  String get bookAnyFareSettledFinalChargeLabel =>
+      values['book_any_fare_settled_final_charge_label'] ?? '';
 
   @override
   String get unableToGetLocationCoordinates =>

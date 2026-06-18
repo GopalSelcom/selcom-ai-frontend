@@ -66,6 +66,10 @@ class ErrorMapper {
               return ServerFailure(
                 message ?? AppStrings.youAlreadyHaveAnActiveRide.tr,
               );
+            case 'BOOKED_FOR_OTHER_LIMIT_REACHED':
+              return ServerFailure(
+                message ?? AppStrings.bookedForOtherLimitReached.tr,
+              );
             case 'PAY_INSUFFICIENT_FUNDS': {
               final details =
                   InsufficientWalletBalanceDetails.tryParseFromApiResponse(data);

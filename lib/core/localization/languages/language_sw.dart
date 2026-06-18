@@ -481,6 +481,16 @@ class LanguageSw extends Languages {
     'unknown_location': '',
     'near_destination': '',
     'active_ride': '',
+    'your_ride': '',
+    'booked_for_passenger': '',
+    'booked_for_someone_else': '',
+    'booked_for_other_limit_reached': '',
+    'book_any_fare_settled_title': '',
+    'book_any_fare_settled_blocked_lead': '',
+    'book_any_fare_settled_middle_with_vehicle': '',
+    'book_any_fare_settled_middle_no_vehicle': '',
+    'book_any_fare_settled_released_trail': '',
+    'book_any_fare_settled_final_charge_label': '',
     'unable_to_get_location_coordinates': '',
     'please_select_valid_pickup_and_destination_locations': '',
     'are_you_sure_you_want_to_add_this_address_as':
@@ -2281,6 +2291,43 @@ class LanguageSw extends Languages {
 
   @override
   String get activeRide => values['active_ride'] ?? '';
+
+  @override
+  String get yourRide => values['your_ride'] ?? '';
+
+  @override
+  String get bookedForPassenger => values['booked_for_passenger'] ?? '';
+
+  @override
+  String get bookedForSomeoneElse => values['booked_for_someone_else'] ?? '';
+
+  @override
+  String get bookedForOtherLimitReached =>
+      values['booked_for_other_limit_reached'] ?? '';
+
+  @override
+  String get bookAnyFareSettledTitle =>
+      values['book_any_fare_settled_title'] ?? '';
+
+  @override
+  String get bookAnyFareSettledBlockedLead =>
+      values['book_any_fare_settled_blocked_lead'] ?? '';
+
+  @override
+  String get bookAnyFareSettledMiddleWithVehicle =>
+      values['book_any_fare_settled_middle_with_vehicle'] ?? '';
+
+  @override
+  String get bookAnyFareSettledMiddleNoVehicle =>
+      values['book_any_fare_settled_middle_no_vehicle'] ?? '';
+
+  @override
+  String get bookAnyFareSettledReleasedTrail =>
+      values['book_any_fare_settled_released_trail'] ?? '';
+
+  @override
+  String get bookAnyFareSettledFinalChargeLabel =>
+      values['book_any_fare_settled_final_charge_label'] ?? '';
 
   @override
   String get unableToGetLocationCoordinates =>
