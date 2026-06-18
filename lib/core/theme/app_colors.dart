@@ -138,6 +138,27 @@ class AppColors {
   static const Color figmaIconGreen = Color(0xFF269441);
   static const Color splashBackground = Color(0xFFFFCC00);
 
+  /// Route location pins (list UI + map letter markers).
+  static const Color routePinStop1 = Color(0xFFFF9900);
+  static const Color routePinStop2 = Color(0xFF0088FF);
+  static const Color routePinDestination = Color(0xFF34C759);
+
+  /// Receipt PNG export palette.
+  static const Color receiptTextDark = Color(0xFF1A1A2E);
+  static const Color receiptTextMid = Color(0xFF555566);
+  static const Color receiptTextMuted = Color(0xFF999AAB);
+  static const Color receiptDivider = Color(0xFFEEEEF2);
+  static const Color receiptBgLight = Color(0xFFF8F8FA);
+
+  /// Wallet segmented tab labels.
+  static const Color walletTabLabelActive = Color(0xFF1F2937);
+  static const Color walletTabLabelInactive = Color(0xFF4B5563);
+
+  /// Insufficient wallet balance dialog.
+  static const Color insufficientBalanceIconBg = Color(0xFFFFE2E2);
+  static const Color insufficientBalanceIcon = Color(0xFFFB2C36);
+  static const Color insufficientBalanceValue = Color(0xFF101828);
+
   /// Map markers: pickup = brand primary, destination = brand secondary.
   static const Color mapPickupMarkerBlue = primary;
   static const Color mapDropMarkerGreen = secondary;

@@ -218,9 +218,9 @@ class _AddFavoriteLocationSheetState extends State<AddFavoriteLocationSheet> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
+                  color: AppColors.pageBackground,
                   borderRadius: BorderRadius.circular(14.r),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: AppColors.skeletonBase),
                 ),
                 child: Text(
                   widget.address,

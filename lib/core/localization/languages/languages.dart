@@ -174,6 +174,8 @@ abstract class Languages {
   String get errorSendingMessage;
   String get estimateFailed;
   String get etaMinutesAwayDropTime;
+  String get etaMinutesAwayOnly;
+  String get dropAtTime;
   String get exploreVehicle;
   String get minutesAgo;
   String get hoursAgo;

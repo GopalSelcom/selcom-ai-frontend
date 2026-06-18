@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
@@ -15,55 +16,33 @@ import '../../../../shared/widgets/app_route_location_pin_icon.dart';
 class RideDateFormatter {
   static String formatDate(String apiDate) {
     try {
-      final parts = apiDate.split(', ');
-      if (parts.length < 2) return apiDate;
-
-      final dateParts = parts[0].split('-');
-      if (dateParts.length < 3) return apiDate;
-
-      final year = dateParts[0];
-      final month = int.parse(dateParts[1]);
-      final day = int.parse(dateParts[2]);
-      final time = parts[1].replaceAll(' ', ''); // 08:08PM
-
-      const months = [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec',
-      ];
-
-      String daySuffix = 'th';
-      if (day >= 11 && day <= 13) {
-        daySuffix = 'th';
-      } else {
-        switch (day % 10) {
-          case 1:
-            daySuffix = 'st';
-            break;
-          case 2:
-            daySuffix = 'nd';
-            break;
-          case 3:
-            daySuffix = 'rd';
-            break;
-          default:
-            daySuffix = 'th';
-        }
+      final parsed = DateFormat('yyyy-MM-dd, hh:mm a').parse(apiDate);
+      final locale = Get.locale?.toLanguageTag() ?? 'en';
+      if (!locale.startsWith('en')) {
+        return DateFormat('dd MMM yyyy • hh:mma', locale).format(parsed);
       }
 
+      final day = parsed.day;
+      final month = DateFormat.MMM(locale).format(parsed);
+      final time = DateFormat('hh:mma', locale).format(parsed).replaceAll(' ', '');
       final dayStr = day.toString().padLeft(2, '0');
-      return '$dayStr$daySuffix ${months[month - 1]} $year . $time';
+      return '$dayStr${_ordinalSuffix(day)} $month ${parsed.year} . $time';
     } catch (e) {
       return apiDate;
+    }
+  }
+
+  static String _ordinalSuffix(int day) {
+    if (day >= 11 && day <= 13) return 'th';
+    switch (day % 10) {
+      case 1:
+        return 'st';
+      case 2:
+        return 'nd';
+      case 3:
+        return 'rd';
+      default:
+        return 'th';
     }
   }
 }

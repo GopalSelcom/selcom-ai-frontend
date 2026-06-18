@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-import '../constants/app_assets.dart';
 import '../theme/app_colors.dart';
 
 class MapMarkerUtils {
@@ -141,61 +140,6 @@ class MapMarkerUtils {
     );
 
     final image = await recorder.endRecording().toImage(size, size);
-    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-
-    return BitmapDescriptor.fromBytes(bytes!.buffer.asUint8List());
-  }
-
-  /// Teardrop pin (from [AppAssets.locationIcPickupPin]) tinted with [color]
-  /// and a white [text] label — used for P/D and A–G route markers.
-  static Future<BitmapDescriptor> createRoutePinLetterMarker({
-    required String text,
-    required Color color,
-    int width = 50,
-    String pinAssetPath = AppAssets.locationIcPickupPin,
-  }) async {
-    final pictureInfo = await vg.loadPicture(SvgAssetLoader(pinAssetPath), null);
-
-    final svgW = pictureInfo.size.width;
-    final svgH = pictureInfo.size.height;
-    final height = (width * svgH / svgW).round();
-    final scale = width / svgW;
-
-    final recorder = ui.PictureRecorder();
-    final canvas = Canvas(recorder);
-
-    canvas.saveLayer(
-      Rect.fromLTWH(0, 0, width.toDouble(), height.toDouble()),
-      Paint()..colorFilter = ColorFilter.mode(color, BlendMode.srcIn),
-    );
-    canvas.scale(scale);
-    canvas.drawPicture(pictureInfo.picture);
-    canvas.restore();
-
-    pictureInfo.picture.dispose();
-
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: text,
-        style: TextStyle(
-          color: AppColors.white,
-          fontSize: width * 0.38,
-          fontWeight: FontWeight.w800,
-          height: 1,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    );
-    textPainter.layout();
-    textPainter.paint(
-      canvas,
-      Offset(
-        (width - textPainter.width) / 2,
-        height * 0.22 - textPainter.height / 2,
-      ),
-    );
-
-    final image = await recorder.endRecording().toImage(width, height);
     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
 
     return BitmapDescriptor.fromBytes(bytes!.buffer.asUint8List());

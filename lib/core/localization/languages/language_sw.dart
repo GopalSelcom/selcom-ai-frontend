@@ -176,6 +176,8 @@ class LanguageSw extends Languages {
     'error_sending_message': '',
     'estimate_failed': '',
     'eta_minutes_away_drop_time': '',
+    'eta_minutes_away_only': '',
+    'drop_at_time': '',
     'explore_vehicle': '',
     'minutes_ago': '',
     'hours_ago': '',
@@ -1278,6 +1280,12 @@ class LanguageSw extends Languages {
   @override
   String get etaMinutesAwayDropTime =>
       values['eta_minutes_away_drop_time'] ?? '';
+
+  @override
+  String get etaMinutesAwayOnly => values['eta_minutes_away_only'] ?? '';
+
+  @override
+  String get dropAtTime => values['drop_at_time'] ?? '';
 
   @override
   String get exploreVehicle => values['explore_vehicle'] ?? '';

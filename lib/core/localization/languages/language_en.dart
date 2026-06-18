@@ -204,6 +204,8 @@ class LanguageEn extends Languages {
     'error_sending_message': 'Error sending message',
     'estimate_failed': 'Estimate failed',
     'eta_minutes_away_drop_time': '@minutes min away • Drop @time',
+    'eta_minutes_away_only': '@minutes min away',
+    'drop_at_time': 'Drop @time',
     'explore_vehicle': 'Explore Vehicle',
     'minutes_ago': '@count m ago',
     'hours_ago': '@count h ago',
@@ -1403,6 +1405,12 @@ class LanguageEn extends Languages {
   @override
   String get etaMinutesAwayDropTime =>
       values['eta_minutes_away_drop_time'] ?? '';
+
+  @override
+  String get etaMinutesAwayOnly => values['eta_minutes_away_only'] ?? '';
+
+  @override
+  String get dropAtTime => values['drop_at_time'] ?? '';
 
   @override
   String get exploreVehicle => values['explore_vehicle'] ?? '';

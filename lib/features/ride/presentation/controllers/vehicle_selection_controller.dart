@@ -1664,10 +1664,10 @@ class VehicleSelectionController extends GetxController {
 
     var distanceEtaLine = parts.isNotEmpty && parts.first.isNotEmpty
         ? parts.first
-        : '$eta min away';
+        : AppStrings.etaMinutesAwayOnly.trParams({'minutes': '$eta'});
     final dropTimeLine = parts.length > 1 && parts[1].isNotEmpty
         ? parts[1]
-        : 'Drop $dropLabel';
+        : AppStrings.dropAtTime.trParams({'time': dropLabel});
 
     final distanceLabel = formatTripDistanceKm(item.distanceKm);
     if (distanceLabel.isNotEmpty) {

@@ -216,6 +216,8 @@ class AppStrings {
   static const String errorSendingMessage = 'error_sending_message';
   static const String estimateFailed = 'estimate_failed';
   static const String etaMinutesAwayDropTime = 'eta_minutes_away_drop_time';
+  static const String etaMinutesAwayOnly = 'eta_minutes_away_only';
+  static const String dropAtTime = 'drop_at_time';
   static const String exploreVehicle = 'explore_vehicle';
   static const String minutesAgo = 'minutes_ago';
   static const String hoursAgo = 'hours_ago';

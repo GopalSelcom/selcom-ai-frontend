@@ -74,13 +74,13 @@ class _WarningIcon extends StatelessWidget {
       width: 72.w,
       height: 72.w,
       decoration: const BoxDecoration(
-        color: Color(0xffFFE2E2),
+        color: AppColors.insufficientBalanceIconBg,
         shape: BoxShape.circle,
       ),
       alignment: Alignment.center,
       child: Icon(
         Icons.error_outline,
-        color: const Color(0xffFB2C36),
+        color: AppColors.insufficientBalanceIcon,
         size: 36.sp,
       ),
     );
@@ -110,7 +110,7 @@ class _AmountBreakdownCard extends StatelessWidget {
               details.currentBalance,
               currency,
             ),
-            valueColor: const Color(0xff101828),
+            valueColor: AppColors.insufficientBalanceValue,
           ),
           SizedBox(height: 12.h),
           _BalanceRow(
@@ -119,7 +119,7 @@ class _AmountBreakdownCard extends StatelessWidget {
               details.requiredAmount,
               currency,
             ),
-            valueColor: const Color(0xff101828),
+            valueColor: AppColors.insufficientBalanceValue,
           ),
           Padding(
             padding: EdgeInsets.symmetric(vertical: 12.h),

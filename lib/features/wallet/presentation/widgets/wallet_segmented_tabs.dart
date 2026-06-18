@@ -79,8 +79,8 @@ class WalletSegmentedTabs extends StatelessWidget {
                           style: AppTextStyles.homeChip.copyWith(
                             fontWeight: FontWeight.w600,
                             color: isSelected
-                                ? Color(0xff1F2937)
-                                : Color(0xff4B5563),
+                                ? AppColors.walletTabLabelActive
+                                : AppColors.walletTabLabelInactive,
                             letterSpacing: -0.6,
                           ),
                         ),

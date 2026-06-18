@@ -231,7 +231,7 @@ class AppCupertinoTextButton extends StatelessWidget {
       fontSize: 14.sp,
       height: 18 / 14,
       letterSpacing: 14.sp * 0.02,
-      color: const Color(0xFF7F7F7F),
+      color: AppColors.textNeutralButton,
     );
     return AppCupertinoTextButton(
       key: key,

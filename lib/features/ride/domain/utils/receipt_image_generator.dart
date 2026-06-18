@@ -19,14 +19,6 @@ class ReceiptImageGenerator {
   /// Allow vector assets (logo + route pins) to finish rasterizing before capture.
   static const Duration _captureDelay = Duration(milliseconds: 500);
 
-  static const Color _primary = AppColors.primary;
-  static const Color _textDark = Color(0xFF1A1A2E);
-  static const Color _textMid = Color(0xFF555566);
-  static const Color _textLight = Color(0xFF999AAB);
-  static const Color _divider = Color(0xFFEEEEF2);
-  static const Color _bgLight = Color(0xFFF8F8FA);
-
-  /// Receipt route pins — fixed px (no ScreenUtil) for PNG capture.
   static const double _routePinSize = 16;
   static const double _routeIconColumnWidth = 18;
 
@@ -47,10 +39,10 @@ class ReceiptImageGenerator {
       child: Directionality(
         textDirection: TextDirection.ltr,
         child: Material(
-          color: Colors.white,
+          color: AppColors.white,
           child: Container(
             width: receiptLogicalWidth,
-            color: Colors.white,
+            color: AppColors.white,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -116,7 +108,7 @@ class ReceiptImageGenerator {
     final completedAt = receipt.completedAt != null
         ? DateTime.parse(receipt.completedAt!).toLocal()
         : DateTime.now();
-    const dateStyle = TextStyle(fontSize: 10, color: _textMid);
+    const dateStyle = TextStyle(fontSize: 10, color: AppColors.receiptTextMid);
 
     return Container(
       color: AppColors.primary,
@@ -133,7 +125,7 @@ class ReceiptImageGenerator {
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: _textDark,
+                  color: AppColors.receiptTextDark,
                 ),
               ),
               const SizedBox(height: 6),
@@ -141,7 +133,7 @@ class ReceiptImageGenerator {
               const SizedBox(height: 2),
               Text(
                 AppStrings.refWithId.trParams({'id': receipt.rideId}).tr,
-                style: const TextStyle(fontSize: 9, color: _textLight),
+                style: const TextStyle(fontSize: 9, color: AppColors.receiptTextMuted),
               ),
             ],
           ),
@@ -199,7 +191,7 @@ class ReceiptImageGenerator {
 
     return Container(
       decoration: const BoxDecoration(
-        color: _bgLight,
+        color: AppColors.receiptBgLight,
         borderRadius: BorderRadius.all(Radius.circular(10)),
       ),
       padding: const EdgeInsets.all(16),
@@ -235,7 +227,7 @@ class ReceiptImageGenerator {
                       child: Container(
                         width: 2,
                         margin: const EdgeInsets.symmetric(vertical: 2),
-                        color: _divider,
+                        color: AppColors.receiptDivider,
                       ),
                     ),
                   ),
@@ -251,11 +243,11 @@ class ReceiptImageGenerator {
                 children: [
                   Text(
                     label.toUpperCase(),
-                    style: const TextStyle(fontSize: 8, color: _textLight),
+                    style: const TextStyle(fontSize: 8, color: AppColors.receiptTextMuted),
                   ),
                   Text(
                     address.isEmpty ? AppStrings.emDash.tr : address,
-                    style: const TextStyle(fontSize: 12, color: _textDark),
+                    style: const TextStyle(fontSize: 12, color: AppColors.receiptTextDark),
                   ),
                 ],
               ),
@@ -272,13 +264,17 @@ class ReceiptImageGenerator {
         _infoChip(
           icon: '📍',
           label: AppStrings.distance.tr,
-          value: '${receipt.distanceKm.toStringAsFixed(2)} km',
+          value: AppStrings.distanceKmFormat.trParams({
+            'value': receipt.distanceKm.toStringAsFixed(2),
+          }),
         ),
         const SizedBox(width: 12),
         _infoChip(
           icon: '⏱',
           label: AppStrings.duration.tr,
-          value: '${receipt.durationMinutes} min',
+          value: AppStrings.minutesShortCount.trParams({
+            'count': '${receipt.durationMinutes}',
+          }),
         ),
         const SizedBox(width: 12),
         _infoChip(
@@ -298,7 +294,7 @@ class ReceiptImageGenerator {
     return Expanded(
       child: Container(
         decoration: const BoxDecoration(
-          color: _bgLight,
+          color: AppColors.receiptBgLight,
           borderRadius: BorderRadius.all(Radius.circular(8)),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -307,7 +303,7 @@ class ReceiptImageGenerator {
           children: [
             Text(
               label.toUpperCase(),
-              style: const TextStyle(fontSize: 8, color: _textLight),
+              style: const TextStyle(fontSize: 8, color: AppColors.receiptTextMuted),
             ),
             const SizedBox(height: 4),
             Text(
@@ -315,7 +311,7 @@ class ReceiptImageGenerator {
               style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: _textDark,
+                color: AppColors.receiptTextDark,
               ),
             ),
           ],
@@ -327,7 +323,7 @@ class ReceiptImageGenerator {
   static Widget _buildDriverSection(ReceiptModel receipt) {
     return Container(
       decoration: const BoxDecoration(
-        color: _bgLight,
+        color: AppColors.receiptBgLight,
         borderRadius: BorderRadius.all(Radius.circular(10)),
       ),
       padding: const EdgeInsets.all(16),
@@ -361,7 +357,7 @@ class ReceiptImageGenerator {
         const SizedBox(height: 12),
         Container(
           decoration: const BoxDecoration(
-            color: _bgLight,
+            color: AppColors.receiptBgLight,
             borderRadius: BorderRadius.all(Radius.circular(10)),
           ),
           padding: const EdgeInsets.all(16),
@@ -385,19 +381,19 @@ class ReceiptImageGenerator {
                   }).tr,
                   -receipt.promoDiscountAmount,
                   receipt.currency,
-                  valueColor: Colors.green.shade700,
+                  valueColor: AppColors.iconSuccess,
                 ),
               if (receipt.discount > 0)
                 _fareRow(
                   AppStrings.discount.tr,
                   -receipt.discount,
                   receipt.currency,
-                  valueColor: Colors.green.shade700,
+                  valueColor: AppColors.iconSuccess,
                 ),
               if (receipt.tax > 0)
                 _fareRow(AppStrings.tax.tr, receipt.tax, receipt.currency),
               const SizedBox(height: 8),
-              const Divider(color: _divider, height: 1),
+              const Divider(color: AppColors.receiptDivider, height: 1),
               const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -407,7 +403,7 @@ class ReceiptImageGenerator {
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
-                      color: _textDark,
+                      color: AppColors.receiptTextDark,
                     ),
                   ),
                   Text(
@@ -419,7 +415,7 @@ class ReceiptImageGenerator {
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
-                      color: _primary,
+                      color: AppColors.primary,
                     ),
                   ),
                 ],
@@ -435,14 +431,14 @@ class ReceiptImageGenerator {
     String label,
     int amount,
     String currency, {
-    Color valueColor = _textMid,
+    Color valueColor = AppColors.receiptTextMid,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 12, color: _textMid)),
+          Text(label, style: const TextStyle(fontSize: 12, color: AppColors.receiptTextMid)),
           Text(
             CurrencyFormatter.formatWithApiCurrency(amount, currency),
             style: TextStyle(fontSize: 12, color: valueColor),
@@ -455,13 +451,13 @@ class ReceiptImageGenerator {
   static Widget _buildFooter() {
     return Container(
       decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: _divider, width: 1)),
+        border: Border(top: BorderSide(color: AppColors.receiptDivider, width: 1)),
       ),
       padding: const EdgeInsets.only(top: 16),
       child: Center(
         child: Text(
           AppStrings.thankYouForRidingWithSelcomGo.tr,
-          style: const TextStyle(fontSize: 11, color: _textLight),
+          style: const TextStyle(fontSize: 11, color: AppColors.receiptTextMuted),
         ),
       ),
     );
@@ -475,7 +471,7 @@ class ReceiptImageGenerator {
       style: const TextStyle(
         fontSize: 10,
         fontWeight: FontWeight.bold,
-        color: _textLight,
+        color: AppColors.receiptTextMuted,
         letterSpacing: 1.2,
       ),
     );
@@ -487,13 +483,13 @@ class ReceiptImageGenerator {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 12, color: _textMid)),
+          Text(label, style: const TextStyle(fontSize: 12, color: AppColors.receiptTextMid)),
           Text(
             value,
             style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
-              color: _textDark,
+              color: AppColors.receiptTextDark,
             ),
           ),
         ],
