@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../core/constants/app_assets.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
-import '../../core/widgets/svg_picture_asset.dart';
+import 'app_route_location_pin_icon.dart';
 
 /// **No intermediate stops:** one line `pickup | → | destination`.
 ///
@@ -105,11 +104,7 @@ class _RideLocationSummaryCardState extends State<RideLocationSummaryCard> {
           child: Row(
             children: [
               _buildIconContainer(
-                SvgPictureAsset(
-                  AppAssets.locationIcPickupPin,
-                  width: 14.sp,
-                  height: 14.sp,
-                ),
+                AppRouteLocationPinIcon.pickup(size: 12.sp),
               ),
               SizedBox(width: 6.w),
               Expanded(
@@ -135,11 +130,7 @@ class _RideLocationSummaryCardState extends State<RideLocationSummaryCard> {
           child: Row(
             children: [
               _buildIconContainer(
-                SvgPictureAsset(
-                  AppAssets.locationIcDestinationPin,
-                  width: 14.sp,
-                  height: 14.sp,
-                ),
+                AppRouteLocationPinIcon.destination(size: 12.sp),
               ),
               SizedBox(width: 6.w),
               Expanded(
@@ -173,11 +164,7 @@ class _RideLocationSummaryCardState extends State<RideLocationSummaryCard> {
           child: Row(
             children: [
               _buildIconContainer(
-                SvgPictureAsset(
-                  AppAssets.locationIcPickupPin,
-                  width: 14.sp,
-                  height: 14.sp,
-                ),
+                AppRouteLocationPinIcon.pickup(size: 12.sp),
               ),
               SizedBox(width: 6.w),
               Expanded(
@@ -197,11 +184,7 @@ class _RideLocationSummaryCardState extends State<RideLocationSummaryCard> {
           child: Row(
             children: [
               _buildIconContainer(
-                SvgPictureAsset(
-                  AppAssets.locationIcDestinationPin,
-                  width: 14.sp,
-                  height: 14.sp,
-                ),
+                AppRouteLocationPinIcon.destination(size: 12.sp),
               ),
               SizedBox(width: 6.w),
               Expanded(
@@ -234,17 +217,15 @@ class _RideLocationSummaryCardState extends State<RideLocationSummaryCard> {
       children: [
         _buildVerticalPickupRow(),
         _buildBridge(height: 10.h),
-        ...widget.intermediateStops.expand((stop) {
+        ...widget.intermediateStops.asMap().entries.expand((entry) {
+          final index = entry.key;
+          final stop = entry.value;
           return [
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 _buildIconContainer(
-                  SvgPictureAsset(
-                    AppAssets.locationIcDestinationPin,
-                    width: 14.sp,
-                    height: 14.sp,
-                  ),
+                  AppRouteLocationPinIcon.stop(index, size: 12.sp),
                 ),
                 SizedBox(width: 10.w),
                 Expanded(
@@ -275,10 +256,8 @@ class _RideLocationSummaryCardState extends State<RideLocationSummaryCard> {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         _buildIconContainer(
-          SvgPictureAsset(
-            AppAssets.locationIcPickupPin,
-            width: 14.sp,
-            height: 14.sp,
+          AppRouteLocationPinIcon.pickup(
+            size: 12.sp,
           ),
         ),
         SizedBox(width: 10.w),
@@ -304,11 +283,7 @@ class _RideLocationSummaryCardState extends State<RideLocationSummaryCard> {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         _buildIconContainer(
-          SvgPictureAsset(
-            AppAssets.locationIcDestinationPin,
-            width: 14.sp,
-            height: 14.sp,
-          ),
+          AppRouteLocationPinIcon.destination(size: 12.sp),
         ),
         SizedBox(width: 10.w),
         Expanded(

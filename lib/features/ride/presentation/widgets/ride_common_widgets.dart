@@ -10,6 +10,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_cupertino_text_button.dart';
+import '../../../../shared/widgets/app_route_location_pin_icon.dart';
 
 class RideDateFormatter {
   static String formatDate(String apiDate) {
@@ -104,25 +105,17 @@ class RideLocationsTimeline extends StatelessWidget {
       return stopAddr != endAddr;
     }).toList();
 
-    final bool isMulti = filteredStops.isNotEmpty;
-    const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
-
     return Column(
       children: [
-        // Start Location Row
         _buildLocationRow(
           title: startLocation,
           address: startAddress,
-          icon: _buildLetterIcon(
-            isMulti ? 'A' : 'P',
-            color: AppColors.mapPickupMarkerBlue,
-          ),
+          icon: AppRouteLocationPinIcon.pickup(),
           bottomSpacingWhenLine:
               showAddStopBeforeDestination && filteredStops.isEmpty ? 0 : null,
           showBottomLine: true,
         ),
 
-        // Intermediate Stops (full rows) or compact summary marker
         if (showStopsAsSummary && filteredStops.isNotEmpty)
           _buildLocationRow(
             title:
@@ -137,10 +130,7 @@ class RideLocationsTimeline extends StatelessWidget {
             _buildLocationRow(
               title: filteredStops[i].address.split(',').first,
               address: filteredStops[i].address,
-              icon: _buildLetterIcon(
-                letters[i + 1],
-                color: AppColors.mapStopMarkerRed,
-              ),
+              icon: AppRouteLocationPinIcon.stop(i),
               bottomSpacingWhenLine:
                   showAddStopBeforeDestination && i == filteredStops.length - 1
                   ? 0
@@ -150,14 +140,10 @@ class RideLocationsTimeline extends StatelessWidget {
 
         if (showAddStopBeforeDestination) _buildAddStopDividerRow(),
 
-        // End Location Row
         _buildLocationRow(
           title: endLocation,
           address: endAddress,
-          icon: _buildLetterIcon(
-            isMulti ? letters[filteredStops.length + 1] : 'D',
-            color: AppColors.mapDropMarkerGreen,
-          ),
+          icon: AppRouteLocationPinIcon.destination(),
           showBottomLine: false,
           footer: showChangeDropLocationLink && onChangeDropLocationTap != null
               ? AppCupertinoTextButton.changeDropLocation(
@@ -170,22 +156,7 @@ class RideLocationsTimeline extends StatelessWidget {
     );
   }
 
-  Widget _buildLetterIcon(String label, {required Color color}) {
-    return Container(
-      width: 24.w,
-      height: 24.w,
-      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-      alignment: Alignment.center,
-      child: Text(
-        label,
-        style: TextStyle(
-          color: AppColors.white,
-          fontSize: 12.sp,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-    );
-  }
+  static const double _routeIconColumnWidth = 22;
 
   Widget _buildStopCountIcon(int count) {
     return Container(
@@ -220,28 +191,33 @@ class RideLocationsTimeline extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Column(
-            children: [
-              icon,
-              if (showBottomLine)
-                Expanded(
-                  child: Container(
-                    width: 1.w,
-                    margin: EdgeInsets.symmetric(vertical: 2.h),
-                    child: CustomPaint(
-                      painter: DashedLinePainter(
-                        color: AppColors.black.withValues(alpha: 0.5),
+          SizedBox(
+            width: _routeIconColumnWidth.w,
+            child: Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(top: 2.h),
+                  child: Center(child: icon),
+                ),
+                if (showBottomLine)
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 2.h),
+                      child: CustomPaint(
+                        painter: DashedLinePainter(
+                          color: AppColors.black.withValues(alpha: 0.5),
+                        ),
                       ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
           SizedBox(width: 8.w),
           Expanded(
             child: Padding(
               padding: EdgeInsets.only(
-                bottom: showBottomLine ? (bottomSpacingWhenLine ?? 16.h) : 0,
+                bottom: showBottomLine ? (bottomSpacingWhenLine ?? 18.h) : 0,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -339,7 +315,7 @@ class RideLocationsTimeline extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           SizedBox(
-            width: 22.w,
+            width: _routeIconColumnWidth.w,
             child: Center(
               child: SizedBox(
                 width: 1.w,
@@ -387,12 +363,13 @@ class DashedLinePainter extends CustomPainter {
 
     const double dashWidth = 4.0;
     const double dashSpace = 4.0;
+    final x = size.width / 2;
     double currentY = 0;
 
     while (currentY < size.height) {
       canvas.drawLine(
-        Offset(0, currentY),
-        Offset(0, currentY + dashWidth),
+        Offset(x, currentY),
+        Offset(x, currentY + dashWidth),
         paint,
       );
       currentY += dashWidth + dashSpace;

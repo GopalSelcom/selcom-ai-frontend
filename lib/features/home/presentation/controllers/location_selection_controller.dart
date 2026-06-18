@@ -7,9 +7,7 @@ import '../../../../core/constants/ride_stop_limits.dart';
 import '../../../../core/domain/entities/location_entity.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/app_dialogs.dart';
-import '../../../../shared/utils/map_route_marker_utils.dart';
 import '../controllers/home_controller.dart';
 
 class LocationSelectionController extends GetxController {
@@ -143,39 +141,6 @@ class LocationSelectionController extends GetxController {
 
   void applyOrderedRowsFromReorder(List<Object?> rows) {
     _applyOrderedRows(rows.cast<_RouteRowDraft>());
-  }
-
-  ({String letter, Color color}) routeLetterStyleForPickup() {
-    if (!hasIntermediateStops) {
-      return (letter: 'P', color: AppColors.mapPickupMarkerBlue);
-    }
-    return (
-      letter: MapRouteMarkerUtils.letterAt(0),
-      color: AppColors.mapPickupMarkerBlue,
-    );
-  }
-
-  ({String letter, Color color}) routeLetterStyleForIntermediateStop(
-    int stopIndex,
-  ) {
-    return (
-      letter: MapRouteMarkerUtils.letterAt(stopIndex + 1),
-      color: AppColors.mapStopMarkerRed,
-    );
-  }
-
-  ({String letter, Color color}) routeLetterStyleForDestination() {
-    if (!hasIntermediateStops) {
-      return (letter: 'D', color: AppColors.mapDropMarkerGreen);
-    }
-    return (
-      letter: MapRouteMarkerUtils.letterAt(
-        MapRouteMarkerUtils.destinationLetterIndex(
-          intermediateStopCount: extraDestinationControllers.length,
-        ),
-      ),
-      color: AppColors.mapDropMarkerGreen,
-    );
   }
 
   bool get _isPickupSegmentReady {

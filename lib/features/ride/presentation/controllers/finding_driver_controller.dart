@@ -31,6 +31,8 @@ import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../../../shared/utils/ride_pickup_status_labels.dart';
 import '../../../../shared/utils/ride_status_normalizer.dart';
 import '../../../../shared/utils/map_route_marker_utils.dart';
+import '../../../../shared/utils/route_map_marker_icons.dart';
+import '../../../../shared/utils/route_pin_letter_style.dart';
 import '../../../../shared/utils/map_vehicle_marker_utils.dart';
 import '../../../../shared/utils/socket_ride_scope.dart';
 import '../../../../shared/utils/tracking_route_geometry_utils.dart';
@@ -323,16 +325,20 @@ class FindingDriverController extends GetxController {
   Future<void> _ensureRouteLetterIcons() async {
     if (_routeLetterIconsLoaded) return;
 
+    await RouteMapMarkerIcons.ensureLetterPinCache();
+    for (int i = 0; i < MapRouteMarkerUtils.routeLetters.length - 1; i++) {
+      final letter = MapRouteMarkerUtils.letterAt(i + 1);
+      _redRouteLetterIcons[letter] = RouteMapMarkerIcons.cached(
+        letter: letter,
+        color: RoutePinLetterStyle.intermediateColor(i),
+      )!;
+    }
     for (int i = 1; i < MapRouteMarkerUtils.routeLetters.length; i++) {
       final letter = MapRouteMarkerUtils.routeLetters[i];
-      _redRouteLetterIcons[letter] = await MapMarkerUtils.createTextMarker(
-        text: letter,
-        color: AppColors.mapStopMarkerRed,
-      );
-      _greenRouteLetterIcons[letter] = await MapMarkerUtils.createTextMarker(
-        text: letter,
-        color: AppColors.mapDropMarkerGreen,
-      );
+      _greenRouteLetterIcons[letter] = RouteMapMarkerIcons.cached(
+        letter: letter,
+        color: RoutePinLetterStyle.destinationColor,
+      )!;
     }
 
     _routeLetterIconsLoaded = true;
@@ -340,7 +346,10 @@ class FindingDriverController extends GetxController {
 
   BitmapDescriptor redRouteLetterIconForSequentialIndex(int sequentialIndex) {
     final letter = MapRouteMarkerUtils.letterAt(sequentialIndex + 1);
-    return _redRouteLetterIcons[letter] ??
+    return RouteMapMarkerIcons.cached(
+          letter: letter,
+          color: RoutePinLetterStyle.intermediateColor(sequentialIndex),
+        ) ??
         dropIcon.value ??
         BitmapDescriptor.defaultMarker;
   }
@@ -349,12 +358,14 @@ class FindingDriverController extends GetxController {
     await _ensureRouteLetterIcons();
 
     if (usesMultiStopRouteMarkers) {
-      pickupIcon.value = await MapMarkerUtils.createTextMarker(
-        text: 'A',
-        color: AppColors.mapPickupMarkerBlue,
+      final intermediateCount = destinations.length - 1;
+      pickupIcon.value = await RouteMapMarkerIcons.pin(
+        letter: RoutePinLetterStyle.pickupLetter(
+          intermediateStopCount: intermediateCount,
+        ),
+        color: RoutePinLetterStyle.pickupColor,
       );
 
-      final intermediateCount = destinations.length - 1;
       final destLetter = MapRouteMarkerUtils.letterAt(
         MapRouteMarkerUtils.destinationLetterIndex(
           intermediateStopCount: intermediateCount,
@@ -369,13 +380,13 @@ class FindingDriverController extends GetxController {
         ),
       );
     } else {
-      pickupIcon.value = await MapMarkerUtils.createTextMarker(
-        text: 'P',
-        color: AppColors.mapPickupMarkerBlue,
+      pickupIcon.value = await RouteMapMarkerIcons.pin(
+        letter: 'P',
+        color: RoutePinLetterStyle.pickupColor,
       );
-      dropIcon.value = await MapMarkerUtils.createTextMarker(
-        text: 'D',
-        color: AppColors.mapDropMarkerGreen,
+      dropIcon.value = await RouteMapMarkerIcons.pin(
+        letter: 'D',
+        color: RoutePinLetterStyle.destinationColor,
       );
       stopIcons.clear();
     }

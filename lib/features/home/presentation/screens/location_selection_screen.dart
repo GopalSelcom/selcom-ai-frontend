@@ -15,7 +15,7 @@ import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/favorite_location_chips_row.dart';
-import '../../../../shared/widgets/app_route_letter_icon.dart';
+import '../../../../shared/widgets/app_route_location_pin_icon.dart';
 import '../../data/models/places_models.dart';
 import '../controllers/home_controller.dart';
 import '../controllers/location_selection_controller.dart';
@@ -118,7 +118,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                           padding: EdgeInsets.symmetric(horizontal: 16.w),
                           child: Obx(() {
                             locationController.syncPickupFromLiveAddress();
-                            locationController.extraDestinationControllers.length;
+                            locationController
+                                .extraDestinationControllers
+                                .length;
                             return _pickupDestinationCard();
                           }),
                         ),
@@ -195,7 +197,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           borderRadius: BorderRadius.all(Radius.circular(16.r)),
         ),
         child: Padding(
-          padding: EdgeInsets.fromLTRB(22.32.w, 15.54.h, 20.32.w, 17.22.h),
+          padding: EdgeInsets.fromLTRB(22.32.w, 15.54.h, 15.54.w, 17.22.h),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -314,12 +316,6 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         final isDestination = rowIndex == rowCount - 1;
         final extraIndex = rowIndex - 1;
 
-        final ({String letter, Color color}) letterStyle = isPickup
-            ? locationController.routeLetterStyleForPickup()
-            : isDestination
-            ? locationController.routeLetterStyleForDestination()
-            : locationController.routeLetterStyleForIntermediateStop(extraIndex);
-
         final TextEditingController textController = isPickup
             ? pickupController
             : isDestination
@@ -334,10 +330,11 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         return Container(
           key: ValueKey('route-row-$rowIndex-${textController.hashCode}'),
           child: _pinFieldRow(
-            icon: AppRouteLetterIcon(
-              letter: letterStyle.letter,
-              color: letterStyle.color,
-            ),
+            icon: isPickup
+                ? AppRouteLocationPinIcon.pickup()
+                : isDestination
+                ? AppRouteLocationPinIcon.destination()
+                : AppRouteLocationPinIcon.stop(extraIndex),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [

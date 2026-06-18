@@ -30,7 +30,6 @@ import '../../../../core/services/app_settings_service.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/active_rides_parser.dart';
 import '../../../../shared/utils/address_display_utils.dart';
@@ -40,6 +39,8 @@ import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/utils/distance_display.dart';
 import '../../../../shared/utils/map_vehicle_marker_utils.dart';
 import '../../../../shared/utils/ride_payment_validation_messages.dart';
+import '../../../../shared/utils/route_map_marker_icons.dart';
+import '../../../../shared/utils/route_pin_letter_style.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../home/domain/repositories/home_repository.dart';
 import '../../../home/presentation/controllers/location_selection_controller.dart';
@@ -390,44 +391,40 @@ class VehicleSelectionController extends GetxController {
   Future<void> loadLocationIcons() async {
     try {
       final bool isMulti = destinations.length > 1;
+      final intermediateCount = destinations.length - 1;
 
       if (!isMulti) {
-        // Single Stop: P (Blue) and D (Green)
-        pickupIcon = await MapMarkerUtils.createTextMarker(
-          text: 'P',
-          color: AppColors.mapPickupMarkerBlue,
+        pickupIcon = await RouteMapMarkerIcons.pin(
+          letter: 'P',
+          color: RoutePinLetterStyle.pickupColor,
         );
-        dropIcon = await MapMarkerUtils.createTextMarker(
-          text: 'D',
-          color: AppColors.mapDropMarkerGreen,
+        dropIcon = await RouteMapMarkerIcons.pin(
+          letter: 'D',
+          color: RoutePinLetterStyle.destinationColor,
         );
         stopIcons.clear();
       } else {
-        // Multi Stop: A (Blue), B, C... (Red), Last Letter (Green)
-        const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
-        pickupIcon = await MapMarkerUtils.createTextMarker(
-          text: 'A',
-          color: AppColors.mapPickupMarkerBlue,
+        pickupIcon = await RouteMapMarkerIcons.pin(
+          letter: RoutePinLetterStyle.pickupLetter(
+            intermediateStopCount: intermediateCount,
+          ),
+          color: RoutePinLetterStyle.pickupColor,
         );
 
         stopIcons.clear();
-        // Generate all possible intermediate letters as Red
-        for (int i = 1; i < letters.length; i++) {
-          final icon = await MapMarkerUtils.createTextMarker(
-            text: letters[i],
-            color: AppColors.mapStopMarkerRed,
+        for (int i = 0; i < intermediateCount; i++) {
+          final icon = await RouteMapMarkerIcons.pin(
+            letter: RoutePinLetterStyle.intermediateLetter(i),
+            color: RoutePinLetterStyle.intermediateColor(i),
           );
           stopIcons.add(icon);
         }
 
-        // Final destination letter circle (secondary — pickup stays primary).
-        final destIndex = destinations.length; // If 2 drops, index is 2 (C)
-        final label = (destIndex < letters.length)
-            ? letters[destIndex]
-            : letters.last;
-        dropIcon = await MapMarkerUtils.createTextMarker(
-          text: label,
-          color: AppColors.secondary,
+        dropIcon = await RouteMapMarkerIcons.pin(
+          letter: RoutePinLetterStyle.destinationLetter(
+            intermediateStopCount: intermediateCount,
+          ),
+          color: RoutePinLetterStyle.destinationColor,
         );
       }
     } catch (e, stackTrace) {
@@ -436,8 +433,7 @@ class VehicleSelectionController extends GetxController {
         debugPrint('[VehicleSelection] Error loading markers: $e');
       }
     }
-    isLocationIconsReady.value =
-        pickupIcon != null && dropIcon != null && stopIcons.isNotEmpty;
+    isLocationIconsReady.value = pickupIcon != null && dropIcon != null;
   }
 
   bool get isMapDataReady => isRouteReady.value && routePoints.length >= 2;

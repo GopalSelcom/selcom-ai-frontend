@@ -11,6 +11,7 @@ import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/currency_formatter.dart';
+import '../../../../shared/widgets/app_route_location_pin_icon.dart';
 import '../../data/models/ride_management_models.dart';
 import 'receipt_format_utils.dart';
 
@@ -24,6 +25,10 @@ class ReceiptImageGenerator {
   static const Color _textLight = Color(0xFF999AAB);
   static const Color _divider = Color(0xFFEEEEF2);
   static const Color _bgLight = Color(0xFFF8F8FA);
+
+  /// Receipt route pins — fixed px (no ScreenUtil) for PNG capture.
+  static const double _routePinSize = 16;
+  static const double _routeIconColumnWidth = 18;
 
   static Future<ReceiptPngCapture> generateReceiptPngBytes({
     required ReceiptModel receipt,
@@ -157,67 +162,38 @@ class ReceiptImageGenerator {
   }
 
   static Widget _buildRouteSection(ReceiptModel receipt) {
-    // Filter stops to avoid duplicating final destination
     final filteredStops = receipt.stops.where((s) {
       final stopAddr = s.address.trim().toLowerCase();
       final endAddr = receipt.destinationAddress.trim().toLowerCase();
       return stopAddr != endAddr;
     }).toList();
 
-    final bool isMulti = filteredStops.isNotEmpty;
-    const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
-
-    final children = <Widget>[
-      _sectionLabel(AppStrings.route.tr),
-      const SizedBox(height: 12),
-      _routeStop(
+    final rows = <Widget>[
+      _routeTimelineRow(
         label: AppStrings.pickup.tr,
         address: receipt.pickupAddress,
-        icon: _buildLetterIcon(
-          isMulti ? 'A' : 'P',
-          color: AppColors.mapPickupMarkerBlue,
-        ),
+        icon: AppRouteLocationPinIcon.pickup(size: _routePinSize),
+        showConnectorBelow: true,
       ),
     ];
 
     for (int i = 0; i < filteredStops.length; i++) {
-      children.add(
-        Container(
-          margin: const EdgeInsets.only(left: 11, top: 2, bottom: 2),
-          width: 2,
-          height: 16,
-          color: _divider,
-        ),
-      );
-      children.add(
-        _routeStop(
+      rows.add(
+        _routeTimelineRow(
           label: '${AppStrings.stop.tr} ${i + 1}',
           address: filteredStops[i].address,
-          icon: _buildLetterIcon(
-            letters[i + 1],
-            color: AppColors.mapStopMarkerRed,
-          ),
+          icon: AppRouteLocationPinIcon.stop(i, size: _routePinSize),
+          showConnectorBelow: true,
         ),
       );
     }
 
-    children.add(
-      Container(
-        margin: const EdgeInsets.only(left: 11, top: 2, bottom: 2),
-        width: 2,
-        height: 16,
-        color: _divider,
-      ),
-    );
-
-    children.add(
-      _routeStop(
+    rows.add(
+      _routeTimelineRow(
         label: AppStrings.dropoff.tr,
         address: receipt.destinationAddress,
-        icon: _buildLetterIcon(
-          isMulti ? letters[filteredStops.length + 1] : 'D',
-          color: AppColors.mapDropMarkerGreen,
-        ),
+        icon: AppRouteLocationPinIcon.destination(size: _routePinSize),
+        showConnectorBelow: false,
       ),
     );
 
@@ -229,54 +205,64 @@ class ReceiptImageGenerator {
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: children,
+        children: [
+          _sectionLabel(AppStrings.route.tr),
+          const SizedBox(height: 12),
+          ...rows,
+        ],
       ),
     );
   }
 
-  static Widget _buildLetterIcon(String label, {required Color color}) {
-    return Container(
-      width: 24,
-      height: 24,
-      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-      alignment: Alignment.center,
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-    );
-  }
-
-  static Widget _routeStop({
+  static Widget _routeTimelineRow({
     required String label,
     required String address,
     required Widget icon,
+    required bool showConnectorBelow,
   }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        icon,
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label.toUpperCase(),
-                style: const TextStyle(fontSize: 8, color: _textLight),
-              ),
-              Text(
-                address.isEmpty ? AppStrings.emDash.tr : address,
-                style: const TextStyle(fontSize: 12, color: _textDark),
-              ),
-            ],
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            width: _routeIconColumnWidth,
+            child: Column(
+              children: [
+                Center(child: icon),
+                if (showConnectorBelow)
+                  Expanded(
+                    child: Center(
+                      child: Container(
+                        width: 2,
+                        margin: const EdgeInsets.symmetric(vertical: 2),
+                        color: _divider,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
-        ),
-      ],
+          const SizedBox(width: 10),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: showConnectorBelow ? 10 : 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label.toUpperCase(),
+                    style: const TextStyle(fontSize: 8, color: _textLight),
+                  ),
+                  Text(
+                    address.isEmpty ? AppStrings.emDash.tr : address,
+                    style: const TextStyle(fontSize: 12, color: _textDark),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
