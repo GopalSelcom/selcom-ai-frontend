@@ -1,11 +1,16 @@
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../env/env.dart';
 
+/// App runtime environment (which host set from [Env] to use).
 enum Environment { dev, staging, prod }
 
+/// Runtime URLs and keys. Initialized once in main via [init].
+///
+/// Source: `.env` → [Env] (generated) → this class.
 class AppConfig {
   static late Environment environment;
   static late String baseUrl;
-  static late String socketUrl;
+  static late String socketBaseUrl;
+  static late String errorReportHost;
   static late String agoraAppId;
 
   /// `none` (default) | `ride_api` POST mint per brain guide | `api` GET legacy **or** POST if endpoint contains `{rideId}`.
@@ -30,65 +35,79 @@ class AppConfig {
   /// `false` → real `go_send_transfer_request_selcom_pesa` + status polling.
   static bool selcomPesaBypass = false;
 
-  static const String _agoraAppIdDefine = String.fromEnvironment(
-    'AGORA_APP_ID',
-    defaultValue: '',
-  );
-  static const String _agoraTokenModeDefine = String.fromEnvironment(
-    'AGORA_TOKEN_MODE',
-    defaultValue: 'none',
-  );
-  static const String _agoraTokenEndpointDefine = String.fromEnvironment(
-    'AGORA_TOKEN_ENDPOINT',
-    defaultValue: '',
-  );
-  static const String _selcomPesaDeepLinkHostDefine = String.fromEnvironment(
-    'SELCOM_PESA_DEEPLINK_HOST',
-    defaultValue: '',
-  );
-
   static void init({required Environment env}) {
     environment = env;
-    agoraAppId = _readEnv('AGORA_APP_ID', _agoraAppIdDefine).trim();
-    agoraTokenMode = _readEnv(
-      'AGORA_TOKEN_MODE',
-      _agoraTokenModeDefine,
-    ).trim().toLowerCase();
-    agoraTokenEndpoint = _readEnv(
-      'AGORA_TOKEN_ENDPOINT',
-      _agoraTokenEndpointDefine,
-    ).trim();
+
+    // Third-party keys (same across environments unless overridden in .env).
+    agoraAppId = Env.agoraAppId.trim();
+    agoraTokenMode = Env.agoraTokenMode.trim().toLowerCase();
+    agoraTokenEndpoint = Env.agoraTokenEndpoint.trim();
+
+    final apiHost = _apiHostFor(env);
+    socketBaseUrl = _socketBaseUrlFor(env);
+    errorReportHost = _errorReportHostFor(env);
+
+    // baseUrl: dev/staging append `/api`; prod uses host as-is (legacy contract).
     switch (env) {
       case Environment.dev:
-        baseUrl = 'https://dukastaging.selcom.dev:7443/api';
-        socketUrl = 'ws://localhost:5010';
-        break;
       case Environment.staging:
-        baseUrl = 'https://dukastaging.selcom.dev:7443/api/';
-        socketUrl = 'wss://staging-socket.duka.direct';
+        baseUrl = '$apiHost/api';
         break;
       case Environment.prod:
         ridePaymentBypass = false;
         selcomPesaBypass = false;
-        baseUrl = 'https://api.duka.direct';
-        socketUrl = 'wss://socket.duka.direct';
+        baseUrl = apiHost;
         break;
     }
 
-    selcomPesaDeepLinkHost = _readEnv(
-      'SELCOM_PESA_DEEPLINK_HOST',
-      _selcomPesaDeepLinkHostDefine,
-    ).trim();
+    selcomPesaDeepLinkHost = Env.selcomPesaDeepLinkHost.trim();
     if (selcomPesaDeepLinkHost.isEmpty) {
       selcomPesaDeepLinkHost = selcomPesaDeepLinkHostDefault;
     }
   }
 
-  static String _readEnv(String key, String fallback) {
-    final dotEnvValue = dotenv.env[key];
-    if (dotEnvValue != null && dotEnvValue.trim().isNotEmpty) {
-      return dotEnvValue;
+  /// Host root for [ApiService] (no `/api` suffix).
+  static String apiHostFor(Environment env) => _apiHostFor(env);
+
+  static String _apiHostFor(Environment env) {
+    switch (env) {
+      case Environment.dev:
+        final devHost = Env.apiHostDev.trim();
+        return _stripTrailingSlash(
+          devHost.isEmpty ? Env.apiHostStaging : devHost,
+        );
+      case Environment.staging:
+        return _stripTrailingSlash(Env.apiHostStaging);
+      case Environment.prod:
+        return _stripTrailingSlash(Env.apiHostProduction);
     }
-    return fallback;
+  }
+
+  static String _socketBaseUrlFor(Environment env) {
+    switch (env) {
+      case Environment.dev:
+        final devSocket = Env.socketBaseUrlDev.trim();
+        return _stripTrailingSlash(
+          devSocket.isEmpty ? Env.socketBaseUrlStaging : devSocket,
+        );
+      case Environment.staging:
+        return _stripTrailingSlash(Env.socketBaseUrlStaging);
+      case Environment.prod:
+        return _stripTrailingSlash(Env.socketBaseUrlProduction);
+    }
+  }
+
+  static String _errorReportHostFor(Environment env) {
+    switch (env) {
+      case Environment.dev:
+      case Environment.staging:
+        return _stripTrailingSlash(Env.errorReportHostStaging);
+      case Environment.prod:
+        return _stripTrailingSlash(Env.errorReportHostProduction);
+    }
+  }
+
+  static String _stripTrailingSlash(String value) {
+    return value.replaceAll(RegExp(r'/+$'), '');
   }
 }

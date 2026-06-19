@@ -6,7 +6,6 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -116,20 +115,6 @@ void main() async {
       await SystemChrome.setPreferredOrientations([
         DeviceOrientation.portraitUp,
       ]);
-      try {
-        await dotenv.load(fileName: '.env');
-      } catch (e, st) {
-        // Usually means `.env` was not listed under `flutter: assets:` in pubspec.yaml,
-        // or the file is missing at build time. App continues with dart-define / defaults.
-        if (kDebugMode) {
-          debugPrint(
-            'flutter_dotenv: could not load .env ($e). '
-            'Ensure pubspec lists `- .env` under flutter assets and the file exists.',
-          );
-          debugPrint('$st');
-        }
-      }
-
       // Initialize Google Maps Renderer for Android
       // final GoogleMapsFlutterPlatform mapsImplementation = GoogleMapsFlutterPlatform.instance;
       // if (mapsImplementation is GoogleMapsFlutterAndroid) {
@@ -174,11 +159,11 @@ void main() async {
         return true;
       };
 
-      // Choose environment (can be set via --dart-define)
+      // Default: dev (staging URLs from .env). Override only if needed: --dart-define=ENV=prod
       const envString = String.fromEnvironment('ENV', defaultValue: 'dev');
       final env = Environment.values.firstWhere(
         (e) => e.toString() == 'Environment.$envString',
-        orElse: () => Environment.prod,
+        orElse: () => Environment.dev,
       );
 
       AppConfig.init(env: env);

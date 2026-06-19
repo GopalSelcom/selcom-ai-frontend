@@ -50,6 +50,7 @@ import '../../features/wallet/domain/usecases/get_wallet_summary_usecase.dart';
 import '../../features/wallet/domain/usecases/email_wallet_statement_usecase.dart';
 import '../../features/wallet/domain/usecases/get_wallet_transactions_usecase.dart';
 import '../config/app_config.dart';
+import '../env/env.dart';
 import '../network/api_service.dart';
 import '../network/headers.dart';
 import '../network/network_connectivity_service.dart';
@@ -89,9 +90,11 @@ Future<void> init() async {
   // ── Network — ApiService initialization ──
   final environment = _mapEnvironment(AppConfig.environment);
 
+  // Base URLs from .env (via AppConfig / Env).
   ApiService().init(
-    stagingBaseUrl: 'https://dukastaging.selcom.dev:7443',
-    productionBaseUrl: 'https://api.duka.direct',
+    stagingBaseUrl: AppConfig.apiHostFor(Environment.staging),
+    productionBaseUrl: AppConfig.apiHostFor(Environment.prod),
+    localBaseUrl: _optionalDevApiHost(),
     environment: environment,
     commonHeadersBuilder: () => commonHeaders(accessTokenRequired: true),
   );
@@ -227,4 +230,10 @@ ApiEnvironment _mapEnvironment(Environment env) {
     case Environment.prod:
       return ApiEnvironment.production;
   }
+}
+
+String? _optionalDevApiHost() {
+  final devHost = Env.apiHostDev.trim();
+  if (devHost.isEmpty) return null;
+  return AppConfig.apiHostFor(Environment.dev);
 }

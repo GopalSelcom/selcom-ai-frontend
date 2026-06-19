@@ -5,6 +5,7 @@ import 'dart:developer';
 import 'package:flutter/foundation.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
+import '../config/app_config.dart';
 import '../data/models/responses/nearbyRiders/response/driver_location_socker_response.dart';
 import '../data/models/responses/nearbyRiders/response/near_by_rider_response.dart';
 import '../data/models/responses/nearbyRiders/response/ride_fare_settled_response.dart';
@@ -44,8 +45,6 @@ class AppSocketService {
   factory AppSocketService() => _instance;
 
   AppSocketService._internal();
-
-  static const String defaultBaseUrl = 'https://dukastaging.selcom.dev:7443';
 
   // ---------------- EVENTS ----------------
 
@@ -102,7 +101,7 @@ class AppSocketService {
   // 💬 Chat controller
   final _chatController = StreamController<Map<String, dynamic>>.broadcast();
 
-  String get baseUrl => defaultBaseUrl;
+  String get baseUrl => AppConfig.socketBaseUrl;
 
   Stream<List<Driver>> get nearbyDriversStream => _driversController.stream;
 
