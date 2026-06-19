@@ -66,7 +66,7 @@ class MyRidesController extends GetxController {
         (failure) => AppDialogs.showErrorDialog(message: failure.message),
         (freshRide) {
           if (rideStatusIsOngoingActive(freshRide.status)) {
-            navigateToDriverAcceptedForRide(freshRide);
+            navigateToOngoingRide(freshRide);
             return;
           }
           // My Rides entry must always use non-completion mode.

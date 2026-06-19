@@ -346,7 +346,7 @@ class NotificationService {
           AppDialogs.showErrorDialog(
             message: AppStrings.unableToOpenRideDetails.tr,
           );
-        }, (ride) => navigateToDriverAcceptedForRide(ride));
+        }, (ride) => navigateToOngoingRide(ride));
       } finally {
         Loader.instance.hide();
       }

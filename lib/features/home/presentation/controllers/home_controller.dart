@@ -734,7 +734,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
           isCompleted: freshRide.status == RideStatus.rideCompleted,
           updateIfExists: true,
         );
-        navigateToDriverAcceptedForRide(freshRide);
+        navigateToOngoingRide(freshRide);
       },
     );
   }

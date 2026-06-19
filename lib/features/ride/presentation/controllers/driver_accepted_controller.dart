@@ -851,6 +851,10 @@ class DriverAcceptedController extends GetxController
         );
       },
       (r) async {
+        if (shouldOpenFindingDriverForRide(r)) {
+          navigateToFindingDriverForRide(r, replace: true);
+          return;
+        }
         rideLoadError.value = null;
         ride.value = r;
         _applyRide(r);
