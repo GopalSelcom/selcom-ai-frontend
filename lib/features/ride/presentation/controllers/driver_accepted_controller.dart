@@ -163,6 +163,8 @@ class DriverAcceptedController extends GetxController
   GoogleMapController? mapController;
   LatLng? _lastDriverRotationSamplePosition;
   bool _navigatedAway = false;
+  /// Suppresses cancel dialog when the user completed [CancelRideFlow] (socket may also fire `cancelled`).
+  bool _isUserInitiatedCancellation = false;
   DateTime? _lastCameraUpdate;
   bool _openedCompletedRideDetails = false;
   bool _hasReceivedTrackingUpdate = false;
@@ -1050,21 +1052,32 @@ class DriverAcceptedController extends GetxController
         name: 'ORDER_TRACKING',
         error: jsonEncode(payload.toJson()),
       );
-      if (_navigatedAway) return;
       final status = (payload.status ?? '').toString().trim();
-      _applyBottomSheetStateForStatus(status);
-      _applyStatusPayload(payload);
       final normalized = normalizeRideStatusString(status);
-      await _syncLiveActivityFromStatusPayload(payload);
-      if (normalized == 'cancelled' || normalized == 'no_driver_found') {
+
+      if (normalized == 'cancelled') {
+        if (_isUserInitiatedCancellation || _navigatedAway) return;
         _navigatedAway = true;
+        await _syncLiveActivityFromStatusPayload(payload);
+        await LiveActivityManager().endActivity(rideId);
+        _showCancelDialogThenGoHome(AppStrings.rideCancelled.tr);
+        return;
+      }
+      if (normalized == 'no_driver_found' || normalized == 'no_drivers_found') {
+        if (_navigatedAway) return;
+        _navigatedAway = true;
+        await _syncLiveActivityFromStatusPayload(payload);
         await LiveActivityManager().endActivity(rideId);
         _showCancelDialogThenGoHome(
-          normalized == 'no_driver_found'
-              ? AppStrings.noDriverFoundForYourRequestPleaseTryAgain.tr
-              : AppStrings.rideCancelled.tr,
+          AppStrings.noDriverFoundForYourRequestPleaseTryAgain.tr,
         );
+        return;
       }
+
+      if (_navigatedAway) return;
+      _applyBottomSheetStateForStatus(status);
+      _applyStatusPayload(payload);
+      await _syncLiveActivityFromStatusPayload(payload);
     });
 
     _rideStopSub = _socketService.rideStopUpdateStream.listen((payload) {
@@ -1161,6 +1174,7 @@ class DriverAcceptedController extends GetxController
       payload,
     ) async {
       if (payload != null) {
+        if (_navigatedAway) return;
         if (!_isSocketEventForThisRide(payload.rideId)) return;
         _hasReceivedTrackingUpdate = true;
         developer.log(
@@ -1589,7 +1603,8 @@ class DriverAcceptedController extends GetxController
     }
 
     if (normalizedStatus == 'cancelled' ||
-        normalizedStatus == 'no_driver_found') {
+        normalizedStatus == 'no_driver_found' ||
+        normalizedStatus == 'no_drivers_found') {
       return;
     }
 
@@ -1902,12 +1917,18 @@ class DriverAcceptedController extends GetxController
       }
     }
 
-    if (trackingStatus == 'cancelled' || trackingStatus == 'no_driver_found') {
+    if (trackingStatus == 'cancelled') {
+      if (_isUserInitiatedCancellation || _navigatedAway) return;
+      _navigatedAway = true;
+      _showCancelDialogThenGoHome(AppStrings.rideCancelled.tr);
+      return;
+    }
+    if (trackingStatus == 'no_driver_found' ||
+        trackingStatus == 'no_drivers_found') {
+      if (_navigatedAway) return;
       _navigatedAway = true;
       _showCancelDialogThenGoHome(
-        trackingStatus == 'no_driver_found'
-            ? AppStrings.noDriverFoundForYourRequestPleaseTryAgain.tr
-            : AppStrings.rideCancelled.tr,
+        AppStrings.noDriverFoundForYourRequestPleaseTryAgain.tr,
       );
       return;
     }
@@ -2196,8 +2217,14 @@ class DriverAcceptedController extends GetxController
       rideId: rideId,
       isReasonProcessing: isReasonProcessing,
       isCancelPayProcessing: isCancelPayProcessing,
-      onCancelApiStarted: () => _navigatedAway = true,
-      onCancelApiFailed: () => _navigatedAway = false,
+      onCancelApiStarted: () {
+        _isUserInitiatedCancellation = true;
+        _navigatedAway = true;
+      },
+      onCancelApiFailed: () {
+        _isUserInitiatedCancellation = false;
+        _navigatedAway = false;
+      },
     ).run();
   }
 

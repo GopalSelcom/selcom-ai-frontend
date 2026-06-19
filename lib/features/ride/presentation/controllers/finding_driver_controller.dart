@@ -144,6 +144,9 @@ class FindingDriverController extends GetxController {
   /// Suppresses duplicate cancel UI when the user initiated cancel (socket may also fire `cancelled`).
   bool _isUserInitiatedCancellation = false;
 
+  /// Ensures only one no-driver terminal dialog (timeout auto-cancel + socket can both fire).
+  bool _noDriverDialogShown = false;
+
   /// When false, hide search countdown/progress (driver matched or later).
   bool get isSearchingPhase =>
       isRideSearchingStatus(normalizedRideStatus.value);
@@ -228,13 +231,12 @@ class FindingDriverController extends GetxController {
         break;
       case 'no_driver_found':
       case 'no_drivers_found':
-        if (_isUserInitiatedCancellation) return;
         isRideCancelled.value = true;
         currentStatusLabel.value = AppStrings.noDriverFound.tr;
         currentDescriptionLabel.value =
             AppStrings.weCouldntFindADriverNearby.tr;
         LiveActivityManager().endActivity(rideId);
-        _showCancelDialogThenGoHome(
+        _showNoDriverFoundDialogThenGoHome(
           AppStrings.noDriversNearbyPleaseTryAgainLater.tr,
         );
         break;
@@ -256,6 +258,18 @@ class FindingDriverController extends GetxController {
   }
 
   void _showCancelDialogThenGoHome(String message) {
+    Future.delayed(Duration.zero, () {
+      AppDialogs.showErrorDialog(
+        title: AppStrings.searchEnded.tr,
+        message: message,
+        onConfirm: () => Get.offAllNamed(AppRoutes.home),
+      );
+    });
+  }
+
+  void _showNoDriverFoundDialogThenGoHome(String message) {
+    if (_noDriverDialogShown) return;
+    _noDriverDialogShown = true;
     Future.delayed(Duration.zero, () {
       AppDialogs.showErrorDialog(
         title: AppStrings.searchEnded.tr,
@@ -564,7 +578,7 @@ class FindingDriverController extends GetxController {
   }
 
   Future<void> _autoCancelRide() async {
-    if (rideId.isEmpty) return;
+    if (rideId.isEmpty || _noDriverDialogShown) return;
 
     final result = await rideRepository.cancelRide(
       rideId,
@@ -573,13 +587,13 @@ class FindingDriverController extends GetxController {
     result.fold(
       (failure) async {
         await LiveActivityManager().endActivity(rideId);
-        _showCancelDialogThenGoHome(
+        _showNoDriverFoundDialogThenGoHome(
           AppStrings.noDriversFoundWithin9MinutesCancellingRide.tr,
         );
       },
       (success) async {
         await LiveActivityManager().endActivity(rideId);
-        _showCancelDialogThenGoHome(
+        _showNoDriverFoundDialogThenGoHome(
           AppStrings.noDriversFoundWithin9MinutesCancellingRide.tr,
         );
       },
