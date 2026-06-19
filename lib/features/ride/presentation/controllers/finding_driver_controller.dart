@@ -8,7 +8,6 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../core/constants/app_assets.dart';
-import '../../../../core/di/injection_container.dart' as di;
 import '../../../../core/data/models/responses/nearbyRiders/response/driver_location_socker_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/near_by_rider_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/ride_fare_settled_response.dart';
@@ -19,11 +18,8 @@ import '../../../../core/domain/entities/location_entity.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
-import '../../../../core/services/app_settings_service.dart';
-import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/address_display_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
@@ -40,7 +36,7 @@ import '../../../../shared/utils/socket_ride_scope.dart';
 import '../../../../shared/utils/tracking_route_geometry_utils.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../domain/repositories/ride_repository.dart';
-import '../widgets/cancel_ride_dialogs.dart';
+import '../utils/cancel_ride_flow.dart';
 
 /// SCR-10 — finding driver: search UI only; on assignment navigates to [AppRoutes.driverAccepted].
 class FindingDriverController extends GetxController {
@@ -144,8 +140,9 @@ class FindingDriverController extends GetxController {
   StreamSubscription<String>? _nearbyDriversErrorSub;
 
   bool _didNavigateToAccepted = false;
+
+  /// Suppresses duplicate cancel UI when the user initiated cancel (socket may also fire `cancelled`).
   bool _isUserInitiatedCancellation = false;
-  bool _isNavigatingHomeAfterCancel = false;
 
   /// When false, hide search countdown/progress (driver matched or later).
   bool get isSearchingPhase =>
@@ -914,120 +911,16 @@ class FindingDriverController extends GetxController {
     return AppStrings.findingDriverMinutesRemain.trParams({'minutes': '$mins'});
   }
 
-  Future<void> confirmCancelRide() async {
-    // 1. Initial Confirmation
-    // final bool isAssigned = ridePhase.value == 'driver_assigned';
-    final dynamic confirmResult = await AppDialogs.showAnimatedDialog(
-      child: const CancelConfirmationDialog(),
-      barrierDismissible: false,
-      barrierColor: AppColors.overlayBlack12,
-    );
-
-    if (confirmResult != true) return;
-
-    // Reasons come from app settings; preload only if not cached yet.
-    final cancelReasons =
-        await di.sl<AppSettingsService>().resolveCancellationReasons();
-    if (cancelReasons.isEmpty) {
-      AppDialogs.showErrorDialog(
-        title: AppStrings.cancelFailed.tr,
-        message: AppStrings.couldNotCancelTryAgain.tr,
-      );
-      return;
-    }
-
-    // 2. Reason Selection + Charges Fetch (keeps first dialog open while loading)
-    String? selectedReason;
-    dynamic cancellationData;
-    String selectedPolicyLabel = '';
-
-    await AppDialogs.showAnimatedDialog<void>(
-      child: CancelReasonSelectionDialog(
-        reasons: cancelReasons,
-        isProcessing: isReasonProcessing,
-        onContinueTap: (reason) async {
-          if (rideId.isEmpty) {
-            AppDialogs.showErrorDialog(
-              title: AppStrings.cancelFailed.tr,
-              message: AppStrings.rideIdIsMissing.tr,
-            );
-            return;
-          }
-          await Loader.withFlag(isReasonProcessing, () async {
-            final charges = await rideRepository.getCancellationCharges(rideId);
-            await charges.fold(
-              (_) async {
-                AppDialogs.showErrorDialog(
-                  title: AppStrings.cancelFailed.tr,
-                  message: AppStrings.couldNotCancelTryAgain.tr,
-                );
-              },
-              (data) async {
-                final selectedPolicy = data.policy.firstWhereOrNull(
-                  (p) =>
-                      p.status.toLowerCase() ==
-                      data.currentStatus.toLowerCase(),
-                );
-                selectedReason = reason;
-                cancellationData = data;
-                selectedPolicyLabel = selectedPolicy?.label ?? '';
-                Get.back();
-              },
-            );
-          });
-        },
-      ),
-      barrierDismissible: false,
-      barrierColor: AppColors.overlayBlack12,
-    );
-    if (selectedReason == null || cancellationData == null) return;
-
-    // 3. Charges dialog + Cancel API (loading on Cancel & Pay button)
-    await AppDialogs.showAnimatedDialog<bool>(
-      child: CancellationChargesDialog(
-        canCancel: cancellationData.canCancel,
-        cancellationFee: cancellationData.cancellationFee,
-        netRefund: cancellationData.netRefund,
-        policyLabel: selectedPolicyLabel,
-        isProcessing: isCancelPayProcessing,
-        onConfirmTap: () async {
-          _isUserInitiatedCancellation = true;
-          var cancelSucceeded = false;
-          await Loader.withFlag(isCancelPayProcessing, () async {
-            final result = await rideRepository.cancelRide(
-              rideId,
-              selectedReason!,
-            );
-            result.fold(
-              (_) {
-                _isUserInitiatedCancellation = false;
-                AppDialogs.showErrorDialog(
-                  title: AppStrings.cancelFailed.tr,
-                  message: AppStrings.couldNotCancelTryAgain.tr,
-                );
-              },
-              (success) {
-                if (!success) {
-                  _isUserInitiatedCancellation = false;
-                  AppDialogs.showErrorDialog(
-                    title: AppStrings.cancelFailed.tr,
-                    message: AppStrings.pleaseTryAgain.tr,
-                  );
-                } else {
-                  cancelSucceeded = true;
-                }
-              },
-            );
-          });
-          if (!cancelSucceeded || _isNavigatingHomeAfterCancel) return;
-          _isNavigatingHomeAfterCancel = true;
-          await AppDialogs.navigateHomeReplacingStack();
-          unawaited(LiveActivityManager().endActivity(rideId));
-        },
-      ),
-      barrierDismissible: false,
-      barrierColor: AppColors.overlayBlack12,
-    );
+  /// User cancel from the searching bottom sheet — shared [CancelRideFlow].
+  Future<void> confirmCancelRide() {
+    return CancelRideFlow(
+      rideRepository: rideRepository,
+      rideId: rideId,
+      isReasonProcessing: isReasonProcessing,
+      isCancelPayProcessing: isCancelPayProcessing,
+      onCancelApiStarted: () => _isUserInitiatedCancellation = true,
+      onCancelApiFailed: () => _isUserInitiatedCancellation = false,
+    ).run();
   }
 
   void searchAgain() {

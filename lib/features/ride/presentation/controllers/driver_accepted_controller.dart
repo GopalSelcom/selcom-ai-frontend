@@ -33,9 +33,7 @@ import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/services/notification_service.dart';
-import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/storage_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/address_display_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
@@ -59,7 +57,7 @@ import '../../data/models/emergency_contacts_response.dart';
 import '../../data/models/stop_update_models.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../screens/ride_details_screen.dart';
-import '../widgets/cancel_ride_dialogs.dart';
+import '../utils/cancel_ride_flow.dart';
 import '../widgets/ride_driver_call_options_sheet.dart';
 import 'ride_details_controller.dart';
 
@@ -2191,118 +2189,16 @@ class DriverAcceptedController extends GetxController
     return trimmed.split(',').first.trim();
   }
 
-  Future<void> confirmCancelRide() async {
-    // 1. Initial Confirmation
-    final dynamic confirmResult = await AppDialogs.showAnimatedDialog(
-      child: const CancelConfirmationDialog(),
-      barrierDismissible: false,
-      barrierColor: AppColors.overlayBlack12,
-    );
-
-    if (confirmResult != true) return;
-
-    // Reasons come from app settings; preload only if not cached yet.
-    final cancelReasons =
-        await di.sl<AppSettingsService>().resolveCancellationReasons();
-    if (cancelReasons.isEmpty) {
-      AppDialogs.showErrorDialog(
-        title: AppStrings.cancelFailed.tr,
-        message: AppStrings.couldNotCancelTryAgain.tr,
-      );
-      return;
-    }
-
-    // 2. Reason Selection + Charges Fetch (keep first dialog open while loading)
-    String? selectedReason;
-    dynamic cancellationData;
-    String selectedPolicyLabel = '';
-
-    await AppDialogs.showAnimatedDialog<void>(
-      child: CancelReasonSelectionDialog(
-        reasons: cancelReasons,
-        isProcessing: isReasonProcessing,
-        onContinueTap: (reason) async {
-          if (rideId.isEmpty) {
-            AppDialogs.showErrorDialog(
-              title: AppStrings.cancelFailed.tr,
-              message: AppStrings.rideIdIsMissing.tr,
-            );
-            return;
-          }
-          await Loader.withFlag(isReasonProcessing, () async {
-            final charges = await rideRepository.getCancellationCharges(rideId);
-            await charges.fold(
-              (_) async {
-                AppDialogs.showErrorDialog(
-                  title: AppStrings.cancelFailed.tr,
-                  message: AppStrings.couldNotCancelTryAgain.tr,
-                );
-              },
-              (data) async {
-                final selectedPolicy = data.policy.firstWhereOrNull(
-                  (p) =>
-                      p.status.toLowerCase() ==
-                      data.currentStatus.toLowerCase(),
-                );
-                selectedReason = reason;
-                cancellationData = data;
-                selectedPolicyLabel = selectedPolicy?.label ?? '';
-                Get.back();
-              },
-            );
-          });
-        },
-      ),
-      barrierDismissible: false,
-      barrierColor: AppColors.overlayBlack12,
-    );
-    if (selectedReason == null || cancellationData == null) return;
-
-    // 3. Charges dialog + Cancel API (loading on Cancel & Pay button)
-    await AppDialogs.showAnimatedDialog<bool>(
-      child: CancellationChargesDialog(
-        canCancel: cancellationData.canCancel,
-        cancellationFee: cancellationData.cancellationFee,
-        netRefund: cancellationData.netRefund,
-        policyLabel: selectedPolicyLabel,
-        isProcessing: isCancelPayProcessing,
-        onConfirmTap: () async {
-          _navigatedAway = true;
-          var cancelSucceeded = false;
-          await Loader.withFlag(isCancelPayProcessing, () async {
-            final result = await rideRepository.cancelRide(
-              rideId,
-              selectedReason!,
-            );
-            result.fold(
-              (_) {
-                _navigatedAway = false;
-                AppDialogs.showErrorDialog(
-                  title: AppStrings.cancelFailed.tr,
-                  message: AppStrings.couldNotCancelTryAgain.tr,
-                );
-              },
-              (success) {
-                if (success) {
-                  cancelSucceeded = true;
-                } else {
-                  _navigatedAway = false;
-                  AppDialogs.showErrorDialog(
-                    title: AppStrings.cancelFailed.tr,
-                    message: AppStrings.pleaseTryAgain.tr,
-                  );
-                }
-              },
-            );
-          });
-          if (!cancelSucceeded) return;
-          await AppDialogs.navigateHomeReplacingStack();
-          unawaited(LiveActivityManager().endActivity(rideId));
-        },
-      ),
-      barrierDismissible: false,
-      barrierColor: AppColors.overlayBlack12,
-    );
+  Future<void> confirmCancelRide() {
+    // Driver-details bottom sheet — shared [CancelRideFlow] (canonical implementation).
+    return CancelRideFlow(
+      rideRepository: rideRepository,
+      rideId: rideId,
+      isReasonProcessing: isReasonProcessing,
+      isCancelPayProcessing: isCancelPayProcessing,
+      onCancelApiStarted: () => _navigatedAway = true,
+      onCancelApiFailed: () => _navigatedAway = false,
+    ).run();
   }
 
   Future<void> _syncLiveActivityFromStatusPayload(
