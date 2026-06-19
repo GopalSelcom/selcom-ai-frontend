@@ -69,8 +69,6 @@ class AppAssets {
   static const String _figmaLocation = '$_imagePath/location';
 
   static const String locationIcPickupPin = '$_figmaLocation/ic_pickup_pin.svg';
-  static const String locationIcStop1 = '$_figmaLocation/ic_stop1.svg';
-  static const String locationIcStop2 = '$_figmaLocation/ic_stop2.svg';
   static const String locationIcDestinationPin =
       '$_figmaLocation/ic_destination_pin.svg';
   static const String locationIcArrowRight =

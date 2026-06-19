@@ -9,7 +9,7 @@ class AppRouteLocationPinIcon extends StatelessWidget {
   const AppRouteLocationPinIcon({
     super.key,
     required this.assetPath,
-    this.tintColor,
+    required this.tintColor,
     this.size,
   });
 
@@ -18,15 +18,15 @@ class AppRouteLocationPinIcon extends StatelessWidget {
       tintColor = RouteLocationPinAssets.pickupColor;
 
   AppRouteLocationPinIcon.destination({super.key, this.size})
-    : assetPath = RouteLocationPinAssets.destination,
-      tintColor = null;
+    : assetPath = RouteLocationPinAssets.waypointPin,
+      tintColor = RouteLocationPinAssets.destinationColor;
 
   AppRouteLocationPinIcon.stop(int index, {super.key, this.size})
-    : assetPath = RouteLocationPinAssets.stopAssetAt(index),
-      tintColor = null;
+    : assetPath = RouteLocationPinAssets.waypointPin,
+      tintColor = RouteLocationPinAssets.colorForIntermediateAt(index);
 
   final String assetPath;
-  final Color? tintColor;
+  final Color tintColor;
   final double? size;
 
   double get _aspectRatio {
@@ -39,22 +39,18 @@ class AppRouteLocationPinIcon extends StatelessWidget {
     final width = size ?? 18.w;
     final height = width * _aspectRatio;
 
-    final picture = SvgPictureAsset(
-      assetPath,
-      width: width,
-      height: height,
-      fit: BoxFit.contain,
-    );
-
     return SizedBox(
       width: width,
       height: height,
-      child: tintColor == null
-          ? picture
-          : ColorFiltered(
-              colorFilter: ColorFilter.mode(tintColor!, BlendMode.srcIn),
-              child: picture,
-            ),
+      child: ColorFiltered(
+        colorFilter: ColorFilter.mode(tintColor, BlendMode.srcIn),
+        child: SvgPictureAsset(
+          assetPath,
+          width: width,
+          height: height,
+          fit: BoxFit.contain,
+        ),
+      ),
     );
   }
 }
