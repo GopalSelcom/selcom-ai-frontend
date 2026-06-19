@@ -140,8 +140,6 @@ class DriverAcceptedController extends GetxController
 
   // Normalized ride status from socket/API — use [normalizeRideStatusString] when writing.
   final currentRideStatus = 'driver_assigned'.obs;
-  final isReasonProcessing = false.obs;
-  final isCancelPayProcessing = false.obs;
 
   final Rxn<BitmapDescriptor> assignedDriverMarkerIcon =
       Rxn<BitmapDescriptor>();
@@ -2215,8 +2213,6 @@ class DriverAcceptedController extends GetxController
     return CancelRideFlow(
       rideRepository: rideRepository,
       rideId: rideId,
-      isReasonProcessing: isReasonProcessing,
-      isCancelPayProcessing: isCancelPayProcessing,
       onCancelApiStarted: () {
         _isUserInitiatedCancellation = true;
         _navigatedAway = true;

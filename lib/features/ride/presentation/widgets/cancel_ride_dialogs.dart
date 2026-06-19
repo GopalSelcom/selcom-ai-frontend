@@ -99,13 +99,11 @@ class CancelReasonSelectionDialog extends StatefulWidget {
   /// Labels from `settings.cancellation_reasons` (server text, not localized).
   final List<String> reasons;
   final Future<void> Function(String reason)? onContinueTap;
-  final RxBool? isProcessing;
 
   const CancelReasonSelectionDialog({
     super.key,
     required this.reasons,
     this.onContinueTap,
-    this.isProcessing,
   });
 
   @override
@@ -194,29 +192,24 @@ class _CancelReasonSelectionDialogState
             ),
           ),
           SizedBox(height: 32.h),
-          Obx(() {
-            final loading = widget.isProcessing?.value ?? false;
-            final isContinueEnabled = _selectedReason != null && !loading;
-            return _ActionButton(
-              title: AppStrings.continueLabel.tr,
-              color: isContinueEnabled
-                  ? AppColors.primaryButton
-                  : AppColors.bgSoftCircle,
-              textColor: isContinueEnabled
-                  ? AppColors.white
-                  : AppColors.textSlateSoft,
-              isLoading: loading,
-              onTap: !isContinueEnabled
-                  ? null
-                  : () async {
-                      if (widget.onContinueTap != null) {
-                        await widget.onContinueTap!.call(_selectedReason!);
-                      } else {
-                        Get.back(result: _selectedReason);
-                      }
-                    },
-            );
-          }),
+          _ActionButton(
+            title: AppStrings.continueLabel.tr,
+            color: _selectedReason != null
+                ? AppColors.primaryButton
+                : AppColors.bgSoftCircle,
+            textColor: _selectedReason != null
+                ? AppColors.white
+                : AppColors.textSlateSoft,
+            onTap: _selectedReason == null
+                ? null
+                : () async {
+                    if (widget.onContinueTap != null) {
+                      await widget.onContinueTap!.call(_selectedReason!);
+                    } else {
+                      Get.back(result: _selectedReason);
+                    }
+                  },
+          ),
           SizedBox(height: 12.h),
           _ActionButton(
             title: AppStrings.no.tr,
@@ -241,14 +234,12 @@ class CancellationChargesDialog extends StatelessWidget {
     required this.cancellationFee,
     required this.netRefund,
     this.onConfirmTap,
-    this.isProcessing,
   });
 
   final bool canCancel;
   final int cancellationFee;
   final int netRefund;
   final Future<void> Function()? onConfirmTap;
-  final RxBool? isProcessing;
 
   @override
   Widget build(BuildContext context) {
@@ -314,33 +305,27 @@ class CancellationChargesDialog extends StatelessWidget {
             onTap: () => Get.back(result: false),
           ),
           SizedBox(height: 10.h),
-          Obx(() {
-            final loading = isProcessing?.value ?? false;
-            return _ActionButton(
-              title: AppStrings.cancelAndPay.tr,
-              color: AppColors.white,
-              textColor: AppColors.textNeutralButton,
-              outlined: true,
-              outlinedBorderColor: AppColors.textNeutralButton,
-              isLoading: loading,
-              onTap: loading
-                  ? null
-                  : () async {
-                      if (!canCancel) {
-                        AppDialogs.showErrorDialog(
-                          title: AppStrings.cancelFailed.tr,
-                          message: AppStrings.couldNotCancelTryAgain.tr,
-                        );
-                        return;
-                      }
-                      if (onConfirmTap != null) {
-                        await onConfirmTap!.call();
-                      } else {
-                        Get.back(result: true);
-                      }
-                    },
-            );
-          }),
+          _ActionButton(
+            title: AppStrings.cancelAndPay.tr,
+            color: AppColors.white,
+            textColor: AppColors.textNeutralButton,
+            outlined: true,
+            outlinedBorderColor: AppColors.textNeutralButton,
+            onTap: () async {
+              if (!canCancel) {
+                AppDialogs.showErrorDialog(
+                  title: AppStrings.cancelFailed.tr,
+                  message: AppStrings.couldNotCancelTryAgain.tr,
+                );
+                return;
+              }
+              if (onConfirmTap != null) {
+                await onConfirmTap!.call();
+              } else {
+                Get.back(result: true);
+              }
+            },
+          ),
         ],
       ),
     );
@@ -355,7 +340,6 @@ class _ActionButton extends StatelessWidget {
     required this.onTap,
     this.outlined = false,
     this.outlinedBorderColor,
-    this.isLoading = false,
   });
 
   final String title;
@@ -364,7 +348,6 @@ class _ActionButton extends StatelessWidget {
   final VoidCallback? onTap;
   final bool outlined;
   final Color? outlinedBorderColor;
-  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -372,7 +355,6 @@ class _ActionButton extends StatelessWidget {
       label: title,
       showBottomInnerShadow: false,
       onPressed: onTap,
-      isLoading: isLoading,
       height: 54.h,
       borderRadius: 100.r,
       backgroundColor: color,

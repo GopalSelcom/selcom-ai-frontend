@@ -21,16 +21,12 @@ class CancelRideFlow {
   CancelRideFlow({
     required this.rideRepository,
     required this.rideId,
-    required this.isReasonProcessing,
-    required this.isCancelPayProcessing,
     this.onCancelApiStarted,
     this.onCancelApiFailed,
   });
 
   final RideRepository rideRepository;
   final String rideId;
-  final RxBool isReasonProcessing;
-  final RxBool isCancelPayProcessing;
 
   /// Called when the user confirms cancel-and-pay (before the cancel API).
   final VoidCallback? onCancelApiStarted;
@@ -66,7 +62,6 @@ class CancelRideFlow {
     await AppDialogs.showAnimatedDialog<void>(
       child: CancelReasonSelectionDialog(
         reasons: cancelReasons,
-        isProcessing: isReasonProcessing,
         onContinueTap: (reason) async {
           if (rideId.isEmpty) {
             AppDialogs.showErrorDialog(
@@ -75,7 +70,7 @@ class CancelRideFlow {
             );
             return;
           }
-          await Loader.withFlag(isReasonProcessing, () async {
+          await Loader.run(() async {
             final charges = await rideRepository.getCancellationCharges(rideId);
             await charges.fold(
               (_) async {
@@ -111,7 +106,6 @@ class CancelRideFlow {
         canCancel: charges.canCancel,
         cancellationFee: charges.cancellationFee,
         netRefund: charges.netRefund,
-        isProcessing: isCancelPayProcessing,
         onConfirmTap: () => _cancelRideAndNavigateHome(selectedReason!),
       ),
       barrierDismissible: false,
@@ -122,7 +116,7 @@ class CancelRideFlow {
   Future<void> _cancelRideAndNavigateHome(String reason) async {
     onCancelApiStarted?.call();
     var cancelSucceeded = false;
-    await Loader.withFlag(isCancelPayProcessing, () async {
+    await Loader.run(() async {
       final result = await rideRepository.cancelRide(rideId, reason);
       result.fold(
         (_) {

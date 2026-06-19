@@ -108,8 +108,6 @@ class FindingDriverController extends GetxController {
   /// Canonical pickup-phase status (`searching`, `driver_assigned`, …).
   final normalizedRideStatus = 'searching'.obs;
   final isRideCancelled = false.obs;
-  final isReasonProcessing = false.obs;
-  final isCancelPayProcessing = false.obs;
 
   final currentEtaSeconds = 0.0.obs;
   final sheetSize = 0.42.obs;
@@ -930,8 +928,6 @@ class FindingDriverController extends GetxController {
     return CancelRideFlow(
       rideRepository: rideRepository,
       rideId: rideId,
-      isReasonProcessing: isReasonProcessing,
-      isCancelPayProcessing: isCancelPayProcessing,
       onCancelApiStarted: () => _isUserInitiatedCancellation = true,
       onCancelApiFailed: () => _isUserInitiatedCancellation = false,
     ).run();
