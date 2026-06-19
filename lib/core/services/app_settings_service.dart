@@ -18,7 +18,13 @@ class AppSettingsService {
   /// Cached `cancellation_reasons` from `/go/settings` (populated by [preload]).
   final cancellationReasons = <String>[].obs;
 
+  /// Cached `features.max_stops` from `/go/settings` (populated by [preload]).
+  final maxStops = AppSettingsModel.defaultMaxStops.obs;
+
   bool get bookForOtherEnabled => bookForOtherSettings.value?.enabled ?? false;
+
+  /// Max intermediate stops allowed (excludes final destination).
+  int get maxIntermediateStops => maxStops.value;
 
   /// `features.book_for_other.max_active` — cap on rides booked for someone else.
   int get maxActiveBookForOtherRides =>
@@ -51,12 +57,14 @@ class AppSettingsService {
         bookForOtherSettings.value = null;
         paymentWaitSeconds.value = AppSettingsModel.defaultPaymentTimerSeconds;
         cancellationReasons.clear();
+        maxStops.value = AppSettingsModel.defaultMaxStops;
       },
       (settings) {
         features.assignAll(settings.features);
         bookForOtherSettings.value = settings.bookForOther;
         paymentWaitSeconds.value = settings.paymentTimerSeconds;
         cancellationReasons.assignAll(settings.cancellationReasons);
+        maxStops.value = settings.maxStops;
       },
     );
     isLoaded.value = true;

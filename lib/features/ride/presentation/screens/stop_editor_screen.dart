@@ -3,7 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/constants/app_assets.dart';
-import '../../../../core/constants/ride_stop_limits.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
@@ -96,11 +95,11 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
   }
 
   void _addStop() async {
-    if (_stops.length >= RideStopLimits.maxIntermediateStops) {
+    if (_stops.length >= controller.maxIntermediateStops) {
       AppDialogs.showErrorDialog(
         title: AppStrings.error.tr,
         message: AppStrings.maxStopsOnly.trParams({
-          'count': '${RideStopLimits.maxIntermediateStops}',
+          'count': '${controller.maxIntermediateStops}',
         }),
       );
       return;
@@ -506,40 +505,44 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
   }
 
   Widget _buildAddStopButton() {
+    final atMaxStops = _stops.length >= controller.maxIntermediateStops;
     return Padding(
       padding: EdgeInsets.only(bottom: 12.h),
-      child: InkWell(
-        onTap: _addStop,
-        borderRadius: BorderRadius.circular(AppRadius.button),
-        child: Container(
-          padding: EdgeInsets.all(12.w),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.button),
-            border: Border.all(color: AppColors.primary),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SvgPictureAsset(
-                AppAssets.locationIcAdd,
-                width: 18.w,
-                height: 18.w,
-                color: AppColors.primary,
-                placeholderBuilder: (_) => Icon(
-                  Icons.add_circle,
+      child: Opacity(
+        opacity: atMaxStops ? 0.45 : 1.0,
+        child: InkWell(
+          onTap: atMaxStops ? null : _addStop,
+          borderRadius: BorderRadius.circular(AppRadius.button),
+          child: Container(
+            padding: EdgeInsets.all(12.w),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppRadius.button),
+              border: Border.all(color: AppColors.primary),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SvgPictureAsset(
+                  AppAssets.locationIcAdd,
+                  width: 18.w,
+                  height: 18.w,
                   color: AppColors.primary,
-                  size: 20.sp,
+                  placeholderBuilder: (_) => Icon(
+                    Icons.add_circle,
+                    color: AppColors.primary,
+                    size: 20.sp,
+                  ),
                 ),
-              ),
-              SizedBox(width: 8.w),
-              Text(
-                AppStrings.addStop.tr,
-                style: AppTextStyles.button.copyWith(
-                  color: AppColors.primary,
-                  fontSize: 14.sp,
+                SizedBox(width: 8.w),
+                Text(
+                  AppStrings.addStop.tr,
+                  style: AppTextStyles.button.copyWith(
+                    color: AppColors.primary,
+                    fontSize: 14.sp,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

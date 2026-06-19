@@ -3,7 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/constants/app_assets.dart';
-import '../../../../core/constants/ride_stop_limits.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -66,7 +65,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
 
   RxnDouble get _routeDestinationLng => locationController.routeDestinationLng;
 
-  int get _maxExtraStops => RideStopLimits.maxIntermediateStops;
+  int get _maxExtraStops => locationController.maxIntermediateStops;
 
   void _onAddDestinationStop() => locationController.onAddDestinationStop();
 

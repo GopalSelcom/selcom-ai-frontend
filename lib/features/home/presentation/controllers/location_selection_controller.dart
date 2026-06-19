@@ -3,9 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../../core/constants/ride_stop_limits.dart';
+import '../../../../core/di/injection_container.dart' as di;
 import '../../../../core/domain/entities/location_entity.dart';
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/services/app_settings_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../controllers/home_controller.dart';
@@ -43,6 +44,9 @@ class LocationSelectionController extends GetxController {
   final isLoadingInitialContent = true.obs;
 
   HomeController get homeController => Get.find<HomeController>();
+
+  /// From `/go/settings` → `features.max_stops` (excludes final destination).
+  int get maxIntermediateStops => di.sl<AppSettingsService>().maxIntermediateStops;
 
   bool get shouldShowPlaceListShimmer =>
       isLoadingInitialContent.value || homeController.isLoadingHomeData.value;
@@ -344,6 +348,13 @@ class LocationSelectionController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    unawaited(_init());
+  }
+
+  Future<void> _init() async {
+    if (!di.sl<AppSettingsService>().isLoaded.value) {
+      await di.sl<AppSettingsService>().preload();
+    }
     _initializeFromArguments();
     _loadInitialContent();
   }
@@ -465,9 +476,7 @@ class LocationSelectionController extends GetxController {
     destinationController = TextEditingController(text: initialDestination);
     pickupFocusNode = FocusNode();
     destinationFocusNode = FocusNode();
-    for (final stopAddress in initialExtraStops.take(
-      RideStopLimits.maxIntermediateStops,
-    )) {
+    for (final stopAddress in initialExtraStops.take(maxIntermediateStops)) {
       extraDestinationControllers.add(TextEditingController(text: stopAddress));
       extraDestinationFocusNodes.add(FocusNode());
       extraStopSelected.add(true);
@@ -560,8 +569,7 @@ class LocationSelectionController extends GetxController {
   }
 
   void onAddDestinationStop() {
-    if (extraDestinationControllers.length >=
-        RideStopLimits.maxIntermediateStops) {
+    if (extraDestinationControllers.length >= maxIntermediateStops) {
       return;
     }
     extraDestinationControllers.add(TextEditingController());

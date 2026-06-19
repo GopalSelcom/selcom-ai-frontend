@@ -89,6 +89,10 @@ class DriverAcceptedController extends GetxController
   final RideRepository rideRepository;
   final AnalyticsService analyticsService;
 
+  /// From `/go/settings` → `features.max_stops` (excludes final destination).
+  int get maxIntermediateStops =>
+      di.sl<AppSettingsService>().maxIntermediateStops;
+
   final AppSocketService _socketService = AppSocketService();
 
   late final String rideId;

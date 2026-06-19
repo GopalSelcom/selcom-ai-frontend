@@ -26,6 +26,9 @@ class AppSettingsModel {
   /// Server `payment_timer` (seconds); used when absent or invalid.
   static const int defaultPaymentTimerSeconds = 300;
 
+  /// `features.max_stops` — max intermediate stops (excludes final destination).
+  static const int defaultMaxStops = 2;
+
   final Map<String, bool> features;
   final int paymentTimerSeconds;
   final BookForOtherSettings? bookForOther;
@@ -33,11 +36,14 @@ class AppSettingsModel {
   /// Ride-cancel options from `/go/settings` → `settings.cancellation_reasons`.
   final List<String> cancellationReasons;
 
+  final int maxStops;
+
   const AppSettingsModel({
     required this.features,
     this.paymentTimerSeconds = defaultPaymentTimerSeconds,
     this.bookForOther,
     this.cancellationReasons = const [],
+    this.maxStops = defaultMaxStops,
   });
 
   factory AppSettingsModel.fromJson(Map<String, dynamic> json) {
@@ -47,6 +53,7 @@ class AppSettingsModel {
 
     final featureMap = <String, bool>{};
     BookForOtherSettings? bookForOther;
+    var maxStops = defaultMaxStops;
     final rawFeatures = json['features'];
     if (rawFeatures is Map<String, dynamic>) {
       for (final entry in rawFeatures.entries) {
@@ -56,6 +63,10 @@ class AppSettingsModel {
             Map<String, dynamic>.from(value),
           );
           featureMap[entry.key] = bookForOther.enabled;
+          continue;
+        }
+        if (entry.key == 'max_stops') {
+          maxStops = _parsePositiveInt(value, defaultMaxStops);
           continue;
         }
         if (value is Map) continue;
@@ -78,6 +89,7 @@ class AppSettingsModel {
       paymentTimerSeconds: _parsePaymentTimerSeconds(json['payment_timer']),
       bookForOther: bookForOther,
       cancellationReasons: cancellationReasons,
+      maxStops: maxStops,
     );
   }
 
