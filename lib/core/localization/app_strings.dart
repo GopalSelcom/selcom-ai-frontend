@@ -840,25 +840,6 @@ class AppStrings {
   static const String backToHome = 'back_to_home';
   static const String booking = 'booking';
   static const String bookingFailed = 'booking_failed';
-  static const String cancelReasonBookedByMistake =
-      'cancel_reason_booked_by_mistake';
-  static const String cancelReasonChangedMyMind =
-      'cancel_reason_changed_my_mind';
-  static const String cancelReasonDriverAskedCancel =
-      'cancel_reason_driver_asked_cancel';
-  static const String cancelReasonDriverPayOffline =
-      'cancel_reason_driver_pay_offline';
-  static const String cancelReasonOthers = 'cancel_reason_others';
-  static const String cancelReasonTakingTooLongArrive =
-      'cancel_reason_taking_too_long_arrive';
-  static const String cancelReasonTakingTooLongConfirmRide =
-      'cancel_reason_taking_too_long_confirm_ride';
-  static const String cancelReasonWaitTimeTooLong =
-      'cancel_reason_wait_time_too_long';
-  static const String cancelReasonWrongDropLocation =
-      'cancel_reason_wrong_drop_location';
-  static const String cancelReasonWrongPickupLocation =
-      'cancel_reason_wrong_pickup_location';
   static const String cardExpired = 'card_expired';
   static const String cards = 'cards';
   static const String chatUnavailable = 'chat_unavailable';

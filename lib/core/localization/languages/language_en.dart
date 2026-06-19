@@ -805,17 +805,6 @@ class LanguageEn extends Languages {
     'back_to_home': 'Back to Home',
     'booking': 'Booking',
     'booking_failed': 'Booking failed',
-    'cancel_reason_booked_by_mistake': 'Booked by mistake',
-    'cancel_reason_changed_my_mind': 'Changed my mind',
-    'cancel_reason_driver_asked_cancel': 'Driver asked to cancel',
-    'cancel_reason_driver_pay_offline': 'Driver asked to pay offline',
-    'cancel_reason_others': 'Others',
-    'cancel_reason_taking_too_long_arrive': 'Taking too long to arrive',
-    'cancel_reason_taking_too_long_confirm_ride':
-        'Taking too long to confirm the ride',
-    'cancel_reason_wait_time_too_long': 'Wait time too long',
-    'cancel_reason_wrong_drop_location': 'Selected wrong drop location',
-    'cancel_reason_wrong_pickup_location': 'Selected wrong pickup location',
     'card_expired': 'Expired',
     'cards': 'Cards',
     'chat_unavailable': 'Chat unavailable',
@@ -3061,45 +3050,6 @@ class LanguageEn extends Languages {
 
   @override
   String get bookingFailed => values['booking_failed'] ?? '';
-
-  @override
-  String get cancelReasonBookedByMistake =>
-      values['cancel_reason_booked_by_mistake'] ?? '';
-
-  @override
-  String get cancelReasonChangedMyMind =>
-      values['cancel_reason_changed_my_mind'] ?? '';
-
-  @override
-  String get cancelReasonDriverAskedCancel =>
-      values['cancel_reason_driver_asked_cancel'] ?? '';
-
-  @override
-  String get cancelReasonDriverPayOffline =>
-      values['cancel_reason_driver_pay_offline'] ?? '';
-
-  @override
-  String get cancelReasonOthers => values['cancel_reason_others'] ?? '';
-
-  @override
-  String get cancelReasonTakingTooLongArrive =>
-      values['cancel_reason_taking_too_long_arrive'] ?? '';
-
-  @override
-  String get cancelReasonTakingTooLongConfirmRide =>
-      values['cancel_reason_taking_too_long_confirm_ride'] ?? '';
-
-  @override
-  String get cancelReasonWaitTimeTooLong =>
-      values['cancel_reason_wait_time_too_long'] ?? '';
-
-  @override
-  String get cancelReasonWrongDropLocation =>
-      values['cancel_reason_wrong_drop_location'] ?? '';
-
-  @override
-  String get cancelReasonWrongPickupLocation =>
-      values['cancel_reason_wrong_pickup_location'] ?? '';
 
   @override
   String get cardExpired => values['card_expired'] ?? '';

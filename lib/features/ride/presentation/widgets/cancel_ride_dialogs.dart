@@ -96,13 +96,14 @@ class CancelAssignmentWarningDialog extends StatelessWidget {
 }
 
 class CancelReasonSelectionDialog extends StatefulWidget {
-  final List<String>? reasons;
+  /// Labels from `settings.cancellation_reasons` (server text, not localized).
+  final List<String> reasons;
   final Future<void> Function(String reason)? onContinueTap;
   final RxBool? isProcessing;
 
   const CancelReasonSelectionDialog({
     super.key,
-    this.reasons,
+    required this.reasons,
     this.onContinueTap,
     this.isProcessing,
   });
@@ -114,26 +115,9 @@ class CancelReasonSelectionDialog extends StatefulWidget {
 
 class _CancelReasonSelectionDialogState
     extends State<CancelReasonSelectionDialog> {
-  late final List<String> _reasons;
-
-  @override
-  void initState() {
-    super.initState();
-    _reasons =
-        widget.reasons ??
-        [
-          'Selected wrong pickup location',
-          'Selected wrong drop location',
-          'Booked by mistake',
-          'Selected different service/vehicle',
-          'Driver asked to pay offline',
-          'Driver asked to cancel',
-          'Taking too long to arrive',
-          'Others',
-        ];
-  }
-
   String? _selectedReason;
+
+  List<String> get _reasons => widget.reasons;
 
   @override
   Widget build(BuildContext context) {

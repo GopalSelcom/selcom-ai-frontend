@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/di/injection_container.dart' as di;
 import '../../../../core/data/models/responses/nearbyRiders/response/driver_location_socker_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/near_by_rider_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/ride_fare_settled_response.dart';
@@ -18,6 +19,7 @@ import '../../../../core/domain/entities/location_entity.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
+import '../../../../core/services/app_settings_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
@@ -923,6 +925,17 @@ class FindingDriverController extends GetxController {
 
     if (confirmResult != true) return;
 
+    // Reasons come from app settings; preload only if not cached yet.
+    final cancelReasons =
+        await di.sl<AppSettingsService>().resolveCancellationReasons();
+    if (cancelReasons.isEmpty) {
+      AppDialogs.showErrorDialog(
+        title: AppStrings.cancelFailed.tr,
+        message: AppStrings.couldNotCancelTryAgain.tr,
+      );
+      return;
+    }
+
     // 2. Reason Selection + Charges Fetch (keeps first dialog open while loading)
     String? selectedReason;
     dynamic cancellationData;
@@ -930,15 +943,7 @@ class FindingDriverController extends GetxController {
 
     await AppDialogs.showAnimatedDialog<void>(
       child: CancelReasonSelectionDialog(
-        reasons: [
-          AppStrings.cancelReasonTakingTooLongConfirmRide.tr,
-          AppStrings.cancelReasonWaitTimeTooLong.tr,
-          AppStrings.cancelReasonWrongPickupLocation.tr,
-          AppStrings.cancelReasonWrongDropLocation.tr,
-          AppStrings.cancelReasonBookedByMistake.tr,
-          AppStrings.cancelReasonChangedMyMind.tr,
-          AppStrings.cancelReasonOthers.tr,
-        ],
+        reasons: cancelReasons,
         isProcessing: isReasonProcessing,
         onContinueTap: (reason) async {
           if (rideId.isEmpty) {

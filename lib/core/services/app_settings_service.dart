@@ -15,6 +15,9 @@ class AppSettingsService {
   final paymentWaitSeconds = AppSettingsModel.defaultPaymentTimerSeconds.obs;
   final bookForOtherSettings = Rxn<BookForOtherSettings>();
 
+  /// Cached `cancellation_reasons` from `/go/settings` (populated by [preload]).
+  final cancellationReasons = <String>[].obs;
+
   bool get bookForOtherEnabled => bookForOtherSettings.value?.enabled ?? false;
 
   /// `features.book_for_other.max_active` — cap on rides booked for someone else.
@@ -29,6 +32,15 @@ class AppSettingsService {
     return features[key] ?? fallback;
   }
 
+  /// Returns cached cancel reasons; calls [preload] only when the cache is empty
+  /// (e.g. splash preload still in flight or not yet run).
+  Future<List<String>> resolveCancellationReasons() async {
+    if (cancellationReasons.isEmpty) {
+      await preload();
+    }
+    return List<String>.from(cancellationReasons);
+  }
+
   Future<void> preload({bool forceRefresh = false}) async {
     if (isLoaded.value && !forceRefresh) return;
 
@@ -38,11 +50,13 @@ class AppSettingsService {
         features.clear();
         bookForOtherSettings.value = null;
         paymentWaitSeconds.value = AppSettingsModel.defaultPaymentTimerSeconds;
+        cancellationReasons.clear();
       },
       (settings) {
         features.assignAll(settings.features);
         bookForOtherSettings.value = settings.bookForOther;
         paymentWaitSeconds.value = settings.paymentTimerSeconds;
+        cancellationReasons.assignAll(settings.cancellationReasons);
       },
     );
     isLoaded.value = true;

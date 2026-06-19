@@ -13,6 +13,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../core/config/app_config.dart';
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/di/injection_container.dart' as di;
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/driver_location_socker_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/ride_fare_settled_response.dart';
@@ -27,6 +28,7 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/app_map_service.dart';
+import '../../../../core/services/app_settings_service.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
@@ -2195,6 +2197,17 @@ class DriverAcceptedController extends GetxController
 
     if (confirmResult != true) return;
 
+    // Reasons come from app settings; preload only if not cached yet.
+    final cancelReasons =
+        await di.sl<AppSettingsService>().resolveCancellationReasons();
+    if (cancelReasons.isEmpty) {
+      AppDialogs.showErrorDialog(
+        title: AppStrings.cancelFailed.tr,
+        message: AppStrings.couldNotCancelTryAgain.tr,
+      );
+      return;
+    }
+
     // 2. Reason Selection + Charges Fetch (keep first dialog open while loading)
     String? selectedReason;
     dynamic cancellationData;
@@ -2202,14 +2215,7 @@ class DriverAcceptedController extends GetxController
 
     await AppDialogs.showAnimatedDialog<void>(
       child: CancelReasonSelectionDialog(
-        reasons: [
-          AppStrings.cancelReasonDriverAskedCancel.tr,
-          AppStrings.cancelReasonDriverPayOffline.tr,
-          AppStrings.cancelReasonTakingTooLongArrive.tr,
-          AppStrings.cancelReasonWrongPickupLocation.tr,
-          AppStrings.cancelReasonBookedByMistake.tr,
-          AppStrings.cancelReasonOthers.tr,
-        ],
+        reasons: cancelReasons,
         isProcessing: isReasonProcessing,
         onContinueTap: (reason) async {
           if (rideId.isEmpty) {

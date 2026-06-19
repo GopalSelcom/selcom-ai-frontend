@@ -672,16 +672,6 @@ abstract class Languages {
   String get backToHome;
   String get booking;
   String get bookingFailed;
-  String get cancelReasonBookedByMistake;
-  String get cancelReasonChangedMyMind;
-  String get cancelReasonDriverAskedCancel;
-  String get cancelReasonDriverPayOffline;
-  String get cancelReasonOthers;
-  String get cancelReasonTakingTooLongArrive;
-  String get cancelReasonTakingTooLongConfirmRide;
-  String get cancelReasonWaitTimeTooLong;
-  String get cancelReasonWrongDropLocation;
-  String get cancelReasonWrongPickupLocation;
   String get cardExpired;
   String get cards;
   String get chatUnavailable;
