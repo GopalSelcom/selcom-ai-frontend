@@ -16,7 +16,7 @@ import '../widgets/cancel_ride_dialogs.dart';
 
 /// User-initiated cancel ride flow shared by finding-driver and driver-assigned screens.
 ///
-/// Follows the driver-assigned sheet pattern: confirm → reasons → charges → cancel API → home.
+/// Follows the driver-assigned sheet pattern: confirm → reasons → (charges if fee > 0) → cancel API → home.
 class CancelRideFlow {
   CancelRideFlow({
     required this.rideRepository,
@@ -38,7 +38,7 @@ class CancelRideFlow {
   /// Called when the cancel API fails so controllers can reset local flags.
   final VoidCallback? onCancelApiFailed;
 
-  /// Runs confirm → reasons → charges → cancel API → home.
+  /// Runs confirm → reasons → (charges when fee > 0) → cancel API → home.
   Future<void> run() async {
     // 1. Initial confirmation
     final confirmResult = await AppDialogs.showAnimatedDialog(
@@ -61,7 +61,6 @@ class CancelRideFlow {
 
     String? selectedReason;
     RideCancellationChargesModel? cancellationData;
-    String selectedPolicyLabel = '';
 
     // 3. Reason selection + fetch cancellation charges.
     await AppDialogs.showAnimatedDialog<void>(
@@ -86,14 +85,8 @@ class CancelRideFlow {
                 );
               },
               (data) async {
-                final selectedPolicy = data.policy.firstWhereOrNull(
-                  (p) =>
-                      p.status.toLowerCase() ==
-                      data.currentStatus.toLowerCase(),
-                );
                 selectedReason = reason;
                 cancellationData = data;
-                selectedPolicyLabel = selectedPolicy?.label ?? '';
                 Get.back();
               },
             );
@@ -107,50 +100,53 @@ class CancelRideFlow {
 
     final charges = cancellationData!;
 
-    // 4. Fee/refund summary, cancel API, then navigate home.
+    // 4. No fee — cancel immediately; otherwise show fee/refund summary first.
+    if (charges.cancellationFee <= 0) {
+      await _cancelRideAndNavigateHome(selectedReason!);
+      return;
+    }
+
     await AppDialogs.showAnimatedDialog<bool>(
       child: CancellationChargesDialog(
         canCancel: charges.canCancel,
         cancellationFee: charges.cancellationFee,
         netRefund: charges.netRefund,
-        policyLabel: selectedPolicyLabel,
         isProcessing: isCancelPayProcessing,
-        onConfirmTap: () async {
-          onCancelApiStarted?.call();
-          var cancelSucceeded = false;
-          await Loader.withFlag(isCancelPayProcessing, () async {
-            final result = await rideRepository.cancelRide(
-              rideId,
-              selectedReason!,
-            );
-            result.fold(
-              (_) {
-                onCancelApiFailed?.call();
-                AppDialogs.showErrorDialog(
-                  title: AppStrings.cancelFailed.tr,
-                  message: AppStrings.couldNotCancelTryAgain.tr,
-                );
-              },
-              (success) {
-                if (success) {
-                  cancelSucceeded = true;
-                } else {
-                  onCancelApiFailed?.call();
-                  AppDialogs.showErrorDialog(
-                    title: AppStrings.cancelFailed.tr,
-                    message: AppStrings.pleaseTryAgain.tr,
-                  );
-                }
-              },
-            );
-          });
-          if (!cancelSucceeded) return;
-          await AppDialogs.navigateHomeReplacingStack();
-          unawaited(LiveActivityManager().endActivity(rideId));
-        },
+        onConfirmTap: () => _cancelRideAndNavigateHome(selectedReason!),
       ),
       barrierDismissible: false,
       barrierColor: AppColors.overlayBlack12,
     );
+  }
+
+  Future<void> _cancelRideAndNavigateHome(String reason) async {
+    onCancelApiStarted?.call();
+    var cancelSucceeded = false;
+    await Loader.withFlag(isCancelPayProcessing, () async {
+      final result = await rideRepository.cancelRide(rideId, reason);
+      result.fold(
+        (_) {
+          onCancelApiFailed?.call();
+          AppDialogs.showErrorDialog(
+            title: AppStrings.cancelFailed.tr,
+            message: AppStrings.couldNotCancelTryAgain.tr,
+          );
+        },
+        (success) {
+          if (success) {
+            cancelSucceeded = true;
+          } else {
+            onCancelApiFailed?.call();
+            AppDialogs.showErrorDialog(
+              title: AppStrings.cancelFailed.tr,
+              message: AppStrings.pleaseTryAgain.tr,
+            );
+          }
+        },
+      );
+    });
+    if (!cancelSucceeded) return;
+    await AppDialogs.navigateHomeReplacingStack();
+    unawaited(LiveActivityManager().endActivity(rideId));
   }
 }

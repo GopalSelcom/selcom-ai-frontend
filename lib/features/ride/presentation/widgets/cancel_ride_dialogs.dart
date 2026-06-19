@@ -240,7 +240,6 @@ class CancellationChargesDialog extends StatelessWidget {
     required this.canCancel,
     required this.cancellationFee,
     required this.netRefund,
-    required this.policyLabel,
     this.onConfirmTap,
     this.isProcessing,
   });
@@ -248,7 +247,6 @@ class CancellationChargesDialog extends StatelessWidget {
   final bool canCancel;
   final int cancellationFee;
   final int netRefund;
-  final String policyLabel;
   final Future<void> Function()? onConfirmTap;
   final RxBool? isProcessing;
 
@@ -303,15 +301,6 @@ class CancellationChargesDialog extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                if (policyLabel.trim().isNotEmpty)
-                  TextSpan(
-                    text: '\n$policyLabel',
-                    style: AppTextStyles.homeCaption.copyWith(
-                      color: AppColors.textSlate,
-                      fontWeight: FontWeight.w400,
-                      height: 1.4,
-                    ),
-                  ),
               ],
             ),
           ),
