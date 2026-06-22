@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:pinput/pinput.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
@@ -11,6 +10,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/phone_formatter.dart';
+import '../../../../shared/widgets/app_otp_field.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_standard_bottom_sheet.dart';
 import '../../../../shared/widgets/app_text_field.dart';
@@ -226,33 +226,6 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
   }
 
   Widget _buildOtpStep(BuildContext context) {
-    final defaultPinTheme = PinTheme(
-      width: 50.w,
-      height: 56.h,
-      textStyle: AppTextStyles.body.copyWith(
-        fontSize: 18.sp,
-        fontWeight: FontWeight.w600,
-        color: AppColors.textHeading,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceSubtle,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: AppColors.borderWalletCard),
-      ),
-    );
-
-    final focusedPinTheme = defaultPinTheme.copyWith(
-      decoration: defaultPinTheme.decoration!.copyWith(
-        border: Border.all(color: AppColors.primary),
-      ),
-    );
-
-    final errorPinTheme = defaultPinTheme.copyWith(
-      decoration: defaultPinTheme.decoration!.copyWith(
-        border: Border.all(color: AppColors.error),
-      ),
-    );
-
     return Column(
       key: const ValueKey(SelcomPesaStep.otp),
       mainAxisSize: MainAxisSize.min,
@@ -271,29 +244,39 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
         ),
         SizedBox(height: 16.h),
         Obx(
-          () => Pinput(
-            length: 6,
-            controller: controller.otpController,
-            autofocus: true,
-            defaultPinTheme: defaultPinTheme,
-            focusedPinTheme: focusedPinTheme,
-            errorPinTheme: errorPinTheme,
-            forceErrorState: controller.otpError.isNotEmpty,
-            errorText: controller.otpError.value,
-            errorTextStyle: AppTextStyles.body.copyWith(
-              color: AppColors.error,
-              fontSize: 13.sp,
-            ),
-            onCompleted: controller.onOtpComplete,
-            onChanged: (_) => controller.otpError.value = '',
-            showCursor: true,
-            cursor: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Container(width: 2.w, height: 24.h, color: AppColors.primary),
-                SizedBox(height: 12.h),
+          () => Column(
+            children: [
+              AppOtpField(
+                length: 6,
+                variant: AppOtpFieldVariant.wallet,
+                controller: controller.otpController,
+                autofocus: true,
+                fieldHeight: 56.h,
+                fieldWidth: 50.w,
+                fieldBorderRadius: 12,
+                fieldFillColor: AppColors.surfaceSubtle,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                hasError: controller.otpError.isNotEmpty,
+                textStyle: AppTextStyles.body.copyWith(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textHeading,
+                ),
+                onCompleted: controller.onOtpComplete,
+                onChanged: (_) => controller.otpError.value = '',
+              ),
+              if (controller.otpError.isNotEmpty) ...[
+                SizedBox(height: 8.h),
+                Text(
+                  controller.otpError.value,
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.body.copyWith(
+                    color: AppColors.error,
+                    fontSize: 13.sp,
+                  ),
+                ),
               ],
-            ),
+            ],
           ),
         ),
 
