@@ -4,8 +4,6 @@ abstract class URLS {
   // ── Grouped endpoint accessors ──
   static const auth = _AuthEndpoints();
   static const ride = _RideEndpoints();
-  static const home = _HomeEndpoints();
-  static const booking = _BookingEndpoints();
   static const profile = _ProfileEndpoints();
   static const common = _CommonEndpoints();
   static const payment = _PaymentEndpoints();
@@ -100,26 +98,6 @@ class _RideEndpoints {
 }
 
 /// ─────────────────────────────────
-/// HOME ENDPOINTS
-/// ─────────────────────────────────
-class _HomeEndpoints {
-  const _HomeEndpoints();
-
-  final homeScreen = "home_screen";
-}
-
-/// ─────────────────────────────────
-/// BOOKING ENDPOINTS
-/// ─────────────────────────────────
-class _BookingEndpoints {
-  const _BookingEndpoints();
-
-  final activeBookings = "booking/active";
-  final bookingHistory = "booking/history";
-  final bookingDetails = "booking/details";
-}
-
-/// ─────────────────────────────────
 /// PROFILE ENDPOINTS
 /// ─────────────────────────────────
 class _ProfileEndpoints {
@@ -206,10 +184,8 @@ class _WalletEndpoints {
   final cancelUssdOrder = "go_wallet/go_cancel_ussd_order";
   final sendTransferRequestSelcomPesa =
       "go_wallet/go_send_transfer_request_selcom_pesa";
-  final simulateSelcomPesaTopUp =
-      "go_wallet/go_simulate_selcom_pesa_top_up";
-  final checkSelcomPesaTopUpStatus =
-      "go_wallet/check_selcom_pesa_status";
+  final simulateSelcomPesaTopUp = "go_wallet/go_simulate_selcom_pesa_top_up";
+  final checkSelcomPesaTopUpStatus = "go_wallet/check_selcom_pesa_status";
   final cardStatement = "go_wallet/go_card_statement";
   final emailCardStatement = "go_wallet/go_email_card_statement";
 }
