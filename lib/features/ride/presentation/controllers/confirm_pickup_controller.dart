@@ -23,12 +23,13 @@ class ConfirmPickupController extends GetxController {
   final address = ''.obs;
   final isResolvingAddress = false.obs;
   final isSubmitting = false.obs;
+  final isMapReady = false.obs;
 
   final bookingMode = BookingMode.self.obs;
   final passengerName = ''.obs;
   final passengerPhone = ''.obs;
   final TextEditingController noteForDriverController = TextEditingController();
-  late final VoidCallback _pickupNoteListener;
+  VoidCallback? _pickupNoteListener;
   late LatLng _initialLatLng;
   late String initialAddress;
 
@@ -37,6 +38,7 @@ class ConfirmPickupController extends GetxController {
   final isPickupNoteExpanded = false.obs;
 
   GoogleMapController? mapController;
+  int _cameraSyncGeneration = 0;
 
   LatLng get initialLatLng => _initialLatLng;
   static const double _pickupMoveThreshold = 0.00005;
@@ -56,8 +58,11 @@ class ConfirmPickupController extends GetxController {
 
   @override
   void onClose() {
-    noteForDriverController.removeListener(_pickupNoteListener);
+    if (_pickupNoteListener != null) {
+      noteForDriverController.removeListener(_pickupNoteListener!);
+    }
     noteForDriverController.dispose();
+    mapController = null;
     super.onClose();
   }
 
@@ -71,24 +76,60 @@ class ConfirmPickupController extends GetxController {
 
     final lat = (args['pickupLat'] as num?)?.toDouble() ?? -6.7924;
     final lng = (args['pickupLng'] as num?)?.toDouble() ?? 39.2083;
-    selectedLatLng.value = LatLng(lat, lng);
     _initialLatLng = LatLng(lat, lng);
+    selectedLatLng.value = _initialLatLng;
     initialAddress =
         (args['pickupAddress'] as String?)?.trim() ?? 'Selected pickup point';
     address.value = initialAddress;
+    isMapReady.value = false;
+    isPickupNoteExpanded.value = false;
+    isResolvingAddress.value = false;
+    isSubmitting.value = false;
+    mapController = null;
+    _cameraSyncGeneration++;
 
     _pickupNoteListener = () {
       if (isClosed) return;
       noteChipRevision.value++;
     };
-    noteForDriverController.addListener(_pickupNoteListener);
+    noteForDriverController.addListener(_pickupNoteListener!);
   }
 
   Future<void> onMapCreated(GoogleMapController controller) async {
     mapController = controller;
-    await controller.animateCamera(
-      CameraUpdate.newLatLng(selectedLatLng.value),
-    );
+    final generation = _cameraSyncGeneration;
+    await _syncCameraToPickup(generation: generation);
+    if (!isClosed && generation == _cameraSyncGeneration) {
+      isMapReady.value = true;
+    }
+  }
+
+  Future<void> _syncCameraToPickup({
+    required int generation,
+    int attempt = 0,
+  }) async {
+    final ctrl = mapController;
+    if (ctrl == null || isClosed || generation != _cameraSyncGeneration) {
+      return;
+    }
+
+    await SchedulerBinding.instance.endOfFrame;
+    if (attempt > 0) {
+      await Future<void>.delayed(Duration(milliseconds: 50 * attempt));
+    }
+
+    try {
+      await ctrl.moveCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(target: _initialLatLng, zoom: 16),
+        ),
+      );
+      selectedLatLng.value = _initialLatLng;
+    } catch (_) {
+      if (attempt < 3 && generation == _cameraSyncGeneration) {
+        await _syncCameraToPickup(generation: generation, attempt: attempt + 1);
+      }
+    }
   }
 
   void onCameraMove(CameraPosition position) {

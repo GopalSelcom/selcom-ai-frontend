@@ -7,8 +7,11 @@ import '../controllers/confirm_pickup_controller.dart';
 class ConfirmPickupBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<ConfirmPickupController>(
-      () => ConfirmPickupController(
+    if (Get.isRegistered<ConfirmPickupController>()) {
+      Get.delete<ConfirmPickupController>(force: true);
+    }
+    Get.put(
+      ConfirmPickupController(
         homeRepository: Get.find<HomeRepository>(),
         rideRepository: Get.find<RideRepository>(),
       ),

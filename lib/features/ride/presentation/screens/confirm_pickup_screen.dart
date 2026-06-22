@@ -33,24 +33,67 @@ class ConfirmPickupScreen extends StatelessWidget {
       body: Stack(
         children: [
           Positioned.fill(
-            child: Obx(
-              () => AppGoogleMap(
-                key: const ValueKey('confirm_pickup_map'),
-                initialCameraPosition: CameraPosition(
-                  target: c.selectedLatLng.value,
-                  zoom: 16,
-                ),
-                circles: _buildRouteCircles(
-                  from: c.initialLatLng,
-                  to: c.selectedLatLng.value,
-                ),
-                onMapCreated: c.onMapCreated,
-                onCameraMove: c.onCameraMove,
-                onCameraIdle: c.onCameraIdle,
-                padding: EdgeInsets.only(bottom: bottomPanelReserve.h),
-              ),
+            child: _ConfirmPickupMap(
+              controller: c,
+              bottomPanelReserve: bottomPanelReserve,
             ),
           ),
+          Obx(() {
+            if (!c.isMapReady.value) {
+              return const SizedBox.shrink();
+            }
+            return Positioned.fill(
+              bottom: bottomPanelReserve.h,
+              child: IgnorePointer(
+                child: Center(
+                  child: Stack(
+                    alignment: Alignment.center,
+                    clipBehavior: Clip.none,
+                    children: [
+                      Container(
+                        width: 10.w,
+                        height: 10.h,
+                        decoration: const BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 4.h,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 16.w,
+                                vertical: 8.h,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary,
+                                borderRadius: BorderRadius.circular(24.r),
+                              ),
+                              child: Text(
+                                AppStrings.pickupPoint.tr,
+                                style: AppTextStyles.homeCaption.copyWith(
+                                  color: AppColors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              width: 2.w,
+                              height: 28.h,
+                              color: AppColors.primary,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }),
           Obx(() {
             if (!c.hasMovedFromInitial || c.mapController == null) {
               return const SizedBox.shrink();
@@ -75,57 +118,6 @@ class ConfirmPickupScreen extends StatelessWidget {
               },
             );
           }),
-          Positioned.fill(
-            bottom: bottomPanelReserve.h,
-            child: IgnorePointer(
-              child: Center(
-                child: Stack(
-                  alignment: Alignment.center,
-                  clipBehavior: Clip.none,
-                  children: [
-                    Container(
-                      width: 10.w,
-                      height: 10.h,
-                      decoration: const BoxDecoration(
-                        color: AppColors.primary,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 4.h,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 16.w,
-                              vertical: 8.h,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              borderRadius: BorderRadius.circular(24.r),
-                            ),
-                            child: Text(
-                              AppStrings.pickupPoint.tr,
-                              style: AppTextStyles.homeCaption.copyWith(
-                                color: AppColors.white,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            width: 2.w,
-                            height: 28.h,
-                            color: AppColors.primary,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
           if (canGoBack)
             Positioned(
               top: MediaQuery.paddingOf(context).top + 10.h,
@@ -480,6 +472,58 @@ class ConfirmPickupScreen extends StatelessWidget {
       return Offset(raw.dx / dpr, raw.dy / dpr);
     }
     return raw;
+  }
+}
+
+class _ConfirmPickupMap extends StatefulWidget {
+  const _ConfirmPickupMap({
+    required this.controller,
+    required this.bottomPanelReserve,
+  });
+
+  final ConfirmPickupController controller;
+  final double bottomPanelReserve;
+
+  @override
+  State<_ConfirmPickupMap> createState() => _ConfirmPickupMapState();
+}
+
+class _ConfirmPickupMapState extends State<_ConfirmPickupMap> {
+  late final CameraPosition _initialCamera;
+  Set<Circle> _routeCircles = {};
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.controller.initialLatLng;
+    _initialCamera = CameraPosition(target: initial, zoom: 16);
+  }
+
+  void _handleCameraMove(CameraPosition position) {
+    widget.controller.onCameraMove(position);
+    setState(() {
+      _routeCircles = _buildRouteCircles(
+        from: widget.controller.initialLatLng,
+        to: position.target,
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AppGoogleMap(
+      key: ValueKey(
+        'confirm_pickup_map_'
+        '${widget.controller.initialLatLng.latitude}_'
+        '${widget.controller.initialLatLng.longitude}',
+      ),
+      initialCameraPosition: _initialCamera,
+      circles: _routeCircles,
+      onMapCreated: widget.controller.onMapCreated,
+      onCameraMove: _handleCameraMove,
+      onCameraIdle: widget.controller.onCameraIdle,
+      padding: EdgeInsets.only(bottom: widget.bottomPanelReserve.h),
+    );
   }
 
   Set<Circle> _buildRouteCircles({required LatLng from, required LatLng to}) {
