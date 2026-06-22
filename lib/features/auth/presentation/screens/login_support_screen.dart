@@ -13,7 +13,6 @@ import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../../../../shared/widgets/phone_country_picker_chip.dart';
 import '../controllers/login_support_controller.dart';
-import '../widgets/login_support_reason_picker_bottom_sheet.dart';
 import '../widgets/login_support_screen_shimmer.dart';
 
 class LoginSupportScreen extends GetView<LoginSupportController> {
@@ -162,7 +161,7 @@ class LoginSupportScreen extends GetView<LoginSupportController> {
 
   Widget _buildReasonDropdown() {
     return GestureDetector(
-      onTap: () => LoginSupportReasonPickerBottomSheet.show(),
+      onTap: controller.openReasonPicker,
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         decoration: BoxDecoration(

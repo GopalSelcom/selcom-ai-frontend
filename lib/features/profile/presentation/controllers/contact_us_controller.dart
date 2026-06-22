@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/widgets/app_reason_picker_bottom_sheet.dart';
 import '../../../ride/domain/repositories/ride_repository.dart';
 import '../../data/models/contact_us_models.dart';
 import '../../domain/repositories/profile_repository.dart';
@@ -90,6 +91,24 @@ class ContactUsController extends GetxController {
   void setSelectedReason(String reason) {
     selectedReason.value = reason;
     _updateCanSubmit();
+  }
+
+  void openReasonPicker() {
+    final placeholder = AppStrings.selectAReason.tr;
+    AppReasonPickerBottomSheet.show(
+      content: Obx(() {
+        return AppReasonPickerBottomSheet(
+          options: [
+            for (final subject in subjects)
+              AppReasonPickerOption(label: subject, value: subject),
+          ],
+          selectedValue: selectedReason.value == placeholder
+              ? ''
+              : selectedReason.value,
+          onSelected: (option) => setSelectedReason(option.value),
+        );
+      }),
+    );
   }
 
   void _updateCanSubmit() {

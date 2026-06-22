@@ -6,6 +6,7 @@ import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../shared/data/countries_phone_data.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
+import '../../../../shared/widgets/app_reason_picker_bottom_sheet.dart';
 import '../../data/models/support_models.dart';
 import '../../domain/repositories/support_repository.dart';
 
@@ -86,6 +87,27 @@ class LoginSupportController extends GetxController {
     selectedReasonLabel.value = reason.label;
     selectedReasonValue.value = reason.value;
     _updateCanSubmit();
+  }
+
+  void openReasonPicker() {
+    AppReasonPickerBottomSheet.show(
+      content: Obx(() {
+        return AppReasonPickerBottomSheet(
+          options: [
+            for (final reason in reasons)
+              AppReasonPickerOption(
+                label: reason.label,
+                value: reason.value,
+              ),
+          ],
+          selectedValue: selectedReasonValue.value,
+          onSelected: (option) {
+            final reason = reasons.firstWhere((r) => r.value == option.value);
+            setSelectedReason(reason);
+          },
+        );
+      }),
+    );
   }
 
   void onFieldChanged(String _) => _updateCanSubmit();
