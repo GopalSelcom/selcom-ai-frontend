@@ -8,8 +8,8 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
-import '../../../../shared/widgets/custom_loader.dart';
 import '../controllers/notification_controller.dart';
+import '../widgets/notification_screen_shimmer.dart';
 
 class NotificationScreen extends StatelessWidget {
   const NotificationScreen({super.key});
@@ -73,7 +73,7 @@ class NotificationScreen extends StatelessWidget {
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value) {
-                return const CustomLoader();
+                return NotificationScreenShimmer.listContent();
               }
 
               if (controller.notifications.isEmpty) {

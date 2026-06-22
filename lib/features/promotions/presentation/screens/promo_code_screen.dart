@@ -12,7 +12,6 @@ import '../../../../shared/widgets/animated_blur_dialog.dart';
 import '../../../../shared/widgets/app_cupertino_text_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/app_skeleton_loader.dart';
-import '../../../../shared/widgets/global_loader_widget.dart';
 import '../../../../shared/widgets/promo_apply_success_dialog.dart';
 import '../controllers/promo_code_controller.dart';
 
@@ -73,7 +72,6 @@ class PromoCodeScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              if (applying) _buildApplyLoadingOverlay(),
               if (showSuccess) _buildApplySuccessOverlay(),
             ],
           ),
@@ -85,18 +83,6 @@ class PromoCodeScreen extends StatelessWidget {
   Widget _buildApplySuccessOverlay() {
     return const Positioned.fill(
       child: AppBlurModalOverlay(child: PromoApplySuccessPanel()),
-    );
-  }
-
-  Widget _buildApplyLoadingOverlay() {
-    return Positioned.fill(
-      child: AppBlurModalOverlay(
-        child: SizedBox(
-          width: 36.w,
-          height: 36.w,
-          child: const GlobalLoaderWidget(),
-        ),
-      ),
     );
   }
 

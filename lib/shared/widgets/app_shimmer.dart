@@ -4,6 +4,8 @@ import 'package:shimmer/shimmer.dart';
 import '../../core/theme/app_colors.dart';
 
 /// App-wide shimmer wrapper (home map chrome, sheets, headers).
+///
+/// Use for **initial data load** placeholders. For button/submit flows use [Loader].
 class AppShimmer extends StatelessWidget {
   const AppShimmer({super.key, required this.child});
 

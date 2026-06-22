@@ -6,9 +6,9 @@ import 'package:iconsax/iconsax.dart';
 import '../../../../../core/localization/app_strings.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../shared/widgets/app_profile_header.dart';
-import '../../../../../shared/widgets/custom_loader.dart';
 import '../../widgets/menu_item_widget.dart';
 import '../controllers/settings_controller.dart';
+import '../widgets/settings_screen_shimmer.dart';
 
 class SettingsScreen extends GetView<SettingsController> {
   const SettingsScreen({super.key});
@@ -23,7 +23,7 @@ class SettingsScreen extends GetView<SettingsController> {
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value) {
-                return const CustomLoader();
+                return SettingsScreenShimmer.settingsMenu();
               }
 
               return RefreshIndicator(

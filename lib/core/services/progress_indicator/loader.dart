@@ -7,7 +7,9 @@ import 'package:lottie/lottie.dart';
 
 import '../../constants/app_loader_assets.dart';
 
-/// Global blocking loader — same implementation as Duka Direct [Loader].
+/// Global blocking loader (Lottie + blur) for **user actions** — submit, pay, apply.
+///
+/// For **initial screen / list data** loading, use [AppShimmer] shimmers instead.
 class Loader {
   Loader._();
 
