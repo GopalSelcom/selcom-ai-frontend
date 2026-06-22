@@ -1,77 +1,104 @@
 import '../env/env.dart';
+import 'environment.dart';
 
-/// App runtime environment (which host set from [Env] to use).
-enum Environment { dev, staging, prod }
-
-/// Runtime URLs and keys. Initialized once in main via [init].
+/// All runtime config from `.env`.
 ///
-/// Source: `.env` → [Env] (generated) → this class.
+/// **Startup:** call [init] once in `main` with [resolveAppEnvironment], then read
+/// values anywhere via `AppConfig.*`.
+///
+/// **API URLs:** only [apiHost] is stored. [ApiService] prepends `/api` when
+/// building `/api/v4/...` paths. Callers outside [ApiService] (Agora, WebView)
+/// use [apiHost] + [apiPathPrefix] the same way.
 class AppConfig {
+  AppConfig._();
+
+  // ── Environment ───────────────────────────────────────────────────────────
+
+  /// Active target: `dev` | `staging` | `prod` (from `--dart-define=ENV=...`).
   static late Environment environment;
-  static late String baseUrl;
+
+  // ── API ───────────────────────────────────────────────────────────────────
+
+  /// API host from `.env` (no trailing slash, no `/api` suffix).
+  ///
+  /// Used as Dio [baseUrl] in [ApiService].
+  static late String apiHost;
+
+  /// `/api` on dev & staging; empty on prod.
+  ///
+  /// Matches the segment [ApiService] adds when `ApiRequest.route` is empty.
+  /// Use with [apiHost] for Agora REST, in-app WebView, or any direct HTTP URL.
+  static String get apiPathPrefix {
+    switch (environment) {
+      case Environment.dev:
+      case Environment.staging:
+        return '/api';
+      case Environment.prod:
+        return '';
+    }
+  }
+
+  // ── Socket & error reporting ──────────────────────────────────────────────
+
+  /// Socket.IO origin (`/go-socket.io` path is set in [AppSocketService]).
   static late String socketBaseUrl;
+
+  /// Host for multipart error-report uploads (separate from main API).
   static late String errorReportHost;
+
+  // ── Agora voice ───────────────────────────────────────────────────────────
+
   static late String agoraAppId;
 
-  /// `none` (default) | `ride_api` POST mint per brain guide | `api` GET legacy **or** POST if endpoint contains `{rideId}`.
+  /// `none` (default) | `ride_api` | `api`
   static late String agoraTokenMode;
   static late String agoraTokenEndpoint;
 
-  /// Host for Selcom Pesa pcode handoff (`https://{host}/pcode/{shortCode}`).
-  /// Decoupled from API environment — production Selcom Pesa uses `spd.selcommobile.com`.
+  // ── Selcom Pesa ───────────────────────────────────────────────────────────
+
+  /// Deep-link host for pcode handoff: `https://{host}/pcode/{shortCode}`.
   static late String selcomPesaDeepLinkHost;
   static const String selcomPesaDeepLinkHostDefault = 'spd.selcommobile.com';
   static const String selcomPesaDownloadUrl = 'https://get.selcompesa.app/';
 
-  /// In-memory toggle only (not persisted, not env-derived).
-  ///
-  /// `true` → `go/validate_ride_payment` + `go/dev/payment_callback` + unsuffixed ride paths.
-  /// `false` → `go/validate_ride_payment_new` + socket payment block + `_new` ride paths.
+  // ── Feature toggles (in-memory, not from `.env`) ──────────────────────────
+
+  /// When true, ride payment endpoints skip the `_new` production suffix.
   static bool ridePaymentBypass = true;
 
-  /// In-memory toggle only (not persisted, not env-derived).
-  ///
-  /// `true` → `go_simulate_selcom_pesa_top_up` (dev/staging); skips USSD / app handoff.
-  /// `false` → real `go_send_transfer_request_selcom_pesa` + status polling.
+  /// When true, Selcom Pesa top-up skips the real app handoff (QA only).
   static bool selcomPesaBypass = false;
 
+  // ── Bootstrap ─────────────────────────────────────────────────────────────
+
+  /// Loads all values from `.env` ([Env]). Call once before `di.init()`.
   static void init({required Environment env}) {
     environment = env;
-
-    // Third-party keys (same across environments unless overridden in .env).
-    agoraAppId = Env.agoraAppId.trim();
-    agoraTokenMode = Env.agoraTokenMode.trim().toLowerCase();
-    agoraTokenEndpoint = Env.agoraTokenEndpoint.trim();
-
-    final apiHost = _apiHostFor(env);
+    apiHost = _apiHostFor(env);
     socketBaseUrl = _socketBaseUrlFor(env);
     errorReportHost = _errorReportHostFor(env);
 
-    // baseUrl: dev/staging append `/api`; prod uses host as-is (legacy contract).
-    switch (env) {
-      case Environment.dev:
-      case Environment.staging:
-        baseUrl = '$apiHost/api';
-        break;
-      case Environment.prod:
-        ridePaymentBypass = false;
-        selcomPesaBypass = false;
-        baseUrl = apiHost;
-        break;
-    }
+    agoraAppId = Env.agoraAppId.trim();
+    agoraTokenMode = Env.agoraTokenMode.trim().toLowerCase();
+    agoraTokenEndpoint = Env.agoraTokenEndpoint.trim();
 
     selcomPesaDeepLinkHost = Env.selcomPesaDeepLinkHost.trim();
     if (selcomPesaDeepLinkHost.isEmpty) {
       selcomPesaDeepLinkHost = selcomPesaDeepLinkHostDefault;
     }
+
+    // Production builds must use real payment flows.
+    if (env == Environment.prod) {
+      ridePaymentBypass = false;
+      selcomPesaBypass = false;
+    }
   }
 
-  /// Host root for [ApiService] (no `/api` suffix).
-  static String apiHostFor(Environment env) => _apiHostFor(env);
-
+  // ── `.env` host resolution ────────────────────────────────────────────────
   static String _apiHostFor(Environment env) {
     switch (env) {
       case Environment.dev:
+        // Optional override; falls back to staging host when empty.
         final devHost = Env.apiHostDev.trim();
         return _stripTrailingSlash(
           devHost.isEmpty ? Env.apiHostStaging : devHost,

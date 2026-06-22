@@ -49,8 +49,6 @@ import '../../features/wallet/domain/usecases/get_wallet_details_usecase.dart';
 import '../../features/wallet/domain/usecases/get_wallet_summary_usecase.dart';
 import '../../features/wallet/domain/usecases/email_wallet_statement_usecase.dart';
 import '../../features/wallet/domain/usecases/get_wallet_transactions_usecase.dart';
-import '../config/app_config.dart';
-import '../env/env.dart';
 import '../network/api_service.dart';
 import '../network/headers.dart';
 import '../network/network_connectivity_service.dart';
@@ -88,14 +86,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => const FlutterSecureStorage());
 
   // ── Network — ApiService initialization ──
-  final environment = _mapEnvironment(AppConfig.environment);
-
-  // Base URLs from .env (via AppConfig / Env).
   ApiService().init(
-    stagingBaseUrl: AppConfig.apiHostFor(Environment.staging),
-    productionBaseUrl: AppConfig.apiHostFor(Environment.prod),
-    localBaseUrl: _optionalDevApiHost(),
-    environment: environment,
     commonHeadersBuilder: () => commonHeaders(accessTokenRequired: true),
   );
 
@@ -218,22 +209,4 @@ Future<void> init() async {
   sl.registerLazySingleton(() => EmailWalletStatementUseCase(sl()));
 
   await sl<AppRegionService>().restore();
-}
-
-/// Maps the app's Environment enum to ApiService's ApiEnvironment enum
-ApiEnvironment _mapEnvironment(Environment env) {
-  switch (env) {
-    case Environment.dev:
-      return ApiEnvironment.local;
-    case Environment.staging:
-      return ApiEnvironment.staging;
-    case Environment.prod:
-      return ApiEnvironment.production;
-  }
-}
-
-String? _optionalDevApiHost() {
-  final devHost = Env.apiHostDev.trim();
-  if (devHost.isEmpty) return null;
-  return AppConfig.apiHostFor(Environment.dev);
 }

@@ -4,7 +4,7 @@ part 'env.g.dart';
 
 /// Values from root `.env`, obfuscated into `env.g.dart` by Envied.
 ///
-/// Edit `.env` → run `dart run build_runner build` → use [AppConfig] in app code.
+/// Edit `.env` → run `dart run build_runner build` → [AppConfig.init] in main.
 @Envied(path: '.env')
 abstract class Env {
   // API hosts (no /api suffix)

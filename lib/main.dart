@@ -13,6 +13,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'firebase_options.dart';
 import 'core/config/app_config.dart';
+import 'core/config/environment.dart';
 import 'core/di/injection_container.dart' as di;
 import 'core/localization/delegate.dart';
 import 'core/localization/getx_languages_translations.dart';
@@ -30,6 +31,12 @@ import 'core/services/live_activity/android_order_tracking_manager.dart';
 import 'core/data/models/notification_model.dart';
 import 'core/services/error_reporting/error_reporter.dart';
 import 'package:screenshot/screenshot.dart';
+
+/// **Change this for local runs** (`dev` | `staging` | `prod`).
+///
+/// Same idea as `ApiEnvironment` in our other apps — one line to flip QA target.
+/// Release CI can still pass `--dart-define=ENV=prod` (overrides when set).
+const Environment kAppEnvironment = Environment.dev;
 
 void _registerKillCallLogSink() {
   registerAgoraLogSink((line) {
@@ -159,14 +166,7 @@ void main() async {
         return true;
       };
 
-      // Default: dev (staging URLs from .env). Override only if needed: --dart-define=ENV=prod
-      const envString = String.fromEnvironment('ENV', defaultValue: 'dev');
-      final env = Environment.values.firstWhere(
-        (e) => e.toString() == 'Environment.$envString',
-        orElse: () => Environment.dev,
-      );
-
-      AppConfig.init(env: env);
+      AppConfig.init(env: resolveAppEnvironment(localDefault: kAppEnvironment));
       await di.init();
 
       // Initialize Notification Service

@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:get/get.dart';
 
 import '../../../../core/config/app_config.dart';
+import '../../../../core/config/environment.dart';
 import '../../../../core/data/models/requests/go_phone_otp_request.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/data/models/requests/go_phone_verify_otp_request.dart';
@@ -155,9 +156,7 @@ class AuthController extends GetxController {
     phoneFieldResetVersion.value++;
   }
 
-  bool get shouldShowGeneratedOtp =>
-      AppConfig.environment == Environment.dev ||
-      AppConfig.environment == Environment.staging;
+  bool get shouldShowGeneratedOtp => AppConfig.environment.isDevOrStaging;
 
   Future<bool> resendOtp() async {
     if (isLoading.value) return false;

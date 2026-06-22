@@ -22,6 +22,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/svg_picture_asset.dart';
 import 'connectivity_probe.dart';
+import '../config/app_config.dart';
 import 'failed_request_queue.dart';
 import 'network_connectivity_service.dart';
 import 'retry_manager.dart';
@@ -29,8 +30,6 @@ import 'retry_manager.dart';
 // ─────────────────────────────────────────────────────────
 // Enums
 // ─────────────────────────────────────────────────────────
-
-enum ApiEnvironment { local, staging, production }
 
 enum ApiMethod { get, post, put, delete, patch, multipart }
 
@@ -131,45 +130,25 @@ class ApiService {
 
   late Dio _defaultDio;
   late Dio _customDio;
-  late String _baseUrl;
   late AuthInterceptor _authInterceptor;
 
   Map<String, dynamic> _commonBodyParams = {};
-
-  static late ApiEnvironment currentEnvironment;
 
   late final Future<Map<String, String>> Function() _commonHeadersBuilder;
 
   // ── Initialization ──
 
+  /// Wires Dio to [AppConfig.apiHost]. Call after [AppConfig.init].
   void init({
-    required String stagingBaseUrl,
-    required String productionBaseUrl,
-    required ApiEnvironment environment,
     required Future<Map<String, String>> Function() commonHeadersBuilder,
-    String? localBaseUrl,
     Map<String, dynamic>? commonBodyParams,
   }) {
-    currentEnvironment = environment;
     _commonHeadersBuilder = commonHeadersBuilder;
-
-    switch (environment) {
-      case ApiEnvironment.local:
-        _baseUrl = localBaseUrl ?? stagingBaseUrl;
-        break;
-      case ApiEnvironment.staging:
-        _baseUrl = stagingBaseUrl;
-        break;
-      case ApiEnvironment.production:
-        _baseUrl = productionBaseUrl;
-        break;
-    }
-
     _commonBodyParams = commonBodyParams ?? {};
 
     _defaultDio = Dio(
       BaseOptions(
-        baseUrl: _baseUrl,
+        baseUrl: AppConfig.apiHost,
         connectTimeout: const Duration(seconds: 40),
         receiveTimeout: const Duration(seconds: 40),
       ),
@@ -187,9 +166,7 @@ class ApiService {
     _defaultDio.interceptors.add(_authInterceptor);
   }
 
-  // ── Getters ──
-
-  String get baseUrl => _baseUrl;
+  String get baseUrl => AppConfig.apiHost;
 
   // ── Internet Check ──
 
@@ -246,6 +223,7 @@ class ApiService {
     final stopwatch = Stopwatch()..start();
 
     // ── Build Endpoint ──
+    // Default route is `api` → `/api/v4/{endpoint}` on top of [AppConfig.apiHost].
     final String endpoint;
     if (request.customBaseUrl.isNotEmpty) {
       endpoint = request.endpoint;

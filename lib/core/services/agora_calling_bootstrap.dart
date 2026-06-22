@@ -25,7 +25,7 @@ class AgoraCallingBootstrap {
     await AgoraCalling.init(
       AgoraCallingConfig(
         appId: AppConfig.agoraAppId,
-        baseUrl: AppConfig.baseUrl,
+        baseUrl: AppConfig.apiHost,
         // Do not pass bare `commonHeaders` — ensure session is loaded from
         // secure storage first (killed-state CallKit Accept can fire before
         // splash). See delivery_agent_app/docs/AGORA_CALLING_BACKGROUND_FIX.md.
@@ -38,9 +38,11 @@ class AgoraCallingBootstrap {
         ensureCallPermissionsUi:
             CallPermissionPromptService.ensureAndroidCallPermissions,
         endpoints: CallEndpoints(
-          tokenPath: (rideId) => '/v4/go/rides/$rideId/call/token',
-          cancelPath: (rideId) => '/v4/go/rides/$rideId/call/cancel',
-          voipTokenPath: '/v4/go/user/voip-token',
+          tokenPath: (rideId) =>
+              '${AppConfig.apiPathPrefix}/v4/go/rides/$rideId/call/token',
+          cancelPath: (rideId) =>
+              '${AppConfig.apiPathPrefix}/v4/go/rides/$rideId/call/cancel',
+          voipTokenPath: '${AppConfig.apiPathPrefix}/v4/go/user/voip-token',
         ),
         // Rider only ever receives calls from drivers; this default keeps the
         // CallKit / heads-up surface neutral when `caller_name` is missing.

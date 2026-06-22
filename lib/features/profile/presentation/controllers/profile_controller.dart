@@ -5,9 +5,9 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../core/config/app_config.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../../../../core/data/models/user_model.dart';
+import '../../../../core/config/app_config.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/network/urls.dart';
 import '../../../../core/routes/app_routes.dart';
@@ -315,7 +315,7 @@ class ProfileController extends GetxController {
     Get.to(
       () => WebViewScreen(
         title: AppStrings.privacyPolicy.tr,
-        url: "${AppConfig.baseUrl}/${URLS.common.privacy}",
+        url: '${AppConfig.apiHost}${AppConfig.apiPathPrefix}/${URLS.common.privacy}',
       ),
     );
   }
