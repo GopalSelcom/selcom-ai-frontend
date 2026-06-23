@@ -15,6 +15,7 @@ import '../../features/home/presentation/bindings/confirm_location_binding.dart'
 import '../../features/home/presentation/bindings/home_binding.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/home/presentation/screens/location_selection_screen.dart';
+import '../../features/home/presentation/bindings/select_saved_location_binding.dart';
 import '../../features/home/presentation/screens/select_saved_location_screen.dart';
 import '../../features/notification/presentation/screens/notification_screen.dart';
 import '../../features/profile/presentation/bindings/contact_us_binding.dart';
@@ -172,7 +173,7 @@ class AppRoutes {
     GetPage(
       name: selectSavedLocation,
       page: () => const SelectSavedLocationScreen(),
-      binding: HomeBinding(),
+      binding: SelectSavedLocationBinding(),
     ),
     GetPage(
       name: checkPickupPoint,
