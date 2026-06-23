@@ -485,7 +485,7 @@ class ConfirmLocationScreen extends GetView<ConfirmLocationController> {
   }
 }
 
-class _ConfirmLocationMap extends StatefulWidget {
+class _ConfirmLocationMap extends StatelessWidget {
   const _ConfirmLocationMap({
     required this.controller,
     required this.config,
@@ -497,75 +497,26 @@ class _ConfirmLocationMap extends StatefulWidget {
   final double bottomPanelReserve;
 
   @override
-  State<_ConfirmLocationMap> createState() => _ConfirmLocationMapState();
-}
+  Widget build(BuildContext context) {
+    final initial = controller.initialLatLng;
+    final initialCamera = CameraPosition(target: initial, zoom: 16);
 
-class _ConfirmLocationMapState extends State<_ConfirmLocationMap> {
-  late final CameraPosition _initialCamera;
-  Set<Circle> _routeCircles = {};
-
-  @override
-  void initState() {
-    super.initState();
-    final initial = widget.controller.initialLatLng;
-    _initialCamera = CameraPosition(target: initial, zoom: 16);
-  }
-
-  void _handleCameraMove(CameraPosition position) {
-    widget.controller.onCameraMove(position);
-    if (!widget.config.showRouteCircles) return;
-    setState(() {
-      _routeCircles = _buildRouteCircles(
-        from: widget.controller.initialLatLng,
-        to: position.target,
+    return Obx(() {
+      controller.routeCircles.value;
+      return AppGoogleMap(
+        key: ValueKey(
+          'confirm_location_map_${initial.latitude}_${initial.longitude}',
+        ),
+        initialCameraPosition: initialCamera,
+        circles: config.showRouteCircles
+            ? controller.routeCircles.value
+            : const <Circle>{},
+        onMapCreated: controller.onMapCreated,
+        onCameraMove: controller.onCameraMove,
+        onCameraIdle: controller.onCameraIdle,
+        padding: EdgeInsets.only(bottom: bottomPanelReserve.h),
       );
     });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AppGoogleMap(
-      key: ValueKey(
-        'confirm_location_map_'
-        '${widget.controller.initialLatLng.latitude}_'
-        '${widget.controller.initialLatLng.longitude}',
-      ),
-      initialCameraPosition: _initialCamera,
-      circles: widget.config.showRouteCircles ? _routeCircles : const {},
-      onMapCreated: widget.controller.onMapCreated,
-      onCameraMove: _handleCameraMove,
-      onCameraIdle: widget.controller.onCameraIdle,
-      padding: EdgeInsets.only(bottom: widget.bottomPanelReserve.h),
-    );
-  }
-
-  Set<Circle> _buildRouteCircles({required LatLng from, required LatLng to}) {
-    final circles = <Circle>{};
-
-    final latDiff = (to.latitude - from.latitude).abs();
-    final lngDiff = (to.longitude - from.longitude).abs();
-    final hasMoved = latDiff > 0.000001 || lngDiff > 0.000001;
-    if (!hasMoved) return circles;
-
-    final approxDistanceMeters = (latDiff + lngDiff) * 111000;
-    final dotCount = (approxDistanceMeters / 24).clamp(6, 28).round();
-    for (var i = 1; i < dotCount; i++) {
-      final t = i / dotCount;
-      circles.add(
-        Circle(
-          circleId: CircleId('confirm_location_route_dot_$i'),
-          center: LatLng(
-            from.latitude + (to.latitude - from.latitude) * t,
-            from.longitude + (to.longitude - from.longitude) * t,
-          ),
-          radius: 5,
-          fillColor: AppColors.primary.withValues(alpha: 0.95),
-          strokeColor: AppColors.primary.withValues(alpha: 0.95),
-          strokeWidth: 1,
-        ),
-      );
-    }
-    return circles;
   }
 }
 

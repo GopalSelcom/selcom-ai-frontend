@@ -145,6 +145,7 @@ class ConfirmLocationController extends GetxController {
   final isMapReady = false.obs;
   final noteChipRevision = 0.obs;
   final isNoteExpanded = false.obs;
+  final routeCircles = Rx<Set<Circle>>(<Circle>{});
 
   final noteForDriverController = TextEditingController();
   GoogleMapController? mapController;
@@ -318,6 +319,40 @@ class ConfirmLocationController extends GetxController {
 
   void onCameraMove(CameraPosition position) {
     selectedLatLng.value = position.target;
+    if (!uiConfig.showRouteCircles) return;
+    routeCircles.value = _buildRouteCircles(
+      from: _initialLatLng,
+      to: position.target,
+    );
+  }
+
+  Set<Circle> _buildRouteCircles({required LatLng from, required LatLng to}) {
+    final circles = <Circle>{};
+
+    final latDiff = (to.latitude - from.latitude).abs();
+    final lngDiff = (to.longitude - from.longitude).abs();
+    final hasMoved = latDiff > 0.000001 || lngDiff > 0.000001;
+    if (!hasMoved) return circles;
+
+    final approxDistanceMeters = (latDiff + lngDiff) * 111000;
+    final dotCount = (approxDistanceMeters / 24).clamp(6, 28).round();
+    for (var i = 1; i < dotCount; i++) {
+      final t = i / dotCount;
+      circles.add(
+        Circle(
+          circleId: CircleId('confirm_location_route_dot_$i'),
+          center: LatLng(
+            from.latitude + (to.latitude - from.latitude) * t,
+            from.longitude + (to.longitude - from.longitude) * t,
+          ),
+          radius: 5,
+          fillColor: AppColors.primary.withValues(alpha: 0.95),
+          strokeColor: AppColors.primary.withValues(alpha: 0.95),
+          strokeWidth: 1,
+        ),
+      );
+    }
+    return circles;
   }
 
   Future<void> onCameraIdle() async {
