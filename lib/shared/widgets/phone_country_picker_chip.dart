@@ -7,6 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../data/countries_phone_data.dart';
 import '../utils/app_dialogs.dart';
+import 'phone_country_picker_controller.dart';
 
 /// Duka-style: emoji flag + dial code, full list from [Countries.all] in a sheet.
 class PhoneCountryPickerChip extends StatelessWidget {
@@ -76,7 +77,7 @@ class PhoneCountryPickerChip extends StatelessWidget {
 
     if (inline) {
       return InkWell(
-        onTap: () => _openSheet(),
+        onTap: _openSheet,
         borderRadius: BorderRadius.circular(8.r),
         child: label,
       );
@@ -85,7 +86,7 @@ class PhoneCountryPickerChip extends StatelessWidget {
     return Material(
       color: AppColors.transparent,
       child: InkWell(
-        onTap: () => _openSheet(),
+        onTap: _openSheet,
         borderRadius: BorderRadius.circular(16.r),
         child: Container(
           height: 54.h,
@@ -109,6 +110,13 @@ class PhoneCountryPickerChip extends StatelessWidget {
   }
 
   Future<void> _openSheet() {
+    final controllerTag =
+        'phone_country_picker_${DateTime.now().microsecondsSinceEpoch}';
+    Get.put(
+      PhoneCountryPickerController(selected: selected),
+      tag: controllerTag,
+    );
+
     return AppDialogs.showStandardBottomSheet<void>(
       title: AppStrings.selectCountry.tr,
       subtitle: AppStrings.selectCountrySubtitle.tr,
@@ -116,61 +124,34 @@ class PhoneCountryPickerChip extends StatelessWidget {
       maxHeightFactor: 0.85,
       barrierDismissible: true,
       content: _CountryPickerSheet(
-        selected: selected,
+        controllerTag: controllerTag,
         onSelect: (country) {
           Get.back<void>();
           onChanged(country);
         },
       ),
-    );
+    ).whenComplete(() {
+      Future<void>.delayed(const Duration(milliseconds: 400), () {
+        if (Get.isRegistered<PhoneCountryPickerController>(tag: controllerTag)) {
+          Get.delete<PhoneCountryPickerController>(tag: controllerTag);
+        }
+      });
+    });
   }
 }
 
 /// Country list body for [AppDialogs.showStandardBottomSheet].
-class _CountryPickerSheet extends StatefulWidget {
-  const _CountryPickerSheet({this.selected, required this.onSelect});
+class _CountryPickerSheet extends StatelessWidget {
+  const _CountryPickerSheet({
+    required this.controllerTag,
+    required this.onSelect,
+  });
 
-  final CountryData? selected;
+  final String controllerTag;
   final ValueChanged<CountryData> onSelect;
 
-  @override
-  State<_CountryPickerSheet> createState() => _CountryPickerSheetState();
-}
-
-class _CountryPickerSheetState extends State<_CountryPickerSheet> {
-  final _search = TextEditingController();
-  List<CountryData> _filtered = Countries.all;
-
-  @override
-  void initState() {
-    super.initState();
-    _search.addListener(_filter);
-  }
-
-  @override
-  void dispose() {
-    _search.removeListener(_filter);
-    _search.dispose();
-    super.dispose();
-  }
-
-  void _filter() {
-    final q = _search.text.trim().toLowerCase();
-    final qDigits = q.replaceAll(RegExp(r'\D'), '');
-    setState(() {
-      if (q.isEmpty) {
-        _filtered = Countries.all;
-      } else {
-        _filtered = Countries.all.where((c) {
-          final dialNorm = c.dialCode.replaceAll('+', '');
-          return c.name.toLowerCase().contains(q) ||
-              c.dialCode.toLowerCase().contains(q) ||
-              (qDigits.isNotEmpty && dialNorm.contains(qDigits)) ||
-              c.code.toLowerCase().contains(q);
-        }).toList();
-      }
-    });
-  }
+  PhoneCountryPickerController get controller =>
+      Get.find<PhoneCountryPickerController>(tag: controllerTag);
 
   /// Space used by [AppStandardBottomSheet] above the scrollable body.
   static double _standardSheetHeaderHeight(BuildContext context) {
@@ -184,7 +165,6 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
     final keyboard = media.viewInsets.bottom;
     final safeBottom = media.padding.bottom;
 
-    // Match [AppStandardBottomSheet] max body (0.85) minus chrome and keyboard.
     final bodyMaxHeight =
         (screenH * 0.85 -
                 keyboard -
@@ -198,7 +178,6 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
       bodyMaxHeight - searchBlockHeight,
     );
 
-    // Sheet uses light surfaces; force dark input/list text when app theme is dark.
     final lightOnSheet = ThemeData(
       brightness: Brightness.light,
       useMaterial3: true,
@@ -212,122 +191,163 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
 
     return Theme(
       data: lightOnSheet,
-      child: SizedBox(
-        height: bodyMaxHeight,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(
-              controller: _search,
-              keyboardType: TextInputType.text,
-              style: AppTextStyles.body.copyWith(
-                fontSize: 16.sp,
-                color: AppColors.textHeading,
-              ),
-              cursorColor: AppColors.primary,
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: AppColors.surfaceSubtle,
-                hintText: AppStrings.searchCountry.tr,
-                hintStyle: AppTextStyles.hint.copyWith(
-                  fontSize: 14.sp,
-                  color: AppColors.textHint,
-                ),
-                prefixIcon: Icon(
-                  Icons.search,
-                  color: AppColors.textBody,
-                  size: 22.sp,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: const BorderSide(color: AppColors.borderDefault),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: const BorderSide(color: AppColors.borderDefault),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: const BorderSide(
-                    color: AppColors.primary,
-                    width: 1.5,
-                  ),
-                ),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12.w,
-                  vertical: 12.h,
-                ),
-              ),
-            ),
-            SizedBox(height: 12.h),
-            SizedBox(
-              height: listHeight,
-              child: _filtered.isEmpty
-                  ? Center(
-                      child: Text(
-                        AppStrings.noCountriesFound.tr,
-                        style: AppTextStyles.homeSubtitle.copyWith(
-                          color: AppColors.textBody,
+      child: Obx(() {
+        controller.searchQuery.value;
+        final filtered = controller.filteredCountries;
+
+        return SizedBox(
+          height: bodyMaxHeight,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _CountrySearchField(onChanged: controller.updateSearch),
+              SizedBox(height: 12.h),
+              SizedBox(
+                height: listHeight,
+                child: filtered.isEmpty
+                    ? Center(
+                        child: Text(
+                          AppStrings.noCountriesFound.tr,
+                          style: AppTextStyles.homeSubtitle.copyWith(
+                            color: AppColors.textBody,
+                          ),
                         ),
-                      ),
-                    )
-                  : ListView.separated(
-                      padding: EdgeInsets.only(bottom: 8.h),
-                      itemCount: _filtered.length,
-                      separatorBuilder: (_, __) => SizedBox(height: 8.h),
-                      itemBuilder: (context, i) {
-                        final c = _filtered[i];
-                        final isSel = c.code == widget.selected?.code;
-                        return InkWell(
-                          onTap: () => widget.onSelect(c),
-                          borderRadius: BorderRadius.circular(12.r),
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 14.w,
-                              vertical: 12.h,
-                            ),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12.r),
-                              color: isSel
-                                  ? AppColors.primaryLight
-                                  : AppColors.surfaceSubtle,
-                            ),
-                            child: Row(
-                              children: [
-                                Text(c.flag, style: TextStyle(fontSize: 22.sp)),
-                                SizedBox(width: 12.w),
-                                Expanded(
-                                  child: Text(
-                                    c.name,
-                                    style: AppTextStyles.homeSubtitle.copyWith(
-                                      fontSize: 15.sp,
-                                      color: AppColors.textHeading,
+                      )
+                    : ListView.separated(
+                        padding: EdgeInsets.only(bottom: 8.h),
+                        itemCount: filtered.length,
+                        separatorBuilder: (_, __) => SizedBox(height: 8.h),
+                        itemBuilder: (context, i) {
+                          final country = filtered[i];
+                          final isSel =
+                              country.code == controller.selected?.code;
+                          return InkWell(
+                            onTap: () => onSelect(country),
+                            borderRadius: BorderRadius.circular(12.r),
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 14.w,
+                                vertical: 12.h,
+                              ),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12.r),
+                                color: isSel
+                                    ? AppColors.primaryLight
+                                    : AppColors.surfaceSubtle,
+                              ),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    country.flag,
+                                    style: TextStyle(fontSize: 22.sp),
+                                  ),
+                                  SizedBox(width: 12.w),
+                                  Expanded(
+                                    child: Text(
+                                      country.name,
+                                      style: AppTextStyles.homeSubtitle
+                                          .copyWith(
+                                        fontSize: 15.sp,
+                                        color: AppColors.textHeading,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                Text(
-                                  c.dialCode,
-                                  style: AppTextStyles.homeSubtitle.copyWith(
-                                    fontSize: 14.sp,
-                                    color: AppColors.textBody,
+                                  Text(
+                                    country.dialCode,
+                                    style: AppTextStyles.homeSubtitle.copyWith(
+                                      fontSize: 14.sp,
+                                      color: AppColors.textBody,
+                                    ),
                                   ),
-                                ),
-                                if (isSel) ...[
-                                  SizedBox(width: 8.w),
-                                  Icon(
-                                    Icons.check_circle,
-                                    color: AppColors.primary,
-                                    size: 20.sp,
-                                  ),
+                                  if (isSel) ...[
+                                    SizedBox(width: 8.w),
+                                    Icon(
+                                      Icons.check_circle,
+                                      color: AppColors.primary,
+                                      size: 20.sp,
+                                    ),
+                                  ],
                                 ],
-                              ],
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
-            ),
-          ],
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+        );
+      }),
+    );
+  }
+}
+
+class _CountrySearchField extends StatefulWidget {
+  const _CountrySearchField({required this.onChanged});
+
+  final ValueChanged<String> onChanged;
+
+  @override
+  State<_CountrySearchField> createState() => _CountrySearchFieldState();
+}
+
+class _CountrySearchFieldState extends State<_CountrySearchField> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: _controller,
+      keyboardType: TextInputType.text,
+      onChanged: widget.onChanged,
+      style: AppTextStyles.body.copyWith(
+        fontSize: 16.sp,
+        color: AppColors.textHeading,
+      ),
+      cursorColor: AppColors.primary,
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: AppColors.surfaceSubtle,
+        hintText: AppStrings.searchCountry.tr,
+        hintStyle: AppTextStyles.hint.copyWith(
+          fontSize: 14.sp,
+          color: AppColors.textHint,
+        ),
+        prefixIcon: Icon(
+          Icons.search,
+          color: AppColors.textBody,
+          size: 22.sp,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12.r),
+          borderSide: const BorderSide(color: AppColors.borderDefault),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12.r),
+          borderSide: const BorderSide(color: AppColors.borderDefault),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12.r),
+          borderSide: const BorderSide(
+            color: AppColors.primary,
+            width: 1.5,
+          ),
+        ),
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: 12.w,
+          vertical: 12.h,
         ),
       ),
     );
