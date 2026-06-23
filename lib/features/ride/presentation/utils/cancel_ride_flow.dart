@@ -59,38 +59,40 @@ class CancelRideFlow {
     RideCancellationChargesModel? cancellationData;
 
     // 3. Reason selection + fetch cancellation charges.
+    final reasonDialog = CancelReasonSelectionDialog(
+      reasons: cancelReasons,
+      onContinueTap: (reason) async {
+        if (rideId.isEmpty) {
+          AppDialogs.showErrorDialog(
+            title: AppStrings.cancelFailed.tr,
+            message: AppStrings.rideIdIsMissing.tr,
+          );
+          return;
+        }
+        await Loader.run(() async {
+          final charges = await rideRepository.getCancellationCharges(rideId);
+          await charges.fold(
+            (_) async {
+              AppDialogs.showErrorDialog(
+                title: AppStrings.cancelFailed.tr,
+                message: AppStrings.couldNotCancelTryAgain.tr,
+              );
+            },
+            (data) async {
+              selectedReason = reason;
+              cancellationData = data;
+              Get.back();
+            },
+          );
+        });
+      },
+    );
     await AppDialogs.showAnimatedDialog<void>(
-      child: CancelReasonSelectionDialog(
-        reasons: cancelReasons,
-        onContinueTap: (reason) async {
-          if (rideId.isEmpty) {
-            AppDialogs.showErrorDialog(
-              title: AppStrings.cancelFailed.tr,
-              message: AppStrings.rideIdIsMissing.tr,
-            );
-            return;
-          }
-          await Loader.run(() async {
-            final charges = await rideRepository.getCancellationCharges(rideId);
-            await charges.fold(
-              (_) async {
-                AppDialogs.showErrorDialog(
-                  title: AppStrings.cancelFailed.tr,
-                  message: AppStrings.couldNotCancelTryAgain.tr,
-                );
-              },
-              (data) async {
-                selectedReason = reason;
-                cancellationData = data;
-                Get.back();
-              },
-            );
-          });
-        },
-      ),
+      child: reasonDialog,
       barrierDismissible: false,
       barrierColor: AppColors.overlayBlack12,
     );
+    reasonDialog.disposeController();
     if (selectedReason == null || cancellationData == null) return;
 
     final charges = cancellationData!;
