@@ -48,34 +48,32 @@ class HomeScreen extends GetView<HomeController> {
           children: [
             // 1. Map Layer (Static Image from Figma)
             Positioned.fill(
-              child: Obx(
-                () {
-                  final activeRide = controller.activeRide.value;
-                  final showsMoreBadge = controller.hasMultipleActiveRides;
-                  final activeRideFootprint = activeRide == null
-                      ? 0.0
-                      : HomeActiveRideCard.footprintAboveSheet(
-                          showsMoreBadge: showsMoreBadge,
-                        );
-                  return AppGoogleMap(
-                    initialCameraPosition: CameraPosition(
-                      target: controller.mapCenter.value,
-                      zoom: 16,
-                    ),
-                    // Keep map focal content above the draggable sheet peek area.
-                    padding: EdgeInsets.only(
-                      bottom:
-                          screenHeight * controller.sheetSize.value +
-                          activeRideFootprint,
-                    ),
-                    myLocationEnabled: controller.hasLocationPermission.value,
-                    circles: controller.nearbyPickupRadiusCircles,
-                    // markers: controller.selectedPickupMarkers,
-                    onMapCreated: controller.onMapCreated,
-                    onCameraIdle: controller.onHomeMapCameraIdle,
-                  );
-                },
-              ),
+              child: Obx(() {
+                final activeRide = controller.activeRide.value;
+                final showsMoreBadge = controller.hasMultipleActiveRides;
+                final activeRideFootprint = activeRide == null
+                    ? 0.0
+                    : HomeActiveRideCard.footprintAboveSheet(
+                        showsMoreBadge: showsMoreBadge,
+                      );
+                return AppGoogleMap(
+                  initialCameraPosition: CameraPosition(
+                    target: controller.mapCenter.value,
+                    zoom: 16,
+                  ),
+                  // Keep map focal content above the draggable sheet peek area.
+                  padding: EdgeInsets.only(
+                    bottom:
+                        screenHeight * controller.sheetSize.value +
+                        activeRideFootprint,
+                  ),
+                  myLocationEnabled: controller.hasLocationPermission.value,
+                  circles: controller.nearbyPickupRadiusCircles,
+                  // markers: controller.selectedPickupMarkers,
+                  onMapCreated: controller.onMapCreated,
+                  onCameraIdle: controller.onHomeMapCameraIdle,
+                );
+              }),
             ),
 
             // 2. Top Header (Address + Profile)
@@ -123,7 +121,8 @@ class HomeScreen extends GetView<HomeController> {
 
               final rides = controller.activeRides.toList(growable: false);
               final sheetBottom = screenHeight * controller.sheetSize.value;
-              final cardBottom = sheetBottom + HomeActiveRideCard.gapAboveSheet.h;
+              final cardBottom =
+                  sheetBottom + HomeActiveRideCard.gapAboveSheet.h;
 
               if (!controller.hasMultipleActiveRides) {
                 return Positioned(
@@ -162,7 +161,8 @@ class HomeScreen extends GetView<HomeController> {
                     child: HomeActiveRidesPanel(
                       isExpanded: isExpanded,
                       rides: rides,
-                      additionalRidesCount: controller.additionalActiveRidesCount,
+                      additionalRidesCount:
+                          controller.additionalActiveRidesCount,
                       onExpand: controller.expandActiveRidesStack,
                       onCollapse: controller.collapseActiveRidesStack,
                       vehicleAssetPathFor:
@@ -341,7 +341,10 @@ class HomeScreen extends GetView<HomeController> {
                 decoration: BoxDecoration(
                   color: AppColors.cardBackground,
                   borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(color: AppColors.secondary, width: 1),
+                  border: Border.all(
+                    color: AppColors.borderWalletCard,
+                    width: 1,
+                  ),
                 ),
                 child: Row(
                   children: [

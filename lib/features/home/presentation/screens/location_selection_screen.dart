@@ -192,7 +192,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.cardBackground,
-          border: Border.all(color: AppColors.secondary),
+          border: Border.all(color: AppColors.borderWalletCard),
           borderRadius: BorderRadius.all(Radius.circular(16.r)),
         ),
         child: Padding(
@@ -219,7 +219,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                         color: AppColors.bgNeutralSoft,
                         borderRadius: BorderRadius.circular(20.r),
                         border: Border.all(
-                          color: AppColors.secondary,
+                          color: AppColors.borderWalletCard,
                           width: 1.2,
                         ),
                       ),
@@ -281,7 +281,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           ],
         ),
         if (showDivider)
-          const Divider(color: AppColors.secondary, height: 26, endIndent: 0),
+          const Divider(color: AppColors.borderWalletCard, height: 26, endIndent: 0),
       ],
     );
   }

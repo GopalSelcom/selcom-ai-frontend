@@ -93,15 +93,15 @@ class FavoriteLocationsScreen extends GetView<FavoriteLocationsController> {
           children: [
             CircleAvatar(
               radius: 22.w,
-              backgroundColor: AppColors.bgSuccessBanner,
+              backgroundColor: AppColors.primaryLight,
               child: SvgPictureAsset(
                 AppAssets.locationIcPickupPin,
                 width: 20.w,
                 height: 20.h,
-                color: AppColors.mapDropMarkerGreen,
+                color: AppColors.primary,
                 placeholderBuilder: (_) => Icon(
                   Icons.location_on,
-                  color: AppColors.mapDropMarkerGreen,
+                  color: AppColors.primary,
                   size: 22.sp,
                 ),
               ),
