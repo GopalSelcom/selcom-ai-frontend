@@ -197,60 +197,81 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         ),
         child: Padding(
           padding: EdgeInsets.fromLTRB(22.32.w, 15.54.h, 15.54.w, 17.22.h),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(child: _integratedLocationFields()),
-              Material(
-                color: AppColors.transparent,
-                child: Opacity(
-                  opacity: _extraDestinationControllers.length >= _maxExtraStops
-                      ? 0.45
-                      : 1.0,
-                  child: InkWell(
-                    onTap: _extraDestinationControllers.length >= _maxExtraStops
-                        ? null
-                        : _onAddDestinationStop,
-                    borderRadius: BorderRadius.circular(20.r),
-                    child: Container(
-                      width: 81.28.w,
-                      height: 43.03.h,
-                      decoration: BoxDecoration(
-                        color: AppColors.bgNeutralSoft,
-                        borderRadius: BorderRadius.circular(20.r),
-                        border: Border.all(
-                          color: AppColors.borderWalletCard,
-                          width: 1.2,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SvgPictureAsset(
-                            AppAssets.locationIcAdd,
-                            width: 16.74.w,
-                            height: 16.74.w,
-                            color: AppColors.primary,
-                            placeholderBuilder: (_) => const Icon(
-                              Icons.add_circle,
-                              size: 16,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          SizedBox(width: 4.72.w),
-                          Text(
-                            AppStrings.add.tr,
-                            style: AppTextStyles.homeCaption.copyWith(
-                              color: AppColors.textMutedStrong,
-                              fontSize: 14.34.sp,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+          child: Obx(() {
+            locationController.extraDestinationControllers.length;
+            final showAddStop =
+                _extraDestinationControllers.length < _maxExtraStops;
+            const addStopAnimDuration = Duration(milliseconds: 340);
+
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: ClipRect(
+                    child: _integratedLocationFields(),
                   ),
+                ),
+                ClipRect(
+                  child: AnimatedSize(
+                    duration: addStopAnimDuration,
+                    curve: Curves.easeInOutCubic,
+                    alignment: Alignment.centerLeft,
+                    clipBehavior: Clip.hardEdge,
+                    child: showAddStop
+                        ? Padding(
+                            padding: EdgeInsets.only(left: 8.w),
+                            child: _addStopButton(),
+                          )
+                        : SizedBox(width: 0, height: 43.03.h),
+                  ),
+                ),
+              ],
+            );
+          }),
+        ),
+      ),
+    );
+  }
+
+  Widget _addStopButton() {
+    return Material(
+      color: AppColors.transparent,
+      child: InkWell(
+        onTap: _onAddDestinationStop,
+        borderRadius: BorderRadius.circular(20.r),
+        child: Container(
+          width: 81.28.w,
+          height: 43.03.h,
+          decoration: BoxDecoration(
+            color: AppColors.bgNeutralSoft,
+            borderRadius: BorderRadius.circular(20.r),
+            border: Border.all(
+              color: AppColors.borderWalletCard,
+              width: 1.2,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SvgPictureAsset(
+                AppAssets.locationIcAdd,
+                width: 16.74.w,
+                height: 16.74.w,
+                color: AppColors.primary,
+                placeholderBuilder: (_) => const Icon(
+                  Icons.add_circle,
+                  size: 16,
+                  color: AppColors.primary,
+                ),
+              ),
+              SizedBox(width: 4.72.w),
+              Text(
+                AppStrings.add.tr,
+                style: AppTextStyles.homeCaption.copyWith(
+                  color: AppColors.textMutedStrong,
+                  fontSize: 14.34.sp,
+                  fontWeight: FontWeight.w400,
                 ),
               ),
             ],
@@ -276,12 +297,21 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
               child: Center(child: icon),
             ),
             SizedBox(width: 13.06.w),
-            Expanded(child: field),
-            if (trailing != null) ...[SizedBox(width: 8.w), trailing],
+            Expanded(
+              child: field,
+            ),
+            if (trailing != null) ...[
+              SizedBox(width: 4.w),
+              ClipRect(child: trailing),
+            ],
           ],
         ),
         if (showDivider)
-          const Divider(color: AppColors.borderWalletCard, height: 26, endIndent: 0),
+          const Divider(
+            color: AppColors.borderWalletCard,
+            height: 26,
+            endIndent: 0,
+          ),
       ],
     );
   }
@@ -359,7 +389,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                 ReorderableDragStartListener(
                   index: rowIndex,
                   child: Padding(
-                    padding: EdgeInsets.only(right: 6.w, left: 2.w),
+                    padding: EdgeInsets.only(right: 4.w, left: 2.w),
                     child: Icon(
                       Icons.drag_indicator_rounded,
                       color: AppColors.textSlateSoft,
