@@ -27,11 +27,11 @@ class SelcomPesaLinkedBottomSheet extends GetView<PaymentMethodsController> {
     final double bottomPadding = MediaQuery.paddingOf(context).bottom;
     final double computedBottomPadding = bottomPadding > 0
         ? (GetPlatform.isIOS
-        ? (bottomPadding - 12.h).clamp(
-      10.h > bottomPadding ? bottomPadding : 10.h,
-      bottomPadding,
-    )
-        : bottomPadding + 12.h)
+              ? (bottomPadding - 12.h).clamp(
+                  10.h > bottomPadding ? bottomPadding : 10.h,
+                  bottomPadding,
+                )
+              : bottomPadding + 12.h)
         : 12.h;
     return AppStandardBottomSheet(
       title: AppStrings.yourLinkedAccount.tr,
@@ -41,7 +41,10 @@ class SelcomPesaLinkedBottomSheet extends GetView<PaymentMethodsController> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildReadOnlyField(label: AppStrings.fullName.tr, value: 'Chirag panchal'),
+          _buildReadOnlyField(
+            label: AppStrings.fullName.tr,
+            value: 'Chirag panchal',
+          ),
           SizedBox(height: 20.h),
           _buildReadOnlyField(
             label: AppStrings.phoneNumber.tr,
@@ -75,9 +78,9 @@ class SelcomPesaLinkedBottomSheet extends GetView<PaymentMethodsController> {
             borderRadius: 16.r,
             outlined: true,
             backgroundColor: AppColors.white,
-            textColor: AppColors.primary,
-            outlinedTextColor: AppColors.primary,
-            outlinedBorderColor: AppColors.primary,
+            textColor: AppColors.primaryButton,
+            outlinedTextColor: AppColors.primaryButton,
+            outlinedBorderColor: AppColors.primaryButton,
             outlinedBorderWidth: 1,
           ),
           SizedBox(height: computedBottomPadding),

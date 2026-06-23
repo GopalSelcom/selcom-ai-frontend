@@ -1,7 +1,11 @@
 import 'package:agora_calling_package/agora_calling_package.dart';
+import 'package:flutter/foundation.dart';
 
 import '../config/app_config.dart';
+import '../network/api_constants.dart';
 import '../network/headers.dart';
+import 'call_permission_prompt_service.dart';
+import 'session_auth_service.dart';
 
 /// Wires `agora_calling_package` for the Selcom Go (rider) app.
 ///
@@ -21,22 +25,60 @@ class AgoraCallingBootstrap {
     await AgoraCalling.init(
       AgoraCallingConfig(
         appId: AppConfig.agoraAppId,
-        baseUrl: AppConfig.baseUrl,
-        getAuthHeaders: () async => commonHeaders(accessTokenRequired: true),
+        baseUrl: AppConfig.apiHost,
+        // Do not pass bare `commonHeaders` — ensure session is loaded from
+        // secure storage first (killed-state CallKit Accept can fire before
+        // splash). See delivery_agent_app/docs/AGORA_CALLING_BACKGROUND_FIX.md.
+        getAuthHeaders: _authHeadersForCalling,
         localRole: CallParticipantRole.rider,
         appName: fcmBackgroundCallKitAppName,
         iosCallKitIconName: iosCallKitIconName,
         callKitCallIdNamespace: callKitCallIdNamespace,
         callerRingbackAsset: 'assets/sound/ringback.mp3',
+        ensureCallPermissionsUi:
+            CallPermissionPromptService.ensureAndroidCallPermissions,
         endpoints: CallEndpoints(
-          tokenPath: (rideId) => '/v4/go/rides/$rideId/call/token',
-          cancelPath: (rideId) => '/v4/go/rides/$rideId/call/cancel',
-          voipTokenPath: '/v4/go/user/voip-token',
+          tokenPath: (rideId) =>
+              '${AppConfig.apiPathPrefix}/v4/go/rides/$rideId/call/token',
+          cancelPath: (rideId) =>
+              '${AppConfig.apiPathPrefix}/v4/go/rides/$rideId/call/cancel',
+          voipTokenPath: '${AppConfig.apiPathPrefix}/v4/go/user/voip-token',
         ),
         // Rider only ever receives calls from drivers; this default keeps the
         // CallKit / heads-up surface neutral when `caller_name` is missing.
         peerNameResolver: (_) => 'Your Driver',
       ),
     );
+  }
+
+  /// Ensures saved auth is readable, then returns normal API headers.
+  static Future<Map<String, String>> _authHeadersForCalling() async {
+    await SessionAuthService.instance.ensureAccessTokenLoaded();
+    final headers = await commonHeaders(accessTokenRequired: true);
+    if (kDebugMode) {
+      final accessToken = headers[Params.accessToken] ?? '';
+      final authorization = headers[Params.authorization] ?? '';
+      debugPrint(
+        '[AGORA_AUTH] getAuthHeaders '
+        'access_token=${_tokenDebugLabel(accessToken)} '
+        'authorization=${_tokenDebugLabel(_stripBearer(authorization))}',
+      );
+    }
+    return headers;
+  }
+
+  static String _stripBearer(String value) {
+    const prefix = 'Bearer ';
+    if (value.startsWith(prefix)) {
+      return value.substring(prefix.length);
+    }
+    return value;
+  }
+
+  static String _tokenDebugLabel(String token) {
+    final t = token.trim();
+    if (t.isEmpty) return 'present=false len=0';
+    final prefixLen = t.length < 8 ? t.length : 8;
+    return 'present=true len=${t.length} prefix=${t.substring(0, prefixLen)}…';
   }
 }

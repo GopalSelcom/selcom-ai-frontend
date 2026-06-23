@@ -1,8 +1,9 @@
 import 'package:get/get.dart';
+
 import '../../../../core/di/injection_container.dart';
-import '../controllers/favorite_locations_controller.dart';
-import '../../domain/usecases/profile_usecase.dart';
 import '../../domain/repositories/profile_repository.dart';
+import '../../domain/usecases/profile_usecase.dart';
+import '../controllers/favorite_locations_controller.dart';
 
 class FavoriteLocationsBinding extends Bindings {
   @override

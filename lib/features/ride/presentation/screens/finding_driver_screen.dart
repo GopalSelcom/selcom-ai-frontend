@@ -3,11 +3,14 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
+import '../../../../shared/widgets/app_map_route_polyline.dart';
+import '../../../../shared/utils/map_route_marker_utils.dart';
 import '../../../../shared/widgets/app_map_route_one_line_bar.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../controllers/finding_driver_controller.dart';
@@ -27,6 +30,25 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
   static const double _sheetMin = 0.28;
   static const double _sheetMaxCompact = 0.44;
   static const double _sheetMaxSearching = 0.38;
+
+  static double _systemBottomInsetPx(BuildContext context) {
+    final mq = MediaQuery.of(context);
+    final p = mq.padding.bottom;
+    final v = mq.viewPadding.bottom;
+    return p > v ? p : v;
+  }
+
+  /// Slightly taller min/initial when nav bar present — avoids clipping cancel.
+  static double _sheetSizeWithNavInset(BuildContext context, double base) {
+    final inset = _systemBottomInsetPx(context);
+    final h = MediaQuery.sizeOf(context).height;
+    if (inset <= 0 || h <= 0) return base;
+    return base + (inset / h) * 0.55;
+  }
+
+  static double _scrollBottomPad(BuildContext context) {
+    return _systemBottomInsetPx(context) > 0 ? 2.h : 0;
+  }
 
   @override
   void initState() {
@@ -95,9 +117,13 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
             final isSearching = c.assignedDriverLocation.value == null;
             return AppDraggableBottomSheet(
               controller: sheetController,
-              initialChildSize: _sheetInitial,
-              minChildSize: _sheetMin,
-              maxChildSize: isSearching ? _sheetMaxSearching : _sheetMaxCompact,
+              reserveSystemBottomInset: true,
+              initialChildSize: _sheetSizeWithNavInset(context, _sheetInitial),
+              minChildSize: _sheetSizeWithNavInset(context, _sheetMin),
+              maxChildSize: _sheetSizeWithNavInset(
+                context,
+                isSearching ? _sheetMaxSearching : _sheetMaxCompact,
+              ),
               childBuilder: (scrollController) =>
                   _bottomSheet(c, scrollController, sheetController),
             );
@@ -118,7 +144,6 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
       final destination = c.destinationLatLng;
       final driver = c.assignedDriverLocation.value;
       final routePoints = c.activeRoutePoints.toList();
-      final isPickupRoute = c.routeTarget.value == 'pick_up';
       final sheetSize = c.sheetSize.value;
       final markers = <Marker>{};
       final circles = <Circle>{};
@@ -168,8 +193,30 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
         );
       }
 
-      // Drop/Destination Marker
-      if (c.dropIcon.value != null) {
+      if (c.usesMultiStopRouteMarkers) {
+        for (var i = 0; i < c.destinations.length; i++) {
+          final stop = c.destinations[i];
+          final isLast = i == c.destinations.length - 1;
+          final icon = isLast
+              ? (c.dropIcon.value ?? BitmapDescriptor.defaultMarker)
+              : (i < c.stopIcons.length
+                    ? c.stopIcons[i]
+                    : c.redRouteLetterIconForSequentialIndex(i));
+
+          markers.add(
+            Marker(
+              markerId: MarkerId(
+                'stop_${MapRouteMarkerUtils.letterAt(i + 1)}_'
+                '${stop.lat.toStringAsFixed(5)}_'
+                '${stop.lng.toStringAsFixed(5)}',
+              ),
+              position: LatLng(stop.lat, stop.lng),
+              icon: icon,
+              anchor: const Offset(0.5, 0.5),
+            ),
+          );
+        }
+      } else if (c.dropIcon.value != null) {
         markers.add(
           Marker(
             markerId: const MarkerId('destination'),
@@ -232,22 +279,10 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
             );
           }
         },
-        polylines: {
-          if (routePoints.isNotEmpty)
-            Polyline(
-              polylineId: const PolylineId('active_route'),
-              points: routePoints,
-              color: AppColors.inputBorderActive,
-              width: 5,
-            ),
-          if (routePoints.isEmpty && isPickupRoute && driver != null)
-            Polyline(
-              polylineId: const PolylineId('fallback_pickup_route'),
-              points: [driver, pickup],
-              color: AppColors.inputBorderActive.withValues(alpha: 0.5),
-              width: 3,
-            ),
-        },
+        polylines: AppMapRoutePolyline.set(
+          polylineId: 'active_route',
+          points: routePoints,
+        ),
         circles: circles,
       );
     });
@@ -258,140 +293,146 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
     ScrollController scrollController,
     DraggableScrollableController sheetController,
   ) {
-    return ListView(
+    return SingleChildScrollView(
       controller: scrollController,
-      padding: EdgeInsets.fromLTRB(
-        20.w,
-        10.h,
-        20.w,
-        24.h + MediaQuery.paddingOf(context).bottom,
+      primary: false,
+      clipBehavior: Clip.hardEdge,
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: ClampingScrollPhysics(),
       ),
-      children: [
-        Center(
-          child: Container(
-            width: 48.w,
-            height: 5.h,
-            decoration: BoxDecoration(
-              color: AppColors.skeletonBase,
-              borderRadius: BorderRadius.circular(10.r),
+      padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, _scrollBottomPad(context)),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Container(
+              width: 48.w,
+              height: 5.h,
+              decoration: BoxDecoration(
+                color: AppColors.skeletonBase,
+                borderRadius: BorderRadius.circular(10.r),
+              ),
             ),
           ),
-        ),
-        SizedBox(height: 24.h),
+          SizedBox(height: 24.h),
 
-        // 1. Title & Subtitle (Centered)
-        Obx(
-          () => Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                c.currentStatusLabel.value,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.homeTitle,
-              ),
-              SizedBox(height: 4.h),
-              Text(
-                c.currentDescriptionLabel.value,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.homeSubtitle,
-              ),
+          // 1. Title & Subtitle (Centered)
+          Obx(
+            () => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  c.currentStatusLabel.value,
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.homeTitle,
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  c.currentDescriptionLabel.value,
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.homeSubtitle,
+                ),
 
-              // Countdown + progress only while status is still `searching`.
-              if (c.isSearchingPhase && !c.isRideCancelled.value) ...[
-                SizedBox(height: 36.h),
+                // Countdown + progress only while status is still `searching`.
+                if (c.isSearchingPhase && !c.isRideCancelled.value) ...[
+                  SizedBox(height: 36.h),
 
-                // 2. Bolt-like Linear Progress Bar
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(4.r),
-                    child: LinearProgressIndicator(
-                      minHeight: 6.h,
-                      backgroundColor: AppColors.primary.withValues(
-                        alpha: 0.15,
-                      ),
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                        AppColors.primary,
+                  // 2. Bolt-like Linear Progress Bar
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20.w),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(4.r),
+                      child: LinearProgressIndicator(
+                        minHeight: 6.h,
+                        backgroundColor: AppColors.primary.withValues(
+                          alpha: 0.15,
+                        ),
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          AppColors.primary,
+                        ),
                       ),
                     ),
                   ),
-                ),
 
-                SizedBox(height: 20.h),
+                  SizedBox(height: 20.h),
 
-                // 3. Timer: M:SS countdown + floor-minute "X min remaining"
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  // 3. Timer: M:SS countdown + floor-minute "X min remaining"
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.access_time_rounded,
+                        color: AppColors.textHeading,
+                        size: 18.sp,
+                      ),
+                      SizedBox(width: 4.5.w),
+                      Text(
+                        c.findingDriverMinutesRemainLabel(),
+                        style: AppTextStyles.homeSubtitle,
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          SizedBox(height: 28.h),
+
+          // 4. Action Buttons (Search Again & Back to Home OR Cancel)
+          Obx(() {
+            if (c.isRideCancelled.value) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (sheetController.isAttached && sheetController.size > 0.35) {
+                  sheetController.animateTo(
+                    0.35,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOut,
+                  );
+                }
+              });
+              return Padding(
+                padding: EdgeInsets.symmetric(horizontal: 10.w),
+                child: Column(
                   children: [
-                    Icon(
-                      Icons.access_time_rounded,
-                      color: AppColors.textHeading,
-                      size: 18.sp,
+                    SizedBox(
+                      width: double.infinity,
+                      child: AppPrimaryButton(
+                        label: AppStrings.searchAgain.tr,
+                        onPressed: c.searchAgain,
+                        height: 56.h,
+                      ),
                     ),
-                    SizedBox(width: 4.5.w),
-                    Text(
-                      c.findingDriverMinutesRemainLabel(),
-                      style: AppTextStyles.homeSubtitle,
+                    SizedBox(height: 16.h),
+                    SizedBox(
+                      width: double.infinity,
+                      child: AppPrimaryButton(
+                        label: AppStrings.backToHome.tr,
+                        onPressed: () => Get.offAllNamed(AppRoutes.home),
+                        outlined: true,
+                        height: 56.h,
+                      ),
                     ),
                   ],
                 ),
-              ],
-            ],
-          ),
-        ),
-
-        SizedBox(height: 28.h),
-
-        // 4. Action Buttons (Search Again & Back to Home OR Cancel)
-        Obx(() {
-          if (c.isRideCancelled.value) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (sheetController.isAttached && sheetController.size > 0.35) {
-                sheetController.animateTo(
-                  0.35,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOut,
-                );
-              }
-            });
+              );
+            }
             return Padding(
               padding: EdgeInsets.symmetric(horizontal: 10.w),
-              child: Column(
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: AppPrimaryButton(
-                      label: 'Search Again',
-                      onPressed: c.searchAgain,
-                      height: 56.h,
-                    ),
-                  ),
-                  SizedBox(height: 16.h),
-                  SizedBox(
-                    width: double.infinity,
-                    child: AppPrimaryButton(
-                      label: 'Back to Home',
-                      onPressed: () => Get.offAllNamed(AppRoutes.home),
-                      outlined: true,
-                      height: 56.h,
-                    ),
-                  ),
-                ],
+              child: AppPrimaryButton(
+                label: AppStrings.cancelRide.tr,
+                onPressed: c.confirmCancelRide,
+                outlined: true,
+                outlinedBorderColor: AppColors.iconHeartFilled,
+                outlinedTextColor: AppColors.iconHeartFilled,
+                height: 56.h,
               ),
             );
-          }
-          return Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10.w),
-            child: AppPrimaryButton(
-              label: 'Cancel Ride',
-              onPressed: c.confirmCancelRide,
-              outlined: true,
-              height: 56.h,
-            ),
-          );
-        }),
-      ],
+          }),
+        ],
+      ),
     );
   }
 }

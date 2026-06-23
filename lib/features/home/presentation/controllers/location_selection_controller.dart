@@ -1,7 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../../core/constants/ride_stop_limits.dart';
+import '../../../../core/di/injection_container.dart' as di;
+import '../../../../core/domain/entities/location_entity.dart';
+import '../../../../core/localization/app_strings.dart';
+import '../../../../core/services/app_settings_service.dart';
+import '../../../../core/services/progress_indicator/loader.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 import '../controllers/home_controller.dart';
 
 class LocationSelectionController extends GetxController {
@@ -31,16 +38,140 @@ class LocationSelectionController extends GetxController {
   final RxnString preferredVehicleTypeId = RxnString();
   final RxnString preferredVehicleName = RxnString();
   final RxBool isVehicleSelectionEditMode = false.obs;
+  final RxBool isReorderingRows = false.obs;
+
+  /// True while saved places / recents refresh for this screen.
+  final isLoadingInitialContent = true.obs;
 
   HomeController get homeController => Get.find<HomeController>();
 
+  /// From `/go/settings` → `features.max_stops` (excludes final destination).
+  int get maxIntermediateStops => di.sl<AppSettingsService>().maxIntermediateStops;
+
+  bool get shouldShowPlaceListShimmer =>
+      isLoadingInitialContent.value || homeController.isLoadingHomeData.value;
+
+  bool get hasIntermediateStops => extraDestinationControllers.isNotEmpty;
+
+  int get totalRouteRows => extraDestinationControllers.length + 2;
+
+  int segmentIndexForRowIndex(int rowIndex) {
+    final last = totalRouteRows - 1;
+    if (rowIndex <= 0) return 0;
+    if (rowIndex >= last) return 1;
+    return 2 + (rowIndex - 1);
+  }
+
+  int rowIndexForSegmentIndex(int segmentIndex) {
+    final last = totalRouteRows - 1;
+    if (segmentIndex <= 0) return 0;
+    if (segmentIndex == 1) return last;
+    return (segmentIndex - 2) + 1;
+  }
+
+  List<_RouteRowDraft> _buildOrderedRows() {
+    final rows = <_RouteRowDraft>[
+      _RouteRowDraft(
+        text: pickupController.text,
+        selected: homeController.isPickupSelected.value,
+        lat: routePickupLat.value,
+        lng: routePickupLng.value,
+      ),
+    ];
+
+    for (var i = 0; i < extraDestinationControllers.length; i++) {
+      rows.add(
+        _RouteRowDraft(
+          text: extraDestinationControllers[i].text,
+          selected: i < extraStopSelected.length ? extraStopSelected[i] : false,
+        ),
+      );
+    }
+
+    rows.add(
+      _RouteRowDraft(
+        text: destinationController.text,
+        selected: homeController.isDestinationSelected.value,
+        lat: routeDestinationLat.value,
+        lng: routeDestinationLng.value,
+        placeId: destinationPlaceId.value,
+      ),
+    );
+
+    return rows;
+  }
+
+  void _applyOrderedRows(List<_RouteRowDraft> rows) {
+    if (rows.length < 2) return;
+    final middle = rows.length - 2;
+
+    pickupController.text = rows.first.text;
+    destinationController.text = rows.last.text;
+
+    routePickupLat.value = rows.first.lat;
+    routePickupLng.value = rows.first.lng;
+    routeDestinationLat.value = rows.last.lat;
+    routeDestinationLng.value = rows.last.lng;
+    destinationPlaceId.value = rows.last.placeId;
+
+    while (extraDestinationControllers.length > middle) {
+      extraDestinationControllers.removeLast().dispose();
+      extraDestinationFocusNodes.removeLast().dispose();
+      if (extraStopSelected.isNotEmpty) {
+        extraStopSelected.removeLast();
+      }
+    }
+    while (extraDestinationControllers.length < middle) {
+      extraDestinationControllers.add(TextEditingController());
+      extraDestinationFocusNodes.add(FocusNode());
+      extraStopSelected.add(false);
+    }
+
+    for (var i = 0; i < middle; i++) {
+      final row = rows[i + 1];
+      extraDestinationControllers[i].text = row.text;
+      if (i < extraStopSelected.length) {
+        extraStopSelected[i] = row.selected;
+      }
+    }
+    extraStopSelected.refresh();
+
+    homeController.isPickupSelected.value = rows.first.selected;
+    homeController.isDestinationSelected.value = rows.last.selected;
+    pickupEditedByUser.value = true;
+  }
+
+  List<Object?> exportOrderedRowsForReorder() => _buildOrderedRows();
+
+  void applyOrderedRowsFromReorder(List<Object?> rows) {
+    _applyOrderedRows(rows.cast<_RouteRowDraft>());
+  }
+
+  bool get _isPickupSegmentReady {
+    final text = pickupController.text.trim();
+    if (text.isEmpty || homeController.isNonSelectableMapAddress(text)) {
+      return false;
+    }
+    if (homeController.isPickupSelected.value) return true;
+    return routePickupLat.value != null && routePickupLng.value != null;
+  }
+
+  bool get _isDestinationSegmentReady {
+    final text = destinationController.text.trim();
+    if (text.isEmpty) return false;
+    if (homeController.isDestinationSelected.value) return true;
+    return routeDestinationLat.value != null &&
+        routeDestinationLng.value != null;
+  }
+
   /// Pickup + final destination + every intermediate row (if any) confirmed from search/recent/saved.
   bool get areAllSegmentsReadyForBooking {
-    if (!homeController.isPickupSelected.value) return false;
-    if (!homeController.isDestinationSelected.value) return false;
+    if (!_isPickupSegmentReady) return false;
+    if (!_isDestinationSegmentReady) return false;
     final n = extraDestinationControllers.length;
     if (extraStopSelected.length != n) return false;
     for (var i = 0; i < n; i++) {
+      if (extraDestinationControllers[i].text.trim().isEmpty) return false;
       if (!extraStopSelected[i]) return false;
     }
     return true;
@@ -55,20 +186,195 @@ class LocationSelectionController extends GetxController {
       final i = segmentIndex - 2;
       if (i >= 0 && i < extraStopSelected.length) {
         extraStopSelected[i] = true;
+        extraStopSelected.refresh();
       }
     }
+    _scheduleAutoProceedIfAllSegmentsReady();
+  }
+
+  void _scheduleAutoProceedIfAllSegmentsReady() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_isDisposed) return;
+      if (!areAllSegmentsReadyForBooking) return;
+      unawaited(proceedWithBooking());
+    });
+  }
+
+  Future<void> proceedWithBooking() async {
+    if (!areAllSegmentsReadyForBooking) return;
+    if (homeController.isProceedingToBooking.value) return;
+
+    final destinations = <String>[];
+    for (final c in extraDestinationControllers) {
+      final t = c.text.trim();
+      if (t.isNotEmpty) destinations.add(t);
+    }
+    final finalDestination = destinationController.text.trim();
+    if (finalDestination.isNotEmpty) {
+      destinations.add(finalDestination);
+    }
+
+    if (isVehicleSelectionEditMode.value) {
+      EstimateValidationOutcome? validationFailure;
+      Map<String, dynamic>? payload;
+      homeController.isProceedingToBooking.value = true;
+      try {
+        payload = await Loader.run(() async {
+          final built = await buildVehicleSelectionEditResult(
+            pickupText: pickupController.text.trim(),
+            destinationTexts: destinations,
+          );
+          if (built == null) return null;
+
+          final destEntities = _locationEntitiesFromEditPayload(built);
+          if (destEntities.isEmpty) return null;
+
+          final validation = await homeController.validateEstimateForRoute(
+            pickupAddress: (built['pickup'] as String?)?.trim() ?? '',
+            pickupLat: (built['pickupLat'] as num).toDouble(),
+            pickupLng: (built['pickupLng'] as num).toDouble(),
+            destination: destEntities.last,
+            stops: destEntities.length > 1
+                ? destEntities.sublist(0, destEntities.length - 1)
+                : const [],
+          );
+          if (!validation.canProceed) {
+            validationFailure = validation;
+            return null;
+          }
+          return built;
+        });
+      } finally {
+        homeController.isProceedingToBooking.value = false;
+      }
+
+      if (validationFailure != null) {
+        await homeController.presentEstimateValidationError(validationFailure!);
+        return;
+      }
+      if (payload == null) {
+        AppDialogs.showErrorDialog(
+          message: AppStrings.pleaseSelectValidPickupAndDestinationLocations.tr,
+        );
+        return;
+      }
+      Get.back(result: payload);
+      return;
+    }
+
+    await homeController.proceedToBookingFromLocationSelection(
+      pickup: pickupController.text.trim(),
+      destinations: destinations,
+      destinationPlaceId: destinationPlaceId.value,
+      routePickupLat: routePickupLat.value,
+      routePickupLng: routePickupLng.value,
+      routeDestinationLat: routeDestinationLat.value,
+      routeDestinationLng: routeDestinationLng.value,
+      preferredVehicleTypeId: preferredVehicleTypeId.value,
+      preferredVehicleName: preferredVehicleName.value,
+    );
+  }
+
+  Future<Map<String, dynamic>?> buildVehicleSelectionEditResult({
+    required String pickupText,
+    required List<String> destinationTexts,
+  }) async {
+    final cleanedDestinations = destinationTexts
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+    if (pickupText.isEmpty || cleanedDestinations.isEmpty) return null;
+
+    final pickupLatLng =
+        (routePickupLat.value != null && routePickupLng.value != null)
+        ? null
+        : await homeController.getLatLngFromAddress(pickupText);
+    final pickupLat = routePickupLat.value ?? pickupLatLng?.latitude;
+    final pickupLng = routePickupLng.value ?? pickupLatLng?.longitude;
+    if (pickupLat == null || pickupLng == null) return null;
+
+    final resultDestinations = <Map<String, dynamic>>[];
+    for (var i = 0; i < cleanedDestinations.length; i++) {
+      final text = cleanedDestinations[i];
+      double? lat;
+      double? lng;
+      if (i == cleanedDestinations.length - 1) {
+        lat = routeDestinationLat.value;
+        lng = routeDestinationLng.value;
+      }
+      if (lat == null || lng == null) {
+        final resolved = await homeController.getLatLngFromAddress(text);
+        lat = resolved?.latitude;
+        lng = resolved?.longitude;
+      }
+      if (lat == null || lng == null) return null;
+      resultDestinations.add({'address': text, 'lat': lat, 'lng': lng});
+    }
+
+    return {
+      'pickup': pickupText,
+      'pickupLat': pickupLat,
+      'pickupLng': pickupLng,
+      'destinations': resultDestinations,
+    };
+  }
+
+  List<LocationEntity> _locationEntitiesFromEditPayload(
+    Map<String, dynamic> payload,
+  ) {
+    final rawDestinations = payload['destinations'];
+    if (rawDestinations is! List) return const [];
+
+    final entities = <LocationEntity>[];
+    for (final item in rawDestinations) {
+      if (item is! Map) continue;
+      final map = Map<String, dynamic>.from(item);
+      final lat = (map['lat'] as num?)?.toDouble();
+      final lng = (map['lng'] as num?)?.toDouble();
+      final address = (map['address'] as String?)?.trim() ?? '';
+      if (lat == null || lng == null || address.isEmpty) continue;
+      entities.add(LocationEntity(lat: lat, lng: lng, address: address));
+    }
+    return entities;
   }
 
   void markExtraStopUnconfirmed(int index) {
     if (index >= 0 && index < extraStopSelected.length) {
       extraStopSelected[index] = false;
+      extraStopSelected.refresh();
     }
   }
 
   @override
   void onInit() {
     super.onInit();
+    unawaited(_init());
+  }
+
+  Future<void> _init() async {
+    if (!di.sl<AppSettingsService>().isLoaded.value) {
+      await di.sl<AppSettingsService>().preload();
+    }
     _initializeFromArguments();
+    _loadInitialContent();
+  }
+
+  Future<void> _loadInitialContent() async {
+    isLoadingInitialContent.value = true;
+    try {
+      while (homeController.isLoadingHomeData.value) {
+        await Future<void>.delayed(const Duration(milliseconds: 40));
+        if (_isDisposed) return;
+      }
+      await Future.wait<void>([
+        homeController.refreshRecentDestinations(),
+        homeController.loadSavedPlaces(),
+      ]);
+    } finally {
+      if (!_isDisposed) {
+        isLoadingInitialContent.value = false;
+      }
+    }
   }
 
   void _initializeFromArguments() {
@@ -145,7 +451,8 @@ class LocationSelectionController extends GetxController {
       clearDestinationOnOpen = (m['clearDestinationOnOpen'] as bool?) ?? false;
       preferredVehicleTypeId.value = (m['preferredVehicleTypeId'] as String?)
           ?.trim();
-      preferredVehicleName.value = (m['preferredVehicleName'] as String?)?.trim();
+      preferredVehicleName.value = (m['preferredVehicleName'] as String?)
+          ?.trim();
     }
 
     if (clearPickupOnOpen) {
@@ -161,13 +468,15 @@ class LocationSelectionController extends GetxController {
       destinationPlaceId.value = null;
     }
 
+    if (homeController.isNonSelectableMapAddress(initialPickup)) {
+      initialPickup = '';
+    }
+
     pickupController = TextEditingController(text: initialPickup);
     destinationController = TextEditingController(text: initialDestination);
     pickupFocusNode = FocusNode();
     destinationFocusNode = FocusNode();
-    for (final stopAddress in initialExtraStops.take(
-      RideStopLimits.maxIntermediateStops,
-    )) {
+    for (final stopAddress in initialExtraStops.take(maxIntermediateStops)) {
       extraDestinationControllers.add(TextEditingController(text: stopAddress));
       extraDestinationFocusNodes.add(FocusNode());
       extraStopSelected.add(true);
@@ -236,24 +545,39 @@ class LocationSelectionController extends GetxController {
     }
   }
 
+  void unfocusAllLocationFields() {
+    FocusManager.instance.primaryFocus?.unfocus();
+    pickupFocusNode.unfocus();
+    destinationFocusNode.unfocus();
+    for (final node in extraDestinationFocusNodes.toList()) {
+      node.unfocus();
+    }
+  }
+
   void syncPickupFromLiveAddress() {
+    if (pickupEditedByUser.value) return;
     final liveAddress = homeController.currentMapAddress.value.trim();
-    if (!pickupEditedByUser.value && liveAddress.isNotEmpty) {
+    if (homeController.isNonSelectableMapAddress(liveAddress)) {
+      if (homeController.isNonSelectableMapAddress(pickupController.text)) {
+        pickupController.clear();
+      }
+      return;
+    }
+    if (liveAddress.isNotEmpty) {
       pickupController.text = liveAddress;
     }
   }
 
   void onAddDestinationStop() {
-    if (extraDestinationControllers.length >=
-        RideStopLimits.maxIntermediateStops) {
+    if (extraDestinationControllers.length >= maxIntermediateStops) {
       return;
     }
     extraDestinationControllers.add(TextEditingController());
     extraDestinationFocusNodes.add(FocusNode());
     extraStopSelected.add(false);
     activeSegmentIndex.value = 2 + extraDestinationControllers.length - 1;
-    homeController.searchQuery.value =
-        extraDestinationControllers.last.text.trim();
+    homeController.searchQuery.value = extraDestinationControllers.last.text
+        .trim();
     focusActiveSegment();
   }
 
@@ -264,6 +588,15 @@ class LocationSelectionController extends GetxController {
 
   void onPickupFieldTapped() {
     final pickupText = pickupController.text.trim();
+    if (homeController.isNonSelectableMapAddress(pickupText)) {
+      pickupEditedByUser.value = true;
+      pickupController.clear();
+      routePickupLat.value = null;
+      routePickupLng.value = null;
+      homeController.isPickupSelected.value = false;
+      homeController.searchQuery.value = '';
+      return;
+    }
     if (!pickupEditedByUser.value && pickupText.isNotEmpty) {
       pickupEditedByUser.value = true;
       pickupController.clear();
@@ -335,4 +668,20 @@ class LocationSelectionController extends GetxController {
     destinationFocusNode.dispose();
     super.onClose();
   }
+}
+
+class _RouteRowDraft {
+  _RouteRowDraft({
+    required this.text,
+    required this.selected,
+    this.lat,
+    this.lng,
+    this.placeId,
+  });
+
+  String text;
+  bool selected;
+  double? lat;
+  double? lng;
+  String? placeId;
 }

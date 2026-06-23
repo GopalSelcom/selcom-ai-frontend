@@ -1,0 +1,119 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get_utils/src/extensions/internacionalization.dart';
+
+import '../../../../core/constants/app_assets.dart';
+import '../../../../core/localization/app_strings.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/svg_picture_asset.dart';
+import 'wallet_icon_label_button.dart';
+
+class WalletInfoCard extends StatelessWidget {
+  const WalletInfoCard({
+    super.key,
+    required this.balanceText,
+    required this.walletNumberText,
+    required this.onCopyWalletNumber,
+    required this.onAddMoney,
+    required this.onEStatement,
+  });
+
+  final String balanceText;
+  final String walletNumberText;
+  final VoidCallback onCopyWalletNumber;
+  final VoidCallback onAddMoney;
+  final VoidCallback onEStatement;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: AppColors.surfaceSubtle,
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
+      ),
+      child: Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(28.w, 17.h, 28.w, 26.h),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SvgPictureAsset(
+                  AppAssets.icWallet,
+                  color: AppColors.primary,
+                  width: 66.w,
+                  height: 64.h,
+                ),
+                SizedBox(width: 21.5.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        balanceText,
+                        style: AppTextStyles.homeTitle.copyWith(
+                          fontSize: 30.sp,
+                          letterSpacing: -0.3,
+                          height: 38 / 30,
+                        ),
+                      ),
+                      Text(
+                        AppStrings.walletNumberLabel.tr,
+                        style: AppTextStyles.homeSubtitle,
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            walletNumberText,
+                            style: AppTextStyles.homeSubtitle,
+                          ),
+                          SizedBox(width: 6.w),
+                          GestureDetector(
+                            onTap: onCopyWalletNumber,
+                            child: SvgPictureAsset(
+                              AppAssets.icCopy,
+                              width: 18.w,
+                              height: 18.w,
+                              color: AppColors.textHint,
+                              placeholderBuilder: (_) => Icon(
+                                Icons.copy_rounded,
+                                size: 18.sp,
+                                color: AppColors.textHint,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Divider(height: 1.h, color: AppColors.borderWalletCard),
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: 18.h, horizontal: 39.w),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                WalletIconLabelButton(
+                  label: AppStrings.addMoney.tr,
+                  iconAsset: AppAssets.icCardReceive,
+                  onTap: onAddMoney,
+                ),
+                WalletIconLabelButton(
+                  label: AppStrings.eStatement.tr,
+                  iconAsset: AppAssets.icEStatement,
+                  onTap: onEStatement,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

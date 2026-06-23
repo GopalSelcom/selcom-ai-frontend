@@ -31,6 +31,7 @@ class UserEntity {
   final num? goAvgRating;
   final int? goRatingCount;
   final String? lastUsedPaymentMethod;
+  final String? firebaseUid;
 
   const UserEntity({
     required this.id,
@@ -65,5 +66,6 @@ class UserEntity {
     this.goAvgRating,
     this.goRatingCount,
     this.lastUsedPaymentMethod,
+    this.firebaseUid,
   });
 }

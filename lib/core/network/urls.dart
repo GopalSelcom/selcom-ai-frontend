@@ -1,11 +1,9 @@
 /// Centralized endpoint registry.
-/// Access via: `URLS.auth.sendOtp`, `URLS.ride.estimateFare`, etc.
+/// Access via: `URLS.auth.firebaseLogin`, `URLS.ride.estimateFare`, etc.
 abstract class URLS {
   // ── Grouped endpoint accessors ──
   static const auth = _AuthEndpoints();
   static const ride = _RideEndpoints();
-  static const home = _HomeEndpoints();
-  static const booking = _BookingEndpoints();
   static const profile = _ProfileEndpoints();
   static const common = _CommonEndpoints();
   static const payment = _PaymentEndpoints();
@@ -15,6 +13,7 @@ abstract class URLS {
   static const wallet = _WalletEndpoints();
   static const notification = _NotificationEndpoints();
   static const pdf = _PdfEndpoints();
+  static const support = _SupportEndpoints();
 }
 
 /// ─────────────────────────────────
@@ -27,17 +26,29 @@ class _PdfEndpoints {
 }
 
 /// ─────────────────────────────────
+/// SUPPORT ENDPOINTS (pre-login)
+/// ─────────────────────────────────
+class _SupportEndpoints {
+  const _SupportEndpoints();
+
+  final reasons = "go/support/reasons";
+  final tickets = "go/support/tickets";
+}
+
+/// ─────────────────────────────────
 /// AUTH ENDPOINTS
 /// ─────────────────────────────────
 class _AuthEndpoints {
   const _AuthEndpoints();
 
-  final sendOtp = "send_otp";
-  final resendOtp = "resend_otp";
-  final verifyOtp = "verify_otp";
   final saveUserDetails = "save_user_additional_details";
   final refreshToken = "refresh_token";
   final logout = "logout";
+
+  final firebaseLogin = "go/auth/firebase_login";
+  final phoneSendOtp = "go/auth/phone/send_otp";
+  final phoneResendOtp = "go/auth/phone/resend_otp";
+  final phoneVerifyOtp = "go/auth/phone/verify_otp";
 }
 
 /// ─────────────────────────────────
@@ -56,38 +67,34 @@ class _RideEndpoints {
   final activeRide = "go/rides/active";
   final pendingReview = "go/rides/pending-review";
   final reviewTags = "go/review-tags";
+
   String cancelRide(String rideId) => "$base/$rideId/cancel";
+
   String rateRide(String rideId) => "$base/$rideId/rate";
+
   String skipRideRating(String rideId) => "$base/$rideId/skip-review";
+
   String activityToken(String rideId) => "$base/$rideId/activity-token";
-  String cancellationCharges(String rideId) => "$base/$rideId/cancellation-charges";
+
+  String cancellationCharges(String rideId) =>
+      "$base/$rideId/cancellation-charges";
+
   String shareRide(String rideId) => "$base/$rideId/share";
+
+  String updateDestination(String rideId) => "$base/$rideId/update-destination";
+
+  String updatePickup(String rideId) => "$base/$rideId/update-pickup";
+
+  String increaseFare(String rideId) => "$base/$rideId/increase-fare";
+
   String updateStops(String rideId) => "$base/$rideId/stops";
+
   String cancelPendingStops(String rideId) => "$base/$rideId/stops/pending";
   final checkBookMode = "go/check-book-mode";
   final emergencyContacts = "go/emergency-contacts";
+
   String cancelVoiceCall(String rideId) => "$base/$rideId/call/cancel";
   final base = "go/rides";
-}
-
-/// ─────────────────────────────────
-/// HOME ENDPOINTS
-/// ─────────────────────────────────
-class _HomeEndpoints {
-  const _HomeEndpoints();
-
-  final homeScreen = "home_screen";
-}
-
-/// ─────────────────────────────────
-/// BOOKING ENDPOINTS
-/// ─────────────────────────────────
-class _BookingEndpoints {
-  const _BookingEndpoints();
-
-  final activeBookings = "booking/active";
-  final bookingHistory = "booking/history";
-  final bookingDetails = "booking/details";
 }
 
 /// ─────────────────────────────────
@@ -135,6 +142,7 @@ class _PaymentEndpoints {
   const _PaymentEndpoints();
 
   final validateRidePayment = "go/validate_ride_payment";
+  final devPaymentCallback = "go/dev/payment_callback";
   final makePayment = "unified_payment";
   final checkPaymentStatus = "check_payment_status";
 }
@@ -166,7 +174,20 @@ class _PlacesEndpoints {
 class _WalletEndpoints {
   const _WalletEndpoints();
 
-  final balance = "go/wallet/balance";
+  final details = "go_wallet/go_wallet_details";
+  final cardBalance = "go_wallet/go_card_balance";
+  final otherPaymentMethods = "go_wallet/go_other_payment_methods";
+  final walletTopUp = "go_wallet/wallet_push_ussd";
+  final checkWalletPaymentTopUpStatus = "check_wallet_push_ussd_status";
+
+  final checkWalletPayment = "go_wallet/check_wallet_payment";
+  final cancelUssdOrder = "go_wallet/go_cancel_ussd_order";
+  final sendTransferRequestSelcomPesa =
+      "go_wallet/go_send_transfer_request_selcom_pesa";
+  final simulateSelcomPesaTopUp = "go_wallet/go_simulate_selcom_pesa_top_up";
+  final checkSelcomPesaTopUpStatus = "go_wallet/check_selcom_pesa_status";
+  final cardStatement = "go_wallet/go_card_statement";
+  final emailCardStatement = "go_wallet/go_email_card_statement";
 }
 
 /// ─────────────────────────────────
@@ -177,6 +198,7 @@ class _NotificationEndpoints {
 
   final list = "go/notifications";
   final readAll = "go/notifications/read-all";
+
   String readById(String notificationId) =>
       "go/notifications/$notificationId/read";
 }

@@ -1,7 +1,7 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart' hide TextDirection;
 import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -9,85 +9,112 @@ import 'package:get/get.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/currency_formatter.dart';
+import '../../../../shared/widgets/app_route_location_pin_icon.dart';
 import '../../data/models/ride_management_models.dart';
+import 'receipt_format_utils.dart';
 
 class ReceiptImageGenerator {
-  static const Color _primary = Color(0xFFF3004C);
-  static const Color _textDark = Color(0xFF1A1A2E);
-  static const Color _textMid = Color(0xFF555566);
-  static const Color _textLight = Color(0xFF999AAB);
-  static const Color _divider = Color(0xFFEEEEF2);
-  static const Color _bgLight = Color(0xFFF8F8FA);
+  /// Allow vector assets (logo + route pins) to finish rasterizing before capture.
+  static const Duration _captureDelay = Duration(milliseconds: 500);
 
-  static Future<File> generateReceiptImage({
+  /// Receipt route pins — fixed px (no ScreenUtil) for PNG/PDF capture.
+  static const double _routePinSize = 13;
+  static const double _routePinSlotHeight = 16;
+  static const double _routeIconColumnWidth = 16;
+
+  static Future<ReceiptPngCapture> generateReceiptPngBytes({
     required ReceiptModel receipt,
   }) async {
-    final String svgString =
-        await rootBundle.loadString(AppAssets.selcomGoLogoRedSvg);
-
+    final logoSvg = await loadReceiptSvgAsset(AppAssets.selcomGoLogo);
     final screenshotController = ScreenshotController();
 
-    final widget = Directionality(
-      textDirection: TextDirection.ltr,
-      child: Material(
-        color: Colors.white,
-        child: Container(
-          width: 595, // A4 width at 72dpi
-          color: Colors.white,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildTopBanner(svgString, receipt),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildRouteSection(receipt),
-                    const SizedBox(height: 24),
-                    _buildInfoRow(receipt),
-                    const SizedBox(height: 24),
-                    if (receipt.driverName != null) ...[
-                      _buildDriverSection(receipt),
+    final captureContext = Get.context;
+    final pixelRatio = captureContext != null
+        ? MediaQuery.devicePixelRatioOf(
+            captureContext,
+          ).clamp(2.0, receiptExportPixelRatio)
+        : receiptExportPixelRatio;
+
+    final widget = RepaintBoundary(
+      child: Directionality(
+        textDirection: TextDirection.ltr,
+        child: Material(
+          color: AppColors.white,
+          child: Container(
+            width: receiptLogicalWidth,
+            color: AppColors.white,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildTopBanner(receipt, logoSvg: logoSvg),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 36,
+                    vertical: 24,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildRouteSection(receipt),
                       const SizedBox(height: 24),
+                      _buildInfoRow(receipt),
+                      const SizedBox(height: 24),
+                      if (receipt.driverName != null) ...[
+                        _buildDriverSection(receipt),
+                        const SizedBox(height: 24),
+                      ],
+                      _buildFareSection(receipt),
+                      const SizedBox(height: 32),
+                      _buildFooter(),
                     ],
-                    _buildFareSection(receipt),
-                    const SizedBox(height: 32),
-                    _buildFooter(),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
 
-    // Use long-widget capture to avoid vertical overflow for tall receipts.
-    final Uint8List imageBytes = await screenshotController.captureFromLongWidget(
-      widget,
-      context: null,
-      delay: const Duration(milliseconds: 50), // slight delay to ensure rendering
-    );
+    // Long-widget capture; delay + pixelRatio matter once multiple SVGs are in the tree.
+    final Uint8List imageBytes = await screenshotController
+        .captureFromLongWidget(
+          widget,
+          context: captureContext,
+          delay: _captureDelay,
+          pixelRatio: pixelRatio,
+        );
 
+    return ReceiptPngCapture(bytes: imageBytes, pixelRatio: pixelRatio);
+  }
+
+  static Future<File> generateReceiptImage({
+    required ReceiptModel receipt,
+  }) async {
+    final capture = await generateReceiptPngBytes(receipt: receipt);
     final dir = await getApplicationDocumentsDirectory();
     final file = File('${dir.path}/receipt_${receipt.rideId}.png');
-    await file.writeAsBytes(imageBytes);
+    await file.writeAsBytes(capture.bytes);
     return file;
   }
 
   // ── Sections ──────────────────────────────────────────────────────────────
 
-  static Widget _buildTopBanner(String svgString, ReceiptModel receipt) {
-    final dateStr = receipt.completedAt != null
-        ? DateFormat('MMMM dd, yyyy  •  hh:mm a')
-            .format(DateTime.parse(receipt.completedAt!).toLocal())
-        : DateFormat('MMMM dd, yyyy  •  hh:mm a').format(DateTime.now());
+  static Widget _buildTopBanner(
+    ReceiptModel receipt, {
+    required String logoSvg,
+  }) {
+    final completedAt = receipt.completedAt != null
+        ? DateTime.parse(receipt.completedAt!).toLocal()
+        : DateTime.now();
+    const dateStyle = TextStyle(fontSize: 10, color: AppColors.receiptTextMid);
 
     return Container(
-      padding: const EdgeInsets.only(left: 36, right: 36, top: 48, bottom: 12),
+      color: AppColors.primary,
+      padding: const EdgeInsets.only(left: 36, right: 36, top: 36, bottom: 24),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -100,31 +127,28 @@ class ReceiptImageGenerator {
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: _textDark,
+                  color: AppColors.receiptTextDark,
                 ),
               ),
               const SizedBox(height: 6),
-              Text(
-                dateStr,
-                style: const TextStyle(
-                  fontSize: 10,
-                  color: _textMid,
-                ),
-              ),
+              receiptDateTimeRow(dateTime: completedAt, style: dateStyle),
               const SizedBox(height: 2),
               Text(
                 AppStrings.refWithId.trParams({'id': receipt.rideId}).tr,
-                style: const TextStyle(
-                  fontSize: 9,
-                  color: _textLight,
-                ),
+                style: const TextStyle(fontSize: 9, color: AppColors.receiptTextMuted),
               ),
             ],
           ),
-          SvgPicture.string(
-            svgString,
+          SizedBox(
             width: 120,
-            colorFilter: const ColorFilter.mode(_primary, BlendMode.srcIn),
+            height: 48,
+            child: SvgPicture.string(
+              logoSvg,
+              width: 120,
+              height: 48,
+              fit: BoxFit.contain,
+              allowDrawingOutsideViewBox: true,
+            ),
           ),
         ],
       ),
@@ -132,9 +156,47 @@ class ReceiptImageGenerator {
   }
 
   static Widget _buildRouteSection(ReceiptModel receipt) {
+    final filteredStops = receipt.stops.where((s) {
+      final stopAddr = s.address.trim().toLowerCase();
+      final endAddr = receipt.destinationAddress.trim().toLowerCase();
+      return stopAddr != endAddr;
+    }).toList();
+
+    final rows = <Widget>[
+      _routeTimelineRow(
+        label: AppStrings.pickup.tr,
+        address: receipt.pickupAddress,
+        icon: AppRouteLocationPinIcon.pickup(size: _routePinSize),
+        showConnectorBelow: true,
+        iconTopInset: 0,
+      ),
+    ];
+
+    for (int i = 0; i < filteredStops.length; i++) {
+      rows.add(
+        _routeTimelineRow(
+          label: '${AppStrings.stop.tr} ${i + 1}',
+          address: filteredStops[i].address,
+          icon: AppRouteLocationPinIcon.stop(i, size: _routePinSize),
+          showConnectorBelow: true,
+          iconTopInset: 2,
+        ),
+      );
+    }
+
+    rows.add(
+      _routeTimelineRow(
+        label: AppStrings.dropoff.tr,
+        address: receipt.destinationAddress,
+        icon: AppRouteLocationPinIcon.destination(size: _routePinSize),
+        showConnectorBelow: false,
+        iconTopInset: 2,
+      ),
+    );
+
     return Container(
       decoration: const BoxDecoration(
-        color: _bgLight,
+        color: AppColors.receiptBgLight,
         borderRadius: BorderRadius.all(Radius.circular(10)),
       ),
       padding: const EdgeInsets.all(16),
@@ -143,58 +205,75 @@ class ReceiptImageGenerator {
         children: [
           _sectionLabel(AppStrings.route.tr),
           const SizedBox(height: 12),
-          _routeStop(
-            label: AppStrings.pickup.tr,
-            address: receipt.pickupAddress,
-            dot: Colors.green.shade700,
-          ),
-          Container(
-            margin: const EdgeInsets.only(left: 5, top: 2, bottom: 2),
-            width: 2,
-            height: 16,
-            color: _divider,
-          ),
-          _routeStop(
-            label: AppStrings.dropoff.tr,
-            address: receipt.destinationAddress,
-            dot: _primary,
-          ),
+          ...rows,
         ],
       ),
     );
   }
 
-  static Widget _routeStop({
+  static Widget _routeTimelineRow({
     required String label,
     required String address,
-    required Color dot,
+    required Widget icon,
+    required bool showConnectorBelow,
+    double iconTopInset = 0,
   }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          margin: const EdgeInsets.only(top: 3),
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label.toUpperCase(),
-                style: const TextStyle(fontSize: 8, color: _textLight),
-              ),
-              Text(
-                address.isEmpty ? AppStrings.emDash.tr : address,
-                style: const TextStyle(fontSize: 12, color: _textDark),
-              ),
-            ],
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            width: _routeIconColumnWidth,
+            child: Column(
+              children: [
+                if (iconTopInset > 0) SizedBox(height: iconTopInset),
+                SizedBox(
+                  height: _routePinSlotHeight,
+                  width: _routeIconColumnWidth,
+                  child: Center(
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      child: icon,
+                    ),
+                  ),
+                ),
+                if (showConnectorBelow)
+                  Expanded(
+                    child: Center(
+                      child: Container(
+                        width: 2,
+                        margin: const EdgeInsets.symmetric(vertical: 1.5),
+                        color: AppColors.receiptDivider,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
-        ),
-      ],
+          const SizedBox(width: 9),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(
+                top: iconTopInset,
+                bottom: showConnectorBelow ? 9 : 0,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label.toUpperCase(),
+                    style: const TextStyle(fontSize: 8, color: AppColors.receiptTextMuted),
+                  ),
+                  Text(
+                    address.isEmpty ? AppStrings.emDash.tr : address,
+                    style: const TextStyle(fontSize: 12, color: AppColors.receiptTextDark),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -204,13 +283,17 @@ class ReceiptImageGenerator {
         _infoChip(
           icon: '📍',
           label: AppStrings.distance.tr,
-          value: '${receipt.distanceKm.toStringAsFixed(2)} km',
+          value: AppStrings.distanceKmFormat.trParams({
+            'value': receipt.distanceKm.toStringAsFixed(2),
+          }),
         ),
         const SizedBox(width: 12),
         _infoChip(
           icon: '⏱',
           label: AppStrings.duration.tr,
-          value: '${receipt.durationMinutes} min',
+          value: AppStrings.minutesShortCount.trParams({
+            'count': '${receipt.durationMinutes}',
+          }),
         ),
         const SizedBox(width: 12),
         _infoChip(
@@ -230,7 +313,7 @@ class ReceiptImageGenerator {
     return Expanded(
       child: Container(
         decoration: const BoxDecoration(
-          color: _bgLight,
+          color: AppColors.receiptBgLight,
           borderRadius: BorderRadius.all(Radius.circular(8)),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -239,7 +322,7 @@ class ReceiptImageGenerator {
           children: [
             Text(
               label.toUpperCase(),
-              style: const TextStyle(fontSize: 8, color: _textLight),
+              style: const TextStyle(fontSize: 8, color: AppColors.receiptTextMuted),
             ),
             const SizedBox(height: 4),
             Text(
@@ -247,7 +330,7 @@ class ReceiptImageGenerator {
               style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: _textDark,
+                color: AppColors.receiptTextDark,
               ),
             ),
           ],
@@ -259,7 +342,7 @@ class ReceiptImageGenerator {
   static Widget _buildDriverSection(ReceiptModel receipt) {
     return Container(
       decoration: const BoxDecoration(
-        color: _bgLight,
+        color: AppColors.receiptBgLight,
         borderRadius: BorderRadius.all(Radius.circular(10)),
       ),
       padding: const EdgeInsets.all(16),
@@ -268,7 +351,10 @@ class ReceiptImageGenerator {
         children: [
           _sectionLabel(AppStrings.driverAndVehicle.tr),
           const SizedBox(height: 12),
-          _detailRow(AppStrings.driver.tr, receipt.driverName ?? AppStrings.emDash.tr),
+          _detailRow(
+            AppStrings.driver.tr,
+            receipt.driverName ?? AppStrings.emDash.tr,
+          ),
           if (receipt.vehicleType != null)
             _detailRow(AppStrings.vehicleType.tr, receipt.vehicleType!),
           if (receipt.vehicleModel != null)
@@ -290,62 +376,65 @@ class ReceiptImageGenerator {
         const SizedBox(height: 12),
         Container(
           decoration: const BoxDecoration(
-            color: _bgLight,
+            color: AppColors.receiptBgLight,
             borderRadius: BorderRadius.all(Radius.circular(10)),
           ),
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              _fareRow(AppStrings.baseFare.tr, receipt.baseFare, receipt.currency),
               _fareRow(
-                AppStrings.distanceCharge.tr,
-                receipt.distanceCharge,
+                AppStrings.rideCharge.tr,
+                receipt.totalFare,
                 receipt.currency,
               ),
-              _fareRow(AppStrings.timeCharge.tr, receipt.timeCharge, receipt.currency),
+              _fareRow(
+                AppStrings.bookingFeesAndConvenienceCharges.tr,
+                receipt.bookingFee,
+                receipt.currency,
+              ),
               if (receipt.promoDiscountAmount > 0 &&
                   (receipt.promoCode?.trim().isNotEmpty ?? false))
                 _fareRow(
-                  AppStrings.receiptPromoLine
-                      .trParams({'code': receipt.promoCode!.trim()})
-                      .tr,
+                  AppStrings.receiptPromoLine.trParams({
+                    'code': receipt.promoCode!.trim(),
+                  }).tr,
                   -receipt.promoDiscountAmount,
                   receipt.currency,
-                  valueColor: Colors.green.shade700,
+                  valueColor: AppColors.iconSuccess,
                 ),
               if (receipt.discount > 0)
                 _fareRow(
                   AppStrings.discount.tr,
                   -receipt.discount,
                   receipt.currency,
-                  valueColor: Colors.green.shade700,
+                  valueColor: AppColors.iconSuccess,
                 ),
               if (receipt.tax > 0)
                 _fareRow(AppStrings.tax.tr, receipt.tax, receipt.currency),
               const SizedBox(height: 8),
-              const Divider(color: _divider, height: 1),
+              const Divider(color: AppColors.receiptDivider, height: 1),
               const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    AppStrings.total.tr,
+                    AppStrings.totalAmount.tr,
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
-                      color: _textDark,
+                      color: AppColors.receiptTextDark,
                     ),
                   ),
                   Text(
                     CurrencyFormatter.formatPayableOrFree(
-                      receipt.total,
+                      receipt.totalAmount,
                       receipt.currency,
                       freeLabel: AppStrings.rideFreeLabel.tr,
                     ),
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
-                      color: _primary,
+                      color: AppColors.primary,
                     ),
                   ),
                 ],
@@ -361,17 +450,14 @@ class ReceiptImageGenerator {
     String label,
     int amount,
     String currency, {
-    Color valueColor = _textMid,
+    Color valueColor = AppColors.receiptTextMid,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: const TextStyle(fontSize: 12, color: _textMid),
-          ),
+          Text(label, style: const TextStyle(fontSize: 12, color: AppColors.receiptTextMid)),
           Text(
             CurrencyFormatter.formatWithApiCurrency(amount, currency),
             style: TextStyle(fontSize: 12, color: valueColor),
@@ -384,13 +470,13 @@ class ReceiptImageGenerator {
   static Widget _buildFooter() {
     return Container(
       decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: _divider, width: 1)),
+        border: Border(top: BorderSide(color: AppColors.receiptDivider, width: 1)),
       ),
       padding: const EdgeInsets.only(top: 16),
       child: Center(
         child: Text(
           AppStrings.thankYouForRidingWithSelcomGo.tr,
-          style: const TextStyle(fontSize: 11, color: _textLight),
+          style: const TextStyle(fontSize: 11, color: AppColors.receiptTextMuted),
         ),
       ),
     );
@@ -404,7 +490,7 @@ class ReceiptImageGenerator {
       style: const TextStyle(
         fontSize: 10,
         fontWeight: FontWeight.bold,
-        color: _textLight,
+        color: AppColors.receiptTextMuted,
         letterSpacing: 1.2,
       ),
     );
@@ -416,16 +502,13 @@ class ReceiptImageGenerator {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: const TextStyle(fontSize: 12, color: _textMid),
-          ),
+          Text(label, style: const TextStyle(fontSize: 12, color: AppColors.receiptTextMid)),
           Text(
             value,
             style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
-              color: _textDark,
+              color: AppColors.receiptTextDark,
             ),
           ),
         ],

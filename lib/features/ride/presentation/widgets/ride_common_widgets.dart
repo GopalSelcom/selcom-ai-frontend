@@ -1,67 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
-import '../../../../core/localization/app_strings.dart';
-import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/widgets/app_cupertino_text_button.dart';
+import '../../../../shared/widgets/app_route_location_pin_icon.dart';
 
 class RideDateFormatter {
   static String formatDate(String apiDate) {
     try {
-      final parts = apiDate.split(', ');
-      if (parts.length < 2) return apiDate;
-
-      final dateParts = parts[0].split('-');
-      if (dateParts.length < 3) return apiDate;
-
-      final year = dateParts[0];
-      final month = int.parse(dateParts[1]);
-      final day = int.parse(dateParts[2]);
-      final time = parts[1].replaceAll(' ', ''); // 08:08PM
-
-      const months = [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec',
-      ];
-
-      String daySuffix = 'th';
-      if (day >= 11 && day <= 13) {
-        daySuffix = 'th';
-      } else {
-        switch (day % 10) {
-          case 1:
-            daySuffix = 'st';
-            break;
-          case 2:
-            daySuffix = 'nd';
-            break;
-          case 3:
-            daySuffix = 'rd';
-            break;
-          default:
-            daySuffix = 'th';
-        }
+      final parsed = DateFormat('yyyy-MM-dd, hh:mm a').parse(apiDate);
+      final locale = Get.locale?.toLanguageTag() ?? 'en';
+      if (!locale.startsWith('en')) {
+        return DateFormat('dd MMM yyyy • hh:mma', locale).format(parsed);
       }
 
+      final day = parsed.day;
+      final month = DateFormat.MMM(locale).format(parsed);
+      final time = DateFormat('hh:mma', locale).format(parsed).replaceAll(' ', '');
       final dayStr = day.toString().padLeft(2, '0');
-      return '$dayStr$daySuffix ${months[month - 1]} $year . $time';
+      return '$dayStr${_ordinalSuffix(day)} $month ${parsed.year} . $time';
     } catch (e) {
       return apiDate;
+    }
+  }
+
+  static String _ordinalSuffix(int day) {
+    if (day >= 11 && day <= 13) return 'th';
+    switch (day % 10) {
+      case 1:
+        return 'st';
+      case 2:
+        return 'nd';
+      case 3:
+        return 'rd';
+      default:
+        return 'th';
     }
   }
 }
@@ -103,25 +84,17 @@ class RideLocationsTimeline extends StatelessWidget {
       return stopAddr != endAddr;
     }).toList();
 
-    final bool isMulti = filteredStops.isNotEmpty;
-    const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
-
     return Column(
       children: [
-        // Start Location Row
         _buildLocationRow(
           title: startLocation,
           address: startAddress,
-          icon: _buildLetterIcon(
-            isMulti ? 'A' : 'P',
-            color: AppColors.mapPickupMarkerBlue,
-          ),
+          icon: AppRouteLocationPinIcon.pickup(),
           bottomSpacingWhenLine:
               showAddStopBeforeDestination && filteredStops.isEmpty ? 0 : null,
           showBottomLine: true,
         ),
 
-        // Intermediate Stops (full rows) or compact summary marker
         if (showStopsAsSummary && filteredStops.isNotEmpty)
           _buildLocationRow(
             title:
@@ -136,10 +109,7 @@ class RideLocationsTimeline extends StatelessWidget {
             _buildLocationRow(
               title: filteredStops[i].address.split(',').first,
               address: filteredStops[i].address,
-              icon: _buildLetterIcon(
-                letters[i + 1],
-                color: AppColors.mapStopMarkerRed,
-              ),
+              icon: AppRouteLocationPinIcon.stop(i),
               bottomSpacingWhenLine:
                   showAddStopBeforeDestination && i == filteredStops.length - 1
                   ? 0
@@ -149,28 +119,15 @@ class RideLocationsTimeline extends StatelessWidget {
 
         if (showAddStopBeforeDestination) _buildAddStopDividerRow(),
 
-        // End Location Row
         _buildLocationRow(
           title: endLocation,
           address: endAddress,
-          icon: _buildLetterIcon(
-            isMulti ? letters[filteredStops.length + 1] : 'D',
-            color: AppColors.mapDropMarkerGreen,
-          ),
+          icon: AppRouteLocationPinIcon.destination(),
           showBottomLine: false,
           footer: showChangeDropLocationLink && onChangeDropLocationTap != null
-              ? GestureDetector(
-                  onTap: onChangeDropLocationTap,
-                  child: Text(
-                    AppStrings.changeDropLocation.tr,
-                    style: TextStyle(
-                      fontFamily: AppTextStyles.metropolisFont,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
-                      fontSize: 12.sp,
-                      height: 20 / 12,
-                    ),
-                  ),
+              ? AppCupertinoTextButton.changeDropLocation(
+                  label: AppStrings.changeDropLocation.tr,
+                  onPressed: onChangeDropLocationTap,
                 )
               : null,
         ),
@@ -178,22 +135,7 @@ class RideLocationsTimeline extends StatelessWidget {
     );
   }
 
-  Widget _buildLetterIcon(String label, {required Color color}) {
-    return Container(
-      width: 24.w,
-      height: 24.w,
-      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-      alignment: Alignment.center,
-      child: Text(
-        label,
-        style: TextStyle(
-          color: AppColors.white,
-          fontSize: 12.sp,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-    );
-  }
+  static const double _routeIconColumnWidth = 22;
 
   Widget _buildStopCountIcon(int count) {
     return Container(
@@ -228,28 +170,33 @@ class RideLocationsTimeline extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Column(
-            children: [
-              icon,
-              if (showBottomLine)
-                Expanded(
-                  child: Container(
-                    width: 1.w,
-                    margin: EdgeInsets.symmetric(vertical: 2.h),
-                    child: CustomPaint(
-                      painter: DashedLinePainter(
-                        color: AppColors.black.withValues(alpha: 0.5),
+          SizedBox(
+            width: _routeIconColumnWidth.w,
+            child: Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(top: 2.h),
+                  child: Center(child: icon),
+                ),
+                if (showBottomLine)
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 2.h),
+                      child: CustomPaint(
+                        painter: DashedLinePainter(
+                          color: AppColors.black.withValues(alpha: 0.5),
+                        ),
                       ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
           SizedBox(width: 8.w),
           Expanded(
             child: Padding(
               padding: EdgeInsets.only(
-                bottom: showBottomLine ? (bottomSpacingWhenLine ?? 16.h) : 0,
+                bottom: showBottomLine ? (bottomSpacingWhenLine ?? 18.h) : 0,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -347,7 +294,7 @@ class RideLocationsTimeline extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           SizedBox(
-            width: 22.w,
+            width: _routeIconColumnWidth.w,
             child: Center(
               child: SizedBox(
                 width: 1.w,
@@ -367,7 +314,7 @@ class RideLocationsTimeline extends StatelessWidget {
                 Align(
                   alignment: Alignment.center,
                   child: Container(
-                    height: 1.h,
+                    height: 0.8.h,
                     color: AppColors.borderWalletCard,
                   ),
                 ),
@@ -395,12 +342,13 @@ class DashedLinePainter extends CustomPainter {
 
     const double dashWidth = 4.0;
     const double dashSpace = 4.0;
+    final x = size.width / 2;
     double currentY = 0;
 
     while (currentY < size.height) {
       canvas.drawLine(
-        Offset(0, currentY),
-        Offset(0, currentY + dashWidth),
+        Offset(x, currentY),
+        Offset(x, currentY + dashWidth),
         paint,
       );
       currentY += dashWidth + dashSpace;
@@ -477,17 +425,14 @@ class NeedHelpRow extends StatelessWidget {
           ),
         ),
         SizedBox(width: 8.w),
-        GestureDetector(
-          onTap: () => Get.toNamed(AppRoutes.contactUs),
-          child: Text(
-            AppStrings.needHelp.tr,
-            style: AppTextStyles.homeSubtitle.copyWith(height: 20 / 15),
-          ),
+        AppCupertinoTextButton.inlineHelpLink(
+          label: AppStrings.needHelp.tr,
+          onPressed: () => Get.toNamed(AppRoutes.contactUs),
         ),
         if (showDownloadSlip) ...[
           SizedBox(width: 20.w),
-          GestureDetector(
-            onTap: onDownloadTap,
+          AppCupertinoTextButton(
+            onPressed: onDownloadTap,
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [

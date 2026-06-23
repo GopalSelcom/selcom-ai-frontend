@@ -12,15 +12,76 @@ import '../utils/app_dialogs.dart';
 class PhoneCountryPickerChip extends StatelessWidget {
   const PhoneCountryPickerChip({
     super.key,
-    required this.selected,
+    this.selected,
     required this.onChanged,
+    this.inline = false,
   });
 
-  final CountryData selected;
+  final CountryData? selected;
   final ValueChanged<CountryData> onChanged;
+
+  /// Compact trigger for [AppTextField] prefix areas (no bordered chip chrome).
+  final bool inline;
 
   @override
   Widget build(BuildContext context) {
+    final label = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (selected != null) ...[
+          Text(
+            selected!.flag,
+            style: TextStyle(fontSize: inline ? 14.sp : 18.sp),
+          ),
+          SizedBox(width: 8.w),
+          Text(
+            selected!.dialCode,
+            style: (inline
+                    ? AppTextStyles.homeSubtitle
+                    : AppTextStyles.body.copyWith(
+                        fontFamily: AppTextStyles.metropolisFont,
+                      ))
+                .copyWith(
+              fontWeight: inline ? FontWeight.w600 : FontWeight.w400,
+              color: AppColors.textHeading,
+              fontSize: inline ? 16.sp : 17.sp,
+            ),
+          ),
+        ] else if (inline) ...[
+          Text(
+            '+',
+            style: AppTextStyles.homeSubtitle.copyWith(
+              fontWeight: FontWeight.w600,
+              fontSize: 16.sp,
+              color: AppColors.textBody,
+            ),
+          ),
+        ] else ...[
+          Text(
+            AppStrings.selectCountry.tr,
+            style: AppTextStyles.homeSubtitle.copyWith(
+              fontWeight: FontWeight.w600,
+              fontSize: 17.sp,
+              color: AppColors.textBody,
+            ),
+          ),
+        ],
+        Icon(
+          Icons.keyboard_arrow_down,
+          size: inline ? 18.sp : 20.sp,
+          color: AppColors.textBody,
+        ),
+      ],
+    );
+
+    if (inline) {
+      return InkWell(
+        onTap: () => _openSheet(),
+        borderRadius: BorderRadius.circular(8.r),
+        child: label,
+      );
+    }
+
     return Material(
       color: AppColors.transparent,
       child: InkWell(
@@ -41,27 +102,7 @@ class PhoneCountryPickerChip extends StatelessWidget {
               ),
             ],
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(selected.flag, style: TextStyle(fontSize: 18.sp)),
-              SizedBox(width: 8.w),
-              Text(
-                selected.dialCode,
-                style: AppTextStyles.body.copyWith(
-                  fontFamily: AppTextStyles.metropolisFont,
-                  fontWeight: FontWeight.w400,
-                  color: AppColors.textHeading,
-                  fontSize: 17.sp,
-                ),
-              ),
-              Icon(
-                Icons.keyboard_arrow_down,
-                size: 20.sp,
-                color: AppColors.textBody,
-              ),
-            ],
-          ),
+          child: label,
         ),
       ),
     );
@@ -87,9 +128,9 @@ class PhoneCountryPickerChip extends StatelessWidget {
 
 /// Country list body for [AppDialogs.showStandardBottomSheet].
 class _CountryPickerSheet extends StatefulWidget {
-  const _CountryPickerSheet({required this.selected, required this.onSelect});
+  const _CountryPickerSheet({this.selected, required this.onSelect});
 
-  final CountryData selected;
+  final CountryData? selected;
   final ValueChanged<CountryData> onSelect;
 
   @override
@@ -144,15 +185,18 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
     final safeBottom = media.padding.bottom;
 
     // Match [AppStandardBottomSheet] max body (0.85) minus chrome and keyboard.
-    final bodyMaxHeight = (screenH * 0.85 -
-            keyboard -
-            _standardSheetHeaderHeight(context) -
-            safeBottom)
-        .clamp(160.0, screenH * 0.55);
+    final bodyMaxHeight =
+        (screenH * 0.85 -
+                keyboard -
+                _standardSheetHeaderHeight(context) -
+                safeBottom)
+            .clamp(160.0, screenH * 0.55);
 
     final searchBlockHeight = 56.h;
-    final listHeight = (bodyMaxHeight - searchBlockHeight - 12.h)
-        .clamp(80.0, bodyMaxHeight - searchBlockHeight);
+    final listHeight = (bodyMaxHeight - searchBlockHeight - 12.h).clamp(
+      80.0,
+      bodyMaxHeight - searchBlockHeight,
+    );
 
     // Sheet uses light surfaces; force dark input/list text when app theme is dark.
     final lightOnSheet = ThemeData(
@@ -233,7 +277,7 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
                       separatorBuilder: (_, __) => SizedBox(height: 8.h),
                       itemBuilder: (context, i) {
                         final c = _filtered[i];
-                        final isSel = c.code == widget.selected.code;
+                        final isSel = c.code == widget.selected?.code;
                         return InkWell(
                           onTap: () => widget.onSelect(c),
                           borderRadius: BorderRadius.circular(12.r),

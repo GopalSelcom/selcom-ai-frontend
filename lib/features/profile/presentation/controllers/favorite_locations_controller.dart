@@ -1,11 +1,12 @@
 import 'package:get/get.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
-import '../../domain/usecases/profile_usecase.dart';
-import '../../domain/repositories/profile_repository.dart';
-import '../../../home/presentation/controllers/home_controller.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../home/presentation/controllers/home_controller.dart';
+import '../../domain/repositories/profile_repository.dart';
+import '../../domain/usecases/profile_usecase.dart';
 
 class FavoriteLocationsController extends GetxController {
   final ProfileUseCase profileUseCase;
@@ -52,13 +53,17 @@ class FavoriteLocationsController extends GetxController {
       (failure) {
         // Rollback
         favorites.value = originalList;
-        AppDialogs.showErrorDialog(message: AppStrings.failedToUpdateFavoriteStatus.tr);
+        AppDialogs.showErrorDialog(
+          message: AppStrings.failedToUpdateFavoriteStatus.tr,
+        );
       },
       (success) {
         if (!success) {
           // Rollback
           favorites.value = originalList;
-          AppDialogs.showErrorDialog(message: AppStrings.failedToUpdateFavoriteStatus.tr);
+          AppDialogs.showErrorDialog(
+            message: AppStrings.failedToUpdateFavoriteStatus.tr,
+          );
         } else {
           // Sync with HomeController if it exists
           if (Get.isRegistered<HomeController>()) {

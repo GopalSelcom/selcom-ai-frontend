@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 
 import '../../../../core/data/models/notification_model.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../controllers/notification_controller.dart';
+import '../widgets/notification_screen_shimmer.dart';
 
 class NotificationScreen extends StatelessWidget {
   const NotificationScreen({super.key});
@@ -54,10 +55,11 @@ class NotificationScreen extends StatelessWidget {
                             )
                           : Text(
                               AppStrings.markAllReadCount.trParams({
-                                'count': controller.unreadCount.value.toString(),
+                                'count': controller.unreadCount.value
+                                    .toString(),
                               }),
                               style: AppTextStyles.homeCaption.copyWith(
-                                color: AppColors.white,
+                                color: AppColors.black,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -71,9 +73,7 @@ class NotificationScreen extends StatelessWidget {
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value) {
-                return const Center(
-                  child: CircularProgressIndicator(color: AppColors.primary),
-                );
+                return NotificationScreenShimmer.listContent();
               }
 
               if (controller.notifications.isEmpty) {
@@ -260,7 +260,9 @@ class NotificationScreen extends StatelessWidget {
           SizedBox(height: 16.h),
           Text(
             AppStrings.noNotificationsYet.tr,
-            style: AppTextStyles.homeSubtitle.copyWith(color: AppColors.textBody),
+            style: AppTextStyles.homeSubtitle.copyWith(
+              color: AppColors.textBody,
+            ),
           ),
           SizedBox(height: 8.h),
           Text(
@@ -337,14 +339,10 @@ class NotificationScreen extends StatelessWidget {
         });
       }
       if (diff.inHours < 24) {
-        return AppStrings.hoursAgo.trParams({
-          'count': diff.inHours.toString(),
-        });
+        return AppStrings.hoursAgo.trParams({'count': diff.inHours.toString()});
       }
       if (diff.inDays < 7) {
-        return AppStrings.daysAgo.trParams({
-          'count': diff.inDays.toString(),
-        });
+        return AppStrings.daysAgo.trParams({'count': diff.inDays.toString()});
       }
 
       return '${date.day}/${date.month}/${date.year}';

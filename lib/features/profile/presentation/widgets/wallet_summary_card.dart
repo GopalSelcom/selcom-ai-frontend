@@ -10,16 +10,61 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/currency_formatter.dart';
+import '../../../../shared/widgets/app_shimmer.dart';
+import '../../../wallet/presentation/utils/wallet_format_utils.dart';
 
 class WalletSummaryCard extends StatelessWidget {
-  final String balance;
-  final String walletNumber;
-
   const WalletSummaryCard({
     super.key,
     required this.balance,
     required this.walletNumber,
+    this.currencyCode,
+    this.isLoading = false,
   });
+
+  final String balance;
+  final String walletNumber;
+  final String? currencyCode;
+  final bool isLoading;
+
+  static const String _accountNumberWidthTemplate = '00000 00000';
+
+  static double get amountGroupWidth => 96.w;
+
+  TextStyle get _accountNumberStyle => AppTextStyles.caption.copyWith(
+    color: AppColors.textBody,
+    fontSize: 12.sp,
+    height: 20 / 12,
+  );
+
+  double _textWidth(String text, TextStyle style) {
+    final painter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      textDirection: TextDirection.ltr,
+      maxLines: 1,
+    )..layout();
+    return painter.width;
+  }
+
+  double _accountNumberTemplateWidth() =>
+      _textWidth(_accountNumberWidthTemplate, _accountNumberStyle);
+
+  String _displayAccountNumber() {
+    if (walletNumber.isEmpty) return '—';
+    final clean = walletNumber.replaceAll(RegExp(r'\s+'), '');
+    if (clean.isEmpty) return '—';
+    return formatWalletAccountNumber(clean, groupSize: 5);
+  }
+
+  String _accountNumberForCopy() => walletNumber.replaceAll(RegExp(r'\s+'), '');
+
+  TextStyle get _amountStyle => AppTextStyles.price.copyWith(
+    color: AppColors.black,
+    fontWeight: FontWeight.w600,
+    fontSize: 17.sp,
+    height: 23.11 / 17,
+    letterSpacing: -0.27,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -28,16 +73,12 @@ class WalletSummaryCard extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 9.w, vertical: 6.h),
       decoration: BoxDecoration(
         color: AppColors.surfaceSubtle,
-        border: Border.all(
-          color: AppColors.borderWalletCard,
-          width: 0.8,
-        ), // Divider/Primary
+        border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
         borderRadius: BorderRadius.circular(27.r),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Left Side: Icon + Texts
           Row(
             children: [
               Container(
@@ -61,67 +102,139 @@ class WalletSummaryCard extends StatelessWidget {
                   Text(
                     AppStrings.wallet.tr,
                     style: AppTextStyles.body.copyWith(
-                      color: AppColors.textHeading, // fill_IETHWP
+                      color: AppColors.textHeading,
                       fontSize: 15.sp,
                       fontWeight: FontWeight.w500,
                       height: 20 / 15,
                     ),
                   ),
-                  Row(
-                    children: [
-                      Text(
-                        walletNumber,
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.textBody,
-                          fontSize: 12.sp,
-                          height: 20 / 12,
-                        ),
-                      ),
-                      SizedBox(width: 4.w),
-                      GestureDetector(
-                        onTap: () {
-                          Clipboard.setData(ClipboardData(text: walletNumber));
-                        },
-                        child: SvgPictureAsset(
-                          AppAssets.icCopy,
-                          width: 14.w,
-                          height: 14.w,
-                          placeholderBuilder: (_) => Icon(
-                            Iconsax.copy,
-                            size: 14.w,
-                            color: AppColors.textHeading.withValues(alpha: 0.5),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  SizedBox(height: 2.h),
+                  _buildAccountNumberRow(),
                 ],
               ),
             ],
           ),
-
-          // Right Side: Amount + Arrow
-          Row(
-            children: [
-              Text(
-                '${CurrencyFormatter.displaySymbol} $balance',
-                style: AppTextStyles.price.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 19.03.sp,
-                  height: 23.11 / 19.03,
-                  letterSpacing: -0.27,
-                ),
-              ),
-              Icon(
-                Iconsax.arrow_right_3,
-                size: 24.w,
-                color: AppColors.textHeading.withValues(alpha: 0.5),
-              ),
-            ],
-          ),
+          _buildAmountRow(),
         ],
       ),
+    );
+  }
+
+  Widget _buildAccountNumberRow() {
+    final displayNumber = _displayAccountNumber();
+    final hasNumber = walletNumber.trim().isNotEmpty;
+    final templateWidth = _accountNumberTemplateWidth();
+
+    if (isLoading) {
+      return AppShimmer(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppShimmerBox(
+              width: templateWidth,
+              height: 12.h,
+              borderRadius: 6.r,
+            ),
+            SizedBox(width: 2.w),
+            AppShimmerBox(width: 14.w, height: 14.w, borderRadius: 4.r),
+          ],
+        ),
+      );
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          displayNumber,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: _accountNumberStyle,
+        ),
+        if (hasNumber) ...[
+          SizedBox(width: 2.w),
+          GestureDetector(
+            onTap: () {
+              Clipboard.setData(ClipboardData(text: _accountNumberForCopy()));
+            },
+            child: SvgPictureAsset(
+              AppAssets.icCopy,
+              width: 14.w,
+              height: 14.w,
+              placeholderBuilder: (_) => Icon(
+                Iconsax.copy,
+                size: 14.w,
+                color: AppColors.textHeading.withValues(alpha: 0.5),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  String _formatBalanceLabel() {
+    if (balance.isEmpty) return '—';
+    final code = currencyCode?.trim();
+    if (code != null && code.isNotEmpty) {
+      final amount = double.tryParse(balance.replaceAll(',', '')) ?? 0;
+      return CurrencyFormatter.formatWithApiCurrency(amount, code);
+    }
+    return '${CurrencyFormatter.displaySymbol} $balance';
+  }
+
+  String _loadingCurrencySymbol() {
+    final code = currencyCode?.trim();
+    if (code != null && code.isNotEmpty) return code;
+    return CurrencyFormatter.displaySymbol;
+  }
+
+  Widget _buildAmountRow() {
+    final amountLabel = _formatBalanceLabel();
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: amountGroupWidth,
+          child: isLoading
+              ? Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(_loadingCurrencySymbol(), style: _amountStyle),
+                    SizedBox(width: 4.w),
+                    AppShimmer(
+                      child: AppShimmerBox(
+                        width: 52.w,
+                        height: 20.h,
+                        borderRadius: 8.r,
+                      ),
+                    ),
+                  ],
+                )
+              : Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    amountLabel,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _amountStyle,
+                  ),
+                ),
+        ),
+        SizedBox(width: 8.w),
+        SvgPictureAsset(
+          AppAssets.icArrowForward,
+          width: 20.w,
+          height: 20.w,
+          color: AppColors.textHeading.withValues(alpha: 0.5),
+          placeholderBuilder: (_) => Icon(
+            Icons.arrow_forward_ios_rounded,
+            size: 24.w,
+            color: AppColors.textHeading.withValues(alpha: 0.5),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -3,25 +3,29 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/constants/app_assets.dart';
-import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/localization/app_strings.dart';
-import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
-import '../../../../shared/utils/currency_formatter.dart';
+import '../../../../shared/widgets/app_cupertino_text_button.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
 import '../../../../shared/widgets/app_map_gps_button.dart';
 import '../../../../shared/widgets/app_map_top_header.dart';
+import '../../../../shared/widgets/app_shimmer.dart';
+import '../../../../shared/widgets/app_vehicle_explore_tile.dart';
 import '../../../../shared/widgets/favorite_location_chips_row.dart';
 import '../../../ride/data/models/ride_management_models.dart';
 import '../controllers/home_controller.dart';
+import '../widgets/home_active_ride_card.dart';
+import '../widgets/home_active_rides_panel.dart';
+import '../widgets/home_address_header_skeleton.dart';
+import '../widgets/home_sheet_layout.dart';
+import '../widgets/home_sheet_loading_content.dart';
 import '../widgets/recent_location_tile.dart';
 
 class HomeScreen extends GetView<HomeController> {
@@ -45,22 +49,32 @@ class HomeScreen extends GetView<HomeController> {
             // 1. Map Layer (Static Image from Figma)
             Positioned.fill(
               child: Obx(
-                () => AppGoogleMap(
-                  initialCameraPosition: CameraPosition(
-                    target: controller.mapCenter.value,
-                    zoom: 16,
-                  ),
-                  // Keep map focal content above the draggable sheet peek area.
-                  padding: EdgeInsets.only(
-                    bottom: screenHeight * controller.sheetSize.value,
-                  ),
-                  myLocationEnabled: controller.hasLocationPermission.value,
-                  circles: controller.nearbyPickupRadiusCircles,
-                  // markers: controller.selectedPickupMarkers,
-                  onMapCreated: controller.onMapCreated,
-                  // onCameraMove: controller.onCameraMove,
-                  // onCameraIdle: controller.onCameraIdle,
-                ),
+                () {
+                  final activeRide = controller.activeRide.value;
+                  final showsMoreBadge = controller.hasMultipleActiveRides;
+                  final activeRideFootprint = activeRide == null
+                      ? 0.0
+                      : HomeActiveRideCard.footprintAboveSheet(
+                          showsMoreBadge: showsMoreBadge,
+                        );
+                  return AppGoogleMap(
+                    initialCameraPosition: CameraPosition(
+                      target: controller.mapCenter.value,
+                      zoom: 16,
+                    ),
+                    // Keep map focal content above the draggable sheet peek area.
+                    padding: EdgeInsets.only(
+                      bottom:
+                          screenHeight * controller.sheetSize.value +
+                          activeRideFootprint,
+                    ),
+                    myLocationEnabled: controller.hasLocationPermission.value,
+                    circles: controller.nearbyPickupRadiusCircles,
+                    // markers: controller.selectedPickupMarkers,
+                    onMapCreated: controller.onMapCreated,
+                    onCameraIdle: controller.onHomeMapCameraIdle,
+                  );
+                },
               ),
             ),
 
@@ -70,22 +84,27 @@ class HomeScreen extends GetView<HomeController> {
                 top: MediaQuery.of(context).padding.top + 10.h,
                 addressWidget: _buildModernAddressBox(),
                 onProfileTap: controller.openProfile,
-                profileIcon: Icons.person,
-                profileIconColor: AppColors.black,
+                profileImageUrl: controller.profileImageUrl.value.isEmpty
+                    ? null
+                    : controller.profileImageUrl.value,
                 isLoading: controller.isLoadingHomeData.value,
                 isExpanded: controller.isSavedPlacesExpanded.value,
               ),
             ),
 
-            // 3. GPS button — lifts with the draggable bottom sheet.
+            // 3. GPS button — lifts with the draggable bottom sheet / active ride card.
             Obx(() {
-              if (controller.isLoadingHomeData.value) {
+              if (controller.isLoadingHomeData.value ||
+                  controller.isActiveRidesExpanded.value) {
                 return const SizedBox.shrink();
               }
               final activeRide = controller.activeRide.value;
-              final bottomOffset = activeRide != null
-                  ? MediaQuery.paddingOf(context).bottom + 12.h + 120.h
-                  : screenHeight * controller.sheetSize.value;
+              final sheetBottom = screenHeight * controller.sheetSize.value;
+              final bottomOffset = activeRide == null
+                  ? sheetBottom + 12.h
+                  : HomeActiveRideCard.gpsButtonBottom(
+                      sheetBottomFromScreenBottom: sheetBottom,
+                    );
               return Positioned(
                 bottom: bottomOffset,
                 right: 20.w,
@@ -94,20 +113,67 @@ class HomeScreen extends GetView<HomeController> {
                 ),
               );
             }),
+            _buildFigmaDraggableSheet(context),
             Obx(() {
               if (controller.isLoadingHomeData.value) {
                 return const SizedBox.shrink();
               }
               final activeRide = controller.activeRide.value;
-              if (activeRide != null) {
+              if (activeRide == null) return const SizedBox.shrink();
+
+              final rides = controller.activeRides.toList(growable: false);
+              final sheetBottom = screenHeight * controller.sheetSize.value;
+              final cardBottom = sheetBottom + HomeActiveRideCard.gapAboveSheet.h;
+
+              if (!controller.hasMultipleActiveRides) {
                 return Positioned(
                   left: 16.w,
                   right: 16.w,
-                  bottom: MediaQuery.of(context).padding.bottom + 12.h,
-                  child: _activeRideCard(activeRide),
+                  bottom: cardBottom,
+                  child: HomeActiveRideCard(
+                    vehicleAssetPath: controller.activeRideVehicleImageAsset(
+                      activeRide,
+                    ),
+                    routeTitle: controller.activeRideRouteTitle(activeRide),
+                    remainingLabel: controller.activeRideRemainingLabel(
+                      activeRide,
+                    ),
+                    additionalRidesCount: 0,
+                    onViewRide: controller.openActiveRide,
+                  ),
                 );
               }
-              return _buildFigmaDraggableSheet(context);
+
+              final isExpanded = controller.isActiveRidesExpanded.value;
+
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned.fill(
+                    child: HomeActiveRidesBlurBarrier(
+                      isExpanded: isExpanded,
+                      onClose: controller.collapseActiveRidesStack,
+                    ),
+                  ),
+                  Positioned(
+                    left: 16.w,
+                    right: 16.w,
+                    bottom: cardBottom,
+                    child: HomeActiveRidesPanel(
+                      isExpanded: isExpanded,
+                      rides: rides,
+                      additionalRidesCount: controller.additionalActiveRidesCount,
+                      onExpand: controller.expandActiveRidesStack,
+                      onCollapse: controller.collapseActiveRidesStack,
+                      vehicleAssetPathFor:
+                          controller.activeRideVehicleImageAsset,
+                      routeTitleFor: controller.activeRideRouteTitle,
+                      remainingLabelFor: controller.activeRideRemainingLabel,
+                      onViewRide: controller.openActiveRide,
+                    ),
+                  ),
+                ],
+              );
             }),
           ],
         ),
@@ -124,11 +190,11 @@ class HomeScreen extends GetView<HomeController> {
         return AnimatedContainer(
           duration: const Duration(milliseconds: 320),
           curve: Curves.easeInOutCubic,
+          constraints: BoxConstraints(minHeight: 64.w),
           padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 9.h),
           decoration: BoxDecoration(
             color: AppColors.white,
             borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: AppColors.borderDefault),
             boxShadow: [
               BoxShadow(
                 color: AppColors.black.withValues(alpha: 0.06),
@@ -138,20 +204,7 @@ class HomeScreen extends GetView<HomeController> {
             ],
           ),
           child: isLoading
-              ? Shimmer.fromColors(
-                  baseColor: AppColors.skeletonBase,
-                  highlightColor: AppColors.skeletonHighlight,
-                  child: Center(
-                    child: Container(
-                      width: 200.w,
-                      height: 16.h,
-                      decoration: BoxDecoration(
-                        color: AppColors.white,
-                        borderRadius: BorderRadius.circular(4.r),
-                      ),
-                    ),
-                  ),
-                )
+              ? const HomeAddressHeaderSkeleton()
               : Row(
                   children: [
                     SizedBox(
@@ -161,7 +214,7 @@ class HomeScreen extends GetView<HomeController> {
                         AppAssets.locationIcPickupPin,
                         width: 21.sp,
                         height: 24.5.sp,
-                        color: AppColors.figmaIconGreen,
+                        color: AppColors.primary,
                       ),
                     ),
                     SizedBox(width: 4.w),
@@ -208,7 +261,8 @@ class HomeScreen extends GetView<HomeController> {
   }
   */
 
-  static const double _sheetHorizontalPadding = 24;
+  static const double _sheetHorizontalPadding =
+      HomeSheetLayout.horizontalPadding;
 
   Widget _buildFigmaDraggableSheet(BuildContext context) {
     return Obx(() {
@@ -224,6 +278,7 @@ class HomeScreen extends GetView<HomeController> {
       final snapSizes = controller.homeSheetSnapSizes;
       final scrollPhysics = controller.homeSheetScrollPhysics;
       final contentSignature = Object.hash(
+        controller.isLoadingHomeData.value,
         controller.recentDestinations.length,
         controller.vehicleTypes.length,
         controller.savedPlaces.length,
@@ -239,13 +294,22 @@ class HomeScreen extends GetView<HomeController> {
         snap: controller.homeSheetShouldSnap,
         snapSizes: snapSizes,
         childBuilder: (scrollController) {
-          return _HomeSheetScrollContent(
-            key: ValueKey<int>(contentSignature),
-            scrollController: scrollController,
-            physics: scrollPhysics,
-            contentSignature: contentSignature,
-            onContentMeasured: controller.reportHomeSheetContentHeight,
-            children: _buildHomeSheetContentChildren(),
+          final isLoading = controller.isLoadingHomeData.value;
+          final children = isLoading
+              ? HomeSheetLoadingContent.buildChildren(
+                  horizontalPadding: _sheetHorizontalPadding,
+                )
+              : _buildHomeSheetContentChildren();
+          return AbsorbPointer(
+            absorbing: isLoading,
+            child: _HomeSheetScrollContent(
+              key: ValueKey<int>(contentSignature),
+              scrollController: scrollController,
+              physics: scrollPhysics,
+              contentSignature: contentSignature,
+              onContentMeasured: controller.reportHomeSheetContentHeight,
+              children: children,
+            ),
           );
         },
       );
@@ -275,15 +339,15 @@ class HomeScreen extends GetView<HomeController> {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 16.h),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceSubtle,
+                  color: AppColors.cardBackground,
                   borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(color: AppColors.skeletonBase, width: 0.8),
+                  border: Border.all(color: AppColors.secondary, width: 1),
                 ),
                 child: Row(
                   children: [
                     SvgPictureAsset(
                       AppAssets.locationIcDestinationPin,
-                      color: AppColors.primary,
+                      color: AppColors.secondary,
                       width: 19.sp,
                       height: 19.sp,
                     ),
@@ -291,7 +355,7 @@ class HomeScreen extends GetView<HomeController> {
                     Text(
                       AppStrings.whereAreYouGoing.tr,
                       style: AppTextStyles.homeSubtitle.copyWith(
-                        color: AppColors.black,
+                        color: AppColors.figmaTextPrimary,
                         fontWeight: FontWeight.w500,
                         fontSize: 15.sp,
                       ),
@@ -306,39 +370,26 @@ class HomeScreen extends GetView<HomeController> {
       SizedBox(height: 8.h),
       Obx(() {
         controller.savedPlaces.length;
+        controller.recentHomeChipKey.value;
         final extras = controller.savedPlacesBeyondPresetSlots;
         return FavoriteLocationChipsRow(
           contentHorizontalPadding: _sheetHorizontalPadding.w,
           chipBackgroundColor: AppColors.surfaceSubtle,
-          chipBorderColor: AppColors.borderWalletCard,
+          highlightedChipKey: controller.recentHomeChipKey.value,
           resolvePlace: controller.getSavedPlaceByLabel,
           extraSavedPlaces: extras,
-          onChipTap: (canonical, place) {
-            if (place == null) {
-              Get.toNamed(AppRoutes.selectSavedLocation, arguments: canonical);
-            } else {
-              controller.navigateToVehicleSelectionForSavedLabel(canonical);
-            }
-          },
-          onSavedChipLongPress: (canonical) =>
-              Get.toNamed(AppRoutes.selectSavedLocation, arguments: canonical),
-          onExtraChipTap: (place) =>
-              controller.navigateToVehicleSelectionForSavedPlace(place),
-          onExtraChipLongPress: (place) {
-            final raw = (place.label ?? place.name ?? '').trim();
-            Get.toNamed(
-              AppRoutes.selectSavedLocation,
-              arguments: raw.isEmpty ? AppStrings.saved.tr : raw,
-            );
-          },
+          onChipTap: controller.onHomePresetChipTap,
+          onSavedChipLongPress: controller.onHomePresetChipLongPress,
+          onExtraChipTap: controller.onHomeExtraChipTap,
+          onExtraChipLongPress: controller.onHomeExtraChipLongPress,
         );
       }),
       Padding(
         padding: EdgeInsets.symmetric(horizontal: _sheetHorizontalPadding.w),
         child: Obx(() {
-          const sectionGap = 12.0;
-          const titleContentGap = 10.0;
-          const recentItemGap = 12.0;
+          const sectionGap = HomeSheetLayout.sectionGap;
+          const titleContentGap = HomeSheetLayout.titleContentGap;
+          const recentItemGap = HomeSheetLayout.recentItemGap;
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -379,29 +430,13 @@ class HomeScreen extends GetView<HomeController> {
     fontSize: 16.sp,
     fontWeight: FontWeight.w600,
     letterSpacing: -0.4,
-    color: AppColors.textHeading,
+    color: AppColors.figmaTextPrimary,
   );
 
   Widget _viewMoreButton({required VoidCallback onPressed}) {
-    return TextButton(
+    return AppCupertinoTextButton.viewMore(
+      label: AppStrings.viewMore.tr,
       onPressed: onPressed,
-      style: TextButton.styleFrom(
-        padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
-        minimumSize: Size.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      ),
-      child: Text(
-        AppStrings.viewMore.tr,
-        style: AppTextStyles.homeSubtitle.copyWith(
-          fontSize: 14.sp,
-          fontWeight: FontWeight.w600,
-          color: AppColors.primary,
-          decoration: TextDecoration.underline,
-          decorationColor: AppColors.primary,
-          decorationThickness: 1,
-          height: 18 / 14,
-        ),
-      ),
     );
   }
 
@@ -437,6 +472,27 @@ class HomeScreen extends GetView<HomeController> {
     return widgets;
   }
 
+  Widget _buildRecentLocationSkeleton() {
+    return AppShimmer(
+      child: Row(
+        children: [
+          AppShimmerBox(width: 52.w, height: 52.w, borderRadius: 12.r),
+          SizedBox(width: 16.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppShimmerBox(height: 14.h, width: 130.w, borderRadius: 8.r),
+                SizedBox(height: 8.h),
+                AppShimmerBox(height: 12.h, width: 200.w, borderRadius: 8.r),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildRecentLocationItem(RecentDestinationModel loc) {
     return Obx(() {
       final distance = controller.calculateDistanceKm(loc.lat, loc.lng);
@@ -456,53 +512,10 @@ class HomeScreen extends GetView<HomeController> {
     });
   }
 
-  Widget _buildRecentLocationSkeleton() {
-    return Row(
-      children: [
-        Container(
-          width: 52.w,
-          height: 52.w,
-          decoration: BoxDecoration(
-            color: AppColors.skeletonBase,
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-        ),
-        SizedBox(width: 16.w),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                height: 14.h,
-                width: 130.w,
-                decoration: BoxDecoration(
-                  color: AppColors.skeletonBase,
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-              ),
-              SizedBox(height: 8.h),
-              Container(
-                height: 12.h,
-                width: 200.w,
-                decoration: BoxDecoration(
-                  color: AppColors.skeletonBase,
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// Image (42) + gap (4) + label + descender padding — fixed row height for the sheet.
-  static const double _vehicleRowHeight = 72;
-
   Widget _buildVehicleHorizontalList() {
     return Obx(
       () => SizedBox(
-        height: _vehicleRowHeight.h,
+        height: HomeSheetLayout.vehicleRowHeight.h,
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           clipBehavior: Clip.none,
@@ -519,6 +532,22 @@ class HomeScreen extends GetView<HomeController> {
     );
   }
 
+  Widget _buildVehicleSkeleton() {
+    return AppShimmer(
+      child: Container(
+        margin: EdgeInsets.only(right: 16.w),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppShimmerBox(width: 62.w, height: 42.h, borderRadius: 16.r),
+            SizedBox(height: 4.h),
+            AppShimmerBox(width: 52.w, height: 10.h, borderRadius: 8.r),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildVehicleCard(VehicleTypeModel vehicle) {
     final imagePath = controller.vehicleExploreImageAsset(vehicle.name);
 
@@ -530,19 +559,7 @@ class HomeScreen extends GetView<HomeController> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(
-              width: 62.w,
-              height: 42.h,
-              child: Image.asset(
-                imagePath,
-                fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => Icon(
-                  Icons.directions_car,
-                  color: AppColors.textBody,
-                  size: 28.sp,
-                ),
-              ),
-            ),
+            AppVehicleExploreTile(assetPath: imagePath),
             SizedBox(height: 4.h),
             Padding(
               padding: EdgeInsets.only(bottom: 2.h),
@@ -562,165 +579,6 @@ class HomeScreen extends GetView<HomeController> {
         ),
       ),
     );
-  }
-
-  Widget _buildVehicleSkeleton() {
-    return Container(
-      margin: EdgeInsets.only(right: 16.w),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 62.w,
-            height: 42.h,
-            padding: EdgeInsets.all(6.w),
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(16.r),
-            ),
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.skeletonBase,
-                borderRadius: BorderRadius.circular(10.r),
-              ),
-            ),
-          ),
-          SizedBox(height: 4.h),
-          Container(
-            width: 52.w,
-            height: 10.h,
-            decoration: BoxDecoration(
-              color: AppColors.skeletonBase,
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _activeRideCard(RideModel ride) {
-    return Material(
-      color: AppColors.white,
-      borderRadius: BorderRadius.circular(16.r),
-      elevation: 4,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16.r),
-        onTap: controller.openActiveRide,
-        child: Container(
-          padding: EdgeInsets.all(12.w),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: AppColors.skeletonBase),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 8.w,
-                      vertical: 4.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryLight,
-                      borderRadius: BorderRadius.circular(10.r),
-                    ),
-                    child: Text(
-                      _activeRideStatusLabel(ride.status.name),
-                      style: AppTextStyles.homeCaption.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  Icon(
-                    Icons.directions_car_filled,
-                    color: AppColors.primary,
-                    size: 18.sp,
-                  ),
-                  SizedBox(width: 4.w),
-                  Text(
-                    (ride.vehicleDisplayName ?? '').trim().isNotEmpty
-                        ? (ride.vehicleDisplayName ?? '').trim()
-                        : AppStrings.fallbackRideName.tr,
-                    style: AppTextStyles.homeCaption.copyWith(
-                      color: AppColors.textHeading,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 10.h),
-              Text(
-                ride.pickup.address,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.homeSubtitle.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textHeading,
-                ),
-              ),
-              SizedBox(height: 2.h),
-              Text(
-                ride.destination.address,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.homeCaption.copyWith(
-                  color: AppColors.textBody,
-                ),
-              ),
-              SizedBox(height: 10.h),
-              Row(
-                children: [
-                  Text(
-                    CurrencyFormatter.format(ride.fareEstimate),
-                    style: AppTextStyles.homeSubtitle.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textHeading,
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    AppStrings.viewTrip.tr,
-                    style: AppTextStyles.homeCaption.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  SizedBox(width: 4.w),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    size: 14.sp,
-                    color: AppColors.primary,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  String _activeRideStatusLabel(String status) {
-    switch (status.toLowerCase()) {
-      case 'driverassigned':
-        return AppStrings.driverAssigned.tr;
-      case 'driverarriving':
-        return AppStrings.driverArriving.tr;
-      case 'driverarrived':
-        return AppStrings.driverArrived.tr;
-      case 'ridestarted':
-      case 'rideinprogress':
-        return AppStrings.rideInProgress.tr;
-      case 'neardestination':
-        return AppStrings.nearDestination.tr;
-      default:
-        return AppStrings.activeRide.tr;
-    }
   }
 
   void _showExitDialog(BuildContext context) {

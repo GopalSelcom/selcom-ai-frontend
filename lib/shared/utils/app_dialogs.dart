@@ -5,17 +5,20 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../../core/localization/app_strings.dart';
+import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
-import '../../core/routes/app_routes.dart';
-import '../../core/services/storage_service.dart';
+import '../../core/services/progress_indicator/loader.dart';
+import '../../core/services/session_expiry_service.dart';
+import '../../features/payment/domain/models/insufficient_wallet_balance_details.dart';
+import '../../features/payment/presentation/widgets/insufficient_wallet_balance_dialog.dart';
+import '../widgets/animated_blur_dialog.dart';
 import '../widgets/app_cancel_flow_dialog.dart';
 import '../widgets/app_primary_button.dart';
 import '../widgets/app_standard_bottom_sheet.dart';
 
 class AppDialogs {
   static bool _isErrorDialogVisible = false;
-  static bool _isLoadingDialogVisible = false;
 
   /// Utility to ensure keyboard is closed before showing dialogs/bottom sheets
   static Future<void> ensureKeyboardClosed() async {
@@ -23,7 +26,8 @@ class AppDialogs {
     if (context == null) return;
 
     final primaryFocus = FocusManager.instance.primaryFocus;
-    final hasKeyboard = (primaryFocus != null && primaryFocus.hasFocus) ||
+    final hasKeyboard =
+        (primaryFocus != null && primaryFocus.hasFocus) ||
         MediaQuery.viewInsetsOf(context).bottom > 0;
 
     if (hasKeyboard) {
@@ -38,50 +42,21 @@ class AppDialogs {
     required Widget child,
     bool barrierDismissible = true,
     Color? barrierColor,
+    bool useRootNavigator = false,
   }) async {
     await ensureKeyboardClosed();
     return showGeneralDialog<T>(
       context: Get.context!,
+      useRootNavigator: useRootNavigator,
       barrierDismissible: barrierDismissible,
       barrierLabel: "AnimatedBlurDialog",
       barrierColor: barrierColor ?? AppColors.overlayBlack12,
-      transitionDuration: const Duration(milliseconds: 300),
+      transitionDuration: AppModalBlurTokens.duration,
       pageBuilder: (context, animation, secondaryAnimation) {
         return child;
       },
       transitionBuilder: (context, animation, secondaryAnimation, childWidget) {
-        final curvedAnimation = CurvedAnimation(
-          parent: animation,
-          curve: const Cubic(0.15, 0.85, 0.2, 1.0),
-        );
-
-        final scaleAnimation = Tween<double>(
-          begin: 1.15,
-          end: 1.0,
-        ).animate(curvedAnimation);
-        final blurAnimation = Tween<double>(
-          begin: 0.0,
-          end: 5.0,
-        ).animate(curvedAnimation);
-
-        return AnimatedBuilder(
-          animation: curvedAnimation,
-          builder: (context, _) {
-            return BackdropFilter(
-              filter: ImageFilter.blur(
-                sigmaX: blurAnimation.value,
-                sigmaY: blurAnimation.value,
-              ),
-              child: FadeTransition(
-                opacity: curvedAnimation,
-                child: ScaleTransition(
-                  scale: scaleAnimation,
-                  child: childWidget,
-                ),
-              ),
-            );
-          },
-        );
+        return AppModalBlurTransition(animation: animation, child: childWidget);
       },
     );
   }
@@ -233,7 +208,8 @@ class AppDialogs {
       'or `sheet` (widget that already wraps AppStandardBottomSheet).',
     );
 
-    final Widget child = sheet ??
+    final Widget child =
+        sheet ??
         AppStandardBottomSheet(
           title: title,
           subtitle: subtitle,
@@ -256,11 +232,30 @@ class AppDialogs {
     _dismissActiveDialog();
   }
 
-  /// Dismisses the loading overlay from [showLoadingDialog] when still visible.
+  /// Dismisses the global [Loader] overlay from [showLoadingDialog].
   static void dismissLoadingDialog() {
-    if (!_isLoadingDialogVisible) return;
-    _dismissActiveDialog();
-    _isLoadingDialogVisible = false;
+    Loader.instance.hide();
+  }
+
+  /// Closes the top modal overlay, then replaces the stack with [route].
+  /// Use after ride cancel so Obx/dialog dependents dispose before navigation.
+  static Future<void> navigateReplacingStack(String route) async {
+    // Let any in-flight widget rebuilds settle before tearing down overlays.
+    await WidgetsBinding.instance.endOfFrame;
+    dismissLoadingDialog();
+    if ((Get.isDialogOpen ?? false) || (Get.isBottomSheetOpen ?? false)) {
+      final navigator = Get.key.currentState;
+      if (navigator != null && navigator.canPop()) {
+        navigator.pop();
+      }
+      await WidgetsBinding.instance.endOfFrame;
+    }
+    await WidgetsBinding.instance.endOfFrame;
+    await Get.offAllNamed(route);
+  }
+
+  static Future<void> navigateHomeReplacingStack() {
+    return navigateReplacingStack(AppRoutes.home);
   }
 
   static void _dismissActiveDialog() {
@@ -272,6 +267,10 @@ class AppDialogs {
       }
     }
   }
+
+  /// Pops the top overlay route (e.g. [showAnimatedDialog], bottom sheets).
+  /// Use instead of [Get.back] — GetX does not track [showGeneralDialog] routes.
+  static void dismissTopOverlay() => _dismissActiveDialog();
 
   /// Shows a common error dialog with an OK button.
   static void showErrorDialog({
@@ -296,8 +295,7 @@ class AppDialogs {
         onConfirm();
       }
       if (isSessionExpiredError) {
-        await StorageService().deleteAll();
-        Get.offAllNamed(AppRoutes.phone);
+        await SessionExpiryService.handleSessionExpired();
         return;
       }
       _dismissActiveDialog();
@@ -449,12 +447,12 @@ class AppDialogs {
                 Container(
                   padding: EdgeInsets.all(16.w),
                   decoration: BoxDecoration(
-                    color: AppColors.successBadge.withValues(alpha: 0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.check_circle_outline,
-                    color: AppColors.successBadge,
+                    color: AppColors.primary,
                     size: 32.sp,
                   ),
                 ),
@@ -490,6 +488,24 @@ class AppDialogs {
       ),
       barrierDismissible: false,
       barrierColor: AppColors.overlayBlack12,
+    );
+  }
+
+  /// Insufficient wallet balance before book ride (see Figma insufficient-balance alert).
+  static Future<void> showInsufficientWalletBalanceDialog({
+    required InsufficientWalletBalanceDetails details,
+    required VoidCallback onTopUp,
+  }) {
+    return showAnimatedDialog<void>(
+      barrierDismissible: true,
+      child: InsufficientWalletBalanceDialog(
+        details: details,
+        onTopUp: () {
+          _dismissActiveDialog();
+          onTopUp();
+        },
+        onDismiss: _dismissActiveDialog,
+      ),
     );
   }
 
@@ -595,7 +611,8 @@ class AppDialogs {
                           onConfirm();
                         },
                         height: 50.h,
-                        backgroundColor: confirmColor ?? AppColors.primary,
+                        backgroundColor:
+                            confirmColor ?? AppColors.primaryButton,
                         textColor: AppColors.white,
                         borderRadius: 12.r,
                       ),
@@ -612,8 +629,8 @@ class AppDialogs {
     );
   }
 
-  /// Shows a permission dialog when notifications are disabled.
-  static void showPermissionDialog({
+  /// Settings prompt for denied permissions (notifications, location, camera, …).
+  static Future<void> showPermissionDialog({
     required String title,
     required String message,
     required VoidCallback onOpenSettings,
@@ -621,7 +638,7 @@ class AppDialogs {
     IconData icon = Icons.notifications_off,
     IconData? secondaryIcon,
   }) {
-    showAnimatedDialog(
+    return showAnimatedDialog<void>(
       child: Dialog(
         backgroundColor: AppColors.cardBackground,
         surfaceTintColor: AppColors.transparent,
@@ -757,7 +774,7 @@ class AppDialogs {
                     height: 140.h,
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: AppColors.bgSuccessLight,
+                      color: AppColors.primaryLight,
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(32.r),
                         topRight: Radius.circular(32.r),
@@ -773,13 +790,11 @@ class AppDialogs {
                     child: Container(
                       padding: EdgeInsets.all(16.w),
                       decoration: BoxDecoration(
-                        color: AppColors.successBadge,
+                        color: AppColors.primary,
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.successBadge.withValues(
-                              alpha: 0.2,
-                            ),
+                            color: AppColors.primary.withValues(alpha: 0.2),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -954,44 +969,9 @@ class AppDialogs {
     );
   }
 
-  /// Shows a simple loading dialog.
+  /// Shows Duka Direct global loader (Lottie + blur). [message] is ignored (Duka parity).
   static void showLoadingDialog({String message = ""}) {
-    if (_isLoadingDialogVisible) return;
-    _isLoadingDialogVisible = true;
-    showAnimatedDialog(
-      child: PopScope(
-        canPop: false,
-        child: Center(
-          child: Container(
-            padding: EdgeInsets.all(24.w),
-            decoration: BoxDecoration(
-              color: AppColors.transparent,
-              borderRadius: BorderRadius.circular(16.r),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CircularProgressIndicator(color: AppColors.primary),
-                if (message.isNotEmpty) ...[
-                  SizedBox(height: 16.h),
-                  Text(
-                    message.tr,
-                    style: AppTextStyles.body.copyWith(
-                      color: AppColors.textHeading,
-                      fontSize: 14.sp,
-                      decoration: TextDecoration.none,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
-      barrierDismissible: false,
-    ).whenComplete(() {
-      _isLoadingDialogVisible = false;
-    });
+    Loader.instance.show();
   }
 }
 

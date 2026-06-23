@@ -7,13 +7,13 @@ import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../../domain/entities/payment_card.dart';
 import '../controllers/card_details_controller.dart';
 import '../widgets/payment_card_action_bottom_sheet.dart';
-import '../../../../shared/utils/app_dialogs.dart';
 
 class CardDetailsScreen extends StatefulWidget {
   final PaymentCard card;
@@ -54,8 +54,7 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
       child: Obx(
         () => PaymentCardActionBottomSheet(
           title: AppStrings.areYouSureWantToAddNdeleteThisCard.tr,
-          description:
-              AppStrings.cardDeleteWarningDescription.tr,
+          description: AppStrings.cardDeleteWarningDescription.tr,
           cardNumber: widget.card.fullNumber,
           imageAssetPath: AppAssets.imgPaymentDeleteCardConfirm,
           primaryButtonLabel: AppStrings.noCancel.tr,
@@ -176,7 +175,6 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                   ),
 
                   SizedBox(height: 24.h),
-
                 ],
               ),
             ),
@@ -185,7 +183,12 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
             top: false,
             bottom: true,
             child: Padding(
-              padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, computedBottomPadding),
+              padding: EdgeInsets.fromLTRB(
+                16.w,
+                0,
+                16.w,
+                computedBottomPadding,
+              ),
               child: AppPrimaryButton(
                 label: AppStrings.deleteCard.tr,
                 onPressed: _openDeleteConfirmationSheet,

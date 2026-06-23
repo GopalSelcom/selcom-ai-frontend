@@ -13,6 +13,29 @@ class PushTypes {
   static const String incomingCall = 'incoming_call';
   static const String callJoined = 'call_joined';
   static const String callCancelled = 'call_cancelled';
+
+  /// Live call pushes — use CallKit / in-app UI, not a generic banner.
+  static bool isLiveCallSignaling(String? type) {
+    final t = type?.toLowerCase().trim() ?? '';
+    return t == incomingCall || t == callJoined || t == callCancelled;
+  }
+
+  static String? typeFromData(Map<String, dynamic> data) {
+    final direct =
+        (data['type'] ?? data['notification_type'])?.toString().trim();
+    if (direct != null && direct.isNotEmpty) {
+      return direct.toLowerCase();
+    }
+    return null;
+  }
+}
+
+/// Body field for POST .../call/token — tells the backend whether the user is
+/// starting a fresh call or answering an incoming ring.
+class CallTokenIntent {
+  CallTokenIntent._();
+  static const String initiate = 'initiate';
+  static const String answer = 'answer';
 }
 
 /// Builds the deterministic ride-scoped channel name used by both clients

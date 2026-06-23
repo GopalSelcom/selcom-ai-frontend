@@ -9,10 +9,43 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../utils/app_dialogs.dart';
 import '../utils/favorite_location_chip_catalog.dart';
+import '../utils/saved_places_ordering.dart';
 import 'app_animated_reveal.dart';
 import 'app_primary_button.dart';
 import 'app_saved_place_chip.dart';
 import 'app_text_field.dart';
+
+/// One chip in the add-favourite picker (same order as [FavoriteLocationChipsRow]).
+sealed class _AddFavoriteChipEntry {
+  const _AddFavoriteChipEntry();
+
+  String get selectionKey;
+}
+
+final class _AddFavoritePresetChip extends _AddFavoriteChipEntry {
+  _AddFavoritePresetChip(this.slotId);
+
+  final FavoriteLocationSlotId slotId;
+
+  @override
+  String get selectionKey => FavoriteLocationChipCatalog.presetKey(slotId);
+}
+
+final class _AddFavoriteExtraChip extends _AddFavoriteChipEntry {
+  _AddFavoriteExtraChip(this.place);
+
+  final SavedPlace place;
+
+  @override
+  String get selectionKey => 'extra:${place.id ?? SavedPlacesOrdering.effectiveLabel(place)}';
+}
+
+final class _AddFavoriteAddNewChip extends _AddFavoriteChipEntry {
+  const _AddFavoriteAddNewChip();
+
+  @override
+  String get selectionKey => 'add_new';
+}
 
 /// Save-as-favourite picker body for [AppDialogs.showStandardBottomSheet].
 class AddFavoriteLocationSheet extends StatefulWidget {
@@ -66,12 +99,6 @@ class AddFavoriteLocationSheet extends StatefulWidget {
 }
 
 class _AddFavoriteLocationSheetState extends State<AddFavoriteLocationSheet> {
-  /// Home row order: Home, Office, Work, Other — then Add New (unchanged behavior).
-  static final List<String> _chipKeys = <String>[
-    ...FavoriteLocationSlotId.values.map(FavoriteLocationChipCatalog.presetKey),
-    'add_new',
-  ];
-
   final TextEditingController _customLabelController = TextEditingController();
   String _selectedLabel = '';
   bool _hasUserSelectedLabel = false;
@@ -111,13 +138,47 @@ class _AddFavoriteLocationSheetState extends State<AddFavoriteLocationSheet> {
     super.dispose();
   }
 
+  /// Filled presets → custom saved labels → empty presets → Add New (matches Home).
+  List<_AddFavoriteChipEntry> _chipsForDisplay() {
+    final extras = SavedPlacesOrdering.beyondPresetSlots(widget.savedPlaces);
+    final groups = FavoriteLocationChipCatalog.slotDisplayGroups(
+      resolvePlace: widget.resolveSavedPlace,
+    );
+
+    return [
+      ...groups.filled.map(_AddFavoritePresetChip.new),
+      ...extras.map(_AddFavoriteExtraChip.new),
+      ...groups.empty.map(_AddFavoritePresetChip.new),
+      const _AddFavoriteAddNewChip(),
+    ];
+  }
+
+  String _labelForSave(_AddFavoriteChipEntry? entry) {
+    if (entry == null) return '';
+    return switch (entry) {
+      _AddFavoriteAddNewChip() => _customLabelController.text.trim(),
+      _AddFavoriteExtraChip(place: final place) =>
+        SavedPlacesOrdering.effectiveLabel(place),
+      _AddFavoritePresetChip(slotId: final slotId) =>
+        FavoriteLocationChipCatalog.canonicalLabel(slotId),
+    };
+  }
+
+  _AddFavoriteChipEntry? _entryForSelectionKey(String key) {
+    for (final entry in _chipsForDisplay()) {
+      if (entry.selectionKey == key) return entry;
+    }
+    return null;
+  }
+
   /// Chrome above scroll body in [AppStandardBottomSheet] (handle + title + subtitle).
   static double _standardSheetHeaderHeight(BuildContext context) {
     return 10.h + 5.h + 13.h + 72.h + 14.h + 1.h + 16.h + 8.h;
   }
 
-  double _estimateContentHeight() {
-    var height = 52.h + 20.h + 28.h + 10.h + 108.h;
+  double _estimateContentHeight(int chipCount) {
+    final chipRows = (chipCount / 3).ceil();
+    var height = 52.h + 20.h + 28.h + 10.h + (chipRows * 48.h).clamp(108.h, 200.h);
     if (_selectedLabel == 'add_new') {
       height += 12.h + 56.h;
     }
@@ -134,115 +195,114 @@ class _AddFavoriteLocationSheetState extends State<AddFavoriteLocationSheet> {
     final keyboard = media.viewInsets.bottom;
     final safeBottom = media.padding.bottom;
 
-    final maxCap = (screenH * 0.92 -
-            _standardSheetHeaderHeight(context) -
-            safeBottom)
-        .clamp(240.0, screenH * 0.75);
+    final maxCap =
+        (screenH * 0.92 - _standardSheetHeaderHeight(context) - safeBottom)
+            .clamp(240.0, screenH * 0.75);
 
-    final bodyHeight = keyboard > 0
-        ? (maxCap - keyboard).clamp(180.0, maxCap)
-        : _estimateContentHeight().clamp(200.0, maxCap);
+    return Obx(() {
+      widget.savedPlaces.length;
+      final chips = _chipsForDisplay();
 
-    return SizedBox(
-      height: bodyHeight,
-      child: SingleChildScrollView(
-        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(14.r),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+      final bodyHeight = keyboard > 0
+          ? (maxCap - keyboard).clamp(180.0, maxCap)
+          : _estimateContentHeight(chips.length).clamp(200.0, maxCap);
+
+      return SizedBox(
+        height: bodyHeight,
+        child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                decoration: BoxDecoration(
+                  color: AppColors.pageBackground,
+                  borderRadius: BorderRadius.circular(14.r),
+                  border: Border.all(color: AppColors.skeletonBase),
+                ),
+                child: Text(
+                  widget.address,
+                  style: AppTextStyles.homeCaption.copyWith(height: 20 / 12),
+                ),
               ),
-              child: Text(
-                widget.address,
-                style: AppTextStyles.homeCaption.copyWith(height: 20 / 12),
+              SizedBox(height: 20.h),
+              Text(
+                AppStrings.saveLocationAs.tr,
+                style: AppTextStyles.homeSubtitle.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-            SizedBox(height: 20.h),
-            Text(
-              AppStrings.saveLocationAs.tr,
-              style: AppTextStyles.homeSubtitle.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            SizedBox(height: 10.h),
-            Obx(() {
-              widget.savedPlaces.length;
-              return Wrap(
+              SizedBox(height: 10.h),
+              Wrap(
                 spacing: 10.w,
                 runSpacing: 10.h,
-                children: _chipKeys.map((label) {
-                  final isSelected = _selectedLabel == label;
+                children: chips.map((entry) {
+                  final isSelected = _selectedLabel == entry.selectionKey;
                   return _labelChip(
-                    label: label,
+                    entry: entry,
                     isSelected: isSelected,
                     onTap: () {
                       setState(() {
                         _hasUserSelectedLabel = true;
-                        _selectedLabel = label;
-                        if (label != 'add_new') {
+                        _selectedLabel = entry.selectionKey;
+                        if (entry is! _AddFavoriteAddNewChip) {
                           _customLabelController.clear();
                         }
                       });
                     },
                   );
                 }).toList(),
-              );
-            }),
-            if (_selectedLabel == 'add_new') ...[
-              SizedBox(height: 12.h),
-              AppTextField(
-                hintText: AppStrings.enterCustomLabel.tr,
-                controller: _customLabelController,
-                onChanged: (_) => setState(() {
-                  _hasUserSelectedLabel = true;
-                }),
-                textInputAction: TextInputAction.done,
-                textFieldBackgroundColor: AppColors.white,
-                textColor: AppColors.textHeading,
-                enableEnhancedStyle: false,
               ),
-            ],
-            Obx(() {
-              final saving = widget.isSaving.value;
-              return AppAnimatedReveal(
-                show: _canSave,
-                visibleKey: const ValueKey('save-button-visible'),
-                hiddenKey: const ValueKey('save-button-hidden'),
-                child: Padding(
-                  padding: EdgeInsets.only(top: 22.h, bottom: 8.h),
-                  child: AppPrimaryButton(
-                    label: AppStrings.saveAddress.tr,
-                    isLoading: saving,
-                    onPressed: () async {
-                      final selected = _selectedLabel == 'add_new'
-                          ? _customLabelController.text.trim()
-                          : _canonicalLabelForPresetKey(_selectedLabel);
-                      await widget.onSave(selected);
-                    },
-                  ),
+              if (_selectedLabel == 'add_new') ...[
+                SizedBox(height: 12.h),
+                AppTextField(
+                  hintText: AppStrings.enterCustomLabel.tr,
+                  controller: _customLabelController,
+                  onChanged: (_) => setState(() {
+                    _hasUserSelectedLabel = true;
+                  }),
+                  textInputAction: TextInputAction.done,
+                  textFieldBackgroundColor: AppColors.white,
+                  textColor: AppColors.textHeading,
+                  enableEnhancedStyle: false,
                 ),
-              );
-            }),
-          ],
+              ],
+              Obx(() {
+                final saving = widget.isSaving.value;
+                return AppAnimatedReveal(
+                  show: _canSave,
+                  visibleKey: const ValueKey('save-button-visible'),
+                  hiddenKey: const ValueKey('save-button-hidden'),
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 22.h, bottom: 8.h),
+                    child: AppPrimaryButton(
+                      label: AppStrings.saveAddress.tr,
+                      isLoading: saving,
+                      onPressed: () async {
+                        final entry = _entryForSelectionKey(_selectedLabel);
+                        await widget.onSave(_labelForSave(entry));
+                      },
+                    ),
+                  ),
+                );
+              }),
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 
   Widget _labelChip({
-    required String label,
+    required _AddFavoriteChipEntry entry,
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    if (label == 'add_new') {
+    if (entry is _AddFavoriteAddNewChip) {
       return AppSavedPlaceChip(
-        label: _displayLabel(label),
+        label: AppStrings.addNew.tr,
         iconAsset: AppAssets.locationIcAdd,
         iconColor: AppColors.primary,
         onTap: onTap,
@@ -251,17 +311,28 @@ class _AddFavoriteLocationSheetState extends State<AddFavoriteLocationSheet> {
       );
     }
 
-    final id = FavoriteLocationSlotId.values.firstWhere(
-      (e) => FavoriteLocationChipCatalog.presetKey(e) == label,
-    );
-    final canonical = FavoriteLocationChipCatalog.canonicalLabel(id);
+    if (entry is _AddFavoriteExtraChip) {
+      final title = SavedPlacesOrdering.effectiveLabel(entry.place);
+      final display =
+          title.capitalizeFirst ?? (title.isEmpty ? AppStrings.saved.tr : title);
+      return AppSavedPlaceChip(
+        label: display,
+        iconAsset: AppAssets.icOtherChip,
+        onTap: onTap,
+        backgroundColor: isSelected ? AppColors.primaryLight : null,
+        borderColor: isSelected ? AppColors.primary : null,
+      );
+    }
+
+    final preset = entry as _AddFavoritePresetChip;
+    final canonical = FavoriteLocationChipCatalog.canonicalLabel(preset.slotId);
     final hasSaved = widget.resolveSavedPlace(canonical) != null;
     final iconPath = hasSaved
-        ? FavoriteLocationChipCatalog.categoryIconAsset(id)
+        ? FavoriteLocationChipCatalog.categoryIconAsset(preset.slotId)
         : FavoriteLocationChipCatalog.emptySlotIconAsset;
 
     return AppSavedPlaceChip(
-      label: _displayLabel(label),
+      label: _presetDisplayTitle(preset.slotId),
       iconAsset: iconPath,
       iconColor: hasSaved ? null : AppColors.primary,
       onTap: onTap,
@@ -270,28 +341,16 @@ class _AddFavoriteLocationSheetState extends State<AddFavoriteLocationSheet> {
     );
   }
 
-  String _displayLabel(String key) {
-    switch (key) {
-      case 'home':
+  String _presetDisplayTitle(FavoriteLocationSlotId id) {
+    switch (id) {
+      case FavoriteLocationSlotId.home:
         return AppStrings.home.tr;
-      case 'office':
+      case FavoriteLocationSlotId.office:
         return AppStrings.office.tr;
-      case 'work':
+      case FavoriteLocationSlotId.work:
         return AppStrings.work.tr;
-      case 'other':
+      case FavoriteLocationSlotId.other:
         return AppStrings.other.tr;
-      case 'add_new':
-        return AppStrings.addNew.tr;
-      default:
-        return key;
     }
-  }
-
-  String _canonicalLabelForPresetKey(String key) {
-    final id = FavoriteLocationSlotId.values.firstWhere(
-      (e) => FavoriteLocationChipCatalog.presetKey(e) == key,
-      orElse: () => FavoriteLocationSlotId.other,
-    );
-    return FavoriteLocationChipCatalog.canonicalLabel(id);
   }
 }

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
@@ -389,8 +389,8 @@ class RideMessageScreen extends GetView<RideMessageController> {
                           ),
                           decoration: InputDecoration(
                             hintText: allowed
-                                ? 'Write a message...'
-                                : 'Chat unavailable',
+                                ? AppStrings.writeAMessage.tr
+                                : AppStrings.chatUnavailable.tr,
                             hintStyle: AppTextStyles.hint.copyWith(
                               color: AppColors.textMessageHint,
                             ),

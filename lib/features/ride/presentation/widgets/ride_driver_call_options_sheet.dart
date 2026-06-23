@@ -78,15 +78,15 @@ class RideDriverCallOptionsSheet extends StatelessWidget {
         rideId: rideId,
         peerDisplayName: peerDisplayName.isNotEmpty
             ? peerDisplayName
-            : 'Your Driver',
+            : AppStrings.yourDriver.tr,
         peerAvatarUrl: peerAvatarUrl,
       );
     } on CallPermissionDeniedException catch (e) {
       AppDialogs.showErrorDialog(
         title: AppStrings.callDriver.tr,
         message: e.outcome == PermissionOutcome.permanentlyDenied
-            ? 'Microphone permission is permanently denied. Open Settings to allow it.'
-            : 'Microphone permission is required to place a call.',
+            ? AppStrings.microphonePermissionDeniedOpenSettings.tr
+            : AppStrings.microphonePermissionRequired.tr,
       );
     } catch (e, st) {
       ErrorReporter.instance.report(error: e, stackTrace: st);

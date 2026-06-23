@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/widgets/app_reason_picker_bottom_sheet.dart';
 import '../../../ride/domain/repositories/ride_repository.dart';
 import '../../data/models/contact_us_models.dart';
 import '../../domain/repositories/profile_repository.dart';
@@ -17,6 +19,7 @@ class ContactUsController extends GetxController {
   });
 
   final isLoading = false.obs;
+  final isSubmitting = false.obs;
   final subjects = <String>[].obs;
   final supportNumber = ''.obs;
   final supportEmail = ''.obs;
@@ -61,23 +64,24 @@ class ContactUsController extends GetxController {
       return;
     }
 
-    isLoading.value = true;
-    final result = await profileRepository.sendEmail(
-      SendEmailRequestModel(
-        subject: selectedReason.value,
-        message: messageController.text,
-      ),
-    );
+    if (isSubmitting.value) return;
 
-    isLoading.value = false;
+    await Loader.withFlag(isSubmitting, () async {
+      final result = await profileRepository.sendEmail(
+        SendEmailRequestModel(
+          subject: selectedReason.value,
+          message: messageController.text,
+        ),
+      );
 
-    result.fold(
-      (failure) => AppDialogs.showErrorDialog(message: failure.message),
-      (success) {
-        Get.back();
-        AppDialogs.showSuccessDialog(message: success.message);
-      },
-    );
+      result.fold(
+        (failure) => AppDialogs.showErrorDialog(message: failure.message),
+        (success) {
+          Get.back();
+          AppDialogs.showSuccessDialog(message: success.message);
+        },
+      );
+    });
   }
 
   void onMessageChanged(String value) {
@@ -87,6 +91,24 @@ class ContactUsController extends GetxController {
   void setSelectedReason(String reason) {
     selectedReason.value = reason;
     _updateCanSubmit();
+  }
+
+  void openReasonPicker() {
+    final placeholder = AppStrings.selectAReason.tr;
+    AppReasonPickerBottomSheet.show(
+      content: Obx(() {
+        return AppReasonPickerBottomSheet(
+          options: [
+            for (final subject in subjects)
+              AppReasonPickerOption(label: subject, value: subject),
+          ],
+          selectedValue: selectedReason.value == placeholder
+              ? ''
+              : selectedReason.value,
+          onSelected: (option) => setSelectedReason(option.value),
+        );
+      }),
+    );
   }
 
   void _updateCanSubmit() {

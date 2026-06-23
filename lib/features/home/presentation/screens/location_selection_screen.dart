@@ -3,21 +3,23 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/constants/app_assets.dart';
-import '../../../../core/constants/ride_stop_limits.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/spin_kit_fading_circle.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/favorite_location_chips_row.dart';
+import '../../../../shared/widgets/app_route_location_pin_icon.dart';
 import '../../data/models/places_models.dart';
 import '../controllers/home_controller.dart';
 import '../controllers/location_selection_controller.dart';
 import '../widgets/favorite_icon_button.dart';
+import '../widgets/location_selection_shimmer.dart';
 
 class LocationSelectionScreen extends StatefulWidget {
   const LocationSelectionScreen({super.key});
@@ -63,16 +65,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
 
   RxnDouble get _routeDestinationLng => locationController.routeDestinationLng;
 
-  RxnString get _preferredVehicleTypeId =>
-      locationController.preferredVehicleTypeId;
-
-  RxnString get _preferredVehicleName =>
-      locationController.preferredVehicleName;
-
-  bool get _isVehicleSelectionEditMode =>
-      locationController.isVehicleSelectionEditMode.value;
-
-  int get _maxExtraStops => RideStopLimits.maxIntermediateStops;
+  int get _maxExtraStops => locationController.maxIntermediateStops;
 
   void _onAddDestinationStop() => locationController.onAddDestinationStop();
 
@@ -98,8 +91,8 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         }
       },
       child: GestureDetector(
-        onTap:
-            () {}, // Prevents global unfocus handler from intercepting taps on this screen
+        onTap: () {},
+        // Prevents global unfocus handler from intercepting taps on this screen
         behavior: HitTestBehavior.translucent,
         child: Scaffold(
           backgroundColor: AppColors.pageBackground,
@@ -124,6 +117,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                           padding: EdgeInsets.symmetric(horizontal: 16.w),
                           child: Obx(() {
                             locationController.syncPickupFromLiveAddress();
+                            locationController
+                                .extraDestinationControllers
+                                .length;
                             return _pickupDestinationCard();
                           }),
                         ),
@@ -196,11 +192,11 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.cardBackground,
-          border: Border.all(color: AppColors.borderDefault),
+          border: Border.all(color: AppColors.secondary),
           borderRadius: BorderRadius.all(Radius.circular(16.r)),
         ),
         child: Padding(
-          padding: EdgeInsets.fromLTRB(22.32.w, 15.54.h, 20.32.w, 17.22.h),
+          padding: EdgeInsets.fromLTRB(22.32.w, 15.54.h, 15.54.w, 17.22.h),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -223,7 +219,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                         color: AppColors.bgNeutralSoft,
                         borderRadius: BorderRadius.circular(20.r),
                         border: Border.all(
-                          color: AppColors.borderNeutral,
+                          color: AppColors.secondary,
                           width: 1.2,
                         ),
                       ),
@@ -235,11 +231,11 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                             AppAssets.locationIcAdd,
                             width: 16.74.w,
                             height: 16.74.w,
-                            color: AppColors.iconMutedLight,
+                            color: AppColors.primary,
                             placeholderBuilder: (_) => const Icon(
                               Icons.add_circle,
                               size: 16,
-                              color: AppColors.iconMutedLight,
+                              color: AppColors.primary,
                             ),
                           ),
                           SizedBox(width: 4.72.w),
@@ -285,11 +281,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           ],
         ),
         if (showDivider)
-          const Divider(
-            color: AppColors.borderNeutral,
-            height: 26,
-            endIndent: 0,
-          ),
+          const Divider(color: AppColors.secondary, height: 26, endIndent: 0),
       ],
     );
   }
@@ -303,152 +295,163 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     );
     final hintStyle = AppTextStyles.hint;
 
-    final List<Widget> rows = [];
+    final rowCount = _extraDestinationControllers.length + 2;
+    return ReorderableListView.builder(
+      shrinkWrap: true,
+      buildDefaultDragHandles: false,
+      physics: const NeverScrollableScrollPhysics(),
+      onReorderStart: (_) {
+        locationController.isReorderingRows.value = true;
+        locationController.unfocusAllLocationFields();
+      },
+      onReorderEnd: (_) {
+        locationController.isReorderingRows.value = false;
+      },
+      onReorder: _onReorderRows,
+      itemCount: rowCount,
+      itemBuilder: (_, rowIndex) {
+        final segment = _segmentForRow(rowIndex);
+        final isPickup = rowIndex == 0;
+        final isDestination = rowIndex == rowCount - 1;
+        final extraIndex = rowIndex - 1;
 
-    // 1. Pickup
-    rows.add(
-      _pinFieldRow(
-        icon: SvgPictureAsset(
-          AppAssets.locationIcPickupPin,
-          width: 12.6.w,
-          height: 16.4.h,
-          placeholderBuilder: (_) =>
-              const Icon(Icons.location_on, color: AppColors.pinRed, size: 16),
-        ),
-        field: TextField(
-          controller: pickupController,
-          focusNode: pickupFocusNode,
-          onTap: () {
-            _setActiveSegment(0);
-            locationController.onPickupFieldTapped();
-          },
-          onChanged: (value) {
-            pickupEditedByUser.value = true;
-            _routePickupLat.value = null;
-            _routePickupLng.value = null;
-            controller.isPickupSelected.value = false;
-            _setActiveSegment(0);
-            controller.searchQuery.value = value;
-          },
-          style: fieldStyle,
-          decoration: InputDecoration(
-            isDense: true,
-            border: InputBorder.none,
-            contentPadding: EdgeInsets.zero,
-            hintText: AppStrings.searchPickupLocation.tr,
-            hintStyle: hintStyle,
-          ),
-        ),
-        showDivider: true,
-      ),
-    );
+        final TextEditingController textController = isPickup
+            ? pickupController
+            : isDestination
+            ? destinationController
+            : _extraDestinationControllers[extraIndex];
+        final FocusNode focusNode = isPickup
+            ? pickupFocusNode
+            : isDestination
+            ? destinationFocusNode
+            : _extraDestinationFocusNodes[extraIndex];
 
-    // 2. Extra stops (shown between pickup and final destination)
-    for (var i = 0; i < _extraDestinationControllers.length; i++) {
-      final segment = 2 + i;
-      rows.add(
-        _pinFieldRow(
-          icon: SvgPictureAsset(
-            AppAssets.locationIcDestinationPin,
-            width: 12.6.w,
-            height: 16.4.h,
-            color: AppColors.mapDropMarkerGreen,
-            placeholderBuilder: (_) => Icon(
-              Icons.push_pin,
-              color: AppColors.mapDropMarkerGreen,
-              size: 16.w,
+        return Container(
+          key: ValueKey('route-row-$rowIndex-${textController.hashCode}'),
+          child: _pinFieldRow(
+            icon: isPickup
+                ? AppRouteLocationPinIcon.pickup()
+                : isDestination
+                ? AppRouteLocationPinIcon.destination()
+                : AppRouteLocationPinIcon.stop(extraIndex),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (!isPickup && !isDestination)
+                  Material(
+                    color: AppColors.transparent,
+                    child: Padding(
+                      padding: EdgeInsets.only(right: 2.w),
+                      child: InkWell(
+                        onTap: () => _onRemoveDestinationStop(extraIndex),
+                        borderRadius: BorderRadius.circular(22.r),
+                        child: Padding(
+                          padding: EdgeInsets.all(2.w),
+                          child: Icon(
+                            Icons.close,
+                            color: AppColors.textHint,
+                            size: 20.sp,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ReorderableDragStartListener(
+                  index: rowIndex,
+                  child: Padding(
+                    padding: EdgeInsets.only(right: 6.w, left: 2.w),
+                    child: Icon(
+                      Icons.drag_indicator_rounded,
+                      color: AppColors.textSlateSoft,
+                      size: 20.sp,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-          trailing: Material(
-            color: AppColors.transparent,
-            child: Padding(
-              padding: EdgeInsets.only(right: 8.w),
-              child: InkWell(
-                onTap: () => _onRemoveDestinationStop(i),
-                borderRadius: BorderRadius.circular(22.r),
-                child: Padding(
-                  padding: EdgeInsets.all(2.w),
-                  child: Icon(
-                    Icons.close,
-                    color: AppColors.textHint,
-                    size: 20.sp,
+            field: Obx(
+              () => IgnorePointer(
+                ignoring: locationController.isReorderingRows.value,
+                child: TextField(
+                  controller: textController,
+                  focusNode: focusNode,
+                  onTap: () {
+                    _setActiveSegment(segment);
+                    if (segment == 0) {
+                      locationController.onPickupFieldTapped();
+                    } else if (segment == 1) {
+                      locationController.onDestinationFieldTapped();
+                    } else {
+                      locationController.onExtraStopFieldTapped(segment - 2);
+                    }
+                  },
+                  onChanged: (value) {
+                    _setActiveSegment(segment);
+                    if (segment == 0) {
+                      pickupEditedByUser.value = true;
+                      _routePickupLat.value = null;
+                      _routePickupLng.value = null;
+                      controller.isPickupSelected.value = false;
+                    } else if (segment == 1) {
+                      _destinationPlaceId.value = null;
+                      controller.isDestinationSelected.value = false;
+                    } else {
+                      locationController.markExtraStopUnconfirmed(segment - 2);
+                    }
+                    controller.searchQuery.value = value;
+                  },
+                  style: fieldStyle,
+                  decoration: InputDecoration(
+                    isDense: true,
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                    hintText: isPickup
+                        ? AppStrings.searchPickup.tr
+                        : isDestination
+                        ? AppStrings.searchDestination.tr
+                        : AppStrings.searchStopLocation.tr,
+                    hintStyle: hintStyle,
                   ),
                 ),
               ),
             ),
+            showDivider: rowIndex < rowCount - 1,
           ),
-          field: TextField(
-            controller: _extraDestinationControllers[i],
-            focusNode: _extraDestinationFocusNodes[i],
-            onTap: () {
-              _setActiveSegment(segment);
-              locationController.onExtraStopFieldTapped(i);
-            },
-            onChanged: (value) {
-              _setActiveSegment(segment);
-              locationController.markExtraStopUnconfirmed(i);
-              controller.searchQuery.value = value;
-            },
-            style: fieldStyle,
-            decoration: InputDecoration(
-              isDense: true,
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.zero,
-              hintText: AppStrings.searchStopLocation.tr,
-              hintStyle: hintStyle,
-            ),
-          ),
-          // Keep a connector line to the next row (another stop or final destination).
-          showDivider: true,
-        ),
-      );
+        );
+      },
+    );
+  }
+
+  int _segmentForRow(int rowIndex) =>
+      locationController.segmentIndexForRowIndex(rowIndex);
+
+  int _rowForSegment(int segmentIndex) =>
+      locationController.rowIndexForSegmentIndex(segmentIndex);
+
+  void _onReorderRows(int oldIndex, int newIndex) {
+    if (newIndex > oldIndex) {
+      newIndex -= 1;
     }
+    final rows = locationController.exportOrderedRowsForReorder();
+    if (oldIndex < 0 ||
+        oldIndex >= rows.length ||
+        newIndex < 0 ||
+        newIndex >= rows.length) {
+      return;
+    }
+    final moved = rows.removeAt(oldIndex);
+    rows.insert(newIndex, moved);
+    locationController.applyOrderedRowsFromReorder(rows);
 
-    // 3. Final destination (always the last row)
-    rows.add(
-      _pinFieldRow(
-        icon: SvgPictureAsset(
-          AppAssets.locationIcDestinationPin,
-          width: 12.6.w,
-          height: 16.4.h,
-          color: AppColors.mapDropMarkerGreen,
-          placeholderBuilder: (_) => Icon(
-            Icons.push_pin,
-            color: AppColors.mapDropMarkerGreen,
-            size: 16.w,
-          ),
-        ),
-        field: TextField(
-          controller: destinationController,
-          focusNode: destinationFocusNode,
-          onTap: () {
-            _setActiveSegment(1);
-            locationController.onDestinationFieldTapped();
-          },
-          onChanged: (value) {
-            _destinationPlaceId.value = null;
-            controller.isDestinationSelected.value = false;
-            _setActiveSegment(1);
-            controller.searchQuery.value = value;
-          },
-          style: fieldStyle,
-          decoration: InputDecoration(
-            isDense: true,
-            border: InputBorder.none,
-            contentPadding: EdgeInsets.zero,
-            hintText: AppStrings.searchDestination.tr,
-            hintStyle: hintStyle,
-          ),
-        ),
-        showDivider: false,
-      ),
-    );
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: rows,
-    );
+    final activeRow = _rowForSegment(_activeSegmentIndex.value);
+    if (activeRow == oldIndex) {
+      _setActiveSegment(_segmentForRow(newIndex));
+    } else if (oldIndex < activeRow && newIndex >= activeRow) {
+      _setActiveSegment(_segmentForRow(activeRow - 1));
+    } else if (oldIndex > activeRow && newIndex <= activeRow) {
+      _setActiveSegment(_segmentForRow(activeRow + 1));
+    }
+    locationController.focusActiveSegment(immediate: true);
   }
 
   void _onRemoveDestinationStop(int index) {
@@ -471,12 +474,16 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
 
   Widget _chipsRow() {
     return Obx(() {
+      locationController.isLoadingInitialContent.value;
+      if (locationController.shouldShowPlaceListShimmer) {
+        return LocationSelectionShimmer.chipsRow();
+      }
       controller.savedPlaces.length;
+      final extras = controller.savedPlacesBeyondPresetSlots;
       return FavoriteLocationChipsRow(
         contentHorizontalPadding: 16.w,
-        chipBackgroundColor: AppColors.white,
-        chipBorderColor: AppColors.borderWalletCard,
         resolvePlace: controller.getSavedPlaceByLabel,
+        extraSavedPlaces: extras,
         onChipTap: (canonical, place) {
           if (place == null) {
             Get.toNamed(AppRoutes.selectSavedLocation, arguments: canonical);
@@ -503,6 +510,33 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         },
         onSavedChipLongPress: (canonical) =>
             Get.toNamed(AppRoutes.selectSavedLocation, arguments: canonical),
+        onExtraChipTap: (place) {
+          final applied = controller.applySavedPlaceToLocationSelection(
+            savedPlace: place,
+            activeSegmentIndex: _activeSegmentIndex.value,
+            pickupController: pickupController,
+            destinationController: destinationController,
+            extraDestinationControllers: _extraDestinationControllers,
+            pickupEditedByUser: pickupEditedByUser,
+            routePickupLat: _routePickupLat,
+            routePickupLng: _routePickupLng,
+            routeDestinationLat: _routeDestinationLat,
+            routeDestinationLng: _routeDestinationLng,
+            destinationPlaceId: _destinationPlaceId,
+          );
+          if (applied) {
+            locationController.confirmSelectionForSegment(
+              _activeSegmentIndex.value,
+            );
+          }
+        },
+        onExtraChipLongPress: (place) {
+          final raw = (place.label ?? place.name ?? '').trim();
+          Get.toNamed(
+            AppRoutes.selectSavedLocation,
+            arguments: raw.isEmpty ? AppStrings.saved.tr : raw,
+          );
+        },
       );
     });
   }
@@ -553,9 +587,12 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     if (controller.searchQuery.value.trim().isEmpty) {
       if (controller.savedPlaces.isEmpty &&
           controller.recentDestinations.isEmpty) {
+        final emptyHint = _activeSegmentIndex.value == 0
+            ? AppStrings.startTypingPickup.tr
+            : AppStrings.startTypingDestination.tr;
         return Center(
           child: Text(
-            AppStrings.startTypingDestination.tr,
+            emptyHint,
             style: AppTextStyles.homeCaption.copyWith(
               color: AppColors.textBody,
             ),
@@ -670,7 +707,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
               final result = await controller.homeRepository.getGeocode(
                 address: recentText,
               );
-              Get.back(); // close loading
+              AppDialogs.dismissLoadingDialog();
 
               result.fold(
                 (failure) =>
@@ -883,91 +920,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         iconAsset: AppAssets.locationIcArrowRight,
         iconColor: AppColors.white,
         isLoading: controller.isProceedingToBooking.value,
-        showBottomInnerShadow: true,
-        onPressed: () async {
-          final destinations = <String>[];
-          for (final c in _extraDestinationControllers) {
-            final t = c.text.trim();
-            if (t.isNotEmpty) destinations.add(t);
-          }
-          final finalDestination = destinationController.text.trim();
-          if (finalDestination.isNotEmpty) {
-            destinations.add(finalDestination);
-          }
-          if (_isVehicleSelectionEditMode) {
-            final payload = await _buildVehicleSelectionEditResult(
-              pickupText: pickupController.text.trim(),
-              destinationTexts: destinations,
-            );
-            if (payload == null) {
-              AppDialogs.showErrorDialog(
-                message: AppStrings
-                    .pleaseSelectValidPickupAndDestinationLocations
-                    .tr,
-              );
-              return;
-            }
-            Get.back(result: payload);
-            return;
-          }
-          controller.proceedToBookingFromLocationSelection(
-            pickup: pickupController.text.trim(),
-            destinations: destinations,
-            destinationPlaceId: _destinationPlaceId.value,
-            routePickupLat: _routePickupLat.value,
-            routePickupLng: _routePickupLng.value,
-            routeDestinationLat: _routeDestinationLat.value,
-            routeDestinationLng: _routeDestinationLng.value,
-            preferredVehicleTypeId: _preferredVehicleTypeId.value,
-            preferredVehicleName: _preferredVehicleName.value,
-          );
-        },
+        onPressed: locationController.proceedWithBooking,
       );
     });
-  }
-
-  Future<Map<String, dynamic>?> _buildVehicleSelectionEditResult({
-    required String pickupText,
-    required List<String> destinationTexts,
-  }) async {
-    final cleanedDestinations = destinationTexts
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toList();
-    if (pickupText.isEmpty || cleanedDestinations.isEmpty) return null;
-
-    final pickupLatLng =
-        (_routePickupLat.value != null && _routePickupLng.value != null)
-        ? null
-        : await controller.getLatLngFromAddress(pickupText);
-    final pickupLat = _routePickupLat.value ?? pickupLatLng?.latitude;
-    final pickupLng = _routePickupLng.value ?? pickupLatLng?.longitude;
-    if (pickupLat == null || pickupLng == null) return null;
-
-    final resultDestinations = <Map<String, dynamic>>[];
-    for (var i = 0; i < cleanedDestinations.length; i++) {
-      final text = cleanedDestinations[i];
-      double? lat;
-      double? lng;
-      if (i == cleanedDestinations.length - 1) {
-        lat = _routeDestinationLat.value;
-        lng = _routeDestinationLng.value;
-      }
-      if (lat == null || lng == null) {
-        final resolved = await controller.getLatLngFromAddress(text);
-        lat = resolved?.latitude;
-        lng = resolved?.longitude;
-      }
-      if (lat == null || lng == null) return null;
-      resultDestinations.add({'address': text, 'lat': lat, 'lng': lng});
-    }
-
-    return {
-      'pickup': pickupText,
-      'pickupLat': pickupLat,
-      'pickupLng': pickupLng,
-      'destinations': resultDestinations,
-    };
   }
 
   Future<void> _handleStopSelection({
@@ -991,7 +946,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       final result = await controller.homeRepository.getGeocode(
         address: description,
       );
-      Get.back(); // close loading
+      AppDialogs.dismissLoadingDialog();
 
       result.fold(
         (failure) => AppDialogs.showErrorDialog(message: failure.message),
@@ -1026,7 +981,8 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       destinationPlaceId: _destinationPlaceId,
     );
     locationController.confirmSelectionForSegment(_activeSegmentIndex.value);
-    controller.suggestions.clear();
+
+    // controller.suggestions.clear();
   }
 
   Widget _buildSearchContent() {
@@ -1034,8 +990,15 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       behavior: HitTestBehavior.translucent,
       child: Obx(() {
+        locationController.isLoadingInitialContent.value;
         if (controller.isSearching.value) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(
+            child: SpinKitFadingCircle(color: AppColors.primary, size: 50.sp),
+          );
+        }
+        if (locationController.shouldShowPlaceListShimmer &&
+            controller.searchQuery.value.trim().isEmpty) {
+          return LocationSelectionShimmer.savedAndRecentList();
         }
         if (controller.searchQuery.value.trim().isNotEmpty) {
           return _suggestionsList(controller);

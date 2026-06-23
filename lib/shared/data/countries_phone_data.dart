@@ -1791,8 +1791,9 @@ class Countries {
 
   /// `dialCode` like `+255` or `255`.
   static CountryData findByDialCode(String dialCode) {
-    final normalized =
-        dialCode.startsWith('+') ? dialCode : '+${dialCode.replaceAll('+', '')}';
+    final normalized = dialCode.startsWith('+')
+        ? dialCode
+        : '+${dialCode.replaceAll('+', '')}';
     try {
       return all.firstWhere((c) => c.dialCode == normalized);
     } catch (_) {

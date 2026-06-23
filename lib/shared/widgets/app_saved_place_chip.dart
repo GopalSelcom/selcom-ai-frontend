@@ -15,6 +15,7 @@ class AppSavedPlaceChip extends StatelessWidget {
     this.backgroundColor,
     this.borderColor,
     this.iconColor,
+    this.isHighlighted = false,
   });
 
   final String label;
@@ -24,6 +25,7 @@ class AppSavedPlaceChip extends StatelessWidget {
   final Color? backgroundColor;
   final Color? borderColor;
   final Color? iconColor;
+  final bool isHighlighted;
 
   @override
   Widget build(BuildContext context) {
@@ -34,11 +36,15 @@ class AppSavedPlaceChip extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 12.52.w, vertical: 11.h),
         decoration: BoxDecoration(
-          color: backgroundColor ?? AppColors.surfaceSubtle,
+          color: isHighlighted
+              ? AppColors.primaryLight
+              : (backgroundColor ?? AppColors.surfaceSubtle),
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(
-            color: borderColor ?? AppColors.borderWalletCard,
-            width: 0.8,
+            color: isHighlighted
+                ? AppColors.primary.withValues(alpha: 0.55)
+                : (borderColor ?? AppColors.borderWalletCard),
+            width: isHighlighted ? 1.2 : 0.8,
           ),
         ),
         child: Row(

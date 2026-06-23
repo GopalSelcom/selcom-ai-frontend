@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 
 import '../models/agora_config.dart';
 import '../models/call_model.dart';
+import '../utils/agora_call_log.dart';
 
 /// REST client for the call signaling endpoints.
 ///
@@ -25,6 +25,12 @@ class CallApiService {
       InterceptorsWrapper(onRequest: (options, handler) async {
         final headers = await config.getAuthHeaders();
         options.headers.addAll(headers);
+        if (_isCallSignalingPath(options.path)) {
+          agoraCallLog(
+            '[AGORA_API] onRequest ${options.method} ${options.path} '
+            'access_token=${_tokenDebugLabel(headers['access_token'])}',
+          );
+        }
         handler.next(options);
       }),
     );
@@ -35,27 +41,32 @@ class CallApiService {
 
   /// Mints (or refreshes) the local user's Agora token for a ride.
   ///
-  /// Caller flow:  POST tokenPath → join channel.
-  /// Callee flow:  POST tokenPath after accept → join channel (backend uses
-  ///               this same call as the implicit "accept" signal and pushes
-  ///               `call_joined` to the caller).
-  /// Refresh flow: same call when `onTokenPrivilegeWillExpire` fires.
-  Future<TokenMintResponse> mintToken(String rideId) async {
+  /// Caller flow:  POST tokenPath with `intent: initiate` → join channel.
+  /// Callee flow:  POST tokenPath with `intent: answer` after accept → join
+  ///               channel (backend pushes `call_joined` to the caller).
+  /// Refresh flow: same call when `onTokenPrivilegeWillExpire` fires — omit
+  ///               [intent] so the backend does not re-signal answer/initiate.
+  Future<TokenMintResponse> mintToken(
+    String rideId, {
+    String? intent,
+  }) async {
     final path = config.endpoints.tokenPath(rideId);
-    if (kDebugMode) {
-      debugPrint('[AGORA_API] POST $path (mintToken rideId=$rideId)');
-    }
+    agoraCallLog(
+      '[AGORA_API] POST $path (mintToken rideId=$rideId intent=$intent)',
+    );
     try {
-      final res = await _dio.post(path);
-      if (kDebugMode) {
-        debugPrint('[AGORA_API] POST $path -> ${res.statusCode}');
-      }
+      final body = intent != null ? <String, dynamic>{'intent': intent} : null;
+      final res = await _dio.post(path, data: body);
+      agoraCallLog('[AGORA_API] POST $path -> ${res.statusCode}');
       return TokenMintResponse.fromJson(_unwrapData(res));
     } on DioException catch (e) {
-      if (kDebugMode) {
-        debugPrint('[AGORA_API] POST $path FAILED status=${e.response?.statusCode} '
-            'type=${e.type} body=${e.response?.data}');
-      }
+      final sentToken =
+          e.requestOptions.headers['access_token']?.toString() ?? '';
+      agoraCallLog(
+        '[AGORA_API] POST $path FAILED status=${e.response?.statusCode} '
+        'type=${e.type} body=${e.response?.data} '
+        'sent_access_token=${_tokenDebugLabel(sentToken)}',
+      );
       rethrow;
     }
   }
@@ -66,15 +77,13 @@ class CallApiService {
   /// regardless of API outcome (so cancel failures never strand the user).
   Future<void> cancelCall(String rideId) async {
     final path = config.endpoints.cancelPath(rideId);
-    if (kDebugMode) {
-      debugPrint('[AGORA_API] POST $path (cancelCall rideId=$rideId)');
-    }
+    agoraCallLog('[AGORA_API] POST $path (cancelCall rideId=$rideId)');
     try {
       await _dio.post(path);
     } on DioException catch (e) {
-      if (kDebugMode) {
-        debugPrint('[AGORA_API] POST $path FAILED status=${e.response?.statusCode}');
-      }
+      agoraCallLog(
+        '[AGORA_API] POST $path FAILED status=${e.response?.statusCode}',
+      );
       rethrow;
     }
   }
@@ -83,18 +92,17 @@ class CallApiService {
   Future<void> registerVoipToken(String token) async {
     if (token.isEmpty) return;
     final path = config.endpoints.voipTokenPath;
-    if (kDebugMode) {
-      debugPrint('[AGORA_API] PATCH $path (registerVoipToken '
-          'tokenLen=${token.length})');
-    }
+    agoraCallLog(
+      '[AGORA_API] PATCH $path (registerVoipToken tokenLen=${token.length})',
+    );
     try {
       final authHeaders = await config.getAuthHeaders();
       final accessToken = authHeaders['access_token']?.trim() ?? '';
       if (accessToken.isEmpty) {
-        if (kDebugMode) {
-          debugPrint('[AGORA_API] PATCH $path skipped — missing access_token '
-              '(likely pre-login/fresh-user flow)');
-        }
+        agoraCallLog(
+          '[AGORA_API] PATCH $path skipped — missing access_token '
+          '(likely pre-login/fresh-user flow)',
+        );
         return;
       }
       final payload = <String, dynamic>{'voip_push_token': token};
@@ -110,14 +118,12 @@ class CallApiService {
           },
         ),
       );
-      if (kDebugMode) {
-        debugPrint('[AGORA_API] PATCH $path -> ${res.statusCode}');
-      }
+      agoraCallLog('[AGORA_API] PATCH $path -> ${res.statusCode}');
     } on DioException catch (e) {
-      if (kDebugMode) {
-        debugPrint('[AGORA_API] PATCH $path FAILED status=${e.response?.statusCode} '
-            'type=${e.type} body=${e.response?.data}');
-      }
+      agoraCallLog(
+        '[AGORA_API] PATCH $path FAILED status=${e.response?.statusCode} '
+        'type=${e.type} body=${e.response?.data}',
+      );
       rethrow;
     }
   }
@@ -126,6 +132,19 @@ class CallApiService {
     final t = url.trim();
     if (t.endsWith('/')) return t.substring(0, t.length - 1);
     return t;
+  }
+
+  static bool _isCallSignalingPath(String path) {
+    return path.contains('/call/token') ||
+        path.contains('/call/cancel') ||
+        path.contains('voip-token');
+  }
+
+  static String _tokenDebugLabel(String? token) {
+    final t = token?.trim() ?? '';
+    if (t.isEmpty) return 'present=false len=0';
+    final prefixLen = t.length < 8 ? t.length : 8;
+    return 'present=true len=${t.length} prefix=${t.substring(0, prefixLen)}…';
   }
 
   /// Backend success envelope is `{ status_code, message, data: { ... } }`.

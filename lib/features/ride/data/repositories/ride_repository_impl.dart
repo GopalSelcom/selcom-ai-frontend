@@ -1,15 +1,20 @@
-import 'package:dartz/dartz.dart';
 import 'dart:developer' as developer;
+
+import 'package:dartz/dartz.dart';
+
+import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/data/models/responses/rides/active_ride_response.dart';
+import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../../core/errors/insufficient_wallet_balance_exception.dart';
+import '../../../../core/errors/ride_payment_validation_exception.dart';
+import '../../../../core/services/error_reporting/error_reporter.dart';
+import '../../../../shared/utils/ride_payment_validation_messages.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../datasources/ride_remote_data_source.dart';
-import '../../../../core/data/models/ride_model.dart';
 import '../models/destination_update_models.dart';
 import '../models/emergency_contacts_response.dart';
 import '../models/ride_management_models.dart';
-import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
-import '../../../../core/services/error_reporting/error_reporter.dart';
 
 class RideRepositoryImpl implements RideRepository {
   final RideRemoteDataSource remoteDataSource;
@@ -103,7 +108,8 @@ class RideRepositoryImpl implements RideRepository {
   }
 
   @override
-  Future<Either<Failure, DestinationUpdatePreviewModel>> previewUpdateDestination(
+  Future<Either<Failure, DestinationUpdatePreviewModel>>
+  previewUpdateDestination(
     String rideId,
     Map<String, dynamic> destination,
   ) async {
@@ -115,12 +121,13 @@ class RideRepositoryImpl implements RideRepository {
       return Right(result);
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(_exceptionMessage(e)));
     }
   }
 
   @override
-  Future<Either<Failure, DestinationUpdateAppliedModel>> confirmUpdateDestination(
+  Future<Either<Failure, DestinationUpdateAppliedModel>>
+  confirmUpdateDestination(
     String rideId,
     Map<String, dynamic> destination,
   ) async {
@@ -132,7 +139,7 @@ class RideRepositoryImpl implements RideRepository {
       return Right(result);
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(_exceptionMessage(e)));
     }
   }
 
@@ -213,6 +220,22 @@ class RideRepositoryImpl implements RideRepository {
     try {
       final result = await remoteDataSource.validateRidePayment(request);
       return Right(result);
+    } on InsufficientWalletBalanceException catch (e) {
+      return Left(
+        InsufficientWalletBalanceFailure('', details: e.details),
+      );
+    } on RidePaymentValidationException catch (e) {
+      return Left(
+        RidePaymentValidationFailure(
+          RidePaymentValidationMessages.displayMessage(
+            errorCode: e.errorCode,
+            apiMessage: e.message,
+          ),
+          errorCode: e.errorCode,
+          activeRideId: e.activeRideId,
+          activeRideStatus: e.activeRideStatus,
+        ),
+      );
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
@@ -267,8 +290,20 @@ class RideRepositoryImpl implements RideRepository {
       return Right(result);
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(_exceptionMessage(e)));
     }
+  }
+
+  String _exceptionMessage(Object error) {
+    if (error is Exception) {
+      final raw = error.toString();
+      const prefix = 'Exception: ';
+      if (raw.startsWith(prefix)) {
+        return raw.substring(prefix.length);
+      }
+      return raw;
+    }
+    return error.toString();
   }
 
   @override

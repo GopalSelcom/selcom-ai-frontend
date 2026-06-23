@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:pinput/pinput.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
@@ -11,6 +10,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/phone_formatter.dart';
+import '../../../../shared/widgets/app_otp_field.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_standard_bottom_sheet.dart';
 import '../../../../shared/widgets/app_text_field.dart';
@@ -41,19 +41,10 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
 
   @override
   Widget build(BuildContext context) {
-    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
-    final double computedBottomPadding = bottomPadding > 0
-        ? (GetPlatform.isIOS
-              ? (bottomPadding - 12.h).clamp(
-                  10.h > bottomPadding ? bottomPadding : 10.h,
-                  bottomPadding,
-                )
-              : bottomPadding + 12.h)
-        : 12.h;
     return Obx(
       () => AppStandardBottomSheet(
         title: _titleForStep(controller.selcomPesaStep.value),
-        headerTextAlign: TextAlign.start,
+        headerTextAlign: TextAlign.center,
         showHeaderDivider: true,
         maxHeightFactor: 0.92,
         content: AnimatedSize(
@@ -74,12 +65,7 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
                 child: SlideTransition(position: offsetAnimation, child: child),
               );
             },
-            child: Column(
-              children: [
-                _buildStepContent(context, controller.selcomPesaStep.value),
-                SizedBox(height: computedBottomPadding),
-              ],
-            ),
+            child: _buildStepContent(context, controller.selcomPesaStep.value),
           ),
         ),
       ),
@@ -132,7 +118,6 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
         AppPrimaryButton(
           label: AppStrings.continueLabel.tr,
           onPressed: controller.openPhoneInput,
-          showBottomInnerShadow: true,
         ),
       ],
     );
@@ -174,13 +159,12 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
           alignment: Alignment.centerLeft,
           child: Text(
             AppStrings.enterPhoneNumber.tr,
-            style: AppTextStyles.body.copyWith(
-              color: AppColors.textBody,
-              fontWeight: FontWeight.w500,
+            style: AppTextStyles.homeSubtitle.copyWith(
+              color: AppColors.textMutedStrong,
             ),
           ),
         ),
-        SizedBox(height: 8.h),
+        SizedBox(height: 4.h),
 
         Obx(
           () => AppTextField(
@@ -231,7 +215,6 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
                     key: const ValueKey('selcom-pesa-continue-visible'),
                     label: AppStrings.continueLabel.tr,
                     onPressed: controller.onPhoneContinue,
-                    showBottomInnerShadow: true,
                   )
                 : const SizedBox.shrink(
                     key: ValueKey('selcom-pesa-continue-hidden'),
@@ -243,33 +226,6 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
   }
 
   Widget _buildOtpStep(BuildContext context) {
-    final defaultPinTheme = PinTheme(
-      width: 50.w,
-      height: 56.h,
-      textStyle: AppTextStyles.body.copyWith(
-        fontSize: 18.sp,
-        fontWeight: FontWeight.w600,
-        color: AppColors.textHeading,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceSubtle,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: AppColors.borderWalletCard),
-      ),
-    );
-
-    final focusedPinTheme = defaultPinTheme.copyWith(
-      decoration: defaultPinTheme.decoration!.copyWith(
-        border: Border.all(color: AppColors.primary),
-      ),
-    );
-
-    final errorPinTheme = defaultPinTheme.copyWith(
-      decoration: defaultPinTheme.decoration!.copyWith(
-        border: Border.all(color: AppColors.error),
-      ),
-    );
-
     return Column(
       key: const ValueKey(SelcomPesaStep.otp),
       mainAxisSize: MainAxisSize.min,
@@ -288,29 +244,39 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
         ),
         SizedBox(height: 16.h),
         Obx(
-          () => Pinput(
-            length: 6,
-            controller: controller.otpController,
-            autofocus: true,
-            defaultPinTheme: defaultPinTheme,
-            focusedPinTheme: focusedPinTheme,
-            errorPinTheme: errorPinTheme,
-            forceErrorState: controller.otpError.isNotEmpty,
-            errorText: controller.otpError.value,
-            errorTextStyle: AppTextStyles.body.copyWith(
-              color: AppColors.error,
-              fontSize: 13.sp,
-            ),
-            onCompleted: controller.onOtpComplete,
-            onChanged: (_) => controller.otpError.value = '',
-            showCursor: true,
-            cursor: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Container(width: 2.w, height: 24.h, color: AppColors.primary),
-                SizedBox(height: 12.h),
+          () => Column(
+            children: [
+              AppOtpField(
+                length: 6,
+                variant: AppOtpFieldVariant.wallet,
+                controller: controller.otpController,
+                autofocus: true,
+                fieldHeight: 56.h,
+                fieldWidth: 50.w,
+                fieldBorderRadius: 12,
+                fieldFillColor: AppColors.surfaceSubtle,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                hasError: controller.otpError.isNotEmpty,
+                textStyle: AppTextStyles.body.copyWith(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textHeading,
+                ),
+                onCompleted: controller.onOtpComplete,
+                onChanged: (_) => controller.otpError.value = '',
+              ),
+              if (controller.otpError.isNotEmpty) ...[
+                SizedBox(height: 8.h),
+                Text(
+                  controller.otpError.value,
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.body.copyWith(
+                    color: AppColors.error,
+                    fontSize: 13.sp,
+                  ),
+                ),
               ],
-            ),
+            ],
           ),
         ),
 
@@ -399,7 +365,6 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
         AppPrimaryButton(
           label: AppStrings.takeSelfie.tr,
           onPressed: controller.takeSelfie,
-          showBottomInnerShadow: true,
         ),
       ],
     );
@@ -417,17 +382,21 @@ class _StepperItem extends StatelessWidget {
     this.isLast = false,
   });
 
+  static final double _nodeSize = 48.w;
+  static final double _connectorHeight = 32.h;
+
   @override
   Widget build(BuildContext context) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Column(
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: _nodeSize,
+          child: Column(
             children: [
               Container(
-                width: 48.w,
-                height: 48.h,
+                width: _nodeSize,
+                height: _nodeSize,
                 decoration: BoxDecoration(
                   color: AppColors.surfaceSubtle,
                   shape: BoxShape.circle,
@@ -436,55 +405,55 @@ class _StepperItem extends StatelessWidget {
                     width: 1,
                   ),
                 ),
-                child: Center(
-                  child: Text(
-                    step,
-                    style: AppTextStyles.body.copyWith(
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textHeading,
-                      fontSize: 15.sp,
-                      height: 20 / 15,
-                    ),
+                alignment: Alignment.center,
+                child: Text(
+                  step,
+                  style: AppTextStyles.body.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textHeading,
+                    fontSize: 15.sp,
+                    height: 20 / 15,
                   ),
                 ),
               ),
               if (!isLast)
-                Expanded(
-                  child: Container(
-                    width: 10.w,
-                    decoration: const BoxDecoration(
-                      color: AppColors.surfaceSubtle,
-                      border: Border.symmetric(
-                        vertical: BorderSide(
-                          color: AppColors.borderWalletCard,
-                          width: 1,
-                        ),
-                      ),
+                Container(
+                  width: 10.w,
+                  height: _connectorHeight,
+                  decoration: const BoxDecoration(
+                    color: AppColors.surfaceSubtle,
+                    border: Border.symmetric(
+                      vertical: BorderSide(color: AppColors.borderWalletCard),
                     ),
                   ),
                 ),
             ],
           ),
-          SizedBox(width: 16.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: 2.h),
-                Text(
-                  description,
-                  style: AppTextStyles.body.copyWith(
-                    color: AppColors.textBody,
-                    fontSize: 15.sp,
-                    height: 1.4,
+        ),
+        SizedBox(width: 16.w),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: _nodeSize,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    description,
+                    style: AppTextStyles.body.copyWith(
+                      color: AppColors.textBody,
+                      fontSize: 15.sp,
+                      height: 1.4,
+                    ),
                   ),
                 ),
-                if (!isLast) SizedBox(height: 14.h),
-              ],
-            ),
+              ),
+              if (!isLast) SizedBox(height: _connectorHeight),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

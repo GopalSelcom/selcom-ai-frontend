@@ -2,8 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+
+/// Visual style for [AppOtpField].
+enum AppOtpFieldVariant {
+  /// Login OTP — large cells, focus glow, primary complete state.
+  login,
+
+  /// Wallet / Selcom Pesa — compact grey cells, primary focus only, no glow.
+  wallet,
+}
 
 /// Keeps OTP input numeric and restarts entry after a failed verify when full.
 class _OtpDigitsFormatter extends TextInputFormatter {
@@ -69,6 +79,10 @@ class AppOtpField extends StatefulWidget {
   final double? fieldWidth;
   final TextStyle? textStyle;
   final MainAxisAlignment mainAxisAlignment;
+  final bool autofocus;
+  final Color fieldFillColor;
+  final double fieldBorderRadius;
+  final AppOtpFieldVariant variant;
 
   const AppOtpField({
     super.key,
@@ -81,6 +95,10 @@ class AppOtpField extends StatefulWidget {
     this.fieldWidth,
     this.textStyle,
     this.mainAxisAlignment = MainAxisAlignment.spaceBetween,
+    this.autofocus = false,
+    this.fieldFillColor = AppColors.white,
+    this.fieldBorderRadius = 16,
+    this.variant = AppOtpFieldVariant.login,
   });
 
   @override
@@ -114,6 +132,13 @@ class _AppOtpFieldState extends State<AppOtpField> {
     _effectiveController.addListener(_onControllerChanged);
     _filledLength = _onlyDigits(_effectiveController.text).length;
     HardwareKeyboard.instance.addHandler(_handleHardwareKey);
+    if (widget.autofocus) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!_disposed && mounted) {
+          _focusNode.requestFocus();
+        }
+      });
+    }
   }
 
   @override
@@ -209,10 +234,8 @@ class _AppOtpFieldState extends State<AppOtpField> {
   Widget build(BuildContext context) {
     final h = widget.fieldHeight ?? 64.h;
     final w = widget.fieldWidth ?? 64.w;
-    const greyBorder = AppColors.borderDefault;
-    final glowColor = widget.hasError
-        ? AppColors.otpErrorShadow
-        : AppColors.inputFocusShadow;
+    final radius = widget.fieldBorderRadius.r;
+    final isWallet = widget.variant == AppOtpFieldVariant.wallet;
 
     final isFocused = _isFocused;
     final isComplete = !widget.hasError && _filledLength >= widget.length;
@@ -223,19 +246,49 @@ class _AppOtpFieldState extends State<AppOtpField> {
     late final Color activeBorder;
     late final Color selectedBorder;
     late final Color inactiveBorder;
-    if (widget.hasError) {
-      activeBorder = selectedBorder = inactiveBorder = AppColors.otpErrorBorder;
-    } else if (isComplete) {
-      activeBorder = selectedBorder = inactiveBorder = AppColors.primary;
-    } else if (isFocused) {
-      activeBorder = AppColors.primary;
-      selectedBorder = AppColors.primary;
-      inactiveBorder = AppColors.primary;
+    late final bool enableGlow;
+    late final double borderWidth;
+    late final bool showCursor;
+
+    if (isWallet) {
+      enableGlow = false;
+      borderWidth = 1.w;
+      showCursor = true;
+      if (widget.hasError) {
+        activeBorder = selectedBorder = inactiveBorder = AppColors.error;
+      } else if (isFocused) {
+        activeBorder = AppColors.primary;
+        selectedBorder = AppColors.primary;
+        inactiveBorder = AppColors.borderWalletCard;
+      } else {
+        activeBorder = selectedBorder = inactiveBorder =
+            AppColors.borderWalletCard;
+      }
     } else {
-      activeBorder = selectedBorder = inactiveBorder = greyBorder;
+      enableGlow = true;
+      borderWidth = 1.2.w;
+      showCursor = false;
+      const greyBorder = AppColors.borderDefault;
+      if (widget.hasError) {
+        activeBorder = selectedBorder = inactiveBorder =
+            AppColors.otpErrorBorder;
+      } else if (isComplete) {
+        activeBorder = selectedBorder = inactiveBorder = AppColors.primary;
+      } else if (isFocused) {
+        activeBorder = AppColors.primary;
+        selectedBorder = AppColors.primary;
+        inactiveBorder = AppColors.primary;
+      } else {
+        activeBorder = selectedBorder = inactiveBorder = greyBorder;
+      }
     }
 
+    final glowColor = widget.hasError
+        ? AppColors.otpErrorShadow
+        : AppColors.inputFocusShadow;
+
     bool cellGlowsAt(int index) {
+      if (!enableGlow) return false;
       if (widget.hasError) return true;
       return isFocused && !isComplete && index == activeCellIndex;
     }
@@ -245,30 +298,31 @@ class _AppOtpFieldState extends State<AppOtpField> {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          IgnorePointer(
-            child: Row(
-              mainAxisAlignment: widget.mainAxisAlignment,
-              children: List.generate(
-                widget.length,
-                (index) => Container(
-                  width: w,
-                  height: h,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(18.r),
-                    boxShadow: cellGlowsAt(index)
-                        ? [
-                            BoxShadow(
-                              color: glowColor,
-                              blurRadius: 0,
-                              spreadRadius: 4,
-                            ),
-                          ]
-                        : const [],
+          if (enableGlow)
+            IgnorePointer(
+              child: Row(
+                mainAxisAlignment: widget.mainAxisAlignment,
+                children: List.generate(
+                  widget.length,
+                  (index) => Container(
+                    width: w,
+                    height: h,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(radius + 2.r),
+                      boxShadow: cellGlowsAt(index)
+                          ? [
+                              BoxShadow(
+                                color: glowColor,
+                                blurRadius: 0,
+                                spreadRadius: 4,
+                              ),
+                            ]
+                          : const [],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
           PinCodeTextField(
             appContext: context,
             length: widget.length,
@@ -284,19 +338,21 @@ class _AppOtpFieldState extends State<AppOtpField> {
             ],
             animationType: AnimationType.fade,
             mainAxisAlignment: widget.mainAxisAlignment,
-            showCursor: false,
+            showCursor: showCursor,
+            cursorColor: AppColors.primary,
+            cursorWidth: 2.w,
             pinTheme: PinTheme(
               shape: PinCodeFieldShape.box,
-              borderRadius: BorderRadius.circular(16.r),
+              borderRadius: BorderRadius.circular(radius),
               fieldHeight: h,
               fieldWidth: w,
-              activeFillColor: AppColors.white,
-              selectedFillColor: AppColors.white,
-              inactiveFillColor: AppColors.white,
+              activeFillColor: widget.fieldFillColor,
+              selectedFillColor: widget.fieldFillColor,
+              inactiveFillColor: widget.fieldFillColor,
               activeColor: activeBorder,
               selectedColor: selectedBorder,
               inactiveColor: inactiveBorder,
-              borderWidth: 1.2.w,
+              borderWidth: borderWidth,
             ),
             animationDuration: const Duration(milliseconds: 300),
             enableActiveFill: true,

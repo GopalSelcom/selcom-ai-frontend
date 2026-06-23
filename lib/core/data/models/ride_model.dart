@@ -32,6 +32,7 @@ class RideModel extends RideEntity {
     required super.createdAt,
     super.pendingStopsUpdate,
     super.isBookedForOther = false,
+    super.isBookAny = false,
     super.passengerName,
     super.passengerPhone,
     super.pdfLinks,
@@ -89,11 +90,14 @@ class RideModel extends RideEntity {
         : null;
 
     final pdfLinksJson = json['pdf_links'] as List?;
-    final pdfLinks = pdfLinksJson?.map((e) => PdfLinkModel.fromJson(e)).toList();
+    final pdfLinks = pdfLinksJson
+        ?.map((e) => PdfLinkModel.fromJson(e))
+        .toList();
 
     final promoCodeRaw = json['promo_code']?.toString().trim();
-    final promoCodeParsed =
-        (promoCodeRaw == null || promoCodeRaw.isEmpty) ? null : promoCodeRaw;
+    final promoCodeParsed = (promoCodeRaw == null || promoCodeRaw.isEmpty)
+        ? null
+        : promoCodeRaw;
     final promoDiscountParsed = (json['promo_discount'] as num?)?.toInt();
 
     return RideModel(
@@ -141,6 +145,7 @@ class RideModel extends RideEntity {
       createdAt: DateTime.parse(createdAtStr),
       pendingStopsUpdate: pendingStopsUpdate,
       isBookedForOther: json['is_booked_for_other'] ?? false,
+      isBookAny: json['is_book_any'] == true,
       passengerName: json['passenger_name'],
       passengerPhone: json['passenger_phone'],
       pdfLinks: pdfLinks,
@@ -180,6 +185,7 @@ class RideModel extends RideEntity {
     DateTime? createdAt,
     PendingStopsUpdateEntity? pendingStopsUpdate,
     bool? isBookedForOther,
+    bool? isBookAny,
     String? passengerName,
     String? passengerPhone,
     List<PdfLinkEntity>? pdfLinks,
@@ -216,6 +222,7 @@ class RideModel extends RideEntity {
       createdAt: createdAt ?? this.createdAt,
       pendingStopsUpdate: pendingStopsUpdate ?? this.pendingStopsUpdate,
       isBookedForOther: isBookedForOther ?? this.isBookedForOther,
+      isBookAny: isBookAny ?? this.isBookAny,
       passengerName: passengerName ?? this.passengerName,
       passengerPhone: passengerPhone ?? this.passengerPhone,
       pdfLinks: pdfLinks ?? this.pdfLinks,
@@ -396,8 +403,12 @@ class PdfLinkModel extends PdfLinkEntity {
       url: json['url'] ?? '',
       token: json['token'] ?? '',
       originalName: json['original_name'] ?? '',
-      expiresAt: json['expires_at'] != null ? DateTime.tryParse(json['expires_at']) : null,
-      uploadedAt: json['uploaded_at'] != null ? DateTime.tryParse(json['uploaded_at']) : null,
+      expiresAt: json['expires_at'] != null
+          ? DateTime.tryParse(json['expires_at'])
+          : null,
+      uploadedAt: json['uploaded_at'] != null
+          ? DateTime.tryParse(json['uploaded_at'])
+          : null,
     );
   }
 }

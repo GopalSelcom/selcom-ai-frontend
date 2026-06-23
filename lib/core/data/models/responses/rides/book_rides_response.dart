@@ -37,37 +37,35 @@ List<BookRideStop> _stopsFromJson(dynamic value) {
   return out;
 }
 
-BookRideResponse bookRideResponseFromJson(String str) => BookRideResponse.fromJson(json.decode(str));
+BookRideResponse bookRideResponseFromJson(String str) =>
+    BookRideResponse.fromJson(json.decode(str));
 
-String bookRideResponseToJson(BookRideResponse data) => json.encode(data.toJson());
+String bookRideResponseToJson(BookRideResponse data) =>
+    json.encode(data.toJson());
 
 class BookRideResponse {
   int? statusCode;
   String? message;
   RideData? data;
 
-  BookRideResponse({
-    this.statusCode,
-    this.message,
-    this.data,
-  });
+  BookRideResponse({this.statusCode, this.message, this.data});
 
   BookRideResponse copyWith({
     int? statusCode,
     String? message,
     RideData? data,
-  }) =>
-      BookRideResponse(
-        statusCode: statusCode ?? this.statusCode,
-        message: message ?? this.message,
-        data: data ?? this.data,
-      );
-
-  factory BookRideResponse.fromJson(Map<String, dynamic> json) => BookRideResponse(
-    statusCode: json["status_code"],
-    message: json["message"],
-    data: json["data"] == null ? null : RideData.fromJson(json["data"]),
+  }) => BookRideResponse(
+    statusCode: statusCode ?? this.statusCode,
+    message: message ?? this.message,
+    data: data ?? this.data,
   );
+
+  factory BookRideResponse.fromJson(Map<String, dynamic> json) =>
+      BookRideResponse(
+        statusCode: json["status_code"],
+        message: json["message"],
+        data: json["data"] == null ? null : RideData.fromJson(json["data"]),
+      );
 
   Map<String, dynamic> toJson() => {
     "status_code": statusCode,
@@ -77,32 +75,23 @@ class BookRideResponse {
 }
 
 class RideData {
-  Ride? ride;
+  BookRide? ride;
 
-  RideData({
-    this.ride,
-  });
+  RideData({this.ride});
 
-  RideData copyWith({
-    Ride? ride,
-  }) =>
-      RideData(
-        ride: ride ?? this.ride,
-      );
+  RideData copyWith({BookRide? ride}) => RideData(ride: ride ?? this.ride);
 
   /// Book ride API may return either `{ "ride": { ... } }` or the ride
   /// document flattened at the root of `data`.
   factory RideData.fromJson(Map<String, dynamic> json) {
     final nested = json['ride'];
     if (nested is Map<String, dynamic>) {
-      return RideData(ride: Ride.fromJson(nested));
+      return RideData(ride: BookRide.fromJson(nested));
     }
-    return RideData(ride: Ride.fromJson(json));
+    return RideData(ride: BookRide.fromJson(json));
   }
 
-  Map<String, dynamic> toJson() => {
-    "ride": ride?.toJson(),
-  };
+  Map<String, dynamic> toJson() => {"ride": ride?.toJson()};
 }
 
 /// One stop row from `stops` in book/active ride payloads.
@@ -130,7 +119,9 @@ class BookRideStop {
   });
 
   factory BookRideStop.fromJson(Map<String, dynamic> json) => BookRideStop(
-    location: json["location"] == null ? null : Location.fromJson(json["location"]),
+    location: json["location"] == null
+        ? null
+        : Location.fromJson(json["location"]),
     status: json["status"]?.toString(),
     subtaskId: json["subtask_id"]?.toString(),
     arrivedAt: _dateTimeFromJson(json["arrived_at"]),
@@ -154,7 +145,7 @@ class BookRideStop {
   };
 }
 
-class Ride {
+class BookRide {
   FareBreakdown? fareBreakdown;
   dynamic driverId;
   dynamic taskId;
@@ -227,7 +218,7 @@ class Ride {
   int? v;
   int? cancelTime;
 
-  Ride({
+  BookRide({
     this.fareBreakdown,
     this.driverId,
     this.taskId,
@@ -299,15 +290,15 @@ class Ride {
     this.updatedAt,
     this.v,
     this.cancelTime,
-  })  : stops = stops ?? const [],
-        rejectedDrivers = rejectedDrivers ?? const [],
-        blockedDrivers = blockedDrivers ?? const [],
-        feedbackTags = feedbackTags ?? const [],
-        feedbackImages = feedbackImages ?? const [],
-        ratingTags = ratingTags ?? const [],
-        pdfLinks = pdfLinks ?? const [];
+  }) : stops = stops ?? const [],
+       rejectedDrivers = rejectedDrivers ?? const [],
+       blockedDrivers = blockedDrivers ?? const [],
+       feedbackTags = feedbackTags ?? const [],
+       feedbackImages = feedbackImages ?? const [],
+       ratingTags = ratingTags ?? const [],
+       pdfLinks = pdfLinks ?? const [];
 
-  factory Ride.fromJson(Map<String, dynamic> json) => Ride(
+  factory BookRide.fromJson(Map<String, dynamic> json) => BookRide(
     fareBreakdown: json["fare_breakdown"] == null
         ? null
         : FareBreakdown.fromJson(json["fare_breakdown"]),
@@ -368,8 +359,12 @@ class Ride {
     riderId: json["rider_id"]?.toString(),
     vehicleTypeId: json["vehicle_type_id"]?.toString(),
     transid: json["transid"]?.toString(),
-    pickup: json["pickup"] == null ? null : Destination.fromJson(json["pickup"]),
-    destination: json["destination"] == null ? null : Destination.fromJson(json["destination"]),
+    pickup: json["pickup"] == null
+        ? null
+        : Destination.fromJson(json["pickup"]),
+    destination: json["destination"] == null
+        ? null
+        : Destination.fromJson(json["destination"]),
     fareEstimate: (json["fare_estimate"] as num?)?.toInt(),
     distanceKm: json["distance_km"]?.toDouble(),
     durationMinutes: (json["duration_minutes"] as num?)?.toInt(),
@@ -510,28 +505,24 @@ class Destination {
   double? lng;
   String? address;
 
-  Destination({
-    this.location,
-    this.lat,
-    this.lng,
-    this.address,
-  });
+  Destination({this.location, this.lat, this.lng, this.address});
 
   Destination copyWith({
     Location? location,
     double? lat,
     double? lng,
     String? address,
-  }) =>
-      Destination(
-        location: location ?? this.location,
-        lat: lat ?? this.lat,
-        lng: lng ?? this.lng,
-        address: address ?? this.address,
-      );
+  }) => Destination(
+    location: location ?? this.location,
+    lat: lat ?? this.lat,
+    lng: lng ?? this.lng,
+    address: address ?? this.address,
+  );
 
   factory Destination.fromJson(Map<String, dynamic> json) => Destination(
-    location: json["location"] == null ? null : Location.fromJson(json["location"]),
+    location: json["location"] == null
+        ? null
+        : Location.fromJson(json["location"]),
     lat: json["lat"]?.toDouble(),
     lng: json["lng"]?.toDouble(),
     address: json["address"],
@@ -549,27 +540,24 @@ class Location {
   String? type;
   List<double>? coordinates;
 
-  Location({
-    this.type,
-    this.coordinates,
-  });
+  Location({this.type, this.coordinates});
 
-  Location copyWith({
-    String? type,
-    List<double>? coordinates,
-  }) =>
-      Location(
-        type: type ?? this.type,
-        coordinates: coordinates ?? this.coordinates,
-      );
+  Location copyWith({String? type, List<double>? coordinates}) => Location(
+    type: type ?? this.type,
+    coordinates: coordinates ?? this.coordinates,
+  );
 
   factory Location.fromJson(Map<String, dynamic> json) => Location(
     type: json["type"],
-    coordinates: json["coordinates"] == null ? [] : List<double>.from(json["coordinates"]!.map((x) => x?.toDouble())),
+    coordinates: json["coordinates"] == null
+        ? []
+        : List<double>.from(json["coordinates"]!.map((x) => x?.toDouble())),
   );
 
   Map<String, dynamic> toJson() => {
     "type": type,
-    "coordinates": coordinates == null ? [] : List<dynamic>.from(coordinates!.map((x) => x)),
+    "coordinates": coordinates == null
+        ? []
+        : List<dynamic>.from(coordinates!.map((x) => x)),
   };
 }

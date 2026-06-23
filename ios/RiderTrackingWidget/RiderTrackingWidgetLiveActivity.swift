@@ -139,16 +139,21 @@ struct TrackingViewModel {
         self.isRiderInRide = tripPhaseStatus.contains(normalizedStatus)
 
         let isNearZero = etaSeconds <= 0 && !self.isArrived
+
+        // Match [AndroidOrderTrackingManager] displayStatus copy (in-app ride phase messages).
+        let rawDriverName = read("driver_name") ?? ""
+        let trimmedDriverName = rawDriverName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let effectiveDriverName = trimmedDriverName.isEmpty ? "Driver" : trimmedDriverName
         
         switch normalizedStatus {
             case "ride_completed", "completed":
-                self.status = "You have arrived!"
+                self.status = "Arrived at Destination"
             case "near_destination", "neardestination":
-                self.status = isNearZero ? "Destination Nearby" : "Almost There"
+                self.status = isNearZero ? "Destination Nearby" : "You're almost there"
             case "ride_in_progress", "rideinprogress":
-                self.status = isNearZero ? "Destination Nearby" : "On Your Way"
+                self.status = isNearZero ? "Destination Nearby" : "You're on your way with \(effectiveDriverName)"
             case "ride_started", "ridestarted":
-                self.status = isNearZero ? "Destination Nearby" : "Ride Started"
+                self.status = isNearZero ? "Destination Nearby" : "\(effectiveDriverName) has started your ride"
             case "driver_arrived", "driverarrived":
                 self.status = "Driver Arrived"
             case "driver_arriving", "driverarriving":
@@ -261,7 +266,7 @@ struct TrackingViewModel {
                     self.shortEta = "Done"
                 } else {
                     // When time is 0 but not arrived yet
-                    self.eta = isRiderInRide ? "Almost there" : "Arriving"
+                    self.eta = isRiderInRide ? "You're almost there" : "Arriving"
                     self.shortEta = isRiderInRide ? "Near" : "Arr"
                 }
             }

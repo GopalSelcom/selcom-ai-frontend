@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:gal/gal.dart';
 import 'package:get/get.dart';
@@ -34,20 +36,46 @@ class RideDetailsController extends GetxController {
   final bool openedFromCompletionFlow;
 
   late final RideRatingController ratingController;
-  late final bool hasExistingRating;
-  late final bool canShowReviewInput;
+  final isLoadingRideDetails = true.obs;
+
+  bool get hasExistingRating => (ride.riderRating ?? 0) > 0;
+
+  /// Completion-entry should prioritize collecting feedback immediately.
+  /// My Rides keeps backend-driven visibility via showReviewUi.
+  bool get canShowReviewInput => openedFromCompletionFlow
+      ? !hasExistingRating
+      : (ride.status == RideStatus.rideCompleted && ride.showReviewUi);
 
   @override
   void onInit() {
     super.onInit();
-    hasExistingRating = (ride.riderRating ?? 0) > 0;
-    // Completion-entry should prioritize collecting feedback immediately.
-    // My Rides keeps backend-driven visibility via showReviewUi.
-    canShowReviewInput = openedFromCompletionFlow
-        ? !hasExistingRating
-        : (ride.status == RideStatus.rideCompleted && ride.showReviewUi);
     ratingController = _resolveRideRatingController();
-    // Prime rating state so the screen can render review inputs immediately.
+    unawaited(_loadRideDetails());
+  }
+
+  Future<void> _loadRideDetails() async {
+    isLoadingRideDetails.value = true;
+    try {
+      final rideRepository = di.sl<RideRepository>();
+      final result = await rideRepository.getRideDetails(ride.id);
+      result.fold(
+        (failure) => AppDialogs.showErrorDialog(message: failure.message),
+        (freshRide) {
+          ride = freshRide;
+          _primeRatingIfNeeded();
+        },
+      );
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      AppDialogs.showErrorDialog(
+        message: AppStrings.anUnexpectedErrorOccurred.tr,
+      );
+    } finally {
+      isLoadingRideDetails.value = false;
+    }
+  }
+
+  void _primeRatingIfNeeded() {
     if (!hasExistingRating && canShowReviewInput) {
       ratingController.prepareRatingForRide(_toRatingEntity(ride));
     }
@@ -59,8 +87,16 @@ class RideDetailsController extends GetxController {
   }
 
   String get vehicleTypeForImage {
-    final value = (ride.vehicleKey ?? '').trim();
-    return value.isNotEmpty ? value : 'Ride';
+    final candidates = [
+      ride.vehicleKey,
+      ride.vehicleDisplayName,
+      ride.vehicleSnapshot?.vehicleType,
+    ];
+    for (final value in candidates) {
+      final trimmed = (value ?? '').trim();
+      if (trimmed.isNotEmpty) return trimmed;
+    }
+    return 'cab';
   }
 
   String get vehicleImageAsset {
@@ -108,9 +144,8 @@ class RideDetailsController extends GetxController {
     return code.isNotEmpty && d > 0;
   }
 
-  String get promoFareLineTitle => AppStrings.receiptPromoLine
-      .trParams({'code': ride.promoCode!.trim()})
-      .tr;
+  String get promoFareLineTitle =>
+      AppStrings.receiptPromoLine.trParams({'code': ride.promoCode!.trim()}).tr;
 
   String get promoFareLineAmountLabel =>
       '-${CurrencyFormatter.format(ride.promoDiscount!)}';
@@ -136,20 +171,7 @@ class RideDetailsController extends GetxController {
     await WidgetsBinding.instance.endOfFrame;
   }
 
-  /// Pops the loading overlay via root navigator (receipt slip flows only).
   Future<void> _dismissReceiptSlipLoading() async {
-    for (var attempt = 0; attempt < 4; attempt++) {
-      final context = Get.overlayContext ?? Get.context;
-      if (context != null) {
-        final navigator = Navigator.of(context, rootNavigator: true);
-        if (navigator.canPop()) {
-          navigator.pop();
-          return;
-        }
-      }
-      await Future<void>.delayed(Duration.zero);
-      await WidgetsBinding.instance.endOfFrame;
-    }
     AppDialogs.dismissLoadingDialog();
   }
 
@@ -180,7 +202,7 @@ class RideDetailsController extends GetxController {
       await Gal.putImage(file.path);
       await _dismissReceiptSlipLoading();
       AppDialogs.showSuccessDialog(
-        message: 'Receipt saved to your photos gallery.',
+        message: AppStrings.receiptSavedToGallery.tr,
       );
     } catch (e, stackTrace) {
       await _dismissReceiptSlipLoading();
@@ -199,12 +221,9 @@ class RideDetailsController extends GetxController {
       if (ride.pdfLinks != null && ride.pdfLinks!.isNotEmpty) {
         final now = DateTime.now().toUtc();
         // Sort to get the most recent one
-        final sortedLinks = List<PdfLinkEntity>.from(ride.pdfLinks!)
-          ..sort(
-            (a, b) => (b.uploadedAt ?? now).compareTo(
-              a.uploadedAt ?? now,
-            ),
-          );
+        final sortedLinks = List<PdfLinkEntity>.from(
+          ride.pdfLinks!,
+        )..sort((a, b) => (b.uploadedAt ?? now).compareTo(a.uploadedAt ?? now));
         shareUrl = sortedLinks.first.url;
       }
 

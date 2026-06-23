@@ -10,9 +10,11 @@ class StorageKeys {
   static const String fcmToken = 'fcm_token';
   static const String voipToken = 'voip_push_token';
   static const String preferredLanguage = 'preferred_language';
+
   /// ISO 3166-1 alpha-2 (e.g. TZ, IN).
   static const String selectedPhoneCountryId = 'selected_phone_country_id';
   static const String signupCompleted = 'signup_completed';
+  static const String appleAuthProfilePrefix = 'apple_auth_profile_';
   static const String stopsIdempotencyPrefix = 'stops_idem_';
 }
 

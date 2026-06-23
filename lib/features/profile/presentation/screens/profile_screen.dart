@@ -1,20 +1,20 @@
 import 'dart:ui';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 
 import '../../../../core/di/injection_container.dart';
-import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/widgets/svg_picture_asset.dart';
-import '../../../../shared/utils/phone_formatter.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
+import '../../../../shared/widgets/app_profile_user_avatar.dart';
+import '../../../../shared/widgets/app_profile_user_summary.dart';
 import '../controllers/profile_controller.dart';
 import '../widgets/menu_item_widget.dart';
+import '../widgets/profile_screen_layout.dart';
+import '../widgets/profile_screen_shimmer.dart';
 import '../widgets/wallet_summary_card.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -60,40 +60,15 @@ class ProfileScreen extends StatelessWidget {
                         padding: EdgeInsets.fromLTRB(16.w, 18.h, 16.w, 0),
                         child: _buildSettingsList(context),
                       ),
-                      SizedBox(height: 18.h),
+                      SizedBox(
+                        height: ProfileScreenLayout.logoutGapAfterSettings,
+                      ),
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.w),
-                        child: InkWell(
-                          onTap: controller.logout,
-                          borderRadius: BorderRadius.circular(16.r),
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              vertical: 16.h,
-                              horizontal: 16.w,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.white,
-                              border: Border.all(color: AppColors.divider),
-                              borderRadius: BorderRadius.circular(16.r),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Iconsax.logout,
-                                  size: 24.w,
-                                  color: AppColors.error,
-                                ),
-                                SizedBox(width: 7.w),
-                                Text(
-                                  AppStrings.logout.tr,
-                                  style: AppTextStyles.body.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.error,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                        child: Obx(
+                          () => controller.isLoadingProfile.value
+                              ? ProfileScreenShimmer.logoutButton()
+                              : _buildLogoutButton(),
                         ),
                       ),
                       SizedBox(height: 40.h),
@@ -156,16 +131,6 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
           ),
-
-          // Loading Overlay
-          Obx(
-            () => controller.isLoading.value
-                ? Container(
-                    color: AppColors.black.withValues(alpha: 0.26),
-                    child: const Center(child: CircularProgressIndicator()),
-                  )
-                : const SizedBox.shrink(),
-          ),
         ],
       ),
     );
@@ -173,15 +138,14 @@ class ProfileScreen extends StatelessWidget {
 
   Widget _buildNormalModeContent() {
     return Obx(() {
+      if (controller.isLoadingProfile.value) {
+        return ProfileScreenShimmer.headerContent();
+      }
       final user = controller.userModel.value;
       final name = (user?.name ?? '').trim().isNotEmpty
           ? (user?.name ?? '')
           : AppStrings.user.tr;
-      final mobile = user?.mobileNumber != null
-          ? TanzaniaPhoneFormatter.formatInternational(
-              user!.mobileNumber.toString(),
-            )
-          : '';
+      final mobile = controller.displayPhone;
       final balance = controller.walletBalance.value;
       final walletNum = controller.walletNumber.value;
       final avgRating = (user?.goAvgRating ?? 0).toDouble();
@@ -190,118 +154,36 @@ class ProfileScreen extends StatelessWidget {
         key: const ValueKey('normal_mode'),
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // User Info
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
-            child: Row(
-              children: [
-                // Profile Image
-                Container(
-                  width: 60.w,
-                  height: 60.w,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.white, width: 2),
-                    color: AppColors.white.withValues(alpha: 0.1),
-                  ),
-                  child: ClipOval(
-                    child: user?.image != null && user!.image!.isNotEmpty
-                        ? CachedNetworkImage(
-                            imageUrl: user.image!,
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) => const Center(
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                            errorWidget: (context, url, error) => Icon(
-                              Iconsax.user,
-                              color: AppColors.white,
-                              size: 30.w,
-                            ),
-                          )
-                        : Icon(
-                            Iconsax.user,
-                            color: AppColors.white,
-                            size: 30.w,
-                          ),
-                  ),
-                ),
-                SizedBox(width: 16.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              name,
-                              style: AppTextStyles.screenTitle.copyWith(
-                                color: AppColors.white,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 30.sp,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          SizedBox(width: 8.w),
-                          GestureDetector(
-                            onTap: controller.toggleEditMode,
-                            child: Icon(
-                              Iconsax.user_edit,
-                              color: AppColors.white,
-                              size: 24.w,
-                            ),
-                          ),
-                        ],
-                      ),
-                      // SizedBox(height: 4.h),
-                      Text(
-                        mobile,
-                        style: AppTextStyles.body.copyWith(
-                          color: AppColors.white.withValues(alpha: 0.8),
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 16 * (-1 / 100),
-                        ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Row(
-                        children: [
-                          SvgPictureAsset(
-                            AppAssets.icRatingStar,
-                            width: 14.w,
-                            height: 14.w,
-                            color: AppColors.ratingStarActive,
-                            placeholderBuilder: (_) => Icon(
-                              Icons.star,
-                              color: AppColors.ratingStarActive,
-                              size: 14.sp,
-                            ),
-                          ),
-                          SizedBox(width: 4.w),
-                          Text(
-                            avgRating.toStringAsFixed(1),
-                            style: AppTextStyles.homeCaption.copyWith(
-                              color: AppColors.white.withValues(alpha: 0.92),
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+          AppProfileUserSummary(
+            name: name,
+            phone: mobile,
+            rating: avgRating,
+            imageUrl: user?.image,
+            onEditTap: controller.toggleEditMode,
           ),
 
           // Wallet Card
           Padding(
-            padding: EdgeInsets.fromLTRB(17.w, 16.h, 14.w, 12.h),
-            child: WalletSummaryCard(balance: balance, walletNumber: walletNum),
+            padding: ProfileScreenLayout.walletPadding,
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(27.r),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(27.r),
+                onTap: controller.isLoadingWallet.value
+                    ? null
+                    : controller.openWallet,
+                child: SizedBox(
+                  height: ProfileScreenLayout.walletCardHeight,
+                  child: WalletSummaryCard(
+                    balance: balance,
+                    walletNumber: walletNum,
+                    currencyCode: controller.walletCurrency.value,
+                    isLoading: controller.isLoadingWallet.value,
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       );
@@ -315,60 +197,12 @@ class ProfileScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Centered Profile Image with Edit Option
-          Stack(
-            children: [
-              Container(
-                width: 100.w,
-                height: 100.w,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.white, width: 3),
-                  color: AppColors.white.withValues(alpha: 0.2),
-                ),
-                child: ClipOval(
-                  child: controller.pickedImage.value != null
-                      ? Image.file(
-                          controller.pickedImage.value!,
-                          fit: BoxFit.cover,
-                        )
-                      : controller.userModel.value?.image != null &&
-                            controller.userModel.value!.image!.isNotEmpty
-                      ? CachedNetworkImage(
-                          imageUrl: controller.userModel.value!.image!,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => const Center(
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                          errorWidget: (context, url, error) => Icon(
-                            Iconsax.user,
-                            color: AppColors.white,
-                            size: 50.w,
-                          ),
-                        )
-                      : Icon(Iconsax.user, color: AppColors.white, size: 50.w),
-                ),
-              ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: GestureDetector(
-                  onTap: controller.pickProfileImage,
-                  child: Container(
-                    padding: EdgeInsets.all(6.w),
-                    decoration: const BoxDecoration(
-                      color: AppColors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Iconsax.camera,
-                      color: AppColors.primary,
-                      size: 18.w,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+          AppProfileUserAvatar(
+            size: 100.w,
+            imageUrl: controller.userModel.value?.image,
+            imageFile: controller.pickedImage.value,
+            showCameraBadge: true,
+            onCameraTap: controller.pickProfileImage,
           ),
           SizedBox(height: 32.h),
 
@@ -412,7 +246,7 @@ class ProfileScreen extends StatelessWidget {
         Text(
           label,
           style: AppTextStyles.caption.copyWith(
-            color: AppColors.white,
+            color: AppColors.black,
             fontSize: 12.sp,
           ),
         ),
@@ -423,8 +257,9 @@ class ProfileScreen extends StatelessWidget {
           keyboardType: isPhone ? TextInputType.phone : TextInputType.name,
           textInputAction: textInputAction,
           onSubmitted: onSubmitted,
+          cursorColor: AppColors.black,
           style: AppTextStyles.screenTitle.copyWith(
-            color: AppColors.white,
+            color: AppColors.black,
             fontSize: 30.sp,
             fontWeight: FontWeight.w800,
             letterSpacing: -1.0,
@@ -435,12 +270,12 @@ class ProfileScreen extends StatelessWidget {
             contentPadding: EdgeInsets.only(bottom: 8.h),
             enabledBorder: UnderlineInputBorder(
               borderSide: BorderSide(
-                color: AppColors.white.withValues(alpha: 0.3),
+                color: AppColors.black.withValues(alpha: 0.3),
                 width: 1.0,
               ),
             ),
             focusedBorder: const UnderlineInputBorder(
-              borderSide: BorderSide(color: AppColors.white, width: 2.0),
+              borderSide: BorderSide(color: AppColors.black, width: 2.0),
             ),
           ),
         ),
@@ -448,16 +283,59 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildLogoutButton() {
+    return InkWell(
+      onTap: controller.logout,
+      borderRadius: BorderRadius.circular(
+        ProfileScreenLayout.logoutBorderRadius,
+      ),
+      child: Container(
+        height: ProfileScreenLayout.logoutButtonHeight,
+        padding: EdgeInsets.symmetric(
+          vertical: ProfileScreenLayout.logoutVerticalPadding,
+          horizontal: ProfileScreenLayout.logoutHorizontalPadding,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          border: Border.all(color: AppColors.divider),
+          borderRadius: BorderRadius.circular(
+            ProfileScreenLayout.logoutBorderRadius,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(Iconsax.logout, size: 24.w, color: AppColors.error),
+            SizedBox(width: 7.w),
+            Text(
+              AppStrings.logout.tr,
+              style: AppTextStyles.body.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.error,
+                height: 20 / 15,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildSettingsList(BuildContext context) {
     return Container(
-      padding: EdgeInsets.fromLTRB(10.w, 19.h, 10.w, 10.h),
+      padding: ProfileScreenLayout.settingsContainerPadding,
       decoration: BoxDecoration(
         color: AppColors.pageBackground,
         border: Border.all(color: AppColors.divider),
         borderRadius: BorderRadius.circular(16.r),
       ),
-      child: Obx(
-        () => Column(
+      child: Obx(() {
+        final menuCount = controller.visibleMenuItemCount;
+        if (controller.isLoadingProfile.value) {
+          return ProfileScreenShimmer.settingsMenu(itemCount: menuCount);
+        }
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             MenuItemWidget(
               icon: Iconsax.clock,
@@ -465,18 +343,19 @@ class ProfileScreen extends StatelessWidget {
               onTap: controller.openMyRides,
             ),
             MenuItemWidget(
-              icon: Iconsax.card,
-              title: AppStrings.payment.tr,
-              onTap: controller.openPaymentMethods,
-            ),
-            MenuItemWidget(
               icon: Iconsax.message_question,
               title: AppStrings.help.tr,
               onTap: controller.openContactUs,
             ),
+            if (controller.showSafetyOption.value)
+              MenuItemWidget(
+                icon: Iconsax.security_user4,
+                title: AppStrings.safety.tr,
+                onTap: controller.openSafety,
+              ),
             MenuItemWidget(
               icon: Iconsax.shield_tick,
-              title: AppStrings.safetyAndPrivacy.tr,
+              title: AppStrings.privacyPolicy.tr,
               onTap: controller.openPrivacyPolicy,
             ),
             MenuItemWidget(
@@ -493,8 +372,8 @@ class ProfileScreen extends StatelessWidget {
                 showDivider: false,
               ),
           ],
-        ),
-      ),
+        );
+      }),
     );
   }
 }

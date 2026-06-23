@@ -8,9 +8,6 @@ class SaveUserAdditionalDetailsRequest {
   });
 
   Map<String, dynamic> toJson() {
-    return {
-      'name': name,
-      'emailId': emailId,
-    };
+    return {'name': name, 'emailId': emailId};
   }
 }

@@ -5,12 +5,14 @@ class FareEstimateModel {
   final double distanceKm;
   final int durationMin;
   final RouteGeometry? routeGeometry;
+  final BookAnyEstimate? bookAny;
 
   FareEstimateModel({
     required this.estimates,
     required this.distanceKm,
     required this.durationMin,
     this.routeGeometry,
+    this.bookAny,
   });
 
   factory FareEstimateModel.fromResponse(FareEstimateResponseModel response) {
@@ -31,6 +33,7 @@ class FareEstimateModel {
       distanceKm: distance,
       durationMin: duration,
       routeGeometry: data?.routeGeometry,
+      bookAny: data?.bookAny,
     );
   }
 

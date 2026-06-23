@@ -3,19 +3,19 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/constants/app_assets.dart';
-import '../../../../core/constants/ride_stop_limits.dart';
-import '../../../../core/routes/app_routes.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
+import '../../../../core/localization/app_strings.dart';
+import '../../../../core/routes/app_routes.dart';
+import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/widgets/svg_picture_asset.dart';
-import '../../../../shared/utils/currency_formatter.dart';
-import '../../../../shared/utils/app_dialogs.dart';
-import '../../../../shared/widgets/app_primary_button.dart';
-import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/currency_formatter.dart';
+import '../../../../shared/widgets/app_back_button.dart';
+import '../../../../shared/widgets/app_primary_button.dart';
 import '../controllers/driver_accepted_controller.dart';
-import '../../../../core/localization/app_strings.dart';
 
 class StopEditorScreen extends StatefulWidget {
   const StopEditorScreen({super.key});
@@ -50,10 +50,9 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
         : <String, dynamic>{};
     _isDestinationEditor = args['editorMode'] == 'destination';
     final ride = args['ride'] as RideEntity?;
-    final destAddr = controller.destinationAddress.trim().toLowerCase();
-    final confirmedStops = (ride?.stops ?? [])
-        .where((s) => s.address.trim().toLowerCase() != destAddr)
-        .toList();
+    final confirmedStops = controller.mapIntermediateStops.isNotEmpty
+        ? controller.mapIntermediateStops
+        : (ride?.stops ?? const <RideStopEntity>[]);
 
     if (controller.stopUpdateWorkingStops.isNotEmpty) {
       // Use recovered stops if available
@@ -96,11 +95,12 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
   }
 
   void _addStop() async {
-    if (_stops.length >= RideStopLimits.maxIntermediateStops) {
+    if (_stops.length >= controller.maxIntermediateStops) {
       AppDialogs.showErrorDialog(
         title: AppStrings.error.tr,
-        message:
-            'You can add up to ${RideStopLimits.maxIntermediateStops} stops only.',
+        message: AppStrings.maxStopsOnly.trParams({
+          'count': '${controller.maxIntermediateStops}',
+        }),
       );
       return;
     }
@@ -117,7 +117,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
             index: _stops.length,
             lat: (result['lat'] ?? 0.0).toDouble(),
             lng: (result['lng'] ?? 0.0).toDouble(),
-            address: result['address'] ?? 'Selected Location',
+            address: result['address'] ?? AppStrings.selectedLocation.tr,
             status: 'pending',
           ),
         );
@@ -153,45 +153,68 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
       final selected = _selectedDestination;
       if (selected == null) return;
       setState(() => _isSaving = true);
-      if (controller.destinationUpdatePreview.value == null) {
-        await controller.previewDropLocationUpdate(selected);
-      } else {
-        final ok = await controller.applyDropLocationUpdate(selected);
-        if (ok) {
-          // Close any progress sheet first, then close editor screen.
-          if (Get.isBottomSheetOpen ?? false) {
-            Get.back();
+      var popEditorOnSuccess = false;
+      try {
+        await Loader.run(() async {
+          if (controller.destinationUpdatePreview.value == null) {
+            await controller.previewDropLocationUpdate(selected);
+          } else {
+            popEditorOnSuccess = await controller.applyDropLocationUpdate(
+              selected,
+            );
           }
-          Get.back();
-          return;
+        });
+        // Pop after Loader.run — Get.back inside the loader task closes the
+        // overlay dialog, not this screen.
+        if (popEditorOnSuccess && mounted) {
+          await _popChangeDropLocationEditor();
+          await controller.onChangeDropLocationEditorClosedAfterConfirm();
         }
+      } finally {
+        if (mounted) setState(() => _isSaving = false);
       }
-      setState(() => _isSaving = false);
       return;
     }
 
-    if (controller.stopUpdatePreview.value == null) {
-      setState(() => _isSaving = true);
-      await controller.previewStopsUpdate(_stops);
-      setState(() => _isSaving = false);
-    } else {
-      setState(() => _isSaving = true);
-      await controller.applyStopsUpdate(_stops);
-      setState(() => _isSaving = false);
-      if (controller.stopUpdateApplied.value != null) {
-        Get.back(); // Return only on success
+    setState(() => _isSaving = true);
+    var popEditorOnSuccess = false;
+    try {
+      await Loader.run(() async {
+        if (controller.stopUpdatePreview.value == null) {
+          await controller.previewStopsUpdate(_stops);
+        } else {
+          popEditorOnSuccess = await controller.applyStopsUpdate(_stops);
+        }
+      });
+      if (popEditorOnSuccess && mounted) {
+        await _popStopEditor();
+        await controller.onStopEditorClosedAfterConfirm();
       }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
+  }
+
+  Future<void> _popChangeDropLocationEditor() async {
+    if (Get.currentRoute != AppRoutes.changeDropLocationEditor) return;
+    Navigator.of(context).pop(true);
+    await WidgetsBinding.instance.endOfFrame;
+  }
+
+  Future<void> _popStopEditor() async {
+    if (Get.currentRoute != AppRoutes.stopEditor) return;
+    Navigator.of(context).pop(true);
+    await WidgetsBinding.instance.endOfFrame;
   }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap:
-          () {}, // Prevents global unfocus handler from intercepting taps on this screen
+      onTap: () {},
+      // Prevents global unfocus handler from intercepting taps on this screen
       behavior: HitTestBehavior.translucent,
       child: Scaffold(
-        backgroundColor: AppColors.pageBackground,
+        backgroundColor: AppColors.cardBackground,
         appBar: AppBar(
           title: Text(
             _isDestinationEditor
@@ -213,7 +236,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                 children: [
                   if (_isDestinationEditor) ...[
                     _buildStaticPoint(
-                      'Current Destination',
+                      AppStrings.currentDestination.tr,
                       controller.destinationAddress,
                       AppColors.mapDropMarkerGreen,
                     ),
@@ -221,14 +244,14 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                         .trim()
                         .isNotEmpty)
                       _buildStaticPoint(
-                        'New Destination',
+                        AppStrings.newDestination.tr,
                         _selectedDestination?['address']?.toString() ?? '',
-                        AppColors.primary,
+                        AppColors.secondary,
                       ),
                     _buildChangeDropLocationButton(),
                   ] else ...[
                     _buildStaticPoint(
-                      'Pickup Point',
+                      AppStrings.pickupPoint.tr,
                       controller.pickupAddress,
                       AppColors.mapPickupMarkerBlue,
                       isPickup: true,
@@ -276,7 +299,9 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Stop ${index + 1}',
+                                        AppStrings.stopNumber.trParams({
+                                          'number': '${index + 1}',
+                                        }),
                                         style: AppTextStyles.caption.copyWith(
                                           fontWeight: FontWeight.w600,
                                           color: AppColors.primary,
@@ -313,7 +338,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                     ),
                     _buildAddStopButton(),
                     _buildStaticPoint(
-                      'Destination',
+                      AppStrings.destination.tr,
                       controller.destinationAddress,
                       AppColors.mapDropMarkerGreen,
                     ),
@@ -338,11 +363,11 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                   return AppPrimaryButton(
                     label: _isDestinationEditor
                         ? (controller.destinationUpdatePreview.value == null
-                              ? 'Update Destination'
-                              : 'Confirm & Update')
+                              ? AppStrings.updateDestination.tr
+                              : AppStrings.confirmAndUpdate.tr)
                         : (controller.stopUpdatePreview.value == null
-                              ? 'Update Ride'
-                              : 'Confirm & Update'),
+                              ? AppStrings.updateRide.tr
+                              : AppStrings.confirmAndUpdate.tr),
                     onPressed: _isSaving ? null : _onSave,
                     isLoading: _isSaving,
                   );
@@ -439,7 +464,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'New Estimated Fare:',
+                  AppStrings.newEstimatedFare.tr,
                   style: AppTextStyles.homeSubtitle.copyWith(fontSize: 14.sp),
                 ),
                 Text(
@@ -453,7 +478,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Fare Difference:',
+                  AppStrings.fareDifference.tr,
                   style: AppTextStyles.homeCaption.copyWith(fontSize: 12.sp),
                 ),
                 Container(
@@ -480,40 +505,44 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
   }
 
   Widget _buildAddStopButton() {
+    final atMaxStops = _stops.length >= controller.maxIntermediateStops;
     return Padding(
       padding: EdgeInsets.only(bottom: 12.h),
-      child: InkWell(
-        onTap: _addStop,
-        borderRadius: BorderRadius.circular(AppRadius.button),
-        child: Container(
-          padding: EdgeInsets.all(12.w),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.button),
-            border: Border.all(color: AppColors.primary),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SvgPictureAsset(
-                AppAssets.locationIcAdd,
-                width: 18.w,
-                height: 18.w,
-                color: AppColors.primary,
-                placeholderBuilder: (_) => Icon(
-                  Icons.add_circle,
+      child: Opacity(
+        opacity: atMaxStops ? 0.45 : 1.0,
+        child: InkWell(
+          onTap: atMaxStops ? null : _addStop,
+          borderRadius: BorderRadius.circular(AppRadius.button),
+          child: Container(
+            padding: EdgeInsets.all(12.w),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppRadius.button),
+              border: Border.all(color: AppColors.primary),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SvgPictureAsset(
+                  AppAssets.locationIcAdd,
+                  width: 18.w,
+                  height: 18.w,
                   color: AppColors.primary,
-                  size: 20.sp,
+                  placeholderBuilder: (_) => Icon(
+                    Icons.add_circle,
+                    color: AppColors.primary,
+                    size: 20.sp,
+                  ),
                 ),
-              ),
-              SizedBox(width: 8.w),
-              Text(
-                'Add Stop',
-                style: AppTextStyles.button.copyWith(
-                  color: AppColors.primary,
-                  fontSize: 14.sp,
+                SizedBox(width: 8.w),
+                Text(
+                  AppStrings.addStop.tr,
+                  style: AppTextStyles.button.copyWith(
+                    color: AppColors.primary,
+                    fontSize: 14.sp,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -553,7 +582,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'New Estimated Fare:',
+                  AppStrings.newEstimatedFare.tr,
                   style: AppTextStyles.homeSubtitle.copyWith(fontSize: 14.sp),
                 ),
                 Text(
@@ -567,7 +596,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Fare Difference:',
+                  AppStrings.fareDifference.tr,
                   style: AppTextStyles.homeCaption.copyWith(fontSize: 12.sp),
                 ),
                 Container(
@@ -614,7 +643,7 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
                   SizedBox(width: 6.w),
                   Expanded(
                     child: Text(
-                      'Fare increase will require a payment authorization.',
+                      AppStrings.fareIncreasePaymentAuthorization.tr,
                       style: AppTextStyles.caption.copyWith(
                         color: AppColors.warning,
                       ),
@@ -640,9 +669,9 @@ class _StopEditorScreenState extends State<StopEditorScreen> {
       child: Container(
         padding: EdgeInsets.all(12.w),
         decoration: BoxDecoration(
-          color: AppColors.pageBackground,
+          color: AppColors.surfaceSubtle,
           borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: AppColors.shade5.withValues(alpha: 0.5)),
+          border: Border.all(color: AppColors.borderWalletCard),
         ),
         child: Row(
           children: [

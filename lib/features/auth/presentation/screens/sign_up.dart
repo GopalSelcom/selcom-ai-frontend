@@ -35,13 +35,16 @@ class SignUpScreen extends GetView<SignUpController> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Obx(
-                () => AppPrimaryButton(
-                  label: AppStrings.submit.tr,
-                  isLoading: controller.isLoading.value,
-                  onPressed: controller.canSubmit
-                      ? controller.submitAdditionalDetails
-                      : null,
-                ),
+                () {
+                  if (!controller.canSubmit) {
+                    return const SizedBox.shrink();
+                  }
+                  return AppPrimaryButton(
+                    label: AppStrings.submit.tr,
+                    isLoading: controller.isLoading.value,
+                    onPressed: controller.submitAdditionalDetails,
+                  );
+                },
               ),
               Obx(
                 () => controller.errorMessage.value.trim().isEmpty
@@ -115,12 +118,11 @@ class SignUpScreen extends GetView<SignUpController> {
                       AppTextField(
                         enableEnhancedStyle: true,
                         label: AppStrings.email.tr,
-                        hintText: AppStrings.enterYourEmailOptional.tr,
+                        hintText: AppStrings.enterYourEmail.tr,
                         controller: controller.emailController,
                         keyboardType: TextInputType.emailAddress,
                         textColor: AppColors.primary,
-                        errorText:
-                            controller.emailController.text.trim().isNotEmpty
+                        errorText: controller.submitted.value
                             ? controller.emailError
                             : null,
                         onChanged: controller.onEmailChanged,

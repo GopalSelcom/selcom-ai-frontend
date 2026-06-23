@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart';
+import 'dart:io';
+
 import 'package:get/get.dart';
 
 import 'controllers/call_controller.dart';
@@ -8,6 +9,8 @@ import 'services/call_api_service.dart';
 import 'services/notification_service.dart';
 import 'ui/screens/active_call_screen.dart';
 import 'ui/screens/incoming_call_screen.dart';
+import 'utils/agora_call_log.dart';
+import 'utils/full_screen_call_permission_prompt.dart';
 
 /// Entry-point facade. Host apps call [AgoraCalling.init] once, then resolve
 /// the controller through `Get.find<CallController>()`.
@@ -34,8 +37,12 @@ class AgoraCalling {
   /// So: instantiate notif, register controller (which lazily subscribes when
   /// `bootstrap()` runs), THEN tell notif to start fanning events.
   static Future<void> init(AgoraCallingConfig config) async {
-    if (_initialized) return;
+    if (_initialized) {
+      killStateCallLog('COLD_START', 'AgoraCalling.init skipped — already initialized');
+      return;
+    }
     _initialized = true;
+    killStateCallLog('COLD_START', 'AgoraCalling.init starting role=${config.localRole}');
 
     final notif = AgoraCallingNotificationService(config);
     final api = CallApiService(config: config);
@@ -54,12 +61,13 @@ class AgoraCalling {
     );
     Get.put<CallController>(controller, permanent: true);
 
-    // Subscribe FIRST — see the doc-comment above for the rationale.
+    killStateCallLog('COLD_START', 'CallController.bootstrap starting (CallKit replay listener)');
     await controller.bootstrap();
+    killStateCallLog('COLD_START', 'CallController.bootstrap done');
     await notif.initialize();
+    killStateCallLog('COLD_START', 'AgoraCalling.init complete — FCM foreground listeners ready');
   }
 
-  /// Routes the host app must register on its `GetMaterialApp.getPages`.
   static List<GetPage<dynamic>> routes() {
     return [
       GetPage(
@@ -81,46 +89,66 @@ class AgoraCalling {
 
   static CallController get controller => Get.find<CallController>();
 
-  /// Registers the iOS PushKit VoIP token with the backend (PATCH to the
-  /// configured `voipTokenPath`). Idempotent — host can call repeatedly.
+  /// Gates Android permissions needed for **killed / background** incoming calls.
   ///
-  /// Host apps wire their PushKit `didUpdate credentials` delegate to forward
-  /// the token here. See `brain/docs/AGORA-FRONTEND-GUIDE.md` § 6.5.
+  /// Must run after [runApp] when an Activity exists (host calls from Home).
+  ///
+  /// **1. POST_NOTIFICATIONS (Android 13+)** — system Allow/Deny dialog.
+  /// **2. Full-screen intent (Android 14+ only)** — in-app explain dialog first;
+  /// Settings opens only when the user taps **Open Settings**.
+  static Future<void> ensureAndroidCallPermissions() async {
+    if (!Platform.isAndroid) {
+      killStateCallLog('COLD_START', 'call permissions skipped — not Android');
+      return;
+    }
+    if (!_initialized) {
+      killStateCallLog(
+        'COLD_START',
+        'call permissions skipped — AgoraCalling not initialized yet',
+      );
+      return;
+    }
+    final hostUi = Get.find<AgoraCallingConfig>().ensureCallPermissionsUi;
+    if (hostUi == null) {
+      killStateCallLog('COLD_START', 'call permissions skipped — no host UI');
+      return;
+    }
+    killStateCallLog('COLD_START', 'call permissions — host UI');
+    await hostUi();
+  }
+
+  /// Whether Android full-screen incoming-call intent is allowed (14+).
+  static Future<bool> isFullScreenIntentGranted() {
+    return FullScreenCallPermissionPrompt.isGranted();
+  }
+
+  /// Opens the system screen to enable full-screen notifications for calls.
+  static Future<void> openFullScreenIntentSettings() {
+    return FullScreenCallPermissionPrompt.openSettings();
+  }
+
   static Future<void> registerVoipToken(String token) async {
     if (!_initialized) {
-      if (kDebugMode) {
-        debugPrint('[AGORA_API] registerVoipToken skipped — package not yet '
-            'initialized (call AgoraCalling.init first)');
-      }
+      agoraCallLog('[AGORA_API] registerVoipToken skipped — package not yet '
+          'initialized (call AgoraCalling.init first)');
       return;
     }
     if (token.isEmpty) {
-      if (kDebugMode) {
-        debugPrint('[AGORA_API] registerVoipToken skipped — empty token');
-      }
+      agoraCallLog('[AGORA_API] registerVoipToken skipped — empty token');
       return;
     }
     final api = Get.find<CallApiService>();
     final cfg = Get.find<AgoraCallingConfig>();
-    if (kDebugMode) {
-      debugPrint('[AGORA_API] registerVoipToken len=${token} '
-          'prefix=${token.substring(0, token.length < 8 ? token.length : 8)}…');
-    }
+    agoraCallLog('[AGORA_API] registerVoipToken len=${token.length} '
+        'prefix=${token.substring(0, token.length < 8 ? token.length : 8)}…');
     try {
       await api.registerVoipToken(token);
-      if (kDebugMode) {
-        debugPrint('[AGORA_API] registerVoipToken OK — backend should now '
-            'have a VoIP token for this user');
-      }
+      agoraCallLog('[AGORA_API] registerVoipToken OK — backend should now '
+          'have a VoIP token for this user');
     } catch (e, st) {
-      // Don't rethrow — the host can retry on the next boot — but DO log
-      // loudly so a missing token registration doesn't silently break iOS
-      // incoming calls (the most common cause of "no ring on iOS").
-      if (kDebugMode) {
-        debugPrint('[AGORA_API] registerVoipToken FAILED — backend will not '
-            'have a VoIP token, iOS incoming calls in background/killed state '
-            'WILL NOT ring. error=$e\n$st');
-      }
+      agoraCallLog('[AGORA_API] registerVoipToken FAILED — backend will not '
+          'have a VoIP token, iOS incoming calls in background/killed state '
+          'WILL NOT ring. error=$e\n$st');
     }
     final hook = cfg.onVoipTokenChanged;
     if (hook != null) {
@@ -130,9 +158,6 @@ class AgoraCalling {
     }
   }
 
-  /// Convenience: forwards an externally-received `incoming_call` payload
-  /// (e.g. from the host app's iOS PushKit bridge) into the package as if it
-  /// arrived via FCM. Use this only when bypassing the FCM listener path.
   static void dispatchExternalIncomingCall(Map<String, dynamic> data) {
     if (!_initialized) return;
     final notif = Get.find<AgoraCallingNotificationService>();

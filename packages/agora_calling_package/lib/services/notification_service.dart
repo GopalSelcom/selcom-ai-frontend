@@ -2,15 +2,48 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_callkit_incoming/entities/entities.dart';
 import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/agora_config.dart';
-import '../models/call_model.dart';
+import '../utils/agora_call_log.dart';
 import '../utils/constants.dart';
+
+/// Shared CallStyle params for incoming calls (foreground iOS + FCM background).
+///
+/// Android incoming-call surfaces by app state:
+/// - **Foreground:** in-app [IncomingCallScreen] only (no duplicate CallStyle).
+/// - **Background / killed:** [FlutterCallkitIncoming.showCallkitIncoming] →
+///   CallStyle notification with Accept/Decline (same path for both states).
+///
+/// [isShowFullLockedScreen]: asks the plugin to use full-screen intent on the
+/// lock screen. Requires [USE_FULL_SCREEN_INTENT] in manifest; on Android 14+
+/// the user must also enable "Full screen notifications" in app Settings.
+/// When disabled by the user, notification + buttons still work on an unlocked phone.
+const AndroidParams _incomingAndroidParams = AndroidParams(
+  isCustomNotification: true,
+  isShowLogo: false,
+  isShowCallID: false,
+  ringtonePath: 'system_ringtone_default',
+  backgroundColor: '#0955fa',
+  actionColor: '#4CAF50',
+  textColor: '#ffffff',
+  textAccept: 'Accept',
+  textDecline: 'Decline',
+  incomingCallNotificationChannelName: 'Incoming Calls',
+  missedCallNotificationChannelName: 'Missed Calls',
+  isShowFullLockedScreen: true,
+  isImportant: true,
+);
+
+/// After `showCallkitIncoming` the FCM background isolate must stay alive long
+/// enough for the native broadcast receiver to post the CallStyle notification.
+/// If the headless FlutterEngine detaches first, `CallkitNotificationManager`
+/// is torn down and the incoming UI is silently dropped (killed-state bug).
+const Duration _bgCallkitEngineKeepAlive = Duration(milliseconds: 2500);
 
 /// Channel id for non-ringing call status updates (e.g. call_joined toasts).
 /// Incoming-call ringing UI is owned by `flutter_callkit_incoming` on both
@@ -26,25 +59,6 @@ const String _statusChannelId = 'go_call_status';
 /// `actionCallAccept` events that race a duplicate `joinChannel`.
 const Duration _pushDedupWindow = Duration(seconds: 10);
 
-/// Top-level FCM background-handler the host must register BEFORE `runApp`:
-///
-/// ```dart
-/// @pragma('vm:entry-point')
-/// Future<void> myFirebaseBg(RemoteMessage m) async {
-///   await Firebase.initializeApp();
-///   await AgoraCallingNotificationService.firebaseBackgroundHandler(
-///     m,
-///     iosCallKitIconName: 'CallKitLogo',
-///     callKitCallIdNamespace: 'agora-call:',
-///     backgroundCallKitAppName: 'My App',
-///   );
-/// }
-/// FirebaseMessaging.onBackgroundMessage(myFirebaseBg);
-/// ```
-///
-/// Pass the same [iosCallKitIconName], [callKitCallIdNamespace], and
-/// [backgroundCallKitAppName] you use in [AgoraCallingConfig] — the background
-/// isolate cannot read GetX / [AgoraCalling.init] config.
 @pragma('vm:entry-point')
 Future<void> _agoraCallingBackgroundHandler(
   RemoteMessage message, {
@@ -52,12 +66,17 @@ Future<void> _agoraCallingBackgroundHandler(
   String callKitCallIdNamespace = 'agora-call:',
   String backgroundCallKitAppName = 'Selcom Go',
 }) async {
+  killStateCallLog(
+    'CALLKIT',
+    'agora background handler entered messageId=${message.messageId}',
+  );
   await AgoraCallingNotificationService._showFromBackground(
     message,
     iosCallKitIconName: iosCallKitIconName,
     callKitCallIdNamespace: callKitCallIdNamespace,
     backgroundCallKitAppName: backgroundCallKitAppName,
   );
+  killStateCallLog('CALLKIT', 'agora background handler exited');
 }
 
 /// Push payload shape emitted to the controller.
@@ -81,19 +100,10 @@ class AgoraCallingNotificationService {
   final StreamController<IncomingPushPayload> _pushes =
       StreamController<IncomingPushPayload>.broadcast();
 
-  /// Foreground dedup map — keyed `"$type:$rideId"` → last seen timestamp.
-  /// Mirrors the static [_bgPushDedup] but for the foreground isolate so
-  /// `_onForegroundMessage` can drop a duplicate FCM before it reaches the
-  /// controller (the controller has its own state guards but we'd still
-  /// double-show CallKit on iOS).
   final Map<String, DateTime> _fgPushDedup = <String, DateTime>{};
 
-  /// Push events the controller layer subscribes to. Three types only:
-  /// `incoming_call`, `call_joined`, `call_cancelled`.
   Stream<IncomingPushPayload> get pushStream => _pushes.stream;
 
-  /// FCM background handler entry. Pass the same CallKit-related values as
-  /// in [AgoraCallingConfig] (see library doc above).
   static Future<void> firebaseBackgroundHandler(
     RemoteMessage message, {
     String iosCallKitIconName = '',
@@ -107,8 +117,6 @@ class AgoraCallingNotificationService {
         backgroundCallKitAppName: backgroundCallKitAppName,
       );
 
-  /// Stable UUID for `flutter_callkit_incoming` CallKit `id` (iOS requires UUID).
-  /// [namespace] must match [AgoraCallingConfig.callKitCallIdNamespace].
   static String callkitUuidForRide(String rideId, String namespace) {
     final trimmed = rideId.trim();
     if (trimmed.isEmpty) return _uuid.v4();
@@ -145,8 +153,6 @@ class AgoraCallingNotificationService {
   }
 
   Future<void> _createAndroidChannels() async {
-    // Only the status channel — the incoming ringing UI is fully owned by
-    // flutter_callkit_incoming, which manages its own CallStyle channel.
     const statusChannel = AndroidNotificationChannel(
       _statusChannelId,
       'Call Status',
@@ -158,9 +164,6 @@ class AgoraCallingNotificationService {
     await androidImpl?.createNotificationChannel(statusChannel);
   }
 
-  /// Supports both major signatures of `flutter_local_notifications`:
-  /// - v18: initialize(InitializationSettings, {callbacks...})
-  /// - v21+: initialize({required InitializationSettings settings, ...})
   Future<void> _initializeLocalNotifications(
     InitializationSettings initSettings,
   ) async {
@@ -183,23 +186,13 @@ class AgoraCallingNotificationService {
 
   void _onForegroundMessage(RemoteMessage message) {
     final type = (message.data['type'] ?? '').toString().toLowerCase();
-    if (kDebugMode) {
-      // Always log — even if we don't handle this push — so the host can
-      // confirm with `adb logcat` whether the FCM message is actually being
-      // delivered to the device. If you don't see this line for an expected
-      // call push, the issue is upstream of the package (FCM token not
-      // registered, backend not pushing, push has `notification` block when
-      // it should be data-only, etc.).
-      debugPrint('[AGORA_NOTIF] fg push type="$type" '
-          'has_notification=${message.notification != null} '
-          'data=${message.data}');
-    }
+    agoraCallLog('[AGORA_NOTIF] fg push type="$type" '
+        'has_notification=${message.notification != null} '
+        'data=${message.data}');
     if (type.isEmpty) return;
     if (_isDuplicatePush(type, message.data, _fgPushDedup)) {
-      if (kDebugMode) {
-        debugPrint('[AGORA_NOTIF] fg push dropped — duplicate within '
-            '${_pushDedupWindow.inSeconds}s');
-      }
+      agoraCallLog('[AGORA_NOTIF] fg push dropped — duplicate within '
+          '${_pushDedupWindow.inSeconds}s');
       return;
     }
     switch (type) {
@@ -207,12 +200,6 @@ class AgoraCallingNotificationService {
         _pushes.add(
           IncomingPushPayload(type, Map<String, dynamic>.from(message.data)),
         );
-        // Avoid duplicate Accept/Decline surfaces: on **Android** in the
-        // foreground, the controller opens [IncomingCallScreen] only — the
-        // system CallStyle notification is **not** shown here (it would stack
-        // with the full-screen incoming UI and confuse users). On **iOS**,
-        // CallKit is the primary incoming surface, so we still show it while
-        // the controller skips the duplicate in-app sheet (see CallController).
         if (Platform.isIOS) {
           _showIncomingUi(message.data);
         }
@@ -229,91 +216,59 @@ class AgoraCallingNotificationService {
         _dismissIncomingUi(message.data);
         return;
       default:
-        if (kDebugMode) {
-          debugPrint('[AGORA_NOTIF] ignoring fg push with unhandled type '
-              '"$type" — not a calling event');
-        }
+        agoraCallLog('[AGORA_NOTIF] ignoring fg push with unhandled type '
+            '"$type" — not a calling event');
         return;
     }
   }
 
   void _onMessageOpened(RemoteMessage message) {
     final type = (message.data['type'] ?? '').toString().toLowerCase();
-    if (kDebugMode) {
-      debugPrint('[AGORA_NOTIF] opened from notification type=$type');
-    }
+    agoraCallLog('[AGORA_NOTIF] opened from notification type=$type');
     if (type.isEmpty) return;
     _pushes.add(
       IncomingPushPayload(type, Map<String, dynamic>.from(message.data)),
     );
   }
 
-  /// Shows the incoming-call UI — same path on both platforms now:
-  /// CallKit on iOS, CallStyle notification + full-screen activity on Android,
-  /// both via `flutter_callkit_incoming` so Accept/Decline buttons dispatch
-  /// the same `CallEvent` regardless of platform or app state.
   Future<void> _showIncomingUi(Map<String, dynamic> data) =>
       _showCallkitIncoming(data);
 
   Future<void> _showCallkitIncoming(Map<String, dynamic> data) async {
     final rideId = (data['ride_id'] ?? data['rideId'])?.toString() ?? 'unknown';
     final peerLabel = _resolvePeerLabel(data);
-    if (kDebugMode) {
-      debugPrint('[AGORA_NOTIF] showCallkitIncoming '
-          'rideId=$rideId peer=$peerLabel');
-    }
+    agoraCallLog('[AGORA_NOTIF] showCallkitIncoming '
+        'rideId=$rideId peer=$peerLabel');
     try {
       await FlutterCallkitIncoming.showCallkitIncoming(
         CallKitParams(
           id: callkitUuidForRide(rideId, _config.callKitCallIdNamespace),
           nameCaller: peerLabel,
           appName: _config.appName,
-          type: 0, // audio
+          type: 0,
           duration: 30000,
-          textAccept: 'Accept',
-          textDecline: 'Decline',
           extra: Map<String, dynamic>.from(data),
-          android: const AndroidParams(
-            isCustomNotification: true,
-            isShowLogo: false,
-            isShowCallID: false,
-            ringtonePath: 'system_ringtone_default',
-            backgroundColor: '#0955fa',
-            actionColor: '#4CAF50',
-            textColor: '#ffffff',
-            incomingCallNotificationChannelName: 'Incoming Calls',
-            missedCallNotificationChannelName: 'Missed Calls',
-            isShowFullLockedScreen: true,
-            isImportant: true,
-          ),
+          android: _incomingAndroidParams,
           ios: _iosCallKitParams(),
         ),
       );
     } catch (e, st) {
-      if (kDebugMode) {
-        debugPrint('[AGORA_NOTIF] showCallkitIncoming failed: $e\n$st');
-      }
+      agoraCallLog('[AGORA_NOTIF] showCallkitIncoming failed: $e\n$st');
     }
   }
 
   Future<void> _dismissIncomingUi(Map<String, dynamic> data) async {
     final rideId = (data['ride_id'] ?? data['rideId'])?.toString();
-    if (kDebugMode) {
-      debugPrint('[AGORA_NOTIF] dismiss incoming UI rideId=$rideId');
-    }
+    agoraCallLog('[AGORA_NOTIF] dismiss incoming UI rideId=$rideId');
     try {
       await FlutterCallkitIncoming.endAllCalls();
     } catch (e) {
-      if (kDebugMode) debugPrint('[AGORA_NOTIF] endAllCalls failed: $e');
+      agoraCallLog('[AGORA_NOTIF] endAllCalls failed: $e');
     }
   }
 
-  /// Injects an externally-received `incoming_call` payload into the push
-  /// stream (e.g. from the host app's iOS PushKit bridge). Bypasses FCM.
   void injectExternalIncomingCall(Map<String, dynamic> data) {
-    if (kDebugMode) {
-      debugPrint('[AGORA_NOTIF] injectExternalIncomingCall data=$data');
-    }
+    agoraCallLog('[AGORA_NOTIF] injectExternalIncomingCall data=$data');
     final patched = <String, dynamic>{
       ...data,
       'type': PushTypes.incomingCall,
@@ -321,19 +276,8 @@ class AgoraCallingNotificationService {
     _pushes.add(IncomingPushPayload(PushTypes.incomingCall, patched));
   }
 
-  /// Public helper for the controller to dismiss any active CallKit / CallStyle
-  /// UI. Today the controller calls `FlutterCallkitIncoming.endAllCalls()`
-  /// directly from `_terminate`; this method is kept for host apps that need to
-  /// force-dismiss any phantom call UIs (e.g. on logout).
-  ///
-  /// **Do not call this from the accept path** — `endAllCalls()` round-trips
-  /// an `actionCallEnded` event back through `FlutterCallkitIncoming.onEvent`
-  /// and will tear down a freshly-accepted call. See the controller's
-  /// `_acceptIncoming` for the correct `setCallConnected` transition.
   Future<void> dismissCallUi() async {
-    if (kDebugMode) {
-      debugPrint('[AGORA_NOTIF] dismissCallUi');
-    }
+    agoraCallLog('[AGORA_NOTIF] dismissCallUi');
     try {
       await FlutterCallkitIncoming.endAllCalls();
     } catch (_) {}
@@ -344,16 +288,11 @@ class AgoraCallingNotificationService {
     if (resolver != null) {
       try {
         return resolver(data);
-      } catch (_) {
-        // fall through
-      }
+      } catch (_) {}
     }
     return _defaultPeerLabel(_config.localRole, data);
   }
 
-  /// Static dedup map for the **background** isolate. Survives across two
-  /// FCM deliveries within the same wake-up cycle (the typical "notification
-  /// + data" backend split).
   static final Map<String, DateTime> _bgPushDedup = <String, DateTime>{};
 
   IOSParams _iosCallKitParams() {
@@ -376,8 +315,6 @@ class AgoraCallingNotificationService {
     );
   }
 
-  /// Background-only entry. Builds its own CallKit invocation because there's
-  /// no guarantee the singleton was initialized in this isolate.
   static Future<void> _showFromBackground(
     RemoteMessage message, {
     required String iosCallKitIconName,
@@ -385,15 +322,14 @@ class AgoraCallingNotificationService {
     required String backgroundCallKitAppName,
   }) async {
     final type = (message.data['type'] ?? '').toString().toLowerCase();
-    if (kDebugMode) {
-      debugPrint('[AGORA_NOTIF] bg push type="$type" '
-          'has_notification=${message.notification != null} '
-          'data=${message.data}');
-    }
+    killStateCallLog(
+      'CALLKIT',
+      '_showFromBackground type="$type" '
+      'has_notification=${message.notification != null} '
+      'data=${message.data}',
+    );
     if (type != PushTypes.incomingCall && type != PushTypes.callCancelled) {
-      if (kDebugMode) {
-        debugPrint('[AGORA_NOTIF] bg push ignored — not a calling event');
-      }
+      killStateCallLog('CALLKIT', 'bg push ignored — not a calling event');
       return;
     }
 
@@ -402,27 +338,35 @@ class AgoraCallingNotificationService {
             'unknown';
 
     if (_isDuplicatePush(type, message.data, _bgPushDedup)) {
-      if (kDebugMode) {
-        debugPrint('[AGORA_NOTIF] bg push dropped — duplicate within '
-            '${_pushDedupWindow.inSeconds}s rideId=$rideId');
-      }
+      killStateCallLog(
+        'CALLKIT',
+        'bg push dropped — duplicate within '
+        '${_pushDedupWindow.inSeconds}s rideId=$rideId',
+      );
       return;
     }
 
     if (type == PushTypes.callCancelled) {
+      killStateCallLog('CALLKIT', 'call_cancelled rideId=$rideId');
       try {
         await FlutterCallkitIncoming.endAllCalls();
-      } catch (_) {}
+      } catch (e) {
+        killStateCallLog('CALLKIT', 'endAllCalls failed for cancel: $e');
+      }
       return;
     }
 
-    // type == incoming_call — same path on both platforms (CallKit on iOS,
-    // CallStyle on Android). The native side wakes the app on Accept and
-    // dispatches Event.actionCallAccept once the Dart isolate is alive.
     final peerLabel = _defaultPeerLabel(
       _peerRoleFromDataOrFallback(message.data),
       message.data,
     );
+    killStateCallLog(
+      'CALLKIT',
+      'showCallkitIncoming START rideId=$rideId peer=$peerLabel',
+    );
+    if (Platform.isAndroid) {
+      await _logAndroidCallPermissionState();
+    }
     try {
       await FlutterCallkitIncoming.showCallkitIncoming(CallKitParams(
         id: callkitUuidForRide(rideId, callKitCallIdNamespace),
@@ -430,33 +374,48 @@ class AgoraCallingNotificationService {
         appName: backgroundCallKitAppName,
         type: 0,
         duration: 30000,
-        textAccept: 'Accept',
-        textDecline: 'Decline',
         extra: Map<String, dynamic>.from(message.data),
-        android: const AndroidParams(
-          isCustomNotification: true,
-          isShowLogo: false,
-          isShowCallID: false,
-          ringtonePath: 'system_ringtone_default',
-          backgroundColor: '#0955fa',
-          actionColor: '#4CAF50',
-          textColor: '#ffffff',
-          incomingCallNotificationChannelName: 'Incoming Calls',
-          missedCallNotificationChannelName: 'Missed Calls',
-          isShowFullLockedScreen: true,
-          isImportant: true,
-        ),
+        android: _incomingAndroidParams,
         ios: _iosCallKitParamsForBackground(iosCallKitIconName),
       ));
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('[AGORA_NOTIF] bg showCallkitIncoming failed: $e');
+      killStateCallLog(
+        'CALLKIT',
+        'showCallkitIncoming OK rideId=$rideId — holding bg isolate '
+        '${_bgCallkitEngineKeepAlive.inMilliseconds}ms for native UI',
+      );
+      if (Platform.isAndroid) {
+        await Future<void>.delayed(_bgCallkitEngineKeepAlive);
+        killStateCallLog('CALLKIT', 'bg isolate keep-alive done rideId=$rideId');
       }
+    } catch (e, st) {
+      killStateCallLog('CALLKIT', 'showCallkitIncoming FAILED rideId=$rideId err=$e');
+      killStateCallLog('CALLKIT', 'stack=$st');
     }
   }
 
-  /// Default peer-name labeler. Rider sees "Your Driver"; driver sees
-  /// "Your Rider". `caller_name` from the push — if present — is preferred.
+  static Future<void> _logAndroidCallPermissionState() async {
+    try {
+      final notif = await Permission.notification.status;
+      killStateCallLog('CALLKIT', 'POST_NOTIFICATIONS status=$notif');
+      if (!notif.isGranted) {
+        killStateCallLog(
+          'CALLKIT',
+          'WARNING: notification permission not granted — CallStyle may not show',
+        );
+      }
+      final canFullScreen = await FlutterCallkitIncoming.canUseFullScreenIntent();
+      killStateCallLog('CALLKIT', 'canUseFullScreenIntent=$canFullScreen');
+      if (canFullScreen == false) {
+        killStateCallLog(
+          'CALLKIT',
+          'WARNING: full-screen intent disabled — lock-screen incoming UI may be hidden',
+        );
+      }
+    } catch (e) {
+      killStateCallLog('CALLKIT', 'permission probe failed: $e');
+    }
+  }
+
   static String _defaultPeerLabel(
     CallParticipantRole localRole,
     Map<String, dynamic> data,
@@ -469,9 +428,6 @@ class AgoraCallingNotificationService {
         : 'Your Rider';
   }
 
-  /// Returns `true` when `(type, ride_id)` was last seen within
-  /// [_pushDedupWindow]. Mutates [bucket] to record the new sighting and
-  /// garbage-collects stale entries so the map can't grow unbounded.
   static bool _isDuplicatePush(
     String type,
     Map<String, dynamic> data,
@@ -488,9 +444,6 @@ class AgoraCallingNotificationService {
     return now.difference(last) <= _pushDedupWindow;
   }
 
-  /// Background isolate has no [AgoraCallingConfig] — fall back to inferring
-  /// the local role from the push's `caller_role`. (rider local ↔ driver
-  /// caller, and vice versa.)
   static CallParticipantRole _peerRoleFromDataOrFallback(
     Map<String, dynamic> data,
   ) {
@@ -500,9 +453,6 @@ class AgoraCallingNotificationService {
     if (raw == 'driver') return CallParticipantRole.rider;
     return CallParticipantRole.rider;
   }
-
 }
 
-/// Helper typedef so the controller can reuse [CallModel.fromIncomingPush]
-/// with a peer-label string built from config.
 typedef PeerLabelBuilder = String Function(Map<String, dynamic> push);

@@ -4,15 +4,14 @@ import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:get/get.dart' hide Response;
 
+import '../../shared/utils/app_dialogs.dart';
 import '../../shared/widgets/app_primary_button.dart';
 import '../localization/app_strings.dart';
 import '../services/error_reporting/error_reporter.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import 'api_service.dart';
-import '../../shared/utils/app_dialogs.dart';
 import 'failed_request_queue.dart';
 import 'network_connectivity_service.dart';
 
@@ -110,10 +109,7 @@ class RetryManager {
               const SizedBox(height: 16),
               Text(
                 AppStrings.connectionError.tr,
-                style: AppTextStyles.onboardingTitle.copyWith(
-                  fontSize: 20.sp,
-                  letterSpacing: -0.4,
-                ),
+                style: AppTextStyles.homeTitle,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
@@ -121,6 +117,7 @@ class RetryManager {
                 "We couldn't complete your request. Please try again.",
                 style: AppTextStyles.onboardingSubtitle.copyWith(
                   fontSize: 14.sp,
+                  height: 20 / 14,
                 ),
                 textAlign: TextAlign.center,
               ),

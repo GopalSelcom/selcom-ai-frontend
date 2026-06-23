@@ -131,9 +131,11 @@ class RideEntity {
   final DateTime createdAt;
   final PendingStopsUpdateEntity? pendingStopsUpdate;
   final bool isBookedForOther;
+  final bool isBookAny;
   final String? passengerName;
   final String? passengerPhone;
   final List<PdfLinkEntity>? pdfLinks;
+
   /// Applied promo on this ride (GET ride / history payloads).
   final String? promoCode;
   final int? promoDiscount;
@@ -168,6 +170,7 @@ class RideEntity {
     required this.createdAt,
     this.pendingStopsUpdate,
     this.isBookedForOther = false,
+    this.isBookAny = false,
     this.passengerName,
     this.passengerPhone,
     this.pdfLinks,
@@ -205,6 +208,7 @@ class RideEntity {
     DateTime? createdAt,
     PendingStopsUpdateEntity? pendingStopsUpdate,
     bool? isBookedForOther,
+    bool? isBookAny,
     String? passengerName,
     String? passengerPhone,
     List<PdfLinkEntity>? pdfLinks,
@@ -241,6 +245,7 @@ class RideEntity {
       createdAt: createdAt ?? this.createdAt,
       pendingStopsUpdate: pendingStopsUpdate ?? this.pendingStopsUpdate,
       isBookedForOther: isBookedForOther ?? this.isBookedForOther,
+      isBookAny: isBookAny ?? this.isBookAny,
       passengerName: passengerName ?? this.passengerName,
       passengerPhone: passengerPhone ?? this.passengerPhone,
       pdfLinks: pdfLinks ?? this.pdfLinks,

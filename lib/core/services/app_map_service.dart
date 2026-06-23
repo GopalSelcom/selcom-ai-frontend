@@ -1,5 +1,4 @@
-import 'dart:ui';
-
+import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 /// Shared map configuration and helpers for all screens that embed [GoogleMap].
@@ -9,6 +8,36 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 /// in one place.
 class AppMapService {
   AppMapService._();
+
+  static const String _brandMapStyleAsset = 'assets/json/map_style.json';
+
+  static String? _cachedBrandMapStyle;
+
+  /// Pale yellow road network + light blue water (see [assets/json/map_style.json]).
+  static Future<String?> loadBrandMapStyle() async {
+    final cached = _cachedBrandMapStyle;
+    if (cached != null) return cached;
+    try {
+      _cachedBrandMapStyle = await rootBundle.loadString(_brandMapStyleAsset);
+      return _cachedBrandMapStyle;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Applies brand map styling; pass [overrideStyle] to replace the default JSON.
+  static Future<void> applyBrandMapStyle(
+    GoogleMapController controller, {
+    String? overrideStyle,
+  }) async {
+    final style = overrideStyle ?? await loadBrandMapStyle();
+    if (style == null || style.isEmpty) return;
+    try {
+      await controller.setMapStyle(style);
+    } catch (_) {
+      // Map may not be ready on some platforms during teardown.
+    }
+  }
 
   // ── Standard UI chrome (minimal; we use [AppMapGpsButton] instead of the SDK button)
   static const bool standardZoomControlsEnabled = false;

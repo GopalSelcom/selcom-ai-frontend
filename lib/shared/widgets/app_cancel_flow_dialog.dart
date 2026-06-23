@@ -34,8 +34,7 @@ class AppCancelFlowDialog extends StatelessWidget {
       backgroundColor: AppColors.cardBackground,
       insetPadding: EdgeInsets.symmetric(horizontal: 13.w),
       child: Padding(
-        padding:
-            padding ?? EdgeInsets.symmetric(vertical: 28.h, horizontal: 24.w),
+        padding: padding ?? EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 28.h),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,

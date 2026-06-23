@@ -13,20 +13,64 @@ import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
+import '../../../../shared/widgets/app_map_route_polyline.dart';
 import '../../../../shared/widgets/app_map_route_one_line_bar.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
+import '../../../../shared/widgets/vehicle_type_image.dart';
 import '../controllers/driver_accepted_controller.dart';
 import '../controllers/ride_share_controller.dart';
+import '../widgets/driver_accepted_screen_shimmer.dart';
 import '../widgets/ride_common_widgets.dart';
 
 /// SCR-11 — Driver accepted (heading to pickup). See `.agent/context/frontend/SCREENS.md`.
 class DriverAcceptedScreen extends StatelessWidget {
   const DriverAcceptedScreen({super.key});
 
-  static const double _sheetInitial = 0.3;
   static const double _sheetMin = 0.3;
   static const double _sheetMaxDriverAssigned = 0.52;
   static const double _sheetMaxRideStarted = 0.68;
+
+  static double _systemBottomInsetPx(BuildContext context) {
+    final mq = MediaQuery.of(context);
+    final p = mq.padding.bottom;
+    final v = mq.viewPadding.bottom;
+    return p > v ? p : v;
+  }
+
+  static double _sheetSizeWithNavInset(BuildContext context, double base) {
+    final inset = _systemBottomInsetPx(context);
+    final h = MediaQuery.sizeOf(context).height;
+    if (inset <= 0 || h <= 0) return base;
+    return base + (inset / h) * 0.55;
+  }
+
+  static double _scrollBottomPad(BuildContext context) {
+    return _systemBottomInsetPx(context) > 0 ? 2.h : 0;
+  }
+
+  static double _baseMinSheetSizeForStatus(String status) {
+    if (status == 'near_destination') {
+      return 0.35;
+    }
+    if (status == 'ride_in_progress' || status == 'ride_started') {
+      return 0.40;
+    }
+    return _sheetMin;
+  }
+
+  /// Keeps map chrome above the sheet when status raises the sheet minimum
+  /// before [DraggableScrollableController] reports the new size.
+  static double _resolvedSheetSizeForActionRow(
+    BuildContext context,
+    DriverAcceptedController c,
+  ) {
+    final minSize = _sheetSizeWithNavInset(
+      context,
+      _baseMinSheetSizeForStatus(c.currentRideStatus.value),
+    );
+    final liveSize = c.sheetSize.value;
+    return liveSize < minSize ? minSize : liveSize;
+  }
 
   void _minimizeSheet(DriverAcceptedController c) {
     if (c.sheetController.isAttached) {
@@ -96,6 +140,10 @@ class DriverAcceptedScreen extends StatelessWidget {
               ),
             ),
             Obx(() {
+              // ETA badge is meaningless until ride details load successfully.
+              if (c.hasRideLoadError) {
+                return const SizedBox.shrink();
+              }
               final eta = c.etaLabel.value;
 
               return Positioned(
@@ -132,33 +180,14 @@ class DriverAcceptedScreen extends StatelessWidget {
               );
             }),
             Obx(() {
-              final screenHeight = MediaQuery.sizeOf(context).height;
-              final sheetTopOffset = screenHeight * c.sheetSize.value;
-              return Positioned(
-                left: 16.w,
-                right: 16.w,
-                bottom: sheetTopOffset + 12.h,
-                child: _rideActionRow(context, c, shareController),
-              );
-            }),
-            Obx(() {
               final state = c.rideBottomSheetState.value;
               final status = c.currentRideStatus.value;
               final double maxSheetSize;
-              final double initialSize;
-              final double minSize;
+              final baseMin = _baseMinSheetSizeForStatus(status);
+              final baseInitial = baseMin;
 
-              if (status == 'near_destination') {
-                initialSize = 0.35;
-                minSize = 0.35;
-              } else if (status == 'ride_in_progress' ||
-                  status == 'ride_started') {
-                initialSize = 0.40;
-                minSize = 0.40;
-              } else {
-                initialSize = _sheetInitial;
-                minSize = _sheetMin;
-              }
+              final initialSize = _sheetSizeWithNavInset(context, baseInitial);
+              final minSize = _sheetSizeWithNavInset(context, baseMin);
 
               switch (state) {
                 case RideBottomSheetState.driverAssigned:
@@ -168,13 +197,33 @@ class DriverAcceptedScreen extends StatelessWidget {
                   maxSheetSize = _sheetMaxRideStarted;
                   break;
               }
+
               return AppDraggableBottomSheet(
                 controller: sheetController,
+                reserveSystemBottomInset: true,
                 initialChildSize: initialSize,
                 minChildSize: minSize,
-                maxChildSize: maxSheetSize,
+                maxChildSize: _sheetSizeWithNavInset(context, maxSheetSize),
                 childBuilder: (scrollController) =>
                     _bottomSheet(c, scrollController),
+              );
+            }),
+            // Above the sheet in the stack so ride-start sheet growth cannot cover chips.
+            Obx(() {
+              // Share/track chips require a loaded ride — hide during load-error state.
+              if (c.hasRideLoadError) {
+                return const SizedBox.shrink();
+              }
+              final screenHeight = MediaQuery.sizeOf(context).height;
+              final sheetTopOffset =
+                  screenHeight * _resolvedSheetSizeForActionRow(context, c);
+              // Also depend on sheet state so layout refreshes when the sheet variant changes.
+              c.rideBottomSheetState.value;
+              return Positioned(
+                left: 16.w,
+                right: 16.w,
+                bottom: sheetTopOffset + 12.h,
+                child: _rideActionRow(context, c, shareController),
               );
             }),
           ],
@@ -200,8 +249,7 @@ class DriverAcceptedScreen extends StatelessWidget {
           return Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Navigation / Track Rider Chip
-              // Navigation / Track Rider Chip
+              // Navigation / Track Rider Chip (zoom in on driver)
               Obx(() {
                 final isTracking = c.assignedDriverLocation.value != null;
                 // Use the controller's state instead of the map's key state
@@ -211,7 +259,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                   return Padding(
                     padding: EdgeInsets.only(right: 8.w),
                     child: _iconActionChip(
-                      icon: Icons.navigation,
+                      icon: Icons.gps_fixed,
                       onTap: () {
                         c.mapWidgetKey.currentState?.retrack();
                         _minimizeSheet(c);
@@ -222,16 +270,6 @@ class DriverAcceptedScreen extends StatelessWidget {
                 }
                 return const SizedBox.shrink();
               }),
-              // Current Location GPS Chip
-              _iconActionChip(
-                icon: Icons.gps_fixed,
-                onTap: () {
-                  c.mapWidgetKey.currentState?.stopTracking();
-                  c.focusOnUserLocation();
-                  _minimizeSheet(c);
-                },
-                color: AppColors.textMapHint,
-              ),
               SizedBox(width: 8.w),
               _iconActionChip(
                 icon: isSharing ? Icons.hourglass_top : Icons.share_outlined,
@@ -253,12 +291,19 @@ class DriverAcceptedScreen extends StatelessWidget {
             ],
           );
         }),
-        SizedBox(width: 10.w),
-        _iconActionChip(
-          icon: Icons.shield_outlined,
-          onTap: () => _showSafetyBottomSheet(context, c, shareController),
-          color: AppColors.textHeading,
-        ),
+        Obx(() {
+          if (!c.shouldShowMapSafetyAction) {
+            return const SizedBox.shrink();
+          }
+          return Padding(
+            padding: EdgeInsets.only(left: 10.w),
+            child: _iconActionChip(
+              icon: Icons.shield_outlined,
+              onTap: () => _showSafetyBottomSheet(context, c, shareController),
+              color: AppColors.textHeading,
+            ),
+          );
+        }),
       ],
     );
   }
@@ -443,33 +488,34 @@ class DriverAcceptedScreen extends StatelessWidget {
       }
 
       // Destinations/Stops Markers
-      final stops = c.ride.value?.stops ?? [];
-      final isMultiStop = c.ride.value?.isMultiStop ?? false;
+      final intermediateStops = c.mapIntermediateStops;
+      final usesMultiStopMarkers = c.usesMultiStopRouteMarkers;
+      final showDestinationMarker =
+          c.dropIcon.value != null &&
+          (usesMultiStopMarkers ||
+              c.rideBottomSheetState.value !=
+                  RideBottomSheetState.driverAssigned);
 
-      if (isMultiStop && stops.isNotEmpty) {
-        for (var i = 0; i < stops.length; i++) {
-          final stop = stops[i];
-
-          // Use stopIcons[i] which corresponds to B, C, D...
-          // because stopIcons index 0 is 'B', 1 is 'C' etc.
-          final icon = (i < c.stopIcons.length)
-              ? c.stopIcons[i]
-              : (c.dropIcon.value ?? BitmapDescriptor.defaultMarker);
+      if (usesMultiStopMarkers) {
+        for (var i = 0; i < intermediateStops.length; i++) {
+          final stop = intermediateStops[i];
+          final letter = c.routeLetterForIntermediateIndex(i);
 
           markers.add(
             Marker(
-              markerId: MarkerId('stop_$i'),
+              markerId: MarkerId(
+                'stop_${letter}_'
+                '${stop.lat.toStringAsFixed(5)}_'
+                '${stop.lng.toStringAsFixed(5)}',
+              ),
               position: LatLng(stop.lat, stop.lng),
-              icon: icon,
+              icon: c.redRouteLetterIconForSequentialIndex(i),
               anchor: const Offset(0.5, 0.5),
             ),
           );
         }
-      } else {
-        // Standard Single-Stop Ride logic
-        if (c.dropIcon.value != null &&
-            c.rideBottomSheetState.value !=
-                RideBottomSheetState.driverAssigned) {
+
+        if (showDestinationMarker) {
           markers.add(
             Marker(
               markerId: const MarkerId('drop'),
@@ -479,19 +525,21 @@ class DriverAcceptedScreen extends StatelessWidget {
             ),
           );
         }
-      }
-
-      final polylines = <Polyline>{};
-      if (route.length > 2) {
-        polylines.add(
-          Polyline(
-            polylineId: const PolylineId('active_route'),
-            points: route,
-            color: AppColors.routeBlue,
-            width: 5,
+      } else if (showDestinationMarker) {
+        markers.add(
+          Marker(
+            markerId: const MarkerId('drop'),
+            position: destination,
+            icon: c.dropIcon.value!,
+            anchor: const Offset(0.5, 0.5),
           ),
         );
       }
+
+      final polylines = AppMapRoutePolyline.set(
+        polylineId: 'active_route',
+        points: route,
+      );
 
       return Stack(
         children: [
@@ -506,8 +554,6 @@ class DriverAcceptedScreen extends StatelessWidget {
             },
             onCameraMove: (_) => c.scheduleAssignedEtaOverlayRefresh(),
             onCameraIdle: c.scheduleAssignedEtaOverlayRefresh,
-            showGpsButton: true,
-            onGpsPressed: c.focusOnUserLocation,
             onUserInteraction: () => _minimizeSheet(c),
             trackRider: c.isTrackingRider.value,
             onTrackingChanged: (tracking) => c.isTrackingRider.value = tracking,
@@ -555,7 +601,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                         height: 14.w,
                         child: const CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: AppColors.routeBlue,
+                          color: AppColors.primary,
                         ),
                       ),
                       SizedBox(width: 10.w),
@@ -578,23 +624,114 @@ class DriverAcceptedScreen extends StatelessWidget {
     });
   }
 
+  Widget _sheetScroll({
+    required BuildContext context,
+    required ScrollController scrollController,
+    required List<Widget> children,
+  }) {
+    return SingleChildScrollView(
+      controller: scrollController,
+      primary: false,
+      clipBehavior: Clip.hardEdge,
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: ClampingScrollPhysics(),
+      ),
+      padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, _scrollBottomPad(context)),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      ),
+    );
+  }
+
+  /// Bottom-sheet content when [DriverAcceptedController.rideLoadError] is set.
+  /// Retry only when [DriverAcceptedController.canRetryRideLoad] (valid rideId).
+  Widget _rideLoadErrorSheet(DriverAcceptedController c) {
+    final message =
+        c.rideLoadError.value ?? AppStrings.failedToLoadRideDetails.tr;
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(20.w, 28.h, 20.w, 12.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Container(
+              width: 72.w,
+              height: 72.w,
+              decoration: const BoxDecoration(
+                color: AppColors.errorBackground,
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Icon(
+                Icons.cloud_off_outlined,
+                size: 36.sp,
+                color: AppColors.error,
+              ),
+            ),
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            AppStrings.unableToOpenRideDetails.tr,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.homeTitle.copyWith(
+              fontSize: 18.sp,
+              height: 24 / 18,
+              letterSpacing: -0.3,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.homeSubtitle.copyWith(
+              fontSize: 14.sp,
+              height: 20 / 14,
+              color: AppColors.textBody,
+            ),
+          ),
+          SizedBox(height: 28.h),
+          if (c.canRetryRideLoad) ...[
+            AppPrimaryButton(
+              label: AppStrings.retry.tr,
+              onPressed: c.retryLoadRideDetails,
+              width: double.infinity,
+              borderRadius: 28.r,
+            ),
+            SizedBox(height: 12.h),
+          ],
+          AppPrimaryButton(
+            label: AppStrings.back.tr,
+            onPressed: c.leaveAfterRideLoadFailure,
+            width: double.infinity,
+            outlined: true,
+            borderRadius: 28.r,
+            outlinedBorderColor: AppColors.borderMedium,
+            outlinedTextColor: AppColors.textHeading,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _bottomSheet(
     DriverAcceptedController c,
     ScrollController scrollController,
   ) {
     return Builder(
       builder: (context) {
-        final double bottomPadding = MediaQuery.paddingOf(context).bottom;
         return Obx(() {
           if (c.isLoadingRide.value) {
-            return ListView(
-              controller: scrollController,
-              padding: EdgeInsets.fromLTRB(
-                16.w,
-                10.h,
-                16.w,
-                16.h + bottomPadding,
-              ),
+            final state = c.rideBottomSheetState.value;
+            if (state == RideBottomSheetState.rideStarted) {
+              return _rideStartedSheetShimmer(c, scrollController);
+            }
+            return _sheetScroll(
+              context: context,
+              scrollController: scrollController,
               children: [
                 Center(
                   child: Container(
@@ -607,10 +744,34 @@ class DriverAcceptedScreen extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 20.h),
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24.h),
-                  child: const Center(child: CircularProgressIndicator()),
+                DriverAcceptedScreenShimmer.driverAssignedSheet(
+                  showPin: c.isPinRequired.value,
+                  pinDigitCount: c.otpDigits.isNotEmpty
+                      ? c.otpDigits.length
+                      : 4,
                 ),
+              ],
+            );
+          }
+
+          // Shown after loading finishes when details are missing or the API failed.
+          if (c.hasRideLoadError) {
+            return _sheetScroll(
+              context: context,
+              scrollController: scrollController,
+              children: [
+                Center(
+                  child: Container(
+                    width: 64.w,
+                    height: 5.h,
+                    decoration: BoxDecoration(
+                      color: AppColors.skeletonBase,
+                      borderRadius: BorderRadius.circular(37.r),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20.h),
+                _rideLoadErrorSheet(c),
               ],
             );
           }
@@ -622,13 +783,9 @@ class DriverAcceptedScreen extends StatelessWidget {
                 overscroll: false,
                 physics: const ClampingScrollPhysics(),
               ),
-              child: ListView(
-                controller: scrollController,
-                shrinkWrap: true,
-                physics: const AlwaysScrollableScrollPhysics(
-                  parent: ClampingScrollPhysics(),
-                ),
-                padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, bottomPadding),
+              child: _sheetScroll(
+                context: context,
+                scrollController: scrollController,
                 children: [
                   Center(
                     child: Container(
@@ -651,14 +808,9 @@ class DriverAcceptedScreen extends StatelessWidget {
             return _rideStartedSheetWithFixedHeader(c, scrollController);
           }
 
-          return ListView(
-            controller: scrollController,
-            padding: EdgeInsets.fromLTRB(
-              16.w,
-              10.h,
-              16.w,
-              16.h + bottomPadding,
-            ),
+          return _sheetScroll(
+            context: context,
+            scrollController: scrollController,
             children: [
               Center(
                 child: Container(
@@ -675,6 +827,58 @@ class DriverAcceptedScreen extends StatelessWidget {
             ],
           );
         });
+      },
+    );
+  }
+
+  Widget _rideStartedSheetShimmer(
+    DriverAcceptedController c,
+    ScrollController scrollController,
+  ) {
+    return Builder(
+      builder: (context) {
+        return ScrollConfiguration(
+          behavior: ScrollConfiguration.of(
+            context,
+          ).copyWith(overscroll: false, physics: const ClampingScrollPhysics()),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 64.w,
+                    height: 5.h,
+                    decoration: BoxDecoration(
+                      color: AppColors.skeletonBase,
+                      borderRadius: BorderRadius.circular(37.r),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 13.h),
+                DriverAcceptedScreenShimmer.rideStartedSheetTitle(),
+                SizedBox(height: 8.h),
+                const Divider(color: AppColors.borderWalletCard, height: 1),
+                SizedBox(height: 14.h),
+                Expanded(
+                  child: SingleChildScrollView(
+                    controller: scrollController,
+                    primary: false,
+                    clipBehavior: Clip.hardEdge,
+                    physics: const ClampingScrollPhysics(),
+                    padding: EdgeInsets.only(
+                      bottom: 16.h + _scrollBottomPad(context),
+                    ),
+                    child: DriverAcceptedScreenShimmer.rideStartedSheetBody(
+                      showChangeDropLink: true,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
       },
     );
   }
@@ -717,13 +921,15 @@ class DriverAcceptedScreen extends StatelessWidget {
                 const Divider(color: AppColors.borderWalletCard, height: 1),
                 SizedBox(height: 14.h),
                 Expanded(
-                  child: ListView(
+                  child: SingleChildScrollView(
                     controller: scrollController,
+                    primary: false,
+                    clipBehavior: Clip.hardEdge,
                     physics: const ClampingScrollPhysics(),
                     padding: EdgeInsets.only(
-                      bottom: 16.h + MediaQuery.paddingOf(context).bottom,
+                      bottom: 16.h + _scrollBottomPad(context),
                     ),
-                    children: [_rideProgressBody(c, showChangeDropLink: true)],
+                    child: _rideProgressBody(c, showChangeDropLink: true),
                   ),
                 ),
               ],
@@ -920,10 +1126,25 @@ class DriverAcceptedScreen extends StatelessWidget {
                       ? Image.network(
                           avatarUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
-                              Image.asset(AppAssets.imgBoda, fit: BoxFit.cover),
+                          errorBuilder: (_, __, ___) => Container(
+                            color: AppColors.bgSoftCircle,
+                            alignment: Alignment.center,
+                            child: Icon(
+                              Icons.person,
+                              color: AppColors.textBody,
+                              size: 24.sp,
+                            ),
+                          ),
                         )
-                      : Image.asset(AppAssets.imgBoda, fit: BoxFit.cover),
+                      : Container(
+                          color: AppColors.bgSoftCircle,
+                          alignment: Alignment.center,
+                          child: Icon(
+                            Icons.person,
+                            color: AppColors.textBody,
+                            size: 24.sp,
+                          ),
+                        ),
                 ),
               );
             }),
@@ -1010,6 +1231,8 @@ class DriverAcceptedScreen extends StatelessWidget {
             label: AppStrings.cancelRide.tr,
             onPressed: c.confirmCancelRide,
             outlined: true,
+            outlinedBorderColor: AppColors.iconHeartFilled,
+            outlinedTextColor: AppColors.iconHeartFilled,
             height: 56.h,
           ),
         ),
@@ -1092,16 +1315,13 @@ class DriverAcceptedScreen extends StatelessWidget {
               ),
             ),
             Obx(
-              () => Image.asset(
-                c.bottomSheetVehicleImageAsset.value,
+              () => VehicleTypeImage(
+                assetPath: c.bottomSheetVehicleImageAsset.value,
                 width: 76.w,
                 height: 60.67.h,
                 fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => Icon(
-                  Icons.two_wheeler,
-                  size: 40.w,
-                  color: AppColors.textBody,
-                ),
+                fallbackIcon: Icons.person,
+                fallbackIconColor: AppColors.textBody,
               ),
             ),
           ],

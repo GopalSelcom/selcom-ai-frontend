@@ -12,7 +12,7 @@ import 'app_saved_place_chip.dart';
 /// Horizontal row of four presets (Home, Office, Work, Other): category icon when
 /// saved, add icon when empty. Behavior is delegated via callbacks (Home vs Location Selection).
 ///
-/// Optional [extraSavedPlaces] appends one chip per non-preset saved address (Home screen only).
+/// Optional [extraSavedPlaces]: custom labels (e.g. "Test") after filled presets, before empty presets.
 ///
 /// Place outside horizontal [Padding] on the parent. Pass [contentHorizontalPadding]
 /// so the first chip lines up with padded siblings while the list scrolls to screen edges.
@@ -25,10 +25,21 @@ class FavoriteLocationChipsRow extends StatelessWidget {
     this.extraSavedPlaces,
     this.onExtraChipTap,
     this.onExtraChipLongPress,
-    this.chipBackgroundColor,
-    this.chipBorderColor,
+    this.chipBackgroundColor = AppColors.white,
+    this.chipBorderColor = AppColors.secondary,
     this.contentHorizontalPadding,
+    this.highlightedChipKey,
   });
+
+  static String presetChipKey(String canonicalLabel) =>
+      'preset:$canonicalLabel';
+
+  static String extraChipKey(SavedPlace place) {
+    final id = place.id?.trim();
+    if (id != null && id.isNotEmpty) return 'extra:id:$id';
+    final raw = (place.label ?? place.name ?? '').trim();
+    return 'extra:label:$raw';
+  }
 
   final SavedPlace? Function(String canonicalLabel) resolvePlace;
 
@@ -37,7 +48,7 @@ class FavoriteLocationChipsRow extends StatelessWidget {
 
   final void Function(String canonicalLabel)? onSavedChipLongPress;
 
-  /// Non-preset favourites (e.g. custom labels from API). Omit everywhere except Home.
+  /// Non-preset favourites (e.g. custom labels from API).
   final List<SavedPlace>? extraSavedPlaces;
 
   final void Function(SavedPlace place)? onExtraChipTap;
@@ -49,6 +60,9 @@ class FavoriteLocationChipsRow extends StatelessWidget {
 
   /// Inset for the first/last chip inside the horizontal scroll (matches sheet padding).
   final double? contentHorizontalPadding;
+
+  /// Home-only: key of the chip tapped before navigating away (slight highlight on return).
+  final String? highlightedChipKey;
 
   String _displayTitle(FavoriteLocationSlotId id) {
     switch (id) {
@@ -69,10 +83,54 @@ class FavoriteLocationChipsRow extends StatelessWidget {
     return raw.capitalizeFirst ?? raw;
   }
 
+  Widget _presetChip(FavoriteLocationSlotId id, {required bool hasSaved}) {
+    final canonical = FavoriteLocationChipCatalog.canonicalLabel(id);
+    final place = resolvePlace(canonical);
+    final chipKey = presetChipKey(canonical);
+    return Padding(
+      padding: EdgeInsets.only(right: 8.w),
+      child: AppSavedPlaceChip(
+        label: _displayTitle(id),
+        iconAsset: hasSaved
+            ? FavoriteLocationChipCatalog.categoryIconAsset(id)
+            : FavoriteLocationChipCatalog.emptySlotIconAsset,
+        iconColor: hasSaved ? null : AppColors.primary,
+        backgroundColor: chipBackgroundColor,
+        borderColor: chipBorderColor,
+        isHighlighted: highlightedChipKey == chipKey,
+        onTap: () => onChipTap(canonical, place),
+        onLongPress: hasSaved && onSavedChipLongPress != null
+            ? () => onSavedChipLongPress!(canonical)
+            : null,
+      ),
+    );
+  }
+
+  Widget _extraChip(SavedPlace place) {
+    final chipKey = extraChipKey(place);
+    return Padding(
+      padding: EdgeInsets.only(right: 8.w),
+      child: AppSavedPlaceChip(
+        label: _extraChipTitle(place),
+        iconAsset: AppAssets.icOtherChip,
+        backgroundColor: chipBackgroundColor,
+        borderColor: chipBorderColor,
+        isHighlighted: highlightedChipKey == chipKey,
+        onTap: () => onExtraChipTap?.call(place),
+        onLongPress: onExtraChipLongPress != null
+            ? () => onExtraChipLongPress!(place)
+            : null,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final extras = extraSavedPlaces ?? const <SavedPlace>[];
     final inset = contentHorizontalPadding ?? 0;
+    final groups = FavoriteLocationChipCatalog.slotDisplayGroups(
+      resolvePlace: resolvePlace,
+    );
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -82,42 +140,9 @@ class FavoriteLocationChipsRow extends StatelessWidget {
       clipBehavior: Clip.none,
       child: Row(
         children: [
-          ...FavoriteLocationSlotId.values.map((id) {
-            final canonical = FavoriteLocationChipCatalog.canonicalLabel(id);
-            final place = resolvePlace(canonical);
-            final hasSaved = place != null;
-            return Padding(
-              padding: EdgeInsets.only(right: 8.w),
-              child: AppSavedPlaceChip(
-                label: _displayTitle(id),
-                iconAsset: hasSaved
-                    ? FavoriteLocationChipCatalog.categoryIconAsset(id)
-                    : FavoriteLocationChipCatalog.emptySlotIconAsset,
-                iconColor: hasSaved ? null : AppColors.primary,
-                backgroundColor: chipBackgroundColor,
-                borderColor: chipBorderColor,
-                onTap: () => onChipTap(canonical, place),
-                onLongPress: hasSaved && onSavedChipLongPress != null
-                    ? () => onSavedChipLongPress!(canonical)
-                    : null,
-              ),
-            );
-          }),
-          ...extras.map((place) {
-            return Padding(
-              padding: EdgeInsets.only(right: 8.w),
-              child: AppSavedPlaceChip(
-                label: _extraChipTitle(place),
-                iconAsset: AppAssets.icOtherChip,
-                backgroundColor: chipBackgroundColor,
-                borderColor: chipBorderColor,
-                onTap: () => onExtraChipTap?.call(place),
-                onLongPress: onExtraChipLongPress != null
-                    ? () => onExtraChipLongPress!(place)
-                    : null,
-              ),
-            );
-          }),
+          ...groups.filled.map((id) => _presetChip(id, hasSaved: true)),
+          ...extras.map(_extraChip),
+          ...groups.empty.map((id) => _presetChip(id, hasSaved: false)),
         ],
       ),
     );

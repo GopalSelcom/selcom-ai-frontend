@@ -1,14 +1,25 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // Brand
-  static const Color primary        = Color(0xFF5CB75E);  // Green — buttons, highlights
-  static const Color primaryLight   = Color(0xFFE8FDE8);  // Light geen bg
+  // Brand (GO UI UX-2): yellow accent + green CTAs
+  static const Color primary = Color(
+    0xFFFFCC00,
+  ); // Brand accent — pins, links, field focus
+  static const Color secondary = Color(0xFF22B573);
+  static const Color brandRed = Color(0xFFE80032);
+  static const Color primaryButton = Color(
+    0xFF5CB75E,
+  ); // Buttons & solid actions (unchanged green)
+  static const Color primaryLight = Color(
+    0xFFFFF6D6,
+  ); // Light yellow selection/highlight surfaces
 
   // Backgrounds
-  static const Color pageBackground = Color(0xFFF8FAFC);  // Gray/Shade 7
-  static const Color cardBackground = Color(0xFFFFFFFF);  // Cards, sheets, modals
-  static const Color errorBackground= Color(0xFFFDECEA);  // OTP error banner
+  static const Color pageBackground = Color(0xFFF8FAFC); // Gray/Shade 7
+  static const Color cardBackground = Color(
+    0xFFFFFFFF,
+  ); // Cards, sheets, modals
+  static const Color errorBackground = Color(0xFFFDECEA); // OTP error banner
   static const Color bgMuted = Color(0xFFF5F5F5);
   static const Color bgSuccessLight = Color(0xFFE8F5E9);
   static const Color bgDarkSurface = Color(0xFF121212);
@@ -32,9 +43,11 @@ class AppColors {
   static const Color bgEtaBlueSoft = Color(0x2E0088FF); // 18% of #0088FF
 
   // Text / Shades
-  static const Color textHeading    = Color(0xFF132235);  // Primary heading/title text
-  static const Color textBody       = Color(0xFF364B63);  // Secondary/body text
-  static const Color textLight      = Color(0xFFAAAAAA);
+  static const Color textHeading = Color(
+    0xFF132235,
+  ); // Primary heading/title text
+  static const Color textBody = Color(0xFF364B63); // Secondary/body text
+  static const Color textLight = Color(0xFFAAAAAA);
   static const Color textPrimary = Color(0xFF222222);
   static const Color textSecondary = Color(0xFF666666);
   static const Color textMuted = Color(0xFF9E9E9E);
@@ -59,24 +72,26 @@ class AppColors {
   static const Color textMessageHint = Color(0xFF1B1A57);
   static const Color textPaymentDialogMessage = Color(0xFF132235);
   static const Color textEtaBlue = Color(0xFF0088FF);
+  static const Color textQrMeta = Color(0xFF707072);
 
   // Semantic
-  static const Color success        = Color(0xFF0EAD36);  // Green
-  static const Color error          = Color(0xFFE24B4A);  // Red error
-  static const Color warning        = Color(0xFFEF9F27);  // Orange/amber
-  static const Color info           = Color(0xFF378ADD);  // Blue
+  static const Color success = Color(0xFF0EAD36); // Green
+  static const Color error = Color(0xFFE24B4A); // Red error
+  static const Color warning = Color(0xFFEF9F27); // Orange/amber
+  static const Color info = Color(0xFF378ADD); // Blue
   static const Color successBadge = Color(0xFF4CAF50);
   static const Color warningStrong = Color(0xFFF59E0B);
   static const Color danger = Color(0xFFEF4444);
 
   // Input
-  static const Color inputBorderActive   = Color(0xFF378ADD);  // Blue on focus
-  static const Color inputBorderDefault  = Color(0xFFDDDDDD);
-  static const Color inputBorderError    = Color(0xFFE24B4A);
+  static const Color inputBorderActive =
+      primary; // Brand yellow on focus (entry/auth fields)
+  static const Color inputBorderDefault = Color(0xFFDDDDDD);
+  static const Color inputBorderError = Color(0xFFE24B4A);
 
   // Dividers
-  static const Color divider        = Color(0xFFEEEEEE);
-  static const Color shadow         = Color(0x1A000000);  // 10% black
+  static const Color divider = Color(0xFFEEEEEE);
+  static const Color shadow = Color(0x1A000000); // 10% black
   static const Color borderSubtle = Color(0xFFE0E0E0);
   static const Color borderMedium = Color(0xFFD3DDE7);
   static const Color borderInputMuted = Color(0xFF9CA3AF);
@@ -87,6 +102,11 @@ class AppColors {
   static const Color borderNeutral = Color(0xFFEDEDED);
   static const Color borderNeutralStrong = Color(0xFFCBD5E1);
   static const Color borderGray = Color(0xFFD9D9D9);
+
+  // Social sign-in (provider brand tokens)
+  static const Color socialSignInNeutralBackground = Color(0xFFE9E9E9);
+  static const Color socialSignInGoogleText = Color(0xFF1F1F1F);
+  static const Color socialSignInLabelOnDark = Color(0xFF1A1C1E);
 
   // Base colors
   static const Color white = Color(0xFFFFFFFF);
@@ -99,26 +119,49 @@ class AppColors {
   static const Color shadowStrong = Color(0x66000000);
   static const Color shadowCard = Color(0x0F000000);
   static const Color shadowMapCard = Color(0x1A000000);
-  static const Color inputFocusShadow = Color(0x335CB75E); // 20% primary
+  static const Color inputFocusShadow = Color(0x33FFCC00); // 20% primary
   static const Color overlayGray43 = Color(0x6D808080);
 
   // Skeleton
   static const Color skeletonBase = Color(0xFFE2E8F0);
   static const Color skeletonHighlight = Color(0xFFF8FAFC);
+  static const Color walletCardText = Color(0xFF5D6A85);
 
   static const Color safetyBannerBg = Color(0xFFE8F4FC);
-  static const Color onlineGreen    = Color(0xFF22C55E);
+  static const Color onlineGreen = Color(0xFF22C55E);
   static const Color driverBubbleBg = Color(0xFFF0F2F5);
 
   // Figma Sync (Node 207:24539)
-  static const Color borderDefault  = Color(0xFFD3DDE7);
+  static const Color borderDefault = Color(0xFFD3DDE7);
   static const Color figmaTextPrimary = Color(0xFF2A3143);
   static const Color figmaTextSecondary = Color(0xFF586377);
   static const Color figmaIconGreen = Color(0xFF269441);
-  static const Color splashVectorTint = Color(0xFF9CF17B);
-  static const Color splashBackground = Color(0xFF51D71C);
-  static const Color mapPickupMarkerBlue = Color(0xFF4FA3FF);
-  static const Color mapDropMarkerGreen = Color(0xFF34C759);
+  static const Color splashBackground = Color(0xFFFFCC00);
+
+  /// Route location pins (list UI + map letter markers).
+  static const Color routePinStop1 = Color(0xFFFF9900);
+  static const Color routePinStop2 = Color(0xFF0088FF);
+  static const Color routePinDestination = Color(0xFF34C759);
+
+  /// Receipt PNG export palette.
+  static const Color receiptTextDark = Color(0xFF1A1A2E);
+  static const Color receiptTextMid = Color(0xFF555566);
+  static const Color receiptTextMuted = Color(0xFF999AAB);
+  static const Color receiptDivider = Color(0xFFEEEEF2);
+  static const Color receiptBgLight = Color(0xFFF8F8FA);
+
+  /// Wallet segmented tab labels.
+  static const Color walletTabLabelActive = Color(0xFF1F2937);
+  static const Color walletTabLabelInactive = Color(0xFF4B5563);
+
+  /// Insufficient wallet balance dialog.
+  static const Color insufficientBalanceIconBg = Color(0xFFFFE2E2);
+  static const Color insufficientBalanceIcon = Color(0xFFFB2C36);
+  static const Color insufficientBalanceValue = Color(0xFF101828);
+
+  /// Map markers: pickup = brand primary, destination = brand secondary.
+  static const Color mapPickupMarkerBlue = primary;
+  static const Color mapDropMarkerGreen = secondary;
   static const Color mapStopMarkerRed = Color(0xFFE11D48);
   static const Color ratingStarFilled = Color(0xFFFFCC00);
   static const Color ratingStarEmpty = Color(0xFFE6E9EE);
@@ -139,10 +182,20 @@ class AppColors {
   static const Color iconHeartOutline = Color(0xFF292D32);
   static const Color iconHeartFilled = Color(0xFFF3004C);
   static const Color textNeutralButton = Color(0xFF7F7F7F);
-  static const Color promotionBlue = Color(0xFF2668D2); // Active badge circle + accent in SVG
-  static const Color promoBadgeStarDisabled = Color(0xFFD8DEE8); // Disabled badge circle (placeholder + SVG star)
-  static const Color promoBadgeAccentDisabled = Color(0xFF9AA8BA); // Disabled % icon (placeholder + SVG accent)
+  static const Color promotionBlue = Color(
+    0xFF2668D2,
+  ); // Active badge circle + accent in SVG
+  static const Color promoBadgeStarDisabled = Color(
+    0xFFD8DEE8,
+  ); // Disabled badge circle (placeholder + SVG star)
+  static const Color promoBadgeAccentDisabled = Color(
+    0xFF9AA8BA,
+  ); // Disabled % icon (placeholder + SVG accent)
   static const Color routeBlue = Color(0xFF3073E8);
+
+  /// Trip route on maps — black line on white casing for pale yellow roads.
+  static const Color mapRouteLine = Color(0xFF000000);
+  static const Color mapRouteLineCasing = Color(0xFFFFFFFF);
   static const Color pinRed = Color(0xFFF52D56);
   static const Color dangerDeep = Color(0xFFE31E24);
   static const Color successMint = Color(0xFF10B981);

@@ -25,7 +25,17 @@ class VehicleImageUtils {
       return AppAssets.imgBajaji;
     }
 
-    return AppAssets.imgCab;
+    if (_containsAny(type, const [
+      'car',
+      'cab',
+      'taxi',
+      'van',
+      'gari',
+    ])) {
+      return AppAssets.imgCab;
+    }
+
+    return fallbackAsset;
   }
 
   static bool _containsAny(String source, List<String> needles) {

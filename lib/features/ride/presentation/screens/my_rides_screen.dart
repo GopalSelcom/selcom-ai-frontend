@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
-
 import '../controllers/my_rides_controller.dart';
+import '../widgets/my_rides_screen_layout.dart';
+import '../widgets/my_rides_screen_shimmer.dart';
 import '../widgets/ride_history_card.dart';
 
 class MyRidesScreen extends StatelessWidget {
@@ -28,7 +30,16 @@ class MyRidesScreen extends StatelessWidget {
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value) {
-                return const Center(child: CircularProgressIndicator());
+                return SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: MyRidesScreenLayout.listHorizontalPadding,
+                      vertical: MyRidesScreenLayout.listVerticalPadding,
+                    ),
+                    child: MyRidesScreenShimmer.listContent(),
+                  ),
+                );
               }
 
               if (controller.pastRides.isEmpty) {
@@ -67,25 +78,36 @@ class MyRidesScreen extends StatelessWidget {
                     ),
                     child: Padding(
                       padding: EdgeInsets.symmetric(
-                        horizontal: 16.w,
-                        vertical: 18.h,
+                        horizontal: MyRidesScreenLayout.listHorizontalPadding,
+                        vertical: MyRidesScreenLayout.listVerticalPadding,
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 4.w),
-                            child: Text(
-                              AppStrings.past.tr,
-                              style: AppTextStyles.body.copyWith(
-                                color: AppColors.textBody,
-                                fontWeight: FontWeight.w500,
-                                fontSize: 15.sp,
-                                height: 20 / 15,
+                            padding: EdgeInsets.symmetric(
+                              horizontal: MyRidesScreenLayout
+                                  .sectionTitleHorizontalInset,
+                            ),
+                            child: SizedBox(
+                              height: MyRidesScreenLayout.sectionTitleHeight,
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  AppStrings.past.tr,
+                                  style: AppTextStyles.body.copyWith(
+                                    color: AppColors.textBody,
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 15.sp,
+                                    height: 20 / 15,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                          SizedBox(height: 9.h),
+                          SizedBox(
+                            height: MyRidesScreenLayout.sectionTitleBottomGap,
+                          ),
 
                           // Map Dynamic Data
                           ...controller.pastRides.map(
@@ -96,14 +118,7 @@ class MyRidesScreen extends StatelessWidget {
                           ),
 
                           if (controller.isLoadingMore.value)
-                            Padding(
-                              padding: EdgeInsets.symmetric(vertical: 8.h),
-                              child: const Center(
-                                child: CircularProgressIndicator(
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                            ),
+                            MyRidesScreenShimmer.loadMoreItems(),
 
                           SizedBox(height: 40.h),
                         ],

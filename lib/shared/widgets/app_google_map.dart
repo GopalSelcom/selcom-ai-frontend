@@ -38,7 +38,7 @@ class AppGoogleMap extends StatefulWidget {
     this.compassEnabled = false,
     this.mapType = MapType.normal,
     this.trafficEnabled = false,
-    this.buildingsEnabled = true,
+    this.buildingsEnabled = false,
     this.indoorViewEnabled = true,
     this.liteModeEnabled = false,
     this.minMaxZoomPreference = MinMaxZoomPreference.unbounded,
@@ -317,8 +317,12 @@ class AppGoogleMapState extends State<AppGoogleMap>
           onPointerCancel: (_) => _isUserInteracting = false,
           child: GoogleMap(
             initialCameraPosition: widget.initialCameraPosition,
-            onMapCreated: (controller) {
+            onMapCreated: (controller) async {
               _controller = controller;
+              await AppMapService.applyBrandMapStyle(
+                controller,
+                overrideStyle: widget.style,
+              );
               widget.onMapCreated(controller);
               if (isTrackingRider) _moveToRider();
             },
@@ -362,7 +366,6 @@ class AppGoogleMapState extends State<AppGoogleMap>
             onTap: widget.onTap,
             onLongPress: widget.onLongPress,
             mapId: widget.mapId,
-            style: widget.style,
           ),
         ),
         // Internal buttons are now hidden as they are moved to the main screen chips.

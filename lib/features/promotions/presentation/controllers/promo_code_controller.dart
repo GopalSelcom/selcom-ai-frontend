@@ -1,16 +1,16 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/data/models/responses/rides/promo_available_response.dart';
+import '../../../../core/di/injection_container.dart' as di;
 import '../../../../core/errors/failures.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/services/analytics_service.dart';
-import '../../../../core/di/injection_container.dart' as di;
-import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../shared/utils/currency_formatter.dart';
-import '../../../../shared/widgets/promo_apply_success_dialog.dart';
 import '../../../home/domain/repositories/home_repository.dart';
 import '../promo_code_route_args.dart';
 
@@ -19,10 +19,11 @@ class PromoCodeController extends GetxController {
 
   final HomeRepository homeRepository;
 
-  final RxList<PromocodeModel> promoCodes = <PromocodeModel>[].obs;
+  final RxList<PromoCodeModel> promoCodes = <PromoCodeModel>[].obs;
   final TextEditingController promoCodeTextController = TextEditingController();
   final isLoading = true.obs;
   final isApplying = false.obs;
+  final showApplySuccess = false.obs;
   final loadError = RxnString();
   final applyInlineError = RxnString();
 
@@ -71,6 +72,9 @@ class PromoCodeController extends GetxController {
     if (item.minRideAmount > 0 && args.fareEstimate < item.minRideAmount) {
       return false;
     }
+    if (args.bookAny) {
+      return false;
+    }
     if (item.applicableVehicleTypes.isNotEmpty &&
         !item.applicableVehicleTypes.contains(args.vehicleTypeId)) {
       return false;
@@ -88,6 +92,9 @@ class PromoCodeController extends GetxController {
         'amount': CurrencyFormatter.format(item.minRideAmount),
       });
     }
+    if (args.bookAny) {
+      return AppStrings.promoCodeNotValidForVehicle.tr;
+    }
     if (item.applicableVehicleTypes.isNotEmpty &&
         !item.applicableVehicleTypes.contains(args.vehicleTypeId)) {
       return AppStrings.promoCodeNotValidForVehicle.tr;
@@ -95,10 +102,10 @@ class PromoCodeController extends GetxController {
     return AppStrings.promoErrorNotApplicable.tr;
   }
 
-  PromocodeModel _mapToDisplayModel(AvailablePromoItem item) {
+  PromoCodeModel _mapToDisplayModel(AvailablePromoItem item) {
     final title = item.description.isNotEmpty ? item.description : item.code;
     final applicable = _isPromoApplicable(item);
-    return PromocodeModel(
+    return PromoCodeModel(
       code: item.code,
       title: title,
       subtitle: _subtitleFor(item),
@@ -145,7 +152,25 @@ class PromoCodeController extends GetxController {
     await _applyCode(code);
   }
 
-  Future<void> applyPromo(PromocodeModel promo) async {
+  static const Duration _successDisplayDuration = Duration(seconds: 2);
+  static const Duration _successDismissSettleDuration = Duration(
+    milliseconds: 320,
+  );
+
+  /// Shows success on promo screen, waits for dismiss, then pops with [applyResult].
+  Future<void> _showSuccessThenReturn(PromoCodeApplyResult applyResult) async {
+    showApplySuccess.value = true;
+    await Future<void>.delayed(_successDisplayDuration);
+    showApplySuccess.value = false;
+    await Future<void>.delayed(_successDismissSettleDuration);
+    await SchedulerBinding.instance.endOfFrame;
+    final navigator = Get.key.currentState;
+    if (navigator != null && navigator.canPop()) {
+      Get.back(result: applyResult.toMap());
+    }
+  }
+
+  Future<void> applyPromo(PromoCodeModel promo) async {
     if (!promo.isApplicable) return;
     final code = promo.code.trim().toUpperCase();
     if (code.isEmpty) return;
@@ -159,50 +184,56 @@ class PromoCodeController extends GetxController {
     if (isApplying.value) return;
 
     final args = _rideArgs!;
-    isApplying.value = true;
-    AppDialogs.showLoadingDialog();
-    try {
-      final result = await homeRepository.validatePromo(
-        code: code,
-        vehicleTypeId: args.vehicleTypeId,
-        fareEstimate: args.fareEstimate,
-      );
-      _dismissLoadingDialogIfOpen();
-
-      await result.fold<Future<void>>(
-        (f) async {
-          final err = f is PromoValidationFailure ? f.errorCode : null;
-          applyInlineError.value = _messageForPromoError(err, f.message);
-          unawaited(
-            di.sl<AnalyticsService>().logEvent(
-              'promo_validated',
-              parameters: {'success': 'false', 'error_code': err ?? 'unknown'},
-            ),
-          );
-        },
-        (data) async {
-          unawaited(
-            di.sl<AnalyticsService>().logEvent(
-              'promo_validated',
-              parameters: {'success': 'true', 'code': data.code},
-            ),
-          );
-          await AppDialogs.showAnimatedDialog<void>(
-            child: const PromoApplySuccessDialog(),
-            barrierDismissible: false,
-            barrierColor: Colors.black38,
-          );
-          Get.back(result: PromocodeApplyResult(code: data.code).toMap());
-        },
-      );
-    } finally {
-      isApplying.value = false;
+    if (args.bookAny) {
+      applyInlineError.value = AppStrings.promoCodeNotValidForVehicle.tr;
+      return;
     }
-  }
 
-  void _dismissLoadingDialogIfOpen() {
-    if (Get.isDialogOpen ?? false) {
-      Get.back<void>();
+    PromoCodeApplyResult? applyResult;
+    try {
+      await Loader.withFlag(isApplying, () async {
+        final result = await homeRepository.validatePromo(
+          code: code,
+          vehicleTypeId: args.vehicleTypeId,
+          fareEstimate: args.fareEstimate,
+        );
+
+        await result.fold<Future<void>>(
+          (f) async {
+            final err = f is PromoValidationFailure ? f.errorCode : null;
+            applyInlineError.value = _messageForPromoError(err, f.message);
+            unawaited(
+              di.sl<AnalyticsService>().logEvent(
+                'promo_validated',
+                parameters: {
+                  'success': 'false',
+                  'error_code': err ?? 'unknown',
+                },
+              ),
+            );
+          },
+          (data) async {
+            applyResult = PromoCodeApplyResult(
+              code: data.code,
+              vehicleTypeId: args.vehicleTypeId,
+              discountedFare: data.discountedFare,
+              discountAmount: data.discountAmount,
+            );
+            unawaited(
+              di.sl<AnalyticsService>().logEvent(
+                'promo_validated',
+                parameters: {'success': 'true', 'code': data.code},
+              ),
+            );
+          },
+        );
+      });
+    } catch (_) {
+      applyInlineError.value = AppStrings.promoErrorNetwork.tr;
+    }
+
+    if (applyResult != null) {
+      await _showSuccessThenReturn(applyResult!);
     }
   }
 
@@ -221,7 +252,7 @@ class PromoCodeController extends GetxController {
   }
 }
 
-class PromocodeModel {
+class PromoCodeModel {
   final String code;
   final String title;
   final String subtitle;
@@ -229,7 +260,7 @@ class PromocodeModel {
   final bool isApplicable;
   final String? inapplicableHint;
 
-  PromocodeModel({
+  PromoCodeModel({
     required this.code,
     required this.title,
     required this.subtitle,

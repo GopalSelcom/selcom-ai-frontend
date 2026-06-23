@@ -8,8 +8,11 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/widgets/animated_blur_dialog.dart';
+import '../../../../shared/widgets/app_cupertino_text_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/app_skeleton_loader.dart';
+import '../../../../shared/widgets/promo_apply_success_dialog.dart';
 import '../controllers/promo_code_controller.dart';
 
 class PromoCodeScreen extends StatelessWidget {
@@ -19,46 +22,67 @@ class PromoCodeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final PromoCodeController controller = Get.find<PromoCodeController>();
 
-    return Scaffold(
-      backgroundColor: AppColors.white,
-      body: Column(
-        children: [
-          AppProfileHeader(title: AppStrings.havePromoCode.tr),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 13.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    return Obx(() {
+      final applying = controller.isApplying.value;
+      final showSuccess = controller.showApplySuccess.value;
+      return PopScope(
+        canPop: !applying && !showSuccess,
+        child: Scaffold(
+          backgroundColor: AppColors.white,
+          body: Stack(
+            children: [
+              Column(
                 children: [
-                  Text(
-                    AppStrings.enterPromocode.tr,
-                    style: AppTextStyles.bodySecondary.copyWith(
-                      fontSize: 15.sp,
-                      color: AppColors.textMutedStrong,
-                      fontWeight: FontWeight.w500,
-                      height: 20 / 15,
+                  AppProfileHeader(title: AppStrings.havePromoCode.tr),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 13.h,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            AppStrings.enterPromocode.tr,
+                            style: AppTextStyles.bodySecondary.copyWith(
+                              fontSize: 15.sp,
+                              color: AppColors.textMutedStrong,
+                              fontWeight: FontWeight.w500,
+                              height: 20 / 15,
+                            ),
+                          ),
+                          SizedBox(height: 4.h),
+                          Obx(() => _buildPromoInputField(controller)),
+                          SizedBox(height: 18.h),
+                          Text(
+                            AppStrings.promocodeList.tr,
+                            style: AppTextStyles.bodySecondary.copyWith(
+                              fontSize: 15.sp,
+                              color: AppColors.textBody,
+                              fontWeight: FontWeight.w500,
+                              height: 20 / 15,
+                            ),
+                          ),
+                          SizedBox(height: 5.h),
+                          Obx(() => _buildPromoListSection(controller)),
+                        ],
+                      ),
                     ),
                   ),
-                  SizedBox(height: 4.h),
-                  Obx(() => _buildPromoInputField(controller)),
-                  SizedBox(height: 18.h),
-                  Text(
-                    AppStrings.promocodeList.tr,
-                    style: AppTextStyles.bodySecondary.copyWith(
-                      fontSize: 15.sp,
-                      color: AppColors.textBody,
-                      fontWeight: FontWeight.w500,
-                      height: 20 / 15,
-                    ),
-                  ),
-                  SizedBox(height: 5.h),
-                  Obx(() => _buildPromoListSection(controller)),
                 ],
               ),
-            ),
+              if (showSuccess) _buildApplySuccessOverlay(),
+            ],
           ),
-        ],
-      ),
+        ),
+      );
+    });
+  }
+
+  Widget _buildApplySuccessOverlay() {
+    return const Positioned.fill(
+      child: AppBlurModalOverlay(child: PromoApplySuccessPanel()),
     );
   }
 
@@ -110,32 +134,30 @@ class PromoCodeScreen extends StatelessWidget {
     required bool showRetry,
     required VoidCallback onRetry,
   }) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 24.h),
-      child: Column(
-        children: [
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: AppTextStyles.bodySecondary.copyWith(
-              fontSize: 14.sp,
-              color: AppColors.textBody,
-            ),
-          ),
-          if (showRetry) ...[
-            SizedBox(height: 12.h),
-            TextButton(
-              onPressed: onRetry,
-              child: Text(
-                AppStrings.retry.tr,
-                style: AppTextStyles.button.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                ),
+    return SizedBox(
+      width: double.infinity,
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 24.h),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.bodySecondary.copyWith(
+                fontSize: 14.sp,
+                color: AppColors.textBody,
               ),
             ),
+            if (showRetry) ...[
+              SizedBox(height: 12.h),
+              AppCupertinoTextButton.retry(
+                label: AppStrings.retry.tr,
+                onPressed: onRetry,
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -209,18 +231,10 @@ class PromoCodeScreen extends StatelessWidget {
                   thickness: 1,
                 ),
                 SizedBox(width: 10.w),
-                TextButton(
+                AppCupertinoTextButton.promoFieldApply(
+                  label: AppStrings.apply.tr,
                   onPressed: applying ? null : controller.applyPromoCode,
-                  child: Text(
-                    AppStrings.apply.tr,
-                    style: AppTextStyles.button.copyWith(
-                      color: applying
-                          ? AppColors.textMutedStrong
-                          : AppColors.primary,
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                  enabled: !applying,
                 ),
               ],
             ),
@@ -240,7 +254,7 @@ class PromoCodeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPromoCard(PromocodeModel promo, PromoCodeController controller) {
+  Widget _buildPromoCard(PromoCodeModel promo, PromoCodeController controller) {
     return Obx(() {
       final applying = controller.isApplying.value;
       final enabled = promo.isApplicable && !applying;
@@ -358,26 +372,12 @@ class PromoCodeScreen extends StatelessWidget {
                           ),
                         ),
                       ),
-                      TextButton(
+                      AppCupertinoTextButton.promoListApply(
+                        label: AppStrings.apply.tr,
                         onPressed: enabled
                             ? () => controller.applyPromo(promo)
                             : null,
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: Text(
-                          AppStrings.apply.tr,
-                          style: AppTextStyles.button.copyWith(
-                            color: enabled
-                                ? AppColors.primary
-                                : AppColors.textMutedStrong,
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: -0.4,
-                          ),
-                        ),
+                        enabled: enabled,
                       ),
                     ],
                   ),

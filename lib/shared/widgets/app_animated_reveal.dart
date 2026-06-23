@@ -63,11 +63,7 @@ class AppAnimatedReveal extends StatelessWidget {
       },
       child: show
           ? KeyedSubtree(key: visibleKey, child: child)
-          : SizedBox(
-              key: hiddenKey,
-              width: double.infinity,
-              height: 0,
-            ),
+          : SizedBox(key: hiddenKey, width: double.infinity, height: 0),
     );
   }
 }

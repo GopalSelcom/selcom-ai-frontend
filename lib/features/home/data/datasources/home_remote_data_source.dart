@@ -1,17 +1,17 @@
-import 'package:selcom_rides_frontend/core/data/models/responses/rides/book_rides_response.dart';
-
-import '../../../../core/data/models/responses/rides/vehicle_types_response.dart';
-import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/data/models/requests/book_ride_request.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
+import '../../../../core/data/models/responses/rides/book_rides_response.dart';
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
 import '../../../../core/data/models/responses/rides/promo_available_response.dart';
 import '../../../../core/data/models/responses/rides/promo_validate_response.dart';
-import '../models/geocode_response_model.dart';
-import '../models/places_models.dart';
+import '../../../../core/data/models/responses/rides/vehicle_types_response.dart';
+import '../../../../core/data/models/vehicle_type_model.dart';
+import '../../../../core/config/ride_payment_endpoints.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
+import '../models/geocode_response_model.dart';
+import '../models/places_models.dart';
 
 abstract class HomeRemoteDataSource {
   Future<List<VehicleTypeModel>> getVehicleTypes();
@@ -204,7 +204,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   Future<BookRideResponse> bookRide(BookRideRequest request) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: URLS.ride.bookRide,
+        endpoint: RidePaymentEndpoints.bookRide,
         method: ApiMethod.post,
         body: request.toJson(),
       ),
@@ -223,9 +223,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       }
       if (raw is Map) {
         try {
-          return BookRideResponse.fromJson(
-            Map<String, dynamic>.from(raw),
-          );
+          return BookRideResponse.fromJson(Map<String, dynamic>.from(raw));
         } catch (_) {}
       }
       return BookRideResponse(

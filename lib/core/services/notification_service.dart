@@ -1,24 +1,32 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/material.dart';
+
+import 'package:agora_calling_package/utils/constants.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import '../services/storage_service.dart';
-import 'package:logger/logger.dart';
 import 'package:get/get.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
-import '../di/injection_container.dart';
+import 'package:logger/logger.dart';
+import 'package:permission_handler/permission_handler.dart';
+
 import '../../features/ride/domain/repositories/ride_repository.dart';
-import '../../shared/utils/ride_active_navigation.dart';
 import '../../shared/utils/app_dialogs.dart';
+import '../../shared/utils/ride_active_navigation.dart';
 import '../data/models/notification_model.dart';
+import '../di/injection_container.dart';
+import '../localization/app_strings.dart';
+import 'call_permission_prompt_service.dart';
+import 'error_reporting/error_reporter.dart';
 import 'live_activity/android_order_tracking_manager.dart';
-import '../services/error_reporting/error_reporter.dart';
+import 'progress_indicator/loader.dart';
+import 'storage_service.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
+
   factory NotificationService() => _instance;
+
   NotificationService._internal();
 
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
@@ -27,6 +35,7 @@ class NotificationService {
   final Logger _logger = Logger();
 
   bool _isInitialized = false;
+  bool _homePermissionFlowRunning = false;
   String? _deviceToken;
   Map<String, dynamic>? _pendingNavigationRaw;
   static const String _defaultChannelId = 'high_importance_channel';
@@ -154,6 +163,38 @@ class NotificationService {
     return settings;
   }
 
+  /// Home entry: system notification sheet, then Android call/full-screen prompts.
+  /// Runs strictly one step at a time (no overlapping dialogs).
+  Future<void> runHomePermissionFlow() async {
+    if (_homePermissionFlowRunning) return;
+    _homePermissionFlowRunning = true;
+    try {
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+      if (!await CallPermissionPromptService.waitUntilUiReady()) return;
+
+      await _requestSystemNotificationPermission();
+      if (!await CallPermissionPromptService.waitUntilUiReady()) return;
+
+      if (Platform.isAndroid) {
+        await CallPermissionPromptService.ensureAndroidCallPermissions();
+      }
+    } finally {
+      _homePermissionFlowRunning = false;
+    }
+  }
+
+  Future<void> _requestSystemNotificationPermission() async {
+    if (Platform.isAndroid) {
+      final current = await Permission.notification.status;
+      if (!current.isGranted && !current.isPermanentlyDenied) {
+        await Permission.notification.request();
+      }
+    } else {
+      await requestPermission();
+    }
+    unawaited(getToken());
+  }
+
   Future<bool> isPermissionDenied() async {
     NotificationSettings settings = await _fcm.getNotificationSettings();
     return settings.authorizationStatus == AuthorizationStatus.denied;
@@ -206,6 +247,17 @@ class NotificationService {
 
   void _onForegroundMessage(RemoteMessage message) {
     _logger.d("Foreground Message received: ${message.messageId}");
+
+    // Call pushes use CallKit / in-app UI — not a generic banner.
+    final callType = PushTypes.typeFromData(message.data);
+    if (PushTypes.isLiveCallSignaling(callType)) {
+      _logger.d(
+        'Skipping host notification for call push type=$callType '
+        '— handled by agora_calling_package',
+      );
+      return;
+    }
+
     final data = FCMNotificationData.fromJson(message.data);
 
     String? title = message.notification?.title ?? data.title;
@@ -284,33 +336,29 @@ class NotificationService {
     try {
       _logger.i("Navigating to ride $rideId from notification");
 
-      AppDialogs.showAnimatedDialog(
-        child: const Center(child: CircularProgressIndicator()),
-        barrierDismissible: false,
-      );
+      Loader.instance.show();
+      try {
+        final rideRepo = sl<RideRepository>();
+        final result = await rideRepo.getRideDetails(rideId);
 
-      final rideRepo = sl<RideRepository>();
-      final result = await rideRepo.getRideDetails(rideId);
-
-      if (Get.isDialogOpen ?? false) Get.back();
-
-      result.fold(
-        (failure) {
+        result.fold((failure) {
           _logger.e("Error fetching ride details: ${failure.message}");
           AppDialogs.showErrorDialog(
             message: AppStrings.unableToOpenRideDetails.tr,
           );
-        },
-        (ride) => navigateToDriverAcceptedForRide(ride),
-      );
+        }, (ride) => navigateToOngoingRide(ride));
+      } finally {
+        Loader.instance.hide();
+      }
     } catch (e, stackTrace) {
+      Loader.instance.hide();
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      if (Get.isDialogOpen ?? false) Get.back();
       _logger.e("Exception in _handleNotificationNavigationRaw: $e");
     }
   }
 
   int _idCounter = 0;
+
   Future<void> showLocalNotification({
     int? id,
     String? title,
@@ -351,5 +399,4 @@ class NotificationService {
       debugPrint("Error in _localNotifications.show: $e");
     }
   }
-
 }

@@ -11,7 +11,8 @@ class ShareLinkModel extends ShareLinkEntity {
     return ShareLinkModel(
       shareUrl: (json['share_url'] ?? '').toString(),
       shareToken: (json['share_token'] ?? '').toString(),
-      expiresAt: DateTime.tryParse((json['expires_at'] ?? '').toString()) ??
+      expiresAt:
+          DateTime.tryParse((json['expires_at'] ?? '').toString()) ??
           DateTime.now().add(const Duration(hours: 24)),
     );
   }

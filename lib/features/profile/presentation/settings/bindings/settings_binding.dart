@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+
 import '../../../../../core/di/injection_container.dart';
 import '../../../../../core/services/app_settings_service.dart';
 import '../../../../../features/settings/domain/usecases/settings_usecase.dart';

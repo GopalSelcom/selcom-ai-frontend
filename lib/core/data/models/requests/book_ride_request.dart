@@ -4,15 +4,15 @@ class BookRideRequest {
   final String validationId;
   final String idempotencyKey;
   final LocationEntity pickup;
-  final LocationEntity? destination;
-  final List<LocationEntity>? destinations;
-  final String vehicleTypeId;
+  final LocationEntity destination;
+  final List<LocationEntity> stops;
+  final String? vehicleTypeId;
+  final bool bookAny;
   final String paymentMethod;
   final bool isBookedForOther;
   final String? passengerName;
   final String? passengerPhone;
   final String note;
-  /// Pre-discount fare for the selected vehicle (server re-validates promo).
   final int? fareEstimate;
   final String? promoCode;
 
@@ -20,9 +20,10 @@ class BookRideRequest {
     required this.validationId,
     required this.idempotencyKey,
     required this.pickup,
-    this.destination,
-    this.destinations,
-    required this.vehicleTypeId,
+    required this.destination,
+    this.stops = const [],
+    this.vehicleTypeId,
+    this.bookAny = false,
     required this.paymentMethod,
     this.isBookedForOther = false,
     this.passengerName,
@@ -33,23 +34,48 @@ class BookRideRequest {
   });
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = {
+    if (bookAny) {
+      final data = <String, dynamic>{
+        'validation_id': validationId,
+        'idempotency_key': idempotencyKey,
+        'book_any': true,
+        'payment_method': paymentMethod,
+        'pickup': _locationJson(pickup),
+        'stops': stops.map(_locationJson).toList(),
+        'destination': _locationJson(destination),
+      };
+      if (isBookedForOther) {
+        data['is_booked_for_other'] = true;
+        if (passengerName != null) data['passenger_name'] = passengerName;
+        if (passengerPhone != null) data['passenger_phone'] = passengerPhone;
+      }
+      return data;
+    }
+
+    final data = <String, dynamic>{
       'validation_id': validationId,
       'idempotency_key': idempotencyKey,
-      'pickup': {
-        'lat': pickup.lat,
-        'lng': pickup.lng,
-        'address': pickup.address,
-      },
-      'vehicle_type_id': vehicleTypeId,
-      'payment_method': paymentMethod,
-      'is_booked_for_other': isBookedForOther,
-      'note': note,
+      'pickup': _locationJson(pickup),
     };
+
+    if (stops.isNotEmpty) {
+      data['stops'] = stops.map(_locationJson).toList();
+    }
+
+    data['destination'] = _locationJson(destination);
+
+    if (vehicleTypeId != null && vehicleTypeId!.trim().isNotEmpty) {
+      data['vehicle_type_id'] = vehicleTypeId;
+    }
+
+    data['payment_method'] = paymentMethod;
+    data['is_booked_for_other'] = isBookedForOther;
+    data['note'] = note;
 
     if (fareEstimate != null) {
       data['fare_estimate'] = fareEstimate;
     }
+
     final promo = promoCode?.trim();
     if (promo != null && promo.isNotEmpty) {
       data['promo_code'] = promo.toUpperCase();
@@ -60,18 +86,12 @@ class BookRideRequest {
       if (passengerPhone != null) data['passenger_phone'] = passengerPhone;
     }
 
-    if (destinations != null && destinations!.isNotEmpty) {
-      data['destinations'] = destinations!
-          .map((d) => {'lat': d.lat, 'lng': d.lng, 'address': d.address})
-          .toList();
-    } else if (destination != null) {
-      data['destination'] = {
-        'lat': destination!.lat,
-        'lng': destination!.lng,
-        'address': destination!.address,
-      };
-    }
-
     return data;
   }
+
+  static Map<String, dynamic> _locationJson(LocationEntity location) => {
+    'lat': location.lat,
+    'lng': location.lng,
+    'address': location.address,
+  };
 }

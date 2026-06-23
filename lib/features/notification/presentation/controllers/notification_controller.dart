@@ -8,8 +8,7 @@ class NotificationController extends GetxController {
 
   NotificationController({required this.repository});
 
-  final RxList<NotificationModel> notifications =
-      <NotificationModel>[].obs;
+  final RxList<NotificationModel> notifications = <NotificationModel>[].obs;
 
   final RxBool isLoading = false.obs;
   final RxBool isLoadingMore = false.obs;
@@ -57,7 +56,9 @@ class NotificationController extends GetxController {
 
   bool get hasMorePages => currentPage.value < totalPages.value;
   bool get canMarkAllAsRead =>
-      unreadCount.value > 0 && notifications.isNotEmpty && !isMarkAllLoading.value;
+      unreadCount.value > 0 &&
+      notifications.isNotEmpty &&
+      !isMarkAllLoading.value;
 
   Future<void> loadMoreNotifications() async {
     if (isLoading.value || isLoadingMore.value || !hasMorePages) {
@@ -66,18 +67,18 @@ class NotificationController extends GetxController {
 
     isLoadingMore.value = true;
     final nextPage = currentPage.value + 1;
-    final result = await repository.getNotifications(page: nextPage, limit: limit);
-
-    result.fold(
-      (failure) {},
-      (response) {
-        final payload = response.data;
-        notifications.addAll(payload?.notifications ?? const []);
-        unreadCount.value = payload?.unreadCount ?? unreadCount.value;
-        currentPage.value = payload?.pagination?.page ?? nextPage;
-        totalPages.value = payload?.pagination?.totalPages ?? totalPages.value;
-      },
+    final result = await repository.getNotifications(
+      page: nextPage,
+      limit: limit,
     );
+
+    result.fold((failure) {}, (response) {
+      final payload = response.data;
+      notifications.addAll(payload?.notifications ?? const []);
+      unreadCount.value = payload?.unreadCount ?? unreadCount.value;
+      currentPage.value = payload?.pagination?.page ?? nextPage;
+      totalPages.value = payload?.pagination?.totalPages ?? totalPages.value;
+    });
 
     isLoadingMore.value = false;
   }
@@ -90,16 +91,13 @@ class NotificationController extends GetxController {
 
     final result = await repository.markAsRead(id);
 
-    result.fold(
-      (failure) {},
-      (success) {
-        if (success) {
-          notifications[index] = notifications[index].copyWith(isRead: true);
-          unreadCount.value = unreadCount.value > 0 ? unreadCount.value - 1 : 0;
-          notifications.refresh();
-        }
-      },
-    );
+    result.fold((failure) {}, (success) {
+      if (success) {
+        notifications[index] = notifications[index].copyWith(isRead: true);
+        unreadCount.value = unreadCount.value > 0 ? unreadCount.value - 1 : 0;
+        notifications.refresh();
+      }
+    });
   }
 
   Future<void> markAllAsRead({bool silent = false}) async {
@@ -112,17 +110,14 @@ class NotificationController extends GetxController {
     }
     final result = await repository.markAllAsRead();
 
-    result.fold(
-      (failure) {},
-      (success) {
-        if (success) {
-          notifications.value = notifications
-              .map((e) => e.copyWith(isRead: true))
-              .toList();
-          unreadCount.value = 0;
-        }
-      },
-    );
+    result.fold((failure) {}, (success) {
+      if (success) {
+        notifications.value = notifications
+            .map((e) => e.copyWith(isRead: true))
+            .toList();
+        unreadCount.value = 0;
+      }
+    });
     if (!silent) {
       isMarkAllLoading.value = false;
     }

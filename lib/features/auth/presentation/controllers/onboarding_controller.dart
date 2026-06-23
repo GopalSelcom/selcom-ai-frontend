@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+import '/core/localization/app_strings.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/routes/app_routes.dart';
@@ -50,33 +50,37 @@ class OnboardingController extends GetxController {
   /// empty response, [slides] stays [_staticSlides].
   Future<void> _loadOnboardingBannersFromApi() async {
     final result = await Get.find<AuthRepository>().getOnboardingBanners();
-    result.fold((_) {
-      bannerFetchSettled.value = true;
-    }, (items) {
-      if (items.isNotEmpty) {
-        final base = _staticSlides();
-        final merged = List<OnboardingSlide>.generate(3, (i) {
-          final b = base[i];
-          final api = items.length == 1
-              ? items.first
-              : (i < items.length ? items[i] : null);
-          final title =
-              (api != null && api.title.isNotEmpty) ? api.title : b.title;
-          final subtitle = (api != null && api.subtitle.isNotEmpty)
-              ? api.subtitle
-              : b.subtitle;
-          final url = api != null ? _trimUrl(api.backgroundImageUrl) : null;
-          return OnboardingSlide(
-            title: title,
-            subtitle: subtitle,
-            image: b.image,
-            networkImageUrl: url,
-          );
-        });
-        slides.assignAll(merged);
-      }
-      bannerFetchSettled.value = true;
-    });
+    result.fold(
+      (_) {
+        bannerFetchSettled.value = true;
+      },
+      (items) {
+        if (items.isNotEmpty) {
+          final base = _staticSlides();
+          final merged = List<OnboardingSlide>.generate(3, (i) {
+            final b = base[i];
+            final api = items.length == 1
+                ? items.first
+                : (i < items.length ? items[i] : null);
+            final title = (api != null && api.title.isNotEmpty)
+                ? api.title
+                : b.title;
+            final subtitle = (api != null && api.subtitle.isNotEmpty)
+                ? api.subtitle
+                : b.subtitle;
+            final url = api != null ? _trimUrl(api.backgroundImageUrl) : null;
+            return OnboardingSlide(
+              title: title,
+              subtitle: subtitle,
+              image: b.image,
+              networkImageUrl: url,
+            );
+          });
+          slides.assignAll(merged);
+        }
+        bannerFetchSettled.value = true;
+      },
+    );
   }
 
   void onPageChanged(int index) {
@@ -84,11 +88,11 @@ class OnboardingController extends GetxController {
   }
 
   void onGetStarted() {
-    Get.offAllNamed(AppRoutes.phone);
+    Get.offAllNamed(AppRoutes.login);
   }
 
   void onSkip() {
-    Get.offAllNamed(AppRoutes.phone);
+    Get.offAllNamed(AppRoutes.login);
   }
 }
 

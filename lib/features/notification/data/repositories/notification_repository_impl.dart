@@ -1,9 +1,10 @@
 import 'package:dartz/dartz.dart';
+
+import '../../../../core/data/models/notification_model.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../domain/repositories/notification_repository.dart';
 import '../datasources/notification_remote_data_source.dart';
-import '../../../../core/services/error_reporting/error_reporter.dart';
-import '../../../../core/data/models/notification_model.dart';
 
 class NotificationRepositoryImpl implements NotificationRepository {
   final NotificationRemoteDataSource remoteDataSource;

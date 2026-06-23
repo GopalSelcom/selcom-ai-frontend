@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 
 import '../../../../core/data/models/requests/submit_ride_rating_request.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/services/analytics_service.dart';
+import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../domain/entities/ride_rating_ride_entity.dart';
 import '../../domain/entities/ride_rating_tag_entity.dart';
-import '../../domain/usecases/get_review_tags_usecase.dart';
 import '../../domain/usecases/get_last_completed_ride_usecase.dart';
+import '../../domain/usecases/get_review_tags_usecase.dart';
 import '../../domain/usecases/skip_ride_rating_usecase.dart';
 import '../../domain/usecases/submit_ride_rating_usecase.dart';
 import '../widgets/ride_rating_bottom_sheet.dart';
@@ -42,6 +43,7 @@ class RideRatingController extends GetxController {
   final isLoadingTags = false.obs;
   final commentController = TextEditingController();
   final commentText = ''.obs;
+  final commentValidationError = RxnString();
 
   bool _hasPromptedThisSession = false;
   int _latestTagRequestRating = 0;
@@ -159,6 +161,9 @@ class RideRatingController extends GetxController {
       commentController.clear();
       commentText.value = '';
     }
+    if (rating > 2) {
+      commentValidationError.value = null;
+    }
     await _loadReviewTagsForRating(rating);
   }
 
@@ -175,6 +180,9 @@ class RideRatingController extends GetxController {
   void onCommentChanged(String value) {
     if (commentText.value != value) {
       commentText.value = value;
+    }
+    if (value.trim().isNotEmpty && commentValidationError.value != null) {
+      commentValidationError.value = null;
     }
   }
 
@@ -198,49 +206,47 @@ class RideRatingController extends GetxController {
     }
     final comment = requiresComment ? commentController.text.trim() : '';
     if (requiresComment && comment.isEmpty) {
-      AppDialogs.showErrorDialog(
-        title: AppStrings.commentRequired.tr,
-        message: AppStrings.pleaseEnterYourCommentFirst.tr,
-      );
+      commentValidationError.value = AppStrings.pleaseEnterYourCommentFirst.tr;
       return;
     }
+    commentValidationError.value = null;
 
-    isSubmitting.value = true;
-    final result = await submitRideRatingUseCase(
-      SubmitRideRatingRequest(
-        rideId: ride.rideId,
-        rating: selectedRating.value,
-        tags: selectedTags.toList(),
-        comment: comment,
-      ),
-    );
-    isSubmitting.value = false;
+    await Loader.withFlag(isSubmitting, () async {
+      final result = await submitRideRatingUseCase(
+        SubmitRideRatingRequest(
+          rideId: ride.rideId,
+          rating: selectedRating.value,
+          tags: selectedTags.toList(),
+          comment: comment,
+        ),
+      );
 
-    result.fold((failure) => _handleFailure(failure), (ok) async {
-      if (!ok) {
-        AppDialogs.showErrorDialog(
-          title: AppStrings.submitFailed.tr,
-          message: AppStrings.unableToSubmitRatingNow.tr,
+      result.fold((failure) => _handleFailure(failure), (ok) async {
+        if (!ok) {
+          AppDialogs.showErrorDialog(
+            title: AppStrings.submitFailed.tr,
+            message: AppStrings.unableToSubmitRatingNow.tr,
+          );
+          return;
+        }
+        await analyticsService.logEvent(
+          'ride_rating_submitted',
+          parameters: {
+            'ride_id': ride.rideId,
+            'rating': selectedRating.value,
+            'tags_count': selectedTags.length,
+          },
         );
-        return;
-      }
-      await analyticsService.logEvent(
-        'ride_rating_submitted',
-        parameters: {
-          'ride_id': ride.rideId,
-          'rating': selectedRating.value,
-          'tags_count': selectedTags.length,
-        },
-      );
-      closeBottomSheet();
-      AppDialogs.showSuccessDialog(
-        title: AppStrings.thankYou.tr,
-        message: AppStrings.yourRatingHasBeenSubmitted.tr,
-        onConfirm: () {
-          _resetSheetState(clearPendingRide: true);
-          onSuccessConfirmed?.call();
-        },
-      );
+        closeBottomSheet();
+        AppDialogs.showSuccessDialog(
+          title: AppStrings.thankYou.tr,
+          message: AppStrings.yourRatingHasBeenSubmitted.tr,
+          onConfirm: () {
+            _resetSheetState(clearPendingRide: true);
+            onSuccessConfirmed?.call();
+          },
+        );
+      });
     });
   }
 
@@ -251,24 +257,24 @@ class RideRatingController extends GetxController {
       return;
     }
 
-    isSubmitting.value = true;
-    final result = await skipRideRatingUseCase(rideId: ride.rideId);
-    isSubmitting.value = false;
+    await Loader.withFlag(isSubmitting, () async {
+      final result = await skipRideRatingUseCase(rideId: ride.rideId);
 
-    result.fold((failure) => _handleFailure(failure), (ok) async {
-      if (!ok) {
-        AppDialogs.showErrorDialog(
-          title: AppStrings.skipFailed.tr,
-          message: AppStrings.unableToSkipRatingNow.tr,
+      result.fold((failure) => _handleFailure(failure), (ok) async {
+        if (!ok) {
+          AppDialogs.showErrorDialog(
+            title: AppStrings.skipFailed.tr,
+            message: AppStrings.unableToSkipRatingNow.tr,
+          );
+          return;
+        }
+        await analyticsService.logEvent(
+          'ride_rating_skipped',
+          parameters: {'ride_id': ride.rideId},
         );
-        return;
-      }
-      await analyticsService.logEvent(
-        'ride_rating_skipped',
-        parameters: {'ride_id': ride.rideId},
-      );
-      _resetSheetState(clearPendingRide: true);
-      closeBottomSheet();
+        _resetSheetState(clearPendingRide: true);
+        closeBottomSheet();
+      });
     });
   }
 
@@ -338,6 +344,7 @@ class RideRatingController extends GetxController {
     selectedTags.clear();
     commentController.clear();
     commentText.value = '';
+    commentValidationError.value = null;
     isLoadingTags.value = false;
     _latestTagRequestRating = 0;
     if (clearPendingRide) {

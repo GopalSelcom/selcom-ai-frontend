@@ -1,13 +1,49 @@
+class BookForOtherSettings {
+  final bool enabled;
+  final double distanceThresholdKm;
+
+  /// Max concurrent **book-for-other** rides (from `features.book_for_other.max_active`).
+  /// Does not limit the rider's own active ride (still max one self ride).
+  final int maxActive;
+
+  const BookForOtherSettings({
+    required this.enabled,
+    required this.distanceThresholdKm,
+    required this.maxActive,
+  });
+
+  factory BookForOtherSettings.fromJson(Map<String, dynamic> json) {
+    return BookForOtherSettings(
+      enabled: json['enabled'] == true,
+      distanceThresholdKm:
+          (json['distance_threshold_km'] as num?)?.toDouble() ?? 1,
+      maxActive: (json['max_active'] as num?)?.toInt() ?? 1,
+    );
+  }
+}
+
 class AppSettingsModel {
   /// Server `payment_timer` (seconds); used when absent or invalid.
   static const int defaultPaymentTimerSeconds = 300;
 
+  /// `features.max_stops` — max intermediate stops (excludes final destination).
+  static const int defaultMaxStops = 2;
+
   final Map<String, bool> features;
   final int paymentTimerSeconds;
+  final BookForOtherSettings? bookForOther;
+
+  /// Ride-cancel options from `/go/settings` → `settings.cancellation_reasons`.
+  final List<String> cancellationReasons;
+
+  final int maxStops;
 
   const AppSettingsModel({
     required this.features,
     this.paymentTimerSeconds = defaultPaymentTimerSeconds,
+    this.bookForOther,
+    this.cancellationReasons = const [],
+    this.maxStops = defaultMaxStops,
   });
 
   factory AppSettingsModel.fromJson(Map<String, dynamic> json) {
@@ -16,28 +52,60 @@ class AppSettingsModel {
     }
 
     final featureMap = <String, bool>{};
+    BookForOtherSettings? bookForOther;
+    var maxStops = defaultMaxStops;
     final rawFeatures = json['features'];
     if (rawFeatures is Map<String, dynamic>) {
       for (final entry in rawFeatures.entries) {
-        featureMap[entry.key] = parseBool(entry.value);
+        final value = entry.value;
+        if (entry.key == 'book_for_other' && value is Map) {
+          bookForOther = BookForOtherSettings.fromJson(
+            Map<String, dynamic>.from(value),
+          );
+          featureMap[entry.key] = bookForOther.enabled;
+          continue;
+        }
+        if (entry.key == 'max_stops') {
+          maxStops = _parsePositiveInt(value, defaultMaxStops);
+          continue;
+        }
+        if (value is Map) continue;
+        featureMap[entry.key] = parseBool(value);
       }
     }
+
+    // Server-managed cancel reasons; shown verbatim in the cancel dialog.
+    final rawReasons = json['cancellation_reasons'];
+    final cancellationReasons = rawReasons is List
+        ? rawReasons
+              .whereType<String>()
+              .map((reason) => reason.trim())
+              .where((reason) => reason.isNotEmpty)
+              .toList()
+        : const <String>[];
 
     return AppSettingsModel(
       features: featureMap,
       paymentTimerSeconds: _parsePaymentTimerSeconds(json['payment_timer']),
+      bookForOther: bookForOther,
+      cancellationReasons: cancellationReasons,
+      maxStops: maxStops,
     );
   }
 
   static int _parsePaymentTimerSeconds(dynamic value) {
-    if (value == null) return defaultPaymentTimerSeconds;
+    return _parsePositiveInt(value, defaultPaymentTimerSeconds);
+  }
+
+  static int _parsePositiveInt(dynamic value, int fallback) {
+    if (value == null) return fallback;
     final int? parsed = switch (value) {
       final int v => v,
       final num v => v.toInt(),
       final String v => int.tryParse(v.trim()),
       _ => null,
     };
-    if (parsed == null || parsed <= 0) return defaultPaymentTimerSeconds;
+    if (parsed == null || parsed <= 0) return fallback;
     return parsed;
   }
 

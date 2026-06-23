@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+
 import '../../../../core/data/models/requests/book_ride_request.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/responses/rides/book_rides_response.dart';
@@ -6,9 +7,9 @@ import '../../../../core/data/models/responses/rides/promo_available_response.da
 import '../../../../core/data/models/responses/rides/promo_validate_response.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../domain/repositories/home_repository.dart';
 import '../datasources/home_remote_data_source.dart';
-import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../models/geocode_response_model.dart';
 import '../models/home_models.dart';
 import '../models/places_models.dart';
@@ -84,7 +85,11 @@ class HomeRepositoryImpl implements HomeRepository {
         final display = msg.isEmpty
             ? 'Unable to estimate fare for this route.'
             : msg;
-        return Left(ServerFailure(display));
+        final code = response.errorCode?.trim();
+        final failureMessage = (code != null && code.isNotEmpty)
+            ? '$code|$display'
+            : display;
+        return Left(ServerFailure(failureMessage));
       }
       return Right(FareEstimateModel.fromResponse(response));
     } catch (e, stackTrace) {
@@ -150,9 +155,7 @@ class HomeRepositoryImpl implements HomeRepository {
       }
       final msg = (r.message ?? '').trim();
       return Left(
-        ServerFailure(
-          msg.isEmpty ? 'Unable to load promo codes.' : msg,
-        ),
+        ServerFailure(msg.isEmpty ? 'Unable to load promo codes.' : msg),
       );
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);

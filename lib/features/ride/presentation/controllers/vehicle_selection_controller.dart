@@ -1,45 +1,62 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:selcom_rides_frontend/core/utils/map_marker_utils.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../core/config/app_config.dart';
 import '../../../../core/data/models/requests/book_ride_request.dart';
-import '../../../../core/data/models/responses/rides/book_rides_response.dart';
+import '../../../../core/data/models/user_profile_models.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/near_by_rider_response.dart';
 import '../../../../core/data/models/responses/payment_status_response/payment_status_response.dart';
+import '../../../../core/data/models/responses/rides/book_rides_response.dart';
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
+import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
-import '../../../payment/presentation/widgets/payment_status_dialog.dart';
-import '../../../../core/domain/entities/location_entity.dart';
-import '../../../../core/routes/app_routes.dart';
-import '../../../../core/services/app_map_service.dart';
-import '../../../../core/services/nearby_drivers_socket_service.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../home/domain/repositories/home_repository.dart';
-import '../../../home/presentation/controllers/location_selection_controller.dart';
-import '../../../payment/presentation/controllers/payment_method_controller.dart';
-import '../../../profile/domain/repositories/profile_repository.dart';
-import '../../../../shared/utils/address_display_utils.dart';
-import '../../../../shared/utils/app_dialogs.dart';
-import '../../../../shared/utils/vehicle_image_utils.dart';
-import '../../domain/repositories/ride_repository.dart';
 import '../../../../core/di/injection_container.dart' as di;
+import '../../../../core/domain/entities/location_entity.dart';
+import '../../../../core/errors/failures.dart';
+import '../../../../core/localization/app_strings.dart';
+import '../../../../core/routes/app_routes.dart';
+import '../../../../core/services/analytics_service.dart';
+import '../../../../core/services/app_map_service.dart';
 import '../../../../core/services/app_region_service.dart';
 import '../../../../core/services/app_settings_service.dart';
-import '../../../../core/services/analytics_service.dart';
-import '../../../../core/errors/failures.dart';
-import '../../../promotions/presentation/promo_code_route_args.dart';
-import '../../../../shared/utils/country_region_defaults.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
+import '../../../../core/services/nearby_drivers_socket_service.dart';
+import '../../../../core/services/progress_indicator/loader.dart';
+import '../../../../core/utils/map_marker_utils.dart';
+import '../../../../shared/utils/active_rides_parser.dart';
+import '../../../../shared/utils/address_display_utils.dart';
+import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/country_region_defaults.dart';
+import '../../../../shared/utils/currency_formatter.dart';
+import '../../../../shared/utils/distance_display.dart';
+import '../../../../shared/utils/map_vehicle_marker_utils.dart';
+import '../../../../shared/utils/ride_payment_validation_messages.dart';
+import '../../../../shared/utils/route_map_marker_icons.dart';
+import '../../../../shared/utils/route_pin_letter_style.dart';
+import '../../../../shared/utils/vehicle_image_utils.dart';
+import '../../../home/domain/repositories/home_repository.dart';
+import '../../../home/presentation/controllers/location_selection_controller.dart';
+import '../../../payment/domain/models/insufficient_wallet_balance_details.dart';
+import '../../../payment/domain/wallet_ride_balance_guard.dart';
+import '../../../payment/presentation/controllers/payment_method_controller.dart';
+import '../../../payment/presentation/widgets/add_money_to_wallet_bottom_sheet.dart';
+import '../../../profile/domain/repositories/profile_repository.dart';
+import '../../../promotions/presentation/promo_code_route_args.dart';
+import '../../../wallet/data/models/go_card_balance_response.dart';
+import '../../domain/repositories/ride_repository.dart';
 
 enum BookingMode { self, other }
+
+/// Sentinel id for the synthetic "Book Any" row in [estimates].
+const String kBookAnyVehicleTypeId = '__book_any__';
 
 /// SCR-09 — vehicle + fare selection.
 class VehicleSelectionController extends GetxController {
@@ -61,14 +78,13 @@ class VehicleSelectionController extends GetxController {
   final isBooking = false.obs;
   final isLoadingNearbyDrivers = false.obs;
   final isSocketConnected = false.obs;
-  final lastSocketError = ''.obs;
-  final nearbyDriverCount = 0.obs;
-  final paymentStatus = PaymentStatus.pending.obs;
 
-  /// Countdown shown in [PaymentStatusDialog]; initial duration from settings API.
-  final paymentTimerSeconds = 300.obs;
+  /// User-visible nearby-drivers badge failed (never show raw socket errors).
+  final nearbyDriversUnavailable = false.obs;
+  final nearbyDriverCount = 0.obs;
   final appliedPromoCode = ''.obs;
   final promoValidatedAt = Rxn<DateTime>();
+  PromoCodeApplyResult? _pendingPromoApplyResult;
   Timer? _promoEstimateDebounce;
   final isRouteReady = false.obs;
   final isLocationIconsReady = false.obs;
@@ -80,8 +96,8 @@ class VehicleSelectionController extends GetxController {
   /// Full route for polyline (API).
   final routePoints = <LatLng>[].obs;
 
-  /// Nearby “driver” markers (dummy positions along/near route).
-  final driverMarkerPoints = <LatLng>[].obs;
+  /// Nearby driver markers from `go:nearby_drivers:result` (position + vehicle type).
+  final nearbyDrivers = <NearbyDriverPoint>[].obs;
 
   late LocationEntity pickupEntity;
   late LocationEntity destinationEntity;
@@ -90,11 +106,14 @@ class VehicleSelectionController extends GetxController {
   String? _preferredVehicleTypeId;
   String? _preferredVehicleName;
   final _vehicleTypes = <VehicleTypeModel>[];
-
   AppSocketService get _socketService => Get.find<AppSocketService>();
   StreamSubscription<List<Driver>>? _nearbyDriversSub;
   StreamSubscription<String>? _nearbyDriversErrorSub;
   StreamSubscription<bool>? _nearbyDriversConnectionSub;
+
+  static const String _nearbyDriversLogName = 'NEARBY_DRIVERS';
+  String? _pendingNearbyDriversVehicleType;
+  int? _lastLoggedNearbyDriversCount;
 
   GoogleMapController? mapController;
   LatLng? _lastProjectedPickup;
@@ -109,15 +128,30 @@ class VehicleSelectionController extends GetxController {
   BitmapDescriptor? pickupIcon;
   BitmapDescriptor? dropIcon;
   final stopIcons = <BitmapDescriptor>[].obs;
+  final Map<String, BitmapDescriptor> _nearbyDriverIconCache = {};
+
+  static PaymentMethodModel get _walletPaymentMethod => PaymentMethodModel(
+    id: 'wallet',
+    label: AppStrings.wallet.tr,
+    type: 'wallet',
+  );
 
   @override
   void onInit() {
     super.onInit();
     _parseArguments();
+    _ensureWalletPaymentSelected();
     loadLocationIcons();
     _initNearbyDriversSocket();
     _loadAll();
   }
+
+  void _ensureWalletPaymentSelected() {
+    paymentMethodController.selectedPayment.value = _walletPaymentMethod;
+  }
+
+  PaymentMethodModel get _walletPayment =>
+      paymentMethodController.selectedPayment.value ?? _walletPaymentMethod;
 
   @override
   void onClose() {
@@ -221,18 +255,29 @@ class VehicleSelectionController extends GetxController {
     final trimmed = appliedPromoCode.value.trim();
     return FareEstimateRequest(
       pickup: pickupEntity,
-      destinations: destinations.toList(),
+      destination: destinationEntity,
+      stops: routeStops,
       promoCode: trimmed.isEmpty ? null : trimmed,
     );
   }
 
-  Future<void> _loadEstimates({bool silent = false}) async {
+  /// Intermediate stops only — final destination is [destinationEntity].
+  List<LocationEntity> get routeStops => destinations.length > 1
+      ? destinations.sublist(0, destinations.length - 1)
+      : const [];
+
+  Future<void> _loadEstimates({
+    bool silent = false,
+    bool preserveRoute = false,
+  }) async {
     if (!silent) {
       isLoadingEstimates.value = true;
     }
-    isRouteReady.value = false;
-    routePoints.clear();
-    driverMarkerPoints.clear();
+    if (!preserveRoute) {
+      isRouteReady.value = false;
+      routePoints.clear();
+      nearbyDrivers.clear();
+    }
     final req = _fareEstimateRequest();
 
     final vehicleTypesResult = await homeRepository.getVehicleTypes();
@@ -266,7 +311,13 @@ class VehicleSelectionController extends GetxController {
           final normalized = model.estimates
               .map((e) => _withResolvedVehicleTypeId(e, vehicleTypes))
               .toList();
-          estimates.assignAll(normalized);
+          estimates.assignAll(
+            _estimatesWithBookAny(normalized, model.bookAny),
+          );
+          final pending = _pendingPromoApplyResult;
+          if (pending != null) {
+            _applyPromoValidationToEstimates(pending);
+          }
           if (appliedPromoCode.value.trim().isNotEmpty) {
             promoValidatedAt.value = DateTime.now();
           }
@@ -293,12 +344,6 @@ class VehicleSelectionController extends GetxController {
                   'last=${mapped.last.latitude},${mapped.last.longitude}',
                 );
               }
-              final n = mapped.length;
-              driverMarkerPoints.assignAll([
-                mapped[(n * 0.25).floor().clamp(0, n - 1)],
-                mapped[(n * 0.55).floor().clamp(0, n - 1)],
-                mapped[(n * 0.78).floor().clamp(0, n - 1)],
-              ]);
             } else {
               _useStraightLineFallback();
             }
@@ -308,9 +353,7 @@ class VehicleSelectionController extends GetxController {
         }
       },
     );
-    if (!silent) {
-      isLoadingEstimates.value = false;
-    }
+    isLoadingEstimates.value = false;
     _applyPreferredVehicleSelection();
 
     if (estimates.isNotEmpty) {
@@ -336,53 +379,52 @@ class VehicleSelectionController extends GetxController {
   }
 
   Future<void> loadDriverIcon() async {
-    driverIcon = await MapMarkerUtils.getResizedMarker(
-      vehicleImage(estimates[selectedVehicleIndex.value]),
-      150,
+    final item = estimates[selectedVehicleIndex.value];
+    final vehicleType = item.isBookAnyOption ? 'cab' : item.vehicleName;
+    final asset = MapVehicleMarkerUtils.markerAssetForVehicleType(vehicleType);
+    driverIcon = await MapMarkerUtils.getSvgMarker(
+      asset,
+      MapVehicleMarkerUtils.defaultMarkerWidth,
     );
   }
 
   Future<void> loadLocationIcons() async {
     try {
       final bool isMulti = destinations.length > 1;
+      final intermediateCount = destinations.length - 1;
 
       if (!isMulti) {
-        // Single Stop: P (Blue) and D (Green)
-        pickupIcon = await MapMarkerUtils.createTextMarker(
-          text: 'P',
-          color: AppColors.mapPickupMarkerBlue,
+        pickupIcon = await RouteMapMarkerIcons.pin(
+          letter: 'P',
+          color: RoutePinLetterStyle.pickupColor,
         );
-        dropIcon = await MapMarkerUtils.createTextMarker(
-          text: 'D',
-          color: AppColors.mapDropMarkerGreen,
+        dropIcon = await RouteMapMarkerIcons.pin(
+          letter: 'D',
+          color: RoutePinLetterStyle.destinationColor,
         );
         stopIcons.clear();
       } else {
-        // Multi Stop: A (Blue), B, C... (Red), Last Letter (Green)
-        const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
-        pickupIcon = await MapMarkerUtils.createTextMarker(
-          text: 'A',
-          color: AppColors.mapPickupMarkerBlue,
+        pickupIcon = await RouteMapMarkerIcons.pin(
+          letter: RoutePinLetterStyle.pickupLetter(
+            intermediateStopCount: intermediateCount,
+          ),
+          color: RoutePinLetterStyle.pickupColor,
         );
 
         stopIcons.clear();
-        // Generate all possible intermediate letters as Red
-        for (int i = 1; i < letters.length; i++) {
-          final icon = await MapMarkerUtils.createTextMarker(
-            text: letters[i],
-            color: AppColors.mapStopMarkerRed,
+        for (int i = 0; i < intermediateCount; i++) {
+          final icon = await RouteMapMarkerIcons.pin(
+            letter: RoutePinLetterStyle.intermediateLetter(i),
+            color: RoutePinLetterStyle.intermediateColor(i),
           );
           stopIcons.add(icon);
         }
 
-        // Destination letter (Green)
-        final destIndex = destinations.length; // If 2 drops, index is 2 (C)
-        final label = (destIndex < letters.length)
-            ? letters[destIndex]
-            : letters.last;
-        dropIcon = await MapMarkerUtils.createTextMarker(
-          text: label,
-          color: AppColors.mapDropMarkerGreen,
+        dropIcon = await RouteMapMarkerIcons.pin(
+          letter: RoutePinLetterStyle.destinationLetter(
+            intermediateStopCount: intermediateCount,
+          ),
+          color: RoutePinLetterStyle.destinationColor,
         );
       }
     } catch (e, stackTrace) {
@@ -391,14 +433,82 @@ class VehicleSelectionController extends GetxController {
         debugPrint('[VehicleSelection] Error loading markers: $e');
       }
     }
-    isLocationIconsReady.value =
-        pickupIcon != null && dropIcon != null && stopIcons.isNotEmpty;
+    isLocationIconsReady.value = pickupIcon != null && dropIcon != null;
   }
 
   bool get isMapDataReady => isRouteReady.value && routePoints.length >= 2;
 
   String vehicleImage(FareEstimateItem e) {
+    if (e.isBookAnyOption) {
+      return VehicleImageUtils.imageAssetForVehicleType('van');
+    }
     return VehicleImageUtils.imageAssetForVehicleType(e.vehicleName);
+  }
+
+  bool get isBookAnySelected => selectedEstimate?.isBookAnyOption == true;
+
+  String vehicleFareDisplay(FareEstimateItem item) {
+    if (item.isBookAnyOption) {
+      final min = item.bookAnyMinFare ?? 0;
+      final max = item.bookAnyMaxFare ?? item.fareEstimate ?? 0;
+      return '${CurrencyFormatter.formatWithApiCurrency(min, item.currency)} - ${CurrencyFormatter.formatWithApiCurrency(max, item.currency)}';
+    }
+    return CurrencyFormatter.formatWithApiCurrency(
+      item.fareEstimate ?? 0,
+      item.currency,
+    );
+  }
+
+  List<FareEstimateItem> _estimatesWithBookAny(
+    List<FareEstimateItem> items,
+    BookAnyEstimate? bookAny,
+  ) {
+    if (bookAny == null || !bookAny.eligible || items.length < 2) {
+      return items;
+    }
+    final first = items.first;
+    final maxPassengers = items
+        .map((e) => e.maxPassengers ?? 1)
+        .fold<int>(1, (a, b) => a > b ? a : b);
+    final anyItem = FareEstimateItem(
+      vehicleTypeId: kBookAnyVehicleTypeId,
+      vehicleName: 'any',
+      displayName: AppStrings.bookAny.tr,
+      fareEstimate: bookAny.blockAmount,
+      distanceKm: first.distanceKm,
+      durationMinutes: first.durationMinutes,
+      currency: bookAny.currency ?? first.currency,
+      maxPassengers: maxPassengers,
+      isBookAnyOption: true,
+      bookAnyMinFare: bookAny.minFare,
+      bookAnyMaxFare: bookAny.maxFare,
+    );
+    return [...items, anyItem];
+  }
+
+  void _restoreVehicleSelectionAfterRefresh({
+    required bool wasBookAny,
+    required String? previousVehicleTypeId,
+    required int previousIndex,
+  }) {
+    if (wasBookAny) {
+      final bookAnyIndex = estimates.indexWhere((e) => e.isBookAnyOption);
+      if (bookAnyIndex >= 0) {
+        selectedVehicleIndex.value = bookAnyIndex;
+        return;
+      }
+    }
+    final resolvedId = (previousVehicleTypeId ?? '').trim();
+    if (resolvedId.isNotEmpty) {
+      final keepIndex = estimates.indexWhere(
+        (e) => (e.vehicleTypeId ?? '').trim() == resolvedId,
+      );
+      if (keepIndex >= 0) {
+        selectedVehicleIndex.value = keepIndex;
+        return;
+      }
+    }
+    selectedVehicleIndex.value = previousIndex.clamp(0, estimates.length - 1);
   }
 
   /// Backend expects `vehicle_type_id` as the catalog id (e.g. Mongo `_id`), not a slug like `cab`.
@@ -432,10 +542,84 @@ class VehicleSelectionController extends GetxController {
     return null;
   }
 
+  FareEstimateItem _copyFareEstimateItem(
+    FareEstimateItem e, {
+    bool? promoApplied,
+    int? promoDiscount,
+    int? discountedFare,
+    String? promoError,
+  }) {
+    return FareEstimateItem(
+      vehicleTypeId: e.vehicleTypeId,
+      vehicleName: e.vehicleName,
+      displayName: e.displayName,
+      fareEstimate: e.fareEstimate,
+      distanceKm: e.distanceKm,
+      durationMinutes: e.durationMinutes,
+      baseFare: e.baseFare,
+      perKmCharge: e.perKmCharge,
+      perMinCharge: e.perMinCharge,
+      minimumFare: e.minimumFare,
+      waypointCharge: e.waypointCharge,
+      maxPassengers: e.maxPassengers,
+      currency: e.currency,
+      promoApplied: promoApplied ?? e.promoApplied,
+      promoDiscount: promoDiscount ?? e.promoDiscount,
+      discountedFare: discountedFare ?? e.discountedFare,
+      promoError: promoError,
+      isBookAnyOption: e.isBookAnyOption,
+      bookAnyMinFare: e.bookAnyMinFare,
+      bookAnyMaxFare: e.bookAnyMaxFare,
+    );
+  }
+
+  bool _estimateMatchesVehicleType(FareEstimateItem e, String vehicleTypeId) {
+    final target = vehicleTypeId.trim().toLowerCase();
+    if (target.isEmpty) return false;
+    final id = (e.vehicleTypeId ?? '').trim().toLowerCase();
+    if (id == target) return true;
+    final name = (e.vehicleName ?? '').trim().toLowerCase();
+    return name == target;
+  }
+
+  /// Called from promo screen after validate succeeds (and from [openPromotions] fallback).
+  Future<void> commitPromoApplyResult(PromoCodeApplyResult validation) async {
+    _pendingPromoApplyResult = validation;
+    appliedPromoCode.value = validation.code;
+    promoValidatedAt.value = DateTime.now();
+    _applyPromoValidationToEstimates(validation);
+    await _loadEstimates(silent: true, preserveRoute: true);
+    _applyPromoValidationToEstimates(validation);
+    _pendingPromoApplyResult = null;
+  }
+
+  /// Applies [PromoCodeApplyResult] pricing to the matching vehicle row (e.g. after validate API).
+  void _applyPromoValidationToEstimates(PromoCodeApplyResult validation) {
+    final vid = validation.vehicleTypeId.trim();
+    if (vid.isEmpty || estimates.isEmpty) return;
+
+    final discounted = validation.discountedFare;
+    final updated = estimates.map((e) {
+      if (!_estimateMatchesVehicleType(e, vid)) return e;
+      final original = e.originalFare;
+      if (original <= 0 || discounted < 0 || discounted >= original) return e;
+      return _copyFareEstimateItem(
+        e,
+        promoApplied: true,
+        promoDiscount: validation.discountAmount,
+        discountedFare: discounted,
+        promoError: null,
+      );
+    }).toList();
+    estimates.assignAll(updated);
+    estimates.refresh();
+  }
+
   FareEstimateItem _withResolvedVehicleTypeId(
     FareEstimateItem e,
     List<VehicleTypeModel> types,
   ) {
+    if (e.isBookAnyOption) return e;
     if (types.isEmpty) return e;
     final raw = (e.vehicleTypeId ?? '').trim();
     if (raw.isNotEmpty && _looksLikeBackendVehicleTypeId(raw)) {
@@ -463,6 +647,9 @@ class VehicleSelectionController extends GetxController {
       promoDiscount: e.promoDiscount,
       discountedFare: e.discountedFare,
       promoError: e.promoError,
+      isBookAnyOption: e.isBookAnyOption,
+      bookAnyMinFare: e.bookAnyMinFare,
+      bookAnyMaxFare: e.bookAnyMaxFare,
     );
   }
 
@@ -504,7 +691,7 @@ class VehicleSelectionController extends GetxController {
         FareEstimateItem(
           vehicleTypeId: '',
           vehicleName: 'ride',
-          displayName: 'Ride',
+          displayName: AppStrings.displayNameRide.tr,
           fareEstimate: 500,
           distanceKm: 4.2,
           durationMinutes: 10,
@@ -559,10 +746,16 @@ class VehicleSelectionController extends GetxController {
 
   Future<void> selectVehicle(int index) async {
     if (index < 0 || index >= estimates.length) return;
+    final item = estimates[index];
+    if (item.isBookAnyOption && appliedPromoCode.value.trim().isNotEmpty) {
+      appliedPromoCode.value = '';
+      promoValidatedAt.value = null;
+      _pendingPromoApplyResult = null;
+    }
     selectedVehicleIndex.value = index;
     await loadDriverIcon();
     _requestNearbyDriversForCurrentSelection();
-    if (appliedPromoCode.value.trim().isNotEmpty) {
+    if (appliedPromoCode.value.trim().isNotEmpty && !item.isBookAnyOption) {
       _scheduleSilentPromoEstimateRefresh();
     }
   }
@@ -578,20 +771,24 @@ class VehicleSelectionController extends GetxController {
     if (isBooking.value) return;
 
     final est = selectedEstimate;
-    final pay = paymentMethodController.selectedPayment.value;
-    if (est == null || pay == null) {
+    if (est == null) {
       AppDialogs.showErrorDialog(
         title: AppStrings.missingInfo.tr,
-        message: AppStrings.selectAVehicleAndPaymentMethod.tr,
+        message: AppStrings.selectAVehicle.tr,
       );
       return;
     }
+    _ensureWalletPaymentSelected();
+    final pay = _walletPayment;
+    final isBookAny = est.isBookAnyOption;
 
     isBooking.value = true;
+    Loader.instance.show();
     try {
       var resolvedVehicleTypeId = (est.vehicleTypeId ?? '').trim();
-      if (resolvedVehicleTypeId.isEmpty ||
-          !_looksLikeBackendVehicleTypeId(resolvedVehicleTypeId)) {
+      if (!isBookAny &&
+          (resolvedVehicleTypeId.isEmpty ||
+              !_looksLikeBackendVehicleTypeId(resolvedVehicleTypeId))) {
         AppDialogs.showErrorDialog(
           title: AppStrings.vehicleType.tr,
           message: AppStrings.couldNotResolveVehicleTypeIdPleaseTryAgain.tr,
@@ -599,6 +796,7 @@ class VehicleSelectionController extends GetxController {
         return;
       }
 
+      Loader.instance.hide();
       final confirmResult = await Get.toNamed(
         AppRoutes.confirmPickup,
         arguments: {
@@ -607,6 +805,7 @@ class VehicleSelectionController extends GetxController {
           'pickupAddress': pickupEntity.address,
         },
       );
+      Loader.instance.show();
 
       if (confirmResult is! Map) {
         return;
@@ -644,9 +843,9 @@ class VehicleSelectionController extends GetxController {
             msg = msg.replaceFirst('Exception: ', '');
           }
           AppDialogs.showErrorDialog(
-            title: 'Estimate failed',
+            title: AppStrings.estimateFailed.tr,
             message: msg.isEmpty
-                ? 'Could not refresh fare after pickup confirmation.'
+                ? AppStrings.couldNotRefreshFareAfterPickup.tr
                 : msg,
           );
           return false;
@@ -665,24 +864,22 @@ class VehicleSelectionController extends GetxController {
           final normalized = model.estimates
               .map((e) => _withResolvedVehicleTypeId(e, _vehicleTypes))
               .toList();
-          estimates.assignAll(normalized);
-
-          final keepIndex = normalized.indexWhere(
-            (e) => (e.vehicleTypeId ?? '').trim() == resolvedVehicleTypeId,
+          estimates.assignAll(
+            _estimatesWithBookAny(normalized, model.bookAny),
           );
-          if (keepIndex >= 0) {
-            selectedVehicleIndex.value = keepIndex;
-          } else {
-            selectedVehicleIndex.value = selectedVehicleIndex.value.clamp(
-              0,
-              normalized.length - 1,
-            );
-          }
+
+          _restoreVehicleSelectionAfterRefresh(
+            wasBookAny: isBookAny,
+            previousVehicleTypeId: resolvedVehicleTypeId,
+            previousIndex: selectedVehicleIndex.value,
+          );
 
           final selectedNow = selectedEstimate;
-          final selectedNowId = (selectedNow?.vehicleTypeId ?? '').trim();
-          if (selectedNowId.isNotEmpty) {
-            resolvedVehicleTypeId = selectedNowId;
+          if (!isBookAny) {
+            final selectedNowId = (selectedNow?.vehicleTypeId ?? '').trim();
+            if (selectedNowId.isNotEmpty) {
+              resolvedVehicleTypeId = selectedNowId;
+            }
           }
 
           if (model.routeGeometry?.coordinates != null &&
@@ -709,10 +906,6 @@ class VehicleSelectionController extends GetxController {
       );
       if (!refreshedOk) return;
 
-      if (!await _awaitPromoStalenessGuardIfNeeded()) {
-        return;
-      }
-
       final isBookedForOther =
           (confirmed['isBookedForOther'] as bool?) ?? false;
       final passengerName = confirmed['passengerName'] as String?;
@@ -724,19 +917,60 @@ class VehicleSelectionController extends GetxController {
                 ? rawRideNote.trim()
                 : rawRideNote.toString().trim());
 
-      // 1) Validate payment first (Validate Ride Payment - Block).
+      if (!await _awaitPromoStalenessGuardIfNeeded()) {
+        return;
+      }
+
       final refreshedSelectedEstimate = selectedEstimate;
-      final validateRequest = ValidateRidePaymentRequest(
-        fareEstimate: refreshedSelectedEstimate?.displayFare ?? est.displayFare,
-        paymentMethod: pay.type,
-        vehicleTypeId: resolvedVehicleTypeId,
-      );
+      final bookingBookAny = refreshedSelectedEstimate?.isBookAnyOption == true;
+      final requiredFare = bookingBookAny
+          ? (refreshedSelectedEstimate?.fareEstimate ??
+                refreshedSelectedEstimate?.displayFare ??
+                est.fareEstimate ??
+                est.displayFare)
+          : (refreshedSelectedEstimate?.displayFare ?? est.displayFare);
+      if (!await _guardWalletBalanceBeforePayment(requiredFare)) {
+        return;
+      }
+
+      if (!await _guardActiveRideLimits(isBookedForOther: isBookedForOther)) {
+        return;
+      }
+
+      if (!await _guardBookForOtherMultiStop(isBookedForOther: isBookedForOther)) {
+        return;
+      }
+
+      // 2) Validate payment (block flow — dummy callback until real payment).
+      final validateRequest = bookingBookAny
+          ? ValidateRidePaymentRequest(
+              bookAny: true,
+              paymentMethod: pay.type,
+              pickup: pickupEntity,
+              destination: destinationEntity,
+              stops: routeStops,
+              isBookedForOther: isBookedForOther,
+              passengerName: isBookedForOther ? passengerName : null,
+              passengerPhone: isBookedForOther ? passengerPhone : null,
+            )
+          : ValidateRidePaymentRequest(
+              fareEstimate: requiredFare,
+              paymentMethod: pay.type,
+              vehicleTypeId: resolvedVehicleTypeId,
+              pickup: pickupEntity,
+              destination: destinationEntity,
+              stops: routeStops,
+              isBookedForOther: isBookedForOther,
+              passengerName: isBookedForOther ? passengerName : null,
+              passengerPhone: isBookedForOther ? passengerPhone : null,
+            );
       final validationResult = await rideRepository.validateRidePayment(
         validateRequest,
       );
 
       await validationResult.fold(
         (f) async {
+          if (_handlePaymentValidationFailure(f)) return;
           AppDialogs.showErrorDialog(
             title: AppStrings.paymentValidationFailed.tr,
             message: AppStrings.couldNotValidatePaymentPleaseTryAgain.tr,
@@ -751,55 +985,40 @@ class VehicleSelectionController extends GetxController {
             return;
           }
 
-          // Join payment room and wait for block callback before booking.
-          if (!_socketService.isConnected) {
-            await _socketService.connect();
-          }
+          // // Join payment room and wait for block callback before booking.
+          // if (!_socketService.isConnected) {
+          //   await _socketService.connect();
+          // }
 
           var blockValidationId = validationId;
+          Loader.instance.show();
           while (true) {
-            final roomValidationId = blockValidationId;
-            _socketService.joinPaymentRoom(validationId: roomValidationId);
-            final txnId = generateTransactionId();
-
-            Future.delayed(const Duration(seconds: 5), () {
-              rideRepository.walletDummyPaymentRequest(
-                DummyPaymentRequest(
-                  result: "SUCCESS",
-                  transId: txnId,
-                  validationId: roomValidationId,
-                ),
-              );
-            });
-            _showPaymentStatusDialog();
-
-            final blockOk = await _waitForPaymentBlockStatus(
-              timeout: Duration(
-                seconds: di.sl<AppSettingsService>().paymentWaitSeconds.value,
-              ),
-            );
-
-            if (blockOk) {
-              paymentStatus.value = PaymentStatus.success;
-              await Future.delayed(const Duration(seconds: 2));
+            String? roomValidationId;
+            if (AppConfig.ridePaymentBypass) {
+              roomValidationId = blockValidationId;
+              _socketService.joinPaymentRoom(validationId: roomValidationId);
             }
+            final paymentConfirmed = AppConfig.ridePaymentBypass
+                ? await _confirmDevPaymentCallback(roomValidationId??"")
+                : true;
 
-            _closePaymentStatusDialogIfOpen();
-
-            if (blockOk) {
+            if (paymentConfirmed) {
               break;
             }
 
+            Loader.instance.hide();
             final shouldRetry = await _offerPaymentBlockRetry();
             if (!shouldRetry) {
               return;
             }
+            Loader.instance.show();
 
             final reValidation = await rideRepository.validateRidePayment(
               validateRequest,
             );
             final nextId = reValidation.fold<String?>(
               (f) {
+                if (_handlePaymentValidationFailure(f)) return null;
                 AppDialogs.showErrorDialog(
                   title: AppStrings.paymentValidationFailed.tr,
                   message: AppStrings.couldNotValidatePaymentPleaseTryAgain.tr,
@@ -831,22 +1050,39 @@ class VehicleSelectionController extends GetxController {
             if (bookingSubmitInFlight) return;
             bookingSubmitInFlight = true;
             try {
-              final request = BookRideRequest(
-                validationId: blockValidationId,
-                idempotencyKey: 'idem_${DateTime.now().millisecondsSinceEpoch}',
-                pickup: pickupEntity,
-                destinations: destinations.toList(),
-                vehicleTypeId: resolvedVehicleTypeId,
-                paymentMethod: pay.type,
-                isBookedForOther: isBookedForOther,
-                passengerName: isBookedForOther ? passengerName : null,
-                passengerPhone: isBookedForOther ? passengerPhone : null,
-                note: rideNote,
-                fareEstimate: selectedOriginalFareAmount,
-                promoCode: appliedPromoCode.value.trim().isEmpty
-                    ? null
-                    : appliedPromoCode.value.trim(),
-              );
+              final request = bookingBookAny
+                  ? BookRideRequest(
+                      validationId: blockValidationId,
+                      idempotencyKey:
+                          'idem_${DateTime.now().millisecondsSinceEpoch}',
+                      pickup: pickupEntity,
+                      destination: destinationEntity,
+                      stops: routeStops,
+                      bookAny: true,
+                      paymentMethod: pay.type,
+                      isBookedForOther: isBookedForOther,
+                      passengerName: isBookedForOther ? passengerName : null,
+                      passengerPhone: isBookedForOther ? passengerPhone : null,
+                      note: rideNote,
+                    )
+                  : BookRideRequest(
+                      validationId: blockValidationId,
+                      idempotencyKey:
+                          'idem_${DateTime.now().millisecondsSinceEpoch}',
+                      pickup: pickupEntity,
+                      destination: destinationEntity,
+                      stops: routeStops,
+                      vehicleTypeId: resolvedVehicleTypeId,
+                      paymentMethod: pay.type,
+                      isBookedForOther: isBookedForOther,
+                      passengerName: isBookedForOther ? passengerName : null,
+                      passengerPhone: isBookedForOther ? passengerPhone : null,
+                      note: rideNote,
+                      fareEstimate: selectedOriginalFareAmount,
+                      promoCode: appliedPromoCode.value.trim().isEmpty
+                          ? null
+                          : appliedPromoCode.value.trim(),
+                    );
               final result = await homeRepository.bookRide(request);
               await result.fold<Future<void>>(
                 (f) async {
@@ -855,7 +1091,7 @@ class VehicleSelectionController extends GetxController {
                     msg = msg.replaceFirst('Exception: ', '');
                   }
                   AppDialogs.showErrorDialog(
-                    title: 'Booking failed',
+                    title: AppStrings.bookingFailed.tr,
                     message: msg,
                   );
                 },
@@ -864,10 +1100,9 @@ class VehicleSelectionController extends GetxController {
                   final rideId = ride?.id;
                   if (rideId == null || rideId.isEmpty || ride == null) {
                     AppDialogs.showErrorDialog(
-                      title: 'Booking',
+                      title: AppStrings.booking.tr,
                       message:
-                          data.message ??
-                          'Ride was created but ride id is missing from the response.',
+                          data.message ?? AppStrings.rideCreatedMissingId.tr,
                     );
                     return;
                   }
@@ -896,6 +1131,7 @@ class VehicleSelectionController extends GetxController {
                     return;
                   }
 
+                  Loader.instance.hide();
                   Get.offNamed(
                     AppRoutes.findingDriver,
                     arguments: {
@@ -926,10 +1162,123 @@ class VehicleSelectionController extends GetxController {
         },
       );
     } finally {
-      // Small delay to ensure snackbars or navigation have time to settle if needed,
-      // but primarily just reset the booking state.
+      Loader.instance.hide();
       isBooking.value = false;
     }
+  }
+
+  double _walletSpendableBalance(GoCardBalanceData? data) {
+    if (data == null) return 0;
+    final available = data.available?.trim();
+    if (available != null && available.isNotEmpty) {
+      return double.tryParse(available) ?? 0;
+    }
+    return double.tryParse(data.balance ?? '0') ?? 0;
+  }
+
+  /// Client-side check via `go_wallet/go_card_balance` until payment API returns breakdown.
+  ///
+  /// See [WalletRideBalanceGuard] TODOs for backend migration.
+  Future<bool> _guardWalletBalanceBeforePayment(int requiredAmount) async {
+    if (AppConfig.ridePaymentBypass) {
+      return true;
+    }
+
+    final walletResult = await profileRepository.getWalletBalance();
+    return walletResult.fold((_) => true, (wallet) {
+      final details = WalletRideBalanceGuard.insufficientDetails(
+        currentBalance: _walletSpendableBalance(wallet.response),
+        requiredAmount: requiredAmount,
+        currency: wallet.response?.currency ?? "",
+      );
+      if (details == null) return true;
+      unawaited(_showInsufficientWalletDialog(details));
+      return false;
+    });
+  }
+
+  Future<void> _showInsufficientWalletDialog(
+    InsufficientWalletBalanceDetails details,
+  ) async {
+    Loader.instance.hide();
+    await AppDialogs.showInsufficientWalletBalanceDialog(
+      details: details,
+      onTopUp: openWalletTopUp,
+    );
+  }
+
+  void openWalletTopUp() {
+    unawaited(AddMoneyToWalletBottomSheet.show());
+  }
+
+  bool _handlePaymentValidationFailure(Failure failure) {
+    if (failure is InsufficientWalletBalanceFailure) {
+      unawaited(_showInsufficientWalletDialog(failure.details));
+      return true;
+    }
+    if (failure is RidePaymentValidationFailure) {
+      AppDialogs.showErrorDialog(
+        title: AppStrings.paymentValidationFailed.tr,
+        message: RidePaymentValidationMessages.displayMessage(
+          errorCode: failure.errorCode,
+          apiMessage: failure.message,
+        ),
+      );
+      return true;
+    }
+    return false;
+  }
+
+  /// Client guard before `POST go/validate_ride_payment`.
+  ///
+  /// Self booking: blocked when any active self ride exists (backend: `RIDE_ALREADY_ACTIVE`).
+  /// Book-for-other: blocked when active book-for-other count >= `max_active` from settings
+  /// (backend: `BOOKED_FOR_OTHER_LIMIT_REACHED`).
+  Future<bool> _guardActiveRideLimits({required bool isBookedForOther}) async {
+    final settingsService = di.sl<AppSettingsService>();
+    await settingsService.preload();
+
+    final activeResult = await rideRepository.getActiveRide();
+    final rides = activeResult.fold(
+      (_) => <RideModel>[],
+      (response) => parseActiveRidesFromResponse(response?.data),
+    );
+
+    if (!isBookedForOther) {
+      if (hasSelfActiveRide(rides)) {
+        AppDialogs.showErrorDialog(
+          message: AppStrings.youAlreadyHaveAnActiveRide.tr,
+        );
+        return false;
+      }
+      return true;
+    }
+
+    if (!settingsService.bookForOtherEnabled) {
+      return true;
+    }
+
+    final maxBookForOther = settingsService.maxActiveBookForOtherRides;
+    final bookedForOtherCount = countBookedForOtherRides(rides);
+    if (bookedForOtherCount >= maxBookForOther) {
+      AppDialogs.showErrorDialog(
+        message: AppStrings.bookedForOtherLimitReached.tr,
+      );
+      return false;
+    }
+
+    return true;
+  }
+
+  /// Book-for-other cannot include intermediate stops (backend: `BOOKED_FOR_OTHER_NO_MULTI_STOP`).
+  Future<bool> _guardBookForOtherMultiStop({required bool isBookedForOther}) async {
+    if (!isBookedForOther) return true;
+    if (routeStops.isEmpty) return true;
+
+    AppDialogs.showErrorDialog(
+      message: AppStrings.bookedForOtherNoMultiStop.tr,
+    );
+    return false;
   }
 
   String generateTransactionId() {
@@ -961,6 +1310,21 @@ class VehicleSelectionController extends GetxController {
       },
     );
     return completer.future;
+  }
+
+  /// Dev bypass: join room, await `payment_callback`, then allow book ride.
+  Future<bool> _confirmDevPaymentCallback(String validationId) async {
+    // Brief pause so `join_payment_room` can register before the callback.
+    await Future.delayed(const Duration(milliseconds: 800));
+    final txnId = generateTransactionId();
+    final result = await rideRepository.walletDummyPaymentRequest(
+      DummyPaymentRequest(
+        result: 'SUCCESS',
+        transId: txnId,
+        validationId: validationId,
+      ),
+    );
+    return result.fold((_) => false, (ok) => ok);
   }
 
   Future<bool> _waitForPaymentBlockStatus({
@@ -1000,79 +1364,29 @@ class VehicleSelectionController extends GetxController {
     return null;
   }
 
-  void _showPaymentStatusDialog() {
-    paymentStatus.value = PaymentStatus.pending;
-    paymentTimerSeconds.value = di
-        .sl<AppSettingsService>()
-        .paymentWaitSeconds
-        .value;
-
-    if (Get.isDialogOpen == true) return;
-
-    AppDialogs.showAnimatedDialog<void>(
-      child: Obx(
-        () => PaymentStatusDialog(
-          status: paymentStatus.value,
-          secondsRemaining: paymentStatus.value == PaymentStatus.pending
-              ? paymentTimerSeconds.value
-              : null,
-        ),
-      ),
-      barrierDismissible: false,
-    );
-
-    // Start local timer for the dialog display
-    _startPaymentTimer();
-  }
-
-  Timer? _paymentTimer;
-
-  void _startPaymentTimer() {
-    _paymentTimer?.cancel();
-    _paymentTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (paymentTimerSeconds.value <= 0) {
-        timer.cancel();
-      } else {
-        paymentTimerSeconds.value--;
-      }
-    });
-  }
-
-  void _closePaymentStatusDialogIfOpen() {
-    _paymentTimer?.cancel();
-    if (Get.isDialogOpen == true) {
-      Get.back();
-    }
-  }
-
   Future<void> _initNearbyDriversSocket() async {
     _nearbyDriversSub?.cancel();
     _nearbyDriversErrorSub?.cancel();
     _nearbyDriversConnectionSub?.cancel();
 
     _nearbyDriversSub = _socketService.nearbyDriversStream.listen((drivers) {
-      if (drivers.isEmpty) {
-        driverMarkerPoints.clear();
-      } else {
-        driverMarkerPoints.assignAll(
-          drivers.map(
-            (d) => LatLng(double.parse(d.lat ?? ""), double.parse(d.lng ?? "")),
-          ),
-        );
-      }
-      nearbyDriverCount.value = drivers.length;
-      lastSocketError.value = '';
-      isLoadingNearbyDrivers.value = false;
+      unawaited(_syncNearbyDriversFromSocket(drivers));
     });
 
-    _nearbyDriversErrorSub = _socketService.errorStream.listen((msg) {
-      lastSocketError.value = msg;
+    _nearbyDriversErrorSub = _socketService.errorStream.listen((message) {
+      nearbyDriversUnavailable.value = true;
       isLoadingNearbyDrivers.value = false;
+      _logNearbyDriversError(message);
     });
     _nearbyDriversConnectionSub = _socketService.connectionStream.listen((ok) {
       isSocketConnected.value = ok;
       if (!ok) {
+        nearbyDriversUnavailable.value = true;
         isLoadingNearbyDrivers.value = false;
+        _logNearbyDriversInfo('Socket disconnected');
+      } else {
+        nearbyDriversUnavailable.value = false;
+        _logNearbyDriversInfo('Socket connected');
       }
     });
 
@@ -1083,10 +1397,13 @@ class VehicleSelectionController extends GetxController {
   void _requestNearbyDriversForCurrentSelection() {
     if (pickupEntity.lat == 0 || pickupEntity.lng == 0) return;
     isLoadingNearbyDrivers.value = true;
-    if (!isSocketConnected.value) {
-      lastSocketError.value = 'Connecting socket...';
-    }
+    nearbyDriversUnavailable.value = false;
+    nearbyDriverCount.value = 0;
+    nearbyDrivers.clear();
     final vehicleType = _socketVehicleTypeForEstimate(selectedEstimate);
+    _pendingNearbyDriversVehicleType = vehicleType ?? 'any';
+    _lastLoggedNearbyDriversCount = null;
+    _logNearbyDriversRequest(vehicleType: _pendingNearbyDriversVehicleType!);
     _socketService.requestNearbyDrivers(
       lat: pickupEntity.lat,
       lng: pickupEntity.lng,
@@ -1095,8 +1412,135 @@ class VehicleSelectionController extends GetxController {
     );
   }
 
+  void _logNearbyDriversRequest({required String vehicleType}) {
+    if (!kDebugMode) return;
+    developer.log(
+      '▶ REQUEST nearby drivers (awaiting result)\n'
+      '  vehicleType: $vehicleType\n'
+      '  lat: ${pickupEntity.lat}\n'
+      '  lng: ${pickupEntity.lng}\n'
+      '  socketConnected: ${isSocketConnected.value}',
+      name: _nearbyDriversLogName,
+    );
+  }
+
+  void _logNearbyDriversResult(List<Driver> drivers) {
+    if (!kDebugMode) return;
+
+    final found = drivers.length;
+    final vehicleType = _pendingNearbyDriversVehicleType ?? 'any';
+    if (_lastLoggedNearbyDriversCount == found) {
+      return;
+    }
+    _lastLoggedNearbyDriversCount = found;
+    final buffer = StringBuffer()
+      ..writeln(
+        found > 0
+            ? '▶ RESULT — driversFound: $found'
+            : '▶ RESULT — driversFound: 0 (no drivers nearby)',
+      )
+      ..writeln('  vehicleType: $vehicleType')
+      ..writeln('  socketConnected: ${isSocketConnected.value}');
+
+    if (drivers.isNotEmpty) {
+      buffer.writeln('  drivers:');
+      for (final d in drivers.take(5)) {
+        final type = d.vehicleType ?? '?';
+        final dist = d.distanceKm?.toStringAsFixed(2) ?? '?';
+        buffer.writeln(
+          '    • fleet=${d.fleetId ?? '?'} type=$type dist=${dist}km '
+          '(${d.lat}, ${d.lng})',
+        );
+      }
+      if (drivers.length > 5) {
+        buffer.writeln('    … +${drivers.length - 5} more');
+      }
+    }
+
+    developer.log(buffer.toString(), name: _nearbyDriversLogName);
+  }
+
+  void _logNearbyDriversError(String message) {
+    if (!kDebugMode) return;
+    _lastLoggedNearbyDriversCount = null;
+    developer.log(
+      '▶ ERROR — nearby drivers failed\n'
+      '  vehicleType: ${_pendingNearbyDriversVehicleType ?? 'any'}\n'
+      '  message: $message',
+      name: _nearbyDriversLogName,
+    );
+  }
+
+  void _logNearbyDriversInfo(String headline) {
+    if (!kDebugMode) return;
+    developer.log(
+      '▶ $headline\n'
+      '  socketConnected: ${isSocketConnected.value}',
+      name: _nearbyDriversLogName,
+    );
+  }
+
+  Future<void> _syncNearbyDriversFromSocket(List<Driver> drivers) async {
+    if (drivers.isEmpty) {
+      nearbyDrivers.clear();
+      nearbyDriverCount.value = 0;
+      nearbyDriversUnavailable.value = false;
+      isLoadingNearbyDrivers.value = false;
+      _logNearbyDriversResult(drivers);
+      return;
+    }
+
+    final parsed = <NearbyDriverPoint>[];
+    for (final d in drivers) {
+      final lat = double.tryParse((d.lat ?? '').trim());
+      final lng = double.tryParse((d.lng ?? '').trim());
+      if (lat == null || lng == null) continue;
+      parsed.add(
+        NearbyDriverPoint(
+          fleetId: d.fleetId ?? '',
+          lat: lat,
+          lng: lng,
+          vehicleType: d.vehicleType,
+          distanceKm: d.distanceKm,
+        ),
+      );
+    }
+
+    await _preloadNearbyDriverIcons(parsed);
+    nearbyDrivers.assignAll(parsed);
+    nearbyDriverCount.value = parsed.length;
+    nearbyDriversUnavailable.value = false;
+    isLoadingNearbyDrivers.value = false;
+    _logNearbyDriversResult(drivers);
+  }
+
+  Future<void> _preloadNearbyDriverIcons(List<NearbyDriverPoint> drivers) async {
+    final types = drivers
+        .map((d) => (d.vehicleType ?? '').trim().toLowerCase())
+        .where((t) => t.isNotEmpty)
+        .toSet();
+    for (final type in types) {
+      if (_nearbyDriverIconCache.containsKey(type)) continue;
+      final asset = MapVehicleMarkerUtils.markerAssetForVehicleType(type);
+      _nearbyDriverIconCache[type] = await MapMarkerUtils.getSvgMarker(
+        asset,
+        MapVehicleMarkerUtils.defaultMarkerWidth,
+      );
+    }
+  }
+
+  BitmapDescriptor nearbyDriverMarkerIcon(String? vehicleType) {
+    final key = (vehicleType ?? '').trim().toLowerCase();
+    if (key.isNotEmpty) {
+      final cached = _nearbyDriverIconCache[key];
+      if (cached != null) return cached;
+    }
+    return driverIcon ?? pickupIcon ?? BitmapDescriptor.defaultMarker;
+  }
+
   String? _socketVehicleTypeForEstimate(FareEstimateItem? item) {
     if (item == null) return null;
+    if (item.isBookAnyOption) return 'any';
 
     // Pass API vehicle_types.key directly in socket event payload.
     final estimateTypeId = (item.vehicleTypeId ?? '').trim();
@@ -1191,7 +1635,7 @@ class VehicleSelectionController extends GetxController {
 
   String compactAddress(String value) {
     final line = compactAddressLine(value);
-    if (line.isEmpty) return 'Selected location';
+    if (line.isEmpty) return AppStrings.selectedLocation.tr;
     return line;
   }
 
@@ -1204,32 +1648,49 @@ class VehicleSelectionController extends GetxController {
     return compactAddress(destinations[index].address);
   }
 
+  String formatTripDistanceKm(double? km) => DistanceDisplay.formatKm(km);
+
+  ({String distanceEtaLine, String dropTimeLine}) vehicleTripSubtitleLines(
+    FareEstimateItem item,
+  ) {
+    final eta = item.durationMinutes ?? 0;
+    final drop = DateTime.now().add(Duration(minutes: eta));
+    final dropLabel =
+        '${drop.hour.toString().padLeft(2, '0')}:${drop.minute.toString().padLeft(2, '0')}';
+
+    final combined = AppStrings.etaMinutesAwayDropTime.trParams({
+      'minutes': '$eta',
+      'time': dropLabel,
+    });
+    final parts = combined.split('•').map((s) => s.trim()).toList();
+
+    var distanceEtaLine = parts.isNotEmpty && parts.first.isNotEmpty
+        ? parts.first
+        : AppStrings.etaMinutesAwayOnly.trParams({'minutes': '$eta'});
+    final dropTimeLine = parts.length > 1 && parts[1].isNotEmpty
+        ? parts[1]
+        : AppStrings.dropAtTime.trParams({'time': dropLabel});
+
+    final distanceLabel = formatTripDistanceKm(item.distanceKm);
+    if (distanceLabel.isNotEmpty) {
+      distanceEtaLine = '$distanceLabel • $distanceEtaLine';
+    }
+
+    return (distanceEtaLine: distanceEtaLine, dropTimeLine: dropTimeLine);
+  }
+
   String get destinationEtaBadgeText {
     final minutes = selectedEstimate?.durationMinutes ?? 0;
-    return minutes > 0 ? '$minutes Mins' : 'ETA';
+    return minutes > 0
+        ? AppStrings.minutesShortCount.trParams({'count': '$minutes'})
+        : AppStrings.etaBadge.tr;
   }
-
-  String get socketDriverStatusText {
-    if (isSocketConnected.value) {
-      return '$nearbyDriverCount drivers online';
-    }
-    if (lastSocketError.value.isNotEmpty) {
-      return 'Socket disconnected';
-    }
-    return 'Connecting drivers...';
-  }
-
-  Color get socketDriverStatusColor =>
-      isSocketConnected.value ? AppColors.success : AppColors.warningStrong;
-
-  Color get socketDriverStatusBackground => isSocketConnected.value
-      ? AppColors.bgSuccessBanner
-      : AppColors.bgWarningLight;
 
   void _clearPromoAfterRouteChange() {
     if (appliedPromoCode.value.trim().isEmpty) return;
     appliedPromoCode.value = '';
     promoValidatedAt.value = null;
+    _pendingPromoApplyResult = null;
     Get.snackbar(
       AppStrings.promoRemovedTitle.tr,
       AppStrings.promoRemovedDestinationChanged.tr,
@@ -1303,7 +1764,23 @@ class VehicleSelectionController extends GetxController {
 
   Future<void> openPromotions() async {
     final est = selectedEstimate;
-    final vid = (est?.vehicleTypeId ?? '').trim();
+    if (est == null) return;
+
+    if (est.isBookAnyOption) {
+      final result = await Get.toNamed<dynamic>(
+        AppRoutes.promotions,
+        arguments: PromoCodeRouteArgs(
+          fareEstimate: est.fareEstimate ?? est.originalFare,
+          bookAny: true,
+        ).toMap(),
+      );
+      final applyResult = PromoCodeApplyResult.tryFrom(result);
+      if (applyResult == null) return;
+      await commitPromoApplyResult(applyResult);
+      return;
+    }
+
+    final vid = (est.vehicleTypeId ?? '').trim();
     if (vid.isEmpty || !_looksLikeBackendVehicleTypeId(vid)) {
       AppDialogs.showErrorDialog(
         title: AppStrings.vehicleType.tr,
@@ -1316,18 +1793,14 @@ class VehicleSelectionController extends GetxController {
       AppRoutes.promotions,
       arguments: PromoCodeRouteArgs(
         vehicleTypeId: vid,
-        fareEstimate: est!.originalFare,
+        fareEstimate: est.originalFare,
         appliedCode: appliedPromoCode.value.trim(),
       ).toMap(),
     );
 
-    if (result is! Map) return;
-    final code = result['code']?.toString().trim().toUpperCase();
-    if (code == null || code.isEmpty) return;
-
-    appliedPromoCode.value = code;
-    promoValidatedAt.value = DateTime.now();
-    await _loadEstimates();
+    final applyResult = PromoCodeApplyResult.tryFrom(result);
+    if (applyResult == null) return;
+    await commitPromoApplyResult(applyResult);
   }
 
   void closeVehicleSelection() {
@@ -1485,7 +1958,7 @@ class VehicleSelectionController extends GetxController {
 
 /// True when [ride] looks like a successful hold/charge for prepaid [paymentMethodType].
 bool rideBookResponseIndicatesPaymentApplied(
-  Ride ride,
+  BookRide ride,
   String paymentMethodType,
 ) {
   final type = paymentMethodType.toLowerCase().trim().replaceAll('-', '_');

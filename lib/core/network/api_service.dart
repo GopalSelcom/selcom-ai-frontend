@@ -4,32 +4,32 @@ import 'dart:developer' as developer;
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart' hide Response, FormData, MultipartFile;
 import 'package:http_parser/http_parser.dart';
 
-import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
-
-import '../constants/app_assets.dart';
-import '../routes/app_routes.dart';
-import '../theme/app_colors.dart';
-import '../theme/app_text_styles.dart';
-import '../services/storage_service.dart';
-import '../widgets/svg_picture_asset.dart';
-import 'failed_request_queue.dart';
-import 'retry_manager.dart';
-import 'network_connectivity_service.dart';
-import 'connectivity_probe.dart';
 import '../../shared/utils/app_dialogs.dart';
+import '../constants/app_assets.dart';
+import '../localization/app_strings.dart';
+import '../routes/app_routes.dart';
 import '../services/error_reporting/error_reporter.dart';
 import '../services/error_reporting/models/error_constants.dart';
+import '../services/progress_indicator/loader.dart';
+import '../services/session_expiry_service.dart';
+import '../services/storage_service.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
+import '../widgets/svg_picture_asset.dart';
+import 'connectivity_probe.dart';
+import '../config/app_config.dart';
+import 'failed_request_queue.dart';
+import 'network_connectivity_service.dart';
+import 'retry_manager.dart';
 
 // ─────────────────────────────────────────────────────────
 // Enums
 // ─────────────────────────────────────────────────────────
-
-enum ApiEnvironment { local, staging, production }
 
 enum ApiMethod { get, post, put, delete, patch, multipart }
 
@@ -92,6 +92,7 @@ class ApiRequest {
   final bool skipAuthInterceptor;
   final List<LocalMultipartFile>? multipartFiles;
   final bool shouldQueue;
+
   /// Optional per-request retry policy.
   ///
   /// Keep null by default so existing behavior is unchanged for all endpoints.
@@ -129,45 +130,25 @@ class ApiService {
 
   late Dio _defaultDio;
   late Dio _customDio;
-  late String _baseUrl;
   late AuthInterceptor _authInterceptor;
 
   Map<String, dynamic> _commonBodyParams = {};
-
-  static late ApiEnvironment currentEnvironment;
 
   late final Future<Map<String, String>> Function() _commonHeadersBuilder;
 
   // ── Initialization ──
 
+  /// Wires Dio to [AppConfig.apiHost]. Call after [AppConfig.init].
   void init({
-    required String stagingBaseUrl,
-    required String productionBaseUrl,
-    required ApiEnvironment environment,
     required Future<Map<String, String>> Function() commonHeadersBuilder,
-    String? localBaseUrl,
     Map<String, dynamic>? commonBodyParams,
   }) {
-    currentEnvironment = environment;
     _commonHeadersBuilder = commonHeadersBuilder;
-
-    switch (environment) {
-      case ApiEnvironment.local:
-        _baseUrl = localBaseUrl ?? stagingBaseUrl;
-        break;
-      case ApiEnvironment.staging:
-        _baseUrl = stagingBaseUrl;
-        break;
-      case ApiEnvironment.production:
-        _baseUrl = productionBaseUrl;
-        break;
-    }
-
     _commonBodyParams = commonBodyParams ?? {};
 
     _defaultDio = Dio(
       BaseOptions(
-        baseUrl: _baseUrl,
+        baseUrl: AppConfig.apiHost,
         connectTimeout: const Duration(seconds: 40),
         receiveTimeout: const Duration(seconds: 40),
       ),
@@ -185,9 +166,7 @@ class ApiService {
     _defaultDio.interceptors.add(_authInterceptor);
   }
 
-  // ── Getters ──
-
-  String get baseUrl => _baseUrl;
+  String get baseUrl => AppConfig.apiHost;
 
   // ── Internet Check ──
 
@@ -244,6 +223,7 @@ class ApiService {
     final stopwatch = Stopwatch()..start();
 
     // ── Build Endpoint ──
+    // Default route is `api` → `/api/v4/{endpoint}` on top of [AppConfig.apiHost].
     final String endpoint;
     if (request.customBaseUrl.isNotEmpty) {
       endpoint = request.endpoint;
@@ -274,6 +254,10 @@ class ApiService {
     }
 
     if (kDebugMode) _logRequest(fullUrl, request, finalHeaders, finalBody);
+
+    if (request.showLoader) {
+      Loader.instance.show();
+    }
 
     try {
       // Skip auth interceptor flag
@@ -362,6 +346,10 @@ class ApiService {
           }),
         },
       );
+    } finally {
+      if (request.showLoader) {
+        Loader.instance.hide();
+      }
     }
   }
 
@@ -629,6 +617,14 @@ class ApiService {
       );
     }
 
+    if (statusCode == 409) {
+      return Response(
+        requestOptions: e.requestOptions,
+        statusCode: statusCode,
+        data: e.response?.data ?? {'message': message},
+      );
+    }
+
     switch (e.type) {
       case DioExceptionType.connectionTimeout:
         message = AppStrings.connectionTimeout.tr;
@@ -784,6 +780,7 @@ class ApiService {
   // ── Session Expired Popup ──
 
   void showLogoutPopup() {
+    if (SessionExpiryService.isHandling) return;
     if (AuthInterceptor.isLoggingOutDueToAuthFailure) return;
     AuthInterceptor.isLoggingOutDueToAuthFailure = true;
 
@@ -799,7 +796,7 @@ class ApiService {
             mainAxisSize: MainAxisSize.min,
             children: [
               // App Logo
-              SvgPictureAsset(AppAssets.selcomGoLogo, height: 48.h),
+              SvgPictureAsset(AppAssets.selcomGoLogoPrimaryColor, height: 48.h),
               SizedBox(height: 24.h),
 
               // Title
@@ -829,12 +826,11 @@ class ApiService {
               // Login Button
               InkWell(
                 onTap: () async {
-                  // Clear tokens
+                  SessionExpiryService.teardownOnLogout();
                   await StorageService().deleteAll();
-                  AuthInterceptor.isLoggingOutDueToAuthFailure = false;
+                  SessionExpiryService.resetOnLogin();
                   Get.back();
-                  // Navigate to phone input screen
-                  Get.offAllNamed(AppRoutes.phone);
+                  Get.offAllNamed(AppRoutes.login);
                 },
                 child: Container(
                   height: 54.h,
@@ -917,6 +913,23 @@ class AuthInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     developer.log("dioError => ${err.error}", name: 'AuthInterceptor');
+
+    if (SessionExpiryService.isHandling) {
+      developer.log(
+        "⏭️ Session already ended — skipping auth refresh",
+        name: 'AuthInterceptor',
+      );
+      return handler.resolve(
+        Response(
+          requestOptions: err.requestOptions,
+          statusCode: err.response?.statusCode ?? 401,
+          data:
+              err.response?.data ??
+              {'message': AppStrings.sessionExpiredPleaseLoginAgain.tr},
+        ),
+      );
+    }
+
     final responseData = err.response?.data;
     final errorCode = (responseData is Map<String, dynamic>)
         ? responseData['error_code'] as String?
@@ -926,7 +939,7 @@ class AuthInterceptor extends Interceptor {
         "❌ Auth error_code detected ($errorCode) - logging out",
         name: 'AuthInterceptor',
       );
-      apiService.showLogoutPopup();
+      unawaited(SessionExpiryService.handleSessionExpired());
       return handler.resolve(
         Response(
           requestOptions: err.requestOptions,
@@ -956,7 +969,7 @@ class AuthInterceptor extends Interceptor {
         "❌ Request already retried after refresh, logging out",
         name: 'AuthInterceptor',
       );
-      apiService.showLogoutPopup();
+      unawaited(SessionExpiryService.handleSessionExpired());
       return handler.next(err);
     }
 
@@ -1043,7 +1056,7 @@ class AuthInterceptor extends Interceptor {
               name: 'AuthInterceptor',
             );
 
-            apiService.showLogoutPopup();
+            unawaited(SessionExpiryService.handleSessionExpired());
 
             return handler.resolve(
               Response(

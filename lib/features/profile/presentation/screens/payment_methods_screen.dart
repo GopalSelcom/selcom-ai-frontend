@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
@@ -43,6 +44,7 @@ class PaymentMethodsScreen extends StatelessWidget {
             AppProfileHeader(
               title: AppStrings.payment.tr,
               onBack: controller.handleBack,
+              bottomPadding: 16.h,
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16.w),
                 child: Obx(
@@ -52,7 +54,6 @@ class PaymentMethodsScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              bottomPadding: 16.h,
             ),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
@@ -60,12 +61,12 @@ class PaymentMethodsScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Payment methods section
-                  _buildSectionTitle('Payment methods'),
+                  _buildSectionTitle(AppStrings.paymentMethodsTitle.tr),
                   SizedBox(height: 8.h),
                   Obx(() => _buildSelcomPesaCard(controller)),
                   SizedBox(height: 14.h),
                   // Cards section
-                  _buildSectionTitle('Cards'),
+                  _buildSectionTitle(AppStrings.cards.tr),
                   SizedBox(height: 8.h),
                   _buildCardsSection(controller),
                 ],
@@ -151,8 +152,10 @@ class PaymentMethodsScreen extends StatelessWidget {
             SizedBox(height: 5.h),
             Text(
               isLinked
-                  ? 'Linked number +255 711 410 410'
-                  : 'Connect your Selcom Pesa account to enable automatic, seamless ride charge deductions.',
+                  ? AppStrings.selcomPesaLinkedNumber.trParams({
+                      'number': '+255 711 410 410',
+                    })
+                  : AppStrings.connectSelcomPesaRideChargesSubtitle.tr,
               style: isLinked
                   ? AppTextStyles.bodySecondary.copyWith(
                       color: AppColors.textBody,
@@ -211,7 +214,7 @@ class PaymentMethodsScreen extends StatelessWidget {
             icon: Icons.credit_card,
             brand: _expiredCard.brand,
             number: _expiredCard.maskedNumber,
-            status: 'Expired',
+            status: AppStrings.cardExpired.tr,
             onTap: () => controller.openCardDetails(_expiredCard),
             showDivider: false,
           ),
@@ -255,7 +258,7 @@ class PaymentMethodsScreen extends StatelessWidget {
                     name,
                     style: AppTextStyles.body.copyWith(
                       fontWeight: FontWeight.w500,
-                      color: status == 'Expired'
+                      color: status == AppStrings.cardExpired.tr
                           ? AppColors.textBody
                           : AppColors.textHeading,
                     ),
@@ -267,7 +270,7 @@ class PaymentMethodsScreen extends StatelessWidget {
                   style: AppTextStyles.body.copyWith(
                     fontSize: 15.h,
                     fontWeight: FontWeight.w500,
-                    color: status == 'Expired'
+                    color: status == AppStrings.cardExpired.tr
                         ? AppColors.textBody
                         : AppColors.textHeading,
                   ),
@@ -278,7 +281,7 @@ class PaymentMethodsScreen extends StatelessWidget {
                     status,
                     style: AppTextStyles.body.copyWith(
                       fontWeight: FontWeight.w500,
-                      color: status == 'Expired'
+                      color: status == AppStrings.cardExpired.tr
                           ? AppColors.textBody
                           : AppColors.textHeading,
                     ),

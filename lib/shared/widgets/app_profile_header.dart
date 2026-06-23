@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import 'app_back_button.dart';
@@ -42,7 +43,11 @@ class AppProfileHeader extends StatelessWidget {
           if (canGoBack)
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 8.w),
-              child: AppBackButton(onPressed: onBack),
+              child: AppBackButton(
+                onPressed: onBack,
+                size: 30.w,
+                color: AppColors.black,
+              ),
             ),
 
           if (title != null) ...[
@@ -53,19 +58,17 @@ class AppProfileHeader extends StatelessWidget {
                 title!,
                 style: AppTextStyles.screenTitle.copyWith(
                   fontSize: 30,
-                  color: AppColors.white,
+                  color: AppColors.black,
                   fontWeight: FontWeight.w800,
                   height: 38 / 30,
+                  letterSpacing: -0.3,
                 ),
               ),
             ),
             SizedBox(height: 12.h),
           ],
 
-          if (child != null) ...[
-            // if (title == null) SizedBox(height: 12.h),
-            child!,
-          ],
+          if (child != null) ...[child!],
         ],
       ),
     );

@@ -2,37 +2,33 @@ import '../../../domain/entities/location_entity.dart';
 
 class FareEstimateRequest {
   final LocationEntity pickup;
-  final LocationEntity? destination;
-  final List<LocationEntity>? destinations;
-  /// When set, estimate API returns per-vehicle promo fields.
+  final LocationEntity destination;
+  final List<LocationEntity> stops;
+  final String? vehicleTypeId;
   final String? promoCode;
 
   const FareEstimateRequest({
     required this.pickup,
-    this.destination,
-    this.destinations,
+    required this.destination,
+    this.stops = const [],
+    this.vehicleTypeId,
     this.promoCode,
   });
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = {
-      'pickup': {
-        'lat': pickup.lat,
-        'lng': pickup.lng,
-        'address': pickup.address,
-      },
+    final data = <String, dynamic>{
+      'pickup': _locationJson(pickup),
     };
 
-    if (destinations != null && destinations!.isNotEmpty) {
-      data['destinations'] = destinations!
-          .map((d) => {'lat': d.lat, 'lng': d.lng, 'address': d.address})
-          .toList();
-    } else if (destination != null) {
-      data['destination'] = {
-        'lat': destination!.lat,
-        'lng': destination!.lng,
-        'address': destination!.address,
-      };
+    if (stops.isNotEmpty) {
+      data['stops'] = stops.map(_locationJson).toList();
+    }
+
+    data['destination'] = _locationJson(destination);
+
+    final vehicleId = vehicleTypeId?.trim();
+    if (vehicleId != null && vehicleId.isNotEmpty) {
+      data['vehicle_type_id'] = vehicleId;
     }
 
     final code = promoCode?.trim();
@@ -42,4 +38,10 @@ class FareEstimateRequest {
 
     return data;
   }
+
+  static Map<String, dynamic> _locationJson(LocationEntity location) => {
+        'lat': location.lat,
+        'lng': location.lng,
+        'address': location.address,
+      };
 }

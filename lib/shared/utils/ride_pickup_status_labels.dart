@@ -26,7 +26,8 @@ abstract final class RidePickupStatusLabels {
       case 'en_route':
         return AppStrings.driverEnRoute.tr;
       case 'driver_arrived':
-        return AppStrings.driverArrived.tr;      default:
+        return AppStrings.driverArrived.tr;
+      default:
         return isRideSearchingStatus(normalizedStatus)
             ? AppStrings.findingYourDriver.tr
             : AppStrings.driverIsHeadingToYourLocation.tr;
@@ -34,7 +35,8 @@ abstract final class RidePickupStatusLabels {
   }
 
   /// Supporting line under the headline.
-  static String descriptionFor(String normalizedStatus) {    switch (normalizedStatus) {
+  static String descriptionFor(String normalizedStatus) {
+    switch (normalizedStatus) {
       case 'searching':
         return AppStrings.findingDriverDefaultDescription.tr;
       case 'driver_assigned':
@@ -43,13 +45,13 @@ abstract final class RidePickupStatusLabels {
       case 'driver_arriving':
       case 'driver_en_route':
       case 'en_route':
-        return AppStrings.driverIsHeadingToPickup.tr;
+        return AppStrings.driverHeadingTowardsYou.tr;
       case 'driver_arrived':
         return AppStrings.driverArrivedDescription.tr;
       default:
         return isRideSearchingStatus(normalizedStatus)
             ? AppStrings.findingDriverDefaultDescription.tr
-            : AppStrings.driverIsHeadingToPickup.tr;
+            : AppStrings.driverHeadingTowardsYou.tr;
     }
   }
 }

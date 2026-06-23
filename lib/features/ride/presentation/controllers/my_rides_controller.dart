@@ -1,12 +1,13 @@
 import 'package:get/get.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
+
 import '../../../../core/data/models/ride_model.dart';
+import '../../../../core/localization/app_strings.dart';
+import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../domain/usecases/ride_usecase.dart';
 import '../screens/ride_details_screen.dart';
 import 'ride_details_controller.dart';
-import '../../../../core/services/error_reporting/error_reporter.dart';
 
 class MyRidesController extends GetxController {
   final RideUseCase rideUseCase;
@@ -24,14 +25,14 @@ class MyRidesController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    fetchPastRides();
+    fetchPastRides(isLoader: true);
   }
 
-  Future<void> fetchPastRides() async {
+  Future<void> fetchPastRides({bool? isLoader = false}) async {
     try {
       _page.value = 1;
       hasMoreData.value = true;
-      isLoading.value = true;
+      isLoading.value = isLoader??true;
       final result = await rideUseCase.getRideHistory(
         page: _page.value,
         limit: _limit,
@@ -65,7 +66,7 @@ class MyRidesController extends GetxController {
         (failure) => AppDialogs.showErrorDialog(message: failure.message),
         (freshRide) {
           if (rideStatusIsOngoingActive(freshRide.status)) {
-            navigateToDriverAcceptedForRide(freshRide);
+            navigateToOngoingRide(freshRide);
             return;
           }
           // My Rides entry must always use non-completion mode.

@@ -5,7 +5,9 @@ import 'package:get/get.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_cupertino_text_button.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
+import '../../../../shared/widgets/vehicle_type_image.dart';
 import '../controllers/ride_rating_controller.dart';
 import 'ride_rating_input_section.dart';
 
@@ -58,15 +60,9 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
                           SizedBox(height: 8.h),
                           Align(
                             alignment: Alignment.centerRight,
-                            child: TextButton(
+                            child: AppCupertinoTextButton.skip(
+                              label: AppStrings.skip.tr,
                               onPressed: controller.onSkipTap,
-                              child: Text(
-                                AppStrings.skip.tr,
-                                style: AppTextStyles.homeCaption.copyWith(
-                                  color: AppColors.textBody,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
                             ),
                           ),
                           Expanded(
@@ -82,7 +78,8 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
                                   children: [
                                     CircleAvatar(
                                       radius: 40.r,
-                                      backgroundColor: AppColors.bgAvatarLightPink,
+                                      backgroundColor:
+                                          AppColors.bgAvatarLightPink,
                                       backgroundImage:
                                           ride.driverImage.trim().isEmpty
                                           ? null
@@ -98,7 +95,8 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
                                                         .toUpperCase(),
                                               style: AppTextStyles.homeTitle
                                                   .copyWith(
-                                                    color: AppColors.textHeading,
+                                                    color:
+                                                        AppColors.textHeading,
                                                     fontWeight: FontWeight.w700,
                                                   ),
                                             )
@@ -142,7 +140,8 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
                                                       fontSize: 20.sp,
                                                       fontWeight:
                                                           FontWeight.w700,
-                                                      color: AppColors.textHeading,
+                                                      color:
+                                                          AppColors.textHeading,
                                                     ),
                                               ),
                                               SizedBox(height: 2.h),
@@ -157,12 +156,15 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
                                             ],
                                           ),
                                         ),
-                                        Image.asset(
-                                          controller.vehicleImageAssetForType(
-                                            ride.vehicleType,
-                                          ),
+                                        VehicleTypeImage(
+                                          assetPath: controller
+                                              .vehicleImageAssetForType(
+                                                ride.vehicleType,
+                                              ),
                                           height: 52.h,
                                           fit: BoxFit.contain,
+                                          fallbackIcon: Icons.person,
+                                          fallbackIconColor: AppColors.textBody,
                                         ),
                                       ],
                                     ),
@@ -182,7 +184,6 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
                             () => AppPrimaryButton(
                               label: AppStrings.done.tr,
                               isLoading: controller.isSubmitting.value,
-                              showBottomInnerShadow: true,
                               onPressed: controller.canSubmit
                                   ? controller.onSubmitTap
                                   : null,
@@ -227,7 +228,10 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
             ),
           if (controller.rideFareLabel.isNotEmpty) ...[
             SizedBox(height: 10.h),
-            _routeLine(label: AppStrings.fare.tr, value: controller.rideFareLabel),
+            _routeLine(
+              label: AppStrings.fare.tr,
+              value: controller.rideFareLabel,
+            ),
           ],
         ],
       ),

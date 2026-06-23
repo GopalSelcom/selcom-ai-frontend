@@ -1,21 +1,32 @@
+import 'package:dio/dio.dart';
+
+import '../../../../core/data/models/requests/firebase_login_request.dart';
+import '../../../../core/data/models/requests/go_phone_otp_request.dart';
+import '../../../../core/data/models/requests/go_phone_verify_otp_request.dart';
+import '../../../../core/data/models/requests/save_user_additional_details_request.dart';
+import '../../../../core/data/models/responses/onboarding_banners_response.dart';
+import '../../../../core/data/models/responses/send_otp_response.dart';
+import '../../../../core/data/models/responses/verify_otp_response.dart';
+import '../../../../core/data/models/user_model.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
-import '../../../../core/data/models/requests/send_otp_request.dart';
-import '../../../../core/data/models/requests/save_user_additional_details_request.dart';
-import '../../../../core/data/models/responses/send_otp_response.dart';
-import '../../../../core/data/models/requests/verify_otp_request.dart';
-import '../../../../core/data/models/responses/verify_otp_response.dart';
-import '../../../../core/data/models/user_model.dart';
-import '../../../../core/data/models/responses/onboarding_banners_response.dart';
 
 abstract class AuthRemoteDataSource {
-  Future<SendOtpResponseModel?> sendOtp({required SendOtpRequest request});
+  Future<VerifyOtpResponseModel?> firebaseLogin({
+    required FirebaseLoginRequest request,
+  });
 
-  Future<SendOtpResponseModel?> resendOtp({required SendOtpRequest request});
+  Future<SendOtpResponseModel?> sendPhoneOtp({
+    required GoPhoneOtpRequest request,
+  });
 
-  Future<VerifyOtpResponseModel?> verifyOtp({
-    required VerifyOtpRequest request,
+  Future<SendOtpResponseModel?> resendPhoneOtp({
+    required GoPhoneOtpRequest request,
+  });
+
+  Future<VerifyOtpResponseModel?> verifyPhoneOtp({
+    required GoPhoneVerifyOtpRequest request,
   });
 
   Future<UserModel> saveUserAdditionalDetails({
@@ -34,69 +45,92 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   AuthRemoteDataSourceImpl();
 
   @override
-  Future<SendOtpResponseModel?> sendOtp({
-    required SendOtpRequest request,
+  Future<VerifyOtpResponseModel?> firebaseLogin({
+    required FirebaseLoginRequest request,
+  }) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.auth.firebaseLogin,
+        method: ApiMethod.post,
+        body: request.toJson(),
+        skipAuthInterceptor: true,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      return VerifyOtpResponseModel.fromJson(
+        _responseMap(response.data),
+      );
+    }
+
+    _throwIfErrorResponse(response, URLS.auth.firebaseLogin);
+  }
+
+  @override
+  Future<SendOtpResponseModel?> sendPhoneOtp({
+    required GoPhoneOtpRequest request,
   }) async {
     try {
       final response = await ApiService().call(
         request: ApiRequest(
-          endpoint: URLS.auth.sendOtp,
+          endpoint: URLS.auth.phoneSendOtp,
           method: ApiMethod.post,
           body: request.toJson(),
+          skipAuthInterceptor: true,
         ),
       );
 
       if (response.data != null) {
-        return SendOtpResponseModel.fromJson(response.data);
+        return SendOtpResponseModel.fromJson(_responseMap(response.data));
       }
-    } catch (e) {
+    } catch (_) {
       // Intentionally avoid logging request payload details.
     }
     return null;
   }
 
   @override
-  Future<SendOtpResponseModel?> resendOtp({
-    required SendOtpRequest request,
+  Future<SendOtpResponseModel?> resendPhoneOtp({
+    required GoPhoneOtpRequest request,
   }) async {
     try {
       final response = await ApiService().call(
         request: ApiRequest(
-          endpoint: URLS.auth.resendOtp,
+          endpoint: URLS.auth.phoneResendOtp,
           method: ApiMethod.post,
           body: request.toJson(),
+          skipAuthInterceptor: true,
         ),
       );
 
       if (response.data != null) {
-        return SendOtpResponseModel.fromJson(response.data);
+        return SendOtpResponseModel.fromJson(_responseMap(response.data));
       }
-    } catch (e) {
+    } catch (_) {
       // Intentionally avoid logging request payload details.
     }
     return null;
   }
 
   @override
-  Future<VerifyOtpResponseModel?> verifyOtp({
-    required VerifyOtpRequest request,
+  Future<VerifyOtpResponseModel?> verifyPhoneOtp({
+    required GoPhoneVerifyOtpRequest request,
   }) async {
-    try {
-      final response = await ApiService().call(
-        request: ApiRequest(
-          endpoint: URLS.auth.verifyOtp,
-          method: ApiMethod.post,
-          body: request.toJson(),
-        ),
-      );
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.auth.phoneVerifyOtp,
+        method: ApiMethod.post,
+        body: request.toJson(),
+      ),
+    );
 
-      if (response.data != null) {
-        return VerifyOtpResponseModel.fromJson(response.data);
-      }
-    } catch (e) {
-      // Intentionally avoid logging request payload details.
+    if (response.statusCode == 200 && response.data != null) {
+      return VerifyOtpResponseModel.fromJson(
+        _responseMap(response.data),
+      );
     }
-    return null;
+
+    _throwIfErrorResponse(response, URLS.auth.phoneVerifyOtp);
   }
 
   @override
@@ -177,5 +211,19 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
     } catch (_) {}
     return const [];
+  }
+
+  Map<String, dynamic> _responseMap(dynamic data) {
+    return data is Map<String, dynamic>
+        ? data
+        : Map<String, dynamic>.from(data as Map);
+  }
+
+  Never _throwIfErrorResponse(Response<dynamic> response, String endpoint) {
+    throw DioException(
+      requestOptions: RequestOptions(path: endpoint),
+      response: response,
+      type: DioExceptionType.badResponse,
+    );
   }
 }

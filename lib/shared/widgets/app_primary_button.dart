@@ -23,12 +23,16 @@ class AppPrimaryButton extends StatelessWidget {
   final double? borderRadius;
   final double? outlinedBorderWidth;
   final bool placeIconAfterLabel;
+
   /// When true (and an icon is shown), label stays centered and the icon is pinned to the **right**
   /// inside the horizontal padding — typical onboarding CTA. Ignored when [isLoading] or [outlined].
   final bool alignIconToTrailingEnd;
-  /// Inner shadow along the **bottom** of the fill only (onboarding CTA).
-  /// Ignored when [outlined] is true.
+
+  /// Inner shadow along the **bottom** of the fill only (onboarding-style CTA).
+  /// Defaults to true; set false for standard elevated / full-rounded buttons.
+  /// Always ignored when [outlined] is true.
   final bool showBottomInnerShadow;
+
   /// When set (e.g. onboarding CTA), overrides default button typography.
   final TextStyle? labelStyle;
 
@@ -57,11 +61,12 @@ class AppPrimaryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color effectiveBackgroundColor =
-        backgroundColor ?? (outlined ? AppColors.white : AppColors.primary);
+        backgroundColor ??
+        (outlined ? AppColors.white : AppColors.primaryButton);
     final Color effectiveOutlinedBorderColor =
-        outlinedBorderColor ?? AppColors.primary;
+        outlinedBorderColor ?? AppColors.primaryButton;
     final Color effectiveTextColor =
-        textColor ?? (outlined ? AppColors.primary : AppColors.white);
+        textColor ?? (outlined ? AppColors.primaryButton : AppColors.white);
     final Color effectiveOutlinedTextColor =
         outlinedTextColor ?? effectiveTextColor;
     final double effectiveBorderRadius = borderRadius ?? AppRadius.button;
@@ -69,22 +74,15 @@ class AppPrimaryButton extends StatelessWidget {
     final Widget? iconWidget = iconAsset == null
         ? null
         : iconAsset!.endsWith('.svg')
-            ? SvgPictureAsset(
-                iconAsset!,
-                width: 18.w,
-                height: 18.w,
-                color:
-                    iconColor ??
-                    (outlined
-                        ? effectiveOutlinedTextColor
-                        : effectiveTextColor),
-              )
-            : Image.asset(
-                iconAsset!,
-                width: 18.w,
-                height: 18.w,
-                color: iconColor,
-              );
+        ? SvgPictureAsset(
+            iconAsset!,
+            width: 18.w,
+            height: 18.w,
+            color:
+                iconColor ??
+                (outlined ? effectiveOutlinedTextColor : effectiveTextColor),
+          )
+        : Image.asset(iconAsset!, width: 18.w, height: 18.w, color: iconColor);
 
     TextStyle resolvedLabelStyle() {
       if (labelStyle != null) {
@@ -108,50 +106,38 @@ class AppPrimaryButton extends StatelessWidget {
               strokeWidth: 2,
             ),
           )
-        : alignIconToTrailingEnd &&
-                !outlined &&
-                iconWidget != null
-            ? Row(
-                children: [
-                  Expanded(
-                    child: Center(
-                      child: Text(
-                        label,
-                        style: resolvedLabelStyle(),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                  iconWidget,
-                ],
-              )
-        : placeIconAfterLabel
-            ? Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
+        : alignIconToTrailingEnd && !outlined && iconWidget != null
+        ? Row(
+            children: [
+              Expanded(
+                child: Center(
+                  child: Text(
                     label,
                     style: resolvedLabelStyle(),
+                    textAlign: TextAlign.center,
                   ),
-                  if (iconWidget != null) ...[
-                    SizedBox(width: 4.w),
-                    iconWidget,
-                  ],
-                ],
-              )
-            : SizedBox.expand(
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Text(
-                      label,
-                      style: resolvedLabelStyle(),
-                    ),
-                    if (iconWidget != null)
-                      Positioned(right: 0, child: iconWidget),
-                  ],
                 ),
-              );
+              ),
+              iconWidget,
+            ],
+          )
+        : placeIconAfterLabel
+        ? Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(label, style: resolvedLabelStyle()),
+              if (iconWidget != null) ...[SizedBox(width: 4.w), iconWidget],
+            ],
+          )
+        : SizedBox.expand(
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Text(label, style: resolvedLabelStyle()),
+                if (iconWidget != null) Positioned(right: 0, child: iconWidget),
+              ],
+            ),
+          );
 
     final Widget button;
     if (showBottomInnerShadow && !outlined) {

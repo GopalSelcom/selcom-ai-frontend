@@ -6,7 +6,6 @@ class RideChatMessage {
     required this.text,
     required this.isFromRider,
     required this.sentAt,
-
   });
 
   final String id;

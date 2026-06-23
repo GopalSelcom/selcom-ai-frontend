@@ -1,17 +1,25 @@
-import '../../../../core/data/models/responses/rides/active_ride_response.dart';
-import '../../../../core/data/models/responses/chat_quick_replies_response.dart';
-import '../../../../core/data/models/ride_model.dart';
+import 'dart:developer' as developer;
+
+import 'package:dio/dio.dart';
+
+import '../../../../core/config/app_config.dart';
+import '../../../../core/config/ride_payment_endpoints.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
-import '../models/ride_management_models.dart';
-import '../models/emergency_contacts_response.dart';
-import '../models/stop_update_models.dart';
-import '../models/destination_update_models.dart';
+import '../../../../core/data/models/responses/chat_quick_replies_response.dart';
+import '../../../../core/data/models/responses/rides/active_ride_response.dart';
+import '../../../../core/data/models/ride_model.dart';
+import '../../../../core/errors/insufficient_wallet_balance_exception.dart';
+import '../../../../core/errors/ride_payment_validation_exception.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
-import 'dart:developer' as developer;
-import 'package:dio/dio.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
+import '../../../../core/services/session_expiry_service.dart';
+import '../../../payment/domain/models/insufficient_wallet_balance_details.dart';
+import '../models/destination_update_models.dart';
+import '../models/emergency_contacts_response.dart';
+import '../models/ride_management_models.dart';
+import '../models/stop_update_models.dart';
 
 abstract class RideRemoteDataSource {
   Future<ActiveRideResponseModel?> getActiveRide();
@@ -99,6 +107,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       request: ApiRequest(
         endpoint: URLS.ride.activeRide,
         method: ApiMethod.get,
+        errorPresentationType: ErrorPresentationType.none,
         // Context:
         // - This endpoint is polled continuously during active-trip screens.
         // - We observed intermittent 502/503/504 responses from backend/gateway.
@@ -119,10 +128,25 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       ),
     );
 
-    if (response.statusCode == 200 && response.data != null) {
-      return ActiveRideResponseModel.fromJson(
-        Map<String, dynamic>.from(response.data),
-      );
+    final raw = response.data;
+    Map<String, dynamic>? bodyMap;
+    if (raw is Map<String, dynamic>) {
+      bodyMap = raw;
+    } else if (raw is Map) {
+      bodyMap = Map<String, dynamic>.from(raw);
+    }
+
+    if (bodyMap != null &&
+        SessionExpiryService.isSessionExpired(
+          httpStatus: response.statusCode,
+          body: bodyMap,
+        )) {
+      await SessionExpiryService.handleSessionExpired();
+      return null;
+    }
+
+    if (response.statusCode == 200 && bodyMap != null) {
+      return ActiveRideResponseModel.fromJson(bodyMap);
     }
     return null;
   }
@@ -231,7 +255,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   ) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "${URLS.ride.base}/$rideId/update-destination",
+        endpoint: RidePaymentEndpoints.updateDestination(rideId),
         method: ApiMethod.put,
         body: {'destination': destination, 'confirm': false},
         errorPresentationType: ErrorPresentationType.none,
@@ -249,6 +273,10 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       }
     }
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      final message = _businessErrorMessage(response.data);
+      if (message != null) {
+        throw Exception(message);
+      }
       return DestinationUpdatePreviewModel.fromJson({});
     }
     throw Exception(
@@ -263,7 +291,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   ) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "${URLS.ride.base}/$rideId/update-destination",
+        endpoint: RidePaymentEndpoints.updateDestination(rideId),
         method: ApiMethod.put,
         body: {'destination': destination, 'confirm': true},
         errorPresentationType: ErrorPresentationType.none,
@@ -281,6 +309,10 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       }
     }
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      final message = _businessErrorMessage(response.data);
+      if (message != null) {
+        throw Exception(message);
+      }
       return DestinationUpdateAppliedModel.fromJson({});
     }
     throw Exception(
@@ -292,7 +324,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   Future<bool> updatePickup(String rideId, Map<String, dynamic> pickup) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "${URLS.ride.base}/$rideId/update-pickup",
+        endpoint: RidePaymentEndpoints.updatePickup(rideId),
         method: ApiMethod.put,
         body: {'pickup': pickup},
       ),
@@ -304,7 +336,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   Future<bool> increaseFare(String rideId, int newFare) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "${URLS.ride.base}/$rideId/increase-fare",
+        endpoint: RidePaymentEndpoints.increaseFare(rideId),
         method: ApiMethod.put,
         body: {'new_fare': newFare},
       ),
@@ -362,19 +394,56 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
 
   @override
   Future<String> validateRidePayment(ValidateRidePaymentRequest request) async {
+    final endpoint = RidePaymentEndpoints.validateRidePayment;
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: URLS.payment.validateRidePayment,
+        endpoint: endpoint,
         method: ApiMethod.post,
         body: request.toJson(),
+        errorPresentationType: ErrorPresentationType.none,
       ),
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      return response.data['data']?['validation_id'] ?? '';
-    }
-    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      final body = _apiResponseMap(response.data);
+      if (body != null) {
+        return body['data']?['validation_id']?.toString() ?? '';
+      }
       return '';
+    }
+
+    final body = _apiResponseMap(response.data);
+    if (body != null) {
+      final insufficient =
+          InsufficientWalletBalanceDetails.tryParseFromApiResponse(body);
+      if (insufficient != null) {
+        throw InsufficientWalletBalanceException(insufficient);
+      }
+
+      final errorCode = body['error_code']?.toString().trim() ?? '';
+      final message = body['message']?.toString().trim() ?? '';
+      final statusCode = response.statusCode;
+
+      // Business rejections from validate payment (400/409) — never return empty validation_id.
+      if (_isValidateRidePaymentBusinessRejection(statusCode, errorCode, message)) {
+        final payload = body['data'];
+        throw RidePaymentValidationException(
+          errorCode: errorCode.isNotEmpty
+              ? errorCode
+              : 'VALIDATE_PAYMENT_REJECTED',
+          message: message,
+          activeRideId: payload is Map
+              ? payload['active_ride_id']?.toString()
+              : null,
+          activeRideStatus: payload is Map
+              ? payload['active_ride_status']?.toString()
+              : null,
+        );
+      }
+
+      if (message.isNotEmpty) {
+        throw Exception(message);
+      }
     }
     throw Exception('Payment validation failed');
   }
@@ -436,12 +505,12 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
 
   @override
   Future<bool> walletDummyPaymentRequest(DummyPaymentRequest request) async {
+    if (!AppConfig.ridePaymentBypass) {
+      return false;
+    }
     final response = await ApiService().call(
       request: ApiRequest(
-        customBaseUrl:
-            "https://dukastaging.selcom.dev:7443/api/v4/go/dev/payment_callback",
-        // endpoint: "${URLS.ride.base}/$rideId/messages",
-        endpoint: "",
+        endpoint: URLS.payment.devPaymentCallback,
         method: ApiMethod.post,
         body: request.toJson(),
       ),
@@ -494,7 +563,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   }) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: URLS.ride.updateStops(rideId),
+        endpoint: RidePaymentEndpoints.updateStops(rideId),
         method: ApiMethod.put,
         headers: {'Idempotency-Key': idempotencyKey},
         body: {'stops': stops, 'confirm': confirm},
@@ -511,12 +580,30 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       }
     }
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      final message = _businessErrorMessage(response.data);
+      if (message != null) {
+        throw Exception(message);
+      }
       if (confirm) {
         return StopUpdateAppliedModel.fromJson({});
       }
       return StopUpdatePreviewModel.fromJson({});
     }
     throw Exception(response.data?['message'] ?? 'Failed to update stops');
+  }
+
+  String? _businessErrorMessage(dynamic data) {
+    if (data is! Map) return null;
+    final map = data is Map<String, dynamic>
+        ? data
+        : Map<String, dynamic>.from(data);
+    final message = map['message']?.toString().trim();
+    if (message == null || message.isEmpty) return null;
+    final errorCode = map['error_code']?.toString().trim();
+    if (errorCode != null && errorCode.isNotEmpty) {
+      return '$errorCode|$message';
+    }
+    return message;
   }
 
   @override
@@ -632,4 +719,20 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
     }
     throw Exception(response.data?['message'] ?? 'Failed to upload PDF');
   }
+}
+
+Map<String, dynamic>? _apiResponseMap(dynamic raw) {
+  if (raw is Map<String, dynamic>) return raw;
+  if (raw is Map) return Map<String, dynamic>.from(raw);
+  return null;
+}
+
+bool _isValidateRidePaymentBusinessRejection(
+  int? statusCode,
+  String errorCode,
+  String message,
+) {
+  if (statusCode == 409) return errorCode.isNotEmpty || message.isNotEmpty;
+  if (statusCode == 400) return errorCode.isNotEmpty || message.isNotEmpty;
+  return false;
 }

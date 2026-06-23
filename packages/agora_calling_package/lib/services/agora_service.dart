@@ -33,6 +33,15 @@ class AgoraService {
   final String appId;
   RtcEngine? _engine;
 
+  /// Channel id from the last successful [onJoinChannelSuccess]. Used to make
+  /// duplicate `joinChannel` calls idempotent (Agora returns -17 when already
+  /// joined with the same uid).
+  String? _activeChannelId;
+
+  /// Serialises concurrent `joinChannel` calls for the same channel.
+  Future<void>? _joinFuture;
+  String? _joinFutureChannel;
+
   /// In-flight init future — cached so concurrent `ensureInitialized` callers
   /// share one engine instead of each constructing their own. Without this,
   /// two parallel accepts (e.g. CallKit replay + foreground push) both pass
@@ -76,6 +85,7 @@ class AgoraService {
     engine.registerEventHandler(
       RtcEngineEventHandler(
         onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
+          _activeChannelId = connection.channelId;
           if (kDebugMode) {
             debugPrint('[AGORA] joined channel=${connection.channelId}');
           }
@@ -110,23 +120,77 @@ class AgoraService {
     required String token,
     int uid = 0,
   }) async {
-    final engine = _requireEngine();
-    await engine.joinChannel(
+    if (_activeChannelId == channelName) {
+      if (kDebugMode) {
+        debugPrint('[AGORA] joinChannel skip — already active on $channelName');
+      }
+      return;
+    }
+    if (_joinFuture != null && _joinFutureChannel == channelName) {
+      if (kDebugMode) {
+        debugPrint('[AGORA] joinChannel await in-flight join for $channelName');
+      }
+      await _joinFuture;
+      return;
+    }
+
+    final pending = _runJoin(
+      channelName: channelName,
       token: token,
-      channelId: channelName,
       uid: uid,
-      options: const ChannelMediaOptions(
-        clientRoleType: ClientRoleType.clientRoleBroadcaster,
-        channelProfile: ChannelProfileType.channelProfileCommunication,
-        publishMicrophoneTrack: true,
-        autoSubscribeAudio: true,
-      ),
     );
+    _joinFuture = pending;
+    _joinFutureChannel = channelName;
+    try {
+      await pending;
+    } finally {
+      if (identical(_joinFuture, pending)) {
+        _joinFuture = null;
+        _joinFutureChannel = null;
+      }
+    }
+  }
+
+  Future<void> _runJoin({
+    required String channelName,
+    required String token,
+    required int uid,
+  }) async {
+    final engine = _requireEngine();
+    try {
+      await engine.joinChannel(
+        token: token,
+        channelId: channelName,
+        uid: uid,
+        options: const ChannelMediaOptions(
+          clientRoleType: ClientRoleType.clientRoleBroadcaster,
+          channelProfile: ChannelProfileType.channelProfileCommunication,
+          publishMicrophoneTrack: true,
+          autoSubscribeAudio: true,
+        ),
+      );
+    } on AgoraRtcException catch (e) {
+      // ERR_JOIN_CHANNEL_REJECTED — duplicate join (CallKit Accept replayed
+      // twice, or placeCall + accept racing). Treat as success so the failure
+      // path does not `leaveChannel` and drop live audio.
+      if (e.code == -17) {
+        if (kDebugMode) {
+          debugPrint(
+            '[AGORA] joinChannel -17 ignored for $channelName '
+            '(duplicate join — already in channel)',
+          );
+        }
+        _activeChannelId = channelName;
+        return;
+      }
+      rethrow;
+    }
   }
 
   Future<void> leaveChannel() async {
     final engine = _engine;
     if (engine == null) return;
+    _activeChannelId = null;
     try {
       await engine.leaveChannel();
     } catch (_) {

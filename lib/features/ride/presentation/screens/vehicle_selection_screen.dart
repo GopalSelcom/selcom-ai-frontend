@@ -12,10 +12,13 @@ import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
+import '../../../../shared/widgets/app_map_route_polyline.dart';
 import '../../../../shared/widgets/app_map_route_one_line_bar.dart';
+import '../../../../shared/widgets/app_shimmer.dart';
+import '../../../../shared/widgets/vehicle_type_image.dart';
 import '../../../../shared/widgets/vehicle_selection_promo_chip.dart';
-import '../../../payment/presentation/widgets/payment_bar.dart';
 import '../controllers/vehicle_selection_controller.dart';
+import '../widgets/book_ride_wallet_footer.dart';
 
 /// SCR-09 — vehicle selection, fare, payment + Book Ride.
 class VehicleSelectionScreen extends StatefulWidget {
@@ -48,23 +51,29 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
     final int visibleItems = estimatesCount.clamp(0, 3);
 
     double listHeight;
-    if (controller.isLoadingEstimates.value || estimatesCount == 0) {
-      listHeight = 120.h; // Loading spinner height
-    } else {
-      listHeight =
-          (visibleItems * 73.h) +
-          ((visibleItems - 1).clamp(0, 2) * 10.h) +
-          10.h;
-    }
+    final int loadingShimmerCount =
+        controller.isLoadingEstimates.value && estimatesCount == 0
+        ? 3
+        : visibleItems.clamp(1, 3);
+    final int listItemsCount = controller.isLoadingEstimates.value
+        ? loadingShimmerCount
+        : visibleItems;
+    listHeight =
+        (listItemsCount * 78.h) +
+        ((listItemsCount - 1).clamp(0, 2) * 10.h) +
+        4.h;
 
-    // PaymentBar: top padding (18.h) + button (~56.h) + bottom padding
+    // Footer: top padding + button (56.h) + notice + bottom inset
     final double paymentBarHeight =
-        76.h +
+        4.h +
+        56.h +
+        8.h +
+        36.h +
         (GetPlatform.isIOS
             ? (bottomPadding > 0
-                  ? (bottomPadding - 10.h).clamp(12.h, bottomPadding)
-                  : 18.h)
-            : (bottomPadding > 0 ? bottomPadding + 8.h : 18.h));
+                  ? (bottomPadding - 8.h).clamp(8.h, bottomPadding)
+                  : 12.h)
+            : (bottomPadding > 0 ? bottomPadding + 8.h : 12.h));
 
     // Safety margin is zero since list is non-scrollable when <= 3 items are present
     const double safetyMargin = 0;
@@ -100,43 +109,14 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                 ),
               ),
             ),
-          Positioned(
-            top: MediaQuery.paddingOf(context).top + 60.h,
-            right: 16.w,
-            child: Obx(
-              () => Container(
-                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-                decoration: BoxDecoration(
-                  color: controller.socketDriverStatusBackground,
-                  borderRadius: BorderRadius.circular(14.r),
-                ),
-                child: Text(
-                  controller.socketDriverStatusText,
-                  style: AppTextStyles.homeCaption.copyWith(
-                    color: controller.socketDriverStatusColor,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 11.sp,
-                  ),
-                ),
-              ),
-            ),
-          ),
           Obx(() {
             final double factor = _calculateInitialSheetSize(context);
-            final int estimatesCount = controller.estimates.length;
-            final bool hasMoreThan3 = estimatesCount > 3;
-            final double initialFactor = hasMoreThan3
-                ? factor.clamp(0.0, 0.6)
-                : factor;
-            final double maxFactor = hasMoreThan3 ? 0.6 : factor;
-            final bool canSnap = hasMoreThan3 && (maxFactor > initialFactor);
             return AppDraggableBottomSheet(
-              key: ValueKey('vehicle_selection_sheet_$estimatesCount'),
-              initialChildSize: initialFactor,
-              minChildSize: initialFactor,
-              maxChildSize: maxFactor,
-              snap: canSnap,
-              snapSizes: canSnap ? [initialFactor, maxFactor] : null,
+              key: ValueKey('vehicle_selection_sheet_${controller.estimates.length}'),
+              initialChildSize: factor,
+              minChildSize: factor,
+              maxChildSize: factor,
+              snap: false,
               childBuilder: (scrollController) =>
                   _bottomSheet(context, scrollController),
             );
@@ -162,13 +142,8 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
       }
 
       final double factor = _calculateInitialSheetSize(context);
-      final int estimatesCount = controller.estimates.length;
-      final bool hasMoreThan3 = estimatesCount > 3;
-      final double initialFactor = hasMoreThan3
-          ? factor.clamp(0.0, 0.6)
-          : factor;
       final double mapBottomPadding =
-          MediaQuery.sizeOf(context).height * initialFactor;
+          MediaQuery.sizeOf(context).height * factor;
 
       final points = controller.routePoints.toList();
       final pickup = LatLng(
@@ -183,20 +158,23 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
         (pickup.latitude + lastDrop.latitude) / 2,
         (pickup.longitude + lastDrop.longitude) / 2,
       );
-      final drivers = controller.driverMarkerPoints.toList();
+      final nearbyDriversList = controller.nearbyDrivers.toList();
       final markers = <Marker>{};
       controller.scheduleOverlayProjection(
         pickup: pickup,
         drops: drops,
         devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
       );
-      for (var i = 0; i < drivers.length; i++) {
-        final jitter = drivers[i];
+      for (var i = 0; i < nearbyDriversList.length; i++) {
+        final driver = nearbyDriversList[i];
+        final markerId = driver.fleetId.isNotEmpty
+            ? 'driver_${driver.fleetId}'
+            : 'driver_$i';
         markers.add(
           Marker(
-            markerId: MarkerId('driver_$i'),
-            position: jitter,
-            icon: controller.driverIcon ?? controller.pickupIcon!,
+            markerId: MarkerId(markerId),
+            position: LatLng(driver.lat, driver.lng),
+            icon: controller.nearbyDriverMarkerIcon(driver.vehicleType),
             anchor: const Offset(0.5, 0.5),
           ),
         );
@@ -275,14 +253,10 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                 devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
               );
             },
-            polylines: {
-              Polyline(
-                polylineId: const PolylineId('route'),
-                points: points,
-                color: AppColors.inputBorderActive,
-                width: 5,
-              ),
-            },
+            polylines: AppMapRoutePolyline.set(
+              polylineId: 'route',
+              points: points,
+            ),
             markers: markers,
           ),
           IgnorePointer(
@@ -331,8 +305,12 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                         child: _locationEditBubble(
                           label: controller.dropMapLabelAt(i),
                           onTap: () => controller.editDropAtIndexFromMap(i),
-                          bubbleColor: AppColors.pinRed,
-                          textColor: AppColors.white,
+                          bubbleColor: i == offsets.length - 1
+                              ? AppColors.primary
+                              : AppColors.pinRed,
+                          textColor: i == offsets.length - 1
+                              ? AppColors.textHeading
+                              : AppColors.white,
                           leadingLabel: i == offsets.length - 1
                               ? controller.destinationEtaBadgeText
                               : null,
@@ -471,9 +449,22 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
           Expanded(
             child: Obx(() {
               if (controller.isLoadingEstimates.value) {
-                return const Padding(
-                  padding: EdgeInsets.all(20),
-                  child: Center(child: CircularProgressIndicator()),
+                final int estimatesCount = controller.estimates.length;
+                final int visibleItems = estimatesCount.clamp(0, 3);
+                final int shimmerCount = (visibleItems == 0 ? 3 : visibleItems)
+                    .clamp(1, 3);
+
+                return ListView.separated(
+                  controller: scrollController,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: EdgeInsets.only(
+                    left: 16.w,
+                    right: 16.w,
+                    bottom: 4.h,
+                  ),
+                  itemCount: shimmerCount,
+                  separatorBuilder: (_, __) => SizedBox(height: 10.h),
+                  itemBuilder: (_, __) => _vehicleCardShimmer(),
                 );
               }
               return ListView.separated(
@@ -481,15 +472,17 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                 physics: controller.estimates.length <= 3
                     ? const NeverScrollableScrollPhysics()
                     : null,
-                padding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 10.h),
+                padding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 4.h),
                 itemCount: controller.estimates.length,
                 separatorBuilder: (_, __) => SizedBox(height: 10.h),
                 itemBuilder: (_, index) {
-                  final item = controller.estimates[index];
                   return Obx(() {
+                    if (index >= controller.estimates.length) {
+                      return const SizedBox.shrink();
+                    }
+                    final item = controller.estimates[index];
                     final selected =
                         controller.selectedVehicleIndex.value == index;
-                    final _ = controller.appliedPromoCode.value;
                     return _vehicleCard(
                       index: index,
                       item: item,
@@ -500,14 +493,12 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
               );
             }),
           ),
-          Obx(() {
-            return PaymentBar(
-              buttonLabel:
-                  '${AppStrings.bookRide.tr} ${CurrencyFormatter.formatPayableOrFree(controller.selectedPayableFareAmount, controller.currency, freeLabel: AppStrings.rideFreeLabel.tr)}',
-              isLoading: controller.isBooking,
-              onActionButtonPressed: controller.bookRide,
-            );
-          }),
+          Obx(
+            () => BookRideWalletFooter(
+              isLoading: controller.isBooking.value,
+              onPressed: controller.bookRide,
+            ),
+          ),
         ],
       ),
     );
@@ -519,10 +510,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
     required bool selected,
   }) {
     final img = controller.vehicleImage(item);
-    final eta = item.durationMinutes ?? 0;
-    final drop = DateTime.now().add(Duration(minutes: eta));
-    final dropLabel =
-        '${drop.hour.toString().padLeft(2, '0')}:${drop.minute.toString().padLeft(2, '0')}';
+    final tripLines = controller.vehicleTripSubtitleLines(item);
 
     return Material(
       color: selected
@@ -589,16 +577,24 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                         ),
                       ],
                     ),
-                    Text(
-                      AppStrings.etaMinutesAwayDropTime.trParams({
-                        'minutes': '$eta',
-                        'time': dropLabel,
-                      }),
-                      style: AppTextStyles.homeCaption.copyWith(
-                        height: 20 / 12,
-                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          tripLines.distanceEtaLine,
+                          style: AppTextStyles.homeCaption.copyWith(
+                            height: 20 / 12,
+                          ),
+                        ),
+                        Text(
+                          tripLines.dropTimeLine,
+                          style: AppTextStyles.homeCaption.copyWith(
+                            height: 20 / 12,
+                          ),
+                        ),
+                      ],
                     ),
-                    if ((item.waypointCharge ?? 0) > 0 ||
+                    /*if ((item.waypointCharge ?? 0) > 0 ||
                         controller.destinations.length > 1) ...[
                       SizedBox(height: 2.h),
                       Text(
@@ -609,7 +605,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ],
+                    ],*/
                     if (controller.appliedPromoCode.value.trim().isNotEmpty &&
                         item.promoApplied != true &&
                         (item.promoError?.trim().isNotEmpty ?? false)) ...[
@@ -643,7 +639,90 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
     );
   }
 
+  /// Loading placeholder for a single item inside the "Choose a ride" sheet.
+  /// Mirrors default card layout (no promo): title + ETA + single fare line.
+  Widget _vehicleCardShimmer() {
+    return Material(
+      color: AppColors.surfaceSubtle,
+      borderRadius: BorderRadius.circular(16.r),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(color: AppColors.borderWalletCard, width: 0.787),
+        ),
+        // Shimmer only the inner content, not the outer card shell.
+        child: AppShimmer(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Vehicle thumbnail (matches [_vehicleThumb] sizes).
+              AppShimmerBox(width: 72.w, height: 52.h, borderRadius: 8.r),
+              SizedBox(width: 18.w),
+              // Left content column.
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      height: 18.h,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: AppShimmerBox(
+                              height: 16.h,
+                              borderRadius: 8.r,
+                            ),
+                          ),
+                          SizedBox(width: 10.w),
+                          AppShimmerBox(
+                            width: 10.w,
+                            height: 10.w,
+                            borderRadius: 999.r,
+                          ),
+                          SizedBox(width: 8.w),
+                          AppShimmerBox(
+                            width: 12.w,
+                            height: 12.w,
+                            borderRadius: 3.r,
+                          ),
+                          SizedBox(width: 6.w),
+                          AppShimmerBox(
+                            width: 26.w,
+                            height: 12.h,
+                            borderRadius: 6.r,
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 2.h),
+                    AppShimmerBox(
+                      width: 170.w,
+                      height: 14.h,
+                      borderRadius: 8.r,
+                    ),
+                  ],
+                ),
+              ),
+              // Single fare line (matches [_vehicleFarePrice] without promo).
+              AppShimmerBox(width: 90.w, height: 16.h, borderRadius: 8.r),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _vehicleFarePrice(FareEstimateItem item) {
+    if (item.isBookAnyOption) {
+      return Text(
+        controller.vehicleFareDisplay(item),
+        style: AppTextStyles.homeTitle.copyWith(
+          fontSize: 16.sp,
+          letterSpacing: -0.4,
+        ),
+      );
+    }
     final showPromo =
         item.promoApplied == true &&
         (item.discountedFare != null) &&
@@ -697,17 +776,12 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
   Widget _vehicleThumb(String asset) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(8.r),
-      child: Image.asset(
-        asset,
+      child: VehicleTypeImage(
+        assetPath: asset,
         width: 72.w,
         height: 52.h,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Container(
-          width: 72.w,
-          height: 52.h,
-          color: AppColors.bgSoftCircle,
-          child: const Icon(Icons.directions_car, color: AppColors.textBody),
-        ),
+        fallbackIconColor: AppColors.textBody,
       ),
     );
   }

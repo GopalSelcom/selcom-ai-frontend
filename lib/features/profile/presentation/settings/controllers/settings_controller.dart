@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../../../../../core/localization/app_strings.dart';
 import '../../../../../core/localization/localization.dart';
 import '../../../../../core/routes/app_routes.dart';
 import '../../../../../core/services/app_settings_service.dart';
-import '../../../../../shared/utils/app_dialogs.dart';
+import '../../../../../core/services/progress_indicator/loader.dart';
 import '../../../../../features/settings/domain/usecases/settings_usecase.dart';
+import '../../../../../shared/utils/app_dialogs.dart';
 
 class SettingsController extends GetxController {
   final SettingsUseCase settingsUseCase;
@@ -29,10 +31,9 @@ class SettingsController extends GetxController {
   /// ride PIN — hide the row. When **false**, the user may manage PIN preference here.
   bool get shouldShowRidePinSetting =>
       !appSettingsService.featureEnabled('ride_pin_admin_required');
-  bool get ridePinSwitchValue =>
-      adminRequiredRidePin.value
-          ? effectiveRequiredRidePin.value
-          : userEnabledRidePin.value;
+  bool get ridePinSwitchValue => adminRequiredRidePin.value
+      ? effectiveRequiredRidePin.value
+      : userEnabledRidePin.value;
 
   @override
   void onInit() {
@@ -76,22 +77,23 @@ class SettingsController extends GetxController {
 
     final previousValue = userEnabledRidePin.value;
     userEnabledRidePin.value = value;
-    isSaving.value = true;
 
-    final result = await settingsUseCase.updateRidePinPreference(enabled: value);
-    result.fold(
-      (failure) {
-        userEnabledRidePin.value = previousValue;
-        AppDialogs.showErrorDialog(message: failure.message);
-      },
-      (preference) {
-        userEnabledRidePin.value = preference.userEnabled;
-        adminRequiredRidePin.value = preference.adminRequired;
-        effectiveRequiredRidePin.value = preference.effectiveRequired;
-      },
-    );
-
-    isSaving.value = false;
+    await Loader.withFlag(isSaving, () async {
+      final result = await settingsUseCase.updateRidePinPreference(
+        enabled: value,
+      );
+      result.fold(
+        (failure) {
+          userEnabledRidePin.value = previousValue;
+          AppDialogs.showErrorDialog(message: failure.message);
+        },
+        (preference) {
+          userEnabledRidePin.value = preference.userEnabled;
+          adminRequiredRidePin.value = preference.adminRequired;
+          effectiveRequiredRidePin.value = preference.effectiveRequired;
+        },
+      );
+    });
   }
 
   void openNotifications() {

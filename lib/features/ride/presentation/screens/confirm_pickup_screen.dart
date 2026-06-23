@@ -33,24 +33,67 @@ class ConfirmPickupScreen extends StatelessWidget {
       body: Stack(
         children: [
           Positioned.fill(
-            child: Obx(
-              () => AppGoogleMap(
-                key: const ValueKey('confirm_pickup_map'),
-                initialCameraPosition: CameraPosition(
-                  target: c.selectedLatLng.value,
-                  zoom: 16,
-                ),
-                circles: _buildRouteCircles(
-                  from: c.initialLatLng,
-                  to: c.selectedLatLng.value,
-                ),
-                onMapCreated: c.onMapCreated,
-                onCameraMove: c.onCameraMove,
-                onCameraIdle: c.onCameraIdle,
-                padding: EdgeInsets.only(bottom: bottomPanelReserve.h),
-              ),
+            child: _ConfirmPickupMap(
+              controller: c,
+              bottomPanelReserve: bottomPanelReserve,
             ),
           ),
+          Obx(() {
+            if (!c.isMapReady.value) {
+              return const SizedBox.shrink();
+            }
+            return Positioned.fill(
+              bottom: bottomPanelReserve.h,
+              child: IgnorePointer(
+                child: Center(
+                  child: Stack(
+                    alignment: Alignment.center,
+                    clipBehavior: Clip.none,
+                    children: [
+                      Container(
+                        width: 10.w,
+                        height: 10.h,
+                        decoration: const BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 4.h,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 16.w,
+                                vertical: 8.h,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary,
+                                borderRadius: BorderRadius.circular(24.r),
+                              ),
+                              child: Text(
+                                AppStrings.pickupPoint.tr,
+                                style: AppTextStyles.homeCaption.copyWith(
+                                  color: AppColors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              width: 2.w,
+                              height: 28.h,
+                              color: AppColors.primary,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }),
           Obx(() {
             if (!c.hasMovedFromInitial || c.mapController == null) {
               return const SizedBox.shrink();
@@ -75,57 +118,6 @@ class ConfirmPickupScreen extends StatelessWidget {
               },
             );
           }),
-          Positioned.fill(
-            bottom: bottomPanelReserve.h,
-            child: IgnorePointer(
-              child: Center(
-                child: Stack(
-                  alignment: Alignment.center,
-                  clipBehavior: Clip.none,
-                  children: [
-                    Container(
-                      width: 10.w,
-                      height: 10.h,
-                      decoration: const BoxDecoration(
-                        color: AppColors.primary,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 4.h,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 16.w,
-                              vertical: 8.h,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              borderRadius: BorderRadius.circular(24.r),
-                            ),
-                            child: Text(
-                              AppStrings.pickupPoint.tr,
-                              style: AppTextStyles.homeCaption.copyWith(
-                                color: AppColors.white,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            width: 2.w,
-                            height: 28.h,
-                            color: AppColors.primary,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
           if (canGoBack)
             Positioned(
               top: MediaQuery.paddingOf(context).top + 10.h,
@@ -185,12 +177,12 @@ class ConfirmPickupScreen extends StatelessWidget {
                           Row(
                             children: [
                               SvgPictureAsset(
-                                AppAssets.locationIcDestinationPin,
+                                AppAssets.locationIcPickupPin,
                                 width: 36.w,
                                 height: 36.w,
                                 color: AppColors.mapDropMarkerGreen,
                                 placeholderBuilder: (_) => Icon(
-                                  Icons.push_pin,
+                                  Icons.location_on,
                                   color: AppColors.mapDropMarkerGreen,
                                   size: 18.sp,
                                 ),
@@ -224,7 +216,7 @@ class ConfirmPickupScreen extends StatelessWidget {
                           SizedBox(height: 12.h),
                           Obx(() {
                             final fullAddress = c.address.value.trim().isEmpty
-                                ? 'Selected pickup point'
+                                ? AppStrings.selectedPickupPoint.tr
                                 : c.address.value.trim();
                             final title = fullAddress.split(',').first.trim();
                             return Container(
@@ -246,7 +238,9 @@ class ConfirmPickupScreen extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    title.isEmpty ? 'Pickup point' : title,
+                                    title.isEmpty
+                                        ? AppStrings.pickupPoint.tr
+                                        : title,
                                     style: AppTextStyles.homeSubtitle.copyWith(
                                       color: AppColors.black,
                                       fontWeight: FontWeight.w500,
@@ -299,139 +293,136 @@ class ConfirmPickupScreen extends StatelessWidget {
                             final expanded = c.isPickupNoteExpanded.value;
                             final noteText = c.noteForDriverController.text
                                 .trim();
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    onTap: c.togglePickupNoteExpanded,
-                                    borderRadius: BorderRadius.circular(12.r),
-                                    child: Ink(
-                                      decoration: BoxDecoration(
-                                        color: AppColors.primary.withValues(
-                                          alpha: 0.10,
-                                        ),
+                            return Container(
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceSubtle,
+                                borderRadius: BorderRadius.circular(12.r),
+                                border: Border.all(
+                                  color: AppColors.borderWalletCard,
+                                ),
+                              ),
+                              child: AnimatedSize(
+                                duration: const Duration(milliseconds: 280),
+                                curve: Curves.easeInOutCubic,
+                                alignment: Alignment.topCenter,
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        onTap: c.togglePickupNoteExpanded,
                                         borderRadius: BorderRadius.circular(
                                           12.r,
                                         ),
-                                        border: Border.all(
-                                          color: AppColors.primary,
-                                          width: 1,
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: AppColors.primary.withValues(
-                                              alpha: 0.15,
-                                            ),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 2),
+                                        child: Padding(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 14.w,
+                                            vertical: 12.h,
                                           ),
-                                        ],
-                                      ),
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 14.w,
-                                        vertical: 12.h,
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Text(
-                                            AppStrings
-                                                .pickupConfirmationNoteLabel
-                                                .tr,
-                                            style: AppTextStyles.homeSubtitle
-                                                .copyWith(
-                                                  color: AppColors.primary,
-                                                  fontWeight: FontWeight.w600,
-                                                  fontSize: 15.sp,
-                                                ),
-                                          ),
-                                          SizedBox(width: 10.w),
-                                          Expanded(
-                                            child: Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.end,
-                                              children: [
-                                                if (noteText.isNotEmpty &&
-                                                    !expanded)
-                                                  Flexible(
-                                                    child: Text(
-                                                      noteText,
-                                                      maxLines: 1,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                      textAlign: TextAlign.end,
-                                                      style: AppTextStyles
-                                                          .homeCaption
-                                                          .copyWith(
-                                                            color: AppColors
-                                                                .textBody,
-                                                            fontSize: 13.sp,
-                                                          ),
+                                          child: Row(
+                                            children: [
+                                              Text(
+                                                AppStrings
+                                                    .pickupConfirmationNoteLabel
+                                                    .tr,
+                                                style: AppTextStyles
+                                                    .homeSubtitle
+                                                    .copyWith(
+                                                      color:
+                                                          AppColors.textHeading,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      fontSize: 15.sp,
                                                     ),
-                                                  ),
-                                                if (noteText.isNotEmpty &&
-                                                    !expanded)
-                                                  SizedBox(width: 6.w),
-                                                AnimatedRotation(
-                                                  turns: expanded ? 0.5 : 0.0,
-                                                  duration: const Duration(
-                                                    milliseconds: 220,
-                                                  ),
-                                                  curve: Curves.easeInOutCubic,
-                                                  child: Icon(
-                                                    Icons.keyboard_arrow_down,
-                                                    color: AppColors.primary,
-                                                    size: 26.sp,
-                                                  ),
+                                              ),
+                                              SizedBox(width: 10.w),
+                                              Expanded(
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.end,
+                                                  children: [
+                                                    if (noteText.isNotEmpty &&
+                                                        !expanded)
+                                                      Flexible(
+                                                        child: Text(
+                                                          noteText,
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          textAlign:
+                                                              TextAlign.end,
+                                                          style: AppTextStyles
+                                                              .homeCaption
+                                                              .copyWith(
+                                                                color: AppColors
+                                                                    .textBody,
+                                                                fontSize: 13.sp,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                    if (noteText.isNotEmpty &&
+                                                        !expanded)
+                                                      SizedBox(width: 6.w),
+                                                    AnimatedRotation(
+                                                      turns: expanded
+                                                          ? 0.5
+                                                          : 0.0,
+                                                      duration: const Duration(
+                                                        milliseconds: 220,
+                                                      ),
+                                                      curve:
+                                                          Curves.easeInOutCubic,
+                                                      child: Icon(
+                                                        Icons
+                                                            .keyboard_arrow_down,
+                                                        color: AppColors
+                                                            .textHeading,
+                                                        size: 26.sp,
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
-                                              ],
-                                            ),
+                                              ),
+                                            ],
                                           ),
-                                        ],
+                                        ),
                                       ),
                                     ),
-                                  ),
+                                    if (expanded) ...[
+                                      Padding(
+                                        padding: EdgeInsets.fromLTRB(
+                                          12.w,
+                                          10.h,
+                                          12.w,
+                                          12.h,
+                                        ),
+                                        child: AppTextField(
+                                          controller: c.noteForDriverController,
+                                          hintText: AppStrings
+                                              .pickupConfirmationNoteHint
+                                              .tr,
+                                          keyboardType: TextInputType.multiline,
+                                          maxLines: 2,
+                                          textInputAction: TextInputAction.done,
+                                          scrollPadding: EdgeInsets.fromLTRB(
+                                            20,
+                                            mq.padding.top + 56,
+                                            20,
+                                            mq.viewInsets.bottom + 120,
+                                          ),
+                                          textFieldBackgroundColor:
+                                              AppColors.white,
+                                          borderColor:
+                                              AppColors.borderWalletCard,
+                                          onChanged: (_) {},
+                                        ),
+                                      ),
+                                    ],
+                                  ],
                                 ),
-                                AnimatedSize(
-                                  duration: const Duration(milliseconds: 280),
-                                  curve: Curves.easeInOutCubic,
-                                  alignment: Alignment.topCenter,
-                                  clipBehavior: Clip.hardEdge,
-                                  child: expanded
-                                      ? Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.stretch,
-                                          children: [
-                                            SizedBox(height: 10.h),
-                                            AppTextField(
-                                              controller:
-                                                  c.noteForDriverController,
-                                              hintText: AppStrings
-                                                  .pickupConfirmationNoteHint
-                                                  .tr,
-                                              keyboardType:
-                                                  TextInputType.multiline,
-                                              maxLines: 2,
-                                              textInputAction:
-                                                  TextInputAction.done,
-                                              scrollPadding:
-                                                  EdgeInsets.fromLTRB(
-                                                    20,
-                                                    mq.padding.top + 56,
-                                                    20,
-                                                    mq.viewInsets.bottom + 120,
-                                                  ),
-                                              textFieldBackgroundColor:
-                                                  AppColors.surfaceSubtle,
-                                              onChanged: (_) {},
-                                            ),
-                                          ],
-                                        )
-                                      : const SizedBox.shrink(),
-                                ),
-                              ],
+                              ),
                             );
                           }),
                           SizedBox(height: 20.h),
@@ -448,7 +439,6 @@ class ConfirmPickupScreen extends StatelessWidget {
                                 iconAsset: AppAssets.locationIcArrowRight,
                                 iconColor: AppColors.white,
                                 height: 54.h,
-                                showBottomInnerShadow: true,
                               ),
                             ),
                           ),
@@ -482,6 +472,58 @@ class ConfirmPickupScreen extends StatelessWidget {
       return Offset(raw.dx / dpr, raw.dy / dpr);
     }
     return raw;
+  }
+}
+
+class _ConfirmPickupMap extends StatefulWidget {
+  const _ConfirmPickupMap({
+    required this.controller,
+    required this.bottomPanelReserve,
+  });
+
+  final ConfirmPickupController controller;
+  final double bottomPanelReserve;
+
+  @override
+  State<_ConfirmPickupMap> createState() => _ConfirmPickupMapState();
+}
+
+class _ConfirmPickupMapState extends State<_ConfirmPickupMap> {
+  late final CameraPosition _initialCamera;
+  Set<Circle> _routeCircles = {};
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.controller.initialLatLng;
+    _initialCamera = CameraPosition(target: initial, zoom: 16);
+  }
+
+  void _handleCameraMove(CameraPosition position) {
+    widget.controller.onCameraMove(position);
+    setState(() {
+      _routeCircles = _buildRouteCircles(
+        from: widget.controller.initialLatLng,
+        to: position.target,
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AppGoogleMap(
+      key: ValueKey(
+        'confirm_pickup_map_'
+        '${widget.controller.initialLatLng.latitude}_'
+        '${widget.controller.initialLatLng.longitude}',
+      ),
+      initialCameraPosition: _initialCamera,
+      circles: _routeCircles,
+      onMapCreated: widget.controller.onMapCreated,
+      onCameraMove: _handleCameraMove,
+      onCameraIdle: widget.controller.onCameraIdle,
+      padding: EdgeInsets.only(bottom: widget.bottomPanelReserve.h),
+    );
   }
 
   Set<Circle> _buildRouteCircles({required LatLng from, required LatLng to}) {

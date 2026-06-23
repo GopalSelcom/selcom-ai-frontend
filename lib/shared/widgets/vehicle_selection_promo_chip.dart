@@ -10,6 +10,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/widgets/svg_picture_asset.dart';
 import '../../features/ride/presentation/controllers/vehicle_selection_controller.dart';
+import 'app_cupertino_text_button.dart';
 
 /// Promo entry on vehicle selection bottom sheet header (text button + icon).
 class VehicleSelectionPromoChip extends StatelessWidget {
@@ -27,14 +28,8 @@ class VehicleSelectionPromoChip extends StatelessWidget {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          TextButton(
+          AppCupertinoTextButton.promoChipOpener(
             onPressed: () => unawaited(controller.openPromotions()),
-            style: TextButton.styleFrom(
-              padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              foregroundColor: fg,
-            ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [

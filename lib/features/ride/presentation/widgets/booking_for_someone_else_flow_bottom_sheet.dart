@@ -1,19 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_native_contact_picker/flutter_native_contact_picker.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/data/countries_phone_data.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/grouped_phone_number_formatter.dart';
+import '../../../../shared/utils/phone_contact_import.dart';
+import '../../../../shared/utils/phone_national_rules.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_standard_bottom_sheet.dart';
 import '../../../../shared/widgets/app_text_field.dart';
-import '../../../../shared/utils/phone_national_rules.dart';
-import '../../../../shared/utils/tanzania_phone_validation.dart';
+import '../../../../shared/widgets/phone_country_picker_chip.dart';
 import '../controllers/confirm_pickup_controller.dart';
 
 enum BookingFlowStep { choice, details }
@@ -42,12 +47,85 @@ class _BookingForSomeoneElseFlowBottomSheetState
   final TextEditingController _phone = TextEditingController();
   String? _nameError;
   String? _phoneError;
+  CountryData _selectedCountry = Countries.findByIsoCode('TZ');
+  int _phoneFieldKey = 0;
+
+  final FlutterNativeContactPicker _contactPicker =
+      FlutterNativeContactPicker();
+
+  Future<void> _pickContact() async {
+    try {
+      if (GetPlatform.isAndroid) {
+        final status = await Permission.contacts.status;
+        if (status.isPermanentlyDenied) {
+          AppDialogs.showPermissionDialog(
+            title: AppStrings.contactsPermission.tr,
+            message: AppStrings.contactsAccessNeeded.tr,
+            onOpenSettings: () => openAppSettings(),
+            icon: Icons.contacts_outlined,
+            secondaryIcon: Icons.contacts,
+          );
+          return;
+        } else if (!status.isGranted) {
+          final requestStatus = await Permission.contacts.request();
+          if (!requestStatus.isGranted) {
+            return;
+          }
+        }
+      }
+
+      final contact = await _contactPicker.selectContact();
+      if (contact != null) {
+        final name = contact.fullName ?? '';
+        final numbers = contact.phoneNumbers ?? [];
+        if (numbers.isNotEmpty) {
+          final parsed = PhoneContactImport.parse(numbers.first);
+
+          setState(() {
+            if (name.isNotEmpty) {
+              _name.text = name;
+            }
+            // Only auto-select when contact number has + / 00 country code.
+            _selectedCountry = parsed.country ?? Countries.findByIsoCode('TZ');
+            _phone.text = parsed.formattedNational;
+            if (parsed.country != null) {
+              _phoneFieldKey++;
+            }
+            _nameError = null;
+            _phoneError = null;
+          });
+        } else {
+          AppDialogs.showErrorDialog(
+            message: 'No phone number found for this contact',
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error picking contact: $e');
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     _name.addListener(_onFieldsChanged);
     _phone.addListener(_onFieldsChanged);
+  }
+
+  void _onCountrySelected(CountryData country) {
+    if (_selectedCountry.code == country.code) return;
+    setState(() {
+      final existingDigits = _phone.text.replaceAll(RegExp(r'\D'), '');
+      _selectedCountry = country;
+      _phone.text = existingDigits.isEmpty
+          ? ''
+          : GroupedPhoneNumberFormatter.formatDigits(
+              existingDigits,
+              country.format,
+            );
+      _phoneFieldKey++;
+      _phoneError = null;
+    });
   }
 
   void _onFieldsChanged() {
@@ -57,9 +135,13 @@ class _BookingForSomeoneElseFlowBottomSheetState
     });
   }
 
-  bool get _canConfirm =>
-      _name.text.trim().isNotEmpty &&
-      TanzaniaPhoneValidation.isCompleteValid(_phone.text);
+  bool get _canConfirm {
+    return _name.text.trim().isNotEmpty &&
+        PhoneNationalRules.isCompleteValidNational(
+          _selectedCountry.code,
+          _phone.text.replaceAll(RegExp(r'\D'), ''),
+        );
+  }
 
   @override
   void dispose() {
@@ -69,8 +151,6 @@ class _BookingForSomeoneElseFlowBottomSheetState
     _phone.dispose();
     super.dispose();
   }
-
-
 
   String? get _sheetTitle {
     switch (_currentStep) {
@@ -120,7 +200,6 @@ class _BookingForSomeoneElseFlowBottomSheetState
               label: AppStrings.confirm.tr,
               iconAsset: AppAssets.locationIcArrowRight,
               alignIconToTrailingEnd: true,
-              showBottomInnerShadow: true,
               onPressed: _onConfirmPressed,
             )
           : null,
@@ -168,41 +247,29 @@ class _BookingForSomeoneElseFlowBottomSheetState
           keyboardType: TextInputType.name,
           errorText: _nameError,
           onChanged: (_) {},
+          suffixIcon: IconButton(
+            icon: Icon(Iconsax.user_add, color: AppColors.primary, size: 22.sp),
+            onPressed: _pickContact,
+          ),
         ),
         SizedBox(height: 16.h),
         AppTextField(
+          key: ValueKey(
+            'passenger-phone-${_selectedCountry.code}-$_phoneFieldKey',
+          ),
           controller: _phone,
           label: AppStrings.passengerPhoneLabel.tr,
-          hintText: PhoneNationalRules.hintForIso(TanzaniaPhoneValidation.iso2),
+          hintText: PhoneNationalRules.hintForIso(_selectedCountry.code),
           keyboardType: TextInputType.phone,
           inputFormatters: PhoneNationalRules.inputFormattersForIso(
-            TanzaniaPhoneValidation.iso2,
+            _selectedCountry.code,
           ),
           prefixIcon: Container(
-            width: 82.w,
-            padding: EdgeInsets.only(left: 14.w),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(3.r),
-                  child: SvgPictureAsset(
-                    AppAssets.icTanzaniaFlag,
-                    height: 14.h,
-                    width: 22.w,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                SizedBox(width: 8.w),
-                Text(
-                  '+255',
-                  style: AppTextStyles.homeSubtitle.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16.sp,
-                    color: AppColors.textHeading,
-                  ),
-                ),
-              ],
+            padding: EdgeInsets.only(left: 12.w, right: 2.w),
+            child: PhoneCountryPickerChip(
+              inline: true,
+              selected: _selectedCountry,
+              onChanged: _onCountrySelected,
             ),
           ),
           errorText: _phoneError,
@@ -221,7 +288,10 @@ class _BookingForSomeoneElseFlowBottomSheetState
       return;
     }
 
-    final e164 = TanzaniaPhoneValidation.e164DigitsOrNull(_phone.text);
+    final e164 = PhoneNationalRules.e164DigitsOrNull(
+      _selectedCountry.code,
+      _phone.text,
+    );
     if (e164 == null) {
       setState(() {
         _phoneError = _phone.text.trim().isEmpty

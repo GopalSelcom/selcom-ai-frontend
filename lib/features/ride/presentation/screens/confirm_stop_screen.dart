@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_back_button.dart';
-import '../../../../shared/widgets/map_widgets.dart';
+import '../../../../shared/widgets/app_google_map.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
-import '../../../../core/localization/app_strings.dart';
 import '../../../home/presentation/controllers/home_controller.dart';
 
 class ConfirmStopScreen extends StatefulWidget {
@@ -208,7 +209,7 @@ class _ConfirmStopScreenState extends State<ConfirmStopScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: AppPrimaryButton(
-                      label: 'Confirm Stop',
+                      label: AppStrings.confirmStop.tr,
                       onPressed: () {
                         Get.back(
                           result: {

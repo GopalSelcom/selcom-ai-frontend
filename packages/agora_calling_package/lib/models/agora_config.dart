@@ -13,6 +13,9 @@ typedef VoipTokenHandler = Future<void> Function(String token);
 /// name (e.g. rider sees "Your Driver"; driver sees "Your Rider").
 typedef PeerNameResolver = String Function(Map<String, dynamic> pushData);
 
+/// Host-provided UI for call notification + full-screen permission prompts.
+typedef EnsureCallPermissionsUi = Future<void> Function();
+
 /// Per-host endpoint paths for the calling REST surface.
 ///
 /// Rider app (Selcom Go) — paths under dukadirect_backend:
@@ -73,6 +76,7 @@ class AgoraCallingConfig {
     this.onVoipTokenChanged,
     this.connectTimeout = const Duration(seconds: 20),
     this.receiveTimeout = const Duration(seconds: 20),
+    this.ensureCallPermissionsUi,
     /// iOS `flutter_callkit_incoming`: asset name in `Runner/Assets.xcassets`
     /// (e.g. `CallKitLogo`). Empty string omits a custom icon (no missing-asset crash).
     this.iosCallKitIconName = '',
@@ -129,6 +133,9 @@ class AgoraCallingConfig {
   /// Dio connect/receive timeouts for the backend client.
   final Duration connectTimeout;
   final Duration receiveTimeout;
+
+  /// Host UI for Android call notification + full-screen permission prompts.
+  final EnsureCallPermissionsUi? ensureCallPermissionsUi;
 
   /// See constructor — optional CallKit template image on iOS.
   final String iosCallKitIconName;

@@ -14,6 +14,7 @@ import '../../../ride/data/models/ride_management_models.dart';
 import '../../data/models/places_models.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/favorite_icon_button.dart';
+import '../widgets/select_saved_location_screen_shimmer.dart';
 
 class SelectSavedLocationScreen extends StatefulWidget {
   const SelectSavedLocationScreen({super.key});
@@ -61,11 +62,10 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
     final canGoBack = Navigator.of(context).canPop();
 
     return GestureDetector(
-      onTap:
-          () {}, // Prevents global unfocus handler from intercepting taps on this screen
+      onTap: () {},
       behavior: HitTestBehavior.translucent,
       child: Scaffold(
-        backgroundColor: AppColors.pageBackground,
+        backgroundColor: AppColors.cardBackground,
         appBar: AppBar(
           automaticallyImplyLeading: false,
           leading: canGoBack
@@ -91,14 +91,18 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
                   child: Stack(
                     children: [
                       Obx(() {
-                        if (controller.isSearching.value) {
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
+                        final query = controller.searchQuery.value.trim();
+
+                        if (query.isNotEmpty) {
+                          if (controller.isSearching.value) {
+                            return SelectSavedLocationScreenShimmer.suggestionsList();
+                          }
+                          return _buildSuggestionsList();
                         }
 
-                        if (controller.searchQuery.value.trim().isNotEmpty) {
-                          return _buildSuggestionsList();
+                        if (controller.isLoadingHomeData.value &&
+                            controller.recentDestinations.isEmpty) {
+                          return SelectSavedLocationScreenShimmer.recentList();
                         }
 
                         return _buildRecentList();
@@ -126,9 +130,9 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
       padding: EdgeInsets.symmetric(horizontal: 16.w),
       height: 54.h,
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: AppColors.surfaceSubtle,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: AppColors.skeletonBase, width: 0.8),
+        border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
       ),
       child: Center(
         child: TextField(
@@ -257,10 +261,9 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         decoration: BoxDecoration(
-          color: AppColors.white,
+          color: AppColors.pageBackground,
           borderRadius: BorderRadius.circular(16.r),
-          // Subtle border/shadow as per image
-          border: Border.all(color: AppColors.bgSoftCircle, width: 0.5),
+          border: Border.all(color: AppColors.borderWalletCard, width: 0.5),
           boxShadow: [
             BoxShadow(
               color: AppColors.black.withValues(alpha: 0.01),

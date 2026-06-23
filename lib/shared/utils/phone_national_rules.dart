@@ -33,12 +33,48 @@ class PhoneNationalRules {
     return c.maxLength + spaces;
   }
 
+  /// E.164 digits without `+`, e.g. `255712345678`, or `null` if invalid.
+  static String? e164DigitsOrNull(String? iso2, String rawDisplay) {
+    final nsn = rawDisplay.replaceAll(RegExp(r'\D'), '');
+    if (!isCompleteValidNational(iso2, nsn)) return null;
+    final dial = findByIso(iso2).dialCode.replaceAll('+', '');
+    return '$dial$nsn';
+  }
+
+  static CountryData findByIso(String? iso2) => Countries.findByIsoCode(iso2);
+
   /// Hint matches visible grouping (digits shown as `x`).
   static String hintForIso(String? iso2) {
     final c = Countries.findByIsoCode(iso2);
     final synthetic = List.filled(c.maxLength, '9').join();
-    final formatted =
-        GroupedPhoneNumberFormatter.formatDigits(synthetic, c.format);
+    final formatted = GroupedPhoneNumberFormatter.formatDigits(
+      synthetic,
+      c.format,
+    );
     return formatted.replaceAll(RegExp(r'[0-9]'), 'x');
+  }
+
+  /// Formats [mobileNumber] for display using API [countryCode] (`255`, `+255`, etc.).
+  static String formatMobileForDisplay({
+    String? countryCode,
+    int? mobileNumber,
+  }) {
+    if (mobileNumber == null || mobileNumber == 0) return '';
+
+    final country = Countries.findByDialCode(countryCode ?? '');
+    final dialDigits = country.dialCode.replaceAll('+', '');
+    var digits = mobileNumber.toString().replaceAll(RegExp(r'\D'), '');
+
+    if (digits.startsWith(dialDigits) && digits.length > country.maxLength) {
+      digits = digits.substring(dialDigits.length);
+    } else if (digits.startsWith('0')) {
+      digits = digits.substring(1);
+    }
+
+    final grouped = GroupedPhoneNumberFormatter.formatDigits(
+      digits,
+      country.format,
+    );
+    return '${country.dialCode} $grouped';
   }
 }

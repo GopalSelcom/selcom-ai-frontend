@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:selcom_rides_frontend/core/localization/app_strings.dart';
-import 'package:get/get.dart';
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_text_styles.dart';
+
+import '../../../../../core/theme/app_colors.dart';import '../../../../../core/theme/app_text_styles.dart';
 
 class SettingsToggleTile extends StatelessWidget {
   final IconData icon;
@@ -64,7 +62,7 @@ class SettingsToggleTile extends StatelessWidget {
                 ),
                 Switch(
                   value: value,
-                  onChanged: enabled ? onChanged : null,
+                  onChanged: enabled && !isSaving ? onChanged : null,
                   thumbColor: WidgetStateProperty.resolveWith((states) {
                     final selected = states.contains(WidgetState.selected);
                     final disabled = states.contains(WidgetState.disabled);
@@ -128,25 +126,6 @@ class SettingsToggleTile extends StatelessWidget {
                 ],
               ),
             ),
-            if (isSaving) ...[
-              SizedBox(height: 10.h),
-              Row(
-                children: [
-                  SizedBox(
-                    width: 14.w,
-                    height: 14.w,
-                    child: const CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  SizedBox(width: 8.w),
-                  Text(
-                    AppStrings.savingChanges.tr,
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.textBody,
-                    ),
-                  ),
-                ],
-              ),
-            ],
           ],
         ),
       ),

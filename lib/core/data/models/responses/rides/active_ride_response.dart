@@ -28,25 +28,100 @@ class ActiveRideResponseModel {
 }
 
 class Data {
-  Ride? ride;
+  ActiveRide? ride;
+  List<ActiveRideEntry>? rides;
+  List<ActiveRide>? additionalRides;
   SocketRooms? socketRooms;
+  int? count;
+  int? activeRidesCount;
+  int? additionalActiveRidesCount;
 
-  Data({this.ride, this.socketRooms});
+  Data({
+    this.ride,
+    this.rides,
+    this.additionalRides,
+    this.socketRooms,
+    this.count,
+    this.activeRidesCount,
+    this.additionalActiveRidesCount,
+  });
 
   factory Data.fromJson(Map<String, dynamic> json) => Data(
-    ride: json["ride"] == null ? null : Ride.fromJson(json["ride"]),
+    ride: json["ride"] == null ? null : ActiveRide.fromJson(json["ride"]),
+    rides: _parseActiveRideEntries(json["rides"]),
+    additionalRides: _parseActiveRideList(json["additional_rides"]),
     socketRooms: json["socket_rooms"] == null
         ? null
         : SocketRooms.fromJson(json["socket_rooms"]),
+    count: (json["count"] as num?)?.toInt(),
+    activeRidesCount: (json["active_rides_count"] as num?)?.toInt(),
+    additionalActiveRidesCount:
+        (json["additional_active_rides_count"] as num?)?.toInt(),
   );
+
+  static List<ActiveRideEntry>? _parseActiveRideEntries(dynamic raw) {
+    if (raw is! List) return null;
+    final entries = <ActiveRideEntry>[];
+    for (final item in raw) {
+      if (item is! Map) continue;
+      final map = Map<String, dynamic>.from(item);
+      final nestedRide = map['ride'];
+      if (nestedRide is Map) {
+        entries.add(
+          ActiveRideEntry(
+            rideJson: Map<String, dynamic>.from(nestedRide),
+            socketRooms: map['socket_rooms'] == null
+                ? null
+                : SocketRooms.fromJson(
+                    Map<String, dynamic>.from(map['socket_rooms'] as Map),
+                  ),
+          ),
+        );
+        continue;
+      }
+      entries.add(
+        ActiveRideEntry(
+          rideJson: map,
+          socketRooms: null,
+        ),
+      );
+    }
+    return entries.isEmpty ? null : entries;
+  }
+
+  static List<ActiveRide>? _parseActiveRideList(dynamic raw) {
+    if (raw is! List) return null;
+    return raw
+        .whereType<Map>()
+        .map((e) => ActiveRide.fromJson(Map<String, dynamic>.from(e)))
+        .toList(growable: false);
+  }
 
   Map<String, dynamic> toJson() => {
     "ride": ride?.toJson(),
+    "rides": rides?.map((e) => e.toJson()).toList(),
+    "additional_rides": additionalRides?.map((e) => e.toJson()).toList(),
     "socket_rooms": socketRooms?.toJson(),
+    "count": count,
+    "active_rides_count": activeRidesCount,
+    "additional_active_rides_count": additionalActiveRidesCount,
   };
 }
 
-class Ride {
+class ActiveRideEntry {
+  /// Full ride map from API — keeps `duration_minutes`, `is_booked_for_other`, etc.
+  final Map<String, dynamic> rideJson;
+  final SocketRooms? socketRooms;
+
+  ActiveRideEntry({required this.rideJson, this.socketRooms});
+
+  Map<String, dynamic> toJson() => {
+    'ride': rideJson,
+    if (socketRooms != null) 'socket_rooms': socketRooms!.toJson(),
+  };
+}
+
+class ActiveRide {
   String? id;
   String? status;
   FareBreakdown? fareBreakdown;
@@ -60,8 +135,11 @@ class Ride {
   VehicleSnapshot? vehicleSnapshot;
   String? pinCode;
   String? createdAt;
+  bool? isBookedForOther;
+  String? passengerName;
+  String? passengerPhone;
 
-  Ride({
+  ActiveRide({
     this.id,
     this.status,
     this.fareBreakdown,
@@ -75,9 +153,12 @@ class Ride {
     this.vehicleSnapshot,
     this.pinCode,
     this.createdAt,
+    this.isBookedForOther,
+    this.passengerName,
+    this.passengerPhone,
   });
 
-  factory Ride.fromJson(Map<String, dynamic> json) => Ride(
+  factory ActiveRide.fromJson(Map<String, dynamic> json) => ActiveRide(
     id: json["_id"],
     status: json["status"],
     fareBreakdown: json["fare_breakdown"] == null
@@ -90,7 +171,9 @@ class Ride {
         ? null
         : Destination.fromJson(json["destination"]),
     fareEstimate: json["fare_estimate"],
-    vehicleTypeId: json["vehicle_type_id"],
+    vehicleTypeId: json["vehicle_type_id"] is Map
+        ? json["vehicle_type_id"]["_id"]?.toString()
+        : json["vehicle_type_id"]?.toString(),
     paymentMethod: json["payment_method"],
     paymentStatus: json["payment_status"],
     driverSnapshot: json["driver_snapshot"] == null
@@ -101,6 +184,9 @@ class Ride {
         : VehicleSnapshot.fromJson(json["vehicle_snapshot"]),
     pinCode: json["pin_code"],
     createdAt: json["created_at"],
+    isBookedForOther: json["is_booked_for_other"] == true,
+    passengerName: json["passenger_name"]?.toString(),
+    passengerPhone: json["passenger_phone"]?.toString(),
   );
 
   Map<String, dynamic> toJson() => {
@@ -117,6 +203,9 @@ class Ride {
     "vehicle_snapshot": vehicleSnapshot?.toJson(),
     "pin_code": pinCode,
     "created_at": createdAt,
+    "is_booked_for_other": isBookedForOther,
+    "passenger_name": passengerName,
+    "passenger_phone": passengerPhone,
   };
 }
 

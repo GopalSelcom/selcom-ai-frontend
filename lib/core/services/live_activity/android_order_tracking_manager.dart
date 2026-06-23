@@ -1,15 +1,19 @@
-import 'dart:io';
 import 'dart:convert';
+import 'dart:developer' as developer;
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'dart:developer' as developer;
+
 import '../../theme/app_colors.dart';
 import '../storage_service.dart';
 
 class AndroidOrderTrackingManager {
   static final AndroidOrderTrackingManager _instance =
       AndroidOrderTrackingManager._internal();
+
   factory AndroidOrderTrackingManager() => _instance;
+
   AndroidOrderTrackingManager._internal();
 
   static const int _baseNotificationId = 88000;
@@ -71,7 +75,7 @@ class AndroidOrderTrackingManager {
     if (totalSeconds < 60) {
       return '${totalSeconds}s';
     }
-    
+
     final int totalMinutes = (totalSeconds / 60).ceil();
     if (totalMinutes >= 60) {
       final int h = totalMinutes ~/ 60;
@@ -150,15 +154,15 @@ class AndroidOrderTrackingManager {
         progress = 100;
       } else if (normalizedStatus.contains('near_destination') ||
           normalizedStatus.contains('neardestination')) {
-        displayStatus = 'Almost There';
+        displayStatus = "You're almost there";
         progress = 95;
       } else if (normalizedStatus.contains('ride_in_progress') ||
           normalizedStatus.contains('rideinprogress')) {
-        displayStatus = 'On Your Way';
+        displayStatus = "You're on your way with $effectiveDriverName";
         progress = 80;
       } else if (normalizedStatus.contains('ride_started') ||
           normalizedStatus.contains('ridestarted')) {
-        displayStatus = 'Ride Started';
+        displayStatus = '$effectiveDriverName has started your ride';
         progress = 70;
       } else if (normalizedStatus.contains('driver_arrived') ||
           normalizedStatus.contains('driverarrived')) {
@@ -200,8 +204,9 @@ class AndroidOrderTrackingManager {
       } else if (normalizedStatus.contains('driver_arrived')) {
         etaDetail = 'Driver is here for pickup';
       } else {
-        final String phase =
-            isInRide ? 'Arriving at destination' : 'Arriving at pickup';
+        final String phase = isInRide
+            ? 'Arriving at destination'
+            : 'Arriving at pickup';
         etaDetail = '$phase • $displayEta';
       }
 
