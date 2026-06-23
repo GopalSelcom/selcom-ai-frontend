@@ -37,6 +37,7 @@ import '../../shared/widgets/confirm_location_screen.dart';
 import '../../features/ride/presentation/screens/driver_accepted_screen.dart';
 import '../../features/ride/presentation/screens/finding_driver_screen.dart';
 import '../../features/ride/presentation/screens/ride_message_screen.dart';
+import '../../features/ride/presentation/bindings/stop_editor_binding.dart';
 import '../../features/ride/presentation/screens/stop_editor_screen.dart';
 import '../../features/ride/presentation/screens/vehicle_selection_screen.dart';
 import '../../features/wallet/presentation/bindings/wallet_binding.dart';
@@ -180,10 +181,15 @@ class AppRoutes {
       page: () => const ConfirmLocationScreen(),
       binding: ConfirmLocationBinding(),
     ),
-    GetPage(name: stopEditor, page: () => const StopEditorScreen()),
+    GetPage(
+      name: stopEditor,
+      page: () => const StopEditorScreen(),
+      binding: StopEditorBinding(),
+    ),
     GetPage(
       name: changeDropLocationEditor,
       page: () => const StopEditorScreen(),
+      binding: StopEditorBinding(),
     ),
     GetPage(
       name: confirmStop,
