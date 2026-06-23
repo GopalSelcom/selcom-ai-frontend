@@ -1,213 +1,100 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_native_contact_picker/flutter_native_contact_picker.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../shared/data/countries_phone_data.dart';
 import '../../../../shared/utils/app_dialogs.dart';
-import '../../../../shared/utils/grouped_phone_number_formatter.dart';
-import '../../../../shared/utils/phone_contact_import.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
+import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_standard_bottom_sheet.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../../../../shared/widgets/phone_country_picker_chip.dart';
+import '../controllers/booking_for_someone_else_flow_controller.dart';
 
-enum BookingMode { self, other }
+export '../controllers/booking_for_someone_else_flow_controller.dart'
+    show BookingMode, BookingFlowStep;
 
-enum BookingFlowStep { choice, details }
+class BookingForSomeoneElseFlowBottomSheet extends StatelessWidget {
+  const BookingForSomeoneElseFlowBottomSheet({
+    super.key,
+    required this.controllerTag,
+  });
 
-class BookingForSomeoneElseFlowBottomSheet extends StatefulWidget {
-  const BookingForSomeoneElseFlowBottomSheet({super.key});
+  final String controllerTag;
+
+  BookingForSomeoneElseFlowController get controller =>
+      Get.find<BookingForSomeoneElseFlowController>(tag: controllerTag);
 
   /// Opens the multi-step booking sheet via [AppDialogs.showStandardBottomSheet].
   static Future<Map<String, dynamic>?> show() {
+    final controllerTag =
+        'booking_for_someone_else_${DateTime.now().microsecondsSinceEpoch}';
+    Get.put(BookingForSomeoneElseFlowController(), tag: controllerTag);
+
     return AppDialogs.showStandardBottomSheet<Map<String, dynamic>>(
-      sheet: const BookingForSomeoneElseFlowBottomSheet(),
+      sheet: BookingForSomeoneElseFlowBottomSheet(controllerTag: controllerTag),
       barrierDismissible: true,
-    );
-  }
-
-  @override
-  State<BookingForSomeoneElseFlowBottomSheet> createState() =>
-      _BookingForSomeoneElseFlowBottomSheetState();
-}
-
-class _BookingForSomeoneElseFlowBottomSheetState
-    extends State<BookingForSomeoneElseFlowBottomSheet> {
-  BookingFlowStep _currentStep = BookingFlowStep.choice;
-
-  final TextEditingController _name = TextEditingController();
-  final TextEditingController _phone = TextEditingController();
-  String? _nameError;
-  String? _phoneError;
-  CountryData _selectedCountry = Countries.findByIsoCode('TZ');
-  int _phoneFieldKey = 0;
-
-  final FlutterNativeContactPicker _contactPicker =
-      FlutterNativeContactPicker();
-
-  Future<void> _pickContact() async {
-    try {
-      if (GetPlatform.isAndroid) {
-        final status = await Permission.contacts.status;
-        if (status.isPermanentlyDenied) {
-          AppDialogs.showPermissionDialog(
-            title: AppStrings.contactsPermission.tr,
-            message: AppStrings.contactsAccessNeeded.tr,
-            onOpenSettings: () => openAppSettings(),
-            icon: Icons.contacts_outlined,
-            secondaryIcon: Icons.contacts,
-          );
-          return;
-        } else if (!status.isGranted) {
-          final requestStatus = await Permission.contacts.request();
-          if (!requestStatus.isGranted) {
-            return;
-          }
+    ).whenComplete(() {
+      Future<void>.delayed(const Duration(milliseconds: 400), () {
+        if (Get.isRegistered<BookingForSomeoneElseFlowController>(
+          tag: controllerTag,
+        )) {
+          Get.delete<BookingForSomeoneElseFlowController>(tag: controllerTag);
         }
-      }
-
-      final contact = await _contactPicker.selectContact();
-      if (contact != null) {
-        final name = contact.fullName ?? '';
-        final numbers = contact.phoneNumbers ?? [];
-        if (numbers.isNotEmpty) {
-          final parsed = PhoneContactImport.parse(numbers.first);
-
-          setState(() {
-            if (name.isNotEmpty) {
-              _name.text = name;
-            }
-            // Only auto-select when contact number has + / 00 country code.
-            _selectedCountry = parsed.country ?? Countries.findByIsoCode('TZ');
-            _phone.text = parsed.formattedNational;
-            if (parsed.country != null) {
-              _phoneFieldKey++;
-            }
-            _nameError = null;
-            _phoneError = null;
-          });
-        } else {
-          AppDialogs.showErrorDialog(
-            message: 'No phone number found for this contact',
-          );
-        }
-      }
-    } catch (e) {
-      debugPrint('Error picking contact: $e');
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _name.addListener(_onFieldsChanged);
-    _phone.addListener(_onFieldsChanged);
-  }
-
-  void _onCountrySelected(CountryData country) {
-    if (_selectedCountry.code == country.code) return;
-    setState(() {
-      final existingDigits = _phone.text.replaceAll(RegExp(r'\D'), '');
-      _selectedCountry = country;
-      _phone.text = existingDigits.isEmpty
-          ? ''
-          : GroupedPhoneNumberFormatter.formatDigits(
-              existingDigits,
-              country.format,
-            );
-      _phoneFieldKey++;
-      _phoneError = null;
+      });
     });
-  }
-
-  void _onFieldsChanged() {
-    setState(() {
-      _nameError = null;
-      _phoneError = null;
-    });
-  }
-
-  bool get _canConfirm {
-    return _name.text.trim().isNotEmpty &&
-        PhoneNationalRules.isCompleteValidNational(
-          _selectedCountry.code,
-          _phone.text.replaceAll(RegExp(r'\D'), ''),
-        );
-  }
-
-  @override
-  void dispose() {
-    _name.removeListener(_onFieldsChanged);
-    _phone.removeListener(_onFieldsChanged);
-    _name.dispose();
-    _phone.dispose();
-    super.dispose();
-  }
-
-  String? get _sheetTitle {
-    switch (_currentStep) {
-      case BookingFlowStep.choice:
-        return AppStrings.bookingForSomeoneElsePrompt.tr;
-      case BookingFlowStep.details:
-        return AppStrings.passengerDetailsTitle.tr;
-    }
-  }
-
-  String? get _sheetSubtitle {
-    switch (_currentStep) {
-      case BookingFlowStep.choice:
-        return AppStrings.bookingForSomeoneElseSubtitle.tr;
-      case BookingFlowStep.details:
-        return AppStrings.notificationPhoneSubtitle.tr;
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return AppStandardBottomSheet(
-      title: _sheetTitle,
-      subtitle: _sheetSubtitle,
-      headerTextAlign: TextAlign.start,
-      maxHeightFactor: 0.92,
-      content: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        switchInCurve: Curves.easeInOutCubic,
-        switchOutCurve: Curves.easeInOutCubic,
-        transitionBuilder: (child, animation) {
-          final offsetAnimation = Tween<Offset>(
-            begin: const Offset(0.1, 0.0),
-            end: Offset.zero,
-          ).animate(animation);
-          return FadeTransition(
-            opacity: animation,
-            child: SlideTransition(position: offsetAnimation, child: child),
-          );
-        },
-        child: _currentStep == BookingFlowStep.choice
-            ? _buildChoiceStep()
-            : _buildDetailsStep(),
-      ),
-      footer: _currentStep == BookingFlowStep.details && _canConfirm
-          ? AppPrimaryButton(
-              label: AppStrings.confirm.tr,
-              iconAsset: AppAssets.locationIcArrowRight,
-              alignIconToTrailingEnd: true,
-              onPressed: _onConfirmPressed,
-            )
-          : null,
-    );
-  }
+    return Obx(() {
+      controller.currentStep.value;
+      controller.canConfirm.value;
+      controller.nameError.value;
+      controller.phoneError.value;
+      controller.selectedCountry.value;
+      controller.phoneFieldKey.value;
 
-  Widget _buildChoiceStep() {
+      return AppStandardBottomSheet(
+        title: controller.sheetTitle,
+        subtitle: controller.sheetSubtitle,
+        headerTextAlign: TextAlign.start,
+        maxHeightFactor: 0.75,
+        content: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          switchInCurve: Curves.easeInOutCubic,
+          switchOutCurve: Curves.easeInOutCubic,
+          transitionBuilder: (child, animation) {
+            final offsetAnimation = Tween<Offset>(
+              begin: const Offset(0.1, 0.0),
+              end: Offset.zero,
+            ).animate(animation);
+            return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(position: offsetAnimation, child: child),
+            );
+          },
+          child: controller.currentStep.value == BookingFlowStep.choice
+              ? _BookingChoiceStep(controller: controller)
+              : _BookingDetailsStep(controller: controller),
+        ),
+      );
+    });
+  }
+}
+
+class _BookingChoiceStep extends StatelessWidget {
+  const _BookingChoiceStep({required this.controller});
+
+  final BookingForSomeoneElseFlowController controller;
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       key: const ValueKey(BookingFlowStep.choice),
       mainAxisSize: MainAxisSize.min,
@@ -216,95 +103,17 @@ class _BookingForSomeoneElseFlowBottomSheetState
         _bookingChoiceRow(
           icon: Iconsax.user,
           title: AppStrings.bookingRideOptionForMe.tr,
-          onTap: () {
-            Navigator.of(context).pop({'mode': BookingMode.self});
-          },
+          onTap: controller.confirmSelfBooking,
         ),
         SizedBox(height: 12.h),
         _bookingChoiceRow(
           icon: Iconsax.user_add,
           title: AppStrings.bookingRideOptionForSomeoneElse.tr,
-          onTap: () {
-            setState(() {
-              _currentStep = BookingFlowStep.details;
-            });
-          },
+          onTap: controller.goToDetailsStep,
         ),
         SizedBox(height: 12.h),
       ],
     );
-  }
-
-  Widget _buildDetailsStep() {
-    return Column(
-      key: const ValueKey(BookingFlowStep.details),
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        AppTextField(
-          controller: _name,
-          label: AppStrings.passengerNameLabel.tr,
-          hintText: AppStrings.enterPassengerFullName.tr,
-          keyboardType: TextInputType.name,
-          errorText: _nameError,
-          onChanged: (_) {},
-          suffixIcon: IconButton(
-            icon: Icon(Iconsax.user_add, color: AppColors.primary, size: 22.sp),
-            onPressed: _pickContact,
-          ),
-        ),
-        SizedBox(height: 16.h),
-        AppTextField(
-          key: ValueKey(
-            'passenger-phone-${_selectedCountry.code}-$_phoneFieldKey',
-          ),
-          controller: _phone,
-          label: AppStrings.passengerPhoneLabel.tr,
-          hintText: PhoneNationalRules.hintForIso(_selectedCountry.code),
-          keyboardType: TextInputType.phone,
-          inputFormatters: PhoneNationalRules.inputFormattersForIso(
-            _selectedCountry.code,
-          ),
-          prefixIcon: Container(
-            padding: EdgeInsets.only(left: 12.w, right: 2.w),
-            child: PhoneCountryPickerChip(
-              inline: true,
-              selected: _selectedCountry,
-              onChanged: _onCountrySelected,
-            ),
-          ),
-          errorText: _phoneError,
-          onChanged: (_) {},
-        ),
-      ],
-    );
-  }
-
-  void _onConfirmPressed() {
-    final trimmedName = _name.text.trim();
-    if (trimmedName.isEmpty) {
-      setState(() {
-        _nameError = AppStrings.nameIsRequired.tr;
-      });
-      return;
-    }
-
-    final e164 = PhoneNationalRules.e164DigitsOrNull(
-      _selectedCountry.code,
-      _phone.text,
-    );
-    if (e164 == null) {
-      setState(() {
-        _phoneError = _phone.text.trim().isEmpty
-            ? AppStrings.notificationPhoneRequired.tr
-            : AppStrings.pleaseEnterAValidPhoneNumber.tr;
-      });
-      return;
-    }
-
-    Navigator.of(
-      context,
-    ).pop({'mode': BookingMode.other, 'name': trimmedName, 'phone': e164});
   }
 
   Widget _bookingChoiceRow({
@@ -343,6 +152,107 @@ class _BookingForSomeoneElseFlowBottomSheetState
           ),
         ),
       ),
+    );
+  }
+}
+
+class _BookingDetailsStep extends StatefulWidget {
+  const _BookingDetailsStep({required this.controller});
+
+  final BookingForSomeoneElseFlowController controller;
+
+  @override
+  State<_BookingDetailsStep> createState() => _BookingDetailsStepState();
+}
+
+class _BookingDetailsStepState extends State<_BookingDetailsStep> {
+  late final TextEditingController _nameController;
+  late final TextEditingController _phoneController;
+
+  BookingForSomeoneElseFlowController get controller => widget.controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController();
+    _phoneController = TextEditingController();
+    _nameController.addListener(controller.onFieldsChanged);
+    _phoneController.addListener(controller.onFieldsChanged);
+    controller.bindDetailFields(
+      name: _nameController,
+      phone: _phoneController,
+    );
+  }
+
+  @override
+  void dispose() {
+    _nameController.removeListener(controller.onFieldsChanged);
+    _phoneController.removeListener(controller.onFieldsChanged);
+    controller.unbindDetailFields();
+    _nameController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      key: const ValueKey(BookingFlowStep.details),
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppTextField(
+          controller: _nameController,
+          label: AppStrings.passengerNameLabel.tr,
+          hintText: AppStrings.enterPassengerFullName.tr,
+          keyboardType: TextInputType.name,
+          errorText: controller.nameError.value,
+          onChanged: (_) {},
+          suffixIcon: IconButton(
+            icon: Icon(Iconsax.user_add, color: AppColors.primary, size: 22.sp),
+            onPressed: controller.pickContact,
+          ),
+        ),
+        SizedBox(height: 16.h),
+        AppTextField(
+          key: ValueKey(
+            'passenger-phone-${controller.selectedCountry.value.code}-${controller.phoneFieldKey.value}',
+          ),
+          controller: _phoneController,
+          label: AppStrings.passengerPhoneLabel.tr,
+          hintText: PhoneNationalRules.hintForIso(
+            controller.selectedCountry.value.code,
+          ),
+          keyboardType: TextInputType.phone,
+          inputFormatters: PhoneNationalRules.inputFormattersForIso(
+            controller.selectedCountry.value.code,
+          ),
+          prefixIcon: Container(
+            padding: EdgeInsets.only(left: 12.w, right: 2.w),
+            child: PhoneCountryPickerChip(
+              inline: true,
+              selected: controller.selectedCountry.value,
+              onChanged: controller.onCountrySelected,
+            ),
+          ),
+          errorText: controller.phoneError.value,
+          onChanged: (_) {},
+        ),
+        AppAnimatedReveal(
+          show: controller.canConfirm.value,
+          visibleKey: const ValueKey('booking-confirm-visible'),
+          hiddenKey: const ValueKey('booking-confirm-hidden'),
+          child: Padding(
+            padding: EdgeInsets.only(top: 22.h, bottom: 8.h),
+            child: AppPrimaryButton(
+              label: AppStrings.confirm.tr,
+              iconAsset: AppAssets.locationIcArrowRight,
+              alignIconToTrailingEnd: true,
+              onPressed: controller.onConfirmPressed,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
