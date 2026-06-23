@@ -19,7 +19,8 @@ import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_standard_bottom_sheet.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../../../../shared/widgets/phone_country_picker_chip.dart';
-import '../controllers/confirm_pickup_controller.dart';
+
+enum BookingMode { self, other }
 
 enum BookingFlowStep { choice, details }
 

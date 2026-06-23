@@ -930,9 +930,18 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     required double lat,
     required double lng,
   }) async {
+    final parentArgs = Get.arguments is Map
+        ? Map<String, dynamic>.from(Get.arguments as Map)
+        : <String, dynamic>{};
     final result = await Get.toNamed(
       AppRoutes.confirmStop,
-      arguments: {'address': address, 'lat': lat, 'lng': lng},
+      arguments: {
+        'address': address,
+        'lat': lat,
+        'lng': lng,
+        if (parentArgs['isSelectingDestination'] == true)
+          'isSelectingDestination': true,
+      },
     );
     if (result != null) {
       Get.back(result: result);

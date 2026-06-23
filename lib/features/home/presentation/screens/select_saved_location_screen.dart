@@ -342,12 +342,17 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
         setState(() => _isGeocoding = false);
 
         if (latLng != null) {
+          final parentArgs = Get.arguments is Map
+              ? Map<String, dynamic>.from(Get.arguments as Map)
+              : <String, dynamic>{};
           final result = await Get.toNamed(
             AppRoutes.confirmStop,
             arguments: {
               'address': subtitle,
               'lat': latLng.latitude,
               'lng': latLng.longitude,
+              if (parentArgs['isSelectingDestination'] == true)
+                'isSelectingDestination': true,
             },
           );
           if (result != null) {
@@ -389,9 +394,16 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
 
     final args = Get.arguments;
     if (args is Map && args['isSelectingStop'] == true) {
+      final parentArgs = Map<String, dynamic>.from(args);
       final result = await Get.toNamed(
         AppRoutes.confirmStop,
-        arguments: {'address': subtitle, 'lat': loc.lat, 'lng': loc.lng},
+        arguments: {
+          'address': subtitle,
+          'lat': loc.lat,
+          'lng': loc.lng,
+          if (parentArgs['isSelectingDestination'] == true)
+            'isSelectingDestination': true,
+        },
       );
       if (result != null) {
         Get.back(result: result);
