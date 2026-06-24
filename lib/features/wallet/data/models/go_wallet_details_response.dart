@@ -28,8 +28,7 @@ class GoWalletDetailsResponseModel {
 class GoWalletDetailsData {
   GoWalletDetailsData({
     this.accountNo,
-    this.firstName,
-    this.lastName,
+    this.name,
     this.address,
     this.city,
     this.dob,
@@ -42,8 +41,7 @@ class GoWalletDetailsData {
   });
 
   final String? accountNo;
-  final String? firstName;
-  final String? lastName;
+  final String? name;
   final String? address;
   final String? city;
   final String? dob;
@@ -57,8 +55,7 @@ class GoWalletDetailsData {
   factory GoWalletDetailsData.fromJson(Map<String, dynamic> json) {
     return GoWalletDetailsData(
       accountNo: json['account_no']?.toString(),
-      firstName: json['first_name']?.toString(),
-      lastName: json['last_name']?.toString(),
+      name: json['name']?.toString(),
       address: json['address']?.toString(),
       city: json['city']?.toString(),
       dob: json['dob']?.toString(),
@@ -76,8 +73,7 @@ class GoWalletDetailsData {
   WalletDetailsEntity toEntity() {
     return WalletDetailsEntity(
       accountNo: accountNo?.trim() ?? '',
-      firstName: firstName,
-      lastName: lastName,
+      name: name,
       address: address,
       city: city,
       dob: dob,

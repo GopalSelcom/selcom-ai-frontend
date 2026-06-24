@@ -538,6 +538,9 @@ class SelcomPesaTopupController extends GetxController {
   }
 
   Future<String> _resolveDisplayName(WalletDetailsEntity details) async {
+    final walletName = details.name?.trim() ?? '';
+    if (walletName.isNotEmpty) return walletName;
+
     final raw = await StorageService().read(StorageKeys.user);
     if (raw != null && raw.trim().isNotEmpty) {
       try {
@@ -550,11 +553,7 @@ class SelcomPesaTopupController extends GetxController {
       } catch (_) {}
     }
 
-    final parts = [
-      details.firstName?.trim() ?? '',
-      details.lastName?.trim() ?? '',
-    ].where((part) => part.isNotEmpty).join(' ');
-    return parts;
+    return '';
   }
 
   String? _validatePhone({required bool showEmptyError}) {

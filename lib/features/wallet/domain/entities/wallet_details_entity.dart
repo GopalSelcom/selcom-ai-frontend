@@ -1,8 +1,7 @@
 class WalletDetailsEntity {
   const WalletDetailsEntity({
     required this.accountNo,
-    this.firstName,
-    this.lastName,
+    this.name,
     this.address,
     this.city,
     this.dob,
@@ -15,8 +14,7 @@ class WalletDetailsEntity {
   });
 
   final String accountNo;
-  final String? firstName;
-  final String? lastName;
+  final String? name;
   final String? address;
   final String? city;
   final String? dob;
