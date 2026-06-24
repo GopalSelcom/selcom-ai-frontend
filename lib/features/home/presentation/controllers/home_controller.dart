@@ -28,7 +28,6 @@ import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/session_expiry_service.dart';
 import '../../../../core/services/location_service.dart';
-import '../../../../core/services/storage_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/active_rides_parser.dart';
@@ -118,10 +117,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   final isResolvingAddress = false.obs;
   final hasLocationPermission = false.obs;
 
-  /// Cached counts to match the shimmer layout height during loading.
-  final cachedRecentDestinationsCount = 0.obs;
-  final cachedVehicleTypesCount = 3.obs; // Default to 3, as we expect some vehicles
-
   /// Draggable home bottom sheet size (fraction of screen height).
   final sheetSize = homeSheetCollapsedPeekMin.obs;
   final DraggableScrollableController homeSheetController =
@@ -163,10 +158,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     homeSheetController.addListener(_onHomeSheetChanged);
     WidgetsBinding.instance.addObserver(this);
     analyticsService.logEvent('home_screen_viewed');
-    _loadCachedCounts().then((_) {
-      invalidateHomeSheetMeasurement();
-      syncHomeSheetToDefault();
-    });
     _loadMapIcons();
     _initSequentialPermissions();
     _addMockDrivers();
@@ -198,22 +189,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         suggestions.clear();
       }
     }, time: const Duration(milliseconds: 300));
-  }
-
-  Future<void> _loadCachedCounts() async {
-    try {
-      final storage = StorageService();
-      final recentStr = await storage.read('cached_recent_destinations_count');
-      if (recentStr != null) {
-        cachedRecentDestinationsCount.value = int.tryParse(recentStr) ?? 0;
-      }
-      final vehicleStr = await storage.read('cached_vehicle_types_count');
-      if (vehicleStr != null) {
-        cachedVehicleTypesCount.value = int.tryParse(vehicleStr) ?? 3;
-      }
-    } catch (e) {
-      developer.log("Error loading cached counts: $e", name: 'HomeController');
-    }
   }
 
   Future<void> _initSequentialPermissions() async {
@@ -441,22 +416,13 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       // Handle Vehicle Types
       results[0].fold(
         (_) => null,
-        (types) {
-          if (types is List<VehicleTypeModel>) {
-            vehicleTypes.assignAll(types);
-            cachedVehicleTypesCount.value = types.length;
-            unawaited(StorageService().write('cached_vehicle_types_count', types.length.toString()));
-          }
-        },
+        (types) => vehicleTypes.assignAll(types as List<VehicleTypeModel>),
       );
 
       // Handle Recent Destinations
       results[1].fold((_) => null, (destinations) {
         if (destinations is List<RecentDestinationModel>) {
           recentDestinations.assignAll(destinations);
-          final previewCount = destinations.length > 3 ? 3 : destinations.length;
-          cachedRecentDestinationsCount.value = previewCount;
-          unawaited(StorageService().write('cached_recent_destinations_count', previewCount.toString()));
         }
       });
 
@@ -986,7 +952,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     if (includeRecent && shouldShowRecentSection) {
       contentHeight += 28.h;
       final count = isLoadingHomeData.value
-          ? cachedRecentDestinationsCount.value
+          ? 3
           : recentDestinationsPreview.length;
       contentHeight += count * 64.h;
       if (count > 1) {
@@ -2039,19 +2005,11 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     return first.isEmpty ? loc.address : first;
   }
 
-  bool get shouldShowRecentSection {
-    if (isLoadingHomeData.value) {
-      return cachedRecentDestinationsCount.value > 0;
-    }
-    return recentDestinations.isNotEmpty;
-  }
+  bool get shouldShowRecentSection =>
+      isLoadingHomeData.value || recentDestinations.isNotEmpty;
 
-  bool get shouldShowVehicleSection {
-    if (isLoadingHomeData.value) {
-      return cachedVehicleTypesCount.value > 0;
-    }
-    return vehicleTypes.isNotEmpty;
-  }
+  bool get shouldShowVehicleSection =>
+      isLoadingHomeData.value || vehicleTypes.isNotEmpty;
 
   // Location selection screen orchestration helpers.
   void applyLocationSelectionTextToSegment({

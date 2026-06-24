@@ -301,8 +301,6 @@ class HomeScreen extends GetView<HomeController> {
           final children = isLoading
               ? HomeSheetLoadingContent.buildChildren(
                   horizontalPadding: _sheetHorizontalPadding,
-                  recentRowCount: controller.cachedRecentDestinationsCount.value,
-                  vehicleCount: controller.cachedVehicleTypesCount.value,
                 )
               : _buildHomeSheetContentChildren();
           return AbsorbPointer(
