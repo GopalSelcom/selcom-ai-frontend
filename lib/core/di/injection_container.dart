@@ -1,5 +1,4 @@
 import 'package:get_it/get_it.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../features/auth/data/datasources/apple_auth_local_data_source.dart';
 import '../../features/auth/data/datasources/auth_remote_data_source.dart';
@@ -79,11 +78,8 @@ Future<void> init() async {
   sl.registerLazySingleton(() => FacebookSignInService());
   sl.registerLazySingleton(() => FirebaseAuthDataSource());
   sl.registerLazySingleton<AppleAuthLocalDataSource>(
-    () => AppleAuthLocalDataSourceImpl(secureStorage: sl()),
+    () => AppleAuthLocalDataSourceImpl(),
   );
-
-  // ── External ──
-  sl.registerLazySingleton(() => const FlutterSecureStorage());
 
   // ── Network — ApiService initialization ──
   ApiService().init(

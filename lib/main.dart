@@ -20,6 +20,7 @@ import 'core/localization/getx_languages_translations.dart';
 import 'core/localization/localization.dart';
 import 'core/services/agora_calling_bootstrap.dart';
 import 'core/services/session_auth_service.dart';
+import 'core/services/storage_service.dart';
 import 'core/services/analytics_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/voip_callkit_bridge_service.dart';
@@ -133,6 +134,9 @@ void main() async {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
+
+      // Hive app storage (tokens, user, prefs) — must run before readers.
+      await StorageService().init();
 
       // Initialize Error Reporter
       await ErrorReporter.instance.init();
