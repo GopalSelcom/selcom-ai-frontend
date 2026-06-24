@@ -94,6 +94,7 @@ class AppDialogs {
   static Future<T?> showAnimatedBottomSheet<T>({
     required Widget child,
     bool barrierDismissible = true,
+    bool enableDrag = true,
   }) async {
     await ensureKeyboardClosed();
     bool hapticTriggered = false;
@@ -156,7 +157,10 @@ class AppDialogs {
                     padding: EdgeInsets.only(
                       bottom: MediaQuery.of(context).viewInsets.bottom,
                     ),
-                    child: child,
+                    child: _DragToDismissWrapper(
+                      enableDrag: enableDrag,
+                      child: child,
+                    ),
                   ),
                 ),
               ),
@@ -196,6 +200,7 @@ class AppDialogs {
     Widget? sheet,
     Widget? footer,
     bool barrierDismissible = true,
+    bool enableDrag = true,
     bool showDragHandle = true,
     bool showHeaderDivider = true,
     EdgeInsetsGeometry? contentPadding,
@@ -224,6 +229,7 @@ class AppDialogs {
 
     return showAnimatedBottomSheet<T>(
       barrierDismissible: barrierDismissible,
+      enableDrag: enableDrag,
       child: child,
     );
   }
@@ -993,4 +999,87 @@ class SuccessHeaderClipper extends CustomClipper<Path> {
 
   @override
   bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
+}
+
+class _DragToDismissWrapper extends StatefulWidget {
+  const _DragToDismissWrapper({
+    required this.child,
+    required this.enableDrag,
+  });
+
+  final Widget child;
+  final bool enableDrag;
+
+  @override
+  State<_DragToDismissWrapper> createState() => _DragToDismissWrapperState();
+}
+
+class _DragToDismissWrapperState extends State<_DragToDismissWrapper>
+    with SingleTickerProviderStateMixin {
+  double _dragOffset = 0.0;
+  late AnimationController _snapController;
+  late Animation<double> _snapAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _snapController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+    _snapAnimation = _snapController.drive(Tween<double>(begin: 0.0, end: 0.0));
+  }
+
+  @override
+  void dispose() {
+    _snapController.dispose();
+    super.dispose();
+  }
+
+  void _handleDragUpdate(DragUpdateDetails details) {
+    if (!widget.enableDrag) return;
+    setState(() {
+      _dragOffset = (_dragOffset + details.primaryDelta!).clamp(0.0, double.infinity);
+    });
+  }
+
+  void _handleDragEnd(DragEndDetails details) {
+    if (!widget.enableDrag) return;
+
+    final velocity = details.primaryVelocity ?? 0.0;
+    if (_dragOffset > 100.0 || velocity > 500.0) {
+      Navigator.of(context).pop();
+    } else {
+      _snapAnimation = _snapController.drive(
+        Tween<double>(begin: _dragOffset, end: 0.0),
+      );
+      _snapController.forward(from: 0.0).then((_) {
+        setState(() {
+          _dragOffset = 0.0;
+        });
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.enableDrag) return widget.child;
+
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onVerticalDragUpdate: _handleDragUpdate,
+      onVerticalDragEnd: _handleDragEnd,
+      child: AnimatedBuilder(
+        animation: _snapController,
+        builder: (context, child) {
+          final offset = _snapController.isAnimating ? _snapAnimation.value : _dragOffset;
+          return Transform.translate(
+            offset: Offset(0.0, offset),
+            child: child,
+          );
+        },
+        child: widget.child,
+      ),
+    );
+  }
 }
