@@ -9,7 +9,11 @@ import 'home_sheet_layout.dart';
 class HomeSheetLoadingContent {
   HomeSheetLoadingContent._();
 
-  static List<Widget> buildChildren({required double horizontalPadding}) {
+  static List<Widget> buildChildren({
+    required double horizontalPadding,
+    required int recentRowCount,
+    required int vehicleCount,
+  }) {
     return [
       _sheetHeaderSection(horizontalPadding),
       SizedBox(height: 8.h),
@@ -19,14 +23,18 @@ class HomeSheetLoadingContent {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: HomeSheetLayout.sectionGap.h),
-            _sectionTitleSkeleton(),
-            SizedBox(height: HomeSheetLayout.titleContentGap.h),
-            ..._recentLocationSkeletons(),
-            SizedBox(height: HomeSheetLayout.sectionGap.h),
-            _sectionTitleSkeleton(width: 140.w),
-            SizedBox(height: HomeSheetLayout.titleContentGap.h),
-            _vehicleRowSkeleton(),
+            if (recentRowCount > 0) ...[
+              SizedBox(height: HomeSheetLayout.sectionGap.h),
+              _sectionTitleSkeleton(),
+              SizedBox(height: HomeSheetLayout.titleContentGap.h),
+              ..._recentLocationSkeletons(recentRowCount),
+            ],
+            if (vehicleCount > 0) ...[
+              SizedBox(height: HomeSheetLayout.sectionGap.h),
+              _sectionTitleSkeleton(width: 140.w),
+              SizedBox(height: HomeSheetLayout.titleContentGap.h),
+              _vehicleRowSkeleton(vehicleCount),
+            ],
           ],
         ),
       ),
@@ -108,9 +116,9 @@ class HomeSheetLoadingContent {
     );
   }
 
-  static List<Widget> _recentLocationSkeletons() {
-    return List.generate(HomeSheetLayout.shimmerRecentRowCount, (index) {
-      final isLast = index == HomeSheetLayout.shimmerRecentRowCount - 1;
+  static List<Widget> _recentLocationSkeletons(int count) {
+    return List.generate(count, (index) {
+      final isLast = index == count - 1;
       return Column(
         children: [
           _recentLocationRowSkeleton(),
@@ -150,7 +158,7 @@ class HomeSheetLoadingContent {
     );
   }
 
-  static Widget _vehicleRowSkeleton() {
+  static Widget _vehicleRowSkeleton(int count) {
     return SizedBox(
       height: HomeSheetLayout.vehicleRowHeight.h,
       child: SingleChildScrollView(
@@ -159,7 +167,7 @@ class HomeSheetLoadingContent {
         child: AppShimmer(
           child: Row(
             children: List.generate(
-              HomeSheetLayout.shimmerVehicleCount,
+              count,
               (_) => Padding(
                 padding: EdgeInsets.only(right: 29.w),
                 child: Column(
