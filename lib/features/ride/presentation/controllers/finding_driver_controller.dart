@@ -696,6 +696,7 @@ class FindingDriverController extends GetxController {
       _hasReceivedTrackingUpdate = true;
       latestTrackingPayload.value = payload;
       _applyTrackingPayload(payload);
+      _handleRideStatusFromTracking(payload);
     });
 
     _fareSettledSub = _socketService.rideFareSettledStream.listen((payload) {
@@ -819,6 +820,49 @@ class FindingDriverController extends GetxController {
       target: target,
       coordinates: payload.routeGeometry?.coordinates,
       fitCamera: true,
+    );
+  }
+
+  /// Backend may emit assignment on `ride:tracking_update` before `ride:status_update`.
+  void _handleRideStatusFromTracking(TrackingUpdateSocketResponse payload) {
+    final rawStatus = (payload.status ?? '').toString().trim();
+    if (rawStatus.isEmpty) return;
+
+    final normalized = normalizeRideStatusString(rawStatus);
+    if (isRideSearchingStatus(normalized)) return;
+
+    final statusPayload = _mergeTrackingIntoStatusPayload(payload);
+    latestRideStatusPayload.value = statusPayload;
+    developer.log(
+      "📥 Tracking status drives navigation: $normalized for ride $rideId",
+      name: 'ORDER_TRACKING',
+    );
+    _handleRideStatus(rawStatus, statusPayload);
+  }
+
+  EventRiderStatusUpdateResponse _mergeTrackingIntoStatusPayload(
+    TrackingUpdateSocketResponse tracking,
+  ) {
+    final existing = latestRideStatusPayload.value;
+    EventRouteGeometry? geometry;
+    final coords = tracking.routeGeometry?.coordinates;
+    if (coords != null && coords.isNotEmpty) {
+      geometry = EventRouteGeometry(
+        coordinates: coords,
+        type: tracking.routeGeometry?.type,
+      );
+    }
+
+    return EventRiderStatusUpdateResponse(
+      rideId: tracking.rideId ?? existing?.rideId ?? rideId,
+      status: tracking.status,
+      driverSnapshot: existing?.driverSnapshot,
+      vehicleSnapshot: existing?.vehicleSnapshot,
+      pinCode: existing?.pinCode,
+      pinRequired: existing?.pinRequired,
+      routeGeometry: geometry ?? existing?.routeGeometry,
+      routeTarget: tracking.routeTarget ?? existing?.routeTarget,
+      etaSeconds: tracking.eta ?? existing?.etaSeconds,
     );
   }
 
