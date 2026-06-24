@@ -141,66 +141,25 @@ class CancelReasonSelectionDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Flexible(
-              child: ListView.separated(
-                shrinkWrap: true,
-                padding: EdgeInsets.zero,
-                itemCount: reasons.length,
-                separatorBuilder: (_, __) =>
-                    Divider(height: 1.h, color: AppColors.bgSoftCircle),
-                itemBuilder: (context, index) {
-                  final reason = reasons[index];
-                  final isSelected = selectedReason == reason;
-                  return InkWell(
-                    onTap: () => controller.selectReason(reason),
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        top: index == 0 ? 0 : 14.h,
-                        bottom: index == reasons.length - 1 ? 0 : 14.h,
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              reason,
-                              style: AppTextStyles.homeSubtitle.copyWith(
-                                color: AppColors.black,
-                                fontWeight: isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.w500,
-                                height: 20 / 15,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            width: 20.w,
-                            height: 20.w,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(6.r),
-                              border: Border.all(
-                                color: isSelected
-                                    ? AppColors.primary
-                                    : AppColors.iconHeartOutline,
-                                width: 1.5,
-                              ),
-                              color: isSelected
-                                  ? AppColors.primary
-                                  : AppColors.transparent,
-                            ),
-                            child: isSelected
-                                ? Icon(
-                                    Icons.check,
-                                    size: 14.sp,
-                                    color: AppColors.white,
-                                  )
-                                : null,
-                          ),
-                        ],
-                      ),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var index = 0; index < reasons.length; index++) ...[
+                  if (index > 0)
+                    Divider(
+                      height: 1.h,
+                      color: AppColors.bgSoftCircle,
                     ),
-                  );
-                },
-              ),
+                  _buildReasonOption(
+                    reason: reasons[index],
+                    isSelected: selectedReason == reasons[index],
+                    isFirst: index == 0,
+                    isLast: index == reasons.length - 1,
+                    onTap: () => controller.selectReason(reasons[index]),
+                  ),
+                ],
+              ],
             ),
             SizedBox(height: 32.h),
             _ActionButton(
@@ -226,6 +185,59 @@ class CancelReasonSelectionDialog extends StatelessWidget {
         ),
       );
     });
+  }
+
+  Widget _buildReasonOption({
+    required String reason,
+    required bool isSelected,
+    required bool isFirst,
+    required bool isLast,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: EdgeInsets.only(
+          top: isFirst ? 0 : 14.h,
+          bottom: isLast ? 0 : 14.h,
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                reason,
+                style: AppTextStyles.homeSubtitle.copyWith(
+                  color: AppColors.black,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  height: 20 / 15,
+                ),
+              ),
+            ),
+            Container(
+              width: 20.w,
+              height: 20.w,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(6.r),
+                border: Border.all(
+                  color: isSelected
+                      ? AppColors.primary
+                      : AppColors.iconHeartOutline,
+                  width: 1.5,
+                ),
+                color: isSelected ? AppColors.primary : AppColors.transparent,
+              ),
+              child: isSelected
+                  ? Icon(
+                      Icons.check,
+                      size: 14.sp,
+                      color: AppColors.white,
+                    )
+                  : null,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

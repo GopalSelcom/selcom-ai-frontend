@@ -326,129 +326,153 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     final hintStyle = AppTextStyles.hint;
 
     final rowCount = _extraDestinationControllers.length + 2;
-    return ReorderableListView.builder(
-      shrinkWrap: true,
-      buildDefaultDragHandles: false,
-      physics: const NeverScrollableScrollPhysics(),
-      onReorderStart: (_) {
-        locationController.isReorderingRows.value = true;
-        locationController.unfocusAllLocationFields();
-      },
-      onReorderEnd: (_) {
-        locationController.isReorderingRows.value = false;
-      },
-      onReorder: _onReorderRows,
-      itemCount: rowCount,
-      itemBuilder: (_, rowIndex) {
-        final segment = _segmentForRow(rowIndex);
-        final isPickup = rowIndex == 0;
-        final isDestination = rowIndex == rowCount - 1;
-        final extraIndex = rowIndex - 1;
+    return SizedBox(
+      height: _integratedRouteFieldsHeight(rowCount),
+      child: ReorderableListView.builder(
+        buildDefaultDragHandles: false,
+        physics: const NeverScrollableScrollPhysics(),
+        onReorderStart: (_) {
+          locationController.isReorderingRows.value = true;
+          locationController.unfocusAllLocationFields();
+        },
+        onReorderEnd: (_) {
+          locationController.isReorderingRows.value = false;
+        },
+        onReorder: _onReorderRows,
+        itemCount: rowCount,
+        itemBuilder: (context, rowIndex) {
+          return _buildIntegratedRouteRow(
+            rowIndex: rowIndex,
+            rowCount: rowCount,
+            fieldStyle: fieldStyle,
+            hintStyle: hintStyle,
+          );
+        },
+      ),
+    );
+  }
 
-        final TextEditingController textController = isPickup
-            ? pickupController
-            : isDestination
-            ? destinationController
-            : _extraDestinationControllers[extraIndex];
-        final FocusNode focusNode = isPickup
-            ? pickupFocusNode
-            : isDestination
-            ? destinationFocusNode
-            : _extraDestinationFocusNodes[extraIndex];
+  /// Fixed extent for route rows inside the pickup/destination card (no shrinkWrap).
+  double _integratedRouteFieldsHeight(int rowCount) {
+    if (rowCount <= 0) return 0;
+    final rowHeight = 28.h;
+    const dividerHeight = 26.0;
+    return rowCount * rowHeight + (rowCount - 1) * dividerHeight;
+  }
 
-        return Container(
-          key: ValueKey('route-row-$rowIndex-${textController.hashCode}'),
-          child: _pinFieldRow(
-            icon: isPickup
-                ? AppRouteLocationPinIcon.pickup()
-                : isDestination
-                ? AppRouteLocationPinIcon.destination()
-                : AppRouteLocationPinIcon.stop(extraIndex),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (!isPickup && !isDestination)
-                  Material(
-                    color: AppColors.transparent,
+  Widget _buildIntegratedRouteRow({
+    required int rowIndex,
+    required int rowCount,
+    required TextStyle fieldStyle,
+    required TextStyle hintStyle,
+  }) {
+    final segment = _segmentForRow(rowIndex);
+    final isPickup = rowIndex == 0;
+    final isDestination = rowIndex == rowCount - 1;
+    final extraIndex = rowIndex - 1;
+
+    final TextEditingController textController = isPickup
+        ? pickupController
+        : isDestination
+        ? destinationController
+        : _extraDestinationControllers[extraIndex];
+    final FocusNode focusNode = isPickup
+        ? pickupFocusNode
+        : isDestination
+        ? destinationFocusNode
+        : _extraDestinationFocusNodes[extraIndex];
+
+    return Container(
+      key: ValueKey('route-row-$rowIndex-${textController.hashCode}'),
+      child: _pinFieldRow(
+        icon: isPickup
+            ? AppRouteLocationPinIcon.pickup()
+            : isDestination
+            ? AppRouteLocationPinIcon.destination()
+            : AppRouteLocationPinIcon.stop(extraIndex),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (!isPickup && !isDestination)
+              Material(
+                color: AppColors.transparent,
+                child: Padding(
+                  padding: EdgeInsets.only(right: 2.w),
+                  child: InkWell(
+                    onTap: () => _onRemoveDestinationStop(extraIndex),
+                    borderRadius: BorderRadius.circular(22.r),
                     child: Padding(
-                      padding: EdgeInsets.only(right: 2.w),
-                      child: InkWell(
-                        onTap: () => _onRemoveDestinationStop(extraIndex),
-                        borderRadius: BorderRadius.circular(22.r),
-                        child: Padding(
-                          padding: EdgeInsets.all(2.w),
-                          child: Icon(
-                            Icons.close,
-                            color: AppColors.textHint,
-                            size: 20.sp,
-                          ),
-                        ),
+                      padding: EdgeInsets.all(2.w),
+                      child: Icon(
+                        Icons.close,
+                        color: AppColors.textHint,
+                        size: 20.sp,
                       ),
                     ),
                   ),
-                ReorderableDragStartListener(
-                  index: rowIndex,
-                  child: Padding(
-                    padding: EdgeInsets.only(right: 4.w, left: 2.w),
-                    child: Icon(
-                      Icons.drag_indicator_rounded,
-                      color: AppColors.textSlateSoft,
-                      size: 20.sp,
-                    ),
-                  ),
                 ),
-              ],
-            ),
-            field: Obx(
-              () => IgnorePointer(
-                ignoring: locationController.isReorderingRows.value,
-                child: TextField(
-                  controller: textController,
-                  focusNode: focusNode,
-                  onTap: () {
-                    _setActiveSegment(segment);
-                    if (segment == 0) {
-                      locationController.onPickupFieldTapped();
-                    } else if (segment == 1) {
-                      locationController.onDestinationFieldTapped();
-                    } else {
-                      locationController.onExtraStopFieldTapped(segment - 2);
-                    }
-                  },
-                  onChanged: (value) {
-                    _setActiveSegment(segment);
-                    if (segment == 0) {
-                      pickupEditedByUser.value = true;
-                      _routePickupLat.value = null;
-                      _routePickupLng.value = null;
-                      controller.isPickupSelected.value = false;
-                    } else if (segment == 1) {
-                      _destinationPlaceId.value = null;
-                      controller.isDestinationSelected.value = false;
-                    } else {
-                      locationController.markExtraStopUnconfirmed(segment - 2);
-                    }
-                    controller.searchQuery.value = value;
-                  },
-                  style: fieldStyle,
-                  decoration: InputDecoration(
-                    isDense: true,
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.zero,
-                    hintText: isPickup
-                        ? AppStrings.searchPickup.tr
-                        : isDestination
-                        ? AppStrings.searchDestination.tr
-                        : AppStrings.searchStopLocation.tr,
-                    hintStyle: hintStyle,
-                  ),
+              ),
+            ReorderableDragStartListener(
+              index: rowIndex,
+              child: Padding(
+                padding: EdgeInsets.only(right: 4.w, left: 2.w),
+                child: Icon(
+                  Icons.drag_indicator_rounded,
+                  color: AppColors.textSlateSoft,
+                  size: 20.sp,
                 ),
               ),
             ),
-            showDivider: rowIndex < rowCount - 1,
+          ],
+        ),
+        field: Obx(
+          () => IgnorePointer(
+            ignoring: locationController.isReorderingRows.value,
+            child: TextField(
+              controller: textController,
+              focusNode: focusNode,
+              onTap: () {
+                _setActiveSegment(segment);
+                if (segment == 0) {
+                  locationController.onPickupFieldTapped();
+                } else if (segment == 1) {
+                  locationController.onDestinationFieldTapped();
+                } else {
+                  locationController.onExtraStopFieldTapped(segment - 2);
+                }
+              },
+              onChanged: (value) {
+                _setActiveSegment(segment);
+                if (segment == 0) {
+                  pickupEditedByUser.value = true;
+                  _routePickupLat.value = null;
+                  _routePickupLng.value = null;
+                  controller.isPickupSelected.value = false;
+                } else if (segment == 1) {
+                  _destinationPlaceId.value = null;
+                  controller.isDestinationSelected.value = false;
+                } else {
+                  locationController.markExtraStopUnconfirmed(segment - 2);
+                }
+                controller.searchQuery.value = value;
+              },
+              style: fieldStyle,
+              decoration: InputDecoration(
+                isDense: true,
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+                hintText: isPickup
+                    ? AppStrings.searchPickup.tr
+                    : isDestination
+                    ? AppStrings.searchDestination.tr
+                    : AppStrings.searchStopLocation.tr,
+                hintStyle: hintStyle,
+              ),
+            ),
           ),
-        );
-      },
+        ),
+        showDivider: rowIndex < rowCount - 1,
+      ),
     );
   }
 
@@ -632,78 +656,17 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
 
       return ListView(
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        shrinkWrap: true,
         children: [
           if (controller.savedPlaces.isNotEmpty) ...[
             _sectionHeader(AppStrings.savedPlaces.tr),
             SizedBox(height: 12.h),
-            _savedPlacesList(controller),
+            ..._savedPlaceTiles(controller),
             SizedBox(height: 24.h),
           ],
           if (controller.recentDestinations.isNotEmpty) ...[
             _sectionHeader(AppStrings.recentLocations.tr),
             SizedBox(height: 12.h),
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: controller.recentDestinations.length,
-              separatorBuilder: (_, __) => SizedBox(height: 8.h),
-              itemBuilder: (_, index) {
-                final destination = controller.recentDestinations[index];
-                final savedPlace = controller.getSavedPlaceFor(
-                  destination.address,
-                  null,
-                );
-                final isFavorite = savedPlace?.isFavourite ?? false;
-                final showFavorite = savedPlace != null;
-
-                final dist = controller.calculateDistanceKm(
-                  destination.lat,
-                  destination.lng,
-                );
-
-                return _locationTile(
-                  kmText: dist.isEmpty ? AppStrings.recentTag.tr : dist,
-                  title: destination.address.split(',').first,
-                  subtitle: destination.address,
-                  isFavorite: isFavorite,
-                  showFavorite: showFavorite,
-                  onTap: () {
-                    if (Get.arguments is Map &&
-                        Get.arguments['isSelectingStop'] == true) {
-                      _handleStopSelection(
-                        address: destination.address,
-                        lat: destination.lat,
-                        lng: destination.lng,
-                      );
-                      return;
-                    }
-                    controller.applyRecentDestinationToLocationSelection(
-                      destination: destination,
-                      activeSegmentIndex: _activeSegmentIndex.value,
-                      pickupController: pickupController,
-                      destinationController: destinationController,
-                      extraDestinationControllers: _extraDestinationControllers,
-                      pickupEditedByUser: pickupEditedByUser,
-                      routePickupLat: _routePickupLat,
-                      routePickupLng: _routePickupLng,
-                      routeDestinationLat: _routeDestinationLat,
-                      routeDestinationLng: _routeDestinationLng,
-                      destinationPlaceId: _destinationPlaceId,
-                    );
-                    locationController.confirmSelectionForSegment(
-                      _activeSegmentIndex.value,
-                    );
-                  },
-                  onFavoriteTap: () =>
-                      controller.toggleAddAddressBottomSheetForAddress(
-                        address: destination.address,
-                        lat: destination.lat,
-                        lng: destination.lng,
-                      ),
-                );
-              },
-            ),
+            ..._recentDestinationTiles(controller),
           ],
         ],
       );
@@ -784,17 +747,17 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     );
   }
 
-  Widget _savedPlacesList(HomeController controller) {
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: controller.savedPlaces.length,
-      separatorBuilder: (_, __) => SizedBox(height: 8.h),
-      itemBuilder: (_, index) {
-        final place = controller.savedPlaces[index];
-        final label = (place.label ?? '').capitalizeFirst ?? '';
-        final dist = controller.calculateDistanceKm(place.lat, place.lng);
-        return _locationTile(
+  List<Widget> _savedPlaceTiles(HomeController controller) {
+    final tiles = <Widget>[];
+    for (var index = 0; index < controller.savedPlaces.length; index++) {
+      if (index > 0) {
+        tiles.add(SizedBox(height: 8.h));
+      }
+      final place = controller.savedPlaces[index];
+      final label = (place.label ?? '').capitalizeFirst ?? '';
+      final dist = controller.calculateDistanceKm(place.lat, place.lng);
+      tiles.add(
+        _locationTile(
           kmText: dist.isEmpty ? AppStrings.savedTag.tr : dist,
           title: label,
           subtitle: place.address ?? '',
@@ -834,9 +797,74 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             lat: place.lat,
             lng: place.lng,
           ),
-        );
-      },
-    );
+        ),
+      );
+    }
+    return tiles;
+  }
+
+  List<Widget> _recentDestinationTiles(HomeController controller) {
+    final tiles = <Widget>[];
+    for (var index = 0; index < controller.recentDestinations.length; index++) {
+      if (index > 0) {
+        tiles.add(SizedBox(height: 8.h));
+      }
+      final destination = controller.recentDestinations[index];
+      final savedPlace = controller.getSavedPlaceFor(
+        destination.address,
+        null,
+      );
+      final isFavorite = savedPlace?.isFavourite ?? false;
+      final showFavorite = savedPlace != null;
+
+      final dist = controller.calculateDistanceKm(
+        destination.lat,
+        destination.lng,
+      );
+
+      tiles.add(
+        _locationTile(
+          kmText: dist.isEmpty ? AppStrings.recentTag.tr : dist,
+          title: destination.address.split(',').first,
+          subtitle: destination.address,
+          isFavorite: isFavorite,
+          showFavorite: showFavorite,
+          onTap: () {
+            if (Get.arguments is Map &&
+                Get.arguments['isSelectingStop'] == true) {
+              _handleStopSelection(
+                address: destination.address,
+                lat: destination.lat,
+                lng: destination.lng,
+              );
+              return;
+            }
+            controller.applyRecentDestinationToLocationSelection(
+              destination: destination,
+              activeSegmentIndex: _activeSegmentIndex.value,
+              pickupController: pickupController,
+              destinationController: destinationController,
+              extraDestinationControllers: _extraDestinationControllers,
+              pickupEditedByUser: pickupEditedByUser,
+              routePickupLat: _routePickupLat,
+              routePickupLng: _routePickupLng,
+              routeDestinationLat: _routeDestinationLat,
+              routeDestinationLng: _routeDestinationLng,
+              destinationPlaceId: _destinationPlaceId,
+            );
+            locationController.confirmSelectionForSegment(
+              _activeSegmentIndex.value,
+            );
+          },
+          onFavoriteTap: () => controller.toggleAddAddressBottomSheetForAddress(
+            address: destination.address,
+            lat: destination.lat,
+            lng: destination.lng,
+          ),
+        ),
+      );
+    }
+    return tiles;
   }
 
   Widget _sectionHeader(String title) {

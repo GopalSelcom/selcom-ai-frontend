@@ -38,133 +38,38 @@ class StopEditorScreen extends GetView<StopEditorController> {
         body: Column(
           children: [
             Expanded(
-              child: ListView(
-                keyboardDismissBehavior:
-                    ScrollViewKeyboardDismissBehavior.onDrag,
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
-                children: [
-                  if (controller.isDestinationEditor) ...[
-                    _buildStaticPoint(
-                      AppStrings.currentDestination.tr,
-                      driverController.destinationAddress,
-                      AppColors.mapDropMarkerGreen,
-                    ),
-                    Obx(() {
-                      final address =
-                          controller.selectedDestination.value?['address']
-                              ?.toString() ??
-                          '';
-                      if (address.trim().isEmpty) {
-                        return const SizedBox.shrink();
-                      }
-                      return _buildStaticPoint(
-                        AppStrings.newDestination.tr,
-                        address,
-                        AppColors.secondary,
-                      );
-                    }),
-                    _buildChangeDropLocationButton(),
-                  ] else ...[
-                    _buildStaticPoint(
-                      AppStrings.pickupPoint.tr,
-                      driverController.pickupAddress,
-                      AppColors.mapPickupMarkerBlue,
-                      isPickup: true,
-                    ),
-                    Obx(() {
-                      final stops = controller.stops;
-                      return ReorderableListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: stops.length,
-                        proxyDecorator: (widget, index, animation) {
-                          return Material(
-                            color: AppColors.transparent,
-                            child: widget,
+              child: controller.isDestinationEditor
+                  ? ListView(
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 20.h,
+                      ),
+                      children: [
+                        _buildStaticPoint(
+                          AppStrings.currentDestination.tr,
+                          driverController.destinationAddress,
+                          AppColors.mapDropMarkerGreen,
+                        ),
+                        Obx(() {
+                          final address =
+                              controller.selectedDestination.value?['address']
+                                  ?.toString() ??
+                              '';
+                          if (address.trim().isEmpty) {
+                            return const SizedBox.shrink();
+                          }
+                          return _buildStaticPoint(
+                            AppStrings.newDestination.tr,
+                            address,
+                            AppColors.secondary,
                           );
-                        },
-                        itemBuilder: (context, index) {
-                          final stop = stops[index];
-                          final canRemoveDraftStop =
-                              controller.canRemoveDraftStopAt(index);
-                          return Padding(
-                            key: ValueKey('stop_${stop.index}_$index'),
-                            padding: EdgeInsets.only(bottom: 12.h),
-                            child: Container(
-                              padding: EdgeInsets.all(12.w),
-                              decoration: BoxDecoration(
-                                color: AppColors.pageBackground,
-                                borderRadius: BorderRadius.circular(12.r),
-                                border: Border.all(
-                                  color: AppColors.shade5.withValues(alpha: 0.5),
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  ReorderableDragStartListener(
-                                    index: index,
-                                    child: Icon(
-                                      Icons.drag_indicator,
-                                      color: AppColors.shade5,
-                                      size: 22.sp,
-                                    ),
-                                  ),
-                                  SizedBox(width: 12.w),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          AppStrings.stopNumber.trParams({
-                                            'number': '${index + 1}',
-                                          }),
-                                          style: AppTextStyles.caption
-                                              .copyWith(
-                                            fontWeight: FontWeight.w600,
-                                            color: AppColors.primary,
-                                          ),
-                                        ),
-                                        SizedBox(height: 2.h),
-                                        Text(
-                                          stop.address,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: AppTextStyles.body.copyWith(
-                                            color: AppColors.textBody,
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  if (canRemoveDraftStop)
-                                    IconButton(
-                                      icon: Icon(
-                                        Icons.remove_circle,
-                                        color: AppColors.primary,
-                                        size: 20.sp,
-                                      ),
-                                      onPressed: () =>
-                                          controller.removeStop(index),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                        onReorder: controller.reorderStops,
-                      );
-                    }),
-                    Obx(_buildAddStopButton),
-                    _buildStaticPoint(
-                      AppStrings.destination.tr,
-                      driverController.destinationAddress,
-                      AppColors.mapDropMarkerGreen,
-                    ),
-                  ],
-                ],
-              ),
+                        }),
+                        _buildChangeDropLocationButton(),
+                      ],
+                    )
+                  : Obx(_buildStopsEditorScrollView),
             ),
             controller.isDestinationEditor
                 ? _buildDestinationPreviewPanel()
@@ -194,6 +99,119 @@ class StopEditorScreen extends GetView<StopEditorController> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildStopsEditorScrollView() {
+    final stops = controller.stops;
+    return CustomScrollView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      slivers: [
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 0),
+          sliver: SliverToBoxAdapter(
+            child: _buildStaticPoint(
+              AppStrings.pickupPoint.tr,
+              driverController.pickupAddress,
+              AppColors.mapPickupMarkerBlue,
+              isPickup: true,
+            ),
+          ),
+        ),
+        SliverPadding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w),
+          sliver: SliverReorderableList(
+            itemCount: stops.length,
+            onReorder: controller.reorderStops,
+            proxyDecorator: (widget, index, animation) {
+              return Material(
+                color: AppColors.transparent,
+                child: widget,
+              );
+            },
+            itemBuilder: (context, index) {
+              final stop = stops[index];
+              final canRemoveDraftStop = controller.canRemoveDraftStopAt(index);
+              return ReorderableDragStartListener(
+                key: ValueKey('stop_${stop.index}_$index'),
+                index: index,
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: 12.h),
+                  child: Container(
+                    padding: EdgeInsets.all(12.w),
+                    decoration: BoxDecoration(
+                      color: AppColors.pageBackground,
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(
+                        color: AppColors.shade5.withValues(alpha: 0.5),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.drag_indicator,
+                          color: AppColors.shade5,
+                          size: 22.sp,
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                AppStrings.stopNumber.trParams({
+                                  'number': '${index + 1}',
+                                }),
+                                style: AppTextStyles.caption.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                              SizedBox(height: 2.h),
+                              Text(
+                                stop.address,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTextStyles.body.copyWith(
+                                  color: AppColors.textBody,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (canRemoveDraftStop)
+                          IconButton(
+                            icon: Icon(
+                              Icons.remove_circle,
+                              color: AppColors.primary,
+                              size: 20.sp,
+                            ),
+                            onPressed: () => controller.removeStop(index),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        SliverPadding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w),
+          sliver: SliverToBoxAdapter(child: Obx(_buildAddStopButton)),
+        ),
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 20.h),
+          sliver: SliverToBoxAdapter(
+            child: _buildStaticPoint(
+              AppStrings.destination.tr,
+              driverController.destinationAddress,
+              AppColors.mapDropMarkerGreen,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
