@@ -16,6 +16,13 @@ import '../controllers/onboarding_controller.dart';
 class OnboardingScreen extends GetView<OnboardingController> {
   const OnboardingScreen({super.key});
 
+  /// Reserved height for title (2 lines) + gap + subtitle (2 lines) so dots stay fixed.
+  static double get _copyBlockHeight {
+    final titleLineHeight = 28.sp * (34 / 28);
+    final subtitleLineHeight = 15.sp * (20 / 15);
+    return titleLineHeight * 2 + 4.h + subtitleLineHeight * 2;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -30,16 +37,25 @@ class OnboardingScreen extends GetView<OnboardingController> {
               flex: 5,
               child: Obx(() {
                 final settled = controller.bannerFetchSettled.value;
-                return PageView.builder(
-                  onPageChanged: controller.onPageChanged,
-                  itemCount: controller.slides.length,
-                  itemBuilder: (context, index) {
-                    final slide = controller.slides[index];
-                    if (!settled) {
-                      return const _OnboardingIllustrationShimmer();
-                    }
-                    return _OnboardingIllustration(slide: slide);
-                  },
+                return ScrollConfiguration(
+                  behavior: ScrollConfiguration.of(context).copyWith(
+                    overscroll: false,
+                    physics: const ClampingScrollPhysics(
+                      parent: PageScrollPhysics(),
+                    ),
+                  ),
+                  child: PageView.builder(
+                    controller: controller.pageController,
+                    onPageChanged: controller.onPageChanged,
+                    itemCount: controller.slides.length,
+                    itemBuilder: (context, index) {
+                      final slide = controller.slides[index];
+                      if (!settled) {
+                        return const _OnboardingIllustrationShimmer();
+                      }
+                      return _OnboardingIllustration(slide: slide);
+                    },
+                  ),
                 );
               }),
             ),
@@ -47,94 +63,117 @@ class OnboardingScreen extends GetView<OnboardingController> {
             // Content Section
             Expanded(
               flex: 4,
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Dot Indicators
-                    SizedBox(height: 18.h),
-
-                    // Title
-                    Obx(
-                      () => Text(
-                        controller.slides[controller.currentIndex.value].title,
-                        textAlign: TextAlign.start,
-                        style: AppTextStyles.onboardingTitle,
-                      ),
-                    ),
-                    SizedBox(height: 4.h),
-
-                    // Subtitle
-                    Obx(
-                      () => Text(
-                        controller
-                            .slides[controller.currentIndex.value]
-                            .subtitle,
-                        textAlign: TextAlign.start,
-                        style: AppTextStyles.onboardingSubtitle,
-                      ),
-                    ),
-                    SizedBox(height: 16.h),
-                    Obx(
-                      () => Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: List.generate(
-                          controller.slides.length,
-                          (index) => AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            margin: EdgeInsets.symmetric(horizontal: 4.w),
-                            width: controller.currentIndex.value == index
-                                ? 32.w
-                                : 10.w,
-                            height: 10.w,
-                            decoration: BoxDecoration(
-                              color: controller.currentIndex.value == index
-                                  ? AppColors.primary
-                                  : AppColors.transparent,
-                              border: Border.all(
-                                color: controller.currentIndex.value != index
-                                    ? AppColors.textBody
-                                    : AppColors.primary,
-                                width: 1.5,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(height: 18.h),
+                  SizedBox(
+                    height: _copyBlockHeight,
+                    child: PageView.builder(
+                      controller: controller.textPageController,
+                      physics: const NeverScrollableScrollPhysics(),
+                      clipBehavior: Clip.hardEdge,
+                      itemCount: controller.slides.length,
+                      itemBuilder: (context, index) {
+                        return Obx(() {
+                          final slide = controller.slides[index];
+                          return Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16.w),
+                            child: Align(
+                              alignment: Alignment.topLeft,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    slide.title,
+                                    textAlign: TextAlign.start,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTextStyles.onboardingTitle,
+                                  ),
+                                  SizedBox(height: 4.h),
+                                  Text(
+                                    slide.subtitle,
+                                    textAlign: TextAlign.start,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTextStyles.onboardingSubtitle,
+                                  ),
+                                ],
                               ),
-                              borderRadius: BorderRadius.circular(9.r),
+                            ),
+                          );
+                        });
+                      },
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.w),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Obx(
+                            () => Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: List.generate(
+                                controller.slides.length,
+                                (index) => AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  margin: EdgeInsets.symmetric(horizontal: 4.w),
+                                  width: controller.currentIndex.value == index
+                                      ? 32.w
+                                      : 10.w,
+                                  height: 10.w,
+                                  decoration: BoxDecoration(
+                                    color:
+                                        controller.currentIndex.value == index
+                                        ? AppColors.primary
+                                        : AppColors.transparent,
+                                    border: Border.all(
+                                      color:
+                                          controller.currentIndex.value != index
+                                          ? AppColors.textBody
+                                          : AppColors.primary,
+                                      width: 1.5,
+                                    ),
+                                    borderRadius: BorderRadius.circular(9.r),
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                          const Spacer(),
+                          Padding(
+                            padding: EdgeInsets.only(bottom: 16.h),
+                            child: AppPrimaryButton(
+                              label: AppStrings.getStarted.tr,
+                              onPressed: controller.onGetStarted,
+                              height: 54.h,
+                              labelStyle: AppTextStyles.onboardingButton,
+                              iconAsset: AppAssets.locationIcArrowRight,
+                              iconColor: AppColors.white,
+                              alignIconToTrailingEnd: true,
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(bottom: 16.h),
+                            child: Text(
+                              AppStrings
+                                  .byContinuingYouAgreeThatYouHaveReadAndAcceptOurTAndCsAndPrivacyPolicy
+                                  .tr,
+                              textAlign: TextAlign.center,
+                              style: AppTextStyles.onboardingFooter,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-
-                    const Spacer(),
-
-                    // Action Button
-                    Padding(
-                      padding: EdgeInsets.only(bottom: 16.h),
-                      child: AppPrimaryButton(
-                        label: AppStrings.getStarted.tr,
-                        onPressed: controller.onGetStarted,
-                        height: 54.h,
-                        labelStyle: AppTextStyles.onboardingButton,
-                        iconAsset: AppAssets.locationIcArrowRight,
-                        iconColor: AppColors.white,
-                        alignIconToTrailingEnd: true,
-                      ),
-                    ),
-
-                    // Footer Text
-                    Padding(
-                      padding: EdgeInsets.only(bottom: 16.h),
-                      child: Text(
-                        AppStrings
-                            .byContinuingYouAgreeThatYouHaveReadAndAcceptOurTAndCsAndPrivacyPolicy
-                            .tr,
-                        textAlign: TextAlign.center,
-                        style: AppTextStyles.onboardingFooter,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ],
