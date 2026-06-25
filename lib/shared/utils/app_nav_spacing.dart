@@ -45,9 +45,11 @@ class AppNavSpacing {
   /// False when [AppSafeBottomBox] on [AppScaffold] already reserves bottom inset.
   bool get shouldUseSafeAreaBottom => !needBottomSpacing.value;
 
-  /// Scaffold body [SafeArea] bottom — off when keyboard is open or scaffold handles inset.
+  /// Scaffold body [SafeArea] bottom — off when keyboard is open or on iOS (handled by design).
   bool scaffoldShouldUseSafeAreaBottom(BuildContext context) {
     if (isKeyboardVisible(context)) return false;
+    final isIos = Theme.of(context).platform == TargetPlatform.iOS;
+    if (isIos) return false;
     return shouldUseSafeAreaBottom;
   }
 
@@ -55,9 +57,11 @@ class AppNavSpacing {
     return MediaQuery.viewInsetsOf(context).bottom > 0;
   }
 
-  /// [SafeArea] bottom for modal sheets — off when keyboard is open or scaffold handles inset.
+  /// [SafeArea] bottom for modal sheets — off when keyboard is open or on iOS (handled by design).
   bool overlayShouldUseSafeAreaBottom(BuildContext context) {
     if (isKeyboardVisible(context)) return false;
+    final isIos = Theme.of(context).platform == TargetPlatform.iOS;
+    if (isIos) return false;
     return shouldUseSafeAreaBottom;
   }
 
@@ -68,9 +72,11 @@ class AppNavSpacing {
     return paddingBottom > viewBottom ? paddingBottom : viewBottom;
   }
 
-  /// System inset for content inside [AppScaffold] (0 when [AppSafeBottomBox] is active).
+  /// System inset for content inside [AppScaffold] (0 when [AppSafeBottomBox] is active or on iOS).
   double scaffoldSystemBottomInset(BuildContext context) {
     if (needBottomSpacing.value) return 0;
+    final isIos = Theme.of(context).platform == TargetPlatform.iOS;
+    if (isIos) return 0;
     return rawSystemBottomInset(context);
   }
 

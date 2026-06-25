@@ -638,13 +638,18 @@ class DriverAcceptedScreen extends StatelessWidget {
 
   /// Bottom-sheet content when [DriverAcceptedController.rideLoadError] is set.
   /// Retry only when [DriverAcceptedController.canRetryRideLoad] (valid rideId).
-  Widget _rideLoadErrorSheet(DriverAcceptedController c) {
+  Widget _rideLoadErrorSheet(BuildContext context, DriverAcceptedController c) {
     final message =
         c.rideLoadError.value ?? AppStrings.failedToLoadRideDetails.tr;
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(20.w, 28.h, 20.w, 12.h),
+      padding: EdgeInsets.fromLTRB(
+        20.w,
+        28.h,
+        20.w,
+        AppNavSpacing.instance.footerTrailingGap(context, fallback: 0),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -762,7 +767,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 20.h),
-                _rideLoadErrorSheet(c),
+                _rideLoadErrorSheet(context, c),
               ],
             );
           }
@@ -859,7 +864,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                     clipBehavior: Clip.hardEdge,
                     physics: const ClampingScrollPhysics(),
                     padding: EdgeInsets.only(
-                      bottom: 16.h +
+                      bottom: AppNavSpacing.instance.footerTrailingGap(context, fallback: 0) +
                           AppNavSpacing.instance.sheetScrollBottomPad(context),
                     ),
                     child: DriverAcceptedScreenShimmer.rideStartedSheetBody(
@@ -919,7 +924,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                     clipBehavior: Clip.hardEdge,
                     physics: const ClampingScrollPhysics(),
                     padding: EdgeInsets.only(
-                      bottom: 16.h +
+                      bottom: AppNavSpacing.instance.footerTrailingGap(context, fallback: 0) +
                           AppNavSpacing.instance.sheetScrollBottomPad(context),
                     ),
                     child: _rideProgressBody(c, showChangeDropLink: true),
@@ -1392,7 +1397,6 @@ class DriverAcceptedScreen extends StatelessWidget {
             ),
           ),
         ),
-        SizedBox(height: 12.h),
       ],
     );
   }
