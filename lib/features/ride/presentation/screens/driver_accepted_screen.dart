@@ -1360,7 +1360,7 @@ class DriverAcceptedScreen extends StatelessWidget {
         SizedBox(height: 8.h),
         Obx(
           () => Container(
-            padding: EdgeInsets.fromLTRB(14.w, 14.h, 11.w, 24.h),
+            padding: EdgeInsets.fromLTRB(14.w, 14.h, 11.w, 14.h),
             decoration: BoxDecoration(
               color: AppColors.surfaceSubtle,
               border: Border.all(color: AppColors.borderWalletCard, width: 0.8),

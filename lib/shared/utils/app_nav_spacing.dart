@@ -45,11 +45,12 @@ class AppNavSpacing {
   /// False when [AppSafeBottomBox] on [AppScaffold] already reserves bottom inset.
   bool get shouldUseSafeAreaBottom => !needBottomSpacing.value;
 
-  /// Scaffold body [SafeArea] bottom — off when keyboard is open or on iOS (handled by design).
+  /// Scaffold body [SafeArea] bottom — on for iOS and non-3-button Android.
+  /// This ensures we get the natural 34px on iOS.
   bool scaffoldShouldUseSafeAreaBottom(BuildContext context) {
     if (isKeyboardVisible(context)) return false;
     final isIos = Theme.of(context).platform == TargetPlatform.iOS;
-    if (isIos) return false;
+    if (isIos) return true;
     return shouldUseSafeAreaBottom;
   }
 
@@ -57,11 +58,11 @@ class AppNavSpacing {
     return MediaQuery.viewInsetsOf(context).bottom > 0;
   }
 
-  /// [SafeArea] bottom for modal sheets — off when keyboard is open or on iOS (handled by design).
+  /// [SafeArea] bottom for modal sheets — on for iOS and non-3-button Android.
   bool overlayShouldUseSafeAreaBottom(BuildContext context) {
     if (isKeyboardVisible(context)) return false;
     final isIos = Theme.of(context).platform == TargetPlatform.iOS;
-    if (isIos) return false;
+    if (isIos) return true;
     return shouldUseSafeAreaBottom;
   }
 
@@ -72,11 +73,11 @@ class AppNavSpacing {
     return paddingBottom > viewBottom ? paddingBottom : viewBottom;
   }
 
-  /// System inset for content inside [AppScaffold] (0 when [AppSafeBottomBox] is active or on iOS).
+  /// System-level bottom inset for [AppScaffold] body column and draggable sheets.
+  /// 
+  /// On iOS, we return the raw inset (e.g. 34px) so content is above the home indicator.
   double scaffoldSystemBottomInset(BuildContext context) {
     if (needBottomSpacing.value) return 0;
-    final isIos = Theme.of(context).platform == TargetPlatform.iOS;
-    if (isIos) return 0;
     return rawSystemBottomInset(context);
   }
 
@@ -109,11 +110,20 @@ class AppNavSpacing {
     final inset = scaffoldSystemBottomInset(context);
     final h = MediaQuery.sizeOf(context).height;
     if (inset <= 0 || h <= 0) return base;
+
+    // On iOS, we don't lift the sheet further because it's already above the inset
+    // and we want to maintain the design aspect ratio.
+    final isIos = Theme.of(context).platform == TargetPlatform.iOS;
+    if (isIos) return base;
+
     return base + (inset / h) * 0.55;
   }
 
   /// Extra scroll padding inside map-style sheets.
+  /// Reduced to 0 for iOS because the 34px system inset is enough.
   double sheetScrollBottomPad(BuildContext context) {
+    final isIos = Theme.of(context).platform == TargetPlatform.iOS;
+    if (isIos) return 0;
     return scaffoldSystemBottomInset(context) > 0 ? 2.h : 0;
   }
 
@@ -133,6 +143,7 @@ class AppNavSpacing {
       return inset + androidExtra.h;
     }
     final isIos = Theme.of(context).platform == TargetPlatform.iOS;
+    // On iOS, if we have a system inset (34px), we don't need additional design gap.
     return inset > 0 ? (isIos ? 0.0 : androidExtra.h) : fallback.h;
   }
 
@@ -148,7 +159,7 @@ class AppNavSpacing {
     final isIos = Theme.of(context).platform == TargetPlatform.iOS;
     final inset = rawSystemBottomInset(context);
     // If iOS has a home indicator area (inset > 0), the Safe Area already 
-    // provide enough breathing room below the content, so we return 0 extra gap.
+    // provides enough breathing room below the content, so we return 0 extra gap.
     if (isIos && inset > 0) {
       return 0.0;
     }
