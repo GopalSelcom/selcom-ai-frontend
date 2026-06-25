@@ -23,9 +23,11 @@ class AppFooterBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final nav = AppNavSpacing.instance;
     final base = padding?.resolve(Directionality.of(context)) ?? EdgeInsets.zero;
-    final trailingGap = nav.isKeyboardVisible(context)
-        ? keyboardBottomGap.h
-        : bottomGap.h;
+    final trailingGap = nav.footerTrailingGap(
+      context,
+      fallback: bottomGap,
+      keyboardGap: keyboardBottomGap,
+    );
 
     return AppScreenSafeArea(
       top: false,

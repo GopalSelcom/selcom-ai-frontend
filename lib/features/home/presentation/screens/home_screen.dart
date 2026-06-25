@@ -681,7 +681,7 @@ class _HomeSheetScrollContentState extends State<_HomeSheetScrollContent> {
   @override
   Widget build(BuildContext context) {
     final sheetBottomGap =
-        AppNavSpacing.instance.needBottomSpacing.value ? 4.0 : 16.h;
+        AppNavSpacing.instance.footerTrailingGap(context, fallback: 16);
 
     return SingleChildScrollView(
       controller: widget.scrollController,

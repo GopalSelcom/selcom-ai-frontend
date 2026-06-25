@@ -10,6 +10,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/currency_formatter.dart';
+import '../../../../shared/utils/app_nav_spacing.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
 import '../../../../shared/widgets/app_map_route_polyline.dart';
@@ -64,7 +65,9 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
         4.h;
 
     // Footer: top padding + button (56.h) + notice + design bottom gap
-    final double paymentBarHeight = 4.h + 56.h + 8.h + 36.h + 12.h;
+    final double designGap =
+        AppNavSpacing.instance.footerTrailingGap(context, fallback: 12);
+    final double paymentBarHeight = 4.h + 56.h + 8.h + 36.h + designGap;
 
     // Safety margin is zero since list is non-scrollable when <= 3 items are present
     const double safetyMargin = 0;

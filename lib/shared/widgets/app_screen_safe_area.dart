@@ -27,7 +27,7 @@ class AppScreenSafeArea extends StatelessWidget {
       top: top,
       left: left,
       right: right,
-      bottom: AppNavSpacing.instance.shouldUseSafeAreaBottom,
+      bottom: AppNavSpacing.instance.scaffoldShouldUseSafeAreaBottom(context),
       minimum: minimum,
       maintainBottomViewPadding: maintainBottomViewPadding,
       child: child,

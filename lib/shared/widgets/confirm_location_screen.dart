@@ -9,6 +9,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/widgets/svg_picture_asset.dart';
 import '../../features/home/presentation/controllers/confirm_location_controller.dart';
+import '../utils/app_nav_spacing.dart';
 import 'app_back_button.dart';
 import 'app_primary_button.dart';
 import 'app_scaffold.dart';
@@ -22,6 +23,7 @@ class ConfirmLocationScreen extends GetView<ConfirmLocationController> {
   @override
   Widget build(BuildContext context) {
     final c = controller;
+    final nav = AppNavSpacing.instance;
     final config = c.uiConfig;
     final canGoBack = Navigator.of(context).canPop();
     final mq = MediaQuery.of(context);
@@ -160,7 +162,8 @@ class ConfirmLocationScreen extends GetView<ConfirmLocationController> {
                       16.w,
                       10.h,
                       16.w,
-                      panelBottomGap.h + keyboardInset,
+                      nav.footerTrailingGap(context, fallback: panelBottomGap) +
+                          keyboardInset,
                     ),
                     child: SingleChildScrollView(
                       keyboardDismissBehavior:

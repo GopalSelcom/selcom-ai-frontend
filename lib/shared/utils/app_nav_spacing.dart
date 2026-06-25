@@ -45,6 +45,12 @@ class AppNavSpacing {
   /// False when [AppSafeBottomBox] on [AppScaffold] already reserves bottom inset.
   bool get shouldUseSafeAreaBottom => !needBottomSpacing.value;
 
+  /// Scaffold body [SafeArea] bottom — off when keyboard is open or scaffold handles inset.
+  bool scaffoldShouldUseSafeAreaBottom(BuildContext context) {
+    if (isKeyboardVisible(context)) return false;
+    return shouldUseSafeAreaBottom;
+  }
+
   bool isKeyboardVisible(BuildContext context) {
     return MediaQuery.viewInsetsOf(context).bottom > 0;
   }
@@ -122,5 +128,24 @@ class AppNavSpacing {
     }
     final isIos = Theme.of(context).platform == TargetPlatform.iOS;
     return inset > 0 ? (isIos ? 0.0 : androidExtra.h) : fallback.h;
+  }
+
+  /// Bottom gap for footers inside [AppScaffold].
+  double footerTrailingGap(
+    BuildContext context, {
+    double fallback = 16,
+    double keyboardGap = 12,
+  }) {
+    if (isKeyboardVisible(context)) {
+      return keyboardGap.h;
+    }
+    final isIos = Theme.of(context).platform == TargetPlatform.iOS;
+    final inset = rawSystemBottomInset(context);
+    // If iOS has a home indicator area (inset > 0), the Safe Area already 
+    // provide enough breathing room below the content, so we return 0 extra gap.
+    if (isIos && inset > 0) {
+      return 0.0;
+    }
+    return fallback.h;
   }
 }

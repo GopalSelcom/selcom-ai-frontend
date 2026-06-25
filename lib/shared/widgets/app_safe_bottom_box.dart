@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 
@@ -30,7 +31,9 @@ class _AppSafeBottomBoxState extends State<AppSafeBottomBox> {
       valueListenable: AppNavSpacing.instance.needBottomSpacing,
       builder: (context, needSpacing, _) {
         return SizedBox(
-          height: needSpacing ? MediaQuery.paddingOf(context).bottom : 0,
+          height: (Platform.isAndroid && needSpacing)
+              ? MediaQuery.paddingOf(context).bottom
+              : 0,
         );
       },
     );
