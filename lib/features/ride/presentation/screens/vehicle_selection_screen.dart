@@ -111,6 +111,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
               minChildSize: factor,
               maxChildSize: factor,
               snap: false,
+              reserveSystemBottomInset: false,
               childBuilder: (scrollController) =>
                   _bottomSheet(context, scrollController),
             );

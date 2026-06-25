@@ -99,7 +99,7 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
             final isSearching = c.assignedDriverLocation.value == null;
             return AppDraggableBottomSheet(
               controller: sheetController,
-              reserveSystemBottomInset: true,
+              reserveSystemBottomInset: false,
               initialChildSize:
                   AppNavSpacing.instance.sheetSizeWithNavInset(context, _sheetInitial),
               minChildSize:

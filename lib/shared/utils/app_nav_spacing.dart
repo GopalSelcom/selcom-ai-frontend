@@ -45,12 +45,11 @@ class AppNavSpacing {
   /// False when [AppSafeBottomBox] on [AppScaffold] already reserves bottom inset.
   bool get shouldUseSafeAreaBottom => !needBottomSpacing.value;
 
-  /// Scaffold body [SafeArea] bottom — on for iOS and non-3-button Android.
-  /// This ensures we get the natural 34px on iOS.
+  /// Scaffold body [SafeArea] bottom — handled by design on iOS (usually off to allow full-screen maps).
   bool scaffoldShouldUseSafeAreaBottom(BuildContext context) {
     if (isKeyboardVisible(context)) return false;
     final isIos = Theme.of(context).platform == TargetPlatform.iOS;
-    if (isIos) return true;
+    if (isIos) return false;
     return shouldUseSafeAreaBottom;
   }
 
@@ -58,11 +57,11 @@ class AppNavSpacing {
     return MediaQuery.viewInsetsOf(context).bottom > 0;
   }
 
-  /// [SafeArea] bottom for modal sheets — on for iOS and non-3-button Android.
+  /// [SafeArea] bottom for modal sheets.
   bool overlayShouldUseSafeAreaBottom(BuildContext context) {
     if (isKeyboardVisible(context)) return false;
     final isIos = Theme.of(context).platform == TargetPlatform.iOS;
-    if (isIos) return true;
+    if (isIos) return false; // Handled by manual padding to avoid dead zones.
     return shouldUseSafeAreaBottom;
   }
 
@@ -75,7 +74,8 @@ class AppNavSpacing {
 
   /// System-level bottom inset for [AppScaffold] body column and draggable sheets.
   /// 
-  /// On iOS, we return the raw inset (e.g. 34px) so content is above the home indicator.
+  /// On iOS, we usually want the background to fill the status bar/home area,
+  /// so we return the raw inset here to be used for INTERNAL content padding.
   double scaffoldSystemBottomInset(BuildContext context) {
     if (needBottomSpacing.value) return 0;
     return rawSystemBottomInset(context);
@@ -111,20 +111,18 @@ class AppNavSpacing {
     final h = MediaQuery.sizeOf(context).height;
     if (inset <= 0 || h <= 0) return base;
 
-    // On iOS, we don't lift the sheet further because it's already above the inset
-    // and we want to maintain the design aspect ratio.
+    // On iOS, we lift the sheet slightly to ensure the content is above the home indicator,
+    // but not too much.
     final isIos = Theme.of(context).platform == TargetPlatform.iOS;
-    if (isIos) return base;
+    if (isIos) return base + (inset / h) * 0.40;
 
     return base + (inset / h) * 0.55;
   }
 
   /// Extra scroll padding inside map-style sheets.
-  /// Reduced to 0 for iOS because the 34px system inset is enough.
+  /// Returns the full system inset (e.g. 34px) so scroll content ends above the indicator.
   double sheetScrollBottomPad(BuildContext context) {
-    final isIos = Theme.of(context).platform == TargetPlatform.iOS;
-    if (isIos) return 0;
-    return scaffoldSystemBottomInset(context) > 0 ? 2.h : 0;
+    return scaffoldSystemBottomInset(context);
   }
 
   /// Bottom gap for modal / overlay sheets (not inside [AppScaffold]).
@@ -134,17 +132,16 @@ class AppNavSpacing {
     double androidExtra = 8,
     double keyboardGap = 12,
   }) {
-    // [AppDialogs.showAnimatedBottomSheet] lifts the sheet; add a design gap only.
     if (isKeyboardVisible(context)) {
       return keyboardGap.h;
     }
+    final isIos = Theme.of(context).platform == TargetPlatform.iOS;
     final inset = rawSystemBottomInset(context);
     if (needBottomSpacing.value) {
       return inset + androidExtra.h;
     }
-    final isIos = Theme.of(context).platform == TargetPlatform.iOS;
-    // On iOS, if we have a system inset (34px), we don't need additional design gap.
-    return inset > 0 ? (isIos ? 0.0 : androidExtra.h) : fallback.h;
+    // On iOS, the system inset (34px) is plenty of space.
+    return inset > 0 ? (isIos ? inset : androidExtra.h) : fallback.h;
   }
 
   /// Bottom gap for footers inside [AppScaffold].
@@ -158,10 +155,8 @@ class AppNavSpacing {
     }
     final isIos = Theme.of(context).platform == TargetPlatform.iOS;
     final inset = rawSystemBottomInset(context);
-    // If iOS has a home indicator area (inset > 0), the Safe Area already 
-    // provides enough breathing room below the content, so we return 0 extra gap.
     if (isIos && inset > 0) {
-      return 0.0;
+      return inset; // Return 34px to lift the footer button naturally.
     }
     return fallback.h;
   }

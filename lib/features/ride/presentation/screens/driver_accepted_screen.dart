@@ -185,7 +185,7 @@ class DriverAcceptedScreen extends StatelessWidget {
 
               return AppDraggableBottomSheet(
                 controller: sheetController,
-                reserveSystemBottomInset: true,
+                reserveSystemBottomInset: false,
                 initialChildSize: initialSize,
                 minChildSize: minSize,
                 maxChildSize:
@@ -864,8 +864,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                     clipBehavior: Clip.hardEdge,
                     physics: const ClampingScrollPhysics(),
                     padding: EdgeInsets.only(
-                      bottom: AppNavSpacing.instance.footerTrailingGap(context, fallback: 0) +
-                          AppNavSpacing.instance.sheetScrollBottomPad(context),
+                      bottom: AppNavSpacing.instance.sheetScrollBottomPad(context),
                     ),
                     child: DriverAcceptedScreenShimmer.rideStartedSheetBody(
                       showChangeDropLink: true,
@@ -924,8 +923,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                     clipBehavior: Clip.hardEdge,
                     physics: const ClampingScrollPhysics(),
                     padding: EdgeInsets.only(
-                      bottom: AppNavSpacing.instance.footerTrailingGap(context, fallback: 0) +
-                          AppNavSpacing.instance.sheetScrollBottomPad(context),
+                      bottom: AppNavSpacing.instance.sheetScrollBottomPad(context),
                     ),
                     child: _rideProgressBody(c, showChangeDropLink: true),
                   ),
