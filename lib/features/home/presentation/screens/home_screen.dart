@@ -187,63 +187,66 @@ class HomeScreen extends GetView<HomeController> {
         final bool isLoading = controller.isLoadingHomeData.value;
         final String address = controller.currentMapAddress.value;
 
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 320),
-          curve: Curves.easeInOutCubic,
-          constraints: BoxConstraints(minHeight: 64.w),
-          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 9.h),
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(16.r),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.black.withValues(alpha: 0.06),
-                blurRadius: 2,
-                offset: const Offset(0, 1),
-              ),
-            ],
-          ),
-          child: isLoading
-              ? const HomeAddressHeaderSkeleton()
-              : Row(
-                  children: [
-                    SizedBox(
-                      width: 28.w,
-                      height: 28.w,
-                      child: SvgPictureAsset(
-                        AppAssets.locationIcPickupPin,
-                        width: 21.sp,
-                        height: 24.5.sp,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    SizedBox(width: 4.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            AppStrings.currentLocation.tr,
-                            style: AppTextStyles.homeSubtitle.copyWith(
-                              color: AppColors.figmaTextPrimary,
-                              height: 20 / 15,
-                            ),
-                          ),
-                          Text(
-                            address,
-                            style: AppTextStyles.homeSubtitle.copyWith(
-                              color: AppColors.figmaTextSecondary,
-                              height: 20 / 15,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+        return GestureDetector(
+          onTap: () => controller.recenterMap(),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 320),
+            curve: Curves.easeInOutCubic,
+            constraints: BoxConstraints(minHeight: 64.w),
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 9.h),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.black.withValues(alpha: 0.06),
+                  blurRadius: 2,
+                  offset: const Offset(0, 1),
                 ),
+              ],
+            ),
+            child: isLoading
+                ? const HomeAddressHeaderSkeleton()
+                : Row(
+                    children: [
+                      SizedBox(
+                        width: 28.w,
+                        height: 28.w,
+                        child: SvgPictureAsset(
+                          AppAssets.locationIcPickupPin,
+                          width: 21.sp,
+                          height: 24.5.sp,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      SizedBox(width: 4.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              AppStrings.currentLocation.tr,
+                              style: AppTextStyles.homeSubtitle.copyWith(
+                                color: AppColors.figmaTextPrimary,
+                                height: 20 / 15,
+                              ),
+                            ),
+                            Text(
+                              address,
+                              style: AppTextStyles.homeSubtitle.copyWith(
+                                color: AppColors.figmaTextSecondary,
+                                height: 20 / 15,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
         );
       }),
     );

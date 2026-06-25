@@ -299,9 +299,12 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
 
   @override
   Future<bool> toggleFavorite(String id, bool isFavorite) async {
+    final endpoint = isFavorite
+        ? "${URLS.address.savedPlaces}/$id/favourite"
+        : "${URLS.address.savedPlaces}/$id";
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "${URLS.address.savedPlaces}/$id/favourite",
+        endpoint: endpoint,
         method: isFavorite ? ApiMethod.put : ApiMethod.delete,
         version: "v4",
       ),

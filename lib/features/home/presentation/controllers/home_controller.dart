@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:developer' as developer;
 
-import 'package:app_settings/app_settings.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -28,6 +27,7 @@ import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/session_expiry_service.dart';
+import '../../../../core/services/location_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/active_rides_parser.dart';
@@ -159,7 +159,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     analyticsService.logEvent('home_screen_viewed');
     _loadMapIcons();
-    _getCurrentLocation();
+    _initSequentialPermissions();
     _addMockDrivers();
     _startActiveRidePolling();
     _loadHomeData().whenComplete(() async {
@@ -180,9 +180,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       }
     });
 
-    // Notification permissions — system sheet, then call/full-screen (sequential).
-    unawaited(notificationService.runHomePermissionFlow());
-
     // 300ms debounce with 2-char threshold for location autocomplete.
     debounce(searchQuery, (query) {
       final normalized = query.trim();
@@ -192,6 +189,13 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         suggestions.clear();
       }
     }, time: const Duration(milliseconds: 300));
+  }
+
+  Future<void> _initSequentialPermissions() async {
+    // 1. Run notification & call permissions flow (sequential system dialogs)
+    await notificationService.runHomePermissionFlow();
+    // 2. Request location permission immediately after notification flow completes
+    await _getCurrentLocation(requestPermissionIfDenied: true);
   }
 
   Future<void> _loadMapIcons() async {
@@ -276,18 +280,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     });
   }
 
-  void _showLocationPermissionSettingsDialog() {
-    if (Get.isDialogOpen == true) return;
-    AppDialogs.showPermissionDialog(
-      title: AppStrings.locationAccessRequired.tr,
-      message: AppStrings.locationPermissionDeniedOpenSettings.tr,
-      onOpenSettings: () {
-        AppSettings.openAppSettings();
-      },
-      icon: Icons.location_off_outlined,
-      secondaryIcon: Icons.location_on_outlined,
-    );
-  }
 
   void _applyLocationPermissionDenied() {
     hasLocationPermission.value = false;
@@ -300,30 +292,34 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     bool requestPermissionIfDenied = false,
     bool showLocationSettingsDialogIfBlocked = false,
   }) async {
-    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    final hasPermission = await LocationService.instance.checkPermission(
+      force: showLocationSettingsDialogIfBlocked,
+      precise: true,
+    );
+
+    if (!hasPermission) {
+      if (requestPermissionIfDenied) {
+        final granted = await LocationService.instance.requestPermission(
+          force: showLocationSettingsDialogIfBlocked,
+          precise: true,
+        );
+        if (!granted) {
+          _applyLocationPermissionDenied();
+          return false;
+        }
+      } else {
+        _applyLocationPermissionDenied();
+        return false;
+      }
+    }
+
+    final serviceEnabled = await LocationService.instance.checkLocationService(
+      force: showLocationSettingsDialogIfBlocked,
+    );
     if (!serviceEnabled) {
       hasLocationPermission.value = false;
       deviceGpsLocation.value = null;
       currentMapAddress.value = AppStrings.enableLocationService.tr;
-      return false;
-    }
-
-    var permission = await Geolocator.checkPermission();
-
-    if (permission == LocationPermission.denied && requestPermissionIfDenied) {
-      permission = await Geolocator.requestPermission();
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      _applyLocationPermissionDenied();
-      if (showLocationSettingsDialogIfBlocked) {
-        _showLocationPermissionSettingsDialog();
-      }
-      return false;
-    }
-
-    if (permission == LocationPermission.denied) {
-      _applyLocationPermissionDenied();
       return false;
     }
 
