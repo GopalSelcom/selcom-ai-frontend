@@ -11,6 +11,9 @@ import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../shared/widgets/app_cupertino_text_button.dart';
 import '../../../../shared/widgets/app_otp_field.dart';
 import '../../../../shared/utils/phone_formatter.dart';
+import '../../../../shared/widgets/app_footer_bar.dart';
+import '../../../../shared/widgets/app_scaffold.dart';
+import '../../../../shared/widgets/app_screen_safe_area.dart';
 import '../controllers/auth_controller.dart';
 
 class OtpScreen extends GetView<AuthController> {
@@ -25,10 +28,9 @@ class OtpScreen extends GetView<AuthController> {
       controller.startResendTimer();
     });
 
-    return Scaffold(
-      backgroundColor: AppColors.pageBackground,
+    return AppScaffold(
       resizeToAvoidBottomInset: true,
-      body: SafeArea(
+      body: AppScreenSafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
@@ -192,55 +194,55 @@ class OtpScreen extends GetView<AuthController> {
                         ),
 
                         const Spacer(),
+                        AppFooterBar(
+                          padding: EdgeInsets.zero,
+                          bottomGap: 12,
+                          child: Obx(() {
+                            if (controller.resendTimer.value > 0) {
+                              return Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    AppStrings.haventGotTheConfirmationCodeYet
+                                        .tr,
+                                    style: AppTextStyles.body.copyWith(
+                                      color: AppColors.textBody,
+                                      fontSize: 30.sp / 2,
+                                      fontWeight: FontWeight.w500,
+                                      height: 20 / 15,
+                                    ),
+                                  ),
+                                  Text(
+                                    "00:${controller.resendTimer.value.toString().padLeft(2, '0')}",
+                                    style:
+                                        AppTextStyles.onboardingFooter.copyWith(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 13.sp,
+                                      height: 18 / 13,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }
 
-                        Obx(() {
-                          if (controller.resendTimer.value > 0) {
                             return Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  AppStrings.haventGotTheConfirmationCodeYet.tr,
-                                  style: AppTextStyles.body.copyWith(
-                                    color: AppColors.textBody,
-                                    fontSize: 30.sp / 2,
-                                    fontWeight: FontWeight.w500,
-                                    height: 20 / 15,
-                                  ),
+                                  AppStrings.didntReceiveTheCode.tr,
+                                  style: AppTextStyles.onboardingSubtitle
+                                      .copyWith(fontSize: 14.sp),
                                 ),
-                                Text(
-                                  "00:${controller.resendTimer.value
-                                      .toString()
-                                      .padLeft(2, '0')}",
-                                  style: AppTextStyles.onboardingFooter
-                                      .copyWith(
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 13.sp,
-                                    height: 18 / 13,
-                                  ),
+                                SizedBox(width: 8.h),
+                                AppCupertinoTextButton.resendOtp(
+                                  label: AppStrings.resendCode.tr,
+                                  onPressed: () async => controller.resendOtp(),
                                 ),
                               ],
                             );
-                          }
-
-                          return Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                AppStrings.didntReceiveTheCode.tr,
-                                style: AppTextStyles.onboardingSubtitle
-                                    .copyWith(fontSize: 14.sp),
-                              ),
-                              SizedBox(width: 8.h),
-                              AppCupertinoTextButton.resendOtp(
-                                label: AppStrings.resendCode.tr,
-                                onPressed: () async => controller.resendOtp(),
-                              ),
-                            ],
-                          );
-                        }),
-
-                        SizedBox(height: 18.h),
+                          }),
+                        ),
                       ],
                     ),
                   ),

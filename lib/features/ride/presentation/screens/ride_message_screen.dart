@@ -8,6 +8,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_back_button.dart';
+import '../../../../shared/widgets/app_footer_bar.dart';
+import '../../../../shared/widgets/app_scaffold.dart';
 import '../../domain/entities/ride_chat_message.dart';
 import '../controllers/ride_message_controller.dart';
 
@@ -20,7 +22,7 @@ class RideMessageScreen extends GetView<RideMessageController> {
       onTap:
           () {}, // Prevents global unfocus handler from intercepting taps on this screen
       behavior: HitTestBehavior.translucent,
-      child: Scaffold(
+      child: AppScaffold(
         backgroundColor: AppColors.surfaceSubtle,
         body: Stack(
           children: [
@@ -354,7 +356,6 @@ class RideMessageScreen extends GetView<RideMessageController> {
       final bool allowed = controller.canChat;
       final bool sending = controller.isSending.value;
       return Container(
-        padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 12.h),
         decoration: BoxDecoration(
           color: AppColors.surfaceSubtle,
           borderRadius: BorderRadius.vertical(top: Radius.circular(26.r)),
@@ -362,8 +363,10 @@ class RideMessageScreen extends GetView<RideMessageController> {
             top: BorderSide(color: AppColors.borderWalletCard),
           ),
         ),
-        child: SafeArea(
-          top: false,
+        child: AppFooterBar(
+          padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 0),
+          bottomGap: 12,
+          keyboardBottomGap: 12,
           child: Opacity(
             opacity: allowed ? 1.0 : 0.5,
             child: AbsorbPointer(

@@ -10,6 +10,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_cupertino_text_button.dart';
+import '../../../../shared/widgets/app_scaffold.dart';
 import '../../../../shared/widgets/app_social_sign_in_button.dart';
 import '../controllers/auth_controller.dart';
 
@@ -18,7 +19,7 @@ class SocialLoginScreen extends GetView<AuthController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppScaffold(
       body: Stack(
         children: [
           const Positioned.fill(

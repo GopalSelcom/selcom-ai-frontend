@@ -7,6 +7,7 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
+import '../../../../shared/widgets/app_scaffold.dart';
 import '../../domain/entities/payment_card.dart';
 import '../controllers/payment_methods_controller.dart';
 import '../widgets/wallet_summary_card.dart';
@@ -35,8 +36,7 @@ class PaymentMethodsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.put(PaymentMethodsController());
 
-    return Scaffold(
-      backgroundColor: AppColors.pageBackground,
+    return AppScaffold(
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

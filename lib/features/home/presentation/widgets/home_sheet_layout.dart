@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 /// Shared layout metrics for home bottom sheet (loaded UI + shimmer).
 abstract final class HomeSheetLayout {
   static const double horizontalPadding = 16;
-  static const double vehicleRowHeight = 96;
+  static const double vehicleRowHeight = 100;
 
   static const double sectionGap = 12;
   static const double titleContentGap = 10;

@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
+import '../../../../shared/widgets/app_scaffold.dart';
 import '../controllers/favorite_locations_controller.dart';
 import '../widgets/favorite_locations_screen_shimmer.dart';
 
@@ -17,7 +18,7 @@ class FavoriteLocationsScreen extends GetView<FavoriteLocationsController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.white,
       body: Column(
         children: [

@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
+import '../../../../shared/widgets/app_scaffold.dart';
 import '../../../../shared/widgets/app_shimmer.dart';
 import '../controllers/wallet_history_controller.dart';
 import '../widgets/wallet_segmented_tabs.dart';
@@ -16,7 +17,7 @@ class WalletHistoryScreen extends GetView<WalletHistoryController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.white,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

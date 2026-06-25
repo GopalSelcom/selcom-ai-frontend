@@ -8,7 +8,9 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
+import '../../../../shared/widgets/app_footer_bar.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
+import '../../../../shared/widgets/app_scaffold.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../controllers/contact_us_controller.dart';
 import '../widgets/contact_us_screen_shimmer.dart';
@@ -18,13 +20,9 @@ class ContactUsScreen extends GetView<ContactUsController> {
 
   @override
   Widget build(BuildContext context) {
-    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
-    final double computedBottomPadding = bottomPadding > 0
-        ? (GetPlatform.isIOS ? 0 : 8.h)
-        : 16.h;
-
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.white,
+      resizeToAvoidBottomInset: true,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -73,28 +71,17 @@ class ContactUsScreen extends GetView<ContactUsController> {
               );
             }),
           ),
-          // Submit Button (Footer)
-          SafeArea(
-            top: false,
-            bottom: true,
+          AppFooterBar(
+            padding: EdgeInsets.symmetric(horizontal: 24.w),
             child: Obx(
-              () => Padding(
-                padding: EdgeInsets.only(
-                  bottom: controller.canSubmit.value
-                      ? computedBottomPadding
-                      : 0,
-                  left: 24.w,
-                  right: 24.w,
-                ),
-                child: AppAnimatedReveal(
-                  show: controller.canSubmit.value,
-                  visibleKey: const ValueKey('contact-submit-visible'),
-                  hiddenKey: const ValueKey('contact-submit-hidden'),
-                  child: AppPrimaryButton(
-                    label: AppStrings.submit.tr,
-                    onPressed: controller.sendMessage,
-                    isLoading: controller.isSubmitting.value,
-                  ),
+              () => AppAnimatedReveal(
+                show: controller.canSubmit.value,
+                visibleKey: const ValueKey('contact-submit-visible'),
+                hiddenKey: const ValueKey('contact-submit-hidden'),
+                child: AppPrimaryButton(
+                  label: AppStrings.submit.tr,
+                  onPressed: controller.sendMessage,
+                  isLoading: controller.isSubmitting.value,
                 ),
               ),
             ),

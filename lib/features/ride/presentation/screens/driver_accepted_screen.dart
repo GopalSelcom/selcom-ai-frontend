@@ -10,43 +10,27 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/utils/app_nav_spacing.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
 import '../../../../shared/widgets/app_map_route_polyline.dart';
 import '../../../../shared/widgets/app_map_route_one_line_bar.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
+import '../../../../shared/widgets/app_scaffold.dart';
 import '../../../../shared/widgets/vehicle_type_image.dart';
 import '../controllers/driver_accepted_controller.dart';
 import '../controllers/ride_share_controller.dart';
 import '../widgets/driver_accepted_screen_shimmer.dart';
 import '../widgets/ride_common_widgets.dart';
 
-/// SCR-11 — Driver accepted (heading to pickup). See `.agent/context/frontend/SCREENS.md`.
+/// SCR-11 Ã¢â‚¬â€ Driver accepted (heading to pickup). See `.agent/context/frontend/SCREENS.md`.
 class DriverAcceptedScreen extends StatelessWidget {
   const DriverAcceptedScreen({super.key});
 
   static const double _sheetMin = 0.3;
   static const double _sheetMaxDriverAssigned = 0.52;
   static const double _sheetMaxRideStarted = 0.68;
-
-  static double _systemBottomInsetPx(BuildContext context) {
-    final mq = MediaQuery.of(context);
-    final p = mq.padding.bottom;
-    final v = mq.viewPadding.bottom;
-    return p > v ? p : v;
-  }
-
-  static double _sheetSizeWithNavInset(BuildContext context, double base) {
-    final inset = _systemBottomInsetPx(context);
-    final h = MediaQuery.sizeOf(context).height;
-    if (inset <= 0 || h <= 0) return base;
-    return base + (inset / h) * 0.55;
-  }
-
-  static double _scrollBottomPad(BuildContext context) {
-    return _systemBottomInsetPx(context) > 0 ? 2.h : 0;
-  }
 
   static double _baseMinSheetSizeForStatus(String status) {
     if (status == 'near_destination') {
@@ -64,7 +48,7 @@ class DriverAcceptedScreen extends StatelessWidget {
     BuildContext context,
     DriverAcceptedController c,
   ) {
-    final minSize = _sheetSizeWithNavInset(
+    final minSize = AppNavSpacing.instance.sheetSizeWithNavInset(
       context,
       _baseMinSheetSizeForStatus(c.currentRideStatus.value),
     );
@@ -102,8 +86,7 @@ class DriverAcceptedScreen extends StatelessWidget {
     final sheetController = c.sheetController;
 
     return _DriverAcceptedEmergencyContactsBootstrap(
-      child: Scaffold(
-        backgroundColor: AppColors.pageBackground,
+      child: AppScaffold(
         body: Stack(
           fit: StackFit.expand,
           children: [
@@ -186,8 +169,10 @@ class DriverAcceptedScreen extends StatelessWidget {
               final baseMin = _baseMinSheetSizeForStatus(status);
               final baseInitial = baseMin;
 
-              final initialSize = _sheetSizeWithNavInset(context, baseInitial);
-              final minSize = _sheetSizeWithNavInset(context, baseMin);
+              final initialSize =
+                  AppNavSpacing.instance.sheetSizeWithNavInset(context, baseInitial);
+              final minSize =
+                  AppNavSpacing.instance.sheetSizeWithNavInset(context, baseMin);
 
               switch (state) {
                 case RideBottomSheetState.driverAssigned:
@@ -203,14 +188,15 @@ class DriverAcceptedScreen extends StatelessWidget {
                 reserveSystemBottomInset: true,
                 initialChildSize: initialSize,
                 minChildSize: minSize,
-                maxChildSize: _sheetSizeWithNavInset(context, maxSheetSize),
+                maxChildSize:
+                    AppNavSpacing.instance.sheetSizeWithNavInset(context, maxSheetSize),
                 childBuilder: (scrollController) =>
                     _bottomSheet(c, scrollController),
               );
             }),
             // Above the sheet in the stack so ride-start sheet growth cannot cover chips.
             Obx(() {
-              // Share/track chips require a loaded ride — hide during load-error state.
+              // Share/track chips require a loaded ride Ã¢â‚¬â€ hide during load-error state.
               if (c.hasRideLoadError) {
                 return const SizedBox.shrink();
               }
@@ -636,7 +622,12 @@ class DriverAcceptedScreen extends StatelessWidget {
       physics: const AlwaysScrollableScrollPhysics(
         parent: ClampingScrollPhysics(),
       ),
-      padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, _scrollBottomPad(context)),
+      padding: EdgeInsets.fromLTRB(
+        16.w,
+        10.h,
+        16.w,
+        AppNavSpacing.instance.sheetScrollBottomPad(context),
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -868,7 +859,8 @@ class DriverAcceptedScreen extends StatelessWidget {
                     clipBehavior: Clip.hardEdge,
                     physics: const ClampingScrollPhysics(),
                     padding: EdgeInsets.only(
-                      bottom: 16.h + _scrollBottomPad(context),
+                      bottom: 16.h +
+                          AppNavSpacing.instance.sheetScrollBottomPad(context),
                     ),
                     child: DriverAcceptedScreenShimmer.rideStartedSheetBody(
                       showChangeDropLink: true,
@@ -927,7 +919,8 @@ class DriverAcceptedScreen extends StatelessWidget {
                     clipBehavior: Clip.hardEdge,
                     physics: const ClampingScrollPhysics(),
                     padding: EdgeInsets.only(
-                      bottom: 16.h + _scrollBottomPad(context),
+                      bottom: 16.h +
+                          AppNavSpacing.instance.sheetScrollBottomPad(context),
                     ),
                     child: _rideProgressBody(c, showChangeDropLink: true),
                   ),
@@ -1082,7 +1075,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                             ),
                             if (c.formattedSpeedLabel.isNotEmpty) ...[
                               Text(
-                                " • ",
+                                " Ã¢â‚¬Â¢ ",
                                 style: AppTextStyles.homeCaption.copyWith(
                                   fontSize: 15.sp,
                                   fontWeight: FontWeight.w800,

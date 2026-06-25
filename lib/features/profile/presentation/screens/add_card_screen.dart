@@ -6,9 +6,11 @@ import 'package:get/get.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/widgets/app_footer_bar.dart';
 import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
+import '../../../../shared/widgets/app_scaffold.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../controllers/add_card_controller.dart';
 
@@ -30,12 +32,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
-    final double computedBottomPadding = bottomPadding > 0
-        ? (GetPlatform.isIOS ? 0 : 8.h)
-        : 24.h;
-
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.white,
       body: Column(
         children: [
@@ -166,9 +163,8 @@ class _AddCardScreenState extends State<AddCardScreen> {
                     ),
                   ),
 
-                  SafeArea(
-                    top: false,
-                    bottom: true,
+                  AppFooterBar(
+                    bottomGap: 24,
                     child: Obx(() {
                       final shouldShow =
                           controller.isSubmitting.value ||
@@ -177,18 +173,13 @@ class _AddCardScreenState extends State<AddCardScreen> {
                         show: shouldShow,
                         visibleKey: const ValueKey('add-card-button-visible'),
                         hiddenKey: const ValueKey('add-card-button-hidden'),
-                        child: Padding(
-                          padding: EdgeInsets.only(
-                            bottom: computedBottomPadding,
-                          ),
-                          child: AppPrimaryButton(
-                            label: AppStrings.addCard.tr,
-                            iconAsset: AppAssets.locationIcArrowRight,
-                            isLoading: controller.isSubmitting.value,
-                            onPressed: controller.isSubmitting.value
-                                ? null
-                                : controller.submitCard,
-                          ),
+                        child: AppPrimaryButton(
+                          label: AppStrings.addCard.tr,
+                          iconAsset: AppAssets.locationIcArrowRight,
+                          isLoading: controller.isSubmitting.value,
+                          onPressed: controller.isSubmitting.value
+                              ? null
+                              : controller.submitCard,
                         ),
                       );
                     }),

@@ -11,6 +11,8 @@ import '../../core/widgets/svg_picture_asset.dart';
 import '../../features/home/presentation/controllers/confirm_location_controller.dart';
 import 'app_back_button.dart';
 import 'app_primary_button.dart';
+import 'app_scaffold.dart';
+import 'app_screen_safe_area.dart';
 import 'app_text_field.dart';
 import 'map_widgets.dart';
 
@@ -24,11 +26,12 @@ class ConfirmLocationScreen extends GetView<ConfirmLocationController> {
     final canGoBack = Navigator.of(context).canPop();
     final mq = MediaQuery.of(context);
     final keyboardInset = mq.viewInsets.bottom;
+    const panelBottomGap = 12.0;
     final bottomSheetMaxHeight =
         mq.size.height - mq.padding.top - mq.padding.bottom - 12;
     final bottomPanelReserve = config.bottomPanelReserve;
 
-    return Scaffold(
+    return AppScaffold(
       resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
@@ -148,15 +151,16 @@ class ConfirmLocationScreen extends GetView<ConfirmLocationController> {
                     ),
                   ],
                 ),
-                child: SafeArea(
+                child: AppScreenSafeArea(
                   top: false,
-                  bottom: false,
+                  left: false,
+                  right: false,
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(
                       16.w,
                       10.h,
                       16.w,
-                      12.h + mq.padding.bottom + keyboardInset,
+                      panelBottomGap.h + keyboardInset,
                     ),
                     child: SingleChildScrollView(
                       keyboardDismissBehavior:

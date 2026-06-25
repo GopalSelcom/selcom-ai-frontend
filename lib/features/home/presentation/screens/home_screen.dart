@@ -11,11 +11,13 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/app_nav_spacing.dart';
 import '../../../../shared/widgets/app_cupertino_text_button.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
 import '../../../../shared/widgets/app_map_gps_button.dart';
 import '../../../../shared/widgets/app_map_top_header.dart';
+import '../../../../shared/widgets/app_scaffold.dart';
 import '../../../../shared/widgets/app_shimmer.dart';
 import '../../../../shared/widgets/app_vehicle_explore_tile.dart';
 import '../../../../shared/widgets/favorite_location_chips_row.dart';
@@ -34,47 +36,50 @@ class HomeScreen extends GetView<HomeController> {
   @override
   Widget build(BuildContext context) {
     controller.onHomeVisible();
-    final screenHeight = MediaQuery.sizeOf(context).height;
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) return;
-        _showExitDialog(context);
-      },
-      child: Scaffold(
-        backgroundColor: AppColors.pageBackground,
-        resizeToAvoidBottomInset: false,
-        body: Stack(
-          children: [
-            // 1. Map Layer (Static Image from Figma)
-            Positioned.fill(
-              child: Obx(() {
-                final activeRide = controller.activeRide.value;
-                final showsMoreBadge = controller.hasMultipleActiveRides;
-                final activeRideFootprint = activeRide == null
-                    ? 0.0
-                    : HomeActiveRideCard.footprintAboveSheet(
-                        showsMoreBadge: showsMoreBadge,
-                      );
-                return AppGoogleMap(
-                  initialCameraPosition: CameraPosition(
-                    target: controller.mapCenter.value,
-                    zoom: 16,
-                  ),
-                  // Keep map focal content above the draggable sheet peek area.
-                  padding: EdgeInsets.only(
-                    bottom:
-                        screenHeight * controller.sheetSize.value +
-                        activeRideFootprint,
-                  ),
-                  myLocationEnabled: controller.hasLocationPermission.value,
-                  circles: controller.nearbyPickupRadiusCircles,
-                  // markers: controller.selectedPickupMarkers,
-                  onMapCreated: controller.onMapCreated,
-                  onCameraIdle: controller.onHomeMapCameraIdle,
-                );
-              }),
-            ),
+    return ValueListenableBuilder<bool>(
+      valueListenable: AppNavSpacing.instance.needBottomSpacing,
+      builder: (context, _, __) {
+        final bodyHeight =
+            AppNavSpacing.instance.scaffoldBodyHeight(context);
+        return PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, result) {
+            if (didPop) return;
+            _showExitDialog(context);
+          },
+          child: AppScaffold(
+            resizeToAvoidBottomInset: false,
+            body: Stack(
+              children: [
+                // 1. Map Layer (Static Image from Figma)
+                Positioned.fill(
+                  child: Obx(() {
+                    final activeRide = controller.activeRide.value;
+                    final showsMoreBadge = controller.hasMultipleActiveRides;
+                    final activeRideFootprint = activeRide == null
+                        ? 0.0
+                        : HomeActiveRideCard.footprintAboveSheet(
+                            showsMoreBadge: showsMoreBadge,
+                          );
+                    return AppGoogleMap(
+                      initialCameraPosition: CameraPosition(
+                        target: controller.mapCenter.value,
+                        zoom: 16,
+                      ),
+                      // Keep map focal content above the draggable sheet peek area.
+                      padding: EdgeInsets.only(
+                        bottom:
+                            bodyHeight * controller.sheetSize.value +
+                            activeRideFootprint,
+                      ),
+                      myLocationEnabled:
+                          controller.hasLocationPermission.value,
+                      circles: controller.nearbyPickupRadiusCircles,
+                      onMapCreated: controller.onMapCreated,
+                      onCameraIdle: controller.onHomeMapCameraIdle,
+                    );
+                  }),
+                ),
 
             // 2. Top Header (Address + Profile)
             Obx(
@@ -90,14 +95,14 @@ class HomeScreen extends GetView<HomeController> {
               ),
             ),
 
-            // 3. GPS button — lifts with the draggable bottom sheet / active ride card.
+            // 3. GPS button â€” lifts with the draggable bottom sheet / active ride card.
             Obx(() {
               if (controller.isLoadingHomeData.value ||
                   controller.isActiveRidesExpanded.value) {
                 return const SizedBox.shrink();
               }
               final activeRide = controller.activeRide.value;
-              final sheetBottom = screenHeight * controller.sheetSize.value;
+              final sheetBottom = bodyHeight * controller.sheetSize.value;
               final bottomOffset = activeRide == null
                   ? sheetBottom + 12.h
                   : HomeActiveRideCard.gpsButtonBottom(
@@ -120,7 +125,7 @@ class HomeScreen extends GetView<HomeController> {
               if (activeRide == null) return const SizedBox.shrink();
 
               final rides = controller.activeRides.toList(growable: false);
-              final sheetBottom = screenHeight * controller.sheetSize.value;
+              final sheetBottom = bodyHeight * controller.sheetSize.value;
               final cardBottom =
                   sheetBottom + HomeActiveRideCard.gapAboveSheet.h;
 
@@ -178,6 +183,8 @@ class HomeScreen extends GetView<HomeController> {
           ],
         ),
       ),
+    );
+      },
     );
   }
 
@@ -272,10 +279,20 @@ class HomeScreen extends GetView<HomeController> {
       controller.isLoadingHomeData.value;
       controller.measuredSheetContentHeightPx.value;
 
+      final nav = AppNavSpacing.instance;
+      double openHeight(double base) => nav.homeSheetOpenSizeLift(context, base);
+
       final minSize = controller.homeSheetMinSize;
-      final initialSize = controller.homeSheetInitialSize;
-      final maxSize = controller.homeSheetMaxChildSize;
-      final snapSizes = controller.homeSheetSnapSizes;
+      final maxSize = openHeight(controller.homeSheetMaxChildSize);
+      final initialSize =
+          openHeight(controller.homeSheetInitialSize).clamp(minSize, maxSize);
+      final snapSizes = controller.homeSheetSnapSizes
+          .map(
+            (size) => size >= controller.homeSheetMaxChildSize - 0.001
+                ? openHeight(size).clamp(minSize, maxSize)
+                : size,
+          )
+          .toList();
       final scrollPhysics = controller.homeSheetScrollPhysics;
       final contentSignature = Object.hash(
         controller.isLoadingHomeData.value,
@@ -663,10 +680,8 @@ class _HomeSheetScrollContentState extends State<_HomeSheetScrollContent> {
 
   @override
   Widget build(BuildContext context) {
-    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
-    final double computedBottomPadding = bottomPadding > 0
-        ? (GetPlatform.isIOS ? 0.0 : 8.h)
-        : 16.h;
+    final sheetBottomGap =
+        AppNavSpacing.instance.needBottomSpacing.value ? 4.0 : 16.h;
 
     return SingleChildScrollView(
       controller: widget.scrollController,
@@ -685,11 +700,7 @@ class _HomeSheetScrollContentState extends State<_HomeSheetScrollContent> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               ...widget.children,
-              SafeArea(
-                top: false,
-                bottom: true,
-                child: SizedBox(height: computedBottomPadding),
-              ),
+              SizedBox(height: sheetBottomGap),
             ],
           ),
         ),

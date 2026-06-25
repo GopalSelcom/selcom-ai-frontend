@@ -20,15 +20,8 @@ class BookRideWalletFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final loading = isLoading;
-    final bottomPadding = MediaQuery.paddingOf(context).bottom;
-    final computedBottomPadding = bottomPadding > 0
-        ? (GetPlatform.isIOS
-              ? (bottomPadding - 8.h).clamp(8.h, bottomPadding)
-              : bottomPadding + 8.h)
-        : 12.h;
-
     return Padding(
-      padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, computedBottomPadding),
+      padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 12.h),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

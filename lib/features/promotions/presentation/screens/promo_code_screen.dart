@@ -11,6 +11,7 @@ import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/animated_blur_dialog.dart';
 import '../../../../shared/widgets/app_cupertino_text_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
+import '../../../../shared/widgets/app_scaffold.dart';
 import '../../../../shared/widgets/app_skeleton_loader.dart';
 import '../../../../shared/widgets/promo_apply_success_dialog.dart';
 import '../controllers/promo_code_controller.dart';
@@ -27,7 +28,7 @@ class PromoCodeScreen extends StatelessWidget {
       final showSuccess = controller.showApplySuccess.value;
       return PopScope(
         canPop: !applying && !showSuccess,
-        child: Scaffold(
+        child: AppScaffold(
           backgroundColor: AppColors.white,
           body: Stack(
             children: [

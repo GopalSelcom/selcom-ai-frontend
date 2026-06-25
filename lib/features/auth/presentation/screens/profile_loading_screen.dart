@@ -6,6 +6,7 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_scaffold.dart';
 import '../controllers/auth_controller.dart';
 
 class ProfileLoadingScreen extends StatefulWidget {
@@ -42,8 +43,7 @@ class _ProfileLoadingScreenState extends State<ProfileLoadingScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.pageBackground,
+    return AppScaffold(
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

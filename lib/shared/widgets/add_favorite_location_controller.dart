@@ -1,4 +1,3 @@
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../../core/data/models/responses/get_saved_places_response.dart';
@@ -129,18 +128,5 @@ class AddFavoriteLocationController extends GetxController {
       case FavoriteLocationSlotId.other:
         return AppStrings.other.tr;
     }
-  }
-
-  double estimateContentHeight(int chipCount) {
-    final chipRows = (chipCount / 3).ceil();
-    var height =
-        52.h + 20.h + 28.h + 10.h + (chipRows * 48.h).clamp(108.h, 200.h);
-    if (selectedLabel.value == 'add_new') {
-      height += 12.h + 56.h;
-    }
-    if (canSave) {
-      height += 22.h + 56.h;
-    }
-    return height + 8.h;
   }
 }

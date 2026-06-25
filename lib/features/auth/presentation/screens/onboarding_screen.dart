@@ -10,7 +10,10 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/widgets/app_footer_bar.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
+import '../../../../shared/widgets/app_scaffold.dart';
+import '../../../../shared/widgets/app_screen_safe_area.dart';
 import '../controllers/onboarding_controller.dart';
 
 class OnboardingScreen extends GetView<OnboardingController> {
@@ -25,9 +28,8 @@ class OnboardingScreen extends GetView<OnboardingController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.pageBackground,
-      body: SafeArea(
+    return AppScaffold(
+      body: AppScreenSafeArea(
         top: false,
         // Illustration should overlap with status bar if needed, but we keep it simple
         child: Column(
@@ -147,26 +149,30 @@ class OnboardingScreen extends GetView<OnboardingController> {
                             ),
                           ),
                           const Spacer(),
-                          Padding(
-                            padding: EdgeInsets.only(bottom: 16.h),
-                            child: AppPrimaryButton(
-                              label: AppStrings.getStarted.tr,
-                              onPressed: controller.onGetStarted,
-                              height: 54.h,
-                              labelStyle: AppTextStyles.onboardingButton,
-                              iconAsset: AppAssets.locationIcArrowRight,
-                              iconColor: AppColors.white,
-                              alignIconToTrailingEnd: true,
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(bottom: 16.h),
-                            child: Text(
-                              AppStrings
-                                  .byContinuingYouAgreeThatYouHaveReadAndAcceptOurTAndCsAndPrivacyPolicy
-                                  .tr,
-                              textAlign: TextAlign.center,
-                              style: AppTextStyles.onboardingFooter,
+                          AppFooterBar(
+                            padding: EdgeInsets.zero,
+                            bottomGap: 16,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                AppPrimaryButton(
+                                  label: AppStrings.getStarted.tr,
+                                  onPressed: controller.onGetStarted,
+                                  height: 54.h,
+                                  labelStyle: AppTextStyles.onboardingButton,
+                                  iconAsset: AppAssets.locationIcArrowRight,
+                                  iconColor: AppColors.white,
+                                  alignIconToTrailingEnd: true,
+                                ),
+                                SizedBox(height: 16.h),
+                                Text(
+                                  AppStrings
+                                      .byContinuingYouAgreeThatYouHaveReadAndAcceptOurTAndCsAndPrivacyPolicy
+                                      .tr,
+                                  textAlign: TextAlign.center,
+                                  style: AppTextStyles.onboardingFooter,
+                                ),
+                              ],
                             ),
                           ),
                         ],

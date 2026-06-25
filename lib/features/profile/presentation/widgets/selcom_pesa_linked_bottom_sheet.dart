@@ -24,15 +24,6 @@ class SelcomPesaLinkedBottomSheet extends GetView<PaymentMethodsController> {
 
   @override
   Widget build(BuildContext context) {
-    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
-    final double computedBottomPadding = bottomPadding > 0
-        ? (GetPlatform.isIOS
-              ? (bottomPadding - 12.h).clamp(
-                  10.h > bottomPadding ? bottomPadding : 10.h,
-                  bottomPadding,
-                )
-              : bottomPadding + 12.h)
-        : 12.h;
     return AppStandardBottomSheet(
       title: AppStrings.yourLinkedAccount.tr,
       headerTextAlign: TextAlign.start,
@@ -83,7 +74,7 @@ class SelcomPesaLinkedBottomSheet extends GetView<PaymentMethodsController> {
             outlinedBorderColor: AppColors.primaryButton,
             outlinedBorderWidth: 1,
           ),
-          SizedBox(height: computedBottomPadding),
+          SizedBox(height: 12.h),
         ],
       ),
     );

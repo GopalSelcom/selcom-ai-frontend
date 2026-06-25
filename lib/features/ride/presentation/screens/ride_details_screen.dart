@@ -9,8 +9,10 @@ import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/utils/phone_formatter.dart';
+import '../../../../shared/widgets/app_footer_bar.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
+import '../../../../shared/widgets/app_scaffold.dart';
 import '../../../../shared/widgets/vehicle_type_image.dart';
 import '../../../ride_rating/presentation/widgets/ride_rating_input_section.dart';
 import '../controllers/ride_details_controller.dart';
@@ -117,7 +119,7 @@ class RideDetailsScreen extends StatelessWidget {
           await handleCompletionExit();
         }
       },
-      child: Scaffold(
+      child: AppScaffold(
         backgroundColor: AppColors.white,
         body: Column(
           children: [
@@ -355,19 +357,14 @@ class RideDetailsScreen extends StatelessWidget {
                 );
               }),
             ),
-            SafeArea(
-              top: false,
+            AppFooterBar(
+              padding: EdgeInsets.symmetric(
+                horizontal:
+                    RideDetailsScreenLayout.primaryButtonHorizontalPadding,
+              ),
               child: Obx(() {
                 if (controller.isLoadingRideDetails.value) {
-                  return Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      RideDetailsScreenLayout.primaryButtonHorizontalPadding,
-                      0,
-                      RideDetailsScreenLayout.primaryButtonHorizontalPadding,
-                      RideDetailsScreenLayout.primaryButtonBottomPadding,
-                    ),
-                    child: RideDetailsScreenShimmer.primaryButton(),
-                  );
+                  return RideDetailsScreenShimmer.primaryButton();
                 }
                 final rc = controller.ratingController;
                 final bool isSimpleDoneFlow =
@@ -394,13 +391,10 @@ class RideDetailsScreen extends StatelessWidget {
                             )
                           : handleSkipFlow);
 
-                return Padding(
-                  padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
-                  child: AppPrimaryButton(
-                    label: buttonLabel,
-                    isLoading: !isSimpleDoneFlow && isSubmitting,
-                    onPressed: onPressed,
-                  ),
+                return AppPrimaryButton(
+                  label: buttonLabel,
+                  isLoading: !isSimpleDoneFlow && isSubmitting,
+                  onPressed: onPressed,
                 );
               }),
             ),

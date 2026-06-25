@@ -11,6 +11,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/app_profile_user_avatar.dart';
 import '../../../../shared/widgets/app_profile_user_summary.dart';
+import '../../../../shared/widgets/app_scaffold.dart';
 import '../controllers/profile_controller.dart';
 import '../widgets/menu_item_widget.dart';
 import '../widgets/profile_screen_layout.dart';
@@ -24,7 +25,7 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.white,
       body: Stack(
         children: [

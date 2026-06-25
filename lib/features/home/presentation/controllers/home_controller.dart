@@ -26,6 +26,7 @@ import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/services/notification_service.dart';
+import '../../../../shared/utils/app_nav_spacing.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/session_expiry_service.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -47,6 +48,7 @@ import '../../../ride_rating/presentation/controllers/ride_rating_controller.dar
 import '../../data/models/home_models.dart';
 import '../../data/models/places_models.dart';
 import '../../domain/repositories/home_repository.dart';
+import '../widgets/home_sheet_layout.dart';
 import '../screens/recent_locations_screen.dart';
 import 'location_selection_controller.dart';
 
@@ -908,8 +910,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   bool get homeSheetShouldSnap => homeSheetSnapSizes.length > 1;
 
   void syncHomeSheetToDefault({bool animated = false}) {
-    final max = homeSheetMaxChildSize;
-    var target = homeSheetInitialSize;
+    final max = _homeSheetOpenSizeWithNavLift(homeSheetMaxChildSize);
+    var target = _homeSheetOpenSizeWithNavLift(homeSheetInitialSize);
     if (homeSheetController.isAttached) {
       final current = homeSheetController.size;
       if (current > max) {
@@ -940,7 +942,17 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     return 80.h + 68.h + 12.h + 16.h;
   }
 
+  /// Slightly taller default open height when [AppSafeBottomBox] shrinks body.
+  double _homeSheetOpenSizeWithNavLift(double base) {
+    final ctx = Get.context;
+    if (ctx == null) return base;
+    return AppNavSpacing.instance.homeSheetOpenSizeLift(ctx, base);
+  }
+
   double get _estimatedBottomPadding {
+    if (AppNavSpacing.instance.needBottomSpacing.value) {
+      return 4.0;
+    }
     final context = Get.context;
     if (context == null) return 16.h;
     final double bottomPadding = MediaQuery.paddingOf(context).bottom;
@@ -965,9 +977,10 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     }
 
     if (shouldShowVehicleSection) {
-      contentHeight += 12.h;
-      contentHeight += 28.h;
-      contentHeight += 72.h;
+      contentHeight += HomeSheetLayout.sectionGap.h;
+      contentHeight += HomeSheetLayout.sectionTitleHeight;
+      contentHeight += HomeSheetLayout.titleContentGap.h;
+      contentHeight += HomeSheetLayout.vehicleRowHeight.h;
     }
 
     contentHeight += _estimatedBottomPadding;

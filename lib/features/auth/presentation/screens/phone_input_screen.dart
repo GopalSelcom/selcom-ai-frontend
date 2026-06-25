@@ -9,7 +9,10 @@ import '../../../../shared/data/countries_phone_data.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
 import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_focus_input_field.dart';
+import '../../../../shared/widgets/app_footer_bar.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
+import '../../../../shared/widgets/app_scaffold.dart';
+import '../../../../shared/widgets/app_screen_safe_area.dart';
 import '../../../../shared/widgets/phone_country_picker_chip.dart';
 import '../controllers/auth_controller.dart';
 
@@ -18,10 +21,9 @@ class PhoneInputScreen extends GetView<AuthController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.pageBackground,
+    return AppScaffold(
       resizeToAvoidBottomInset: true,
-      body: SafeArea(
+      body: AppScreenSafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
@@ -130,33 +132,50 @@ class PhoneInputScreen extends GetView<AuthController> {
                               : const SizedBox.shrink(),
                         ),
                         const Spacer(),
-                        Padding(
-                          padding: EdgeInsets.only(bottom: 14.h),
-                          child: Text(
-                            AppStrings
-                                .noteByProceedingYouConsentToGetCallsWhatsappOrSmsMessagesIncludingByAu
-                                .tr,
-                            style: AppTextStyles.homeCaption.copyWith(
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.w400,
-                              color: AppColors.textBody,
-                              height: 20 / 12,
+                        Obx(() {
+                          final showButton = controller.canRequestOtp;
+                          return AppFooterBar(
+                            padding: EdgeInsets.zero,
+                            bottomGap: showButton ? 12 : 0,
+                            keyboardBottomGap: 12,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.only(
+                                    bottom: showButton ? 14.h : 0,
+                                  ),
+                                  child: Text(
+                                    AppStrings
+                                        .noteByProceedingYouConsentToGetCallsWhatsappOrSmsMessagesIncludingByAu
+                                        .tr,
+                                    style: AppTextStyles.homeCaption.copyWith(
+                                      fontSize: 12.sp,
+                                      fontWeight: FontWeight.w400,
+                                      color: AppColors.textBody,
+                                      height: 20 / 12,
+                                    ),
+                                  ),
+                                ),
+                                AppAnimatedReveal(
+                                  show: showButton,
+                                  visibleKey: const ValueKey(
+                                    'continue-button-visible',
+                                  ),
+                                  hiddenKey: const ValueKey(
+                                    'continue-button-hidden',
+                                  ),
+                                  child: AppPrimaryButton(
+                                    label: AppStrings.continueLabel.tr,
+                                    isLoading: controller.isLoading.value,
+                                    onPressed: controller.sendOtpAndNavigate,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ),
-                        Obx(
-                          () => AppAnimatedReveal(
-                            show: controller.canRequestOtp,
-                            visibleKey: const ValueKey('continue-button-visible'),
-                            hiddenKey: const ValueKey('continue-button-hidden'),
-                            child: AppPrimaryButton(
-                              label: AppStrings.continueLabel.tr,
-                              isLoading: controller.isLoading.value,
-                              onPressed: controller.sendOtpAndNavigate,
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 12.h),
+                          );
+                        }),
                       ],
                     ),
                   ),

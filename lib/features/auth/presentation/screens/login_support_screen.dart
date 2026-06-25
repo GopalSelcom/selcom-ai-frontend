@@ -7,9 +7,11 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
+import '../../../../shared/widgets/app_footer_bar.dart';
 import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
+import '../../../../shared/widgets/app_scaffold.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../../../../shared/widgets/phone_country_picker_chip.dart';
 import '../controllers/login_support_controller.dart';
@@ -20,13 +22,9 @@ class LoginSupportScreen extends GetView<LoginSupportController> {
 
   @override
   Widget build(BuildContext context) {
-    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
-    final double computedBottomPadding = bottomPadding > 0
-        ? (GetPlatform.isIOS ? 0 : 8.h)
-        : 16.h;
-
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.white,
+      resizeToAvoidBottomInset: true,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -129,27 +127,17 @@ class LoginSupportScreen extends GetView<LoginSupportController> {
               );
             }),
           ),
-          SafeArea(
-            top: false,
-            bottom: true,
+          AppFooterBar(
+            padding: EdgeInsets.symmetric(horizontal: 24.w),
             child: Obx(
-              () => Padding(
-                padding: EdgeInsets.only(
-                  bottom: controller.canSubmit.value
-                      ? computedBottomPadding
-                      : 0,
-                  left: 24.w,
-                  right: 24.w,
-                ),
-                child: AppAnimatedReveal(
-                  show: controller.canSubmit.value,
-                  visibleKey: const ValueKey('login-support-submit-visible'),
-                  hiddenKey: const ValueKey('login-support-submit-hidden'),
-                  child: AppPrimaryButton(
-                    label: AppStrings.submit.tr,
-                    onPressed: controller.submitTicket,
-                    isLoading: controller.isSubmitting.value,
-                  ),
+              () => AppAnimatedReveal(
+                show: controller.canSubmit.value,
+                visibleKey: const ValueKey('login-support-submit-visible'),
+                hiddenKey: const ValueKey('login-support-submit-hidden'),
+                child: AppPrimaryButton(
+                  label: AppStrings.submit.tr,
+                  onPressed: controller.submitTicket,
+                  isLoading: controller.isSubmitting.value,
                 ),
               ),
             ),

@@ -11,6 +11,7 @@ import '../../../../core/services/storage_service.dart';
 import '../../../../core/services/voip_callkit_bridge_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/widgets/app_scaffold.dart';
 import '../controllers/auth_controller.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -56,7 +57,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return const AppScaffold(
       backgroundColor: AppColors.splashBackground,
       body: SizedBox.expand(
         child: SvgPictureAsset(AppAssets.splashScreenBg, fit: BoxFit.cover),

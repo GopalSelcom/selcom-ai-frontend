@@ -10,7 +10,9 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/widgets/app_back_button.dart';
+import '../../../../shared/widgets/app_footer_bar.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
+import '../../../../shared/widgets/app_scaffold.dart';
 import '../controllers/driver_accepted_controller.dart';
 import '../controllers/stop_editor_controller.dart';
 
@@ -26,7 +28,7 @@ class StopEditorScreen extends GetView<StopEditorController> {
     return GestureDetector(
       onTap: () {},
       behavior: HitTestBehavior.translucent,
-      child: Scaffold(
+      child: AppScaffold(
         backgroundColor: AppColors.cardBackground,
         appBar: AppBar(
           title: Text(controller.appBarTitle),
@@ -74,28 +76,26 @@ class StopEditorScreen extends GetView<StopEditorController> {
             controller.isDestinationEditor
                 ? _buildDestinationPreviewPanel()
                 : _buildPreviewPanel(),
-            SafeArea(
-              child: Padding(
-                padding: EdgeInsets.all(16.w),
-                child: Obx(() {
-                  driverController.stopUpdatePreview.value;
-                  driverController.destinationUpdatePreview.value;
-                  controller.selectedDestination.value;
-                  controller.stops.length;
+            Obx(() {
+              driverController.stopUpdatePreview.value;
+              driverController.destinationUpdatePreview.value;
+              controller.selectedDestination.value;
+              controller.stops.length;
 
-                  if (!controller.shouldShowSaveButton) {
-                    return const SizedBox.shrink();
-                  }
+              if (!controller.shouldShowSaveButton) {
+                return const SizedBox.shrink();
+              }
 
-                  return AppPrimaryButton(
-                    label: controller.saveButtonLabel,
-                    onPressed:
-                        controller.isSaving.value ? null : controller.onSave,
-                    isLoading: controller.isSaving.value,
-                  );
-                }),
-              ),
-            ),
+              return AppFooterBar(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: AppPrimaryButton(
+                  label: controller.saveButtonLabel,
+                  onPressed:
+                      controller.isSaving.value ? null : controller.onSave,
+                  isLoading: controller.isSaving.value,
+                ),
+              );
+            }),
           ],
         ),
       ),

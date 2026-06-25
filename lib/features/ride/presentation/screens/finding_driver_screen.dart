@@ -7,12 +7,14 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/utils/app_nav_spacing.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
 import '../../../../shared/widgets/app_map_route_polyline.dart';
 import '../../../../shared/utils/map_route_marker_utils.dart';
 import '../../../../shared/widgets/app_map_route_one_line_bar.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
+import '../../../../shared/widgets/app_scaffold.dart';
 import '../controllers/finding_driver_controller.dart';
 
 class FindingDriverScreen extends StatefulWidget {
@@ -30,25 +32,6 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
   static const double _sheetMin = 0.28;
   static const double _sheetMaxCompact = 0.44;
   static const double _sheetMaxSearching = 0.38;
-
-  static double _systemBottomInsetPx(BuildContext context) {
-    final mq = MediaQuery.of(context);
-    final p = mq.padding.bottom;
-    final v = mq.viewPadding.bottom;
-    return p > v ? p : v;
-  }
-
-  /// Slightly taller min/initial when nav bar present — avoids clipping cancel.
-  static double _sheetSizeWithNavInset(BuildContext context, double base) {
-    final inset = _systemBottomInsetPx(context);
-    final h = MediaQuery.sizeOf(context).height;
-    if (inset <= 0 || h <= 0) return base;
-    return base + (inset / h) * 0.55;
-  }
-
-  static double _scrollBottomPad(BuildContext context) {
-    return _systemBottomInsetPx(context) > 0 ? 2.h : 0;
-  }
 
   @override
   void initState() {
@@ -74,8 +57,7 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
       c.updateSheetSize(sheetController.size);
     });
 
-    return Scaffold(
-      backgroundColor: AppColors.pageBackground,
+    return AppScaffold(
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -118,9 +100,11 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
             return AppDraggableBottomSheet(
               controller: sheetController,
               reserveSystemBottomInset: true,
-              initialChildSize: _sheetSizeWithNavInset(context, _sheetInitial),
-              minChildSize: _sheetSizeWithNavInset(context, _sheetMin),
-              maxChildSize: _sheetSizeWithNavInset(
+              initialChildSize:
+                  AppNavSpacing.instance.sheetSizeWithNavInset(context, _sheetInitial),
+              minChildSize:
+                  AppNavSpacing.instance.sheetSizeWithNavInset(context, _sheetMin),
+              maxChildSize: AppNavSpacing.instance.sheetSizeWithNavInset(
                 context,
                 isSearching ? _sheetMaxSearching : _sheetMaxCompact,
               ),
@@ -300,7 +284,12 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
       physics: const AlwaysScrollableScrollPhysics(
         parent: ClampingScrollPhysics(),
       ),
-      padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, _scrollBottomPad(context)),
+      padding: EdgeInsets.fromLTRB(
+        20.w,
+        10.h,
+        20.w,
+        AppNavSpacing.instance.sheetScrollBottomPad(context),
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,

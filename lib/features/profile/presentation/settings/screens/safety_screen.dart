@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import '../../../../../core/localization/app_strings.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../shared/widgets/app_profile_header.dart';
+import '../../../../../shared/widgets/app_scaffold.dart';
 import '../controllers/settings_controller.dart';
 import '../widgets/ride_pin_protection_section.dart';
 import '../widgets/settings_screen_shimmer.dart';
@@ -14,7 +15,7 @@ class SafetyScreen extends GetView<SettingsController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.white,
       body: Column(
         children: [

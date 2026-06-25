@@ -14,13 +14,14 @@ import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
 import '../../../../shared/widgets/app_map_route_polyline.dart';
 import '../../../../shared/widgets/app_map_route_one_line_bar.dart';
+import '../../../../shared/widgets/app_scaffold.dart';
 import '../../../../shared/widgets/app_shimmer.dart';
 import '../../../../shared/widgets/vehicle_type_image.dart';
 import '../../../../shared/widgets/vehicle_selection_promo_chip.dart';
 import '../controllers/vehicle_selection_controller.dart';
 import '../widgets/book_ride_wallet_footer.dart';
 
-/// SCR-09 — vehicle selection, fare, payment + Book Ride.
+/// SCR-09 â€” vehicle selection, fare, payment + Book Ride.
 class VehicleSelectionScreen extends StatefulWidget {
   const VehicleSelectionScreen({super.key});
 
@@ -39,7 +40,6 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
 
   double _calculateInitialSheetSize(BuildContext context) {
     final double screenHeight = MediaQuery.sizeOf(context).height;
-    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
 
     if (screenHeight <= 0) return 0.55;
 
@@ -63,17 +63,8 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
         ((listItemsCount - 1).clamp(0, 2) * 10.h) +
         4.h;
 
-    // Footer: top padding + button (56.h) + notice + bottom inset
-    final double paymentBarHeight =
-        4.h +
-        56.h +
-        8.h +
-        36.h +
-        (GetPlatform.isIOS
-            ? (bottomPadding > 0
-                  ? (bottomPadding - 8.h).clamp(8.h, bottomPadding)
-                  : 12.h)
-            : (bottomPadding > 0 ? bottomPadding + 8.h : 12.h));
+    // Footer: top padding + button (56.h) + notice + design bottom gap
+    final double paymentBarHeight = 4.h + 56.h + 8.h + 36.h + 12.h;
 
     // Safety margin is zero since list is non-scrollable when <= 3 items are present
     const double safetyMargin = 0;
@@ -88,7 +79,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
   Widget build(BuildContext context) {
     final canGoBack = Navigator.of(context).canPop();
 
-    return Scaffold(
+    return AppScaffold(
       body: Stack(
         fit: StackFit.expand,
         children: [

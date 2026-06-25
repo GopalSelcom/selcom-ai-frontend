@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../utils/app_nav_spacing.dart';
 
 /// Reusable draggable bottom sheet shell for map-style screens.
 ///
@@ -69,9 +70,6 @@ class AppDraggableBottomSheet extends StatelessWidget {
   }
 
   static double _systemBottomInset(BuildContext context) {
-    final mq = MediaQuery.of(context);
-    final paddingBottom = mq.padding.bottom;
-    final viewBottom = mq.viewPadding.bottom;
-    return paddingBottom > viewBottom ? paddingBottom : viewBottom;
+    return AppNavSpacing.instance.scaffoldSystemBottomInset(context);
   }
 }

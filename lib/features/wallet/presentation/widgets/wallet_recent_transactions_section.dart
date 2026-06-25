@@ -23,8 +23,11 @@ class WalletRecentTransactionsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    final list = ListView(
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: BouncingScrollPhysics(),
+      ),
+      padding: EdgeInsets.zero,
       children: [
         Row(
           children: [
@@ -44,58 +47,33 @@ class WalletRecentTransactionsSection extends StatelessWidget {
           ],
         ),
         SizedBox(height: 12.h),
-        Expanded(
-          child: _buildScrollableContent(context),
-        ),
+        if (transactions.isEmpty)
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: 48.h),
+            child: Center(
+              child: Text(
+                AppStrings.noTransactionsYet.tr,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.textHint,
+                ),
+              ),
+            ),
+          )
+        else
+          ...transactions.map(
+            (item) => WalletTransactionRow(item: item),
+          ),
       ],
     );
-  }
 
-  Widget _buildScrollableContent(BuildContext context) {
     if (onRefresh == null) {
-      return _buildListBody();
+      return list;
     }
 
     return RefreshIndicator(
       onRefresh: onRefresh!,
-      child: _buildListBody(),
-    );
-  }
-
-  Widget _buildListBody() {
-    if (transactions.isEmpty) {
-      return LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(
-              parent: BouncingScrollPhysics(),
-            ),
-            padding: EdgeInsets.zero,
-            child: SizedBox(
-              height: constraints.maxHeight,
-              child: Center(
-                child: Text(
-                  AppStrings.noTransactionsYet.tr,
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.textHint,
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-      );
-    }
-
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(
-        parent: BouncingScrollPhysics(),
-      ),
-      padding: EdgeInsets.zero,
-      children: transactions
-          .map((item) => WalletTransactionRow(item: item))
-          .toList(growable: false),
+      child: list,
     );
   }
 }

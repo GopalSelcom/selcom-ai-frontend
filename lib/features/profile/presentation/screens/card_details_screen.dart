@@ -9,7 +9,9 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
+import '../../../../shared/widgets/app_footer_bar.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
+import '../../../../shared/widgets/app_scaffold.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../../domain/entities/payment_card.dart';
 import '../controllers/card_details_controller.dart';
@@ -75,12 +77,7 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
-    final double computedBottomPadding = bottomPadding > 0
-        ? (GetPlatform.isIOS ? 0 : 8.h)
-        : 24.h;
-
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.white,
       body: Column(
         children: [
@@ -179,17 +176,10 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
               ),
             ),
           ),
-          SafeArea(
-            top: false,
-            bottom: true,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                16.w,
-                0,
-                16.w,
-                computedBottomPadding,
-              ),
-              child: AppPrimaryButton(
+          AppFooterBar(
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            bottomGap: 24,
+            child: AppPrimaryButton(
                 label: AppStrings.deleteCard.tr,
                 onPressed: _openDeleteConfirmationSheet,
                 height: 56.h,
@@ -200,7 +190,6 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                 outlinedTextColor: AppColors.error,
                 outlinedBorderColor: AppColors.error,
                 outlinedBorderWidth: 1,
-              ),
             ),
           ),
         ],

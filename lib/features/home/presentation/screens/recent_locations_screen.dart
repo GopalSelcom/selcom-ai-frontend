@@ -6,6 +6,7 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
+import '../../../../shared/widgets/app_scaffold.dart';
 import '../../../ride/data/models/ride_management_models.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/recent_location_tile.dart';
@@ -16,7 +17,7 @@ class RecentLocationsScreen extends GetView<HomeController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.white,
       body: Column(
         children: [

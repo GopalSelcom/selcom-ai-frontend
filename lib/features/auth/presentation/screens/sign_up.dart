@@ -8,6 +8,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
+import '../../../../shared/widgets/app_scaffold.dart';
+import '../../../../shared/widgets/app_screen_safe_area.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../controllers/sign_up_controller.dart';
 
@@ -17,8 +19,7 @@ class SignUpScreen extends GetView<SignUpController> {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-    return Scaffold(
-      backgroundColor: AppColors.pageBackground,
+    return AppScaffold(
       resizeToAvoidBottomInset: false,
       bottomNavigationBar: AnimatedPadding(
         duration: const Duration(milliseconds: 180),
@@ -29,7 +30,7 @@ class SignUpScreen extends GetView<SignUpController> {
           bottom: bottomInset > 0 ? bottomInset + 12.h : 16.h,
           top: 8.h,
         ),
-        child: SafeArea(
+        child: AppScreenSafeArea(
           top: false,
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -64,7 +65,7 @@ class SignUpScreen extends GetView<SignUpController> {
           ),
         ),
       ),
-      body: SafeArea(
+      body: AppScreenSafeArea(
         child: SingleChildScrollView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           child: Padding(

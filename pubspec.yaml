@@ -70,6 +70,7 @@ dependencies:
     path: ./packages/agora_calling_package
   card_swiper: ^3.0.1
   qr_flutter: ^4.1.0
+  flutter_android_navigation_mode: ^0.0.4
 
 dev_dependencies:
   flutter_test:

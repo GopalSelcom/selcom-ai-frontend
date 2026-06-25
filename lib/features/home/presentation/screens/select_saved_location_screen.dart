@@ -8,6 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_back_button.dart';
+import '../../../../shared/widgets/app_scaffold.dart';
 import '../controllers/home_controller.dart';
 import '../controllers/select_saved_location_controller.dart';
 import '../widgets/favorite_icon_button.dart';
@@ -25,7 +26,7 @@ class SelectSavedLocationScreen extends GetView<SelectSavedLocationController> {
     return GestureDetector(
       onTap: () {},
       behavior: HitTestBehavior.translucent,
-      child: Scaffold(
+      child: AppScaffold(
         backgroundColor: AppColors.cardBackground,
         appBar: AppBar(
           automaticallyImplyLeading: false,

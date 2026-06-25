@@ -13,6 +13,8 @@ import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
+import '../../../../shared/widgets/app_scaffold.dart';
+import '../../../../shared/widgets/app_screen_safe_area.dart';
 import '../../../../shared/widgets/favorite_location_chips_row.dart';
 import '../../../../shared/widgets/app_route_location_pin_icon.dart';
 import '../../data/models/places_models.dart';
@@ -94,9 +96,8 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         onTap: () {},
         // Prevents global unfocus handler from intercepting taps on this screen
         behavior: HitTestBehavior.translucent,
-        child: Scaffold(
-          backgroundColor: AppColors.pageBackground,
-          body: SafeArea(
+        child: AppScaffold(
+          body: AppScreenSafeArea(
             child: Stack(
               children: [
                 Obx(() {
