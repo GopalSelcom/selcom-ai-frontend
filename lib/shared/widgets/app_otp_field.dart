@@ -110,8 +110,9 @@ class _AppOtpFieldState extends State<AppOtpField> {
   late final bool _ownsController;
   final FocusNode _focusNode = FocusNode();
   bool _disposed = false;
-  bool _isFocused = false;
-  int _filledLength = 0;
+  /// Focus and fill length drive border/glow styling without [setState].
+  final ValueNotifier<bool> _isFocused = ValueNotifier(false);
+  final ValueNotifier<int> _filledLength = ValueNotifier(0);
   bool _retryOnNextInput = false;
   late final _OtpDigitsFormatter _digitsFormatter;
 
@@ -130,7 +131,7 @@ class _AppOtpFieldState extends State<AppOtpField> {
     );
     _focusNode.addListener(_onFocusChanged);
     _effectiveController.addListener(_onControllerChanged);
-    _filledLength = _onlyDigits(_effectiveController.text).length;
+    _filledLength.value = _onlyDigits(_effectiveController.text).length;
     HardwareKeyboard.instance.addHandler(_handleHardwareKey);
     if (widget.autofocus) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -147,10 +148,10 @@ class _AppOtpFieldState extends State<AppOtpField> {
     if (oldWidget.controller != widget.controller) {
       oldWidget.controller?.removeListener(_onControllerChanged);
       widget.controller?.addListener(_onControllerChanged);
-      _filledLength = _onlyDigits(_effectiveController.text).length;
+      _filledLength.value = _onlyDigits(_effectiveController.text).length;
     }
 
-    if (widget.hasError && _filledLength >= widget.length) {
+    if (widget.hasError && _filledLength.value >= widget.length) {
       _retryOnNextInput = true;
     } else if (oldWidget.hasError && !widget.hasError) {
       _retryOnNextInput = false;
@@ -160,16 +161,16 @@ class _AppOtpFieldState extends State<AppOtpField> {
   void _onFocusChanged() {
     if (_disposed || !mounted) return;
     final focused = _focusNode.hasFocus;
-    if (_isFocused != focused) {
-      setState(() => _isFocused = focused);
+    if (_isFocused.value != focused) {
+      _isFocused.value = focused;
     }
   }
 
   void _onControllerChanged() {
     if (_disposed || !mounted) return;
     final len = _onlyDigits(_effectiveController.text).length;
-    if (_filledLength != len) {
-      setState(() => _filledLength = len);
+    if (_filledLength.value != len) {
+      _filledLength.value = len;
     }
   }
 
@@ -182,7 +183,7 @@ class _AppOtpFieldState extends State<AppOtpField> {
       text: digit,
       selection: const TextSelection.collapsed(offset: 1),
     );
-    setState(() => _filledLength = 1);
+    _filledLength.value = 1;
     widget.onChanged?.call(digit);
   }
 
@@ -191,7 +192,7 @@ class _AppOtpFieldState extends State<AppOtpField> {
     if (event is! KeyDownEvent) return false;
     if (!_focusNode.hasFocus) return false;
     if (!_retryOnNextInput || !widget.hasError) return false;
-    if (_filledLength < widget.length) return false;
+    if (_filledLength.value < widget.length) return false;
 
     final char = event.character;
     if (char != null && RegExp(r'^\d$').hasMatch(char)) {
@@ -205,8 +206,8 @@ class _AppOtpFieldState extends State<AppOtpField> {
     if (_disposed) return;
     final digits = _onlyDigits(value);
     final len = digits.length;
-    if (_filledLength != len && mounted) {
-      setState(() => _filledLength = len);
+    if (_filledLength.value != len && mounted) {
+      _filledLength.value = len;
     }
     widget.onChanged?.call(digits);
   }
@@ -222,6 +223,8 @@ class _AppOtpFieldState extends State<AppOtpField> {
     HardwareKeyboard.instance.removeHandler(_handleHardwareKey);
     _effectiveController.removeListener(_onControllerChanged);
     _focusNode.removeListener(_onFocusChanged);
+    _isFocused.dispose();
+    _filledLength.dispose();
     // Do not dispose [_focusNode]: PinCodeTextField keeps a listener and may
     // unfocus asynchronously after OTP verification navigation.
     if (_ownsController) {
@@ -232,135 +235,142 @@ class _AppOtpFieldState extends State<AppOtpField> {
 
   @override
   Widget build(BuildContext context) {
-    final h = widget.fieldHeight ?? 64.h;
-    final w = widget.fieldWidth ?? 64.w;
-    final radius = widget.fieldBorderRadius.r;
-    final isWallet = widget.variant == AppOtpFieldVariant.wallet;
+    return ListenableBuilder(
+      listenable: Listenable.merge([_isFocused, _filledLength]),
+      builder: (context, _) {
+        final isFocused = _isFocused.value;
+        final filledLength = _filledLength.value;
 
-    final isFocused = _isFocused;
-    final isComplete = !widget.hasError && _filledLength >= widget.length;
-    final activeCellIndex = _filledLength < widget.length
-        ? _filledLength
-        : widget.length - 1;
+        final h = widget.fieldHeight ?? 64.h;
+        final w = widget.fieldWidth ?? 64.w;
+        final radius = widget.fieldBorderRadius.r;
+        final isWallet = widget.variant == AppOtpFieldVariant.wallet;
 
-    late final Color activeBorder;
-    late final Color selectedBorder;
-    late final Color inactiveBorder;
-    late final bool enableGlow;
-    late final double borderWidth;
-    late final bool showCursor;
+        final isComplete = !widget.hasError && filledLength >= widget.length;
+        final activeCellIndex = filledLength < widget.length
+            ? filledLength
+            : widget.length - 1;
 
-    if (isWallet) {
-      enableGlow = false;
-      borderWidth = 1.w;
-      showCursor = true;
-      if (widget.hasError) {
-        activeBorder = selectedBorder = inactiveBorder = AppColors.error;
-      } else if (isFocused) {
-        activeBorder = AppColors.primary;
-        selectedBorder = AppColors.primary;
-        inactiveBorder = AppColors.borderWalletCard;
-      } else {
-        activeBorder = selectedBorder = inactiveBorder =
-            AppColors.borderWalletCard;
-      }
-    } else {
-      enableGlow = true;
-      borderWidth = 1.2.w;
-      showCursor = false;
-      const greyBorder = AppColors.borderDefault;
-      if (widget.hasError) {
-        activeBorder = selectedBorder = inactiveBorder =
-            AppColors.otpErrorBorder;
-      } else if (isComplete) {
-        activeBorder = selectedBorder = inactiveBorder = AppColors.primary;
-      } else if (isFocused) {
-        activeBorder = AppColors.primary;
-        selectedBorder = AppColors.primary;
-        inactiveBorder = AppColors.primary;
-      } else {
-        activeBorder = selectedBorder = inactiveBorder = greyBorder;
-      }
-    }
+        late final Color activeBorder;
+        late final Color selectedBorder;
+        late final Color inactiveBorder;
+        late final bool enableGlow;
+        late final double borderWidth;
+        late final bool showCursor;
 
-    final glowColor = widget.hasError
-        ? AppColors.otpErrorShadow
-        : AppColors.inputFocusShadow;
+        if (isWallet) {
+          enableGlow = false;
+          borderWidth = 1.w;
+          showCursor = true;
+          if (widget.hasError) {
+            activeBorder = selectedBorder = inactiveBorder = AppColors.error;
+          } else if (isFocused) {
+            activeBorder = AppColors.primary;
+            selectedBorder = AppColors.primary;
+            inactiveBorder = AppColors.borderWalletCard;
+          } else {
+            activeBorder = selectedBorder = inactiveBorder =
+                AppColors.borderWalletCard;
+          }
+        } else {
+          enableGlow = true;
+          borderWidth = 1.2.w;
+          showCursor = false;
+          const greyBorder = AppColors.borderDefault;
+          if (widget.hasError) {
+            activeBorder = selectedBorder = inactiveBorder =
+                AppColors.otpErrorBorder;
+          } else if (isComplete) {
+            activeBorder = selectedBorder = inactiveBorder = AppColors.primary;
+          } else if (isFocused) {
+            activeBorder = AppColors.primary;
+            selectedBorder = AppColors.primary;
+            inactiveBorder = AppColors.primary;
+          } else {
+            activeBorder = selectedBorder = inactiveBorder = greyBorder;
+          }
+        }
 
-    bool cellGlowsAt(int index) {
-      if (!enableGlow) return false;
-      if (widget.hasError) return true;
-      return isFocused && !isComplete && index == activeCellIndex;
-    }
+        final glowColor = widget.hasError
+            ? AppColors.otpErrorShadow
+            : AppColors.inputFocusShadow;
 
-    return SizedBox(
-      height: h,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          if (enableGlow)
-            IgnorePointer(
-              child: Row(
-                mainAxisAlignment: widget.mainAxisAlignment,
-                children: List.generate(
-                  widget.length,
-                  (index) => Container(
-                    width: w,
-                    height: h,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(radius + 2.r),
-                      boxShadow: cellGlowsAt(index)
-                          ? [
-                              BoxShadow(
-                                color: glowColor,
-                                blurRadius: 0,
-                                spreadRadius: 4,
-                              ),
-                            ]
-                          : const [],
+        bool cellGlowsAt(int index) {
+          if (!enableGlow) return false;
+          if (widget.hasError) return true;
+          return isFocused && !isComplete && index == activeCellIndex;
+        }
+
+        return SizedBox(
+          height: h,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              if (enableGlow)
+                IgnorePointer(
+                  child: Row(
+                    mainAxisAlignment: widget.mainAxisAlignment,
+                    children: List.generate(
+                      widget.length,
+                      (index) => Container(
+                        width: w,
+                        height: h,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(radius + 2.r),
+                          boxShadow: cellGlowsAt(index)
+                              ? [
+                                  BoxShadow(
+                                    color: glowColor,
+                                    blurRadius: 0,
+                                    spreadRadius: 4,
+                                  ),
+                                ]
+                              : const [],
+                        ),
+                      ),
                     ),
                   ),
                 ),
+              PinCodeTextField(
+                appContext: context,
+                length: widget.length,
+                controller: _effectiveController,
+                focusNode: _focusNode,
+                autoDisposeControllers: false,
+                onChanged: _handleChanged,
+                onCompleted: widget.onCompleted,
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  _digitsFormatter,
+                ],
+                animationType: AnimationType.fade,
+                mainAxisAlignment: widget.mainAxisAlignment,
+                showCursor: showCursor,
+                cursorColor: AppColors.primary,
+                cursorWidth: 2.w,
+                pinTheme: PinTheme(
+                  shape: PinCodeFieldShape.box,
+                  borderRadius: BorderRadius.circular(radius),
+                  fieldHeight: h,
+                  fieldWidth: w,
+                  activeFillColor: widget.fieldFillColor,
+                  selectedFillColor: widget.fieldFillColor,
+                  inactiveFillColor: widget.fieldFillColor,
+                  activeColor: activeBorder,
+                  selectedColor: selectedBorder,
+                  inactiveColor: inactiveBorder,
+                  borderWidth: borderWidth,
+                ),
+                animationDuration: const Duration(milliseconds: 300),
+                enableActiveFill: true,
+                textStyle: widget.textStyle ?? AppTextStyles.screenTitle,
+                beforeTextPaste: _beforeTextPaste,
               ),
-            ),
-          PinCodeTextField(
-            appContext: context,
-            length: widget.length,
-            controller: _effectiveController,
-            focusNode: _focusNode,
-            autoDisposeControllers: false,
-            onChanged: _handleChanged,
-            onCompleted: widget.onCompleted,
-            keyboardType: TextInputType.number,
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-              _digitsFormatter,
             ],
-            animationType: AnimationType.fade,
-            mainAxisAlignment: widget.mainAxisAlignment,
-            showCursor: showCursor,
-            cursorColor: AppColors.primary,
-            cursorWidth: 2.w,
-            pinTheme: PinTheme(
-              shape: PinCodeFieldShape.box,
-              borderRadius: BorderRadius.circular(radius),
-              fieldHeight: h,
-              fieldWidth: w,
-              activeFillColor: widget.fieldFillColor,
-              selectedFillColor: widget.fieldFillColor,
-              inactiveFillColor: widget.fieldFillColor,
-              activeColor: activeBorder,
-              selectedColor: selectedBorder,
-              inactiveColor: inactiveBorder,
-              borderWidth: borderWidth,
-            ),
-            animationDuration: const Duration(milliseconds: 300),
-            enableActiveFill: true,
-            textStyle: widget.textStyle ?? AppTextStyles.screenTitle,
-            beforeTextPaste: _beforeTextPaste,
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

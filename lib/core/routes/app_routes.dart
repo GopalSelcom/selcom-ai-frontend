@@ -11,10 +11,11 @@ import '../../features/auth/presentation/screens/profile_loading_screen.dart';
 import '../../features/auth/presentation/screens/sign_up.dart';
 import '../../features/auth/presentation/screens/social_login_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
+import '../../features/home/presentation/bindings/confirm_location_binding.dart';
 import '../../features/home/presentation/bindings/home_binding.dart';
-import '../../features/home/presentation/screens/check_pickup_point_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/home/presentation/screens/location_selection_screen.dart';
+import '../../features/home/presentation/bindings/select_saved_location_binding.dart';
 import '../../features/home/presentation/screens/select_saved_location_screen.dart';
 import '../../features/notification/presentation/screens/notification_screen.dart';
 import '../../features/profile/presentation/bindings/contact_us_binding.dart';
@@ -28,16 +29,15 @@ import '../../features/profile/presentation/settings/screens/safety_screen.dart'
 import '../../features/profile/presentation/settings/screens/settings_screen.dart';
 import '../../features/promotions/presentation/bindings/promo_code_binding.dart';
 import '../../features/promotions/presentation/screens/promo_code_screen.dart';
-import '../../features/ride/presentation/bindings/confirm_pickup_binding.dart';
 import '../../features/ride/presentation/bindings/driver_accepted_binding.dart';
 import '../../features/ride/presentation/bindings/finding_driver_binding.dart';
 import '../../features/ride/presentation/bindings/ride_message_binding.dart';
 import '../../features/ride/presentation/bindings/vehicle_selection_binding.dart';
-import '../../features/ride/presentation/screens/confirm_pickup_screen.dart';
-import '../../features/ride/presentation/screens/confirm_stop_screen.dart';
+import '../../shared/widgets/confirm_location_screen.dart';
 import '../../features/ride/presentation/screens/driver_accepted_screen.dart';
 import '../../features/ride/presentation/screens/finding_driver_screen.dart';
 import '../../features/ride/presentation/screens/ride_message_screen.dart';
+import '../../features/ride/presentation/bindings/stop_editor_binding.dart';
 import '../../features/ride/presentation/screens/stop_editor_screen.dart';
 import '../../features/ride/presentation/screens/vehicle_selection_screen.dart';
 import '../../features/wallet/presentation/bindings/wallet_binding.dart';
@@ -126,8 +126,8 @@ class AppRoutes {
     ),
     GetPage(
       name: confirmPickup,
-      page: () => const ConfirmPickupScreen(),
-      binding: ConfirmPickupBinding(),
+      page: () => const ConfirmLocationScreen(),
+      binding: ConfirmLocationBinding(),
     ),
     GetPage(
       name: findingDriver,
@@ -174,22 +174,27 @@ class AppRoutes {
     GetPage(
       name: selectSavedLocation,
       page: () => const SelectSavedLocationScreen(),
-      binding: HomeBinding(),
+      binding: SelectSavedLocationBinding(),
     ),
     GetPage(
       name: checkPickupPoint,
-      page: () => const CheckPickupPointScreen(),
-      binding: HomeBinding(),
+      page: () => const ConfirmLocationScreen(),
+      binding: ConfirmLocationBinding(),
     ),
-    GetPage(name: stopEditor, page: () => const StopEditorScreen()),
+    GetPage(
+      name: stopEditor,
+      page: () => const StopEditorScreen(),
+      binding: StopEditorBinding(),
+    ),
     GetPage(
       name: changeDropLocationEditor,
       page: () => const StopEditorScreen(),
+      binding: StopEditorBinding(),
     ),
     GetPage(
       name: confirmStop,
-      page: () => const ConfirmStopScreen(),
-      binding: HomeBinding(),
+      page: () => const ConfirmLocationScreen(),
+      binding: ConfirmLocationBinding(),
     ),
     GetPage(
       name: wallet,

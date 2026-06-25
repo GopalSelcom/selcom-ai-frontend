@@ -42,7 +42,7 @@ class WalletRepositoryImpl implements WalletRepository {
 
     return WalletDetailsEntity(
       accountNo: pan,
-      firstName: balance?.holderName,
+      name: balance?.holderName,
       status: 1,
     );
   }

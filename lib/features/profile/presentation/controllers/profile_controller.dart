@@ -312,11 +312,9 @@ class ProfileController extends GetxController {
   }
 
   void openPrivacyPolicy() {
-    Get.to(
-      () => WebViewScreen(
-        title: AppStrings.privacyPolicy.tr,
-        url: '${AppConfig.apiHost}${AppConfig.apiPathPrefix}/${URLS.common.privacy}',
-      ),
+    WebViewScreen.open(
+      title: AppStrings.privacyPolicy.tr,
+      url: '${AppConfig.apiHost}${AppConfig.apiPathPrefix}/${URLS.common.privacy}',
     );
   }
 

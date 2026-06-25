@@ -1,40 +1,41 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' hide Marker;
 
-import '../../../../core/constants/app_assets.dart';
-import '../../../../core/localization/app_strings.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/widgets/svg_picture_asset.dart';
-import '../../../../shared/widgets/app_back_button.dart';
-import '../../../../shared/widgets/app_primary_button.dart';
-import '../../../../shared/widgets/app_text_field.dart';
-import '../../../../shared/widgets/map_widgets.dart';
-import '../controllers/confirm_pickup_controller.dart';
+import '../../core/localization/app_strings.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_text_styles.dart';
+import '../../core/widgets/svg_picture_asset.dart';
+import '../../features/home/presentation/controllers/confirm_location_controller.dart';
+import 'app_back_button.dart';
+import 'app_primary_button.dart';
+import 'app_text_field.dart';
+import 'map_widgets.dart';
 
-class ConfirmPickupScreen extends StatelessWidget {
-  const ConfirmPickupScreen({super.key});
+class ConfirmLocationScreen extends GetView<ConfirmLocationController> {
+  const ConfirmLocationScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final c = Get.find<ConfirmPickupController>();
+    final c = controller;
+    final config = c.uiConfig;
     final canGoBack = Navigator.of(context).canPop();
     final mq = MediaQuery.of(context);
     final keyboardInset = mq.viewInsets.bottom;
     final bottomSheetMaxHeight =
         mq.size.height - mq.padding.top - mq.padding.bottom - 12;
-    const bottomPanelReserve = 400.0;
+    final bottomPanelReserve = config.bottomPanelReserve;
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
           Positioned.fill(
-            child: _ConfirmPickupMap(
+            child: _ConfirmLocationMap(
               controller: c,
+              config: config,
               bottomPanelReserve: bottomPanelReserve,
             ),
           ),
@@ -73,7 +74,7 @@ class ConfirmPickupScreen extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(24.r),
                               ),
                               child: Text(
-                                AppStrings.pickupPoint.tr,
+                                config.pinLabel.tr,
                                 style: AppTextStyles.homeCaption.copyWith(
                                   color: AppColors.white,
                                   fontWeight: FontWeight.w700,
@@ -94,30 +95,31 @@ class ConfirmPickupScreen extends StatelessWidget {
               ),
             );
           }),
-          Obx(() {
-            if (!c.hasMovedFromInitial || c.mapController == null) {
-              return const SizedBox.shrink();
-            }
-            final initial = c.initialLatLng;
-            final trigger = c.selectedLatLng.value;
-            return FutureBuilder<Offset?>(
-              future: _projectInitialPickupOffset(
-                context: context,
-                controller: c,
-                initialLatLng: initial,
-                triggerLatLng: trigger,
-              ),
-              builder: (context, snap) {
-                final offset = snap.data;
-                if (offset == null) return const SizedBox.shrink();
-                return Positioned(
-                  left: offset.dx - 24.w,
-                  top: offset.dy - 24.h,
-                  child: _PreviousPickupBlueSymbol(size: 48.w),
-                );
-              },
-            );
-          }),
+          if (config.showPreviousPointMarker)
+            Obx(() {
+              if (!c.hasMovedFromInitial || c.mapController == null) {
+                return const SizedBox.shrink();
+              }
+              final initial = c.initialLatLng;
+              final trigger = c.selectedLatLng.value;
+              return FutureBuilder<Offset?>(
+                future: _projectInitialPointOffset(
+                  context: context,
+                  mapController: c,
+                  initialLatLng: initial,
+                  triggerLatLng: trigger,
+                ),
+                builder: (context, snap) {
+                  final offset = snap.data;
+                  if (offset == null) return const SizedBox.shrink();
+                  return Positioned(
+                    left: offset.dx - 24.w,
+                    top: offset.dy - 24.h,
+                    child: _PreviousPointBlueSymbol(size: 48.w),
+                  );
+                },
+              );
+            }),
           if (canGoBack)
             Positioned(
               top: MediaQuery.paddingOf(context).top + 10.h,
@@ -177,46 +179,46 @@ class ConfirmPickupScreen extends StatelessWidget {
                           Row(
                             children: [
                               SvgPictureAsset(
-                                AppAssets.locationIcPickupPin,
+                                config.headerIconAsset,
                                 width: 36.w,
                                 height: 36.w,
-                                color: AppColors.mapDropMarkerGreen,
+                                color: config.headerIconColor,
                                 placeholderBuilder: (_) => Icon(
                                   Icons.location_on,
-                                  color: AppColors.mapDropMarkerGreen,
+                                  color: config.headerIconColor,
                                   size: 18.sp,
                                 ),
                               ),
                               SizedBox(width: 8.w),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    AppStrings.checkYourPickupPoint.tr,
-                                    style: AppTextStyles.homeTitle.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.black,
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      config.headerTitle.tr,
+                                      style: AppTextStyles.homeTitle.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.black,
+                                      ),
                                     ),
-                                  ),
-                                  SizedBox(height: 4.h),
-                                  Text(
-                                    AppStrings
-                                        .selectANearbyPointForEasierPickup
-                                        .tr,
-                                    style: AppTextStyles.homeCaption.copyWith(
-                                      color: AppColors.textBody,
-                                      fontSize: 15.sp,
-                                      height: 20 / 15,
+                                    SizedBox(height: 4.h),
+                                    Text(
+                                      config.headerSubtitle.tr,
+                                      style: AppTextStyles.homeCaption.copyWith(
+                                        color: AppColors.textBody,
+                                        fontSize: 15.sp,
+                                        height: 20 / 15,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ],
                           ),
                           SizedBox(height: 12.h),
                           Obx(() {
                             final fullAddress = c.address.value.trim().isEmpty
-                                ? AppStrings.selectedPickupPoint.tr
+                                ? config.addressEmptyFallback.tr
                                 : c.address.value.trim();
                             final title = fullAddress.split(',').first.trim();
                             return Container(
@@ -239,7 +241,7 @@ class ConfirmPickupScreen extends StatelessWidget {
                                 children: [
                                   Text(
                                     title.isEmpty
-                                        ? AppStrings.pickupPoint.tr
+                                        ? config.addressEmptyFallback.tr
                                         : title,
                                     style: AppTextStyles.homeSubtitle.copyWith(
                                       color: AppColors.black,
@@ -287,156 +289,164 @@ class ConfirmPickupScreen extends StatelessWidget {
                               ),
                             );
                           }),
-                          SizedBox(height: 16.h),
-                          Obx(() {
-                            c.noteChipRevision.value;
-                            final expanded = c.isPickupNoteExpanded.value;
-                            final noteText = c.noteForDriverController.text
-                                .trim();
-                            return Container(
-                              decoration: BoxDecoration(
-                                color: AppColors.surfaceSubtle,
-                                borderRadius: BorderRadius.circular(12.r),
-                                border: Border.all(
-                                  color: AppColors.borderWalletCard,
+                          if (config.showDriverNote) ...[
+                            SizedBox(height: 16.h),
+                            Obx(() {
+                              c.noteChipRevision.value;
+                              final expanded = c.isNoteExpanded.value;
+                              final noteText = c.noteForDriverController.text
+                                  .trim();
+                              return Container(
+                                decoration: BoxDecoration(
+                                  color: AppColors.surfaceSubtle,
+                                  borderRadius: BorderRadius.circular(12.r),
+                                  border: Border.all(
+                                    color: AppColors.borderWalletCard,
+                                  ),
                                 ),
-                              ),
-                              child: AnimatedSize(
-                                duration: const Duration(milliseconds: 280),
-                                curve: Curves.easeInOutCubic,
-                                alignment: Alignment.topCenter,
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    Material(
-                                      color: Colors.transparent,
-                                      child: InkWell(
-                                        onTap: c.togglePickupNoteExpanded,
-                                        borderRadius: BorderRadius.circular(
-                                          12.r,
-                                        ),
-                                        child: Padding(
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 14.w,
-                                            vertical: 12.h,
+                                child: AnimatedSize(
+                                  duration: const Duration(milliseconds: 280),
+                                  curve: Curves.easeInOutCubic,
+                                  alignment: Alignment.topCenter,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      Material(
+                                        color: Colors.transparent,
+                                        child: InkWell(
+                                          onTap: c.toggleNoteExpanded,
+                                          borderRadius: BorderRadius.circular(
+                                            12.r,
                                           ),
-                                          child: Row(
-                                            children: [
-                                              Text(
-                                                AppStrings
-                                                    .pickupConfirmationNoteLabel
-                                                    .tr,
-                                                style: AppTextStyles
-                                                    .homeSubtitle
-                                                    .copyWith(
-                                                      color:
-                                                          AppColors.textHeading,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                      fontSize: 15.sp,
-                                                    ),
-                                              ),
-                                              SizedBox(width: 10.w),
-                                              Expanded(
-                                                child: Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.end,
-                                                  children: [
-                                                    if (noteText.isNotEmpty &&
-                                                        !expanded)
-                                                      Flexible(
-                                                        child: Text(
-                                                          noteText,
-                                                          maxLines: 1,
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
-                                                          textAlign:
-                                                              TextAlign.end,
-                                                          style: AppTextStyles
-                                                              .homeCaption
-                                                              .copyWith(
-                                                                color: AppColors
-                                                                    .textBody,
-                                                                fontSize: 13.sp,
-                                                              ),
-                                                        ),
-                                                      ),
-                                                    if (noteText.isNotEmpty &&
-                                                        !expanded)
-                                                      SizedBox(width: 6.w),
-                                                    AnimatedRotation(
-                                                      turns: expanded
-                                                          ? 0.5
-                                                          : 0.0,
-                                                      duration: const Duration(
-                                                        milliseconds: 220,
-                                                      ),
-                                                      curve:
-                                                          Curves.easeInOutCubic,
-                                                      child: Icon(
-                                                        Icons
-                                                            .keyboard_arrow_down,
+                                          child: Padding(
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: 14.w,
+                                              vertical: 12.h,
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Text(
+                                                  AppStrings
+                                                      .pickupConfirmationNoteLabel
+                                                      .tr,
+                                                  style: AppTextStyles
+                                                      .homeSubtitle
+                                                      .copyWith(
                                                         color: AppColors
                                                             .textHeading,
-                                                        size: 26.sp,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        fontSize: 15.sp,
                                                       ),
-                                                    ),
-                                                  ],
                                                 ),
-                                              ),
-                                            ],
+                                                SizedBox(width: 10.w),
+                                                Expanded(
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.end,
+                                                    children: [
+                                                      if (noteText.isNotEmpty &&
+                                                          !expanded)
+                                                        Flexible(
+                                                          child: Text(
+                                                            noteText,
+                                                            maxLines: 1,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                            textAlign:
+                                                                TextAlign.end,
+                                                            style: AppTextStyles
+                                                                .homeCaption
+                                                                .copyWith(
+                                                                  color: AppColors
+                                                                      .textBody,
+                                                                  fontSize:
+                                                                      13.sp,
+                                                                ),
+                                                          ),
+                                                        ),
+                                                      if (noteText.isNotEmpty &&
+                                                          !expanded)
+                                                        SizedBox(width: 6.w),
+                                                      AnimatedRotation(
+                                                        turns: expanded
+                                                            ? 0.5
+                                                            : 0.0,
+                                                        duration:
+                                                            const Duration(
+                                                              milliseconds: 220,
+                                                            ),
+                                                        curve: Curves
+                                                            .easeInOutCubic,
+                                                        child: Icon(
+                                                          Icons
+                                                              .keyboard_arrow_down,
+                                                          color: AppColors
+                                                              .textHeading,
+                                                          size: 26.sp,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                    if (expanded) ...[
-                                      Padding(
-                                        padding: EdgeInsets.fromLTRB(
-                                          12.w,
-                                          10.h,
-                                          12.w,
-                                          12.h,
-                                        ),
-                                        child: AppTextField(
-                                          controller: c.noteForDriverController,
-                                          hintText: AppStrings
-                                              .pickupConfirmationNoteHint
-                                              .tr,
-                                          keyboardType: TextInputType.multiline,
-                                          maxLines: 2,
-                                          textInputAction: TextInputAction.done,
-                                          scrollPadding: EdgeInsets.fromLTRB(
-                                            20,
-                                            mq.padding.top + 56,
-                                            20,
-                                            mq.viewInsets.bottom + 120,
+                                      if (expanded) ...[
+                                        Padding(
+                                          padding: EdgeInsets.fromLTRB(
+                                            12.w,
+                                            10.h,
+                                            12.w,
+                                            12.h,
                                           ),
-                                          textFieldBackgroundColor:
-                                              AppColors.white,
-                                          borderColor:
-                                              AppColors.borderWalletCard,
-                                          onChanged: (_) {},
+                                          child: AppTextField(
+                                            controller:
+                                                c.noteForDriverController,
+                                            hintText: AppStrings
+                                                .pickupConfirmationNoteHint
+                                                .tr,
+                                            keyboardType:
+                                                TextInputType.multiline,
+                                            maxLines: 2,
+                                            textInputAction:
+                                                TextInputAction.done,
+                                            scrollPadding: EdgeInsets.fromLTRB(
+                                              20,
+                                              mq.padding.top + 56,
+                                              20,
+                                              mq.viewInsets.bottom + 120,
+                                            ),
+                                            textFieldBackgroundColor:
+                                                AppColors.white,
+                                            borderColor:
+                                                AppColors.borderWalletCard,
+                                            onChanged: (_) {},
+                                          ),
                                         ),
-                                      ),
+                                      ],
                                     ],
-                                  ],
+                                  ),
                                 ),
-                              ),
-                            );
-                          }),
+                              );
+                            }),
+                          ],
                           SizedBox(height: 20.h),
                           Obx(
                             () => SizedBox(
                               width: double.infinity,
                               height: 54.h,
                               child: AppPrimaryButton(
-                                label: AppStrings.confirmPickup.tr,
+                                label: config.confirmButtonLabel.tr,
                                 onPressed: c.isSubmitting.value
                                     ? null
-                                    : c.confirmPickup,
+                                    : c.onConfirm,
                                 isLoading: c.isSubmitting.value,
-                                iconAsset: AppAssets.locationIcArrowRight,
+                                iconAsset: config.confirmButtonIconAsset,
                                 iconColor: AppColors.white,
                                 height: 54.h,
                               ),
@@ -455,15 +465,15 @@ class ConfirmPickupScreen extends StatelessWidget {
     );
   }
 
-  Future<Offset?> _projectInitialPickupOffset({
+  Future<Offset?> _projectInitialPointOffset({
     required BuildContext context,
-    required ConfirmPickupController controller,
+    required ConfirmLocationController mapController,
     required LatLng initialLatLng,
     required LatLng triggerLatLng,
   }) async {
-    if (controller.mapController == null) return null;
+    if (mapController.mapController == null) return null;
     final raw = await AppMapService.screenOffsetFor(
-      controller.mapController!,
+      mapController.mapController!,
       initialLatLng,
     );
     if (raw == null) return null;
@@ -475,89 +485,43 @@ class ConfirmPickupScreen extends StatelessWidget {
   }
 }
 
-class _ConfirmPickupMap extends StatefulWidget {
-  const _ConfirmPickupMap({
+class _ConfirmLocationMap extends StatelessWidget {
+  const _ConfirmLocationMap({
     required this.controller,
+    required this.config,
     required this.bottomPanelReserve,
   });
 
-  final ConfirmPickupController controller;
+  final ConfirmLocationController controller;
+  final ConfirmLocationUiConfig config;
   final double bottomPanelReserve;
 
   @override
-  State<_ConfirmPickupMap> createState() => _ConfirmPickupMapState();
-}
+  Widget build(BuildContext context) {
+    final initial = controller.initialLatLng;
+    final initialCamera = CameraPosition(target: initial, zoom: 16);
 
-class _ConfirmPickupMapState extends State<_ConfirmPickupMap> {
-  late final CameraPosition _initialCamera;
-  Set<Circle> _routeCircles = {};
-
-  @override
-  void initState() {
-    super.initState();
-    final initial = widget.controller.initialLatLng;
-    _initialCamera = CameraPosition(target: initial, zoom: 16);
-  }
-
-  void _handleCameraMove(CameraPosition position) {
-    widget.controller.onCameraMove(position);
-    setState(() {
-      _routeCircles = _buildRouteCircles(
-        from: widget.controller.initialLatLng,
-        to: position.target,
+    return Obx(() {
+      controller.routeCircles.value;
+      return AppGoogleMap(
+        key: ValueKey(
+          'confirm_location_map_${initial.latitude}_${initial.longitude}',
+        ),
+        initialCameraPosition: initialCamera,
+        circles: config.showRouteCircles
+            ? controller.routeCircles.value
+            : const <Circle>{},
+        onMapCreated: controller.onMapCreated,
+        onCameraMove: controller.onCameraMove,
+        onCameraIdle: controller.onCameraIdle,
+        padding: EdgeInsets.only(bottom: bottomPanelReserve.h),
       );
     });
   }
-
-  @override
-  Widget build(BuildContext context) {
-    return AppGoogleMap(
-      key: ValueKey(
-        'confirm_pickup_map_'
-        '${widget.controller.initialLatLng.latitude}_'
-        '${widget.controller.initialLatLng.longitude}',
-      ),
-      initialCameraPosition: _initialCamera,
-      circles: _routeCircles,
-      onMapCreated: widget.controller.onMapCreated,
-      onCameraMove: _handleCameraMove,
-      onCameraIdle: widget.controller.onCameraIdle,
-      padding: EdgeInsets.only(bottom: widget.bottomPanelReserve.h),
-    );
-  }
-
-  Set<Circle> _buildRouteCircles({required LatLng from, required LatLng to}) {
-    final circles = <Circle>{};
-
-    final latDiff = (to.latitude - from.latitude).abs();
-    final lngDiff = (to.longitude - from.longitude).abs();
-    final hasMoved = latDiff > 0.000001 || lngDiff > 0.000001;
-    if (!hasMoved) return circles;
-
-    final approxDistanceMeters = (latDiff + lngDiff) * 111000;
-    final dotCount = (approxDistanceMeters / 24).clamp(6, 28).round();
-    for (var i = 1; i < dotCount; i++) {
-      final t = i / dotCount;
-      circles.add(
-        Circle(
-          circleId: CircleId('pickup_route_dot_$i'),
-          center: LatLng(
-            from.latitude + (to.latitude - from.latitude) * t,
-            from.longitude + (to.longitude - from.longitude) * t,
-          ),
-          radius: 5,
-          fillColor: AppColors.primary.withValues(alpha: 0.95),
-          strokeColor: AppColors.primary.withValues(alpha: 0.95),
-          strokeWidth: 1,
-        ),
-      );
-    }
-    return circles;
-  }
 }
 
-class _PreviousPickupBlueSymbol extends StatelessWidget {
-  const _PreviousPickupBlueSymbol({required this.size});
+class _PreviousPointBlueSymbol extends StatelessWidget {
+  const _PreviousPointBlueSymbol({required this.size});
 
   final double size;
 

@@ -34,40 +34,40 @@ class PromoCodeScreen extends StatelessWidget {
               Column(
                 children: [
                   AppProfileHeader(title: AppStrings.havePromoCode.tr),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(16.w, 13.h, 16.w, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppStrings.enterPromocode.tr,
+                          style: AppTextStyles.bodySecondary.copyWith(
+                            fontSize: 15.sp,
+                            color: AppColors.textMutedStrong,
+                            fontWeight: FontWeight.w500,
+                            height: 20 / 15,
+                          ),
+                        ),
+                        SizedBox(height: 4.h),
+                        Obx(() => _buildPromoInputField(controller)),
+                        SizedBox(height: 18.h),
+                        Text(
+                          AppStrings.promocodeList.tr,
+                          style: AppTextStyles.bodySecondary.copyWith(
+                            fontSize: 15.sp,
+                            color: AppColors.textBody,
+                            fontWeight: FontWeight.w500,
+                            height: 20 / 15,
+                          ),
+                        ),
+                        SizedBox(height: 5.h),
+                      ],
+                    ),
+                  ),
                   Expanded(
-                    child: SingleChildScrollView(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 16.w,
-                        vertical: 13.h,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            AppStrings.enterPromocode.tr,
-                            style: AppTextStyles.bodySecondary.copyWith(
-                              fontSize: 15.sp,
-                              color: AppColors.textMutedStrong,
-                              fontWeight: FontWeight.w500,
-                              height: 20 / 15,
-                            ),
-                          ),
-                          SizedBox(height: 4.h),
-                          Obx(() => _buildPromoInputField(controller)),
-                          SizedBox(height: 18.h),
-                          Text(
-                            AppStrings.promocodeList.tr,
-                            style: AppTextStyles.bodySecondary.copyWith(
-                              fontSize: 15.sp,
-                              color: AppColors.textBody,
-                              fontWeight: FontWeight.w500,
-                              height: 20 / 15,
-                            ),
-                          ),
-                          SizedBox(height: 5.h),
-                          Obx(() => _buildPromoListSection(controller)),
-                        ],
-                      ),
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 13.h),
+                      child: Obx(() => _buildPromoListSection(controller)),
                     ),
                   ),
                 ],
@@ -88,14 +88,12 @@ class PromoCodeScreen extends StatelessWidget {
 
   Widget _buildPromoListSection(PromoCodeController controller) {
     if (controller.isLoading.value) {
-      return Column(
-        children: List.generate(
-          3,
-          (i) => Padding(
-            padding: EdgeInsets.only(bottom: i < 2 ? 12.h : 0),
-            child: AppSkeletonLoader(height: 120.h, borderRadius: 16),
-          ),
-        ),
+      return ListView.separated(
+        padding: EdgeInsets.zero,
+        itemCount: 3,
+        separatorBuilder: (_, __) => SizedBox(height: 12.h),
+        itemBuilder: (_, __) =>
+            AppSkeletonLoader(height: 120.h, borderRadius: 16),
       );
     }
 
@@ -108,7 +106,7 @@ class PromoCodeScreen extends StatelessWidget {
       );
     }
 
-    if (controller.promoCodes.isEmpty) {
+    if (!controller.promoCodes.isEmpty) {
       return _buildListMessage(
         message: AppStrings.noAvailablePromoCodes.tr,
         showRetry: true,
@@ -116,15 +114,13 @@ class PromoCodeScreen extends StatelessWidget {
       );
     }
 
+    final promos = controller.promoCodes;
     return ListView.separated(
-      shrinkWrap: true,
       padding: EdgeInsets.zero,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: controller.promoCodes.length,
+      itemCount: promos.length,
       separatorBuilder: (_, __) => SizedBox(height: 12.h),
       itemBuilder: (context, index) {
-        final promo = controller.promoCodes[index];
-        return _buildPromoCard(promo, controller);
+        return _buildPromoCard(promos[index], controller);
       },
     );
   }
@@ -134,11 +130,11 @@ class PromoCodeScreen extends StatelessWidget {
     required bool showRetry,
     required VoidCallback onRetry,
   }) {
-    return SizedBox(
-      width: double.infinity,
+    return Center(
       child: Padding(
         padding: EdgeInsets.symmetric(vertical: 24.h),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(

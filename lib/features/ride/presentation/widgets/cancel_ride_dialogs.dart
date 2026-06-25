@@ -9,6 +9,7 @@ import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/widgets/app_cancel_flow_dialog.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
+import '../controllers/cancel_reason_selection_controller.dart';
 
 class CancelConfirmationDialog extends StatelessWidget {
   const CancelConfirmationDialog({super.key});
@@ -95,136 +96,149 @@ class CancelAssignmentWarningDialog extends StatelessWidget {
   }
 }
 
-class CancelReasonSelectionDialog extends StatefulWidget {
-  /// Labels from `settings.cancellation_reasons` (server text, not localized).
-  final List<String> reasons;
-  final Future<void> Function(String reason)? onContinueTap;
+class CancelReasonSelectionDialog extends StatelessWidget {
+  const CancelReasonSelectionDialog._({required this.controllerTag});
 
-  const CancelReasonSelectionDialog({
-    super.key,
-    required this.reasons,
-    this.onContinueTap,
-  });
+  final String controllerTag;
 
-  @override
-  State<CancelReasonSelectionDialog> createState() =>
-      _CancelReasonSelectionDialogState();
-}
+  CancelReasonSelectionController get controller =>
+      Get.find<CancelReasonSelectionController>(tag: controllerTag);
 
-class _CancelReasonSelectionDialogState
-    extends State<CancelReasonSelectionDialog> {
-  String? _selectedReason;
+  factory CancelReasonSelectionDialog({
+    required List<String> reasons,
+    Future<void> Function(String reason)? onContinueTap,
+  }) {
+    final controllerTag =
+        'cancel_reason_selection_${DateTime.now().microsecondsSinceEpoch}';
+    Get.put(
+      CancelReasonSelectionController(
+        reasons: reasons,
+        onContinueTap: onContinueTap,
+      ),
+      tag: controllerTag,
+    );
+    return CancelReasonSelectionDialog._(controllerTag: controllerTag);
+  }
 
-  List<String> get _reasons => widget.reasons;
+  void disposeController() {
+    Future<void>.delayed(const Duration(milliseconds: 400), () {
+      if (Get.isRegistered<CancelReasonSelectionController>(tag: controllerTag)) {
+        Get.delete<CancelReasonSelectionController>(tag: controllerTag);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return AppCancelFlowDialog(
-      canPop: false,
-      title: AppStrings.whyDoYouWantToCancel.tr,
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Flexible(
-            child: ListView.separated(
-              shrinkWrap: true,
-              padding: EdgeInsets.zero,
-              itemCount: _reasons.length,
-              separatorBuilder: (_, __) =>
-                  Divider(height: 1.h, color: AppColors.bgSoftCircle),
-              itemBuilder: (context, index) {
-                final reason = _reasons[index];
-                final isSelected = _selectedReason == reason;
-                return InkWell(
-                  onTap: () {
-                    setState(() {
-                      _selectedReason = reason;
-                    });
-                  },
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      top: index == 0 ? 0 : 14.h,
-                      bottom: index == _reasons.length - 1 ? 0 : 14.h,
+    return Obx(() {
+      final selectedReason = controller.selectedReason.value;
+      final reasons = controller.reasons;
+
+      return AppCancelFlowDialog(
+        canPop: false,
+        title: AppStrings.whyDoYouWantToCancel.tr,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var index = 0; index < reasons.length; index++) ...[
+                  if (index > 0)
+                    Divider(
+                      height: 1.h,
+                      color: AppColors.bgSoftCircle,
                     ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            reason,
-                            style: AppTextStyles.homeSubtitle.copyWith(
-                              color: AppColors.black,
-                              fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.w500,
-                              height: 20 / 15,
-                            ),
-                          ),
-                        ),
-                        Container(
-                          width: 20.w,
-                          height: 20.w,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(6.r),
-                            border: Border.all(
-                              color: isSelected
-                                  ? AppColors.primary
-                                  : AppColors.iconHeartOutline,
-                              width: 1.5,
-                            ),
-                            color: isSelected
-                                ? AppColors.primary
-                                : AppColors.transparent,
-                          ),
-                          child: isSelected
-                              ? Icon(
-                                  Icons.check,
-                                  size: 14.sp,
-                                  color: AppColors.white,
-                                )
-                              : null,
-                        ),
-                      ],
-                    ),
+                  _buildReasonOption(
+                    reason: reasons[index],
+                    isSelected: selectedReason == reasons[index],
+                    isFirst: index == 0,
+                    isLast: index == reasons.length - 1,
+                    onTap: () => controller.selectReason(reasons[index]),
                   ),
-                );
-              },
+                ],
+              ],
             ),
-          ),
-          SizedBox(height: 32.h),
-          _ActionButton(
-            title: AppStrings.continueLabel.tr,
-            color: _selectedReason != null
-                ? AppColors.primaryButton
-                : AppColors.bgSoftCircle,
-            textColor: _selectedReason != null
-                ? AppColors.white
-                : AppColors.textSlateSoft,
-            onTap: _selectedReason == null
-                ? null
-                : () async {
-                    if (widget.onContinueTap != null) {
-                      await widget.onContinueTap!.call(_selectedReason!);
-                    } else {
-                      Get.back(result: _selectedReason);
-                    }
-                  },
-          ),
-          SizedBox(height: 12.h),
-          _ActionButton(
-            title: AppStrings.no.tr,
-            color: AppColors.white,
-            textColor: AppColors.textNeutralButton,
-            outlined: true,
-            outlinedBorderColor: AppColors.textNeutralButton,
-            onTap: () => Get.back(),
-          ),
-        ],
+            SizedBox(height: 32.h),
+            _ActionButton(
+              title: AppStrings.continueLabel.tr,
+              color: controller.hasSelection
+                  ? AppColors.primaryButton
+                  : AppColors.bgSoftCircle,
+              textColor: controller.hasSelection
+                  ? AppColors.white
+                  : AppColors.textSlateSoft,
+              onTap: controller.hasSelection ? controller.onContinue : null,
+            ),
+            SizedBox(height: 12.h),
+            _ActionButton(
+              title: AppStrings.no.tr,
+              color: AppColors.white,
+              textColor: AppColors.textNeutralButton,
+              outlined: true,
+              outlinedBorderColor: AppColors.textNeutralButton,
+              onTap: () => Get.back(),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  Widget _buildReasonOption({
+    required String reason,
+    required bool isSelected,
+    required bool isFirst,
+    required bool isLast,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: EdgeInsets.only(
+          top: isFirst ? 0 : 14.h,
+          bottom: isLast ? 0 : 14.h,
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                reason,
+                style: AppTextStyles.homeSubtitle.copyWith(
+                  color: AppColors.black,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  height: 20 / 15,
+                ),
+              ),
+            ),
+            Container(
+              width: 20.w,
+              height: 20.w,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(6.r),
+                border: Border.all(
+                  color: isSelected
+                      ? AppColors.primary
+                      : AppColors.iconHeartOutline,
+                  width: 1.5,
+                ),
+                color: isSelected ? AppColors.primary : AppColors.transparent,
+              ),
+              child: isSelected
+                  ? Icon(
+                      Icons.check,
+                      size: 14.sp,
+                      color: AppColors.white,
+                    )
+                  : null,
+            ),
+          ],
+        ),
       ),
     );
   }
-
-  bool get isSelected => _selectedReason != null;
 }
 
 class CancellationChargesDialog extends StatelessWidget {

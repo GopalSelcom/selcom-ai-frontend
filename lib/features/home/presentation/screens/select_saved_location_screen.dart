@@ -4,58 +4,19 @@ import 'package:get/get.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
-import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
-import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_back_button.dart';
-import '../../../ride/data/models/ride_management_models.dart';
-import '../../data/models/places_models.dart';
 import '../controllers/home_controller.dart';
+import '../controllers/select_saved_location_controller.dart';
 import '../widgets/favorite_icon_button.dart';
 import '../widgets/select_saved_location_screen_shimmer.dart';
 
-class SelectSavedLocationScreen extends StatefulWidget {
+class SelectSavedLocationScreen extends GetView<SelectSavedLocationController> {
   const SelectSavedLocationScreen({super.key});
 
-  @override
-  State<SelectSavedLocationScreen> createState() =>
-      _SelectSavedLocationScreenState();
-}
-
-class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
-  late final HomeController controller;
-  late final TextEditingController searchController;
-  late final String label;
-  bool _isGeocoding = false;
-
-  @override
-  void initState() {
-    super.initState();
-    controller = Get.find<HomeController>();
-    final args = Get.arguments;
-    if (args is Map) {
-      final Map<String, dynamic> data = Map<String, dynamic>.from(args);
-      label = data['label'] ?? AppStrings.searchLocation.tr;
-    } else {
-      label = args as String? ?? AppStrings.homeLabel.tr;
-    }
-    searchController = TextEditingController();
-
-    // Clear previous suggestions and search query
-    // Wrapped in addPostFrameCallback to avoid "setState() called during build" exception
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.searchQuery.value = '';
-      controller.suggestions.clear();
-    });
-  }
-
-  @override
-  void dispose() {
-    searchController.dispose();
-    super.dispose();
-  }
+  HomeController get homeController => controller.homeController;
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +35,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
                   alignment: Alignment.center,
                 )
               : null,
-          title: Text(label),
+          title: Text(controller.label),
         ),
         body: GestureDetector(
           onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
@@ -91,29 +52,33 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
                   child: Stack(
                     children: [
                       Obx(() {
-                        final query = controller.searchQuery.value.trim();
+                        final query = homeController.searchQuery.value.trim();
 
                         if (query.isNotEmpty) {
-                          if (controller.isSearching.value) {
-                            return SelectSavedLocationScreenShimmer.suggestionsList();
+                          if (homeController.isSearching.value) {
+                            return SelectSavedLocationScreenShimmer
+                                .suggestionsList();
                           }
                           return _buildSuggestionsList();
                         }
 
-                        if (controller.isLoadingHomeData.value &&
-                            controller.recentDestinations.isEmpty) {
+                        if (homeController.isLoadingHomeData.value &&
+                            homeController.recentDestinations.isEmpty) {
                           return SelectSavedLocationScreenShimmer.recentList();
                         }
 
                         return _buildRecentList();
                       }),
-                      if (_isGeocoding)
-                        Container(
-                          color: AppColors.white.withValues(alpha: 0.5),
-                          child: const Center(
-                            child: CircularProgressIndicator(),
-                          ),
-                        ),
+                      Obx(
+                        () => controller.isGeocoding.value
+                            ? Container(
+                                color: AppColors.white.withValues(alpha: 0.5),
+                                child: const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
                     ],
                   ),
                 ),
@@ -136,10 +101,10 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
       ),
       child: Center(
         child: TextField(
-          controller: searchController,
+          controller: controller.searchController,
           autofocus: true,
           textAlignVertical: TextAlignVertical.center,
-          onChanged: (value) => controller.searchQuery.value = value,
+          onChanged: controller.onSearchChanged,
           style: AppTextStyles.homeSubtitle.copyWith(
             color: AppColors.textHeading,
             fontWeight: FontWeight.w500,
@@ -150,7 +115,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
             prefixIcon: Padding(
               padding: EdgeInsets.only(right: 8.w),
               child: Obx(
-                () => controller.searchQuery.value.isEmpty
+                () => homeController.searchQuery.value.isEmpty
                     ? Icon(Icons.search, color: AppColors.textHint, size: 22.sp)
                     : SvgPictureAsset(
                         AppAssets.locationIcPickupPin,
@@ -164,7 +129,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
             border: InputBorder.none,
             suffixIconConstraints: BoxConstraints(minWidth: 40.w, minHeight: 0),
             suffixIcon: Obx(
-              () => controller.searchQuery.value.isNotEmpty
+              () => homeController.searchQuery.value.isNotEmpty
                   ? IconButton(
                       padding: EdgeInsets.zero,
                       icon: Icon(
@@ -172,11 +137,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
                         color: AppColors.textHint,
                         size: 20.sp,
                       ),
-                      onPressed: () {
-                        searchController.clear();
-                        controller.searchQuery.value = '';
-                        controller.suggestions.clear();
-                      },
+                      onPressed: controller.clearSearch,
                     )
                   : const SizedBox.shrink(),
             ),
@@ -187,7 +148,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
   }
 
   Widget _buildSuggestionsList() {
-    if (controller.suggestions.isEmpty) {
+    if (homeController.suggestions.isEmpty) {
       return Center(
         child: Text(
           AppStrings.noLocationsFound.tr,
@@ -198,25 +159,25 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
 
     return ListView.separated(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-      itemCount: controller.suggestions.length,
+      itemCount: homeController.suggestions.length,
       separatorBuilder: (_, __) => SizedBox(height: 12.h),
       itemBuilder: (context, index) {
-        final item = controller.suggestions[index];
+        final item = homeController.suggestions[index];
         final description = item.description ?? '';
         final title = description.split(',').first;
 
         return _locationTile(
           title: title,
           subtitle: description,
-          onTap: () => _handleLocationSelection(item),
+          onTap: () => controller.handleLocationSelection(item),
         );
       },
     );
   }
 
   Widget _buildRecentList() {
-    if (controller.recentDestinations.isEmpty &&
-        controller.savedPlaces.isEmpty) {
+    if (homeController.recentDestinations.isEmpty &&
+        homeController.savedPlaces.isEmpty) {
       return Center(
         child: Text(
           AppStrings.noRecentLocations.tr,
@@ -225,7 +186,7 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
       );
     }
 
-    final recentItems = controller.recentDestinations;
+    final recentItems = homeController.recentDestinations;
 
     return ListView.separated(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -234,13 +195,13 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
       itemBuilder: (context, index) {
         final loc = recentItems[index];
         return Obx(() {
-          final savedPlace = controller.getSavedPlaceFor(loc.address, null);
+          final savedPlace = homeController.getSavedPlaceFor(loc.address, null);
           final isFavorite = savedPlace?.isFavourite ?? false;
           return _locationTile(
             title: loc.address.split(',').first,
             subtitle: loc.address,
-            onTap: () => _handleRecentSelection(loc),
-            onFavorite: () => controller.toggleFavoriteForRecent(loc),
+            onTap: () => controller.handleRecentSelection(loc),
+            onFavorite: () => homeController.toggleFavoriteForRecent(loc),
             isFavorite: isFavorite,
           );
         });
@@ -326,89 +287,6 @@ class _SelectSavedLocationScreenState extends State<SelectSavedLocationScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  Future<void> _handleLocationSelection(Prediction item) async {
-    final title = item.description?.split(',').first ?? label;
-    final subtitle = item.description ?? '';
-
-    final args = Get.arguments;
-    if (args is Map && args['isSelectingStop'] == true) {
-      if (_isGeocoding) return;
-      setState(() => _isGeocoding = true);
-      try {
-        final latLng = await controller.getLatLngFromAddress(subtitle);
-        setState(() => _isGeocoding = false);
-
-        if (latLng != null) {
-          final result = await Get.toNamed(
-            AppRoutes.confirmStop,
-            arguments: {
-              'address': subtitle,
-              'lat': latLng.latitude,
-              'lng': latLng.longitude,
-            },
-          );
-          if (result != null) {
-            Get.back(result: result);
-          }
-        } else {
-          AppDialogs.showErrorDialog(
-            message: AppStrings.unableToGetLocationCoordinates.tr,
-          );
-        }
-      } catch (e) {
-        setState(() => _isGeocoding = false);
-        AppDialogs.showErrorDialog(
-          message: '${AppStrings.anUnexpectedErrorOccurred.tr}: $e',
-        );
-      }
-      return;
-    }
-
-    // Show loading? Maybe, but geocoding is usually fast.
-    final latLng = await controller.getLatLngFromAddress(subtitle);
-
-    Get.toNamed(
-      AppRoutes.checkPickupPoint,
-      arguments: {
-        'label': label,
-        'title': title,
-        'subtitle': subtitle,
-        'placeId': item.placeId ?? '',
-        if (latLng != null) 'lat': latLng.latitude,
-        if (latLng != null) 'lng': latLng.longitude,
-      },
-    );
-  }
-
-  Future<void> _handleRecentSelection(RecentDestinationModel loc) async {
-    final title = loc.address.split(',').first;
-    final subtitle = loc.address;
-
-    final args = Get.arguments;
-    if (args is Map && args['isSelectingStop'] == true) {
-      final result = await Get.toNamed(
-        AppRoutes.confirmStop,
-        arguments: {'address': subtitle, 'lat': loc.lat, 'lng': loc.lng},
-      );
-      if (result != null) {
-        Get.back(result: result);
-      }
-      return;
-    }
-
-    Get.toNamed(
-      AppRoutes.checkPickupPoint,
-      arguments: {
-        'label': label,
-        'title': title,
-        'subtitle': subtitle,
-        'placeId': '',
-        'lat': loc.lat,
-        'lng': loc.lng,
-      },
     );
   }
 }

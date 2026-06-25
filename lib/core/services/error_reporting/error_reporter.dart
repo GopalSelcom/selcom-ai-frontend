@@ -60,8 +60,10 @@ class ErrorReporter {
         // We use Map storage for simplicity instead of registering custom adapters
       }
 
-      await Hive.initFlutter();
-      await Hive.openBox(_boxName);
+      await StorageService().init();
+      if (!Hive.isBoxOpen(_boxName)) {
+        await Hive.openBox(_boxName);
+      }
 
       _connectivity.connectivityStream.listen((isOnline) {
         if (isOnline) {

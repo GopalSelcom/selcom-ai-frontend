@@ -1,4 +1,4 @@
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 /// Centralized storage keys to prevent typos and ensure consistency across the app.
 class StorageKeys {
@@ -18,44 +18,70 @@ class StorageKeys {
   static const String stopsIdempotencyPrefix = 'stops_idem_';
 }
 
-/// A service class for handling secure data persistence using FlutterSecureStorage.
-/// Implements a singleton pattern to ensure a single instance is used throughout the app.
+/// App-wide key/value persistence backed by Hive (app sandbox).
+///
+/// Unlike iOS Keychain ([flutter_secure_storage]), Hive files are removed when
+/// the app is uninstalled on both iOS and Android.
 class StorageService {
   static final StorageService _instance = StorageService._internal();
 
-  /// Factory constructor to return the singleton instance.
   factory StorageService() => _instance;
 
-  /// Internal constructor for singleton initialization.
   StorageService._internal();
 
-  /// Instance of FlutterSecureStorage for encrypted data storage.
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  static const String boxName = 'app_storage_box';
 
-  /// Writes a [value] to secure storage associated with the given [key].
+  static bool _hiveFlutterInitialized = false;
+
+  Box<String>? _box;
+
+  /// Initializes Hive for Flutter and opens [boxName].
+  ///
+  /// Safe to call multiple times (e.g. from [main] and lazily from reads).
+  Future<void> init() async {
+    if (_box != null && _box!.isOpen) return;
+
+    if (!_hiveFlutterInitialized) {
+      await Hive.initFlutter();
+      _hiveFlutterInitialized = true;
+    }
+
+    if (Hive.isBoxOpen(boxName)) {
+      _box = Hive.box<String>(boxName);
+      return;
+    }
+
+    _box = await Hive.openBox<String>(boxName);
+  }
+
+  Future<Box<String>> _ensureBox() async {
+    await init();
+    return _box!;
+  }
+
   Future<void> write(String key, String value) async {
-    await _storage.write(key: key, value: value);
+    final box = await _ensureBox();
+    await box.put(key, value);
   }
 
-  /// Reads a value from secure storage for the given [key].
-  /// Returns null if the key does not exist.
   Future<String?> read(String key) async {
-    return await _storage.read(key: key);
+    final box = await _ensureBox();
+    return box.get(key);
   }
 
-  /// Deletes the value associated with the given [key] from secure storage.
   Future<void> delete(String key) async {
-    await _storage.delete(key: key);
+    final box = await _ensureBox();
+    await box.delete(key);
   }
 
-  /// Clears all data stored in secure storage.
-  /// Typically used during logout.
+  /// Clears all data in the app storage box — typically used during logout.
   Future<void> deleteAll() async {
-    await _storage.deleteAll();
+    final box = await _ensureBox();
+    await box.clear();
   }
 
-  /// Checks if a specific [key] exists in secure storage.
   Future<bool> containsKey(String key) async {
-    return await _storage.containsKey(key: key);
+    final box = await _ensureBox();
+    return box.containsKey(key);
   }
 }

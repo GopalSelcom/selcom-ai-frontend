@@ -2562,6 +2562,7 @@ class DriverAcceptedController extends GetxController
       AppRoutes.selectSavedLocation,
       arguments: {
         'isSelectingStop': true,
+        'isSelectingDestination': true,
         'label': AppStrings.changeDropLocation.tr,
       },
     );

@@ -48,34 +48,32 @@ class HomeScreen extends GetView<HomeController> {
           children: [
             // 1. Map Layer (Static Image from Figma)
             Positioned.fill(
-              child: Obx(
-                () {
-                  final activeRide = controller.activeRide.value;
-                  final showsMoreBadge = controller.hasMultipleActiveRides;
-                  final activeRideFootprint = activeRide == null
-                      ? 0.0
-                      : HomeActiveRideCard.footprintAboveSheet(
-                          showsMoreBadge: showsMoreBadge,
-                        );
-                  return AppGoogleMap(
-                    initialCameraPosition: CameraPosition(
-                      target: controller.mapCenter.value,
-                      zoom: 16,
-                    ),
-                    // Keep map focal content above the draggable sheet peek area.
-                    padding: EdgeInsets.only(
-                      bottom:
-                          screenHeight * controller.sheetSize.value +
-                          activeRideFootprint,
-                    ),
-                    myLocationEnabled: controller.hasLocationPermission.value,
-                    circles: controller.nearbyPickupRadiusCircles,
-                    // markers: controller.selectedPickupMarkers,
-                    onMapCreated: controller.onMapCreated,
-                    onCameraIdle: controller.onHomeMapCameraIdle,
-                  );
-                },
-              ),
+              child: Obx(() {
+                final activeRide = controller.activeRide.value;
+                final showsMoreBadge = controller.hasMultipleActiveRides;
+                final activeRideFootprint = activeRide == null
+                    ? 0.0
+                    : HomeActiveRideCard.footprintAboveSheet(
+                        showsMoreBadge: showsMoreBadge,
+                      );
+                return AppGoogleMap(
+                  initialCameraPosition: CameraPosition(
+                    target: controller.mapCenter.value,
+                    zoom: 16,
+                  ),
+                  // Keep map focal content above the draggable sheet peek area.
+                  padding: EdgeInsets.only(
+                    bottom:
+                        screenHeight * controller.sheetSize.value +
+                        activeRideFootprint,
+                  ),
+                  myLocationEnabled: controller.hasLocationPermission.value,
+                  circles: controller.nearbyPickupRadiusCircles,
+                  // markers: controller.selectedPickupMarkers,
+                  onMapCreated: controller.onMapCreated,
+                  onCameraIdle: controller.onHomeMapCameraIdle,
+                );
+              }),
             ),
 
             // 2. Top Header (Address + Profile)
@@ -123,7 +121,8 @@ class HomeScreen extends GetView<HomeController> {
 
               final rides = controller.activeRides.toList(growable: false);
               final sheetBottom = screenHeight * controller.sheetSize.value;
-              final cardBottom = sheetBottom + HomeActiveRideCard.gapAboveSheet.h;
+              final cardBottom =
+                  sheetBottom + HomeActiveRideCard.gapAboveSheet.h;
 
               if (!controller.hasMultipleActiveRides) {
                 return Positioned(
@@ -162,7 +161,8 @@ class HomeScreen extends GetView<HomeController> {
                     child: HomeActiveRidesPanel(
                       isExpanded: isExpanded,
                       rides: rides,
-                      additionalRidesCount: controller.additionalActiveRidesCount,
+                      additionalRidesCount:
+                          controller.additionalActiveRidesCount,
                       onExpand: controller.expandActiveRidesStack,
                       onCollapse: controller.collapseActiveRidesStack,
                       vehicleAssetPathFor:
@@ -187,63 +187,66 @@ class HomeScreen extends GetView<HomeController> {
         final bool isLoading = controller.isLoadingHomeData.value;
         final String address = controller.currentMapAddress.value;
 
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 320),
-          curve: Curves.easeInOutCubic,
-          constraints: BoxConstraints(minHeight: 64.w),
-          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 9.h),
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(16.r),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.black.withValues(alpha: 0.06),
-                blurRadius: 2,
-                offset: const Offset(0, 1),
-              ),
-            ],
-          ),
-          child: isLoading
-              ? const HomeAddressHeaderSkeleton()
-              : Row(
-                  children: [
-                    SizedBox(
-                      width: 28.w,
-                      height: 28.w,
-                      child: SvgPictureAsset(
-                        AppAssets.locationIcPickupPin,
-                        width: 21.sp,
-                        height: 24.5.sp,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    SizedBox(width: 4.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            AppStrings.currentLocation.tr,
-                            style: AppTextStyles.homeSubtitle.copyWith(
-                              color: AppColors.figmaTextPrimary,
-                              height: 20 / 15,
-                            ),
-                          ),
-                          Text(
-                            address,
-                            style: AppTextStyles.homeSubtitle.copyWith(
-                              color: AppColors.figmaTextSecondary,
-                              height: 20 / 15,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+        return GestureDetector(
+          onTap: () => controller.recenterMap(),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 320),
+            curve: Curves.easeInOutCubic,
+            constraints: BoxConstraints(minHeight: 64.w),
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 9.h),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.black.withValues(alpha: 0.06),
+                  blurRadius: 2,
+                  offset: const Offset(0, 1),
                 ),
+              ],
+            ),
+            child: isLoading
+                ? const HomeAddressHeaderSkeleton()
+                : Row(
+                    children: [
+                      SizedBox(
+                        width: 28.w,
+                        height: 28.w,
+                        child: SvgPictureAsset(
+                          AppAssets.locationIcPickupPin,
+                          width: 21.sp,
+                          height: 24.5.sp,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      SizedBox(width: 4.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              AppStrings.currentLocation.tr,
+                              style: AppTextStyles.homeSubtitle.copyWith(
+                                color: AppColors.figmaTextPrimary,
+                                height: 20 / 15,
+                              ),
+                            ),
+                            Text(
+                              address,
+                              style: AppTextStyles.homeSubtitle.copyWith(
+                                color: AppColors.figmaTextSecondary,
+                                height: 20 / 15,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
         );
       }),
     );
@@ -341,7 +344,10 @@ class HomeScreen extends GetView<HomeController> {
                 decoration: BoxDecoration(
                   color: AppColors.cardBackground,
                   borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(color: AppColors.secondary, width: 1),
+                  border: Border.all(
+                    color: AppColors.borderWalletCard,
+                    width: 1,
+                  ),
                 ),
                 child: Row(
                   children: [

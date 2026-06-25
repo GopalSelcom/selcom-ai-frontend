@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '/core/localization/app_strings.dart';
 
@@ -7,6 +8,9 @@ import '../../domain/repositories/auth_repository.dart';
 
 class OnboardingController extends GetxController {
   final currentIndex = 0.obs;
+
+  late final PageController pageController;
+  late final PageController textPageController;
 
   /// When `false`, illustration area shows a shimmer instead of local assets so we
   /// never flash static images right before switching to API `background_image_url`.
@@ -42,8 +46,30 @@ class OnboardingController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    pageController = PageController();
+    textPageController = PageController();
+    pageController.addListener(_syncTextPageScroll);
     slides.assignAll(_staticSlides());
     _loadOnboardingBannersFromApi();
+  }
+
+  @override
+  void onClose() {
+    pageController.removeListener(_syncTextPageScroll);
+    pageController.dispose();
+    textPageController.dispose();
+    super.onClose();
+  }
+
+  /// Keeps copy in sync with illustration swipe (avoids text blink on page change).
+  void _syncTextPageScroll() {
+    final page = pageController.page;
+    if (page == null || !textPageController.hasClients) return;
+    final viewport = textPageController.position.viewportDimension;
+    if (viewport <= 0) return;
+    final maxPage = (slides.length - 1).toDouble();
+    final clampedPage = page.clamp(0.0, maxPage < 0 ? 0.0 : maxPage);
+    textPageController.jumpTo(clampedPage * viewport);
   }
 
   /// Merges API `title`, `subtitle`, and `background_image_url` per slide; on error or
