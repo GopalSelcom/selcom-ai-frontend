@@ -68,7 +68,7 @@ class LanguageEn extends Languages {
         'Could not start the payment. Please try again.',
     'tanqr_timer_expired_title': 'Payment time expired',
     'tanqr_timer_expired_message':
-        'The QR code has expired. Would you like to try again?',
+        'The payment request has expired. Would you like to try again?',
     'tanqr_missing_registered_phone':
         'Your registered phone number is missing. Please update your profile.',
     'tanqr_cancel_request': 'Cancel request',

@@ -31,7 +31,7 @@ class MobileMoneyTopupController extends GetxController {
   final WalletRepository _walletRepository;
   final AppRegionService _appRegionService;
 
-  static const int countdownDurationSeconds = 120;
+  static const int countdownDurationSeconds = 300;
   static const Duration pollInterval = Duration(seconds: 10);
 
   final phoneRaw = ''.obs;
