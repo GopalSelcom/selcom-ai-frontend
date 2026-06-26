@@ -56,7 +56,7 @@ class LanguageEn extends Languages {
         'Enter Selcom Pesa customer phone number, and we\'ll send a request',
     'request_sent_complete_selcom_topup':
         'Request sent. Please complete payment on Selcom Pesa to Topup your Go wallet',
-    'expires_in_with_time': 'Expires in ... @time',
+    'expires_in_with_time': 'Expires in @time',
     'tanqr_amount_required': 'Please enter an amount',
     'tanqr_amount_must_be_greater_than_zero':
         'Amount must be greater than 0',
@@ -213,7 +213,7 @@ class LanguageEn extends Languages {
     'days_left_count': '@count days left',
     'expires_in_timer': 'Expire in @timer',
     'request_sent_please_complete_payment_on_selcom_pesa_to_book_your_ride':
-        'Request sent. Please complete payment on Selcom Pesa to book your ride.',
+        'Request sent. Please complete payment on Selcom Pesa to top-up your wallet.',
     'payment_completed_successfully': 'Payment completed successfully',
     'thank_you_for_riding_with_us_see_you_on_the_next_trip':
         'Thank you for riding with us, see you on the next trip.',
