@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/utils/bottom_padding_helper.dart';
 import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
@@ -30,10 +31,10 @@ class _AddCardScreenState extends State<AddCardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
-    final double computedBottomPadding = bottomPadding > 0
-        ? (GetPlatform.isIOS ? 0 : 8.h)
-        : 24.h;
+    final double computedBottomPadding = getComputedBottomPadding(
+      context,
+      defaultPadding: 24.h,
+    );
 
     return Scaffold(
       backgroundColor: AppColors.white,

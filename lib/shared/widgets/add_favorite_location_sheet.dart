@@ -18,10 +18,7 @@ import 'app_text_field.dart';
 
 /// Save-as-favourite picker body for [AppDialogs.showStandardBottomSheet].
 class AddFavoriteLocationSheet extends StatelessWidget {
-  const AddFavoriteLocationSheet({
-    super.key,
-    required this.controllerTag,
-  });
+  const AddFavoriteLocationSheet({super.key, required this.controllerTag});
 
   final String controllerTag;
 
@@ -55,6 +52,22 @@ class AddFavoriteLocationSheet extends StatelessWidget {
       maxHeightFactor: 0.92,
       barrierDismissible: true,
       content: AddFavoriteLocationSheet(controllerTag: controllerTag),
+      footer: Obx(() {
+        final controller = Get.find<AddFavoriteLocationController>(
+          tag: controllerTag,
+        );
+        final saving = controller.isSaving.value;
+        return AppAnimatedReveal(
+          show: controller.canSave,
+          visibleKey: const ValueKey('save-button-visible'),
+          hiddenKey: const ValueKey('save-button-hidden'),
+          child: AppPrimaryButton(
+            label: AppStrings.saveAddress.tr,
+            isLoading: saving,
+            onPressed: controller.saveSelected,
+          ),
+        );
+      }),
     ).whenComplete(() {
       Future<void>.delayed(const Duration(milliseconds: 400), () {
         if (Get.isRegistered<AddFavoriteLocationController>(
@@ -96,85 +109,67 @@ class _AddFavoriteLocationSheetBody extends StatelessWidget {
     final keyboard = media.viewInsets.bottom;
     final safeBottom = media.padding.bottom;
 
-    final maxCap =
-        (screenH * 0.92 - standardSheetHeaderHeight - safeBottom)
-            .clamp(240.0, screenH * 0.75);
+    final maxCap = (screenH * 0.92 - standardSheetHeaderHeight - safeBottom)
+        .clamp(240.0, screenH * 0.75);
 
     return Obx(() {
       controller.savedPlaces.length;
       controller.selectedLabel.value;
       controller.customLabelText.value;
       controller.hasUserSelectedLabel.value;
-      final saving = controller.isSaving.value;
 
       final chips = controller.chipsForDisplay();
       final bodyHeight = keyboard > 0
           ? (maxCap - keyboard).clamp(180.0, maxCap)
           : controller.estimateContentHeight(chips.length).clamp(200.0, maxCap);
 
-      return SizedBox(
-        height: bodyHeight,
-        child: SingleChildScrollView(
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-                decoration: BoxDecoration(
-                  color: AppColors.pageBackground,
-                  borderRadius: BorderRadius.circular(14.r),
-                  border: Border.all(color: AppColors.skeletonBase),
-                ),
-                child: Text(
-                  controller.address,
-                  style: AppTextStyles.homeCaption.copyWith(height: 20 / 12),
-                ),
+      return SingleChildScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+              decoration: BoxDecoration(
+                color: AppColors.pageBackground,
+                borderRadius: BorderRadius.circular(14.r),
+                border: Border.all(color: AppColors.skeletonBase),
               ),
-              SizedBox(height: 20.h),
-              Text(
-                AppStrings.saveLocationAs.tr,
-                style: AppTextStyles.homeSubtitle.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+              child: Text(
+                controller.address,
+                style: AppTextStyles.homeCaption.copyWith(height: 20 / 12),
               ),
-              SizedBox(height: 10.h),
-              Wrap(
-                spacing: 10.w,
-                runSpacing: 10.h,
-                children: chips.map((entry) {
-                  final isSelected =
-                      controller.selectedLabel.value == entry.selectionKey;
-                  return _labelChip(
-                    controller: controller,
-                    entry: entry,
-                    isSelected: isSelected,
-                    onTap: () => controller.selectChip(entry),
-                  );
-                }).toList(),
+            ),
+            SizedBox(height: 20.h),
+            Text(
+              AppStrings.saveLocationAs.tr,
+              style: AppTextStyles.homeSubtitle.copyWith(
+                fontWeight: FontWeight.w600,
               ),
-              if (controller.selectedLabel.value == 'add_new') ...[
-                SizedBox(height: 12.h),
-                _AddFavoriteCustomLabelField(
-                  onChanged: controller.onCustomLabelChanged,
-                ),
-              ],
-              AppAnimatedReveal(
-                show: controller.canSave,
-                visibleKey: const ValueKey('save-button-visible'),
-                hiddenKey: const ValueKey('save-button-hidden'),
-                child: Padding(
-                  padding: EdgeInsets.only(top: 22.h, bottom: 8.h),
-                  child: AppPrimaryButton(
-                    label: AppStrings.saveAddress.tr,
-                    isLoading: saving,
-                    onPressed: controller.saveSelected,
-                  ),
-                ),
+            ),
+            SizedBox(height: 10.h),
+            Wrap(
+              spacing: 10.w,
+              runSpacing: 10.h,
+              children: chips.map((entry) {
+                final isSelected =
+                    controller.selectedLabel.value == entry.selectionKey;
+                return _labelChip(
+                  controller: controller,
+                  entry: entry,
+                  isSelected: isSelected,
+                  onTap: () => controller.selectChip(entry),
+                );
+              }).toList(),
+            ),
+            if (controller.selectedLabel.value == 'add_new') ...[
+              SizedBox(height: 12.h),
+              _AddFavoriteCustomLabelField(
+                onChanged: controller.onCustomLabelChanged,
               ),
             ],
-          ),
+          ],
         ),
       );
     });
@@ -200,7 +195,8 @@ class _AddFavoriteLocationSheetBody extends StatelessWidget {
     if (entry is AddFavoriteExtraChip) {
       final title = SavedPlacesOrdering.effectiveLabel(entry.place);
       final display =
-          title.capitalizeFirst ?? (title.isEmpty ? AppStrings.saved.tr : title);
+          title.capitalizeFirst ??
+          (title.isEmpty ? AppStrings.saved.tr : title);
       return AppSavedPlaceChip(
         label: display,
         iconAsset: AppAssets.icOtherChip,
@@ -238,7 +234,8 @@ class _AddFavoriteCustomLabelField extends StatefulWidget {
       _AddFavoriteCustomLabelFieldState();
 }
 
-class _AddFavoriteCustomLabelFieldState extends State<_AddFavoriteCustomLabelField> {
+class _AddFavoriteCustomLabelFieldState
+    extends State<_AddFavoriteCustomLabelField> {
   late final TextEditingController _controller;
 
   @override

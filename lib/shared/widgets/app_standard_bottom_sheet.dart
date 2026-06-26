@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:get/get.dart';
+import 'package:get/get_utils/src/platform/platform.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -52,7 +52,7 @@ class AppStandardBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final maxBodyHeight = MediaQuery.sizeOf(context).height * maxHeightFactor;
     final bodyPadding =
-        contentPadding ?? EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 8.h);
+        contentPadding ?? EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 0.h);
     final double bottomPadding = MediaQuery.paddingOf(context).bottom;
     final double computedBottomPadding = bottomPadding > 0
         ? (GetPlatform.isIOS ? 0.0 : 8.h)
@@ -118,8 +118,7 @@ class AppStandardBottomSheet extends StatelessWidget {
                 ),
               ),
           ],
-          ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: maxBodyHeight),
+          Flexible(
             child: SingleChildScrollView(padding: bodyPadding, child: content),
           ),
           if (footer != null) ...[

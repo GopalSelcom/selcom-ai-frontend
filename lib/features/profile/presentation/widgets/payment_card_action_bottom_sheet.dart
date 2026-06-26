@@ -6,6 +6,7 @@ import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/utils/bottom_padding_helper.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 
 class PaymentCardActionBottomSheet extends StatelessWidget {
@@ -41,10 +42,10 @@ class PaymentCardActionBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
-    final double computedBottomPadding = bottomPadding > 0
-        ? (GetPlatform.isIOS ? 0.0 : 8.h)
-        : 16.h;
+    final double computedBottomPadding = getComputedBottomPadding(
+      context,
+      defaultPadding: 16.h,
+    );
     return Container(
       decoration: BoxDecoration(
         color: AppColors.white,

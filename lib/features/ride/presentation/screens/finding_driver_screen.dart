@@ -26,24 +26,26 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
 
-  static const double _sheetInitial = 0.38;
+  static const double _sheetInitial = 0.36;
   static const double _sheetMin = 0.28;
   static const double _sheetMaxCompact = 0.44;
-  static const double _sheetMaxSearching = 0.38;
+  static const double _sheetMaxSearching = 0.36;
 
   static double _systemBottomInsetPx(BuildContext context) {
     final mq = MediaQuery.of(context);
-    final p = mq.padding.bottom;
-    final v = mq.viewPadding.bottom;
-    return p > v ? p : v;
+    return mq.viewPadding.bottom;
   }
 
   /// Slightly taller min/initial when nav bar present — avoids clipping cancel.
   static double _sheetSizeWithNavInset(BuildContext context, double base) {
-    final inset = _systemBottomInsetPx(context);
-    final h = MediaQuery.sizeOf(context).height;
-    if (inset <= 0 || h <= 0) return base;
-    return base + (inset / h) * 0.55;
+    final inset = MediaQuery.of(context).viewPadding.bottom;
+
+    if (inset == 0) return base;
+
+    // Normalize instead of ratio
+    final extra = inset > 30 ? 0.06 : 0.02;
+
+    return base + extra;
   }
 
   static double _scrollBottomPad(BuildContext context) {

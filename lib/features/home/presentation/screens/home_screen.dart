@@ -11,6 +11,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/bottom_padding_helper.dart';
 import '../../../../shared/widgets/app_cupertino_text_button.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
@@ -302,7 +303,7 @@ class HomeScreen extends GetView<HomeController> {
               ? HomeSheetLoadingContent.buildChildren(
                   horizontalPadding: _sheetHorizontalPadding,
                 )
-              : _buildHomeSheetContentChildren();
+              : _buildHomeSheetContentChildren(context);
           return AbsorbPointer(
             absorbing: isLoading,
             child: _HomeSheetScrollContent(
@@ -319,7 +320,15 @@ class HomeScreen extends GetView<HomeController> {
     });
   }
 
-  List<Widget> _buildHomeSheetContentChildren() {
+  List<Widget> _buildHomeSheetContentChildren(BuildContext context) {
+    final mq = MediaQuery.of(context);
+
+    final bottomSafe = mq.viewPadding.bottom; // gesture / system area
+    final keyboard = mq.viewInsets.bottom; // keyboard height
+
+    // If keyboard is open → use keyboard space
+    // else → use safe gesture space
+    final bottomSpacing = keyboard > 0 ? keyboard : bottomSafe;
     return [
       Padding(
         padding: EdgeInsets.symmetric(horizontal: _sheetHorizontalPadding.w),
@@ -425,6 +434,7 @@ class HomeScreen extends GetView<HomeController> {
                 SizedBox(height: titleContentGap.h),
                 _buildVehicleHorizontalList(),
               ],
+              SizedBox(height: bottomSpacing + 2.h),
             ],
           );
         }),
@@ -666,11 +676,6 @@ class _HomeSheetScrollContentState extends State<_HomeSheetScrollContent> {
 
   @override
   Widget build(BuildContext context) {
-    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
-    final double computedBottomPadding = bottomPadding > 0
-        ? (GetPlatform.isIOS ? 0.0 : 8.h)
-        : 16.h;
-
     return SingleChildScrollView(
       controller: widget.scrollController,
       physics: widget.physics,
@@ -686,14 +691,7 @@ class _HomeSheetScrollContentState extends State<_HomeSheetScrollContent> {
             key: _contentKey,
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              ...widget.children,
-              SafeArea(
-                top: false,
-                bottom: true,
-                child: SizedBox(height: computedBottomPadding),
-              ),
-            ],
+            children: [...widget.children, getSafeBottomBox(context)],
           ),
         ),
       ),

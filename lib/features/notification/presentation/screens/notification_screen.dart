@@ -17,6 +17,7 @@ class NotificationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(sl<NotificationController>());
+    final mq = MediaQuery.of(context);
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -91,9 +92,14 @@ class NotificationScreen extends StatelessWidget {
                 child: RefreshIndicator(
                   onRefresh: controller.getNotifications,
                   child: ListView.separated(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 16.w,
-                      vertical: 16.h,
+                    padding: EdgeInsets.fromLTRB(
+                      16.w,
+                      16.h,
+                      16.w,
+                      (mq.viewInsets.bottom > 0
+                              ? mq.viewInsets.bottom
+                              : mq.viewPadding.bottom) +
+                          16.h,
                     ),
                     itemCount:
                         controller.notifications.length +

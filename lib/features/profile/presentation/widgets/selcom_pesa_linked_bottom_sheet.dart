@@ -8,6 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/bottom_padding_helper.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_standard_bottom_sheet.dart';
 import '../controllers/payment_methods_controller.dart';
@@ -31,7 +32,9 @@ class SelcomPesaLinkedBottomSheet extends GetView<PaymentMethodsController> {
                   10.h > bottomPadding ? bottomPadding : 10.h,
                   bottomPadding,
                 )
-              : bottomPadding + 12.h)
+              : (generalConfigController.needBottomSpacing
+                    ? bottomPadding
+                    : bottomPadding + 12.h))
         : 12.h;
     return AppStandardBottomSheet(
       title: AppStrings.yourLinkedAccount.tr,

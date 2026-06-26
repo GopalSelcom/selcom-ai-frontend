@@ -13,28 +13,35 @@ class WalletTransactionList extends StatelessWidget {
     super.key,
     required this.items,
     this.scrollController,
-    this.padding,
     this.onRefresh,
   });
 
   final List<WalletTransactionItem> items;
   final ScrollController? scrollController;
-  final EdgeInsetsGeometry? padding;
   final Future<void> Function()? onRefresh;
 
   @override
   Widget build(BuildContext context) {
-    final resolvedPadding = padding ?? EdgeInsets.fromLTRB(16.w, 0, 16.w, 32.h);
+    final mq = MediaQuery.of(context);
+
+    final bottomPadding = mq.viewInsets.bottom > 0
+        ? mq
+              .viewInsets
+              .bottom // keyboard open
+        : mq.padding.bottom; // safe area
+    final resolvedPadding = EdgeInsets.fromLTRB(
+      16.w,
+      0,
+      16.w,
+      bottomPadding.h + 8.h,
+    );
     final listBody = _buildListBody(resolvedPadding);
 
     if (onRefresh == null) {
       return listBody;
     }
 
-    return RefreshIndicator(
-      onRefresh: onRefresh!,
-      child: listBody,
-    );
+    return RefreshIndicator(onRefresh: onRefresh!, child: listBody);
   }
 
   Widget _buildListBody(EdgeInsetsGeometry resolvedPadding) {
