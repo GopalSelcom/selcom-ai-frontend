@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/app_adaptive_bottom_safe_scaffold.dart';
 import '../../../../shared/data/countries_phone_data.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
 import '../../../../shared/widgets/app_animated_reveal.dart';
@@ -18,152 +19,155 @@ class PhoneInputScreen extends GetView<AuthController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.pageBackground,
-      resizeToAvoidBottomInset: true,
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
+    return AppAdaptiveBottomSafeScaffold(
+      hasBottomWidget: true,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: IntrinsicHeight(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(height: 103.h - kToolbarHeight),
-                        Text(
-                          AppStrings.enterPhoneNumberForVerification.tr,
-                          style: AppTextStyles.onboardingTitle.copyWith(
-                            fontSize: 28.sp,
-                            height: 34 / 28,
-                            letterSpacing: -0.4,
-                          ),
-                        ),
-                        SizedBox(height: 8.h),
-                        Text(
-                          AppStrings.weLlTextACodeToVerifyYourPhoneNumber.tr,
-                          style: AppTextStyles.homeSubtitle.copyWith(
-                            fontSize: 15.sp,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.textBody,
-                            height: 20 / 15,
-                          ),
-                        ),
-                        SizedBox(height: 22.h),
-                        Obx(() {
-                          final iso = controller.selectedCountryIso.value;
-                          final resetV =
-                              controller.phoneFieldResetVersion.value;
-                          final hint = PhoneNationalRules.hintForIso(iso);
-                          final country = Countries.findByIsoCode(iso);
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: kToolbarHeight),
+                    Text(
+                      AppStrings.enterPhoneNumberForVerification.tr,
+                      style: AppTextStyles.onboardingTitle.copyWith(
+                        fontSize: 28.sp,
+                        height: 34 / 28,
+                        letterSpacing: -0.4,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      AppStrings.weLlTextACodeToVerifyYourPhoneNumber.tr,
+                      style: AppTextStyles.homeSubtitle.copyWith(
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textBody,
+                        height: 20 / 15,
+                      ),
+                    ),
+                    SizedBox(height: 22.h),
+                    Obx(() {
+                      final iso = controller.selectedCountryIso.value;
+                      final resetV = controller.phoneFieldResetVersion.value;
+                      final hint = PhoneNationalRules.hintForIso(iso);
+                      final country = Countries.findByIsoCode(iso);
 
-                          final phoneFieldStyle = TextStyle(
-                            fontFamily: AppTextStyles.metropolisFont,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16.sp,
-                            height: 1.2,
-                            letterSpacing: -0.16,
-                            color: AppColors.primary,
-                          );
+                      final phoneFieldStyle = TextStyle(
+                        fontFamily: AppTextStyles.metropolisFont,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16.sp,
+                        height: 1.2,
+                        letterSpacing: -0.16,
+                        color: AppColors.primary,
+                      );
 
-                          return Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              PhoneCountryPickerChip(
-                                key: ValueKey('cc-$iso'),
-                                selected: country,
-                                onChanged: controller.onPhoneCountrySelected,
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          PhoneCountryPickerChip(
+                            key: ValueKey('cc-$iso'),
+                            selected: country,
+                            onChanged: controller.onPhoneCountrySelected,
+                          ),
+                          SizedBox(width: 8.w),
+                          Expanded(
+                            child: AppFocusInputField(
+                              key: ValueKey('$iso-$resetV'),
+                              height: 54.h,
+                              focusedBorderColor: AppColors.primary,
+                              keyboardType: TextInputType.number,
+                              inputFormatters:
+                                  PhoneNationalRules.inputFormattersForIso(iso),
+                              style: phoneFieldStyle,
+                              maxLength:
+                                  PhoneNationalRules.maxDisplayCharactersForIso(
+                                    iso,
+                                  ),
+                              onChanged: (v) {
+                                controller.mobileNumber.value = v.replaceAll(
+                                  RegExp(r'\D'),
+                                  '',
+                                );
+                              },
+                              hintText: hint.isEmpty
+                                  ? AppStrings.eG7XxXxxXxx.tr
+                                  : hint,
+                              hintStyle: phoneFieldStyle.copyWith(
+                                color: AppColors.primary.withValues(alpha: 0.5),
                               ),
-                              SizedBox(width: 8.w),
-                              Expanded(
-                                child: AppFocusInputField(
-                                  key: ValueKey('$iso-$resetV'),
-                                  height: 54.h,
-                                  focusedBorderColor: AppColors.primary,
-                                  keyboardType: TextInputType.number,
-                                  inputFormatters:
-                                      PhoneNationalRules.inputFormattersForIso(
-                                        iso,
-                                      ),
-                                  style: phoneFieldStyle,
-                                  maxLength:
-                                      PhoneNationalRules.maxDisplayCharactersForIso(
-                                        iso,
-                                      ),
-                                  onChanged: (v) {
-                                    controller.mobileNumber.value = v
-                                        .replaceAll(RegExp(r'\D'), '');
-                                  },
-                                  hintText: hint.isEmpty
-                                      ? AppStrings.eG7XxXxxXxx.tr
-                                      : hint,
-                                  hintStyle: phoneFieldStyle.copyWith(
-                                    color: AppColors.primary.withValues(
-                                      alpha: 0.5,
-                                    ),
-                                  ),
-                                  contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 16.w,
-                                    vertical: 16.h,
-                                  ),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 16.w,
+                                vertical: 16.h,
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    }),
+                    Obx(
+                      () => controller.errorMessage.isNotEmpty
+                          ? Padding(
+                              padding: EdgeInsets.only(top: 12.h),
+                              child: Text(
+                                controller.errorMessage.value,
+                                style: TextStyle(
+                                  color: AppColors.error,
+                                  fontSize: 14.sp,
                                 ),
                               ),
-                            ],
-                          );
-                        }),
-                        Obx(
-                          () => controller.errorMessage.isNotEmpty
-                              ? Padding(
-                                  padding: EdgeInsets.only(top: 12.h),
-                                  child: Text(
-                                    controller.errorMessage.value,
-                                    style: TextStyle(
-                                      color: AppColors.error,
-                                      fontSize: 14.sp,
-                                    ),
-                                  ),
-                                )
-                              : const SizedBox.shrink(),
-                        ),
-                        const Spacer(),
-                        Padding(
-                          padding: EdgeInsets.only(bottom: 14.h),
-                          child: Text(
-                            AppStrings
-                                .noteByProceedingYouConsentToGetCallsWhatsappOrSmsMessagesIncludingByAu
-                                .tr,
-                            style: AppTextStyles.homeCaption.copyWith(
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.w400,
-                              color: AppColors.textBody,
-                              height: 20 / 12,
-                            ),
-                          ),
-                        ),
-                        Obx(
-                          () => AppAnimatedReveal(
-                            show: controller.canRequestOtp,
-                            visibleKey: const ValueKey('continue-button-visible'),
-                            hiddenKey: const ValueKey('continue-button-hidden'),
-                            child: AppPrimaryButton(
-                              label: AppStrings.continueLabel.tr,
-                              isLoading: controller.isLoading.value,
-                              onPressed: controller.sendOtpAndNavigate,
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 12.h),
-                      ],
+                            )
+                          : const SizedBox.shrink(),
                     ),
-                  ),
+                  ],
                 ),
               ),
-            );
-          },
+            ),
+          ),
+        ],
+      ),
+      footer: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16.w),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              AppStrings
+                  .noteByProceedingYouConsentToGetCallsWhatsappOrSmsMessagesIncludingByAu
+                  .tr,
+              style: AppTextStyles.homeCaption.copyWith(
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w400,
+                color: AppColors.textBody,
+                height: 20 / 12,
+              ),
+            ),
+            Obx(
+              () => AppAnimatedReveal(
+                show: controller.canRequestOtp,
+                visibleKey: const ValueKey('continue-button-visible'),
+                hiddenKey: const ValueKey('continue-button-hidden'),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SizedBox(height: 14.h),
+                    AppPrimaryButton(
+                      label: AppStrings.continueLabel.tr,
+                      isLoading: controller.isLoading.value,
+                      onPressed: controller.sendOtpAndNavigate,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -24,7 +24,7 @@ class SignUpController extends GetxController {
   final submitted = false.obs;
   final isLoading = false.obs;
   final errorMessage = ''.obs;
-  final _formTick = 0.obs;
+  final formTick = 0.obs;
 
   @override
   void onInit() {
@@ -51,7 +51,7 @@ class SignUpController extends GetxController {
         emailController.text = email;
       }
       if (name.isNotEmpty || email.isNotEmpty) {
-        _formTick.value++;
+        formTick.value++;
         return;
       }
     }
@@ -62,9 +62,7 @@ class SignUpController extends GetxController {
     final raw = await StorageService().read(StorageKeys.user);
     if (raw == null || raw.isEmpty) return;
 
-    final user = UserModel.fromJson(
-      jsonDecode(raw) as Map<String, dynamic>,
-    );
+    final user = UserModel.fromJson(jsonDecode(raw) as Map<String, dynamic>);
     var updated = false;
     if (nameController.text.trim().isEmpty &&
         (user.name?.trim().isNotEmpty ?? false)) {
@@ -77,13 +75,13 @@ class SignUpController extends GetxController {
       updated = true;
     }
     if (updated) {
-      _formTick.value++;
+      formTick.value++;
     }
   }
 
-  void onNameChanged(String _) => _formTick.value++;
+  void onNameChanged(String _) => formTick.value++;
 
-  void onEmailChanged(String _) => _formTick.value++;
+  void onEmailChanged(String _) => formTick.value++;
 
   void setAcceptedTerms(bool value) {
     acceptedTerms.value = value;
@@ -117,7 +115,7 @@ class SignUpController extends GetxController {
 
   void markSubmitted() {
     submitted.value = true;
-    _formTick.value++;
+    formTick.value++;
   }
 
   Future<bool> submitAdditionalDetails() async {

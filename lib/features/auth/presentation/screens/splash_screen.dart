@@ -10,6 +10,7 @@ import '../../../../core/services/app_settings_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/services/voip_callkit_bridge_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_adaptive_bottom_safe_scaffold.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../controllers/auth_controller.dart';
 
@@ -56,8 +57,9 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return const AppAdaptiveBottomSafeScaffold(
       backgroundColor: AppColors.splashBackground,
+      hasBottomWidget: false,
       body: SizedBox.expand(
         child: SvgPictureAsset(AppAssets.splashScreenBg, fit: BoxFit.cover),
       ),

@@ -6,6 +6,7 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/app_adaptive_bottom_safe_scaffold.dart';
 import '../controllers/auth_controller.dart';
 
 class ProfileLoadingScreen extends StatefulWidget {
@@ -42,8 +43,8 @@ class _ProfileLoadingScreenState extends State<ProfileLoadingScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.pageBackground,
+    return AppAdaptiveBottomSafeScaffold(
+      hasBottomWidget: false,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

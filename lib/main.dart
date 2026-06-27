@@ -31,6 +31,7 @@ import 'core/services/live_activity/live_activity_manager.dart';
 import 'core/services/live_activity/android_order_tracking_manager.dart';
 import 'core/data/models/notification_model.dart';
 import 'core/services/error_reporting/error_reporter.dart';
+import 'core/utils/bottom_inset_helper.dart';
 import 'package:screenshot/screenshot.dart';
 
 /// **Change this for local runs** (`dev` | `staging` | `prod`).
@@ -120,6 +121,7 @@ void main() async {
   await runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
+      await BottomInsetHelper.instance.init();
       await SystemChrome.setPreferredOrientations([
         DeviceOrientation.portraitUp,
       ]);

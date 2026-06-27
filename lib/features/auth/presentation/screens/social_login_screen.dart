@@ -8,6 +8,7 @@ import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/app_adaptive_bottom_safe_scaffold.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_cupertino_text_button.dart';
 import '../../../../shared/widgets/app_social_sign_in_button.dart';
@@ -18,28 +19,28 @@ class SocialLoginScreen extends GetView<AuthController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppAdaptiveBottomSafeScaffold(
+      backgroundColor: AppColors.splashBackground,
+      hasBottomWidget: true,
       body: Stack(
         children: [
           const Positioned.fill(
             child: SvgPictureAsset(AppAssets.splashScreenBg, fit: BoxFit.cover),
           ),
-          SafeArea(
-            child: Column(
-              children: [
-                Expanded(
-                  child: Center(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 15.w,
-                        vertical: 24.h,
-                      ),
-                      child: _SocialLoginCard(controller: controller),
+          Column(
+            children: [
+              Expanded(
+                child: Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 15.w,
+                      vertical: 24.h,
                     ),
+                    child: _SocialLoginCard(controller: controller),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),

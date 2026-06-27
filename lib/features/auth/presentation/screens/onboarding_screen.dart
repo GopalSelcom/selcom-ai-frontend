@@ -9,6 +9,7 @@ import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/app_adaptive_bottom_safe_scaffold.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../controllers/onboarding_controller.dart';
@@ -25,156 +26,151 @@ class OnboardingScreen extends GetView<OnboardingController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.pageBackground,
-      body: SafeArea(
-        top: false,
-        // Illustration should overlap with status bar if needed, but we keep it simple
-        child: Column(
-          children: [
-            // Illustration Section
-            Expanded(
-              flex: 5,
-              child: Obx(() {
-                final settled = controller.bannerFetchSettled.value;
-                return ScrollConfiguration(
-                  behavior: ScrollConfiguration.of(context).copyWith(
-                    overscroll: false,
-                    physics: const ClampingScrollPhysics(
-                      parent: PageScrollPhysics(),
-                    ),
+    return AppAdaptiveBottomSafeScaffold(
+      hasBottomWidget: true,
+      body: Column(
+        children: [
+          // Illustration Section
+          Expanded(
+            flex: 5,
+            child: Obx(() {
+              final settled = controller.bannerFetchSettled.value;
+              return ScrollConfiguration(
+                behavior: ScrollConfiguration.of(context).copyWith(
+                  overscroll: false,
+                  physics: const ClampingScrollPhysics(
+                    parent: PageScrollPhysics(),
                   ),
+                ),
+                child: PageView.builder(
+                  controller: controller.pageController,
+                  onPageChanged: controller.onPageChanged,
+                  itemCount: controller.slides.length,
+                  itemBuilder: (context, index) {
+                    final slide = controller.slides[index];
+                    if (!settled) {
+                      return const _OnboardingIllustrationShimmer();
+                    }
+                    return _OnboardingIllustration(slide: slide);
+                  },
+                ),
+              );
+            }),
+          ),
+
+          // Content Section
+          Expanded(
+            flex: 4,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(height: 18.h),
+                SizedBox(
+                  height: _copyBlockHeight,
                   child: PageView.builder(
-                    controller: controller.pageController,
-                    onPageChanged: controller.onPageChanged,
+                    controller: controller.textPageController,
+                    physics: const NeverScrollableScrollPhysics(),
+                    clipBehavior: Clip.hardEdge,
                     itemCount: controller.slides.length,
                     itemBuilder: (context, index) {
-                      final slide = controller.slides[index];
-                      if (!settled) {
-                        return const _OnboardingIllustrationShimmer();
-                      }
-                      return _OnboardingIllustration(slide: slide);
+                      return Obx(() {
+                        final slide = controller.slides[index];
+                        return Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16.w),
+                          child: Align(
+                            alignment: Alignment.topLeft,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  slide.title,
+                                  textAlign: TextAlign.start,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTextStyles.onboardingTitle,
+                                ),
+                                SizedBox(height: 4.h),
+                                Text(
+                                  slide.subtitle,
+                                  textAlign: TextAlign.start,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTextStyles.onboardingSubtitle,
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      });
                     },
                   ),
-                );
-              }),
-            ),
-
-            // Content Section
-            Expanded(
-              flex: 4,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  SizedBox(height: 18.h),
-                  SizedBox(
-                    height: _copyBlockHeight,
-                    child: PageView.builder(
-                      controller: controller.textPageController,
-                      physics: const NeverScrollableScrollPhysics(),
-                      clipBehavior: Clip.hardEdge,
-                      itemCount: controller.slides.length,
-                      itemBuilder: (context, index) {
-                        return Obx(() {
-                          final slide = controller.slides[index];
-                          return Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16.w),
-                            child: Align(
-                              alignment: Alignment.topLeft,
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    slide.title,
-                                    textAlign: TextAlign.start,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: AppTextStyles.onboardingTitle,
-                                  ),
-                                  SizedBox(height: 4.h),
-                                  Text(
-                                    slide.subtitle,
-                                    textAlign: TextAlign.start,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: AppTextStyles.onboardingSubtitle,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        });
-                      },
-                    ),
-                  ),
-                  SizedBox(height: 16.h),
-                  Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.w),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Obx(
-                            () => Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: List.generate(
-                                controller.slides.length,
-                                (index) => AnimatedContainer(
-                                  duration: const Duration(milliseconds: 300),
-                                  margin: EdgeInsets.symmetric(horizontal: 4.w),
-                                  width: controller.currentIndex.value == index
-                                      ? 32.w
-                                      : 10.w,
-                                  height: 10.w,
-                                  decoration: BoxDecoration(
-                                    color:
-                                        controller.currentIndex.value == index
-                                        ? AppColors.primary
-                                        : AppColors.transparent,
-                                    border: Border.all(
-                                      color:
-                                          controller.currentIndex.value != index
-                                          ? AppColors.textBody
-                                          : AppColors.primary,
-                                      width: 1.5,
-                                    ),
-                                    borderRadius: BorderRadius.circular(9.r),
-                                  ),
+                ),
+                SizedBox(height: 16.h),
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
+                    child: Align(
+                      alignment: Alignment.topLeft,
+                      child: Obx(
+                        () => Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: List.generate(
+                            controller.slides.length,
+                            (index) => AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              margin: EdgeInsets.symmetric(horizontal: 4.w),
+                              width: controller.currentIndex.value == index
+                                  ? 32.w
+                                  : 10.w,
+                              height: 10.w,
+                              decoration: BoxDecoration(
+                                color: controller.currentIndex.value == index
+                                    ? AppColors.primary
+                                    : AppColors.transparent,
+                                border: Border.all(
+                                  color: controller.currentIndex.value != index
+                                      ? AppColors.textBody
+                                      : AppColors.primary,
+                                  width: 1.5,
                                 ),
+                                borderRadius: BorderRadius.circular(9.r),
                               ),
                             ),
                           ),
-                          const Spacer(),
-                          Padding(
-                            padding: EdgeInsets.only(bottom: 16.h),
-                            child: AppPrimaryButton(
-                              label: AppStrings.getStarted.tr,
-                              onPressed: controller.onGetStarted,
-                              height: 54.h,
-                              labelStyle: AppTextStyles.onboardingButton,
-                              iconAsset: AppAssets.locationIcArrowRight,
-                              iconColor: AppColors.white,
-                              alignIconToTrailingEnd: true,
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(bottom: 16.h),
-                            child: Text(
-                              AppStrings
-                                  .byContinuingYouAgreeThatYouHaveReadAndAcceptOurTAndCsAndPrivacyPolicy
-                                  .tr,
-                              textAlign: TextAlign.center,
-                              style: AppTextStyles.onboardingFooter,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      footer: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16.w),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AppPrimaryButton(
+              label: AppStrings.getStarted.tr,
+              onPressed: controller.onGetStarted,
+              height: 54.h,
+              labelStyle: AppTextStyles.onboardingButton,
+              iconAsset: AppAssets.locationIcArrowRight,
+              iconColor: AppColors.white,
+              alignIconToTrailingEnd: true,
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              AppStrings
+                  .byContinuingYouAgreeThatYouHaveReadAndAcceptOurTAndCsAndPrivacyPolicy
+                  .tr,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.onboardingFooter,
             ),
           ],
         ),
@@ -188,6 +184,9 @@ class _OnboardingIllustration extends StatelessWidget {
 
   final OnboardingSlide slide;
 
+  static const _fit = BoxFit.cover;
+  static const _alignment = Alignment.bottomCenter;
+
   @override
   Widget build(BuildContext context) {
     if (slide.usesNetworkImage) {
@@ -197,19 +196,25 @@ class _OnboardingIllustration extends StatelessWidget {
         return SvgPicture.network(
           raw,
           width: double.infinity,
-          fit: BoxFit.contain,
+          height: double.infinity,
+          fit: _fit,
+          alignment: _alignment,
           placeholderBuilder: (_) => const _OnboardingIllustrationShimmer(),
         );
       }
       return CachedNetworkImage(
         imageUrl: raw,
         width: double.infinity,
-        fit: BoxFit.contain,
+        height: double.infinity,
+        fit: _fit,
+        alignment: _alignment,
         placeholder: (_, __) => const _OnboardingIllustrationShimmer(),
         errorWidget: (_, __, ___) => SvgPictureAsset(
           slide.image,
           width: double.infinity,
-          fit: BoxFit.contain,
+          height: double.infinity,
+          fit: _fit,
+          alignment: _alignment,
         ),
       );
     }
@@ -217,7 +222,9 @@ class _OnboardingIllustration extends StatelessWidget {
     return SvgPictureAsset(
       slide.image,
       width: double.infinity,
-      fit: BoxFit.contain,
+      height: double.infinity,
+      fit: _fit,
+      alignment: _alignment,
     );
   }
 }
