@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import '../../../../../core/localization/app_strings.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/widgets/app_adaptive_bottom_safe_scaffold.dart';
 import '../../../../../shared/widgets/app_profile_header.dart';
 import '../controllers/settings_controller.dart';
 import '../widgets/ride_pin_protection_section.dart';
@@ -14,8 +15,9 @@ class SafetyScreen extends GetView<SettingsController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppAdaptiveBottomSafeScaffold(
       backgroundColor: AppColors.white,
+      hasBottomWidget: true,
       body: Column(
         children: [
           AppProfileHeader(title: AppStrings.safety.tr),

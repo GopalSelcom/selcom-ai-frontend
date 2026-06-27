@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/app_adaptive_bottom_safe_scaffold.dart';
 import 'app_profile_header.dart';
 import 'app_web_view_controller.dart';
 import 'web_view_content_shimmer.dart';
@@ -57,8 +58,8 @@ class WebViewScreen extends StatelessWidget {
           Navigator.of(context).pop();
         }
       },
-      child: Scaffold(
-        backgroundColor: AppColors.pageBackground,
+      child: AppAdaptiveBottomSafeScaffold(
+        hasBottomWidget: true,
         body: Column(
           children: [
             AppProfileHeader(title: title),

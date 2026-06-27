@@ -8,6 +8,7 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/app_adaptive_bottom_safe_scaffold.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/app_profile_user_avatar.dart';
 import '../../../../shared/widgets/app_profile_user_summary.dart';
@@ -24,23 +25,107 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.white,
-      body: Stack(
-        children: [
-          // 1. Underlying Layout (Static spacing header + List)
-          Column(
-            children: [
-              // Invisible spacer perfectly matching the normal collapsed header height
-              Obx(
+    return Obx(
+      () => AppAdaptiveBottomSafeScaffold(
+        backgroundColor: AppColors.white,
+        hasBottomWidget: !controller.isEditing.value,
+        liftBodyForKeyboard: !controller.isEditing.value,
+        body: Stack(
+          children: [
+            // 1. Underlying Layout (Static spacing header + List)
+            Column(
+              children: [
+                // Invisible spacer perfectly matching the normal collapsed header height
+                Obx(
+                  () => AnimatedSize(
+                    duration: const Duration(milliseconds: 350),
+                    curve: Curves.easeOutCirc,
+                    alignment: Alignment.topCenter,
+                    child: Opacity(
+                      opacity: 0.0,
+                      child: AppProfileHeader(
+                        onBack: controller.handleBack,
+                        child: controller.isEditing.value
+                            ? _buildEditModeContent()
+                            : _buildNormalModeContent(),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // App Settings List Area
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(16.w, 18.h, 16.w, 0),
+                          child: _buildSettingsList(context),
+                        ),
+                        SizedBox(
+                          height: ProfileScreenLayout.logoutGapAfterSettings,
+                        ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16.w),
+                          child: Obx(
+                            () => controller.isLoadingProfile.value
+                                ? ProfileScreenShimmer.logoutButton()
+                                : _buildLogoutButton(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            // 2. Dim & Blur Overlay (Appears only during edit mode)
+            Obx(
+              () => AnimatedOpacity(
+                opacity: controller.isEditing.value ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 350),
+                child: IgnorePointer(
+                  ignoring: !controller.isEditing.value,
+                  child: GestureDetector(
+                    onTap: controller.cancelEdit,
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 4.0, sigmaY: 4.0),
+                      child: Container(color: AppColors.overlayGray43),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // 3. Foreground Animated Red Header (Pinned top, expands over stack)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Obx(
                 () => AnimatedSize(
                   duration: const Duration(milliseconds: 350),
                   curve: Curves.easeOutCirc,
                   alignment: Alignment.topCenter,
-                  child: Opacity(
-                    opacity: 0.0,
-                    child: AppProfileHeader(
-                      onBack: controller.handleBack,
+                  child: AppProfileHeader(
+                    onBack: controller.handleBack,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      transitionBuilder: (child, animation) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(0.0, -0.05),
+                              end: Offset.zero,
+                            ).animate(animation),
+                            child: child,
+                          ),
+                        );
+                      },
                       child: controller.isEditing.value
                           ? _buildEditModeContent()
                           : _buildNormalModeContent(),
@@ -48,90 +133,9 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ),
               ),
-
-              // App Settings List Area
-              Expanded(
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(16.w, 18.h, 16.w, 0),
-                        child: _buildSettingsList(context),
-                      ),
-                      SizedBox(
-                        height: ProfileScreenLayout.logoutGapAfterSettings,
-                      ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16.w),
-                        child: Obx(
-                          () => controller.isLoadingProfile.value
-                              ? ProfileScreenShimmer.logoutButton()
-                              : _buildLogoutButton(),
-                        ),
-                      ),
-                      SizedBox(height: 40.h),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          // 2. Dim & Blur Overlay (Appears only during edit mode)
-          Obx(
-            () => AnimatedOpacity(
-              opacity: controller.isEditing.value ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 350),
-              child: IgnorePointer(
-                ignoring: !controller.isEditing.value,
-                child: GestureDetector(
-                  onTap: controller.cancelEdit,
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 4.0, sigmaY: 4.0),
-                    child: Container(color: AppColors.overlayGray43),
-                  ),
-                ),
-              ),
             ),
-          ),
-
-          // 3. Foreground Animated Red Header (Pinned top, expands over stack)
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Obx(
-              () => AnimatedSize(
-                duration: const Duration(milliseconds: 350),
-                curve: Curves.easeOutCirc,
-                alignment: Alignment.topCenter,
-                child: AppProfileHeader(
-                  onBack: controller.handleBack,
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 250),
-                    transitionBuilder: (child, animation) {
-                      return FadeTransition(
-                        opacity: animation,
-                        child: SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0.0, -0.05),
-                            end: Offset.zero,
-                          ).animate(animation),
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: controller.isEditing.value
-                        ? _buildEditModeContent()
-                        : _buildNormalModeContent(),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

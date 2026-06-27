@@ -15,6 +15,7 @@ class AppAdaptiveBottomSafeScaffold extends StatelessWidget {
     this.footer,
     this.backgroundColor = AppColors.pageBackground,
     this.hasBottomWidget = false,
+    this.liftBodyForKeyboard = true,
   });
 
   final Widget body;
@@ -26,6 +27,9 @@ class AppAdaptiveBottomSafeScaffold extends StatelessWidget {
 
   /// Retained for call-site compatibility; also true when [footer] is non-null.
   final bool hasBottomWidget;
+
+  /// When false, [body] is not padded for the keyboard (e.g. inputs live in a top header).
+  final bool liftBodyForKeyboard;
 
   bool get _hasFooter => footer != null;
 
@@ -64,7 +68,8 @@ class AppAdaptiveBottomSafeScaffold extends StatelessWidget {
           )
         : 0.0;
 
-    final bodyBottomPadding = !_hasFooter && keyboardInset > 0
+    final bodyBottomPadding =
+        liftBodyForKeyboard && !_hasFooter && keyboardInset > 0
         ? keyboardInset + BottomInsetHelper.footerMinGap
         : 0.0;
 
@@ -99,4 +104,4 @@ class AppAdaptiveBottomSafeScaffold extends StatelessWidget {
     );
   }
 }
-
+
