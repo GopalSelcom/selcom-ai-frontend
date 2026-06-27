@@ -6,8 +6,7 @@ import 'package:iconsax/iconsax.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../shared/utils/bottom_padding_helper.dart';
-import '../../../../shared/widgets/app_animated_reveal.dart';
+import '../../../../core/widgets/app_adaptive_bottom_safe_scaffold.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/app_text_field.dart';
@@ -19,88 +18,68 @@ class ContactUsScreen extends GetView<ContactUsController> {
 
   @override
   Widget build(BuildContext context) {
-    final double computedBottomPadding = getComputedBottomPadding(
-      context,
-      defaultPadding: 16.h,
-    );
+    return Obx(
+      () => AppAdaptiveBottomSafeScaffold(
+        backgroundColor: AppColors.white,
+        hasBottomWidget: controller.canSubmit.value,
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AppProfileHeader(title: AppStrings.contactUs.tr),
+            SizedBox(height: 16.h),
+            Expanded(
+              child: Obx(() {
+                if (controller.isLoading.value && controller.subjects.isEmpty) {
+                  return Align(
+                    alignment: Alignment.topCenter,
+                    child: ContactUsScreenShimmer.formContent(),
+                  );
+                }
 
-    return Scaffold(
-      backgroundColor: AppColors.white,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          AppProfileHeader(title: AppStrings.contactUs.tr),
-
-          SizedBox(height: 16.h),
-
-          Expanded(
-            child: Obx(() {
-              if (controller.isLoading.value && controller.subjects.isEmpty) {
-                return Align(
-                  alignment: Alignment.topCenter,
-                  child: ContactUsScreenShimmer.formContent(),
+                return SingleChildScrollView(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppStrings.reasonToContact.tr,
+                          style: AppTextStyles.homeSubtitle,
+                        ),
+                        SizedBox(height: 8.h),
+                        _buildReasonDropdown(),
+                        SizedBox(height: 8.h),
+                        Text(
+                          AppStrings.message.tr,
+                          style: AppTextStyles.homeSubtitle,
+                        ),
+                        SizedBox(height: 8.h),
+                        AppTextField(
+                          controller: controller.messageController,
+                          hintText: AppStrings.howCanWeHelpYou.tr,
+                          maxLines: 5,
+                          onChanged: controller.onMessageChanged,
+                          textColor: AppColors.textHeading,
+                          textFieldBackgroundColor: AppColors.surfaceSubtle,
+                        ),
+                      ],
+                    ),
+                  ),
                 );
-              }
-
-              return SingleChildScrollView(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24.w),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        AppStrings.reasonToContact.tr,
-                        style: AppTextStyles.homeSubtitle,
-                      ),
-                      SizedBox(height: 8.h),
-                      _buildReasonDropdown(),
-                      SizedBox(height: 8.h),
-                      Text(
-                        AppStrings.message.tr,
-                        style: AppTextStyles.homeSubtitle,
-                      ),
-                      SizedBox(height: 8.h),
-                      AppTextField(
-                        controller: controller.messageController,
-                        hintText: AppStrings.howCanWeHelpYou.tr,
-                        maxLines: 5,
-                        onChanged: controller.onMessageChanged,
-                        textColor: AppColors.textHeading,
-                        textFieldBackgroundColor: AppColors.surfaceSubtle,
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }),
-          ),
-          // Submit Button (Footer)
-          SafeArea(
-            top: false,
-            bottom: true,
-            child: Obx(
-              () => Padding(
-                padding: EdgeInsets.only(
-                  bottom: controller.canSubmit.value
-                      ? computedBottomPadding
-                      : 0,
-                  left: 24.w,
-                  right: 24.w,
-                ),
-                child: AppAnimatedReveal(
-                  show: controller.canSubmit.value,
-                  visibleKey: const ValueKey('contact-submit-visible'),
-                  hiddenKey: const ValueKey('contact-submit-hidden'),
-                  child: AppPrimaryButton(
-                    label: AppStrings.submit.tr,
-                    onPressed: controller.sendMessage,
-                    isLoading: controller.isSubmitting.value,
-                  ),
-                ),
-              ),
+              }),
             ),
-          ),
-        ],
+          ],
+        ),
+        footer: controller.canSubmit.value
+            ? Padding(
+                padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 0),
+                child: AppPrimaryButton(
+                  label: AppStrings.submit.tr,
+                  onPressed: controller.sendMessage,
+                  isLoading: controller.isSubmitting.value,
+                ),
+              )
+            : null,
       ),
     );
   }

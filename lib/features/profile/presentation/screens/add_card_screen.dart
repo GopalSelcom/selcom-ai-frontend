@@ -6,8 +6,7 @@ import 'package:get/get.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../shared/utils/bottom_padding_helper.dart';
-import '../../../../shared/widgets/app_animated_reveal.dart';
+import '../../../../core/widgets/app_adaptive_bottom_safe_scaffold.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/app_text_field.dart';
@@ -31,176 +30,152 @@ class _AddCardScreenState extends State<AddCardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final double computedBottomPadding = getComputedBottomPadding(
-      context,
-      defaultPadding: 24.h,
-    );
+    return Obx(() {
+      final showFooter =
+          controller.isSubmitting.value || controller.canSubmitForm.value;
 
-    return Scaffold(
-      backgroundColor: AppColors.white,
-      body: Column(
-        children: [
-          AppProfileHeader(title: AppStrings.addNewCard.tr, onBack: Get.back),
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 0),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+      return AppAdaptiveBottomSafeScaffold(
+        backgroundColor: AppColors.white,
+        hasBottomWidget: showFooter,
+        body: Column(
+          children: [
+            AppProfileHeader(title: AppStrings.addNewCard.tr, onBack: Get.back),
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 0),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Obx(
+                        () => AppTextField(
+                          label: AppStrings.fullName.tr,
+                          hintText: AppStrings.eGJohnDoe.tr,
+                          controller: controller.cardHolderController,
+                          focusNode: controller.fullNameFocus,
+                          textInputAction: TextInputAction.next,
+                          onSubmitted: (_) => controller.focusCardNumber(),
+                          onChanged: (_) => controller.onFieldChanged(),
+                          errorText: controller.fullNameError.value,
+                          fontSize: 15.h,
+                          fontWeight: FontWeight.w500,
+                          textFieldBackgroundColor: AppColors.pageBackground,
+                          textColor: AppColors.textHeading,
+                        ),
+                      ),
+                      SizedBox(height: 12.h),
+                      Obx(
+                        () => AppTextField(
+                          label: AppStrings.cardNumber.tr,
+                          hintText: AppStrings.value0000000000000000.tr,
+                          controller: controller.cardNumberController,
+                          focusNode: controller.cardNumberFocus,
+                          keyboardType: TextInputType.number,
+                          textInputAction: TextInputAction.next,
+                          onSubmitted: (_) => controller.focusExpiry(),
+                          onChanged: (_) => controller.onFieldChanged(),
+                          errorText: controller.cardNumberError.value,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(16),
+                            _CardNumberFormatter(),
+                          ],
+                          fontSize: 15.h,
+                          fontWeight: FontWeight.w500,
+                          textFieldBackgroundColor: AppColors.pageBackground,
+                          textColor: AppColors.textHeading,
+                        ),
+                      ),
+                      SizedBox(height: 12.h),
+                      Row(
                         children: [
-                          Obx(
-                            () => AppTextField(
-                              label: AppStrings.fullName.tr,
-                              hintText: AppStrings.eGJohnDoe.tr,
-                              controller: controller.cardHolderController,
-                              focusNode: controller.fullNameFocus,
-                              textInputAction: TextInputAction.next,
-                              onSubmitted: (_) => controller.focusCardNumber(),
-                              onChanged: (_) => controller.onFieldChanged(),
-                              errorText: controller.fullNameError.value,
-                              fontSize: 15.h,
-                              fontWeight: FontWeight.w500,
-                              textFieldBackgroundColor:
-                                  AppColors.pageBackground,
-                              textColor: AppColors.textHeading,
-                            ),
-                          ),
-                          SizedBox(height: 12.h),
-                          Obx(
-                            () => AppTextField(
-                              label: AppStrings.cardNumber.tr,
-                              hintText: AppStrings.value0000000000000000.tr,
-                              controller: controller.cardNumberController,
-                              focusNode: controller.cardNumberFocus,
-                              keyboardType: TextInputType.number,
-                              textInputAction: TextInputAction.next,
-                              onSubmitted: (_) => controller.focusExpiry(),
-                              onChanged: (_) => controller.onFieldChanged(),
-                              errorText: controller.cardNumberError.value,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly,
-                                LengthLimitingTextInputFormatter(16),
-                                _CardNumberFormatter(),
-                              ],
-                              fontSize: 15.h,
-                              fontWeight: FontWeight.w500,
-                              textFieldBackgroundColor:
-                                  AppColors.pageBackground,
-                              textColor: AppColors.textHeading,
-                            ),
-                          ),
-                          SizedBox(height: 12.h),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Obx(
-                                  () => AppTextField(
-                                    label: AppStrings.expiry.tr,
-                                    hintText: AppStrings.mmYy.tr,
-                                    controller: controller.expiryController,
-                                    focusNode: controller.expiryFocus,
-                                    keyboardType: TextInputType.number,
-                                    textInputAction: TextInputAction.next,
-                                    onSubmitted: (_) => controller.focusCvv(),
-                                    onChanged: (_) =>
-                                        controller.onFieldChanged(),
-                                    errorText: controller.expiryError.value,
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.digitsOnly,
-                                      LengthLimitingTextInputFormatter(4),
-                                      _CardExpiryFormatter(),
-                                    ],
-                                    fontSize: 15.h,
-                                    fontWeight: FontWeight.w500,
-                                    textFieldBackgroundColor:
-                                        AppColors.pageBackground,
-                                    textColor: AppColors.textHeading,
-                                  ),
-                                ),
+                          Expanded(
+                            child: Obx(
+                              () => AppTextField(
+                                label: AppStrings.expiry.tr,
+                                hintText: AppStrings.mmYy.tr,
+                                controller: controller.expiryController,
+                                focusNode: controller.expiryFocus,
+                                keyboardType: TextInputType.number,
+                                textInputAction: TextInputAction.next,
+                                onSubmitted: (_) => controller.focusCvv(),
+                                onChanged: (_) => controller.onFieldChanged(),
+                                errorText: controller.expiryError.value,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                  LengthLimitingTextInputFormatter(4),
+                                  _CardExpiryFormatter(),
+                                ],
+                                fontSize: 15.h,
+                                fontWeight: FontWeight.w500,
+                                textFieldBackgroundColor:
+                                    AppColors.pageBackground,
+                                textColor: AppColors.textHeading,
                               ),
-                              SizedBox(width: 12.w),
-                              Expanded(
-                                child: Obx(
-                                  () => AppTextField(
-                                    label: AppStrings.cvv.tr,
-                                    hintText: AppStrings.eG123.tr,
-                                    controller: controller.cvvController,
-                                    focusNode: controller.cvvFocus,
-                                    keyboardType: TextInputType.number,
-                                    textInputAction: TextInputAction.done,
-                                    onSubmitted: (_) => controller.submitCard(),
-                                    onChanged: (_) =>
-                                        controller.onFieldChanged(),
-                                    errorText: controller.cvvError.value,
-                                    isPassword: controller.isCvvHidden.value,
-                                    suffixIcon: IconButton(
-                                      onPressed: controller.toggleCvvVisibility,
-                                      icon: Icon(
-                                        controller.isCvvHidden.value
-                                            ? Icons.visibility_off_outlined
-                                            : Icons.visibility_outlined,
-                                        color: AppColors.textBody.withValues(
-                                          alpha: 0.7,
-                                        ),
-                                        size: 20.w,
-                                      ),
+                            ),
+                          ),
+                          SizedBox(width: 12.w),
+                          Expanded(
+                            child: Obx(
+                              () => AppTextField(
+                                label: AppStrings.cvv.tr,
+                                hintText: AppStrings.eG123.tr,
+                                controller: controller.cvvController,
+                                focusNode: controller.cvvFocus,
+                                keyboardType: TextInputType.number,
+                                textInputAction: TextInputAction.done,
+                                onSubmitted: (_) => controller.submitCard(),
+                                onChanged: (_) => controller.onFieldChanged(),
+                                errorText: controller.cvvError.value,
+                                isPassword: controller.isCvvHidden.value,
+                                suffixIcon: IconButton(
+                                  onPressed: controller.toggleCvvVisibility,
+                                  icon: Icon(
+                                    controller.isCvvHidden.value
+                                        ? Icons.visibility_off_outlined
+                                        : Icons.visibility_outlined,
+                                    color: AppColors.textBody.withValues(
+                                      alpha: 0.7,
                                     ),
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.digitsOnly,
-                                      LengthLimitingTextInputFormatter(3),
-                                    ],
-                                    fontSize: 15.h,
-                                    fontWeight: FontWeight.w500,
-                                    textFieldBackgroundColor:
-                                        AppColors.pageBackground,
-                                    textColor: AppColors.textHeading,
+                                    size: 20.w,
                                   ),
                                 ),
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                  LengthLimitingTextInputFormatter(3),
+                                ],
+                                fontSize: 15.h,
+                                fontWeight: FontWeight.w500,
+                                textFieldBackgroundColor:
+                                    AppColors.pageBackground,
+                                textColor: AppColors.textHeading,
                               ),
-                            ],
+                            ),
                           ),
                         ],
                       ),
-                    ),
+                    ],
                   ),
-
-                  SafeArea(
-                    top: false,
-                    bottom: true,
-                    child: Obx(() {
-                      final shouldShow =
-                          controller.isSubmitting.value ||
-                          controller.canSubmitForm.value;
-                      return AppAnimatedReveal(
-                        show: shouldShow,
-                        visibleKey: const ValueKey('add-card-button-visible'),
-                        hiddenKey: const ValueKey('add-card-button-hidden'),
-                        child: Padding(
-                          padding: EdgeInsets.only(
-                            bottom: computedBottomPadding,
-                          ),
-                          child: AppPrimaryButton(
-                            label: AppStrings.addCard.tr,
-                            iconAsset: AppAssets.locationIcArrowRight,
-                            isLoading: controller.isSubmitting.value,
-                            onPressed: controller.isSubmitting.value
-                                ? null
-                                : controller.submitCard,
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+        footer: showFooter
+            ? Padding(
+                padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 0),
+                child: AppPrimaryButton(
+                  label: AppStrings.addCard.tr,
+                  iconAsset: AppAssets.locationIcArrowRight,
+                  isLoading: controller.isSubmitting.value,
+                  onPressed: controller.isSubmitting.value
+                      ? null
+                      : controller.submitCard,
+                ),
+              )
+            : null,
+      );
+    });
   }
 }
 

@@ -7,6 +7,7 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/app_adaptive_bottom_safe_scaffold.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../controllers/notification_controller.dart';
 import '../widgets/notification_screen_shimmer.dart';
@@ -17,10 +18,10 @@ class NotificationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(sl<NotificationController>());
-    final mq = MediaQuery.of(context);
 
-    return Scaffold(
+    return AppAdaptiveBottomSafeScaffold(
       backgroundColor: AppColors.white,
+      hasBottomWidget: true,
       body: Column(
         children: [
           /// Header + Mark All Read
@@ -92,15 +93,7 @@ class NotificationScreen extends StatelessWidget {
                 child: RefreshIndicator(
                   onRefresh: controller.getNotifications,
                   child: ListView.separated(
-                    padding: EdgeInsets.fromLTRB(
-                      16.w,
-                      16.h,
-                      16.w,
-                      (mq.viewInsets.bottom > 0
-                              ? mq.viewInsets.bottom
-                              : mq.viewPadding.bottom) +
-                          16.h,
-                    ),
+                    padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 16.h),
                     itemCount:
                         controller.notifications.length +
                         (controller.hasMorePages ||

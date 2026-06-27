@@ -5,6 +5,7 @@ import 'package:iconsax/iconsax.dart';
 
 import '../../../../../core/localization/app_strings.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/widgets/app_adaptive_bottom_safe_scaffold.dart';
 import '../../../../../shared/widgets/app_profile_header.dart';
 import '../../widgets/menu_item_widget.dart';
 import '../controllers/settings_controller.dart';
@@ -15,8 +16,9 @@ class SettingsScreen extends GetView<SettingsController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppAdaptiveBottomSafeScaffold(
       backgroundColor: AppColors.white,
+      hasBottomWidget: true,
       body: Column(
         children: [
           AppProfileHeader(title: AppStrings.settings.tr),

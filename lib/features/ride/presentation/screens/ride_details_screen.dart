@@ -8,6 +8,7 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/app_adaptive_bottom_safe_scaffold.dart';
 import '../../../../shared/utils/phone_formatter.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
@@ -117,8 +118,9 @@ class RideDetailsScreen extends StatelessWidget {
           await handleCompletionExit();
         }
       },
-      child: Scaffold(
+      child: AppAdaptiveBottomSafeScaffold(
         backgroundColor: AppColors.white,
+        hasBottomWidget: true,
         body: Column(
           children: [
             AppProfileHeader(
@@ -349,63 +351,58 @@ class RideDetailsScreen extends StatelessWidget {
                         showDownloadSlip: controller.isCompleted,
                         onDownloadTap: controller.downloadSlip,
                       ),
-                      SizedBox(height: RideDetailsScreenLayout.scrollBottomGap),
                     ],
-                  ),
-                );
-              }),
-            ),
-            SafeArea(
-              top: false,
-              child: Obx(() {
-                if (controller.isLoadingRideDetails.value) {
-                  return Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      RideDetailsScreenLayout.primaryButtonHorizontalPadding,
-                      0,
-                      RideDetailsScreenLayout.primaryButtonHorizontalPadding,
-                      RideDetailsScreenLayout.primaryButtonBottomPadding,
-                    ),
-                    child: RideDetailsScreenShimmer.primaryButton(),
-                  );
-                }
-                final rc = controller.ratingController;
-                final bool isSimpleDoneFlow =
-                    controller.hasExistingRating ||
-                    !controller.canShowReviewInput;
-                final bool isSubmitting = rc.isSubmitting.value;
-
-                final String buttonLabel = isSimpleDoneFlow
-                    ? AppStrings.done.tr
-                    : (rc.hasSelectedRating
-                          ? AppStrings.done.tr
-                          : AppStrings.skip.tr);
-
-                final onPressed = isSimpleDoneFlow
-                    ? (controller.openedFromCompletionFlow
-                          ? handleCompletionExit
-                          : () => Navigator.pop(context))
-                    : (rc.hasSelectedRating
-                          ? () => rc.onSubmitTap(
-                              onSuccessConfirmed:
-                                  controller.openedFromCompletionFlow
-                                  ? handleCompletionExit
-                                  : () => Navigator.pop(context),
-                            )
-                          : handleSkipFlow);
-
-                return Padding(
-                  padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
-                  child: AppPrimaryButton(
-                    label: buttonLabel,
-                    isLoading: !isSimpleDoneFlow && isSubmitting,
-                    onPressed: onPressed,
                   ),
                 );
               }),
             ),
           ],
         ),
+        footer: Obx(() {
+          if (controller.isLoadingRideDetails.value) {
+            return Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal:
+                    RideDetailsScreenLayout.primaryButtonHorizontalPadding,
+              ),
+              child: RideDetailsScreenShimmer.primaryButton(),
+            );
+          }
+          final rc = controller.ratingController;
+          final bool isSimpleDoneFlow =
+              controller.hasExistingRating || !controller.canShowReviewInput;
+          final bool isSubmitting = rc.isSubmitting.value;
+
+          final String buttonLabel = isSimpleDoneFlow
+              ? AppStrings.done.tr
+              : (rc.hasSelectedRating
+                    ? AppStrings.done.tr
+                    : AppStrings.skip.tr);
+
+          final onPressed = isSimpleDoneFlow
+              ? (controller.openedFromCompletionFlow
+                    ? handleCompletionExit
+                    : () => Navigator.pop(context))
+              : (rc.hasSelectedRating
+                    ? () => rc.onSubmitTap(
+                        onSuccessConfirmed: controller.openedFromCompletionFlow
+                            ? handleCompletionExit
+                            : () => Navigator.pop(context),
+                      )
+                    : handleSkipFlow);
+
+          return Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal:
+                  RideDetailsScreenLayout.primaryButtonHorizontalPadding,
+            ),
+            child: AppPrimaryButton(
+              label: buttonLabel,
+              isLoading: !isSimpleDoneFlow && isSubmitting,
+              onPressed: onPressed,
+            ),
+          );
+        }),
       ),
     );
   }

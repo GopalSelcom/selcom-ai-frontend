@@ -7,8 +7,8 @@ import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/app_adaptive_bottom_safe_scaffold.dart';
 import '../../../../shared/utils/app_dialogs.dart';
-import '../../../../shared/utils/bottom_padding_helper.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/app_text_field.dart';
@@ -76,13 +76,9 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final double computedBottomPadding = getComputedBottomPadding(
-      context,
-      defaultPadding: 24.h,
-    );
-
-    return Scaffold(
+    return AppAdaptiveBottomSafeScaffold(
       backgroundColor: AppColors.white,
+      hasBottomWidget: true,
       body: Column(
         children: [
           AppProfileHeader(title: AppStrings.cardDetail.tr),
@@ -174,37 +170,27 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                     textColor: AppColors.textHeading,
                     fontWeight: FontWeight.w600,
                   ),
-
                   SizedBox(height: 24.h),
                 ],
               ),
             ),
           ),
-          SafeArea(
-            top: false,
-            bottom: true,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                16.w,
-                0,
-                16.w,
-                computedBottomPadding,
-              ),
-              child: AppPrimaryButton(
-                label: AppStrings.deleteCard.tr,
-                onPressed: _openDeleteConfirmationSheet,
-                height: 56.h,
-                borderRadius: 16.r,
-                outlined: true,
-                backgroundColor: AppColors.white,
-                textColor: AppColors.error,
-                outlinedTextColor: AppColors.error,
-                outlinedBorderColor: AppColors.error,
-                outlinedBorderWidth: 1,
-              ),
-            ),
-          ),
         ],
+      ),
+      footer: Padding(
+        padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 0),
+        child: AppPrimaryButton(
+          label: AppStrings.deleteCard.tr,
+          onPressed: _openDeleteConfirmationSheet,
+          height: 56.h,
+          borderRadius: 16.r,
+          outlined: true,
+          backgroundColor: AppColors.white,
+          textColor: AppColors.error,
+          outlinedTextColor: AppColors.error,
+          outlinedBorderColor: AppColors.error,
+          outlinedBorderWidth: 1,
+        ),
       ),
     );
   }

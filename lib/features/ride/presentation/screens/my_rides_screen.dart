@@ -6,6 +6,7 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/app_adaptive_bottom_safe_scaffold.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../controllers/my_rides_controller.dart';
 import '../widgets/my_rides_screen_layout.dart';
@@ -20,8 +21,9 @@ class MyRidesScreen extends StatelessWidget {
     // Inject controller using GetIt and Put it into GetX
     final MyRidesController controller = Get.put(sl<MyRidesController>());
 
-    return Scaffold(
+    return AppAdaptiveBottomSafeScaffold(
       backgroundColor: AppColors.white,
+      hasBottomWidget: true,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -119,8 +121,6 @@ class MyRidesScreen extends StatelessWidget {
 
                           if (controller.isLoadingMore.value)
                             MyRidesScreenShimmer.loadMoreItems(),
-
-                          SizedBox(height: 40.h),
                         ],
                       ),
                     ),
