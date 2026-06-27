@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_adaptive_bottom_safe_scaffold.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/app_shimmer.dart';
 import '../controllers/wallet_controller.dart';
@@ -15,8 +16,9 @@ class WalletScreen extends GetView<WalletController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppAdaptiveBottomSafeScaffold(
       backgroundColor: AppColors.white,
+      hasBottomWidget: true,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -29,7 +31,7 @@ class WalletScreen extends GetView<WalletController> {
                 return _WalletShimmer();
               }
               return Padding(
-                padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 32.h),
+                padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -63,7 +65,7 @@ class _WalletShimmer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 32.h),
+      padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 16.h),
       child: AppShimmer(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_adaptive_bottom_safe_scaffold.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/app_shimmer.dart';
 import '../controllers/wallet_history_controller.dart';
@@ -16,8 +17,9 @@ class WalletHistoryScreen extends GetView<WalletHistoryController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppAdaptiveBottomSafeScaffold(
       backgroundColor: AppColors.white,
+      hasBottomWidget: true,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -69,7 +71,7 @@ class _HistoryShimmer extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppShimmer(
       child: ListView(
-        padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 32.h),
+        padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
         children: List.generate(
           5,
           (_) => Padding(
