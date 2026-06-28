@@ -5,9 +5,11 @@ import 'package:get/get.dart';
 import '../../core/localization/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/utils/bottom_inset_helper.dart';
 import '../data/countries_phone_data.dart';
 import '../utils/app_dialogs.dart';
-import 'app_standard_bottom_sheet_gesture_pad.dart';
+import 'app_standard_bottom_sheet.dart';
+import 'app_standard_bottom_sheet_bottom_pad.dart';
 import 'phone_country_picker_controller.dart';
 
 /// Duka-style: emoji flag + dial code, full list from [Countries.all] in a sheet.
@@ -38,16 +40,17 @@ class PhoneCountryPickerChip extends StatelessWidget {
           SizedBox(width: 8.w),
           Text(
             selected!.dialCode,
-            style: (inline
-                    ? AppTextStyles.homeSubtitle
-                    : AppTextStyles.body.copyWith(
-                        fontFamily: AppTextStyles.metropolisFont,
-                      ))
-                .copyWith(
-              fontWeight: inline ? FontWeight.w600 : FontWeight.w400,
-              color: AppColors.textHeading,
-              fontSize: inline ? 16.sp : 17.sp,
-            ),
+            style:
+                (inline
+                        ? AppTextStyles.homeSubtitle
+                        : AppTextStyles.body.copyWith(
+                            fontFamily: AppTextStyles.metropolisFont,
+                          ))
+                    .copyWith(
+                      fontWeight: inline ? FontWeight.w600 : FontWeight.w400,
+                      color: AppColors.textHeading,
+                      fontSize: inline ? 16.sp : 17.sp,
+                    ),
           ),
         ] else if (inline) ...[
           Text(
@@ -118,13 +121,10 @@ class PhoneCountryPickerChip extends StatelessWidget {
       tag: controllerTag,
     );
 
-    return AppDialogs.showStandardBottomSheet<void>(
-      title: AppStrings.selectCountry.tr,
-      subtitle: AppStrings.selectCountrySubtitle.tr,
-      headerTextAlign: TextAlign.start,
-      maxHeightFactor: 0.85,
+    return AppDialogs.showAnimatedBottomSheet<void>(
       barrierDismissible: true,
-      content: _CountryPickerSheet(
+      handleKeyboardInsets: true,
+      child: _PhoneCountryPickerSheetShell(
         controllerTag: controllerTag,
         onSelect: (country) {
           Get.back<void>();
@@ -133,11 +133,46 @@ class PhoneCountryPickerChip extends StatelessWidget {
       ),
     ).whenComplete(() {
       Future<void>.delayed(const Duration(milliseconds: 400), () {
-        if (Get.isRegistered<PhoneCountryPickerController>(tag: controllerTag)) {
+        if (Get.isRegistered<PhoneCountryPickerController>(
+          tag: controllerTag,
+        )) {
           Get.delete<PhoneCountryPickerController>(tag: controllerTag);
         }
       });
     });
+  }
+}
+
+/// Shell with sheet-local inset flags. Uses [AppDialogs.showAnimatedBottomSheet]
+/// with `handleKeyboardInsets: true` so the sheet moves above the keyboard;
+/// nav clearance when the keyboard is closed comes from [bottomBodyWidget].
+class _PhoneCountryPickerSheetShell extends StatelessWidget {
+  const _PhoneCountryPickerSheetShell({
+    required this.controllerTag,
+    required this.onSelect,
+  });
+
+  final String controllerTag;
+  final ValueChanged<CountryData> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppStandardBottomSheet(
+      title: AppStrings.selectCountry.tr,
+      subtitle: AppStrings.selectCountrySubtitle.tr,
+      headerTextAlign: TextAlign.start,
+      maxHeightFactor: 0.85,
+      hasBottomWidget: false,
+      liftBodyForKeyboard: false,
+      bottomBodyWidget: const AppStandardBottomSheetBottomPad(
+        hideWhenKeyboardOpen: true,
+        includeFooterMinGap: false,
+      ),
+      content: _CountryPickerSheet(
+        controllerTag: controllerTag,
+        onSelect: onSelect,
+      ),
+    );
   }
 }
 
@@ -163,15 +198,28 @@ class _CountryPickerSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
     final screenH = media.size.height;
-    final keyboard = media.viewInsets.bottom;
-    final safeBottom = media.padding.bottom;
+    final helper = BottomInsetHelper.instance;
+    final keyboardOpen = helper.isSheetKeyboardOpen(context);
+    final keyboardInset = media.viewInsets.bottom;
+    final bottomPadHeight = keyboardOpen
+        ? 0.0
+        : helper.resolveSheetBottomPadHeight(
+            context,
+            gestureNavOnly: false,
+            includeFooterMinGap: false,
+          );
 
-    final bodyMaxHeight =
-        (screenH * 0.85 -
-                keyboard -
+    // Use [keyboardOpen] (not raw viewInsets) so residual inset after dismiss
+    // does not shrink the body while the nav pad is still shown.
+    final bodyMaxHeight = (keyboardOpen
+            ? screenH -
+                keyboardInset -
                 _standardSheetHeaderHeight(context) -
-                safeBottom)
-            .clamp(160.0, screenH * 0.55);
+                BottomInsetHelper.footerMinGap
+            : screenH * 0.85 -
+                _standardSheetHeaderHeight(context) -
+                bottomPadHeight)
+        .clamp(160.0, screenH * 0.55);
 
     final searchBlockHeight = 56.h;
     final listHeight = (bodyMaxHeight - searchBlockHeight - 12.h).clamp(
@@ -215,10 +263,7 @@ class _CountryPickerSheet extends StatelessWidget {
                         ),
                       )
                     : ListView.separated(
-                        padding: EdgeInsets.only(
-                          bottom:
-                              8.h + AppStandardBottomSheetGesturePad.height(),
-                        ),
+                        padding: EdgeInsets.only(bottom: 8.h),
                         itemCount: filtered.length,
                         separatorBuilder: (_, __) => SizedBox(height: 8.h),
                         itemBuilder: (context, i) {
@@ -251,9 +296,9 @@ class _CountryPickerSheet extends StatelessWidget {
                                       country.name,
                                       style: AppTextStyles.homeSubtitle
                                           .copyWith(
-                                        fontSize: 15.sp,
-                                        color: AppColors.textHeading,
-                                      ),
+                                            fontSize: 15.sp,
+                                            color: AppColors.textHeading,
+                                          ),
                                     ),
                                   ),
                                   Text(
@@ -329,11 +374,7 @@ class _CountrySearchFieldState extends State<_CountrySearchField> {
           fontSize: 14.sp,
           color: AppColors.textHint,
         ),
-        prefixIcon: Icon(
-          Icons.search,
-          color: AppColors.textBody,
-          size: 22.sp,
-        ),
+        prefixIcon: Icon(Icons.search, color: AppColors.textBody, size: 22.sp),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
           borderSide: const BorderSide(color: AppColors.borderDefault),
@@ -344,15 +385,9 @@ class _CountrySearchFieldState extends State<_CountrySearchField> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
-          borderSide: const BorderSide(
-            color: AppColors.primary,
-            width: 1.5,
-          ),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
-        contentPadding: EdgeInsets.symmetric(
-          horizontal: 12.w,
-          vertical: 12.h,
-        ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
       ),
     );
   }

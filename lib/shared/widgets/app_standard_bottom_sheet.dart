@@ -51,13 +51,15 @@ class AppStandardBottomSheet extends StatelessWidget {
 
   /// When null, defaults to true so content-only sheets get 3-button / iOS
   /// clearance via [AppAdaptiveBottomInsetLayout]. Android gesture uses zero
-  /// layout gap here; opt-in [AppStandardBottomSheetGesturePad] covers gesture.
+  /// layout gap here; use [AppStandardBottomSheetBottomPad] with
+  /// `gestureNavOnly: true` in content, or [AppStandardBottomSheetGesturePad].
   final bool? hasBottomWidget;
 
   final bool liftBodyForKeyboard;
 
   /// Optional widget pinned below the scrollable [content] (not scrolled away).
-  /// Use for sheet-specific nav clearance when [hasBottomWidget] is false.
+  /// Use [AppStandardBottomSheetBottomPad] with `hideWhenKeyboardOpen: true`
+  /// when [hasBottomWidget] is false and the sheet handles keyboard sizing.
   final Widget? bottomBodyWidget;
 
   bool get _hasHeader =>

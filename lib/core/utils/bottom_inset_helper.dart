@@ -26,6 +26,10 @@ class BottomInsetHelper {
   /// [MediaQuery.removePadding] with `removeBottom: true`).
   static const double threeButtonNavFallbackPadding = 48;
 
+  /// Treat keyboard as open above this [MediaQuery.viewInsets.bottom] (avoids
+  /// residual insets from the route under a modal sheet).
+  static const double sheetKeyboardOpenThreshold = 48;
+
   static const double _gestureSafeAreaThreshold = 5;
 
   DeviceNavigationMode? _cachedAndroidMode;
@@ -66,6 +70,55 @@ class BottomInsetHelper {
   /// Android full-screen gesture navigation (cached at startup).
   bool get isAndroidGestureNavigation =>
       Platform.isAndroid && !shouldApplyAndroidSpacingSync();
+
+  /// Height for list-only sheet in-content pad on Android gesture nav only.
+  double gestureOnlySheetPadHeight() {
+    if (!isAndroidGestureNavigation) return 0;
+    return gestureFallbackPadding + footerMinGap;
+  }
+
+  /// Whether the sheet should hide a bottom pad (keyboard or focused field).
+  bool isSheetKeyboardOpen(BuildContext context) {
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+    if (keyboardInset > sheetKeyboardOpenThreshold) return true;
+
+    final focus = FocusManager.instance.primaryFocus;
+    if (focus != null && focus.hasFocus && keyboardInset > 0) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /// Bottom pad height for [AppStandardBottomSheetBottomPad].
+  ///
+  /// When [gestureNavOnly] is true, returns spacing on Android gesture nav only
+  /// (list sheets; 3-button uses layout body-only inset).
+  ///
+  /// [includeFooterMinGap] adds [footerMinGap] for footer-style sheets; set false
+  /// for nav-only [bottomBodyWidget] pads (avoids a white strip above 3-button nav).
+  double resolveSheetBottomPadHeight(
+    BuildContext context, {
+    required bool gestureNavOnly,
+    bool includeFooterMinGap = true,
+  }) {
+    final minGap = includeFooterMinGap ? footerMinGap : 0.0;
+
+    if (gestureNavOnly) {
+      if (!isAndroidGestureNavigation) return 0;
+      return gestureFallbackPadding + minGap;
+    }
+
+    if (isAndroidGestureNavigation) {
+      return gestureFallbackPadding + minGap;
+    }
+
+    if (Platform.isAndroid && shouldApplyAndroidSpacingSync()) {
+      return resolveAndroidThreeButtonNavInset(context) + minGap;
+    }
+
+    return resolveFooterSafeAreaInset(context, true) + minGap;
+  }
 
   /// Safe-area inset for footer when keyboard is closed.
   ///
@@ -109,7 +162,7 @@ class BottomInsetHelper {
 
   /// Bottom inset for scrollable body when there is no [footer].
   ///
-  /// Android gesture: no layout gap (sheets may use [AppStandardBottomSheetGesturePad]).
+  /// Android gesture: no layout gap (sheets may use [AppStandardBottomSheetBottomPad]).
   /// Android 3-button / iOS: clearance when [hasBottomWidget] is true.
   double resolveBodyOnlyBottomSafeAreaInset(
     BuildContext context, {
