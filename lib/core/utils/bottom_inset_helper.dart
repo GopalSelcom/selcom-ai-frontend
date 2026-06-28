@@ -222,4 +222,20 @@ class BottomInsetHelper {
 
     return mq.viewPadding.bottom;
   }
+
+  /// Bottom clearance for [AppDraggableBottomSheet] (map-style draggable panels).
+  ///
+  /// Android 3-button / gesture fallbacks and iOS home indicator — same rules as
+  /// footer safe area, without [footerMinGap].
+  double resolveDraggableSheetBottomInset(BuildContext context) {
+    return resolveFooterSafeAreaInset(context, true);
+  }
+
+  /// Trailing scroll padding inside a draggable sheet when the shell does not
+  /// reserve system inset on the container ([reserveSystemBottomInset] false).
+  double resolveDraggableSheetScrollBottomPad(BuildContext context) {
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+    if (keyboardInset > 0) return keyboardInset;
+    return resolveDraggableSheetBottomInset(context);
+  }
 }

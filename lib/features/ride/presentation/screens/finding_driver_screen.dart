@@ -30,27 +30,7 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
   static const double _sheetMin = 0.28;
   static const double _sheetMaxCompact = 0.44;
   static const double _sheetMaxSearching = 0.36;
-
-  static double _systemBottomInsetPx(BuildContext context) {
-    final mq = MediaQuery.of(context);
-    return mq.viewPadding.bottom;
-  }
-
-  /// Slightly taller min/initial when nav bar present — avoids clipping cancel.
-  static double _sheetSizeWithNavInset(BuildContext context, double base) {
-    final inset = MediaQuery.of(context).viewPadding.bottom;
-
-    if (inset == 0) return base;
-
-    // Normalize instead of ratio
-    final extra = inset > 30 ? 0.06 : 0.02;
-
-    return base + extra;
-  }
-
-  static double _scrollBottomPad(BuildContext context) {
-    return _systemBottomInsetPx(context) > 0 ? 2.h : 0;
-  }
+  static const double _sheetCancelledBase = 0.35;
 
   @override
   void initState() {
@@ -119,10 +99,15 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
             final isSearching = c.assignedDriverLocation.value == null;
             return AppDraggableBottomSheet(
               controller: sheetController,
-              reserveSystemBottomInset: true,
-              initialChildSize: _sheetSizeWithNavInset(context, _sheetInitial),
-              minChildSize: _sheetSizeWithNavInset(context, _sheetMin),
-              maxChildSize: _sheetSizeWithNavInset(
+              initialChildSize: AppDraggableBottomSheet.sheetFractionIncludingBottomInset(
+                context,
+                _sheetInitial,
+              ),
+              minChildSize: AppDraggableBottomSheet.sheetFractionIncludingBottomInset(
+                context,
+                _sheetMin,
+              ),
+              maxChildSize: AppDraggableBottomSheet.sheetFractionIncludingBottomInset(
                 context,
                 isSearching ? _sheetMaxSearching : _sheetMaxCompact,
               ),
@@ -302,7 +287,7 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
       physics: const AlwaysScrollableScrollPhysics(
         parent: ClampingScrollPhysics(),
       ),
-      padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, _scrollBottomPad(context)),
+      padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 0),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -386,10 +371,16 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
           // 4. Action Buttons (Search Again & Back to Home OR Cancel)
           Obx(() {
             if (c.isRideCancelled.value) {
+              final compactSize =
+                  AppDraggableBottomSheet.sheetFractionIncludingBottomInset(
+                context,
+                _sheetCancelledBase,
+              );
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (sheetController.isAttached && sheetController.size > 0.35) {
+                if (sheetController.isAttached &&
+                    (sheetController.size - compactSize).abs() > 0.02) {
                   sheetController.animateTo(
-                    0.35,
+                    compactSize,
                     duration: const Duration(milliseconds: 300),
                     curve: Curves.easeOut,
                   );

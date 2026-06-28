@@ -31,27 +31,6 @@ class DriverAcceptedScreen extends StatelessWidget {
   static const double _sheetMaxDriverAssigned = 0.50;
   static const double _sheetMaxRideStarted = 0.62;
 
-  static double _systemBottomInsetPx(BuildContext context) {
-    final mq = MediaQuery.of(context);
-    return mq.viewPadding.bottom;
-  }
-
-  /// Slightly taller min/initial when nav bar present — avoids clipping cancel.
-  static double _sheetSizeWithNavInset(BuildContext context, double base) {
-    final inset = MediaQuery.of(context).viewPadding.bottom;
-
-    if (inset == 0) return base;
-
-    // Normalize instead of ratio
-    final extra = inset > 30 ? 0.06 : 0.02;
-
-    return base + extra;
-  }
-
-  static double _scrollBottomPad(BuildContext context) {
-    return _systemBottomInsetPx(context) > 0 ? 2.h : 0;
-  }
-
   static double _baseMinSheetSizeForStatus(String status) {
     if (status == 'near_destination') {
       return 0.35;
@@ -62,13 +41,20 @@ class DriverAcceptedScreen extends StatelessWidget {
     return _sheetMin;
   }
 
+  /// Matches home sheet sizing: add [AppDraggableBottomSheet.bottomInsetOf] to fraction.
+  static double _sheetSizeIncludingBottomInset(
+    BuildContext context,
+    double base,
+  ) =>
+      AppDraggableBottomSheet.sheetFractionIncludingBottomInset(context, base);
+
   /// Keeps map chrome above the sheet when status raises the sheet minimum
   /// before [DraggableScrollableController] reports the new size.
   static double _resolvedSheetSizeForActionRow(
     BuildContext context,
     DriverAcceptedController c,
   ) {
-    final minSize = _sheetSizeWithNavInset(
+    final minSize = _sheetSizeIncludingBottomInset(
       context,
       _baseMinSheetSizeForStatus(c.currentRideStatus.value),
     );
@@ -78,15 +64,19 @@ class DriverAcceptedScreen extends StatelessWidget {
 
   void _minimizeSheet(DriverAcceptedController c) {
     if (c.sheetController.isAttached) {
+      final context = Get.context;
       final status = c.currentRideStatus.value;
-      final double targetMin;
+      final double baseMin;
       if (status == 'near_destination') {
-        targetMin = 0.35;
+        baseMin = 0.35;
       } else if (status == 'ride_in_progress' || status == 'ride_started') {
-        targetMin = 0.40;
+        baseMin = 0.40;
       } else {
-        targetMin = _sheetMin;
+        baseMin = _sheetMin;
       }
+      final targetMin = context != null
+          ? _sheetSizeIncludingBottomInset(context, baseMin)
+          : baseMin;
       Future.microtask(() {
         c.sheetController.animateTo(
           targetMin,
@@ -190,8 +180,9 @@ class DriverAcceptedScreen extends StatelessWidget {
               final baseMin = _baseMinSheetSizeForStatus(status);
               final baseInitial = baseMin;
 
-              final initialSize = _sheetSizeWithNavInset(context, baseInitial);
-              final minSize = _sheetSizeWithNavInset(context, baseMin);
+              final initialSize =
+                  _sheetSizeIncludingBottomInset(context, baseInitial);
+              final minSize = _sheetSizeIncludingBottomInset(context, baseMin);
 
               switch (state) {
                 case RideBottomSheetState.driverAssigned:
@@ -204,10 +195,10 @@ class DriverAcceptedScreen extends StatelessWidget {
 
               return AppDraggableBottomSheet(
                 controller: sheetController,
-                reserveSystemBottomInset: true,
                 initialChildSize: initialSize,
                 minChildSize: minSize,
-                maxChildSize: _sheetSizeWithNavInset(context, maxSheetSize),
+                maxChildSize:
+                    _sheetSizeIncludingBottomInset(context, maxSheetSize),
                 childBuilder: (scrollController) =>
                     _bottomSheet(c, scrollController),
               );
@@ -449,7 +440,8 @@ class DriverAcceptedScreen extends StatelessWidget {
       } else {
         currentMin = _sheetMin;
       }
-      final stableBottomPad = screenHeight * currentMin;
+      final stableBottomPad = screenHeight *
+          _sheetSizeIncludingBottomInset(context, currentMin);
 
       final pickup = c.pickupLatLng;
       final destination = c.destinationLatLng;
@@ -872,9 +864,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                     primary: false,
                     clipBehavior: Clip.hardEdge,
                     physics: const ClampingScrollPhysics(),
-                    padding: EdgeInsets.only(
-                      bottom: 16.h + _scrollBottomPad(context),
-                    ),
+                    padding: EdgeInsets.only(bottom: 16.h),
                     child: DriverAcceptedScreenShimmer.rideStartedSheetBody(
                       showChangeDropLink: true,
                     ),
@@ -931,9 +921,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                     primary: false,
                     clipBehavior: Clip.hardEdge,
                     physics: const ClampingScrollPhysics(),
-                    padding: EdgeInsets.only(
-                      bottom: 16.h + _scrollBottomPad(context),
-                    ),
+                    padding: EdgeInsets.only(bottom: 16.h),
                     child: _rideProgressBody(c, showChangeDropLink: true),
                   ),
                 ),

@@ -50,6 +50,7 @@ import '../../../../shared/utils/tanzania_license_plate_formatter.dart';
 import '../../../../shared/utils/socket_ride_scope.dart';
 import '../../../../shared/utils/tracking_route_geometry_utils.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
+import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../data/models/destination_update_models.dart';
@@ -213,13 +214,21 @@ class DriverAcceptedController extends GetxController
   }
 
   double _targetSheetFractionForStatus(String status) {
+    double base;
     if (status == 'near_destination') {
-      return 0.35;
+      base = 0.35;
+    } else if (status == 'ride_in_progress' || status == 'ride_started') {
+      base = 0.40;
+    } else {
+      base = 0.3;
     }
-    if (status == 'ride_in_progress' || status == 'ride_started') {
-      return 0.40;
-    }
-    return 0.3;
+
+    final context = Get.context;
+    if (context == null) return base;
+    return AppDraggableBottomSheet.sheetFractionIncludingBottomInset(
+      context,
+      base,
+    );
   }
 
   void _syncSheetLayoutForCurrentStatus() {

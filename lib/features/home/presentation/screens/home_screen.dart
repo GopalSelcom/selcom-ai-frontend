@@ -11,7 +11,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
-import '../../../../shared/utils/bottom_padding_helper.dart';
 import '../../../../shared/widgets/app_cupertino_text_button.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
@@ -321,14 +320,6 @@ class HomeScreen extends GetView<HomeController> {
   }
 
   List<Widget> _buildHomeSheetContentChildren(BuildContext context) {
-    final mq = MediaQuery.of(context);
-
-    final bottomSafe = mq.viewPadding.bottom; // gesture / system area
-    final keyboard = mq.viewInsets.bottom; // keyboard height
-
-    // If keyboard is open → use keyboard space
-    // else → use safe gesture space
-    final bottomSpacing = keyboard > 0 ? keyboard : bottomSafe;
     return [
       Padding(
         padding: EdgeInsets.symmetric(horizontal: _sheetHorizontalPadding.w),
@@ -434,7 +425,7 @@ class HomeScreen extends GetView<HomeController> {
                 SizedBox(height: titleContentGap.h),
                 _buildVehicleHorizontalList(),
               ],
-              SizedBox(height: bottomSpacing + 2.h),
+              SizedBox(height: 8.h),
             ],
           );
         }),
@@ -668,8 +659,9 @@ class _HomeSheetScrollContentState extends State<_HomeSheetScrollContent> {
       return;
     }
     final layoutHeight = MediaQuery.sizeOf(contentContext).height;
+    final bottomInset = AppDraggableBottomSheet.bottomInsetOf(contentContext);
     widget.onContentMeasured(
-      contentHeightPx: renderBox.size.height,
+      contentHeightPx: renderBox.size.height + bottomInset,
       layoutHeightPx: layoutHeight,
     );
   }
@@ -691,7 +683,7 @@ class _HomeSheetScrollContentState extends State<_HomeSheetScrollContent> {
             key: _contentKey,
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [...widget.children, getSafeBottomBox(context)],
+            children: widget.children,
           ),
         ),
       ),

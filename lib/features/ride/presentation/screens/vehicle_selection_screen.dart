@@ -39,7 +39,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
 
   double _calculateInitialSheetSize(BuildContext context) {
     final double screenHeight = MediaQuery.sizeOf(context).height;
-    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
+    final navInset = AppDraggableBottomSheet.bottomInsetOf(context);
 
     if (screenHeight <= 0) return 0.55;
 
@@ -63,17 +63,8 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
         ((listItemsCount - 1).clamp(0, 2) * 10.h) +
         4.h;
 
-    // Footer: top padding + button (56.h) + notice + bottom inset
-    final double paymentBarHeight =
-        4.h +
-        56.h +
-        8.h +
-        36.h +
-        (GetPlatform.isIOS
-            ? (bottomPadding > 0
-                  ? (bottomPadding - 8.h).clamp(8.h, bottomPadding)
-                  : 12.h)
-            : (bottomPadding > 0 ? bottomPadding + 8.h : 12.h));
+    // Footer: top padding + button (56.h) + notice + nav inset (sheet shell)
+    final double paymentBarHeight = 4.h + 56.h + 8.h + 36.h + navInset;
 
     // Safety margin is zero since list is non-scrollable when <= 3 items are present
     const double safetyMargin = 0;
@@ -415,92 +406,88 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
   }
 
   Widget _bottomSheet(BuildContext context, ScrollController scrollController) {
-    return SafeArea(
-      top: false,
-      bottom: false,
-      child: Column(
-        children: [
-          SizedBox(height: 10.h),
-          Container(
-            width: 48.w,
-            height: 4.h,
-            decoration: BoxDecoration(
-              color: AppColors.skeletonBase,
-              borderRadius: BorderRadius.circular(2.r),
-            ),
+    return Column(
+      children: [
+        SizedBox(height: 10.h),
+        Container(
+          width: 48.w,
+          height: 4.h,
+          decoration: BoxDecoration(
+            color: AppColors.skeletonBase,
+            borderRadius: BorderRadius.circular(2.r),
           ),
-          SizedBox(height: 16.h),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Text(
-                    AppStrings.chooseRide.tr,
-                    style: AppTextStyles.homeTitle,
-                  ),
+        ),
+        SizedBox(height: 16.h),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Text(
+                  AppStrings.chooseRide.tr,
+                  style: AppTextStyles.homeTitle,
                 ),
-                VehicleSelectionPromoChip(controller: controller),
-              ],
-            ),
+              ),
+              VehicleSelectionPromoChip(controller: controller),
+            ],
           ),
-          SizedBox(height: 12.h),
-          Expanded(
-            child: Obx(() {
-              if (controller.isLoadingEstimates.value) {
-                final int estimatesCount = controller.estimates.length;
-                final int visibleItems = estimatesCount.clamp(0, 3);
-                final int shimmerCount = (visibleItems == 0 ? 3 : visibleItems)
-                    .clamp(1, 3);
+        ),
+        SizedBox(height: 12.h),
+        Expanded(
+          child: Obx(() {
+            if (controller.isLoadingEstimates.value) {
+              final int estimatesCount = controller.estimates.length;
+              final int visibleItems = estimatesCount.clamp(0, 3);
+              final int shimmerCount = (visibleItems == 0 ? 3 : visibleItems)
+                  .clamp(1, 3);
 
-                return ListView.separated(
-                  controller: scrollController,
-                  physics: const NeverScrollableScrollPhysics(),
-                  padding: EdgeInsets.only(
-                    left: 16.w,
-                    right: 16.w,
-                    bottom: 4.h,
-                  ),
-                  itemCount: shimmerCount,
-                  separatorBuilder: (_, __) => SizedBox(height: 10.h),
-                  itemBuilder: (_, __) => _vehicleCardShimmer(),
-                );
-              }
               return ListView.separated(
                 controller: scrollController,
-                physics: controller.estimates.length <= 3
-                    ? const NeverScrollableScrollPhysics()
-                    : null,
-                padding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 4.h),
-                itemCount: controller.estimates.length,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: EdgeInsets.only(
+                  left: 16.w,
+                  right: 16.w,
+                  bottom: 4.h,
+                ),
+                itemCount: shimmerCount,
                 separatorBuilder: (_, __) => SizedBox(height: 10.h),
-                itemBuilder: (_, index) {
-                  return Obx(() {
-                    if (index >= controller.estimates.length) {
-                      return const SizedBox.shrink();
-                    }
-                    final item = controller.estimates[index];
-                    final selected =
-                        controller.selectedVehicleIndex.value == index;
-                    return _vehicleCard(
-                      index: index,
-                      item: item,
-                      selected: selected,
-                    );
-                  });
-                },
+                itemBuilder: (_, __) => _vehicleCardShimmer(),
               );
-            }),
+            }
+            return ListView.separated(
+              controller: scrollController,
+              physics: controller.estimates.length <= 3
+                  ? const NeverScrollableScrollPhysics()
+                  : null,
+              padding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 4.h),
+              itemCount: controller.estimates.length,
+              separatorBuilder: (_, __) => SizedBox(height: 10.h),
+              itemBuilder: (_, index) {
+                return Obx(() {
+                  if (index >= controller.estimates.length) {
+                    return const SizedBox.shrink();
+                  }
+                  final item = controller.estimates[index];
+                  final selected =
+                      controller.selectedVehicleIndex.value == index;
+                  return _vehicleCard(
+                    index: index,
+                    item: item,
+                    selected: selected,
+                  );
+                });
+              },
+            );
+          }),
+        ),
+        Obx(
+          () => BookRideWalletFooter(
+            isLoading: controller.isBooking.value,
+            onPressed: controller.bookRide,
           ),
-          Obx(
-            () => BookRideWalletFooter(
-              isLoading: controller.isBooking.value,
-              onPressed: controller.bookRide,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

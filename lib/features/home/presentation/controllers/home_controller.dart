@@ -29,6 +29,7 @@ import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/session_expiry_service.dart';
 import '../../../../core/services/location_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/bottom_inset_helper.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/active_rides_parser.dart';
 import '../../../../shared/utils/app_dialogs.dart';
@@ -48,6 +49,7 @@ import '../../data/models/home_models.dart';
 import '../../data/models/places_models.dart';
 import '../../domain/repositories/home_repository.dart';
 import '../screens/recent_locations_screen.dart';
+import '../widgets/home_sheet_layout.dart';
 import 'location_selection_controller.dart';
 
 class HomeController extends GetxController with WidgetsBindingObserver {
@@ -280,7 +282,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     });
   }
 
-
   void _applyLocationPermissionDenied() {
     hasLocationPermission.value = false;
     deviceGpsLocation.value = null;
@@ -439,7 +440,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
       // Handle Active Ride
       results[3].fold((_) => null, (response) {
-        final activeRideResponse = response as active_ride_api.ActiveRideResponseModel?;
+        final activeRideResponse =
+            response as active_ride_api.ActiveRideResponseModel?;
         _applyActiveRideResponse(activeRideResponse);
       });
 
@@ -939,31 +941,31 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   double get _estimatedBottomPadding {
     final context = Get.context;
     if (context == null) return 16.h;
-    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
-    return bottomPadding > 0
-        ? (GetPlatform.isIOS ? 0.0 : 8.h) + bottomPadding
-        : 16.h;
+    return BottomInsetHelper.instance.resolveDraggableSheetBottomInset(context);
   }
 
   double _homeSheetContentHeight({required bool includeRecent}) {
-    double contentHeight = 78.h;
-    contentHeight += 64.h;
+    double contentHeight =
+        HomeSheetLayout.headerBlockHeight + HomeSheetLayout.chipsRowHeight;
 
     if (includeRecent && shouldShowRecentSection) {
-      contentHeight += 28.h;
+      contentHeight += HomeSheetLayout.sectionGap.h;
+      contentHeight += HomeSheetLayout.sectionTitleHeight;
+      contentHeight += HomeSheetLayout.titleContentGap.h;
       final count = isLoadingHomeData.value
-          ? 3
+          ? HomeSheetLayout.shimmerRecentRowCount
           : recentDestinationsPreview.length;
-      contentHeight += count * 64.h;
+      contentHeight += count * HomeSheetLayout.recentRowHeight;
       if (count > 1) {
-        contentHeight += (count - 1) * 25.h;
+        contentHeight += (count - 1) * HomeSheetLayout.recentDividerBlockHeight;
       }
     }
 
     if (shouldShowVehicleSection) {
-      contentHeight += 12.h;
-      contentHeight += 28.h;
-      contentHeight += 72.h;
+      contentHeight += HomeSheetLayout.sectionGap.h;
+      contentHeight += HomeSheetLayout.sectionTitleHeight;
+      contentHeight += HomeSheetLayout.titleContentGap.h;
+      contentHeight += HomeSheetLayout.vehicleRowHeight.h;
     }
 
     contentHeight += _estimatedBottomPadding;

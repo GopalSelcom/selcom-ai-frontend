@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/bottom_inset_helper.dart';
 
 /// Reusable draggable bottom sheet shell for map-style screens.
 ///
-/// Sits inside the app-level [SafeArea] ([main.dart]); do not add another
-/// bottom [viewPadding] lift here or the sheet sits too high.
+/// Sits inside the app-level [SafeArea] ([main.dart] with `bottom: false`);
+/// use [reserveSystemBottomInset] (default) so content clears Android 3-button
+/// nav, gesture nav, and the iOS home indicator via [BottomInsetHelper].
 class AppDraggableBottomSheet extends StatelessWidget {
   const AppDraggableBottomSheet({
     super.key,
@@ -17,7 +19,7 @@ class AppDraggableBottomSheet extends StatelessWidget {
     this.snapSizes,
     this.controller,
     this.expand = true,
-    this.reserveSystemBottomInset = false,
+    this.reserveSystemBottomInset = true,
     required this.childBuilder,
   });
 
@@ -29,10 +31,27 @@ class AppDraggableBottomSheet extends StatelessWidget {
   final bool snap;
   final bool expand;
 
-  /// Lifts sheet content above Android 3-button nav / iOS home indicator.
+  /// When true (default), lifts all sheet content above system bottom inset.
   final bool reserveSystemBottomInset;
   final List<double>? snapSizes;
   final Widget Function(ScrollController scrollController) childBuilder;
+
+  /// Shared bottom clearance for sheet size math and scroll trailing pads.
+  static double bottomInsetOf(BuildContext context) {
+    return BottomInsetHelper.instance.resolveDraggableSheetBottomInset(context);
+  }
+
+  /// Adds [bottomInsetOf] to [baseFraction] — same rule as home sheet sizing.
+  static double sheetFractionIncludingBottomInset(
+    BuildContext context,
+    double baseFraction,
+  ) {
+    final screenH = MediaQuery.sizeOf(context).height;
+    if (screenH <= 0) return baseFraction;
+    final inset = bottomInsetOf(context);
+    if (inset <= 0) return baseFraction;
+    return (baseFraction + inset / screenH).clamp(baseFraction, 0.92);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +78,9 @@ class AppDraggableBottomSheet extends StatelessWidget {
           ),
           child: reserveSystemBottomInset
               ? Padding(
-                  padding: EdgeInsets.only(bottom: _systemBottomInset(context)),
+                  padding: EdgeInsets.only(
+                    bottom: bottomInsetOf(context),
+                  ),
                   child: childBuilder(scrollController),
                 )
               : childBuilder(scrollController),
@@ -67,11 +88,18 @@ class AppDraggableBottomSheet extends StatelessWidget {
       },
     );
   }
+}
 
-  static double _systemBottomInset(BuildContext context) {
-    final mq = MediaQuery.of(context);
-    final paddingBottom = mq.padding.bottom;
-    final viewBottom = mq.viewPadding.bottom;
-    return paddingBottom > viewBottom ? paddingBottom : viewBottom;
+/// Trailing spacer for draggable sheet scroll content when
+/// [AppDraggableBottomSheet.reserveSystemBottomInset] is false.
+class AppDraggableBottomSheetBottomPad extends StatelessWidget {
+  const AppDraggableBottomSheetBottomPad({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final height = BottomInsetHelper.instance
+        .resolveDraggableSheetScrollBottomPad(context);
+    if (height <= 0) return const SizedBox.shrink();
+    return SizedBox(height: height);
   }
 }

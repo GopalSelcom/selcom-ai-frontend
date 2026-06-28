@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../shared/utils/bottom_padding_helper.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 
 /// Book-ride footer: primary CTA + wallet-only payment notice (no method picker).
@@ -21,17 +20,9 @@ class BookRideWalletFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final loading = isLoading;
-    final bottomPadding = MediaQuery.paddingOf(context).bottom;
-    final computedBottomPadding = bottomPadding > 0
-        ? (GetPlatform.isIOS
-              ? (bottomPadding - 8.h).clamp(8.h, bottomPadding)
-              : (generalConfigController.needBottomSpacing
-                    ? bottomPadding
-                    : bottomPadding + 8.h))
-        : 12.h;
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, computedBottomPadding),
+      padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 12.h),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
