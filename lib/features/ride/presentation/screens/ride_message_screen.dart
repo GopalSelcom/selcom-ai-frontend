@@ -6,6 +6,8 @@ import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/bottom_inset_helper.dart';
+import '../../../../core/widgets/app_adaptive_bottom_safe_scaffold.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/app_back_button.dart';
 import '../../domain/entities/ride_chat_message.dart';
@@ -16,12 +18,15 @@ class RideMessageScreen extends GetView<RideMessageController> {
 
   @override
   Widget build(BuildContext context) {
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+
     return GestureDetector(
       onTap:
           () {}, // Prevents global unfocus handler from intercepting taps on this screen
       behavior: HitTestBehavior.translucent,
-      child: Scaffold(
+      child: AppAdaptiveBottomSafeScaffold(
         backgroundColor: AppColors.surfaceSubtle,
+        liftBodyForKeyboard: false,
         body: Stack(
           children: [
             // Map Header (Faded static image) - extends to top edge under status bar
@@ -44,29 +49,34 @@ class RideMessageScreen extends GetView<RideMessageController> {
               children: [
                 SizedBox(height: 90.h),
                 Expanded(
-                  child: Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: AppColors.white,
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(40.r),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.black.withValues(alpha: 0.08),
-                          blurRadius: 20,
-                          offset: const Offset(0, -4),
+                  child: AnimatedPadding(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeOut,
+                    padding: EdgeInsets.only(bottom: keyboardInset),
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: AppColors.white,
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(40.r),
                         ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        _grabber(),
-                        _header(),
-                        _safetyBanner(),
-                        Expanded(child: _messageList()),
-                        _composer(),
-                      ],
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.black.withValues(alpha: 0.08),
+                            blurRadius: 20,
+                            offset: const Offset(0, -4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          _grabber(),
+                          _header(),
+                          _safetyBanner(),
+                          Expanded(child: _messageList()),
+                          _composer(context),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -349,85 +359,106 @@ class RideMessageScreen extends GetView<RideMessageController> {
     return "${t.hour.toString().padLeft(2, '0')}.${t.minute.toString().padLeft(2, '0')}";
   }
 
-  Widget _composer() {
+  double _composerBottomPadding(BuildContext context) {
+    final helper = BottomInsetHelper.instance;
+    final inset = helper.resolveBodyOnlyBottomSafeAreaInset(
+      context,
+      hasFooter: false,
+      hasBottomWidget: true,
+    );
+    if (inset > 0) return inset;
+    if (helper.isAndroidGestureNavigation) {
+      return helper.gestureOnlySheetPadHeight();
+    }
+    return helper.resolveAndroidThreeButtonNavInset(context);
+  }
+
+  Widget _composer(BuildContext context) {
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final navPad = keyboardOpen ? 0.0 : _composerBottomPadding(context);
+
     return Obx(() {
       final bool allowed = controller.canChat;
       final bool sending = controller.isSending.value;
-      return Container(
-        padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 12.h),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceSubtle,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(26.r)),
-          border: const Border(
-            top: BorderSide(color: AppColors.borderWalletCard),
-          ),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Opacity(
-            opacity: allowed ? 1.0 : 0.5,
-            child: AbsorbPointer(
-              absorbing: !allowed,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _quickReplyChips(allowed: allowed, sending: sending),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: controller.messageController,
-                          enabled: allowed,
-                          keyboardType: TextInputType.multiline,
-                          textInputAction: TextInputAction.newline,
-                          minLines: 1,
-                          maxLines: 5,
-                          style: AppTextStyles.body.copyWith(
-                            color: AppColors.textHeading,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: allowed
-                                ? AppStrings.writeAMessage.tr
-                                : AppStrings.chatUnavailable.tr,
-                            hintStyle: AppTextStyles.hint.copyWith(
-                              color: AppColors.textMessageHint,
+
+      return ColoredBox(
+        color: AppColors.white,
+        child: Padding(
+          padding: EdgeInsets.only(bottom: navPad),
+          child: Container(
+            padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 12.h),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceSubtle,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(26.r)),
+              border: const Border(
+                top: BorderSide(color: AppColors.borderWalletCard),
+              ),
+            ),
+            child: Opacity(
+              opacity: allowed ? 1.0 : 0.5,
+              child: AbsorbPointer(
+                absorbing: !allowed,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _quickReplyChips(allowed: allowed, sending: sending),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: controller.messageController,
+                            enabled: allowed,
+                            keyboardType: TextInputType.multiline,
+                            textInputAction: TextInputAction.newline,
+                            minLines: 1,
+                            maxLines: 5,
+                            style: AppTextStyles.body.copyWith(
+                              color: AppColors.textHeading,
                             ),
-                            border: InputBorder.none,
+                            decoration: InputDecoration(
+                              hintText: allowed
+                                  ? AppStrings.writeAMessage.tr
+                                  : AppStrings.chatUnavailable.tr,
+                              hintStyle: AppTextStyles.hint.copyWith(
+                                color: AppColors.textMessageHint,
+                              ),
+                              border: InputBorder.none,
+                            ),
                           ),
                         ),
-                      ),
-                      SizedBox(width: 12.w),
-                      Container(
-                        width: 42.w,
-                        height: 42.w,
-                        decoration: BoxDecoration(
-                          color: allowed && !sending
-                              ? AppColors.primary
-                              : AppColors.skeletonBase,
-                          shape: BoxShape.circle,
-                        ),
-                        child: IconButton(
-                          onPressed: sending
-                              ? null
-                              : controller.sendCurrentMessage,
-                          icon: SvgPictureAsset(
-                            AppAssets.icSend,
-                            width: 18.w,
-                            height: 18.w,
-                            color: AppColors.white,
-                            placeholderBuilder: (_) => const Icon(
-                              Icons.send_rounded,
+                        SizedBox(width: 12.w),
+                        Container(
+                          width: 42.w,
+                          height: 42.w,
+                          decoration: BoxDecoration(
+                            color: allowed && !sending
+                                ? AppColors.primary
+                                : AppColors.skeletonBase,
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            onPressed: sending
+                                ? null
+                                : controller.sendCurrentMessage,
+                            icon: SvgPictureAsset(
+                              AppAssets.icSend,
+                              width: 18.w,
+                              height: 18.w,
                               color: AppColors.white,
-                              size: 24,
+                              placeholderBuilder: (_) => const Icon(
+                                Icons.send_rounded,
+                                color: AppColors.white,
+                                size: 24,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

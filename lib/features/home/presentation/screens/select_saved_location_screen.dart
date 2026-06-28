@@ -6,8 +6,9 @@ import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/app_adaptive_bottom_safe_scaffold.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
-import '../../../../shared/widgets/app_back_button.dart';
+import '../../../../shared/widgets/app_screen_app_bar.dart';
 import '../controllers/home_controller.dart';
 import '../controllers/select_saved_location_controller.dart';
 import '../widgets/favorite_icon_button.dart';
@@ -20,74 +21,69 @@ class SelectSavedLocationScreen extends GetView<SelectSavedLocationController> {
 
   @override
   Widget build(BuildContext context) {
-    final canGoBack = Navigator.of(context).canPop();
-
     return GestureDetector(
       onTap: () {},
       behavior: HitTestBehavior.translucent,
-      child: Scaffold(
+      child: AppAdaptiveBottomSafeScaffold(
         backgroundColor: AppColors.cardBackground,
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          leading: canGoBack
-              ? const AppBackButton(
-                  color: AppColors.textHeading,
-                  alignment: Alignment.center,
-                )
-              : null,
-          title: Text(controller.label),
+        appBar: AppScreenAppBar(title: controller.label),
+        hasBottomWidget: true,
+        liftBodyForKeyboard: false,
+        pinnedHeader: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(height: 16.h),
+              _buildSearchBar(),
+              SizedBox(height: 16.h),
+            ],
+          ),
         ),
         body: GestureDetector(
           onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
           behavior: HitTestBehavior.translucent,
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: 16.h),
-                _buildSearchBar(),
-                SizedBox(height: 16.h),
-                Expanded(
-                  child: Stack(
-                    children: [
-                      Obx(() {
-                        final query = homeController.searchQuery.value.trim();
-
-                        if (query.isNotEmpty) {
-                          if (homeController.isSearching.value) {
-                            return SelectSavedLocationScreenShimmer
-                                .suggestionsList();
-                          }
-                          return _buildSuggestionsList();
-                        }
-
-                        if (homeController.isLoadingHomeData.value &&
-                            homeController.recentDestinations.isEmpty) {
-                          return SelectSavedLocationScreenShimmer.recentList();
-                        }
-
-                        return _buildRecentList();
-                      }),
-                      Obx(
-                        () => controller.isGeocoding.value
-                            ? Container(
-                                color: AppColors.white.withValues(alpha: 0.5),
-                                child: const Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                              )
-                            : const SizedBox.shrink(),
+            child: Obx(
+              () => Stack(
+                children: [
+                  Positioned.fill(child: _buildListContent()),
+                  if (controller.isGeocoding.value)
+                    Positioned.fill(
+                      child: ColoredBox(
+                        color: AppColors.white.withValues(alpha: 0.5),
+                        child: const Center(
+                          child: CircularProgressIndicator(),
+                        ),
                       ),
-                    ],
-                  ),
-                ),
-              ],
+                    ),
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildListContent() {
+    final query = homeController.searchQuery.value.trim();
+
+    if (query.isNotEmpty) {
+      if (homeController.isSearching.value) {
+        return SelectSavedLocationScreenShimmer.suggestionsList();
+      }
+      return _buildSuggestionsList();
+    }
+
+    if (homeController.isLoadingHomeData.value &&
+        homeController.recentDestinations.isEmpty) {
+      return SelectSavedLocationScreenShimmer.recentList();
+    }
+
+    return _buildRecentList();
   }
 
   Widget _buildSearchBar() {
@@ -158,6 +154,8 @@ class SelectSavedLocationScreen extends GetView<SelectSavedLocationController> {
     }
 
     return ListView.separated(
+      primary: false,
+      padding: EdgeInsets.zero,
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       itemCount: homeController.suggestions.length,
       separatorBuilder: (_, __) => SizedBox(height: 12.h),
@@ -189,6 +187,8 @@ class SelectSavedLocationScreen extends GetView<SelectSavedLocationController> {
     final recentItems = homeController.recentDestinations;
 
     return ListView.separated(
+      primary: false,
+      padding: EdgeInsets.zero,
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       itemCount: recentItems.length,
       separatorBuilder: (_, __) => SizedBox(height: 12.h),

@@ -7,10 +7,12 @@ import 'package:google_maps_flutter/google_maps_flutter.dart' hide Marker;
 import '../../core/localization/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/widgets/app_adaptive_bottom_safe_scaffold.dart';
 import '../../core/widgets/svg_picture_asset.dart';
 import '../../features/home/presentation/controllers/confirm_location_controller.dart';
 import 'app_back_button.dart';
 import 'app_primary_button.dart';
+import 'app_standard_bottom_sheet_bottom_pad.dart';
 import 'app_text_field.dart';
 import 'map_widgets.dart';
 
@@ -23,13 +25,13 @@ class ConfirmLocationScreen extends GetView<ConfirmLocationController> {
     final config = c.uiConfig;
     final canGoBack = Navigator.of(context).canPop();
     final mq = MediaQuery.of(context);
-    final keyboardInset = mq.viewInsets.bottom;
     final bottomSheetMaxHeight =
         mq.size.height - mq.padding.top - mq.padding.bottom - 12;
     final bottomPanelReserve = config.bottomPanelReserve;
 
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
+    return AppAdaptiveBottomSafeScaffold(
+      backgroundColor: AppColors.pageBackground,
+      hasBottomWidget: true,
       body: Stack(
         children: [
           Positioned.fill(
@@ -152,12 +154,7 @@ class ConfirmLocationScreen extends GetView<ConfirmLocationController> {
                   top: false,
                   bottom: false,
                   child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      16.w,
-                      10.h,
-                      16.w,
-                      12.h + mq.padding.bottom + keyboardInset,
-                    ),
+                    padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 12.h),
                     child: SingleChildScrollView(
                       keyboardDismissBehavior:
                           ScrollViewKeyboardDismissBehavior.onDrag,
@@ -451,6 +448,10 @@ class ConfirmLocationScreen extends GetView<ConfirmLocationController> {
                                 height: 54.h,
                               ),
                             ),
+                          ),
+                          const AppStandardBottomSheetBottomPad(
+                            gestureNavOnly: true,
+                            hideWhenKeyboardOpen: true,
                           ),
                         ],
                       ),

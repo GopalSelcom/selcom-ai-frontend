@@ -11,6 +11,8 @@ class AppAdaptiveBottomSafeScaffold extends StatelessWidget {
   const AppAdaptiveBottomSafeScaffold({
     super.key,
     required this.body,
+    this.appBar,
+    this.pinnedHeader,
     this.footer,
     this.backgroundColor = AppColors.pageBackground,
     this.hasBottomWidget = false,
@@ -18,6 +20,12 @@ class AppAdaptiveBottomSafeScaffold extends StatelessWidget {
   });
 
   final Widget body;
+
+  /// Optional top app bar (Material [AppBar] or [PreferredSizeWidget]).
+  final PreferredSizeWidget? appBar;
+
+  /// Fixed content above [body] (search bars, filters, etc.).
+  final Widget? pinnedHeader;
 
   /// Optional bottom slot. Fully screen-controlled.
   final Widget? footer;
@@ -35,10 +43,13 @@ class AppAdaptiveBottomSafeScaffold extends StatelessWidget {
     return Scaffold(
       backgroundColor: backgroundColor,
       resizeToAvoidBottomInset: false,
+      appBar: appBar,
       body: MediaQuery.removePadding(
         context: context,
         removeBottom: true,
+        removeTop: appBar != null,
         child: AppAdaptiveBottomInsetLayout(
+          pinnedHeader: pinnedHeader,
           body: body,
           footer: footer,
           hasBottomWidget: hasBottomWidget,

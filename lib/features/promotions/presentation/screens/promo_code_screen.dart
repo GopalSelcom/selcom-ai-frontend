@@ -7,6 +7,8 @@ import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/bottom_inset_helper.dart';
+import '../../../../core/widgets/app_adaptive_bottom_safe_scaffold.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/widgets/animated_blur_dialog.dart';
 import '../../../../shared/widgets/app_cupertino_text_button.dart';
@@ -18,59 +20,75 @@ import '../controllers/promo_code_controller.dart';
 class PromoCodeScreen extends StatelessWidget {
   const PromoCodeScreen({super.key});
 
+  double _listBottomPadding(BuildContext context) {
+    return BottomInsetHelper.instance.resolveBodyOnlyBottomSafeAreaInset(
+      context,
+      hasFooter: false,
+      hasBottomWidget: true,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final PromoCodeController controller = Get.find<PromoCodeController>();
+    final listBottomPad = _listBottomPadding(context);
 
     return Obx(() {
       final applying = controller.isApplying.value;
       final showSuccess = controller.showApplySuccess.value;
       return PopScope(
         canPop: !applying && !showSuccess,
-        child: Scaffold(
+        child: AppAdaptiveBottomSafeScaffold(
           backgroundColor: AppColors.white,
+          liftBodyForKeyboard: false,
+          pinnedHeader: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppProfileHeader(title: AppStrings.havePromoCode.tr),
+              Padding(
+                padding: EdgeInsets.fromLTRB(16.w, 13.h, 16.w, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppStrings.enterPromocode.tr,
+                      style: AppTextStyles.bodySecondary.copyWith(
+                        fontSize: 15.sp,
+                        color: AppColors.textMutedStrong,
+                        fontWeight: FontWeight.w500,
+                        height: 20 / 15,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Obx(() => _buildPromoInputField(controller)),
+                    SizedBox(height: 18.h),
+                    Text(
+                      AppStrings.promocodeList.tr,
+                      style: AppTextStyles.bodySecondary.copyWith(
+                        fontSize: 15.sp,
+                        color: AppColors.textBody,
+                        fontWeight: FontWeight.w500,
+                        height: 20 / 15,
+                      ),
+                    ),
+                    SizedBox(height: 5.h),
+                  ],
+                ),
+              ),
+            ],
+          ),
           body: Stack(
             children: [
-              Column(
-                children: [
-                  AppProfileHeader(title: AppStrings.havePromoCode.tr),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(16.w, 13.h, 16.w, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          AppStrings.enterPromocode.tr,
-                          style: AppTextStyles.bodySecondary.copyWith(
-                            fontSize: 15.sp,
-                            color: AppColors.textMutedStrong,
-                            fontWeight: FontWeight.w500,
-                            height: 20 / 15,
-                          ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Obx(() => _buildPromoInputField(controller)),
-                        SizedBox(height: 18.h),
-                        Text(
-                          AppStrings.promocodeList.tr,
-                          style: AppTextStyles.bodySecondary.copyWith(
-                            fontSize: 15.sp,
-                            color: AppColors.textBody,
-                            fontWeight: FontWeight.w500,
-                            height: 20 / 15,
-                          ),
-                        ),
-                        SizedBox(height: 5.h),
-                      ],
+              Positioned.fill(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  child: Obx(
+                    () => _buildPromoListSection(
+                      controller,
+                      listBottomPad: listBottomPad,
                     ),
                   ),
-                  Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 13.h),
-                      child: Obx(() => _buildPromoListSection(controller)),
-                    ),
-                  ),
-                ],
+                ),
               ),
               if (showSuccess) _buildApplySuccessOverlay(),
             ],
@@ -86,10 +104,16 @@ class PromoCodeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPromoListSection(PromoCodeController controller) {
+  Widget _buildPromoListSection(
+    PromoCodeController controller, {
+    required double listBottomPad,
+  }) {
+    final bottomPad = 13.h + listBottomPad;
+
     if (controller.isLoading.value) {
       return ListView.separated(
-        padding: EdgeInsets.zero,
+        primary: false,
+        padding: EdgeInsets.only(bottom: bottomPad),
         itemCount: 3,
         separatorBuilder: (_, __) => SizedBox(height: 12.h),
         itemBuilder: (_, __) =>
@@ -116,7 +140,8 @@ class PromoCodeScreen extends StatelessWidget {
 
     final promos = controller.promoCodes;
     return ListView.separated(
-      padding: EdgeInsets.zero,
+      primary: false,
+      padding: EdgeInsets.only(bottom: bottomPad),
       itemCount: promos.length,
       separatorBuilder: (_, __) => SizedBox(height: 12.h),
       itemBuilder: (context, index) {

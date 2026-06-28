@@ -7,10 +7,11 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/bottom_inset_helper.dart';
+import '../../../../core/widgets/app_adaptive_bottom_safe_scaffold.dart';
 import '../../../../core/widgets/spin_kit_fading_circle.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
-import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/favorite_location_chips_row.dart';
@@ -94,50 +95,42 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         onTap: () {},
         // Prevents global unfocus handler from intercepting taps on this screen
         behavior: HitTestBehavior.translucent,
-        child: Scaffold(
-          backgroundColor: AppColors.pageBackground,
-          body: SafeArea(
-            child: Stack(
+        child: Obx(() {
+          final shouldShowBookRideButton =
+              locationController.areAllSegmentsReadyForBooking ||
+              controller.isProceedingToBooking.value;
+          final topInset = MediaQuery.paddingOf(context).top;
+
+          return AppAdaptiveBottomSafeScaffold(
+            hasBottomWidget: shouldShowBookRideButton,
+            liftBodyForKeyboard: shouldShowBookRideButton,
+            pinnedHeader: Stack(
+              clipBehavior: Clip.none,
               children: [
-                Obx(() {
-                  final bool shouldShowBookRideButton =
-                      locationController.areAllSegmentsReadyForBooking ||
-                      controller.isProceedingToBooking.value;
-                  return AnimatedPadding(
-                    duration: const Duration(milliseconds: 240),
-                    curve: Curves.easeOutCubic,
-                    padding: EdgeInsets.only(
-                      top: 60.h,
-                      bottom: shouldShowBookRideButton ? 92.h : 16.h,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16.w),
-                          child: Obx(() {
-                            locationController.syncPickupFromLiveAddress();
-                            locationController
-                                .extraDestinationControllers
-                                .length;
-                            return _pickupDestinationCard();
-                          }),
-                        ),
-                        SizedBox(height: 8.79.h),
-                        _chipsRow(),
-                        SizedBox(height: 9.h),
-                        Expanded(
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16.w),
-                            child: _buildSearchContent(),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
+                Padding(
+                  padding: EdgeInsets.only(top: topInset + 60.h),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.w),
+                        child: Obx(() {
+                          locationController.syncPickupFromLiveAddress();
+                          locationController
+                              .extraDestinationControllers
+                              .length;
+                          return _pickupDestinationCard();
+                        }),
+                      ),
+                      SizedBox(height: 8.79.h),
+                      _chipsRow(),
+                      SizedBox(height: 9.h),
+                    ],
+                  ),
+                ),
                 Positioned(
-                  top: 12.h,
+                  top: topInset + 12.h,
                   left: 16.w,
                   child: Navigator.of(context).canPop()
                       ? AppBackButton(
@@ -147,7 +140,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                       : const SizedBox.shrink(),
                 ),
                 Positioned(
-                  top: 12.h,
+                  top: topInset + 12.h,
                   left: 0,
                   right: 0,
                   child: Center(
@@ -162,26 +155,22 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                     ),
                   ),
                 ),
-                Obx(() {
-                  final bool shouldShowBookRideButton =
-                      locationController.areAllSegmentsReadyForBooking ||
-                      controller.isProceedingToBooking.value;
-                  return Positioned(
-                    left: 16.w,
-                    right: 16.w,
-                    bottom: 26.h,
-                    child: AppAnimatedReveal(
-                      show: shouldShowBookRideButton,
-                      visibleKey: const ValueKey('book-ride-visible'),
-                      hiddenKey: const ValueKey('book-ride-hidden'),
-                      child: _bookRideButton(),
-                    ),
-                  );
-                }),
               ],
             ),
-          ),
-        ),
+            body: Padding(
+              padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
+              child: _buildSearchContent(
+                bookRideFooterVisible: shouldShowBookRideButton,
+              ),
+            ),
+            footer: shouldShowBookRideButton
+                ? Padding(
+                    padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 0),
+                    child: _bookRideButton(),
+                  )
+                : null,
+          );
+        }),
       ),
     );
   }
@@ -595,7 +584,22 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     });
   }
 
-  Widget _suggestionsList(HomeController controller) {
+  double _scrollNavBottomPadding(
+    BuildContext context, {
+    required bool bookRideFooterVisible,
+  }) {
+    if (bookRideFooterVisible) return 0;
+    return BottomInsetHelper.instance.resolveBodyOnlyBottomSafeAreaInset(
+      context,
+      hasFooter: false,
+      hasBottomWidget: true,
+    );
+  }
+
+  Widget _suggestionsList(
+    HomeController controller, {
+    required double listBottomPad,
+  }) {
     if (controller.suggestions.isEmpty) {
       return Center(
         child: Text(
@@ -605,6 +609,8 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       );
     }
     return ListView.separated(
+      primary: false,
+      padding: EdgeInsets.only(bottom: listBottomPad),
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       itemCount: controller.suggestions.length,
       separatorBuilder: (_, __) => SizedBox(height: 8.h),
@@ -637,7 +643,10 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     );
   }
 
-  Widget _recentList(HomeController controller) {
+  Widget _recentList(
+    HomeController controller, {
+    required double listBottomPad,
+  }) {
     if (controller.searchQuery.value.trim().isEmpty) {
       if (controller.savedPlaces.isEmpty &&
           controller.recentDestinations.isEmpty) {
@@ -655,6 +664,8 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       }
 
       return ListView(
+        primary: false,
+        padding: EdgeInsets.only(bottom: listBottomPad),
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         children: [
           if (controller.savedPlaces.isNotEmpty) ...[
@@ -673,6 +684,8 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     }
 
     return ListView.separated(
+      primary: false,
+      padding: EdgeInsets.only(bottom: listBottomPad),
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       itemCount: controller.recentSearches.length,
       separatorBuilder: (_, __) => SizedBox(height: 8.h),
@@ -1052,12 +1065,16 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     // controller.suggestions.clear();
   }
 
-  Widget _buildSearchContent() {
+  Widget _buildSearchContent({required bool bookRideFooterVisible}) {
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       behavior: HitTestBehavior.translucent,
       child: Obx(() {
         locationController.isLoadingInitialContent.value;
+        final listBottomPad = _scrollNavBottomPadding(
+          context,
+          bookRideFooterVisible: bookRideFooterVisible,
+        );
         if (controller.isSearching.value) {
           return Center(
             child: SpinKitFadingCircle(color: AppColors.primary, size: 50.sp),
@@ -1065,12 +1082,21 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         }
         if (locationController.shouldShowPlaceListShimmer &&
             controller.searchQuery.value.trim().isEmpty) {
-          return LocationSelectionShimmer.savedAndRecentList();
+          return Padding(
+            padding: EdgeInsets.only(bottom: listBottomPad),
+            child: LocationSelectionShimmer.savedAndRecentList(),
+          );
         }
         if (controller.searchQuery.value.trim().isNotEmpty) {
-          return _suggestionsList(controller);
+          return _suggestionsList(
+            controller,
+            listBottomPad: listBottomPad,
+          );
         }
-        return _recentList(controller);
+        return _recentList(
+          controller,
+          listBottomPad: listBottomPad,
+        );
       }),
     );
   }

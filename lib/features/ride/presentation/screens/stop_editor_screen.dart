@@ -7,6 +7,7 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/app_adaptive_bottom_safe_scaffold.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/widgets/app_back_button.dart';
@@ -26,79 +27,78 @@ class StopEditorScreen extends GetView<StopEditorController> {
     return GestureDetector(
       onTap: () {},
       behavior: HitTestBehavior.translucent,
-      child: Scaffold(
-        backgroundColor: AppColors.cardBackground,
-        appBar: AppBar(
-          title: Text(controller.appBarTitle),
-          leading: const AppBackButton(
-            color: AppColors.textHeading,
-            alignment: Alignment.center,
-          ),
-        ),
-        body: Column(
-          children: [
-            Expanded(
-              child: controller.isDestinationEditor
-                  ? ListView(
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 16.w,
-                        vertical: 20.h,
-                      ),
-                      children: [
-                        _buildStaticPoint(
-                          AppStrings.currentDestination.tr,
-                          driverController.destinationAddress,
-                          AppColors.mapDropMarkerGreen,
+      child: Obx(() {
+        driverController.stopUpdatePreview.value;
+        driverController.destinationUpdatePreview.value;
+        controller.selectedDestination.value;
+        controller.stops.length;
+
+        final showSave = controller.shouldShowSaveButton;
+
+        return AppAdaptiveBottomSafeScaffold(
+          backgroundColor: AppColors.cardBackground,
+          hasBottomWidget: showSave,
+          body: Column(
+            children: [
+              AppBar(
+                title: Text(controller.appBarTitle),
+                leading: const AppBackButton(
+                  color: AppColors.textHeading,
+                  alignment: Alignment.center,
+                ),
+              ),
+              Expanded(
+                child: controller.isDestinationEditor
+                    ? ListView(
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 16.w,
+                          vertical: 20.h,
                         ),
-                        Obx(() {
-                          final address =
-                              controller.selectedDestination.value?['address']
-                                  ?.toString() ??
-                              '';
-                          if (address.trim().isEmpty) {
-                            return const SizedBox.shrink();
-                          }
-                          return _buildStaticPoint(
-                            AppStrings.newDestination.tr,
-                            address,
-                            AppColors.secondary,
-                          );
-                        }),
-                        _buildChangeDropLocationButton(),
-                      ],
-                    )
-                  : Obx(_buildStopsEditorScrollView),
-            ),
-            controller.isDestinationEditor
-                ? _buildDestinationPreviewPanel()
-                : _buildPreviewPanel(),
-            SafeArea(
-              child: Padding(
-                padding: EdgeInsets.all(16.w),
-                child: Obx(() {
-                  driverController.stopUpdatePreview.value;
-                  driverController.destinationUpdatePreview.value;
-                  controller.selectedDestination.value;
-                  controller.stops.length;
-
-                  if (!controller.shouldShowSaveButton) {
-                    return const SizedBox.shrink();
-                  }
-
-                  return AppPrimaryButton(
+                        children: [
+                          _buildStaticPoint(
+                            AppStrings.currentDestination.tr,
+                            driverController.destinationAddress,
+                            AppColors.mapDropMarkerGreen,
+                          ),
+                          Obx(() {
+                            final address =
+                                controller.selectedDestination.value?['address']
+                                    ?.toString() ??
+                                '';
+                            if (address.trim().isEmpty) {
+                              return const SizedBox.shrink();
+                            }
+                            return _buildStaticPoint(
+                              AppStrings.newDestination.tr,
+                              address,
+                              AppColors.secondary,
+                            );
+                          }),
+                          _buildChangeDropLocationButton(),
+                        ],
+                      )
+                    : Obx(_buildStopsEditorScrollView),
+              ),
+              controller.isDestinationEditor
+                  ? _buildDestinationPreviewPanel()
+                  : _buildPreviewPanel(),
+            ],
+          ),
+          footer: showSave
+              ? Padding(
+                  padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 0),
+                  child: AppPrimaryButton(
                     label: controller.saveButtonLabel,
                     onPressed:
                         controller.isSaving.value ? null : controller.onSave,
                     isLoading: controller.isSaving.value,
-                  );
-                }),
-              ),
-            ),
-          ],
-        ),
-      ),
+                  ),
+                )
+              : null,
+        );
+      }),
     );
   }
 
