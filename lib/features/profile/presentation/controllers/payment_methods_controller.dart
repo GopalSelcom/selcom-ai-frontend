@@ -251,17 +251,14 @@ class PaymentMethodsController extends GetxController {
     final result = await Get.to<PaymentCard>(() => const AddCardScreen());
 
     if (result != null) {
-      AppDialogs.showAnimatedBottomSheet(
-        child: PaymentCardActionBottomSheet(
-          title: AppStrings.yourCardHasBeenNaddedSuccessfully.tr,
-          description: AppStrings.cardReadyToUseYouCanManageOrRemoveAnytime.tr,
-          cardNumber: result.fullNumber,
-          imageAssetPath: AppAssets.imgPaymentAddCardSuccess,
-          primaryButtonLabel: AppStrings.ok.tr,
-          onPrimaryPressed: AppDialogs.closeActiveDialog,
-          iconAsset: AppAssets.locationIcArrowRight,
-        ),
-        barrierDismissible: true,
+      await PaymentCardActionBottomSheet.show(
+        title: AppStrings.yourCardHasBeenNaddedSuccessfully.tr,
+        description: AppStrings.cardReadyToUseYouCanManageOrRemoveAnytime.tr,
+        cardNumber: result.fullNumber,
+        imageAssetPath: AppAssets.imgPaymentAddCardSuccess,
+        primaryButtonLabel: AppStrings.ok.tr,
+        onPrimaryPressed: AppDialogs.closeActiveDialog,
+        iconAsset: AppAssets.locationIcArrowRight,
       );
     }
   }

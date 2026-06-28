@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -7,9 +9,9 @@ import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/bottom_inset_helper.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
-import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_standard_bottom_sheet.dart';
 import '../../../../shared/widgets/app_text_field.dart';
@@ -60,11 +62,19 @@ class BookingForSomeoneElseFlowBottomSheet extends StatelessWidget {
       controller.selectedCountry.value;
       controller.phoneFieldKey.value;
 
+      final isDetails =
+          controller.currentStep.value == BookingFlowStep.details;
+      final showFooter = isDetails && controller.canConfirm.value;
+
       return AppStandardBottomSheet(
         title: controller.sheetTitle,
         subtitle: controller.sheetSubtitle,
         headerTextAlign: TextAlign.start,
         maxHeightFactor: 0.75,
+        hasBottomWidget: isDetails,
+        liftBodyForKeyboard: !isDetails,
+        bottomBodyWidget:
+            isDetails ? null : const _BookingSheetBottomPad(),
         content: AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
           switchInCurve: Curves.easeInOutCubic,
@@ -76,13 +86,36 @@ class BookingForSomeoneElseFlowBottomSheet extends StatelessWidget {
             ).animate(animation);
             return FadeTransition(
               opacity: animation,
-              child: SlideTransition(position: offsetAnimation, child: child),
+              child: SlideTransition(
+                position: offsetAnimation,
+                child: child,
+              ),
             );
           },
           child: controller.currentStep.value == BookingFlowStep.choice
               ? _BookingChoiceStep(controller: controller)
               : _BookingDetailsStep(controller: controller),
         ),
+        footer: isDetails
+            ? AnimatedSize(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOut,
+                alignment: Alignment.topCenter,
+                clipBehavior: Clip.none,
+                child: showFooter
+                    ? AppPrimaryButton(
+                        key: const ValueKey('booking-confirm-footer'),
+                        label: AppStrings.confirm.tr,
+                        iconAsset: AppAssets.locationIcArrowRight,
+                        alignIconToTrailingEnd: true,
+                        onPressed: controller.onConfirmPressed,
+                      )
+                    : const SizedBox(
+                        key: ValueKey('booking-footer-spacer'),
+                        width: double.infinity,
+                      ),
+              )
+            : null,
       );
     });
   }
@@ -238,21 +271,54 @@ class _BookingDetailsStepState extends State<_BookingDetailsStep> {
           errorText: controller.phoneError.value,
           onChanged: (_) {},
         ),
-        AppAnimatedReveal(
-          show: controller.canConfirm.value,
-          visibleKey: const ValueKey('booking-confirm-visible'),
-          hiddenKey: const ValueKey('booking-confirm-hidden'),
-          child: Padding(
-            padding: EdgeInsets.only(top: 22.h, bottom: 8.h),
-            child: AppPrimaryButton(
-              label: AppStrings.confirm.tr,
-              iconAsset: AppAssets.locationIcArrowRight,
-              alignIconToTrailingEnd: true,
-              onPressed: controller.onConfirmPressed,
-            ),
-          ),
-        ),
       ],
     );
+  }
+}
+
+/// Nav clearance for the **choice** step when there is no footer slot.
+///
+/// On the details step, an empty footer + [AppAdaptiveBottomInsetLayout]
+/// footer padding keeps nav clearance without toggling layout flags.
+class _BookingSheetBottomPad extends StatelessWidget {
+  const _BookingSheetBottomPad();
+
+  /// Ignore small residual [MediaQuery.viewInsets] from the route under the sheet.
+  static const double _keyboardOpenThreshold = 48;
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isKeyboardOpen(context)) {
+      return const SizedBox.shrink();
+    }
+
+    final helper = BottomInsetHelper.instance;
+    final double height;
+
+    if (helper.isAndroidGestureNavigation) {
+      height = BottomInsetHelper.gestureFallbackPadding +
+          BottomInsetHelper.footerMinGap;
+    } else if (Platform.isAndroid && helper.shouldApplyAndroidSpacingSync()) {
+      height = helper.resolveAndroidThreeButtonNavInset(context) +
+          BottomInsetHelper.footerMinGap;
+    } else {
+      height = helper.resolveFooterSafeAreaInset(context, true) +
+          BottomInsetHelper.footerMinGap;
+    }
+
+    if (height <= 0) return const SizedBox.shrink();
+    return SizedBox(height: height);
+  }
+
+  bool _isKeyboardOpen(BuildContext context) {
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+    if (keyboardInset > _keyboardOpenThreshold) return true;
+
+    final focus = FocusManager.instance.primaryFocus;
+    if (focus != null && focus.hasFocus && keyboardInset > 0) {
+      return true;
+    }
+
+    return false;
   }
 }

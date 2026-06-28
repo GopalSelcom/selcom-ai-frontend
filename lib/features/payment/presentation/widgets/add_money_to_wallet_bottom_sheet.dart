@@ -14,6 +14,7 @@ import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/thousands_separator_input_formatter.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_standard_bottom_sheet.dart';
+import '../../../../shared/widgets/app_standard_bottom_sheet_gesture_pad.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../../data/models/go_other_payment_methods_models.dart';
 import '../controllers/tanqr_wallet_topup_controller.dart';
@@ -139,6 +140,7 @@ class _OptionsContent extends StatelessWidget {
           onTap: () => _onOptionTap(_AddMoneyOption.mobileMoney),
         ),
         SizedBox(height: 8.h),
+        const AppStandardBottomSheetGesturePad(),
         // _AddMoneyOptionTile(
         //   title: AppStrings.addMoneyStepsToLoadGoWallet.tr,
         //   subtitle: AppStrings.addMoneyStepsToLoadGoWalletSubtitle.tr,

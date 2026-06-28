@@ -42,34 +42,65 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
   @override
   Widget build(BuildContext context) {
     return Obx(
-      () => AppStandardBottomSheet(
-        title: _titleForStep(controller.selcomPesaStep.value),
-        headerTextAlign: TextAlign.center,
-        showHeaderDivider: true,
-        maxHeightFactor: 0.92,
-        content: AnimatedSize(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOutCubic,
-          alignment: Alignment.topCenter,
-          child: AnimatedSwitcher(
+      () {
+        final step = controller.selcomPesaStep.value;
+        controller.canContinueSelcomPhone.value;
+        return AppStandardBottomSheet(
+          title: _titleForStep(step),
+          headerTextAlign: TextAlign.center,
+          showHeaderDivider: true,
+          maxHeightFactor: 0.92,
+          content: AnimatedSize(
             duration: const Duration(milliseconds: 300),
-            switchInCurve: Curves.easeInOutCubic,
-            switchOutCurve: Curves.easeInOutCubic,
-            transitionBuilder: (child, animation) {
-              final offsetAnimation = Tween<Offset>(
-                begin: const Offset(0.1, 0.0),
-                end: Offset.zero,
-              ).animate(animation);
-              return FadeTransition(
-                opacity: animation,
-                child: SlideTransition(position: offsetAnimation, child: child),
-              );
-            },
-            child: _buildStepContent(context, controller.selcomPesaStep.value),
+            curve: Curves.easeInOutCubic,
+            alignment: Alignment.topCenter,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              switchInCurve: Curves.easeInOutCubic,
+              switchOutCurve: Curves.easeInOutCubic,
+              transitionBuilder: (child, animation) {
+                final offsetAnimation = Tween<Offset>(
+                  begin: const Offset(0.1, 0.0),
+                  end: Offset.zero,
+                ).animate(animation);
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: offsetAnimation,
+                    child: child,
+                  ),
+                );
+              },
+              child: _buildStepContent(context, step),
+            ),
           ),
-        ),
-      ),
+          footer: _footerForStep(step),
+        );
+      },
     );
+  }
+
+  Widget? _footerForStep(SelcomPesaStep step) {
+    switch (step) {
+      case SelcomPesaStep.connect:
+        return AppPrimaryButton(
+          label: AppStrings.continueLabel.tr,
+          onPressed: controller.openPhoneInput,
+        );
+      case SelcomPesaStep.phoneInput:
+        if (!controller.canContinueSelcomPhone.value) return null;
+        return AppPrimaryButton(
+          label: AppStrings.continueLabel.tr,
+          onPressed: controller.onPhoneContinue,
+        );
+      case SelcomPesaStep.otp:
+        return null;
+      case SelcomPesaStep.selfie:
+        return AppPrimaryButton(
+          label: AppStrings.takeSelfie.tr,
+          onPressed: controller.takeSelfie,
+        );
+    }
   }
 
   Widget _buildStepContent(BuildContext context, SelcomPesaStep step) {
@@ -114,11 +145,6 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
           ),
         ),
         SizedBox(height: 20.h),
-
-        AppPrimaryButton(
-          label: AppStrings.continueLabel.tr,
-          onPressed: controller.openPhoneInput,
-        ),
       ],
     );
   }
@@ -196,31 +222,6 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
         ),
 
         SizedBox(height: 24.h),
-
-        Obx(
-          () => AnimatedSwitcher(
-            duration: const Duration(milliseconds: 260),
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeInCubic,
-            transitionBuilder: (child, animation) => FadeTransition(
-              opacity: animation,
-              child: SizeTransition(
-                sizeFactor: animation,
-                axis: Axis.vertical,
-                child: child,
-              ),
-            ),
-            child: controller.canContinueSelcomPhone.value
-                ? AppPrimaryButton(
-                    key: const ValueKey('selcom-pesa-continue-visible'),
-                    label: AppStrings.continueLabel.tr,
-                    onPressed: controller.onPhoneContinue,
-                  )
-                : const SizedBox.shrink(
-                    key: ValueKey('selcom-pesa-continue-hidden'),
-                  ),
-          ),
-        ),
       ],
     );
   }
@@ -361,11 +362,6 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
           ),
         ),
         SizedBox(height: 24.h),
-
-        AppPrimaryButton(
-          label: AppStrings.takeSelfie.tr,
-          onPressed: controller.takeSelfie,
-        ),
       ],
     );
   }

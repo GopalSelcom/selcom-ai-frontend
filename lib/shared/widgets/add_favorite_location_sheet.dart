@@ -104,24 +104,12 @@ class _AddFavoriteLocationSheetBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final media = MediaQuery.of(context);
-    final screenH = media.size.height;
-    final keyboard = media.viewInsets.bottom;
-    final safeBottom = media.padding.bottom;
-
-    final maxCap = (screenH * 0.92 - standardSheetHeaderHeight - safeBottom)
-        .clamp(240.0, screenH * 0.75);
-
     return Obx(() {
       controller.savedPlaces.length;
       controller.selectedLabel.value;
       controller.customLabelText.value;
       controller.hasUserSelectedLabel.value;
-
       final chips = controller.chipsForDisplay();
-      final bodyHeight = keyboard > 0
-          ? (maxCap - keyboard).clamp(180.0, maxCap)
-          : controller.estimateContentHeight(chips.length).clamp(200.0, maxCap);
 
       return SingleChildScrollView(
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,

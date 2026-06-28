@@ -16,6 +16,7 @@ import '../../../../shared/widgets/app_google_map.dart';
 import '../../../../shared/widgets/app_map_route_polyline.dart';
 import '../../../../shared/widgets/app_map_route_one_line_bar.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
+import '../../../../shared/widgets/app_standard_bottom_sheet_gesture_pad.dart';
 import '../../../../shared/widgets/vehicle_type_image.dart';
 import '../controllers/driver_accepted_controller.dart';
 import '../controllers/ride_share_controller.dart';
@@ -384,6 +385,7 @@ class DriverAcceptedScreen extends StatelessWidget {
               ],
             );
           }),
+          const AppStandardBottomSheetGesturePad(),
         ],
       ),
     );

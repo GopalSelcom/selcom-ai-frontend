@@ -11,8 +11,11 @@ import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/widgets/app_standard_bottom_sheet.dart';
+import '../../../../shared/widgets/app_standard_bottom_sheet_gesture_pad.dart';
 
-/// In-app (Agora) vs system dialer — same UX from driver-accepted and ride chat.
+/// In-app (Agora) vs system dialer — same shell pattern as
+/// [ReceiptOptionsBottomSheet] / [AddMoneyToWalletBottomSheet] options step.
 class RideDriverCallOptionsSheet extends StatelessWidget {
   const RideDriverCallOptionsSheet({
     super.key,
@@ -36,11 +39,24 @@ class RideDriverCallOptionsSheet extends StatelessWidget {
     if (rideId.isEmpty) return Future.value();
 
     return AppDialogs.showStandardBottomSheet<void>(
+      sheet: RideDriverCallOptionsSheet(
+        rideId: rideId,
+        peerDisplayName: peerDisplayName,
+        driverPhone: driverPhone,
+        peerAvatarUrl: peerAvatarUrl,
+      ),
+      barrierDismissible: true,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AppStandardBottomSheet(
       title: AppStrings.callDriver.tr,
       subtitle: AppStrings.callDriverSheetSubtitle.tr,
       headerTextAlign: TextAlign.start,
-      barrierDismissible: true,
-      content: RideDriverCallOptionsSheet(
+      showHeaderDivider: false,
+      content: _DriverCallOptionsContent(
         rideId: rideId,
         peerDisplayName: peerDisplayName,
         driverPhone: driverPhone,
@@ -48,6 +64,20 @@ class RideDriverCallOptionsSheet extends StatelessWidget {
       ),
     );
   }
+}
+
+class _DriverCallOptionsContent extends StatelessWidget {
+  const _DriverCallOptionsContent({
+    required this.rideId,
+    required this.peerDisplayName,
+    required this.driverPhone,
+    this.peerAvatarUrl,
+  });
+
+  final String rideId;
+  final String peerDisplayName;
+  final String driverPhone;
+  final String? peerAvatarUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -58,15 +88,17 @@ class RideDriverCallOptionsSheet extends StatelessWidget {
           icon: Icons.phone_in_talk_outlined,
           title: AppStrings.inAppCalling.tr,
           subtitle: AppStrings.inAppCallingSubtitle.tr,
-          onTap: () => _onInAppCallTap(),
+          onTap: () => unawaited(_onInAppCallTap()),
         ),
         SizedBox(height: 10.h),
         _DriverCallOptionTile(
           icon: Icons.call_outlined,
           title: AppStrings.normalCall.tr,
           subtitle: AppStrings.normalCallSubtitle.tr,
-          onTap: () => _onNormalCallTap(),
+          onTap: _onNormalCallTap,
         ),
+        SizedBox(height: 8.h),
+        const AppStandardBottomSheetGesturePad(),
       ],
     );
   }
@@ -90,7 +122,7 @@ class RideDriverCallOptionsSheet extends StatelessWidget {
       );
     } catch (e, st) {
       ErrorReporter.instance.report(error: e, stackTrace: st);
-      await show(
+      await RideDriverCallOptionsSheet.show(
         rideId: rideId,
         peerDisplayName: peerDisplayName,
         driverPhone: driverPhone,

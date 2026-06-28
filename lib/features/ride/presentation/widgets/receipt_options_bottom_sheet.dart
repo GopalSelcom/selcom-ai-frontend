@@ -6,8 +6,11 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/widgets/app_standard_bottom_sheet.dart';
+import '../../../../shared/widgets/app_standard_bottom_sheet_gesture_pad.dart';
 
-/// Receipt download / share picker body for [AppDialogs.showStandardBottomSheet].
+/// Receipt download / share picker — same shell pattern as
+/// [AddMoneyToWalletBottomSheet] options step.
 class ReceiptOptionsBottomSheet extends StatelessWidget {
   const ReceiptOptionsBottomSheet({
     super.key,
@@ -23,16 +26,37 @@ class ReceiptOptionsBottomSheet extends StatelessWidget {
     required VoidCallback onShare,
   }) {
     return AppDialogs.showStandardBottomSheet<void>(
-      title: AppStrings.receiptOptions.tr,
-      subtitle: AppStrings.chooseHowToReceiveReceipt.tr,
-      headerTextAlign: TextAlign.center,
-      content: ReceiptOptionsBottomSheet(
+      sheet: ReceiptOptionsBottomSheet(
         onDownload: onDownload,
         onShare: onShare,
       ),
       barrierDismissible: true,
     );
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return AppStandardBottomSheet(
+      title: AppStrings.receiptOptions.tr,
+      subtitle: AppStrings.chooseHowToReceiveReceipt.tr,
+      headerTextAlign: TextAlign.center,
+      showHeaderDivider: false,
+      content: _ReceiptOptionsContent(
+        onDownload: onDownload,
+        onShare: onShare,
+      ),
+    );
+  }
+}
+
+class _ReceiptOptionsContent extends StatelessWidget {
+  const _ReceiptOptionsContent({
+    required this.onDownload,
+    required this.onShare,
+  });
+
+  final VoidCallback onDownload;
+  final VoidCallback onShare;
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +82,8 @@ class ReceiptOptionsBottomSheet extends StatelessWidget {
             onShare();
           },
         ),
+        SizedBox(height: 8.h),
+        const AppStandardBottomSheetGesturePad(),
       ],
     );
   }

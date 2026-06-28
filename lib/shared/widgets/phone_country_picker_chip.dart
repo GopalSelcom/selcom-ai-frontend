@@ -7,6 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../data/countries_phone_data.dart';
 import '../utils/app_dialogs.dart';
+import 'app_standard_bottom_sheet_gesture_pad.dart';
 import 'phone_country_picker_controller.dart';
 
 /// Duka-style: emoji flag + dial code, full list from [Countries.all] in a sheet.
@@ -214,7 +215,10 @@ class _CountryPickerSheet extends StatelessWidget {
                         ),
                       )
                     : ListView.separated(
-                        padding: EdgeInsets.only(bottom: 8.h),
+                        padding: EdgeInsets.only(
+                          bottom:
+                              8.h + AppStandardBottomSheetGesturePad.height(),
+                        ),
                         itemCount: filtered.length,
                         separatorBuilder: (_, __) => SizedBox(height: 8.h),
                         itemBuilder: (context, i) {

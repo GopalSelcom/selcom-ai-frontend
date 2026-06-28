@@ -22,6 +22,10 @@ class BottomInsetHelper {
   /// Fallback when Android gesture nav reports near-zero [MediaQuery] padding.
   static const double gestureFallbackPadding = 16;
 
+  /// Fallback when Android 3-button nav reports near-zero padding (e.g. after
+  /// [MediaQuery.removePadding] with `removeBottom: true`).
+  static const double threeButtonNavFallbackPadding = 48;
+
   static const double _gestureSafeAreaThreshold = 5;
 
   DeviceNavigationMode? _cachedAndroidMode;
@@ -81,6 +85,12 @@ class BottomInsetHelper {
       return gestureFallbackPadding;
     }
 
+    if (Platform.isAndroid &&
+        shouldApplyAndroidSpacingSync() &&
+        raw < _gestureSafeAreaThreshold) {
+      return threeButtonNavFallbackPadding;
+    }
+
     return raw;
   }
 
@@ -95,6 +105,41 @@ class BottomInsetHelper {
     }
 
     return resolveFooterSafeAreaInset(context, applySpacing) + footerMinGap;
+  }
+
+  /// Bottom inset for scrollable body when there is no [footer].
+  ///
+  /// Android gesture: no layout gap (sheets may use [AppStandardBottomSheetGesturePad]).
+  /// Android 3-button / iOS: clearance when [hasBottomWidget] is true.
+  double resolveBodyOnlyBottomSafeAreaInset(
+    BuildContext context, {
+    required bool hasFooter,
+    required bool hasBottomWidget,
+  }) {
+    if (hasFooter) return 0;
+    if (!hasBottomWidget) return 0;
+    if (isAndroidGestureNavigation) return 0;
+
+    return resolveBottomInset(
+      context,
+      shouldApplySpacing(hasBottomWidget: true),
+      includeKeyboardInset: false,
+    );
+  }
+
+  /// Resolves Android 3-button navigation bar height when [MediaQuery] padding
+  /// was removed or reports zero.
+  double resolveAndroidThreeButtonNavInset(BuildContext context) {
+    if (!Platform.isAndroid || !shouldApplyAndroidSpacingSync()) return 0;
+
+    final mq = MediaQuery.of(context);
+    if (mq.viewPadding.bottom >= _gestureSafeAreaThreshold) {
+      return mq.viewPadding.bottom;
+    }
+    if (mq.padding.bottom >= _gestureSafeAreaThreshold) {
+      return mq.padding.bottom;
+    }
+    return threeButtonNavFallbackPadding;
   }
 
   /// Bottom inset in logical pixels.
@@ -117,6 +162,10 @@ class BottomInsetHelper {
     }
 
     if (!applySpacing) return 0;
+
+    if (Platform.isAndroid && shouldApplyAndroidSpacingSync()) {
+      return resolveAndroidThreeButtonNavInset(context);
+    }
 
     return mq.viewPadding.bottom;
   }

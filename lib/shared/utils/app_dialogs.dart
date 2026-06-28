@@ -95,6 +95,7 @@ class AppDialogs {
     required Widget child,
     bool barrierDismissible = true,
     bool enableDrag = true,
+    bool handleKeyboardInsets = true,
   }) async {
     await ensureKeyboardClosed();
     bool hapticTriggered = false;
@@ -155,7 +156,9 @@ class AppDialogs {
                   color: Colors.transparent,
                   child: Padding(
                     padding: EdgeInsets.only(
-                      bottom: MediaQuery.of(context).viewInsets.bottom,
+                      bottom: handleKeyboardInsets
+                          ? MediaQuery.of(context).viewInsets.bottom
+                          : 0,
                     ),
                     child: _DragToDismissWrapper(
                       enableDrag: enableDrag,
@@ -193,6 +196,8 @@ class AppDialogs {
   ///
   /// Do not pass both [content] and [sheet]. For one-off custom UIs without
   /// [AppStandardBottomSheet], use [showAnimatedBottomSheet].
+  ///
+  /// Bottom safe area / keyboard recipes: `.cursor/rules/bottom-sheet-recipes.mdc`
   static Future<T?> showStandardBottomSheet<T>({
     String? title,
     String? subtitle,
@@ -230,6 +235,7 @@ class AppDialogs {
     return showAnimatedBottomSheet<T>(
       barrierDismissible: barrierDismissible,
       enableDrag: enableDrag,
+      handleKeyboardInsets: false,
       child: child,
     );
   }

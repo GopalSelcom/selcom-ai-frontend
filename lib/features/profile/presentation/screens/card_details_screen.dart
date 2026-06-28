@@ -50,9 +50,9 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
   }
 
   void _openDeleteConfirmationSheet() {
-    AppDialogs.showAnimatedBottomSheet(
+    AppDialogs.showStandardBottomSheet<void>(
       barrierDismissible: true,
-      child: Obx(
+      sheet: Obx(
         () => PaymentCardActionBottomSheet(
           title: AppStrings.areYouSureWantToAddNdeleteThisCard.tr,
           description: AppStrings.cardDeleteWarningDescription.tr,

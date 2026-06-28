@@ -288,10 +288,7 @@ class RideRatingController extends GetxController {
   void _openRatingBottomSheet() {
     if (_isRatingSheetOpen) return;
     _isRatingSheetOpen = true;
-    AppDialogs.showAnimatedBottomSheet(
-      child: const RideRatingBottomSheet(),
-      barrierDismissible: true,
-    ).then((_) => _isRatingSheetOpen = false);
+    RideRatingBottomSheet.show().then((_) => _isRatingSheetOpen = false);
   }
 
   Future<void> _loadReviewTagsForRating(int rating) async {

@@ -7,6 +7,7 @@ import '../../core/localization/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../utils/app_dialogs.dart';
+import 'app_standard_bottom_sheet_gesture_pad.dart';
 
 /// One row in [AppReasonPickerBottomSheet].
 class AppReasonPickerOption {
@@ -68,6 +69,7 @@ class AppReasonPickerBottomSheet extends StatelessWidget {
             },
           ),
         ],
+        const AppStandardBottomSheetGesturePad(),
       ],
     );
   }

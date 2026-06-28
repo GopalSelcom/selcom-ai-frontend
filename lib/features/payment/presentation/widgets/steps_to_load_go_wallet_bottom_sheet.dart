@@ -9,6 +9,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
+import '../../../../shared/widgets/app_standard_bottom_sheet_gesture_pad.dart';
 import '../../../../shared/widgets/app_shimmer.dart';
 import '../controllers/steps_to_load_go_wallet_controller.dart';
 
@@ -81,6 +82,7 @@ class StepsToLoadGoWalletBottomSheet extends StatelessWidget {
           isLast: true,
           description: AppStrings.addMoneyGoWalletStep5.tr,
         ),
+        const AppStandardBottomSheetGesturePad(),
       ],
     );
   }
