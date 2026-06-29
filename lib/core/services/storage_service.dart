@@ -2,6 +2,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 /// Centralized storage keys to prevent typos and ensure consistency across the app.
 class StorageKeys {
+  /// Legacy Hive key — prefer [StorageService.readAccessToken] / [writeAccessToken].
   static const String authorizationToken = 'authorization_token';
   static const String accessToken = 'access_token';
   static const String refreshToken = 'refresh_token';
@@ -83,5 +84,22 @@ class StorageService {
   Future<bool> containsKey(String key) async {
     final box = await _ensureBox();
     return box.containsKey(key);
+  }
+
+  /// Canonical session JWT — reads [StorageKeys.accessToken], with one-time
+  /// fallback to legacy [StorageKeys.authorizationToken].
+  Future<String?> readAccessToken() async {
+    final token = await read(StorageKeys.accessToken);
+    if (token != null && token.trim().isNotEmpty) return token.trim();
+    final legacy = await read(StorageKeys.authorizationToken);
+    if (legacy == null || legacy.trim().isEmpty) return null;
+    return legacy.trim();
+  }
+
+  /// Persists the session JWT under [StorageKeys.accessToken] only.
+  Future<void> writeAccessToken(String value) async {
+    final trimmed = value.trim();
+    await write(StorageKeys.accessToken, trimmed);
+    await delete(StorageKeys.authorizationToken);
   }
 }

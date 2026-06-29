@@ -146,10 +146,7 @@ class AppSocketService {
     _isConnecting = true;
 
     final storage = StorageService();
-    final token =
-        (await storage.read(StorageKeys.accessToken)) ??
-        (await storage.read(StorageKeys.authorizationToken)) ??
-        '';
+    final token = (await storage.readAccessToken()) ?? '';
 
     _socket?.dispose();
 

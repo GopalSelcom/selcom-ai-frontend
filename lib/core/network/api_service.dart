@@ -21,8 +21,9 @@ import '../services/storage_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/svg_picture_asset.dart';
-import 'connectivity_probe.dart';
 import '../config/app_config.dart';
+import 'api_constants.dart';
+import 'connectivity_probe.dart';
 import 'failed_request_queue.dart';
 import 'network_connectivity_service.dart';
 import 'retry_manager.dart';
@@ -897,7 +898,7 @@ class AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final token = await StorageService().read(StorageKeys.authorizationToken);
+    final token = await StorageService().readAccessToken();
 
     final currentAuth = options.headers['Authorization'];
     final hasAuthHeader =
@@ -987,25 +988,18 @@ class AuthInterceptor extends Interceptor {
           name: 'AuthInterceptor',
         );
 
-        final newToken = await StorageService().read(
-          StorageKeys.authorizationToken,
-        );
+        final newAccessToken = await StorageService().readAccessToken();
 
         // Update headers with new token
         final updatedHeaders = Map<String, dynamic>.from(
           err.requestOptions.headers,
         );
 
-        updatedHeaders['Authorization'] = 'Bearer $newToken';
-        updatedHeaders['retry-after-refresh'] = 'true';
-
-        // Also update access_token if present
-        if (updatedHeaders.containsKey('access_token')) {
-          final newAccessToken = await StorageService().read(
-            StorageKeys.accessToken,
-          );
-          updatedHeaders['access_token'] = newAccessToken;
+        if (newAccessToken != null && newAccessToken.isNotEmpty) {
+          updatedHeaders['Authorization'] = 'Bearer $newAccessToken';
+          updatedHeaders[Params.accessToken] = newAccessToken;
         }
+        updatedHeaders['retry-after-refresh'] = 'true';
 
         developer.log(
           "✅ Headers updated with new token for retry",
@@ -1147,24 +1141,47 @@ class AuthInterceptor extends Interceptor {
       );
 
       if (response.statusCode == 200 && response.data != null) {
-        final data = response.data;
-        final newAccessToken =
-            data['authorization_token'] ?? data['access_token'];
-        final newRefreshToken = data['refresh_token'];
+        final root = response.data;
+        if (root is! Map) {
+          developer.log(
+            '❌ Refresh API 200 but response is not a map',
+            name: 'AuthInterceptor',
+          );
+          if (!_refreshCompleter!.isCompleted) {
+            _refreshCompleter!.complete(false);
+          }
+          return false;
+        }
 
-        if (newAccessToken != null) {
-          await StorageService().write(
-            StorageKeys.authorizationToken,
-            newAccessToken,
+        final rootMap = Map<String, dynamic>.from(root);
+        final payload = rootMap['data'] is Map
+            ? Map<String, dynamic>.from(rootMap['data'] as Map)
+            : rootMap;
+
+        final newAccessToken = (payload['authorization_token'] ??
+                payload['access_token'] ??
+                payload['accessToken'])
+            ?.toString()
+            .trim();
+        final newRefreshToken = (payload['refresh_token'] ??
+                payload['refreshToken'] ??
+                payload['newRefreshToken'])
+            ?.toString()
+            .trim();
+
+        if (newAccessToken == null || newAccessToken.isEmpty) {
+          developer.log(
+            '❌ Refresh API 200 but no access token in payload',
+            name: 'AuthInterceptor',
           );
+          if (!_refreshCompleter!.isCompleted) {
+            _refreshCompleter!.complete(false);
+          }
+          return false;
         }
-        if (data['access_token'] != null) {
-          await StorageService().write(
-            StorageKeys.accessToken,
-            data['access_token'],
-          );
-        }
-        if (newRefreshToken != null) {
+
+        await StorageService().writeAccessToken(newAccessToken);
+        if (newRefreshToken != null && newRefreshToken.isNotEmpty) {
           await StorageService().write(
             StorageKeys.refreshToken,
             newRefreshToken,
