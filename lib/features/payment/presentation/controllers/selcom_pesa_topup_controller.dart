@@ -64,6 +64,7 @@ class SelcomPesaTopupController extends GetxController {
   Timer? _pollTimer;
   bool _pendingDialogVisible = false;
   bool _paymentHandled = false;
+  bool _statusPollInFlight = false;
   bool _retainForFollowUpSheet = false;
   SelcomPesaTopupFlow? _activeFlow;
   int? _lastSelfAmount;
@@ -392,15 +393,18 @@ class SelcomPesaTopupController extends GetxController {
   }
 
   Future<void> _pollSelcomPesaStatus() async {
-    if (_paymentHandled) return;
+    if (_paymentHandled || _statusPollInFlight) return;
 
     final transid = _session?.transid.trim() ?? '';
     if (transid.isEmpty) return;
 
+    _statusPollInFlight = true;
     try {
       final status = await _walletRepository.checkSelcomPesaTopUpStatus(
         transid: transid,
       );
+
+      if (_paymentHandled) return;
 
       if (status.isPaid) {
         await _onPaymentSucceeded();
@@ -421,11 +425,14 @@ class SelcomPesaTopupController extends GetxController {
         );
       }
     } on WalletPaymentException catch (e) {
+      if (_paymentHandled) return;
       if (e.message == AppStrings.selcomPesaStatusNotFound) {
         await _onPaymentTerminalError(AppStrings.selcomPesaStatusNotFound.tr);
       }
     } catch (_) {
       // Keep polling until timeout or a terminal state.
+    } finally {
+      _statusPollInFlight = false;
     }
   }
 
@@ -450,25 +457,39 @@ class SelcomPesaTopupController extends GetxController {
     if (_paymentHandled) return;
     _paymentHandled = true;
     _stopTimers();
-    _dismissPendingDialog();
+    await _dismissPendingDialogAndWait();
 
     await WalletRefresh.afterBalanceChange();
+
+    _activeFlow = null;
+    _session = null;
 
     AppDialogs.showSuccessDialog(
       title: AppStrings.walletFundsReceivedTitle.tr,
       message: AppStrings.walletFundsReceivedSubtitle.tr,
+      onConfirm: _disposeRegisteredController,
     );
-    _finishFlow();
   }
 
   Future<void> _onPaymentTerminalError(String message) async {
     if (_paymentHandled) return;
     _paymentHandled = true;
     _stopTimers();
-    _dismissPendingDialog();
+    await _dismissPendingDialogAndWait();
 
-    AppDialogs.showErrorDialog(message: message);
-    _finishFlow();
+    _activeFlow = null;
+    _session = null;
+
+    AppDialogs.showErrorDialog(
+      message: message,
+      onConfirm: _disposeRegisteredController,
+    );
+  }
+
+  Future<void> _dismissPendingDialogAndWait() async {
+    if (!_pendingDialogVisible) return;
+    _dismissPendingDialog();
+    await WidgetsBinding.instance.endOfFrame;
   }
 
   Future<void> cancelPaymentRequest() async {
