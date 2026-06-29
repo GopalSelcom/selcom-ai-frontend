@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -41,11 +42,18 @@ class AppDraggableBottomSheet extends StatelessWidget {
     return BottomInsetHelper.instance.resolveDraggableSheetBottomInset(context);
   }
 
-  /// Adds [bottomInsetOf] to [baseFraction] — same rule as home sheet sizing.
+  /// Adds [bottomInsetOf] to [baseFraction] for Android sheet sizing.
+  ///
+  /// On iOS, [reserveSystemBottomInset] shell padding alone clears the home
+  /// indicator — inflating the fraction as well causes extra white space.
   static double sheetFractionIncludingBottomInset(
     BuildContext context,
     double baseFraction,
   ) {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      return baseFraction;
+    }
+
     final screenH = MediaQuery.sizeOf(context).height;
     if (screenH <= 0) return baseFraction;
     final inset = bottomInsetOf(context);
