@@ -119,6 +119,11 @@
         <!-- Selcom Pesa: package visibility (Android 11+) -->
         <package android:name="com.selcompesa" />
         <package android:name="com.selcombank.dev" />
+        <!-- Selcom Pesa: custom scheme probe (matches iOS LSApplicationQueriesSchemes) -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="selcompesa" />
+        </intent>
         <!-- Selcom Pesa: open wallet top-up handoff (production) -->
         <intent>
             <action android:name="android.intent.action.VIEW" />
