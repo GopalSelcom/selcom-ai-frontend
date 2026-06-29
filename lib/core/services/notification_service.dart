@@ -259,14 +259,15 @@ class NotificationService {
     }
 
     final data = FCMNotificationData.fromJson(message.data);
-
+    String? title = message.notification?.title ?? data.title;
+    String? body = message.notification?.body ?? data.body;
     // Only show a local notification if this is a data-only message.
-    if (message.notification == null) {
+    if (title != null&&body != null) {
       _logger.d("Showing local notification for foreground message");
       showLocalNotification(
-        id: message.messageId.hashCode,
-        title: data.title,
-        body: data.body,
+        id: message.notification?.hashCode ?? message.messageId.hashCode,
+        title: title,
+        body: body,
         payload: jsonEncode(data.toJson()),
       );
     }
