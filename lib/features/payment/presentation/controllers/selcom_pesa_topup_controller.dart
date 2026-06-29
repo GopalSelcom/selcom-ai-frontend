@@ -12,6 +12,7 @@ import '../../../../core/services/app_region_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/selcom_pesa/selcom_pesa_app_launcher_service.dart';
 import '../../../../core/services/storage_service.dart';
+import '../../../../shared/data/countries_phone_data.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
 import '../../../../shared/utils/thousands_separator_input_formatter.dart';
@@ -76,9 +77,9 @@ class SelcomPesaTopupController extends GetxController {
   String get countryDialCode =>
       _appRegionService.selected.dialCode.replaceAll('+', '');
 
-  String get countryDialCodeDisplay => _appRegionService.selected.dialCode;
+  String get countryDialCodeDisplay => "+255";
 
-  String get countryIso => _appRegionService.selected.code;
+  String get countryIso => Countries.findByIsoCode("+255").code;
 
   bool get isAwaitingPaymentResult =>
       _pendingDialogVisible || (_session != null && !_paymentHandled);
