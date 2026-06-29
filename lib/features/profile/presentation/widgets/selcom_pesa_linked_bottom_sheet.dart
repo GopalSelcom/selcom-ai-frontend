@@ -10,6 +10,7 @@ import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_standard_bottom_sheet.dart';
+import '../../../payment/domain/wallet_payment_phone_country.dart';
 import '../controllers/payment_methods_controller.dart';
 
 class SelcomPesaLinkedBottomSheet extends GetView<PaymentMethodsController> {
@@ -48,7 +49,7 @@ class SelcomPesaLinkedBottomSheet extends GetView<PaymentMethodsController> {
           SizedBox(height: 20.h),
           _buildReadOnlyField(
             label: AppStrings.phoneNumber.tr,
-            value: '+255 711 410 410',
+            value: '${WalletPaymentPhoneCountry.dialCodeDisplay} 711 410 410',
           ),
           SizedBox(height: 24.h),
           Row(

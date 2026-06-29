@@ -6,7 +6,6 @@ import 'package:get/get.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
-import '../../../../core/services/app_region_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
@@ -15,6 +14,7 @@ import '../../../wallet/domain/repositories/wallet_repository.dart';
 import '../../../wallet/presentation/utils/wallet_refresh.dart';
 import '../../data/datasources/wallet_payment_remote_data_source.dart';
 import '../../data/models/go_other_payment_methods_models.dart';
+import '../../domain/wallet_payment_phone_country.dart';
 import '../../domain/wallet_top_up_limits.dart';
 import '../widgets/mobile_money_topup_status_dialog.dart';
 
@@ -22,14 +22,11 @@ class MobileMoneyTopupController extends GetxController {
   MobileMoneyTopupController({
     this.controllerTag,
     WalletRepository? walletRepository,
-    AppRegionService? appRegionService,
-  }) : _walletRepository = walletRepository ?? sl<WalletRepository>(),
-       _appRegionService = appRegionService ?? sl<AppRegionService>();
+  }) : _walletRepository = walletRepository ?? sl<WalletRepository>();
 
   final String? controllerTag;
 
   final WalletRepository _walletRepository;
-  final AppRegionService _appRegionService;
 
   static const int countdownDurationSeconds = 300;
   static const Duration pollInterval = Duration(seconds: 10);
@@ -60,12 +57,12 @@ class MobileMoneyTopupController extends GetxController {
   String? _lastUssdPhone;
   int? _lastAmount;
 
-  String get countryDialCode =>
-      _appRegionService.selected.dialCode.replaceAll('+', '');
+  String get countryDialCode => WalletPaymentPhoneCountry.dialCodeDigits;
 
-  String get countryDialCodeDisplay => _appRegionService.selected.dialCode;
+  String get countryDialCodeDisplay =>
+      WalletPaymentPhoneCountry.dialCodeDisplay;
 
-  String get countryIso => _appRegionService.selected.code;
+  String get countryIso => WalletPaymentPhoneCountry.iso;
 
   int? get parsedAmount {
     final digits = amountRaw.value.replaceAll(RegExp(r'\D'), '');
@@ -135,7 +132,7 @@ class MobileMoneyTopupController extends GetxController {
     if (digits.isEmpty) {
       return showEmptyError ? AppStrings.enterPhoneNumber.tr : null;
     }
-    final iso = _appRegionService.selected.code;
+    const iso = WalletPaymentPhoneCountry.iso;
     if (!PhoneNationalRules.isCompleteValidNational(iso, digits)) {
       return AppStrings.enterPhoneNumber.tr;
     }

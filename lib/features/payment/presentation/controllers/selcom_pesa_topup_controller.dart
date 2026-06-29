@@ -8,7 +8,6 @@ import '../../../../core/config/app_config.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_strings.dart';
-import '../../../../core/services/app_region_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/selcom_pesa/selcom_pesa_app_launcher_service.dart';
 import '../../../../core/services/storage_service.dart';
@@ -21,6 +20,7 @@ import '../../../wallet/presentation/utils/wallet_refresh.dart';
 import '../../data/datasources/wallet_payment_remote_data_source.dart';
 import '../../data/models/go_other_payment_methods_models.dart';
 import '../../data/models/selcom_pesa_topup_models.dart';
+import '../../domain/wallet_payment_phone_country.dart';
 import '../../domain/wallet_top_up_limits.dart';
 import '../widgets/mobile_money_topup_status_dialog.dart';
 
@@ -30,16 +30,13 @@ class SelcomPesaTopupController extends GetxController {
   SelcomPesaTopupController({
     this.controllerTag,
     WalletRepository? walletRepository,
-    AppRegionService? appRegionService,
     SelcomPesaAppLauncherService? selcomPesaLauncher,
   }) : _walletRepository = walletRepository ?? sl<WalletRepository>(),
-       _appRegionService = appRegionService ?? sl<AppRegionService>(),
        _selcomPesaLauncher =
            selcomPesaLauncher ?? sl<SelcomPesaAppLauncherService>();
 
   final String? controllerTag;
   final WalletRepository _walletRepository;
-  final AppRegionService _appRegionService;
   final SelcomPesaAppLauncherService _selcomPesaLauncher;
 
   static const int paymentTimeoutSeconds = 300;
@@ -73,12 +70,12 @@ class SelcomPesaTopupController extends GetxController {
   SelcomPesaTopupResult? _session;
   String _pendingRequestTitle = '';
 
-  String get countryDialCode =>
-      _appRegionService.selected.dialCode.replaceAll('+', '');
+  String get countryDialCode => WalletPaymentPhoneCountry.dialCodeDigits;
 
-  String get countryDialCodeDisplay => _appRegionService.selected.dialCode;
+  String get countryDialCodeDisplay =>
+      WalletPaymentPhoneCountry.dialCodeDisplay;
 
-  String get countryIso => _appRegionService.selected.code;
+  String get countryIso => WalletPaymentPhoneCountry.iso;
 
   bool get isAwaitingPaymentResult =>
       _pendingDialogVisible || (_session != null && !_paymentHandled);
