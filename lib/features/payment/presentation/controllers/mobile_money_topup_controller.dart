@@ -29,8 +29,12 @@ class MobileMoneyTopupController extends GetxController {
 
   final WalletRepository _walletRepository;
 
-  static const int countdownDurationSeconds = 300;
+  static const int countdownDurationSeconds = 60;
   static const Duration pollInterval = Duration(seconds: 10);
+
+  /// Info-only UX: show request-sent message, no countdown, poll, or retry.
+  /// Legacy timer/poll/retry paths remain for Selcom Pesa and future re-enable.
+  static const bool _infoDialogOnlyFlow = true;
 
   final phoneRaw = ''.obs;
   final amountRaw = ''.obs;
@@ -232,7 +236,9 @@ class MobileMoneyTopupController extends GetxController {
 
       await Future<void>.delayed(Duration.zero);
       _showPendingDialog();
-      _startPollingTimers();
+      if (!_infoDialogOnlyFlow) {
+        _startPollingTimers();
+      }
     } on WalletPaymentException catch (e) {
       if (closeSheetFirst) {
         apiError.value = e.message.tr;
@@ -293,9 +299,16 @@ class MobileMoneyTopupController extends GetxController {
     if (!_pendingDialogVisible) return;
     _pendingDialogVisible = false;
     AppDialogs.dismissTopOverlay();
+    if (_infoDialogOnlyFlow) {
+      _paymentHandled = true;
+      _stopTimers();
+      _finishPaymentFlow();
+    }
   }
 
   void _startPollingTimers() {
+    if (_infoDialogOnlyFlow) return;
+
     _stopTimers();
     pendingCountdown.value = countdownDurationSeconds;
     _paymentHandled = false;
@@ -317,6 +330,7 @@ class MobileMoneyTopupController extends GetxController {
   }
 
   Future<void> _pollPaymentStatus() async {
+    if (_infoDialogOnlyFlow) return;
     if (_paymentHandled) return;
 
     final transid = _session?.transid.trim() ?? '';
@@ -335,6 +349,7 @@ class MobileMoneyTopupController extends GetxController {
   }
 
   void _onTimerExpired() {
+    if (_infoDialogOnlyFlow) return;
     if (_paymentHandled) return;
     _stopTimers();
     _dismissPendingDialog();
