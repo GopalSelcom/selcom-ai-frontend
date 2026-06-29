@@ -5,6 +5,7 @@ class WalletTransactionEntity {
     required this.categoryLabel,
     required this.amount,
     required this.isCredit,
+    required this.showAmountSign,
     required this.createdAt,
     required this.currency,
   });
@@ -14,6 +15,8 @@ class WalletTransactionEntity {
   final String categoryLabel;
   final double amount;
   final bool isCredit;
+  /// When false, amount is shown without `+` / `-` (e.g. RELEASE holds).
+  final bool showAmountSign;
   final DateTime createdAt;
   final String currency;
 }

@@ -4,6 +4,7 @@ class WalletTransactionItem {
     required this.categoryLabel,
     required this.amount,
     required this.isCredit,
+    required this.showAmountSign,
     required this.createdAtLabel,
     required this.currency,
   });
@@ -12,6 +13,7 @@ class WalletTransactionItem {
   final String categoryLabel;
   final double amount;
   final bool isCredit;
+  final bool showAmountSign;
   final String createdAtLabel;
   final String currency;
 }
