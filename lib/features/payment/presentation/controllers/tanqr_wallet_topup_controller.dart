@@ -333,7 +333,11 @@ class TanQrWalletTopupController extends GetxController {
 
     var dismissed = false;
     try {
-      await _walletRepository.cancelUssdOrder(transid: transid);
+      await _walletRepository.cancelUssdOrder(
+        transid: transid,
+        paymentMethod:
+            GoOtherPaymentMethodsRequest.cancelUssdPaymentMethodMobileMoney,
+      );
       _paymentHandled = true;
       _stopTimers();
       dismissed = true;

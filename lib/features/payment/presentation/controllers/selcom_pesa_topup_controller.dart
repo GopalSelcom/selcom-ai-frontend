@@ -19,6 +19,7 @@ import '../../../wallet/domain/entities/wallet_details_entity.dart';
 import '../../../wallet/domain/repositories/wallet_repository.dart';
 import '../../../wallet/presentation/utils/wallet_refresh.dart';
 import '../../data/datasources/wallet_payment_remote_data_source.dart';
+import '../../data/models/go_other_payment_methods_models.dart';
 import '../../data/models/selcom_pesa_topup_models.dart';
 import '../../domain/wallet_top_up_limits.dart';
 import '../widgets/mobile_money_topup_status_dialog.dart';
@@ -484,7 +485,11 @@ class SelcomPesaTopupController extends GetxController {
 
     var dismissed = false;
     try {
-      await _walletRepository.cancelUssdOrder(transid: transid);
+      await _walletRepository.cancelUssdOrder(
+        transid: transid,
+        paymentMethod:
+            GoOtherPaymentMethodsRequest.cancelUssdPaymentMethodSelcomPesa,
+      );
       _paymentHandled = true;
       _stopTimers();
       dismissed = true;
