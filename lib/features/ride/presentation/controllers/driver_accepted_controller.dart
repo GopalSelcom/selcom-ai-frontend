@@ -180,7 +180,7 @@ class DriverAcceptedController extends GetxController
   StreamSubscription<RideStopsUpdateFailedResponse>? _rideStopsUpdateFailedSub;
   StreamSubscription<PaymentStatusUpdateResponse>? _paymentStatusSub;
   StreamSubscription<RideFareSettledResponse>? _fareSettledSub;
-  bool _didJoinRideRoom = false;
+  bool _skipRideRoomLeaveOnClose = false;
   bool _isHandlingAppResume = false;
   bool _emergencyContactsLoadedOnce = false;
 
@@ -639,6 +639,9 @@ class DriverAcceptedController extends GetxController
     _trackingSub?.cancel();
     _chatSub?.cancel();
     _fareSettledSub?.cancel();
+    if (!_skipRideRoomLeaveOnClose && rideId.isNotEmpty) {
+      _socketService.leaveRideRoom(rideId: rideId);
+    }
     super.onClose();
   }
 
@@ -655,7 +658,6 @@ class DriverAcceptedController extends GetxController
       try {
         await _fetchRideDetails();
         await _socketService.connect();
-        _didJoinRideRoom = false;
         _joinRideRoomIfNeeded();
       } finally {
         _isHandlingAppResume = false;
@@ -855,6 +857,7 @@ class DriverAcceptedController extends GetxController
       },
       (r) async {
         if (shouldOpenFindingDriverForRide(r)) {
+          _skipRideRoomLeaveOnClose = true;
           navigateToFindingDriverForRide(r, replace: true);
           return;
         }
@@ -1042,7 +1045,6 @@ class DriverAcceptedController extends GetxController
     _rideStopsUpdateFailedSub?.cancel();
     _paymentStatusSub?.cancel();
     _fareSettledSub?.cancel();
-    _didJoinRideRoom = false;
 
     _connectionSub = _socketService.connectionStream.listen((connected) {
       if (!connected) return;
@@ -1270,11 +1272,10 @@ class DriverAcceptedController extends GetxController
   }
 
   void _joinRideRoomIfNeeded() {
-    if (_didJoinRideRoom || !_socketService.isConnected || rideId.isEmpty) {
+    if (!_socketService.isConnected || rideId.isEmpty) {
       return;
     }
-    _socketService.joinRideRoom(rideId: rideId);
-    _didJoinRideRoom = true;
+    _socketService.switchRideRoom(rideId: rideId);
   }
 
   Future<void> loadDriverIcon({String? vehicleType}) async {

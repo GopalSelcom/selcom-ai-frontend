@@ -55,6 +55,7 @@ class AppSocketService {
 
   // Ride
   static const String evtJoinRideRoom = 'join_ride_room';
+  static const String evtLeaveRideRoom = 'leave_ride_room';
   static const String evtRideStatusUpdate = 'ride:status_update';
   static const String evtRideStopUpdate = 'ride:stop_update';
   static const String evtRideStopsUpdated = 'ride:stops_updated';
@@ -76,6 +77,7 @@ class AppSocketService {
   bool _manualDisconnect = false;
   bool _isConnecting = false;
   int _reconnectAttempt = 0;
+  String? _joinedRideRoomId;
   static const int _maxReconnectAttempts = 12;
   final _driversController = StreamController<List<Driver>>.broadcast();
   final _errorController = StreamController<String>.broadcast();
@@ -138,6 +140,9 @@ class AppSocketService {
 
   bool get isConnected => _socket?.connected == true;
 
+  /// Ride room currently joined via [switchRideRoom] / [joinRideRoom].
+  String? get joinedRideRoomId => _joinedRideRoomId;
+
   // ---------------- CONNECT ----------------
 
   Future<void> connect() async {
@@ -178,6 +183,7 @@ class AppSocketService {
       _reconnectAttempt = 0;
       _cancelReconnectTimer();
 
+      _rejoinRideRoomIfNeeded();
       _connectionController.add(true);
     });
     _socket!.onDisconnect((data) {
@@ -296,12 +302,54 @@ class AppSocketService {
     _socket!.emit(evtNearbyDrivers, body);
   }
 
-  void joinRideRoom({required String rideId}) {
-    if (_socket?.connected != true) {
-      _errorController.add('Socket not connected');
-      return;
+  /// Joins [rideId]'s room, leaving any previously joined ride room first.
+  void switchRideRoom({required String rideId}) {
+    final id = rideId.trim();
+    if (id.isEmpty) return;
+
+    if (_joinedRideRoomId != null &&
+        _joinedRideRoomId != id &&
+        _joinedRideRoomId!.isNotEmpty) {
+      _emitLeaveRideRoom(_joinedRideRoomId!);
     }
+
+    _joinedRideRoomId = id;
+    _emitJoinRideRoom(id);
+  }
+
+  /// Leaves [rideId]'s socket room (no-op when socket is disconnected).
+  void leaveRideRoom({required String rideId}) {
+    final id = rideId.trim();
+    if (id.isEmpty) return;
+    _emitLeaveRideRoom(id);
+    if (_joinedRideRoomId == id) {
+      _joinedRideRoomId = null;
+    }
+  }
+
+  /// Leaves whichever ride room is currently tracked, if any.
+  void leaveJoinedRideRoom() {
+    final id = _joinedRideRoomId;
+    if (id == null || id.isEmpty) return;
+    leaveRideRoom(rideId: id);
+  }
+
+  void joinRideRoom({required String rideId}) => switchRideRoom(rideId: rideId);
+
+  void _emitJoinRideRoom(String rideId) {
+    if (_socket?.connected != true) return;
     _socket!.emit(evtJoinRideRoom, {'ride_id': rideId});
+  }
+
+  void _emitLeaveRideRoom(String rideId) {
+    if (_socket?.connected != true) return;
+    _socket!.emit(evtLeaveRideRoom, {'ride_id': rideId});
+  }
+
+  void _rejoinRideRoomIfNeeded() {
+    final id = _joinedRideRoomId?.trim();
+    if (id == null || id.isEmpty) return;
+    _emitJoinRideRoom(id);
   }
 
   void joinPaymentRoom({required String validationId}) {
@@ -343,6 +391,7 @@ class AppSocketService {
     _manualDisconnect = true;
     _isConnecting = false;
     _cancelReconnectTimer();
+    leaveJoinedRideRoom();
     _socket?.disconnect();
   }
 
