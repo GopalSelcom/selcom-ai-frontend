@@ -119,6 +119,10 @@ class RideRepositoryImpl implements RideRepository {
         destination,
       );
       return Right(result);
+    } on InsufficientWalletBalanceException catch (e) {
+      return Left(
+        InsufficientWalletBalanceFailure('', details: e.details),
+      );
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(_exceptionMessage(e)));
@@ -137,6 +141,10 @@ class RideRepositoryImpl implements RideRepository {
         destination,
       );
       return Right(result);
+    } on InsufficientWalletBalanceException catch (e) {
+      return Left(
+        InsufficientWalletBalanceFailure('', details: e.details),
+      );
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(_exceptionMessage(e)));
@@ -288,6 +296,10 @@ class RideRepositoryImpl implements RideRepository {
         idempotencyKey: idempotencyKey,
       );
       return Right(result);
+    } on InsufficientWalletBalanceException catch (e) {
+      return Left(
+        InsufficientWalletBalanceFailure('', details: e.details),
+      );
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(_exceptionMessage(e)));
