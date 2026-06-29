@@ -314,7 +314,8 @@ class ProfileController extends GetxController {
   void openPrivacyPolicy() {
     WebViewScreen.open(
       title: AppStrings.privacyPolicy.tr,
-      url: '${AppConfig.apiHost}${AppConfig.apiPathPrefix}/${URLS.common.privacy}',
+      url:
+          '${AppConfig.apiHost}${AppConfig.apiPathPrefix}/v4/${URLS.common.privacy}',
     );
   }
 
