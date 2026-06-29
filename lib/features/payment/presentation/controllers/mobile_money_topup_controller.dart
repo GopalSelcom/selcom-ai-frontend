@@ -9,6 +9,7 @@ import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
+import '../../../../shared/utils/grouped_phone_number_formatter.dart';
 import '../../../../shared/utils/thousands_separator_input_formatter.dart';
 import '../../../wallet/domain/repositories/wallet_repository.dart';
 import '../../../wallet/presentation/utils/wallet_refresh.dart';
@@ -251,21 +252,38 @@ class MobileMoneyTopupController extends GetxController {
     }
   }
 
+  String _enteredPhoneDisplay() {
+    var digits = phoneRaw.value.replaceAll(RegExp(r'\D'), '');
+    if (digits.isEmpty) {
+      digits = _lastUssdPhone ?? '';
+    }
+    if (digits.startsWith('0')) {
+      digits = digits.substring(1);
+    }
+
+    const iso = WalletPaymentPhoneCountry.iso;
+    final country = PhoneNationalRules.findByIso(iso);
+    final grouped = GroupedPhoneNumberFormatter.formatDigits(
+      digits,
+      country.format,
+    );
+    return '$countryDialCodeDisplay $grouped';
+  }
+
   void _showPendingDialog() {
-    pendingCountdown.value = countdownDurationSeconds;
     _pendingDialogVisible = true;
 
     AppDialogs.showAnimatedDialog<void>(
       barrierDismissible: false,
       child: PopScope(
         canPop: false,
-        child: Obx(
-          () => MobileMoneyTopupStatusDialog(
-            type: MobileMoneyTopupDialogType.request,
-            secondsListenable: pendingCountdown,
-            onCancel: () => unawaited(cancelPaymentRequest()),
-            isCancelling: isCancelling.value,
-          ),
+        child: MobileMoneyTopupStatusDialog(
+          type: MobileMoneyTopupDialogType.request,
+          requestTitle: AppStrings.mobileMoneyRequestSentTitle.tr,
+          requestSubtitle: AppStrings.mobileMoneyRequestSentMessage.trParams({
+            'number': _enteredPhoneDisplay(),
+          }),
+          onAcknowledge: _dismissPendingDialog,
         ),
       ),
     );

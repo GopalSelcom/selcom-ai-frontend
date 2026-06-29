@@ -20,6 +20,7 @@ class MobileMoneyTopupStatusDialog extends StatelessWidget {
     this.requestTitle,
     this.requestSubtitle,
     this.onCancel,
+    this.onAcknowledge,
     this.isCancelling = false,
   });
 
@@ -28,6 +29,7 @@ class MobileMoneyTopupStatusDialog extends StatelessWidget {
   final String? requestTitle;
   final String? requestSubtitle;
   final VoidCallback? onCancel;
+  final VoidCallback? onAcknowledge;
   final bool isCancelling;
 
   @override
@@ -43,6 +45,7 @@ class MobileMoneyTopupStatusDialog extends StatelessWidget {
         ? AppAssets.icRequest
         : AppAssets.icSuccess;
     final bool showCancel = isRequest && onCancel != null;
+    final bool showAcknowledge = isRequest && onAcknowledge != null;
 
     return Dialog(
       insetPadding: EdgeInsets.symmetric(horizontal: 24.w),
@@ -85,7 +88,7 @@ class MobileMoneyTopupStatusDialog extends StatelessWidget {
                       22.w,
                       0,
                       22.w,
-                      showCancel ? 16.h : 26.h,
+                      showCancel || showAcknowledge ? 16.h : 26.h,
                     ),
                     child: isRequest
                         ? (secondsListenable == null
@@ -121,6 +124,17 @@ class MobileMoneyTopupStatusDialog extends StatelessWidget {
                         label: AppStrings.tanQrCancelRequest.tr,
                         onPressed: isCancelling ? null : onCancel,
                         isLoading: isCancelling,
+                        width: double.infinity,
+                        height: 56.h,
+                        borderRadius: 16.r,
+                      ),
+                    ),
+                  if (showAcknowledge)
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(22.w, 0, 22.w, 26.h),
+                      child: AppPrimaryButton(
+                        label: AppStrings.gotIt.tr,
+                        onPressed: onAcknowledge,
                         width: double.infinity,
                         height: 56.h,
                         borderRadius: 16.r,
