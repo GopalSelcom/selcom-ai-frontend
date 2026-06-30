@@ -18,6 +18,7 @@ import '../../../../core/services/session_expiry_service.dart';
 import '../../../payment/domain/models/insufficient_wallet_balance_details.dart';
 import '../models/destination_update_models.dart';
 import '../models/emergency_contacts_response.dart';
+import '../models/mid_ride_cancel_models.dart';
 import '../models/ride_management_models.dart';
 import '../models/stop_update_models.dart';
 
@@ -33,6 +34,8 @@ abstract class RideRemoteDataSource {
   Future<RideCancellationChargesModel> getCancellationCharges(String rideId);
 
   Future<bool> cancelRide(String rideId, String reason);
+
+  Future<DisputeChargeResult> disputeCharge(String rideId, {String? reason});
 
   Future<bool> cancelVoiceCall(String rideId);
 
@@ -235,6 +238,35 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       ),
     );
     return response.statusCode == 200 || response.statusCode == 201;
+  }
+
+  @override
+  Future<DisputeChargeResult> disputeCharge(
+    String rideId, {
+    String? reason,
+  }) async {
+    final body = <String, dynamic>{};
+    final trimmed = reason?.trim() ?? '';
+    if (trimmed.isNotEmpty) {
+      body['reason'] = trimmed;
+    }
+
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.ride.disputeCharge(rideId),
+        method: ApiMethod.post,
+        body: body.isEmpty ? null : body,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      final data = Map<String, dynamic>.from(response.data['data'] ?? {});
+      return DisputeChargeResult.fromJson(data);
+    }
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      throw Exception('dispute_window_closed');
+    }
+    throw Exception('Failed to dispute charge');
   }
 
   @override

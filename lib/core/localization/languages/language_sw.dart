@@ -402,6 +402,44 @@ class LanguageSw extends Languages {
     'resend_otp': 'Tuma tena OTP',
     'retry': 'Jaribu tena',
     'ride_cancelled': 'Safari Imeghairiwa',
+    'trip_ended_by_driver': 'Safari imeishia na dereva',
+    'mid_ride_driver_could_not_finish':
+        'Dereva wako hakuweza kumaliza safari (@reason).',
+    'mid_ride_sorry_subtitle': 'Samahani, safari yako haikuweza kukamilika.',
+    'mid_ride_reason_lead': 'Sababu: ',
+    'mid_ride_charge_title': 'Muhtasari wa malipo',
+    'mid_ride_charge_summary_lead': 'Utalipishwa ',
+    'mid_ride_charge_summary_for': ' kwa ',
+    'mid_ride_charge_summary_trail': ' km ulizosafiri.',
+    'mid_ride_charge_summary':
+        'Utalipishwa @amount kwa kilomita @distance ulizosafiri.',
+    'mid_ride_charge_scheduled_lead': 'Malipo yatafanywa saa ',
+    'mid_ride_charge_scheduled_trail':
+        '. Pinga kabla ya wakati huo ikiwa kuna tatizo.',
+    'mid_ride_charge_scheduled':
+        'Malipo yatafanywa saa @time. Ikiwa kuna tatizo, unaweza kupinga kabla ya wakati huo.',
+    'mid_ride_charge_finalising': 'Tunakamilisha malipo yako…',
+    'mid_ride_charge_captured_lead': 'Imelipishwa ',
+    'mid_ride_charge_captured_middle': ' kwa umbali uliosafiri. ',
+    'mid_ride_charge_captured_refund_trail': ' imerudishwa kwenye pochi yako.',
+    'mid_ride_charge_captured':
+        'Imelipishwa @captured kwa umbali uliosafiri. @refund imerudishwa kwenye pochi yako.',
+    'mid_ride_under_review':
+        'Inakaguliwa — hautalipishwa tunapokagua.',
+    'mid_ride_no_charge': 'Hakuna malipo — zuio limerudishwa kikamilifu.',
+    'mid_ride_dispute_charge': 'Pinga malipo',
+    'mid_ride_dispute_success':
+        'Zuio limetolewa. Timu yetu itakagua — hautalipishwa tunapokagua.',
+    'mid_ride_dispute_failed': 'Imeshindikana kuwasilisha pingamizi',
+    'mid_ride_dispute_unavailable': 'Pingamizi halipatikani',
+    'mid_ride_dispute_window_closed':
+        'Muda wa kupinga umekwisha. Wasiliana na msaada ikiwa bado unahitaji usaidizi.',
+    'mid_ride_cancelled_by_driver_partial_charge':
+        'Imeghairiwa na dereva — malipo ya sehemu',
+    'mid_ride_reason_vehicle_breakdown': 'Gari limevunjika',
+    'mid_ride_reason_accident': 'Ajali',
+    'mid_ride_reason_unsafe': 'Hali si salama',
+    'mid_ride_reason_other': 'Nyingine',
     'driver_started_your_ride': '@driverName ameanzisha safari yako',
     'ride_completed': 'Safari Imekamilika',
     'the_ride_has_been_cancelled': 'Safari imeghairiwa.',
@@ -2007,6 +2045,106 @@ class LanguageSw extends Languages {
 
   @override
   String get rideCancelled => values['ride_cancelled'] ?? '';
+
+  @override
+  String get tripEndedByDriver => values['trip_ended_by_driver'] ?? '';
+
+  @override
+  String get midRideDriverCouldNotFinish =>
+      values['mid_ride_driver_could_not_finish'] ?? '';
+
+  @override
+  String get midRideSorrySubtitle => values['mid_ride_sorry_subtitle'] ?? '';
+
+  @override
+  String get midRideReasonLead => values['mid_ride_reason_lead'] ?? '';
+
+  @override
+  String get midRideChargeTitle => values['mid_ride_charge_title'] ?? '';
+
+  @override
+  String get midRideChargeSummaryLead =>
+      values['mid_ride_charge_summary_lead'] ?? '';
+
+  @override
+  String get midRideChargeSummaryFor => values['mid_ride_charge_summary_for'] ?? '';
+
+  @override
+  String get midRideChargeSummaryTrail =>
+      values['mid_ride_charge_summary_trail'] ?? '';
+
+  @override
+  String get midRideChargeSummary => values['mid_ride_charge_summary'] ?? '';
+
+  @override
+  String get midRideChargeScheduledLead =>
+      values['mid_ride_charge_scheduled_lead'] ?? '';
+
+  @override
+  String get midRideChargeScheduledTrail =>
+      values['mid_ride_charge_scheduled_trail'] ?? '';
+
+  @override
+  String get midRideChargeScheduled => values['mid_ride_charge_scheduled'] ?? '';
+
+  @override
+  String get midRideChargeFinalising =>
+      values['mid_ride_charge_finalising'] ?? '';
+
+  @override
+  String get midRideChargeCapturedLead =>
+      values['mid_ride_charge_captured_lead'] ?? '';
+
+  @override
+  String get midRideChargeCapturedMiddle =>
+      values['mid_ride_charge_captured_middle'] ?? '';
+
+  @override
+  String get midRideChargeCapturedRefundTrail =>
+      values['mid_ride_charge_captured_refund_trail'] ?? '';
+
+  @override
+  String get midRideChargeCaptured => values['mid_ride_charge_captured'] ?? '';
+
+  @override
+  String get midRideUnderReview => values['mid_ride_under_review'] ?? '';
+
+  @override
+  String get midRideNoCharge => values['mid_ride_no_charge'] ?? '';
+
+  @override
+  String get midRideDisputeCharge => values['mid_ride_dispute_charge'] ?? '';
+
+  @override
+  String get midRideDisputeSuccess => values['mid_ride_dispute_success'] ?? '';
+
+  @override
+  String get midRideDisputeFailed => values['mid_ride_dispute_failed'] ?? '';
+
+  @override
+  String get midRideDisputeUnavailable =>
+      values['mid_ride_dispute_unavailable'] ?? '';
+
+  @override
+  String get midRideDisputeWindowClosed =>
+      values['mid_ride_dispute_window_closed'] ?? '';
+
+  @override
+  String get midRideCancelledByDriverPartialCharge =>
+      values['mid_ride_cancelled_by_driver_partial_charge'] ?? '';
+
+  @override
+  String get midRideReasonVehicleBreakdown =>
+      values['mid_ride_reason_vehicle_breakdown'] ?? '';
+
+  @override
+  String get midRideReasonAccident => values['mid_ride_reason_accident'] ?? '';
+
+  @override
+  String get midRideReasonUnsafe => values['mid_ride_reason_unsafe'] ?? '';
+
+  @override
+  String get midRideReasonOther => values['mid_ride_reason_other'] ?? '';
 
   @override
   String get driverStartedYourRide => values['driver_started_your_ride'] ?? '';

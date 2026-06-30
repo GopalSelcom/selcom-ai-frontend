@@ -44,6 +44,7 @@ import '../../../../shared/utils/map_route_marker_utils.dart';
 import '../../../../shared/utils/route_map_marker_icons.dart';
 import '../../../../shared/utils/route_pin_letter_style.dart';
 import '../../../../shared/utils/map_vehicle_marker_utils.dart';
+import '../../../../shared/utils/mid_ride_cancel_navigation.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../../../shared/utils/ride_pickup_status_labels.dart';
 import '../../../../shared/utils/ride_status_normalizer.dart';
@@ -58,6 +59,8 @@ import '../../../payment/presentation/widgets/add_money_to_wallet_bottom_sheet.d
 import '../../data/models/destination_update_models.dart';
 import '../../data/models/emergency_contacts_response.dart';
 import '../../data/models/stop_update_models.dart';
+import '../../../../core/data/models/mid_ride_cancel_model.dart';
+import '../../data/models/mid_ride_cancel_models.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../screens/ride_details_screen.dart';
 import '../utils/cancel_ride_flow.dart';
@@ -180,6 +183,7 @@ class DriverAcceptedController extends GetxController
   StreamSubscription<RideStopsUpdateFailedResponse>? _rideStopsUpdateFailedSub;
   StreamSubscription<PaymentStatusUpdateResponse>? _paymentStatusSub;
   StreamSubscription<RideFareSettledResponse>? _fareSettledSub;
+  StreamSubscription<RideDriverCancelledPayload>? _driverCancelledSub;
   bool _skipRideRoomLeaveOnClose = false;
   bool _isHandlingAppResume = false;
   bool _emergencyContactsLoadedOnce = false;
@@ -639,6 +643,7 @@ class DriverAcceptedController extends GetxController
     _trackingSub?.cancel();
     _chatSub?.cancel();
     _fareSettledSub?.cancel();
+    _driverCancelledSub?.cancel();
     if (!_skipRideRoomLeaveOnClose && rideId.isNotEmpty) {
       _socketService.leaveRideRoom(rideId: rideId);
     }
@@ -861,6 +866,13 @@ class DriverAcceptedController extends GetxController
           navigateToFindingDriverForRide(r, replace: true);
           return;
         }
+        if (rideNeedsMidRideCancelScreen(r)) {
+          final block = _midRideCancelModelFromRide(r);
+          if (block != null) {
+            await _maybeNavigateMidRideDriverCancelled(block);
+            return;
+          }
+        }
         rideLoadError.value = null;
         ride.value = r;
         _applyRide(r);
@@ -1045,6 +1057,7 @@ class DriverAcceptedController extends GetxController
     _rideStopsUpdateFailedSub?.cancel();
     _paymentStatusSub?.cancel();
     _fareSettledSub?.cancel();
+    _driverCancelledSub?.cancel();
 
     _connectionSub = _socketService.connectionStream.listen((connected) {
       if (!connected) return;
@@ -1064,8 +1077,10 @@ class DriverAcceptedController extends GetxController
 
       if (normalized == 'cancelled') {
         if (_isUserInitiatedCancellation || _navigatedAway) return;
-        _navigatedAway = true;
         await _syncLiveActivityFromStatusPayload(payload);
+        await _maybeNavigateMidRideDriverCancelled();
+        if (_navigatedAway) return;
+        _navigatedAway = true;
         await LiveActivityManager().endActivity(rideId);
         _showCancelDialogThenGoHome(AppStrings.rideCancelled.tr);
         return;
@@ -1197,6 +1212,14 @@ class DriverAcceptedController extends GetxController
       BookAnyFareSettledUi.maybeShow(payload: payload, rideId: rideId);
     });
 
+    _driverCancelledSub = _socketService.rideDriverCancelledStream.listen((
+      payload,
+    ) async {
+      if (payload.rideId.trim() != rideId) return;
+      if (_navigatedAway) return;
+      await _maybeNavigateMidRideDriverCancelled(payload.toMidRideCancelModel());
+    });
+
     // Ensure socket is connected for the active-ride entry path too.
     await _socketService.connect();
     if (_socketService.isConnected) {
@@ -1310,6 +1333,66 @@ class DriverAcceptedController extends GetxController
     });
   }
 
+  Future<void> _handleRideCancelledFromTracking() async {
+    await _maybeNavigateMidRideDriverCancelled();
+    if (_navigatedAway) return;
+    _navigatedAway = true;
+    _showCancelDialogThenGoHome(AppStrings.rideCancelled.tr);
+  }
+
+  Future<void> _maybeNavigateMidRideDriverCancelled([
+    MidRideCancelModel? seed,
+  ]) async {
+    if (_navigatedAway) return;
+    final block = seed ?? await _loadMidRideCancelBlock();
+    if (block == null) return;
+    _navigatedAway = true;
+    _skipRideRoomLeaveOnClose = true;
+    await showMidRideDriverCancelledDialog(rideId: rideId, cancel: block);
+  }
+
+  Future<MidRideCancelModel?> _loadMidRideCancelBlock() async {
+    if (rideId.isEmpty) return null;
+    final result = await rideRepository.getRideDetails(rideId);
+    return result.fold((_) => null, (r) {
+      if (!rideHasMidRideDriverCancel(r)) return null;
+      final block = r.midRideCancel;
+      if (block is MidRideCancelModel) return block;
+      if (block == null) return null;
+      return MidRideCancelModel(
+        reason: block.reason,
+        reasonText: block.reasonText,
+        distanceCoveredKm: block.distanceCoveredKm,
+        partialFare: block.partialFare,
+        capturedAmount: block.capturedAmount,
+        netRefund: block.netRefund,
+        releasedAmount: block.releasedAmount,
+        captureAt: block.captureAt,
+        disputeDeadline: block.disputeDeadline,
+        canDispute: block.canDispute,
+        captureStatus: block.captureStatus,
+      );
+    });
+  }
+
+  MidRideCancelModel? _midRideCancelModelFromRide(RideModel r) {
+    final block = r.midRideCancel;
+    if (block is MidRideCancelModel) return block;
+    if (block == null) return null;
+    return MidRideCancelModel(
+      reason: block.reason,
+      reasonText: block.reasonText,
+      distanceCoveredKm: block.distanceCoveredKm,
+      partialFare: block.partialFare,
+      capturedAmount: block.capturedAmount,
+      netRefund: block.netRefund,
+      releasedAmount: block.releasedAmount,
+      captureAt: block.captureAt,
+      disputeDeadline: block.disputeDeadline,
+      canDispute: block.canDispute,
+      captureStatus: block.captureStatus,
+    );
+  }
   void _syncBottomSheetVehicleImage(String? vehicleType) {
     final previousAsset = bottomSheetVehicleImageAsset.value;
     bottomSheetVehicleImageAsset
@@ -1925,8 +2008,7 @@ class DriverAcceptedController extends GetxController
 
     if (trackingStatus == 'cancelled') {
       if (_isUserInitiatedCancellation || _navigatedAway) return;
-      _navigatedAway = true;
-      _showCancelDialogThenGoHome(AppStrings.rideCancelled.tr);
+      unawaited(_handleRideCancelledFromTracking());
       return;
     }
     if (trackingStatus == 'no_driver_found' ||

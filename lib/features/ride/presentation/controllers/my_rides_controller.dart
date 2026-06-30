@@ -4,6 +4,7 @@ import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/mid_ride_cancel_navigation.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../domain/usecases/ride_usecase.dart';
 import '../screens/ride_details_screen.dart';
@@ -65,6 +66,17 @@ class MyRidesController extends GetxController {
       result.fold(
         (failure) => AppDialogs.showErrorDialog(message: failure.message),
         (freshRide) {
+          if (rideNeedsMidRideCancelScreen(freshRide)) {
+            final block = freshRide.midRideCancel;
+            if (block != null) {
+              showMidRideDriverCancelledDialog(
+                rideId: freshRide.id,
+                cancel: block,
+                navigateHomeOnDismiss: false,
+              );
+              return;
+            }
+          }
           if (rideStatusIsOngoingActive(freshRide.status)) {
             navigateToOngoingRide(freshRide);
             return;

@@ -505,6 +505,40 @@ class AppStrings {
   static const String resendOtp = 'resend_otp';
   static const String retry = 'retry';
   static const String rideCancelled = 'ride_cancelled';
+  static const String tripEndedByDriver = 'trip_ended_by_driver';
+  static const String midRideDriverCouldNotFinish =
+      'mid_ride_driver_could_not_finish';
+  static const String midRideSorrySubtitle = 'mid_ride_sorry_subtitle';
+  static const String midRideReasonLead = 'mid_ride_reason_lead';
+  static const String midRideChargeTitle = 'mid_ride_charge_title';
+  static const String midRideChargeSummaryLead = 'mid_ride_charge_summary_lead';
+  static const String midRideChargeSummaryFor = 'mid_ride_charge_summary_for';
+  static const String midRideChargeSummaryTrail = 'mid_ride_charge_summary_trail';
+  static const String midRideChargeSummary = 'mid_ride_charge_summary';
+  static const String midRideChargeScheduledLead = 'mid_ride_charge_scheduled_lead';
+  static const String midRideChargeScheduledTrail = 'mid_ride_charge_scheduled_trail';
+  static const String midRideChargeScheduled = 'mid_ride_charge_scheduled';
+  static const String midRideChargeFinalising = 'mid_ride_charge_finalising';
+  static const String midRideChargeCapturedLead = 'mid_ride_charge_captured_lead';
+  static const String midRideChargeCapturedMiddle = 'mid_ride_charge_captured_middle';
+  static const String midRideChargeCapturedRefundTrail =
+      'mid_ride_charge_captured_refund_trail';
+  static const String midRideChargeCaptured = 'mid_ride_charge_captured';
+  static const String midRideUnderReview = 'mid_ride_under_review';
+  static const String midRideNoCharge = 'mid_ride_no_charge';
+  static const String midRideDisputeCharge = 'mid_ride_dispute_charge';
+  static const String midRideDisputeSuccess = 'mid_ride_dispute_success';
+  static const String midRideDisputeFailed = 'mid_ride_dispute_failed';
+  static const String midRideDisputeUnavailable = 'mid_ride_dispute_unavailable';
+  static const String midRideDisputeWindowClosed =
+      'mid_ride_dispute_window_closed';
+  static const String midRideCancelledByDriverPartialCharge =
+      'mid_ride_cancelled_by_driver_partial_charge';
+  static const String midRideReasonVehicleBreakdown =
+      'mid_ride_reason_vehicle_breakdown';
+  static const String midRideReasonAccident = 'mid_ride_reason_accident';
+  static const String midRideReasonUnsafe = 'mid_ride_reason_unsafe';
+  static const String midRideReasonOther = 'mid_ride_reason_other';
   static const String driverStartedYourRide = 'driver_started_your_ride';
   static const String rideCompleted = 'ride_completed';
   static const String theRideHasBeenCancelled = 'the_ride_has_been_cancelled';

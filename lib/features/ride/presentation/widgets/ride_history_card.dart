@@ -26,6 +26,9 @@ class RideHistoryCard extends StatelessWidget {
       case RideStatus.rideCompleted:
         return AppStrings.completed.tr;
       case RideStatus.cancelled:
+        if (ride.midRideCancel?.isDriverMidRideCancel == true) {
+          return AppStrings.midRideCancelledByDriverPartialCharge.tr;
+        }
         return AppStrings.cancelled.tr;
       case RideStatus.noDriverFound:
         return AppStrings.noDriverFound.tr;
@@ -59,7 +62,9 @@ class RideHistoryCard extends StatelessWidget {
     final vehicleType = resolvedVehicleType.isNotEmpty
         ? resolvedVehicleType
         : AppStrings.fallbackRideName.tr;
-    final effectiveFare = ride.status == RideStatus.cancelled
+    final effectiveFare = ride.midRideCancel?.isDriverMidRideCancel == true
+        ? (ride.midRideCancel?.displayChargeAmount ?? 0)
+        : ride.status == RideStatus.cancelled
         ? (ride.cancellationFee ?? 0)
         : (ride.fareBreakdown?.totalAmount ??
               ride.finalFare ??

@@ -94,6 +94,8 @@ class _RideEndpoints {
   final emergencyContacts = "go/emergency-contacts";
 
   String cancelVoiceCall(String rideId) => "$base/$rideId/call/cancel";
+
+  String disputeCharge(String rideId) => "$base/$rideId/dispute-charge";
   final base = "go/rides";
 }
 

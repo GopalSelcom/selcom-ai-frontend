@@ -1,5 +1,7 @@
 import '../../domain/entities/location_entity.dart';
+import '../../domain/entities/mid_ride_cancel_entity.dart';
 import '../../domain/entities/ride_entity.dart';
+import 'mid_ride_cancel_model.dart';
 
 class RideModel extends RideEntity {
   const RideModel({
@@ -38,6 +40,7 @@ class RideModel extends RideEntity {
     super.pdfLinks,
     super.promoCode,
     super.promoDiscount,
+    super.midRideCancel,
   });
 
   factory RideModel.fromJson(Map<String, dynamic> json) {
@@ -100,6 +103,11 @@ class RideModel extends RideEntity {
         : promoCodeRaw;
     final promoDiscountParsed = (json['promo_discount'] as num?)?.toInt();
 
+    final midRideCancelJson = json['mid_ride_cancel'];
+    final midRideCancel = midRideCancelJson is Map
+        ? MidRideCancelModel.fromJson(Map<String, dynamic>.from(midRideCancelJson))
+        : null;
+
     return RideModel(
       id: json['_id'] ?? '',
       riderId: json['rider_id'] ?? '',
@@ -151,6 +159,7 @@ class RideModel extends RideEntity {
       pdfLinks: pdfLinks,
       promoCode: promoCodeParsed,
       promoDiscount: promoDiscountParsed,
+      midRideCancel: midRideCancel,
     );
   }
 
@@ -191,6 +200,7 @@ class RideModel extends RideEntity {
     List<PdfLinkEntity>? pdfLinks,
     String? promoCode,
     int? promoDiscount,
+    MidRideCancelEntity? midRideCancel,
   }) {
     return RideModel(
       id: id ?? this.id,
@@ -228,6 +238,7 @@ class RideModel extends RideEntity {
       pdfLinks: pdfLinks ?? this.pdfLinks,
       promoCode: promoCode ?? this.promoCode,
       promoDiscount: promoDiscount ?? this.promoDiscount,
+      midRideCancel: midRideCancel ?? this.midRideCancel,
     );
   }
 

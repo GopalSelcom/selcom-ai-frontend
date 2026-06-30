@@ -1,4 +1,5 @@
 import 'location_entity.dart';
+import 'mid_ride_cancel_entity.dart';
 
 enum RideStatus {
   searching,
@@ -140,6 +141,9 @@ class RideEntity {
   final String? promoCode;
   final int? promoDiscount;
 
+  /// Present when the driver ended the trip mid-ride (partial charge flow).
+  final MidRideCancelEntity? midRideCancel;
+
   const RideEntity({
     required this.id,
     required this.riderId,
@@ -176,6 +180,7 @@ class RideEntity {
     this.pdfLinks,
     this.promoCode,
     this.promoDiscount,
+    this.midRideCancel,
   });
 
   RideEntity copyWith({
@@ -214,6 +219,7 @@ class RideEntity {
     List<PdfLinkEntity>? pdfLinks,
     String? promoCode,
     int? promoDiscount,
+    MidRideCancelEntity? midRideCancel,
   }) {
     return RideEntity(
       id: id ?? this.id,
@@ -251,6 +257,7 @@ class RideEntity {
       pdfLinks: pdfLinks ?? this.pdfLinks,
       promoCode: promoCode ?? this.promoCode,
       promoDiscount: promoDiscount ?? this.promoDiscount,
+      midRideCancel: midRideCancel ?? this.midRideCancel,
     );
   }
 }

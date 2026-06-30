@@ -64,7 +64,7 @@ class AppConfig {
   // ── Feature toggles (in-memory, not from `.env`) ──────────────────────────
 
   /// When true, ride payment endpoints skip the `_new` production suffix.
-  static bool ridePaymentBypass = false;
+  static bool ridePaymentBypass = true;
 
   /// When true, Selcom Pesa top-up skips the real app handoff (QA only).
   static bool selcomPesaBypass = false;

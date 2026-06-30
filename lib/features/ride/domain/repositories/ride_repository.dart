@@ -6,6 +6,7 @@ import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/errors/failures.dart';
 import '../../data/models/destination_update_models.dart';
 import '../../data/models/emergency_contacts_response.dart';
+import '../../data/models/mid_ride_cancel_models.dart';
 import '../../data/models/ride_management_models.dart';
 
 abstract class RideRepository {
@@ -25,6 +26,11 @@ abstract class RideRepository {
   );
 
   Future<Either<Failure, bool>> cancelRide(String rideId, String reason);
+
+  Future<Either<Failure, DisputeChargeResult>> disputeCharge(
+    String rideId, {
+    String? reason,
+  });
 
   Future<Either<Failure, bool>> cancelVoiceCall(String rideId);
 

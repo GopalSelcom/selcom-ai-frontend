@@ -12,6 +12,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../../features/ride/domain/repositories/ride_repository.dart';
 import '../../shared/utils/app_dialogs.dart';
+import '../../shared/utils/mid_ride_cancel_navigation.dart';
 import '../../shared/utils/ride_active_navigation.dart';
 import '../data/models/notification_model.dart';
 import '../di/injection_container.dart';
@@ -345,7 +346,16 @@ class NotificationService {
           AppDialogs.showErrorDialog(
             message: AppStrings.unableToOpenRideDetails.tr,
           );
-        }, (ride) => navigateToOngoingRide(ride));
+        }, (ride) {
+          if (rideNeedsMidRideCancelScreen(ride)) {
+            final block = ride.midRideCancel;
+            if (block != null) {
+              showMidRideDriverCancelledDialog(rideId: ride.id, cancel: block);
+              return;
+            }
+          }
+          navigateToOngoingRide(ride);
+        });
       } finally {
         Loader.instance.hide();
       }

@@ -4,6 +4,7 @@ import '../../core/data/models/ride_model.dart';
 import '../../core/domain/entities/ride_entity.dart';
 import '../../core/routes/app_routes.dart';
 import 'map_route_marker_utils.dart';
+import 'mid_ride_cancel_navigation.dart';
 import 'ride_status_normalizer.dart';
 
 /// Terminal / inactive rides — show details sheet instead of live ride UI.
@@ -164,6 +165,17 @@ void navigateToOngoingRide(
   if (shouldOpenFindingDriverForRide(ride)) {
     navigateToFindingDriverForRide(ride, replace: replace);
     return;
+  }
+  if (rideNeedsMidRideCancelScreen(ride)) {
+    final block = ride.midRideCancel;
+    if (block != null) {
+      showMidRideDriverCancelledDialog(
+        rideId: ride.id,
+        cancel: block,
+        navigateHomeOnDismiss: replace,
+      );
+      return;
+    }
   }
   navigateToDriverAcceptedForRide(
     ride,
