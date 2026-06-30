@@ -12,6 +12,7 @@ import '../../../../shared/utils/phone_national_rules.dart';
 import '../../../../shared/utils/thousands_separator_input_formatter.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_text_field.dart';
+import '../../domain/wallet_payment_phone_country.dart';
 import '../controllers/mobile_money_topup_controller.dart';
 import 'wallet_topup_sheet_lifecycle.dart';
 
@@ -51,7 +52,8 @@ class MobileMoneyTopupBottomSheet extends GetView<MobileMoneyTopupController> {
         return const SizedBox.shrink();
       }
       final apiError = controller.apiError.value;
-      final iso = controller.countryIso;
+      const iso = WalletPaymentPhoneCountry.iso;
+      const dialCodeDisplay = WalletPaymentPhoneCountry.dialCodeDisplay;
 
       return Column(
         mainAxisSize: MainAxisSize.min,
@@ -81,7 +83,7 @@ class MobileMoneyTopupBottomSheet extends GetView<MobileMoneyTopupController> {
               child: Center(
                 widthFactor: 1,
                 child: Text(
-                  controller.countryDialCodeDisplay,
+                  dialCodeDisplay,
                   style: AppTextStyles.homeTitle.copyWith(
                     fontSize: 16.sp,
                     height: 22 / 16,

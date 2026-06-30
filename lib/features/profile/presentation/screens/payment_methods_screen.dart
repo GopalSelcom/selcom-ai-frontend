@@ -8,6 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/app_adaptive_bottom_safe_scaffold.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
+import '../../../payment/domain/wallet_payment_phone_country.dart';
 import '../../domain/entities/payment_card.dart';
 import '../controllers/payment_methods_controller.dart';
 import '../widgets/wallet_summary_card.dart';
@@ -154,7 +155,8 @@ class PaymentMethodsScreen extends StatelessWidget {
             Text(
               isLinked
                   ? AppStrings.selcomPesaLinkedNumber.trParams({
-                      'number': '+255 711 410 410',
+                      'number':
+                          '${WalletPaymentPhoneCountry.dialCodeDisplay} 711 410 410',
                     })
                   : AppStrings.connectSelcomPesaRideChargesSubtitle.tr,
               style: isLinked

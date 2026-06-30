@@ -24,7 +24,10 @@ abstract class WalletPaymentRemoteDataSource {
     required String transid,
   });
 
-  Future<void> cancelUssdOrder({required String transid});
+  Future<void> cancelUssdOrder({
+    required String transid,
+    required String paymentMethod,
+  });
 }
 
 class WalletPaymentRemoteDataSourceImpl
@@ -127,9 +130,13 @@ class WalletPaymentRemoteDataSourceImpl
   }
 
   @override
-  Future<void> cancelUssdOrder({required String transid}) async {
+  Future<void> cancelUssdOrder({
+    required String transid,
+    required String paymentMethod,
+  }) async {
     final trimmedTransid = transid.trim();
-    if (trimmedTransid.isEmpty) {
+    final trimmedPaymentMethod = paymentMethod.trim();
+    if (trimmedTransid.isEmpty || trimmedPaymentMethod.isEmpty) {
       throw WalletPaymentException(AppStrings.tanQrPaymentRequestFailed);
     }
 
@@ -137,7 +144,10 @@ class WalletPaymentRemoteDataSourceImpl
       request: ApiRequest(
         endpoint: URLS.wallet.cancelUssdOrder,
         method: ApiMethod.post,
-        body: {'transid': trimmedTransid},
+        body: {
+          'transid': trimmedTransid,
+          'payment_method': trimmedPaymentMethod,
+        },
         errorPresentationType: ErrorPresentationType.none,
       ),
     );

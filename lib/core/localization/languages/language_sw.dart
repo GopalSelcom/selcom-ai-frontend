@@ -45,6 +45,8 @@ class LanguageSw extends Languages {
     'wallet_funds_received_title': '',
     'wallet_funds_received_subtitle': '',
     'top_up_request_sent_title': '',
+    'mobile_money_request_sent_title': '',
+    'mobile_money_request_sent_message': '',
     'selcom_pesa_to_go_wallet': '',
     'use_another_number': '',
     'enter_selcom_pesa_customer_phone_hint': '',
@@ -868,6 +870,14 @@ class LanguageSw extends Languages {
 
   @override
   String get topUpRequestSentTitle => values['top_up_request_sent_title'] ?? '';
+
+  @override
+  String get mobileMoneyRequestSentTitle =>
+      values['mobile_money_request_sent_title'] ?? '';
+
+  @override
+  String get mobileMoneyRequestSentMessage =>
+      values['mobile_money_request_sent_message'] ?? '';
 
   @override
   String get selcomPesaToGoWallet => values['selcom_pesa_to_go_wallet'] ?? '';

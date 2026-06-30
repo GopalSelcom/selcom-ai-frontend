@@ -12,6 +12,7 @@ import '../../../../shared/utils/thousands_separator_input_formatter.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../../../profile/presentation/controllers/payment_methods_controller.dart';
+import '../../domain/wallet_payment_phone_country.dart';
 import '../controllers/selcom_pesa_topup_controller.dart';
 import 'selcom_pesa_another_number_bottom_sheet.dart';
 import 'wallet_topup_sheet_lifecycle.dart';
@@ -211,7 +212,8 @@ class SelcomPesaToWalletBottomSheet extends GetView<SelcomPesaTopupController> {
             Text(
               linked
                   ? AppStrings.selcomPesaLinkedNumber.trParams({
-                      'number': '+255 711 410 410',
+                      'number':
+                          '${WalletPaymentPhoneCountry.dialCodeDisplay} 711 410 410',
                     })
                   : AppStrings.connectSelcomPesaRideChargesSubtitle.tr,
               style: linked

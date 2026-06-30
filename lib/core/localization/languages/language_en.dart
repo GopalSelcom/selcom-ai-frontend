@@ -50,13 +50,16 @@ class LanguageEn extends Languages {
     'wallet_funds_received_subtitle':
         'You can now use your wallet to book rides.',
     'top_up_request_sent_title': 'Top up request sent',
+    'mobile_money_request_sent_title': 'Request sent',
+    'mobile_money_request_sent_message':
+        'Your payment request has been sent to @number. The amount will be reflected in your Selcom Go wallet.',
     'selcom_pesa_to_go_wallet': 'Selcom Pesa to Go wallet',
     'use_another_number': '+ Use another number',
     'enter_selcom_pesa_customer_phone_hint':
         'Enter Selcom Pesa customer phone number, and we\'ll send a request',
     'request_sent_complete_selcom_topup':
         'Request sent. Please complete payment on Selcom Pesa to Topup your Go wallet',
-    'expires_in_with_time': 'Expires in ... @time',
+    'expires_in_with_time': 'Expires in @time',
     'tanqr_amount_required': 'Please enter an amount',
     'tanqr_amount_must_be_greater_than_zero':
         'Amount must be greater than 0',
@@ -68,7 +71,7 @@ class LanguageEn extends Languages {
         'Could not start the payment. Please try again.',
     'tanqr_timer_expired_title': 'Payment time expired',
     'tanqr_timer_expired_message':
-        'The QR code has expired. Would you like to try again?',
+        'The payment request has expired. Would you like to try again?',
     'tanqr_missing_registered_phone':
         'Your registered phone number is missing. Please update your profile.',
     'tanqr_cancel_request': 'Cancel request',
@@ -213,7 +216,7 @@ class LanguageEn extends Languages {
     'days_left_count': '@count days left',
     'expires_in_timer': 'Expire in @timer',
     'request_sent_please_complete_payment_on_selcom_pesa_to_book_your_ride':
-        'Request sent. Please complete payment on Selcom Pesa to book your ride.',
+        'Request sent. Please complete payment on Selcom Pesa to top-up your wallet.',
     'payment_completed_successfully': 'Payment completed successfully',
     'thank_you_for_riding_with_us_see_you_on_the_next_trip':
         'Thank you for riding with us, see you on the next trip.',
@@ -993,6 +996,14 @@ class LanguageEn extends Languages {
 
   @override
   String get topUpRequestSentTitle => values['top_up_request_sent_title'] ?? '';
+
+  @override
+  String get mobileMoneyRequestSentTitle =>
+      values['mobile_money_request_sent_title'] ?? '';
+
+  @override
+  String get mobileMoneyRequestSentMessage =>
+      values['mobile_money_request_sent_message'] ?? '';
 
   @override
   String get selcomPesaToGoWallet => values['selcom_pesa_to_go_wallet'] ?? '';

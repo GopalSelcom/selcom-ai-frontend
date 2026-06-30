@@ -19,12 +19,14 @@ String formatWalletTransactionAmount({
   required double amount,
   required bool isCredit,
   required String currency,
+  bool showSign = true,
 }) {
-  final sign = isCredit ? '+' : '-';
   final formatted = CurrencyFormatter.formatWithApiCurrency(
     amount.abs(),
     currency,
   );
+  if (!showSign) return formatted;
+  final sign = isCredit ? '+' : '-';
   return '$sign$formatted';
 }
 

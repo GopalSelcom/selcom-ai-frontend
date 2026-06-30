@@ -124,7 +124,7 @@ class NotificationService {
     // 4. iOS Foreground Notification Options
     if (Platform.isIOS) {
       await _fcm.setForegroundNotificationPresentationOptions(
-        alert: true,
+        alert: false,
         badge: true,
         sound: true,
       );
@@ -259,11 +259,10 @@ class NotificationService {
     }
 
     final data = FCMNotificationData.fromJson(message.data);
-
     String? title = message.notification?.title ?? data.title;
     String? body = message.notification?.body ?? data.body;
-
-    if (title != null || body != null) {
+    // Only show a local notification if this is a data-only message.
+    if (title != null&&body != null) {
       _logger.d("Showing local notification for foreground message");
       showLocalNotification(
         id: message.notification?.hashCode ?? message.messageId.hashCode,

@@ -32,17 +32,27 @@ class InsufficientWalletBalanceDetails {
     );
   }
 
-  /// Parses `PAY_INSUFFICIENT_FUNDS` payloads when payment backend is ready.
+  /// Parses insufficient-wallet payloads from ride payment / stop-update APIs.
   ///
-  /// Expected shape (flexible): `data` object or root with
-  /// `current_balance`, `required_amount`, `amount_needed` (or `shortfall`).
+  /// Supported `error_code` values: `PAY_INSUFFICIENT_FUNDS`, `INSUFFICIENT_BALANCE`.
+  /// Expected `data`: `required` + `available`, or legacy balance field names.
+  static const Set<String> _insufficientBalanceErrorCodes = {
+    'PAY_INSUFFICIENT_FUNDS',
+    'INSUFFICIENT_BALANCE',
+  };
+
+  static bool isInsufficientBalanceErrorCode(String? errorCode) {
+    if (errorCode == null || errorCode.isEmpty) return false;
+    return _insufficientBalanceErrorCodes.contains(errorCode);
+  }
+
   static InsufficientWalletBalanceDetails? tryParseFromApiResponse(
     dynamic raw,
   ) {
     if (raw is! Map) return null;
     final map = Map<String, dynamic>.from(raw);
     final errorCode = map['error_code'] as String?;
-    if (errorCode != null && errorCode != 'PAY_INSUFFICIENT_FUNDS') {
+    if (errorCode != null && !isInsufficientBalanceErrorCode(errorCode)) {
       return null;
     }
 
@@ -51,13 +61,14 @@ class InsufficientWalletBalanceDetails {
         : map;
 
     final current = _readAmount(payload, const [
+      'available',
       'current_balance',
       'wallet_balance',
       'balance',
     ]);
     final required = _readAmount(payload, const [
-      'required_amount',
       'required',
+      'required_amount',
       'fare_estimate',
       'fare',
     ]);
@@ -70,7 +81,7 @@ class InsufficientWalletBalanceDetails {
         (payload['currency'] as String?)?.trim() ?? 'TZS';
 
     if (current == null || required == null) {
-      if (errorCode != 'PAY_INSUFFICIENT_FUNDS') return null;
+      if (!isInsufficientBalanceErrorCode(errorCode)) return null;
       return null;
     }
 

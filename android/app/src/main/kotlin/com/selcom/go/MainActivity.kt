@@ -2,6 +2,7 @@ package com.selcom.go
 
 import android.app.NotificationManager
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
@@ -32,6 +33,37 @@ class MainActivity : FlutterActivity() {
 
                 else -> result.notImplemented()
             }
+        }
+
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            SELCOM_PESA_CHANNEL,
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "isInstalled" -> result.success(isSelcomPesaInstalled())
+                else -> result.notImplemented()
+            }
+        }
+    }
+
+    private fun isSelcomPesaInstalled(): Boolean {
+        return SELCOM_PESA_PACKAGES.any(::isPackageInstalled)
+    }
+
+    private fun isPackageInstalled(packageName: String): Boolean {
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                packageManager.getPackageInfo(
+                    packageName,
+                    PackageManager.PackageInfoFlags.of(0),
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                packageManager.getPackageInfo(packageName, 0)
+            }
+            true
+        } catch (_: Exception) {
+            false
         }
     }
 
@@ -65,5 +97,11 @@ class MainActivity : FlutterActivity() {
 
     companion object {
         const val FULL_SCREEN_INTENT_CHANNEL = "agora_calling/full_screen_intent"
+        const val SELCOM_PESA_CHANNEL = "com.selcom.go/selcom_pesa"
+
+        private val SELCOM_PESA_PACKAGES = listOf(
+            "com.selcompesa",
+            "com.selcombank.dev",
+        )
     }
 }

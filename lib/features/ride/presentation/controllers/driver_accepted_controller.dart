@@ -24,6 +24,7 @@ import '../../../../core/data/models/responses/payment_status_response/payment_s
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/domain/entities/location_entity.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
+import '../../../../core/errors/failures.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/analytics_service.dart';
@@ -53,6 +54,8 @@ import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
+import '../../../payment/domain/models/insufficient_wallet_balance_details.dart';
+import '../../../payment/presentation/widgets/add_money_to_wallet_bottom_sheet.dart';
 import '../../data/models/destination_update_models.dart';
 import '../../data/models/emergency_contacts_response.dart';
 import '../../data/models/stop_update_models.dart';
@@ -178,7 +181,7 @@ class DriverAcceptedController extends GetxController
   StreamSubscription<RideStopsUpdateFailedResponse>? _rideStopsUpdateFailedSub;
   StreamSubscription<PaymentStatusUpdateResponse>? _paymentStatusSub;
   StreamSubscription<RideFareSettledResponse>? _fareSettledSub;
-  bool _didJoinRideRoom = false;
+  bool _skipRideRoomLeaveOnClose = false;
   bool _isHandlingAppResume = false;
   bool _emergencyContactsLoadedOnce = false;
 
@@ -645,6 +648,9 @@ class DriverAcceptedController extends GetxController
     _trackingSub?.cancel();
     _chatSub?.cancel();
     _fareSettledSub?.cancel();
+    if (!_skipRideRoomLeaveOnClose && rideId.isNotEmpty) {
+      _socketService.leaveRideRoom(rideId: rideId);
+    }
     super.onClose();
   }
 
@@ -661,7 +667,6 @@ class DriverAcceptedController extends GetxController
       try {
         await _fetchRideDetails();
         await _socketService.connect();
-        _didJoinRideRoom = false;
         _joinRideRoomIfNeeded();
       } finally {
         _isHandlingAppResume = false;
@@ -861,6 +866,7 @@ class DriverAcceptedController extends GetxController
       },
       (r) async {
         if (shouldOpenFindingDriverForRide(r)) {
+          _skipRideRoomLeaveOnClose = true;
           navigateToFindingDriverForRide(r, replace: true);
           return;
         }
@@ -1048,7 +1054,6 @@ class DriverAcceptedController extends GetxController
     _rideStopsUpdateFailedSub?.cancel();
     _paymentStatusSub?.cancel();
     _fareSettledSub?.cancel();
-    _didJoinRideRoom = false;
 
     _connectionSub = _socketService.connectionStream.listen((connected) {
       if (!connected) return;
@@ -1276,11 +1281,10 @@ class DriverAcceptedController extends GetxController
   }
 
   void _joinRideRoomIfNeeded() {
-    if (_didJoinRideRoom || !_socketService.isConnected || rideId.isEmpty) {
+    if (!_socketService.isConnected || rideId.isEmpty) {
       return;
     }
-    _socketService.joinRideRoom(rideId: rideId);
-    _didJoinRideRoom = true;
+    _socketService.switchRideRoom(rideId: rideId);
   }
 
   Future<void> loadDriverIcon({String? vehicleType}) async {
@@ -2357,7 +2361,10 @@ class DriverAcceptedController extends GetxController
       idempotencyKey: stopUpdateIdempotencyKey.value,
     );
 
-    result.fold((f) => _showStopUpdateError(f.message), (res) {
+    result.fold((f) {
+      if (_handleInsufficientWalletFailure(f)) return;
+      _showStopUpdateError(f.message);
+    }, (res) {
       if (res is StopUpdatePreviewModel) {
         stopUpdatePreview.value = res;
         // Generate key if not present and save it
@@ -2392,6 +2399,7 @@ class DriverAcceptedController extends GetxController
       (f) {
         _clearIdempotencyKey();
         stopUpdateProgressStep.value = 0;
+        if (_handleInsufficientWalletFailure(f)) return false;
         _showStopUpdateError(f.message);
         return false;
       },
@@ -2447,6 +2455,27 @@ class DriverAcceptedController extends GetxController
 
   void _showStopUpdateError(String rawMessage) {
     _showLocationUpdateValidationError(rawMessage, clearStopPreview: true);
+  }
+
+  Future<void> _showInsufficientWalletDialog(
+    InsufficientWalletBalanceDetails details,
+  ) async {
+    await AppDialogs.showInsufficientWalletBalanceDialog(
+      details: details,
+      onTopUp: _openWalletTopUp,
+    );
+  }
+
+  void _openWalletTopUp() {
+    unawaited(AddMoneyToWalletBottomSheet.show());
+  }
+
+  bool _handleInsufficientWalletFailure(Failure failure) {
+    if (failure is InsufficientWalletBalanceFailure) {
+      unawaited(_showInsufficientWalletDialog(failure.details));
+      return true;
+    }
+    return false;
   }
 
   void _showDestinationUpdateError(String rawMessage) {
@@ -2600,7 +2629,10 @@ class DriverAcceptedController extends GetxController
       rideId,
       dest,
     );
-    previewRes.fold((f) => _showDestinationUpdateError(f.message), (preview) {
+    previewRes.fold((f) {
+      if (_handleInsufficientWalletFailure(f)) return;
+      _showDestinationUpdateError(f.message);
+    }, (preview) {
       destinationUpdatePreview.value = preview;
     });
   }
@@ -2670,6 +2702,7 @@ class DriverAcceptedController extends GetxController
         _pendingDestinationTargetLat = null;
         _pendingDestinationTargetLng = null;
         _pendingDestinationAppliedAfterConfirm = null;
+        if (_handleInsufficientWalletFailure(f)) return false;
         _showDestinationUpdateError(f.message);
         return false;
       },

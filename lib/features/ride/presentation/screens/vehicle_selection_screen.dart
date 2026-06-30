@@ -365,7 +365,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                       child: Text(
                         leadingLabel,
                         style: AppTextStyles.homeCaption.copyWith(
-                          color: bubbleColor,
+                          color: AppColors.textHeading,
                           fontWeight: FontWeight.w700,
                           fontSize: 12.sp,
                         ),

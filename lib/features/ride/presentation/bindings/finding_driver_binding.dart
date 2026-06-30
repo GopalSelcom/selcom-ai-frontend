@@ -14,9 +14,12 @@ class FindingDriverBinding extends Bindings {
         () => RideRepositoryImpl(remoteDataSource: Get.find()),
       );
     }
-    Get.lazyPut<FindingDriverController>(
-      () => FindingDriverController(rideRepository: Get.find()),
-      fenix: true,
+    // Always recreate so a new active ride never reuses a stale rideId/socket session.
+    if (Get.isRegistered<FindingDriverController>()) {
+      Get.delete<FindingDriverController>(force: true);
+    }
+    Get.put<FindingDriverController>(
+      FindingDriverController(rideRepository: Get.find()),
     );
   }
 }

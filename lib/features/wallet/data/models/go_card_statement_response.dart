@@ -111,47 +111,38 @@ class GoCardStatementTransaction {
     if (parsedDate == null) return null;
 
     final normalizedType = (type ?? '').trim().toUpperCase();
-    final isCredit = normalizedType == 'CREDIT';
-    final merchantLabel = merchant?.trim();
-    final utilityLabel = utilityCode?.trim();
-    final commentLabel = comment?.trim().isNotEmpty == true
-        ? comment!.trim()
-        : utilityLabel;
+    final isRelease = normalizedType == 'RELEASE';
+    // RELEASE is grouped with received; amount has no +/- prefix.
+    final isCredit = normalizedType == 'CREDIT' || isRelease;
     final parsedAmount = double.tryParse((amount ?? '').trim()) ?? 0;
 
-    final merchantName = isCredit
-        ? (commentLabel?.isNotEmpty == true
-              ? commentLabel!
-              : (merchantLabel?.isNotEmpty == true ? merchantLabel! : 'Credit'))
-        : (merchantLabel?.isNotEmpty == true
-              ? merchantLabel!
-              : (commentLabel?.isNotEmpty == true ? commentLabel! : 'Debit'));
-
-    final categoryLabel = isCredit
-        ? (commentLabel?.isNotEmpty == true
-              ? 'Credit - $commentLabel'
-              : 'Credit')
-        : (merchantLabel?.isNotEmpty == true
-              ? 'Debit - $merchantLabel'
-              : (commentLabel?.isNotEmpty == true
-                    ? 'Debit - $commentLabel'
-                    : 'Debit'));
-
-    final id = transId?.trim().isNotEmpty == true
+    final displayTransId = transId?.trim().isNotEmpty == true
         ? transId!.trim()
         : reference?.trim().isNotEmpty == true
         ? reference!.trim()
+        : '—';
+
+    final typeLabel = _transtypeLabel(normalizedType);
+
+    final id = displayTransId != '—'
+        ? displayTransId
         : '${date}_${normalizedType}_$parsedAmount';
 
     return WalletTransactionEntity(
       id: id,
-      merchantName: merchantName,
-      categoryLabel: categoryLabel,
+      merchantName: displayTransId,
+      categoryLabel: typeLabel,
       amount: parsedAmount,
       isCredit: isCredit,
+      showAmountSign: !isRelease,
       createdAt: parsedDate,
       currency: currency,
     );
+  }
+
+  static String _transtypeLabel(String normalizedType) {
+    if (normalizedType.isEmpty) return '—';
+    return '${normalizedType[0]}${normalizedType.substring(1).toLowerCase()}';
   }
 
   static DateTime? _parseStatementDate(String? value) {

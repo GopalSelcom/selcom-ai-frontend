@@ -128,11 +128,7 @@ class _CommonEndpoints {
 
   final onboardingBanner = "go/banner";
   final chatQuickReplies = "go/chat/quick-replies";
-  final getSettings = "get_setting";
-  final aboutUs = "get_setting?type=1";
-  final terms = "get_setting?type=2";
-  final privacy = "get_setting?type=3";
-  final faqs = "get_setting?type=5";
+  final privacy = "go/get_setting?type=3";
 }
 
 /// ─────────────────────────────────
@@ -178,7 +174,7 @@ class _WalletEndpoints {
   final cardBalance = "go_wallet/go_card_balance";
   final otherPaymentMethods = "go_wallet/go_other_payment_methods";
   final walletTopUp = "go_wallet/wallet_push_ussd";
-  final checkWalletPaymentTopUpStatus = "check_wallet_push_ussd_status";
+  final checkWalletPaymentTopUpStatus = "go_wallet/check_wallet_push_ussd_status";
 
   final checkWalletPayment = "go_wallet/check_wallet_payment";
   final cancelUssdOrder = "go_wallet/go_cancel_ussd_order";

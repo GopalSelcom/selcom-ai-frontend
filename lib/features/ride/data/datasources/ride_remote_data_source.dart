@@ -273,12 +273,14 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       }
     }
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      _throwIfInsufficientWalletBalance(response.data);
       final message = _businessErrorMessage(response.data);
       if (message != null) {
         throw Exception(message);
       }
       return DestinationUpdatePreviewModel.fromJson({});
     }
+    _throwIfInsufficientWalletBalance(response.data);
     throw Exception(
       response.data?['message']?.toString() ?? 'Failed to preview destination',
     );
@@ -309,12 +311,14 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       }
     }
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      _throwIfInsufficientWalletBalance(response.data);
       final message = _businessErrorMessage(response.data);
       if (message != null) {
         throw Exception(message);
       }
       return DestinationUpdateAppliedModel.fromJson({});
     }
+    _throwIfInsufficientWalletBalance(response.data);
     throw Exception(
       response.data?['message']?.toString() ?? 'Failed to update destination',
     );
@@ -580,6 +584,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       }
     }
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      _throwIfInsufficientWalletBalance(response.data);
       final message = _businessErrorMessage(response.data);
       if (message != null) {
         throw Exception(message);
@@ -589,6 +594,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       }
       return StopUpdatePreviewModel.fromJson({});
     }
+    _throwIfInsufficientWalletBalance(response.data);
     throw Exception(response.data?['message'] ?? 'Failed to update stops');
   }
 
@@ -725,6 +731,16 @@ Map<String, dynamic>? _apiResponseMap(dynamic raw) {
   if (raw is Map<String, dynamic>) return raw;
   if (raw is Map) return Map<String, dynamic>.from(raw);
   return null;
+}
+
+void _throwIfInsufficientWalletBalance(dynamic raw) {
+  final body = _apiResponseMap(raw);
+  if (body == null) return;
+  final insufficient =
+      InsufficientWalletBalanceDetails.tryParseFromApiResponse(body);
+  if (insufficient != null) {
+    throw InsufficientWalletBalanceException(insufficient);
+  }
 }
 
 bool _isValidateRidePaymentBusinessRejection(

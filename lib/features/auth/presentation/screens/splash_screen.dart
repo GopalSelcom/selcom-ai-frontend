@@ -37,7 +37,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (!mounted) return;
 
-    final token = await StorageService().read(StorageKeys.authorizationToken);
+    final token = await StorageService().readAccessToken();
     final userJson = await StorageService().read(StorageKeys.user);
 
     if (!mounted) return;

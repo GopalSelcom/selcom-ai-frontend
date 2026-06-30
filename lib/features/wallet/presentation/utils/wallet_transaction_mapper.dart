@@ -12,6 +12,7 @@ WalletTransactionItem mapWalletTransactionToItem(
     categoryLabel: entity.categoryLabel,
     amount: entity.amount,
     isCredit: entity.isCredit,
+    showAmountSign: entity.showAmountSign,
     createdAtLabel: DateFormat('d MMM yyyy').format(entity.createdAt.toLocal()),
     currency: entity.currency,
   );

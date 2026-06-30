@@ -14,38 +14,29 @@ class SessionAuthService {
 
   static final SessionAuthService instance = SessionAuthService._();
 
-  String? _authorizationToken;
   String? _accessToken;
 
   /// Reads saved tokens from secure storage during startup, before
   /// [AgoraCallingBootstrap.init], so background Accept can mint RTC tokens.
   Future<void> preloadFromStorage() async {
     final storage = StorageService();
-    _authorizationToken = await storage.read(StorageKeys.authorizationToken);
-    _accessToken = await storage.read(StorageKeys.accessToken);
+    _accessToken = await storage.readAccessToken();
     if (kDebugMode) {
       debugPrint(
         '[USER_AUTH] preloadFromStorage: '
-        'authorization=${_tokenDebugLabel(_authorizationToken)} '
         'access_token=${_tokenDebugLabel(_accessToken)}',
       );
     }
   }
 
   /// Reloads tokens from disk when the in-memory cache is still empty.
-  ///
-  /// Rider headers use both `Authorization: Bearer …` and `access_token`; we
-  /// treat either as a valid session for the early guard in `_acceptIncoming`.
   Future<void> ensureAccessTokenLoaded() async {
-    final hasAuth = (_authorizationToken ?? '').trim().isNotEmpty;
-    final hasAccess = (_accessToken ?? '').trim().isNotEmpty;
-    if (hasAuth || hasAccess) return;
+    if ((_accessToken ?? '').trim().isNotEmpty) return;
 
     await preloadFromStorage();
     if (kDebugMode) {
       debugPrint(
         '[USER_AUTH] ensureAccessTokenLoaded after storage read: '
-        'authorization=${_tokenDebugLabel(_authorizationToken)} '
         'access_token=${_tokenDebugLabel(_accessToken)}',
       );
     }

@@ -6,15 +6,16 @@ import 'package:get/get.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
-import '../../../../core/services/app_region_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
+import '../../../../shared/utils/grouped_phone_number_formatter.dart';
 import '../../../../shared/utils/thousands_separator_input_formatter.dart';
 import '../../../wallet/domain/repositories/wallet_repository.dart';
 import '../../../wallet/presentation/utils/wallet_refresh.dart';
 import '../../data/datasources/wallet_payment_remote_data_source.dart';
 import '../../data/models/go_other_payment_methods_models.dart';
+import '../../domain/wallet_payment_phone_country.dart';
 import '../../domain/wallet_top_up_limits.dart';
 import '../widgets/mobile_money_topup_status_dialog.dart';
 
@@ -22,17 +23,18 @@ class MobileMoneyTopupController extends GetxController {
   MobileMoneyTopupController({
     this.controllerTag,
     WalletRepository? walletRepository,
-    AppRegionService? appRegionService,
-  }) : _walletRepository = walletRepository ?? sl<WalletRepository>(),
-       _appRegionService = appRegionService ?? sl<AppRegionService>();
+  }) : _walletRepository = walletRepository ?? sl<WalletRepository>();
 
   final String? controllerTag;
 
   final WalletRepository _walletRepository;
-  final AppRegionService _appRegionService;
 
-  static const int countdownDurationSeconds = 120;
+  static const int countdownDurationSeconds = 60;
   static const Duration pollInterval = Duration(seconds: 10);
+
+  /// Info-only UX: show request-sent message, no countdown, poll, or retry.
+  /// Legacy timer/poll/retry paths remain for Selcom Pesa and future re-enable.
+  static const bool _infoDialogOnlyFlow = true;
 
   final phoneRaw = ''.obs;
   final amountRaw = ''.obs;
@@ -60,12 +62,12 @@ class MobileMoneyTopupController extends GetxController {
   String? _lastUssdPhone;
   int? _lastAmount;
 
-  String get countryDialCode =>
-      _appRegionService.selected.dialCode.replaceAll('+', '');
+  String get countryDialCode => WalletPaymentPhoneCountry.dialCodeDigits;
 
-  String get countryDialCodeDisplay => _appRegionService.selected.dialCode;
+  String get countryDialCodeDisplay =>
+      WalletPaymentPhoneCountry.dialCodeDisplay;
 
-  String get countryIso => _appRegionService.selected.code;
+  String get countryIso => WalletPaymentPhoneCountry.iso;
 
   int? get parsedAmount {
     final digits = amountRaw.value.replaceAll(RegExp(r'\D'), '');
@@ -135,7 +137,7 @@ class MobileMoneyTopupController extends GetxController {
     if (digits.isEmpty) {
       return showEmptyError ? AppStrings.enterPhoneNumber.tr : null;
     }
-    final iso = _appRegionService.selected.code;
+    const iso = WalletPaymentPhoneCountry.iso;
     if (!PhoneNationalRules.isCompleteValidNational(iso, digits)) {
       return AppStrings.enterPhoneNumber.tr;
     }
@@ -234,7 +236,9 @@ class MobileMoneyTopupController extends GetxController {
 
       await Future<void>.delayed(Duration.zero);
       _showPendingDialog();
-      _startPollingTimers();
+      if (!_infoDialogOnlyFlow) {
+        _startPollingTimers();
+      }
     } on WalletPaymentException catch (e) {
       if (closeSheetFirst) {
         apiError.value = e.message.tr;
@@ -254,21 +258,38 @@ class MobileMoneyTopupController extends GetxController {
     }
   }
 
+  String _enteredPhoneDisplay() {
+    var digits = phoneRaw.value.replaceAll(RegExp(r'\D'), '');
+    if (digits.isEmpty) {
+      digits = _lastUssdPhone ?? '';
+    }
+    if (digits.startsWith('0')) {
+      digits = digits.substring(1);
+    }
+
+    const iso = WalletPaymentPhoneCountry.iso;
+    final country = PhoneNationalRules.findByIso(iso);
+    final grouped = GroupedPhoneNumberFormatter.formatDigits(
+      digits,
+      country.format,
+    );
+    return '$countryDialCodeDisplay $grouped';
+  }
+
   void _showPendingDialog() {
-    pendingCountdown.value = countdownDurationSeconds;
     _pendingDialogVisible = true;
 
     AppDialogs.showAnimatedDialog<void>(
       barrierDismissible: false,
       child: PopScope(
         canPop: false,
-        child: Obx(
-          () => MobileMoneyTopupStatusDialog(
-            type: MobileMoneyTopupDialogType.request,
-            secondsListenable: pendingCountdown,
-            onCancel: () => unawaited(cancelPaymentRequest()),
-            isCancelling: isCancelling.value,
-          ),
+        child: MobileMoneyTopupStatusDialog(
+          type: MobileMoneyTopupDialogType.request,
+          requestTitle: AppStrings.mobileMoneyRequestSentTitle.tr,
+          requestSubtitle: AppStrings.mobileMoneyRequestSentMessage.trParams({
+            'number': _enteredPhoneDisplay(),
+          }),
+          onAcknowledge: _dismissPendingDialog,
         ),
       ),
     );
@@ -278,9 +299,16 @@ class MobileMoneyTopupController extends GetxController {
     if (!_pendingDialogVisible) return;
     _pendingDialogVisible = false;
     AppDialogs.dismissTopOverlay();
+    if (_infoDialogOnlyFlow) {
+      _paymentHandled = true;
+      _stopTimers();
+      _finishPaymentFlow();
+    }
   }
 
   void _startPollingTimers() {
+    if (_infoDialogOnlyFlow) return;
+
     _stopTimers();
     pendingCountdown.value = countdownDurationSeconds;
     _paymentHandled = false;
@@ -302,6 +330,7 @@ class MobileMoneyTopupController extends GetxController {
   }
 
   Future<void> _pollPaymentStatus() async {
+    if (_infoDialogOnlyFlow) return;
     if (_paymentHandled) return;
 
     final transid = _session?.transid.trim() ?? '';
@@ -320,6 +349,7 @@ class MobileMoneyTopupController extends GetxController {
   }
 
   void _onTimerExpired() {
+    if (_infoDialogOnlyFlow) return;
     if (_paymentHandled) return;
     _stopTimers();
     _dismissPendingDialog();
@@ -373,7 +403,11 @@ class MobileMoneyTopupController extends GetxController {
 
     var dismissed = false;
     try {
-      await _walletRepository.cancelUssdOrder(transid: transid);
+      await _walletRepository.cancelUssdOrder(
+        transid: transid,
+        paymentMethod:
+            GoOtherPaymentMethodsRequest.cancelUssdPaymentMethodMobileMoney,
+      );
       _paymentHandled = true;
       _stopTimers();
       dismissed = true;

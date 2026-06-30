@@ -68,7 +68,8 @@ class ErrorMapper {
               return ServerFailure(AppStrings.bookedForOtherLimitReached.tr);
             case 'BOOKED_FOR_OTHER_NO_MULTI_STOP':
               return ServerFailure(AppStrings.bookedForOtherNoMultiStop.tr);
-            case 'PAY_INSUFFICIENT_FUNDS': {
+            case 'PAY_INSUFFICIENT_FUNDS':
+            case 'INSUFFICIENT_BALANCE': {
               final details =
                   InsufficientWalletBalanceDetails.tryParseFromApiResponse(data);
               if (details != null) {

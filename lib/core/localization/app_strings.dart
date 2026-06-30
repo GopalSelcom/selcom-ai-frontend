@@ -58,6 +58,10 @@ class AppStrings {
   static const String walletFundsReceivedSubtitle =
       'wallet_funds_received_subtitle';
   static const String topUpRequestSentTitle = 'top_up_request_sent_title';
+  static const String mobileMoneyRequestSentTitle =
+      'mobile_money_request_sent_title';
+  static const String mobileMoneyRequestSentMessage =
+      'mobile_money_request_sent_message';
   static const String selcomPesaToGoWallet = 'selcom_pesa_to_go_wallet';
   static const String useAnotherNumber = 'use_another_number';
   static const String enterSelcomPesaCustomerPhoneHint =

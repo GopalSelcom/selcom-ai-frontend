@@ -66,8 +66,7 @@ Future<Map<String, String>> commonHeaders({
     if (refreshToken != null && refreshToken.isNotEmpty) {
       authToken = refreshToken;
     } else {
-      authToken =
-          await StorageService().read(StorageKeys.authorizationToken) ?? "";
+      authToken = await StorageService().readAccessToken() ?? "";
     }
     headers[Params.authorization] = "Bearer $authToken";
   } else {
@@ -75,8 +74,8 @@ Future<Map<String, String>> commonHeaders({
   }
 
   // ── Access Token ──
-  final accessToken = await StorageService().read(StorageKeys.accessToken);
-  if (accessToken != null) {
+  final accessToken = await StorageService().readAccessToken();
+  if (accessToken != null && accessToken.isNotEmpty) {
     headers[Params.accessToken] = accessToken;
   }
 

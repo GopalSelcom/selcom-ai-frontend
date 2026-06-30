@@ -12,6 +12,7 @@ import '../../../../shared/utils/phone_national_rules.dart';
 import '../../../../shared/utils/thousands_separator_input_formatter.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_text_field.dart';
+import '../../domain/wallet_payment_phone_country.dart';
 import '../controllers/selcom_pesa_topup_controller.dart';
 import 'wallet_topup_sheet_lifecycle.dart';
 
@@ -83,7 +84,8 @@ class _SelcomPesaAnotherNumberBottomSheetState
 
   @override
   Widget build(BuildContext context) {
-    final iso = _controller.countryIso;
+    const iso = WalletPaymentPhoneCountry.iso;
+    const dialCodeDisplay = WalletPaymentPhoneCountry.dialCodeDisplay;
 
     return Obx(() {
       if (!mounted ||
@@ -122,7 +124,7 @@ class _SelcomPesaAnotherNumberBottomSheetState
               child: Center(
                 widthFactor: 1,
                 child: Text(
-                  _controller.countryDialCodeDisplay,
+                  dialCodeDisplay,
                   style: AppTextStyles.homeTitle.copyWith(
                     fontSize: 16.sp,
                     height: 22 / 16,

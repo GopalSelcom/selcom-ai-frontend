@@ -240,7 +240,7 @@ class AuthController extends GetxController {
   }
 
   Future<void> _configurePhoneAttachMode() async {
-    final token = await StorageService().read(StorageKeys.authorizationToken);
+    final token = await StorageService().readAccessToken();
     isPhoneAttachFlow.value = token != null && token.isNotEmpty;
   }
 
@@ -409,14 +409,7 @@ class AuthController extends GetxController {
     }
 
     if (verifyData.accessToken != null) {
-      await StorageService().write(
-        StorageKeys.authorizationToken,
-        verifyData.accessToken!,
-      );
-      await StorageService().write(
-        StorageKeys.accessToken,
-        verifyData.accessToken!,
-      );
+      await StorageService().writeAccessToken(verifyData.accessToken!);
     }
     if (verifyData.refreshToken != null) {
       await StorageService().write(

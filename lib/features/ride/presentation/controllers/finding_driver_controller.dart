@@ -435,6 +435,9 @@ class FindingDriverController extends GetxController {
     _fareSettledSub?.cancel();
     _nearbyDriversSub?.cancel();
     _nearbyDriversErrorSub?.cancel();
+    if (!_didNavigateToAccepted && rideId.isNotEmpty) {
+      _socketService.leaveRideRoom(rideId: rideId);
+    }
     super.onClose();
   }
 
@@ -653,7 +656,7 @@ class FindingDriverController extends GetxController {
 
     _connectionSub = _socketService.connectionStream.listen((connected) {
       if (!connected) return;
-      _socketService.joinRideRoom(rideId: rideId);
+      _socketService.switchRideRoom(rideId: rideId);
     });
 
     _rideStatusSub = _socketService.rideStatusStream.listen((payload) async {
@@ -703,9 +706,9 @@ class FindingDriverController extends GetxController {
       BookAnyFareSettledUi.maybeShow(payload: payload, rideId: rideId);
     });
 
+    await _socketService.connect();
     if (_socketService.isConnected) {
-      _socketService.joinRideRoom(rideId: rideId);
-      // Removed redundant _syncLiveActivity() call to respect 'APNs-only' update model
+      _socketService.switchRideRoom(rideId: rideId);
     }
   }
 

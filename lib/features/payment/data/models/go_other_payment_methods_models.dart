@@ -9,6 +9,10 @@ class GoOtherPaymentMethodsRequest {
   static const String paymentModeTanQr = 'Selcom Pay / Mastercard QR';
   static const String paymentModeMobileMoney = 'Mobile Money';
 
+  /// `payment_method` values for [WalletRepository.cancelUssdOrder].
+  static const String cancelUssdPaymentMethodMobileMoney = 'mobile_money';
+  static const String cancelUssdPaymentMethodSelcomPesa = 'selcom_pesa';
+
   final int totalPrice;
   final String ussdPhoneNumber;
   final String paymentMode;

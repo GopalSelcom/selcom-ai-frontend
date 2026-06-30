@@ -138,9 +138,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   final fareEstimate = Rxn<FareEstimateModel>();
   GoogleMapController? _mapController;
   final AppSocketService _socketService = AppSocketService();
-  final Set<String> _joinedActiveRideRoomIds = <String>{};
   bool _ignoreSelectionReset = false;
-  StreamSubscription<bool>? _homeSocketConnectionSub;
   Timer? _activeRidePollingTimer;
   bool _isRefreshingActiveRide = false;
   bool _activeRideRefreshQueued = false;
@@ -544,6 +542,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
   void onHomeVisible() {
     if (SessionExpiryService.isHandling) return;
+    // Release ride socket room when user is on Home (one room at a time).
+    _socketService.leaveJoinedRideRoom();
     if (_skipNextVisibleRefresh) {
       _skipNextVisibleRefresh = false;
       return;
@@ -568,9 +568,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     activeRide.value = null;
     activeRides.clear();
     isActiveRidesExpanded.value = false;
-    _joinedActiveRideRoomIds.clear();
-    _homeSocketConnectionSub?.cancel();
-    _homeSocketConnectionSub = null;
+    _socketService.leaveJoinedRideRoom();
   }
 
   Future<void> refreshActiveRide({bool force = false}) async {
@@ -610,9 +608,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       activeRide.value = null;
       activeRides.clear();
       isActiveRidesExpanded.value = false;
-      _joinedActiveRideRoomIds.clear();
-      _homeSocketConnectionSub?.cancel();
-      _homeSocketConnectionSub = null;
+      _socketService.leaveJoinedRideRoom();
       return;
     }
 
@@ -622,7 +618,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     if (!hasMultipleActiveRides) {
       isActiveRidesExpanded.value = false;
     }
-    unawaited(_joinAllActiveRideRooms(rides));
     _syncLiveActivity(primaryRide);
   }
 
@@ -722,7 +717,16 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     final detailsResult = await rideRepository.getRideDetails(rideId);
     detailsResult.fold(
       (failure) => AppDialogs.showErrorDialog(message: failure.message),
-      (freshRide) {
+      (freshRide) async {
+        final freshId = freshRide.id.trim();
+        if (freshId.isEmpty || freshId != rideId) {
+          AppDialogs.showErrorDialog(
+            message: AppStrings.failedToLoadRideDetails.tr,
+          );
+          return;
+        }
+        await _socketService.connect();
+        _socketService.switchRideRoom(rideId: freshId);
         // 🛰️ Sync Live Activity view when user taps "View Trip"
         LiveActivityManager().startActivity(
           orderId: freshRide.id,
@@ -738,41 +742,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     );
   }
 
-  Future<void> _joinAllActiveRideRooms(
-    List<RideModel> rides, {
-    bool force = false,
-  }) async {
-    // Join every active ride room so status updates work for self + book-for-other rides.
-    final rideIds = rides
-        .map((ride) => ride.id.trim())
-        .where((id) => id.isNotEmpty)
-        .toList(growable: false);
-    if (rideIds.isEmpty) return;
-
-    final currentIds = rideIds.toSet();
-    _joinedActiveRideRoomIds.removeWhere((id) => !currentIds.contains(id));
-
-    Future<void> joinPending() async {
-      for (final id in rideIds) {
-        if (!force && _joinedActiveRideRoomIds.contains(id)) continue;
-        _joinedActiveRideRoomIds.add(id);
-        _socketService.joinRideRoom(rideId: id);
-      }
-    }
-
-    _homeSocketConnectionSub?.cancel();
-    _homeSocketConnectionSub = _socketService.connectionStream.listen((
-      connected,
-    ) {
-      if (!connected) return;
-      joinPending();
-    });
-    await _socketService.connect();
-    if (_socketService.isConnected) {
-      await joinPending();
-    }
-  }
-
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) return;
@@ -782,9 +751,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         await _getCurrentLocation();
       }
       await refreshActiveRide(force: true);
-      if (activeRides.isNotEmpty) {
-        await _joinAllActiveRideRooms(activeRides.toList(), force: true);
-      }
     });
   }
 
@@ -994,7 +960,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     homeSheetController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     stopActiveRidePolling();
-    _homeSocketConnectionSub?.cancel();
     _socketService.dispose();
     super.onClose();
   }

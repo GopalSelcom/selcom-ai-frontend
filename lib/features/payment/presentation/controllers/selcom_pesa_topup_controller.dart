@@ -8,10 +8,10 @@ import '../../../../core/config/app_config.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_strings.dart';
-import '../../../../core/services/app_region_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/selcom_pesa/selcom_pesa_app_launcher_service.dart';
 import '../../../../core/services/storage_service.dart';
+import '../../../../shared/data/countries_phone_data.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
 import '../../../../shared/utils/thousands_separator_input_formatter.dart';
@@ -19,7 +19,9 @@ import '../../../wallet/domain/entities/wallet_details_entity.dart';
 import '../../../wallet/domain/repositories/wallet_repository.dart';
 import '../../../wallet/presentation/utils/wallet_refresh.dart';
 import '../../data/datasources/wallet_payment_remote_data_source.dart';
+import '../../data/models/go_other_payment_methods_models.dart';
 import '../../data/models/selcom_pesa_topup_models.dart';
+import '../../domain/wallet_payment_phone_country.dart';
 import '../../domain/wallet_top_up_limits.dart';
 import '../widgets/mobile_money_topup_status_dialog.dart';
 
@@ -29,16 +31,13 @@ class SelcomPesaTopupController extends GetxController {
   SelcomPesaTopupController({
     this.controllerTag,
     WalletRepository? walletRepository,
-    AppRegionService? appRegionService,
     SelcomPesaAppLauncherService? selcomPesaLauncher,
   }) : _walletRepository = walletRepository ?? sl<WalletRepository>(),
-       _appRegionService = appRegionService ?? sl<AppRegionService>(),
        _selcomPesaLauncher =
            selcomPesaLauncher ?? sl<SelcomPesaAppLauncherService>();
 
   final String? controllerTag;
   final WalletRepository _walletRepository;
-  final AppRegionService _appRegionService;
   final SelcomPesaAppLauncherService _selcomPesaLauncher;
 
   static const int paymentTimeoutSeconds = 300;
@@ -66,18 +65,19 @@ class SelcomPesaTopupController extends GetxController {
   Timer? _pollTimer;
   bool _pendingDialogVisible = false;
   bool _paymentHandled = false;
+  bool _statusPollInFlight = false;
   bool _retainForFollowUpSheet = false;
   SelcomPesaTopupFlow? _activeFlow;
   int? _lastSelfAmount;
   SelcomPesaTopupResult? _session;
   String _pendingRequestTitle = '';
 
-  String get countryDialCode =>
-      _appRegionService.selected.dialCode.replaceAll('+', '');
+  String get countryDialCode => WalletPaymentPhoneCountry.dialCodeDigits;
 
-  String get countryDialCodeDisplay => _appRegionService.selected.dialCode;
+  String get countryDialCodeDisplay =>
+      WalletPaymentPhoneCountry.dialCodeDisplay;
 
-  String get countryIso => _appRegionService.selected.code;
+  String get countryIso => WalletPaymentPhoneCountry.iso;
 
   bool get isAwaitingPaymentResult =>
       _pendingDialogVisible || (_session != null && !_paymentHandled);
@@ -394,15 +394,18 @@ class SelcomPesaTopupController extends GetxController {
   }
 
   Future<void> _pollSelcomPesaStatus() async {
-    if (_paymentHandled) return;
+    if (_paymentHandled || _statusPollInFlight) return;
 
     final transid = _session?.transid.trim() ?? '';
     if (transid.isEmpty) return;
 
+    _statusPollInFlight = true;
     try {
       final status = await _walletRepository.checkSelcomPesaTopUpStatus(
         transid: transid,
       );
+
+      if (_paymentHandled) return;
 
       if (status.isPaid) {
         await _onPaymentSucceeded();
@@ -423,11 +426,14 @@ class SelcomPesaTopupController extends GetxController {
         );
       }
     } on WalletPaymentException catch (e) {
+      if (_paymentHandled) return;
       if (e.message == AppStrings.selcomPesaStatusNotFound) {
         await _onPaymentTerminalError(AppStrings.selcomPesaStatusNotFound.tr);
       }
     } catch (_) {
       // Keep polling until timeout or a terminal state.
+    } finally {
+      _statusPollInFlight = false;
     }
   }
 
@@ -452,25 +458,39 @@ class SelcomPesaTopupController extends GetxController {
     if (_paymentHandled) return;
     _paymentHandled = true;
     _stopTimers();
-    _dismissPendingDialog();
+    await _dismissPendingDialogAndWait();
 
     await WalletRefresh.afterBalanceChange();
+
+    _activeFlow = null;
+    _session = null;
 
     AppDialogs.showSuccessDialog(
       title: AppStrings.walletFundsReceivedTitle.tr,
       message: AppStrings.walletFundsReceivedSubtitle.tr,
+      onConfirm: _disposeRegisteredController,
     );
-    _finishFlow();
   }
 
   Future<void> _onPaymentTerminalError(String message) async {
     if (_paymentHandled) return;
     _paymentHandled = true;
     _stopTimers();
-    _dismissPendingDialog();
+    await _dismissPendingDialogAndWait();
 
-    AppDialogs.showErrorDialog(message: message);
-    _finishFlow();
+    _activeFlow = null;
+    _session = null;
+
+    AppDialogs.showErrorDialog(
+      message: message,
+      onConfirm: _disposeRegisteredController,
+    );
+  }
+
+  Future<void> _dismissPendingDialogAndWait() async {
+    if (!_pendingDialogVisible) return;
+    _dismissPendingDialog();
+    await WidgetsBinding.instance.endOfFrame;
   }
 
   Future<void> cancelPaymentRequest() async {
@@ -484,7 +504,11 @@ class SelcomPesaTopupController extends GetxController {
 
     var dismissed = false;
     try {
-      await _walletRepository.cancelUssdOrder(transid: transid);
+      await _walletRepository.cancelUssdOrder(
+        transid: transid,
+        paymentMethod:
+            GoOtherPaymentMethodsRequest.cancelUssdPaymentMethodSelcomPesa,
+      );
       _paymentHandled = true;
       _stopTimers();
       dismissed = true;
