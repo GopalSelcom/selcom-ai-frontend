@@ -8,14 +8,19 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/data/models/ride_model.dart';
+import '../../../../core/di/injection_container.dart' as di;
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/services/app_settings_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/payment_dialog_header_section.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/utils/active_rides_parser.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/book_for_other_prompt_policy.dart';
 import '../../../../shared/utils/favorite_location_chip_catalog.dart';
 import '../../../../shared/utils/saved_place_confirmation_copy.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
@@ -395,12 +400,27 @@ class ConfirmLocationController extends GetxController {
     }
   }
 
+  /// Pickup confirm: resolves book-for-self vs book-for-other (see
+  /// [BookForOtherPromptPolicy] for the full flow diagram).
   Future<void> _confirmRidePickup() async {
-    final shouldAsk = await _shouldPromptBookingForSomeoneElse();
-    if (shouldAsk) {
-      await _finishWithBookingPrompt();
-    } else {
-      _finishAsSelfBooking();
+    final decision = await _resolveBookForOtherPromptDecision();
+    switch (decision.action) {
+      case BookForOtherPromptAction.selfOnly:
+        // No sheet — return pickup with `isBookedForOther: false`.
+        _finishAsSelfBooking();
+      case BookForOtherPromptAction.showChoiceSheet:
+        // Distance API passed; both self and other slots available.
+        await _finishWithBookingPrompt();
+      case BookForOtherPromptAction.showOtherOnlySheet:
+        // Self ride already active — choice sheet with "for someone else" only.
+        await _finishWithOtherOnlyBooking();
+      case BookForOtherPromptAction.blocked:
+        final activeRides = await _loadActiveRidesForBookForOtherPolicy();
+        AppDialogs.showErrorDialog(
+          message: hasSelfActiveRide(activeRides)
+              ? AppStrings.youAlreadyHaveAnActiveRide.tr
+              : AppStrings.bookedForOtherLimitReached.tr,
+        );
     }
   }
 
@@ -439,7 +459,44 @@ class ConfirmLocationController extends GetxController {
     );
   }
 
-  Future<bool> _shouldPromptBookingForSomeoneElse() async {
+  /// Book-for-other gate on pickup confirm.
+  ///
+  /// See `docs/flows/book-for-other-pickup-flow.md` and [BookForOtherPromptPolicy].
+  Future<BookForOtherPromptDecision> _resolveBookForOtherPromptDecision() async {
+    final settingsService = di.sl<AppSettingsService>();
+    await settingsService.preload();
+
+    if (!settingsService.bookForOtherEnabled) {
+      return BookForOtherPromptDecision.selfOnly;
+    }
+
+    final activeRides = await _loadActiveRidesForBookForOtherPolicy();
+    final maxActive = settingsService.maxActiveBookForOtherRides;
+
+    // Rider already on a self ride — any new booking must be for someone else.
+    // Skip distance check; show choice sheet with only the "other" row.
+    if (hasSelfActiveRide(activeRides) &&
+        countBookedForOtherRides(activeRides) < maxActive) {
+      return const BookForOtherPromptDecision(
+        action: BookForOtherPromptAction.showOtherOnlySheet,
+      );
+    }
+
+    // Pickup distance gate — only blocks the sheet when API explicitly says
+    // pickup is near the rider. When GPS is off, skip this gate.
+    final bookModeGate = await _resolveCheckBookModeGate();
+    if (bookModeGate == CheckBookModeGate.pickupNearRider) {
+      return BookForOtherPromptDecision.selfOnly;
+    }
+
+    return BookForOtherPromptPolicy.evaluate(
+      maxActiveBookForOther: maxActive,
+      activeRides: activeRides,
+    );
+  }
+
+  /// `GET go/check-book-mode` when GPS works; [CheckBookModeGate.unavailable] otherwise.
+  Future<CheckBookModeGate> _resolveCheckBookModeGate() async {
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     final permission = await Geolocator.checkPermission();
     final hasLocationPermission =
@@ -447,7 +504,7 @@ class ConfirmLocationController extends GetxController {
         permission == LocationPermission.whileInUse;
 
     if (!serviceEnabled || !hasLocationPermission) {
-      return true;
+      return CheckBookModeGate.unavailable;
     }
 
     try {
@@ -459,24 +516,40 @@ class ConfirmLocationController extends GetxController {
         ).timeout(const Duration(seconds: 5)),
       );
 
+      final pickup = selectedLatLng.value;
       final checkResult = await Loader.run(
         () => rideRepository.checkBookMode(
           riderLat: position.latitude,
           riderLng: position.longitude,
-          pickupLat: selectedLatLng.value.latitude,
-          pickupLng: selectedLatLng.value.longitude,
+          pickupLat: pickup.latitude,
+          pickupLng: pickup.longitude,
         ),
       );
 
       return checkResult.fold(
-        (_) => false,
-        (result) => result.showBookForOtherOption,
+        (_) => CheckBookModeGate.unavailable,
+        (result) => result.showBookForOtherOption
+            ? CheckBookModeGate.pickupFarFromRider
+            : CheckBookModeGate.pickupNearRider,
       );
     } catch (_) {
-      return true;
+      return CheckBookModeGate.unavailable;
     }
   }
 
+  /// Prefer Home cache; refresh from API when empty.
+  Future<List<RideModel>> _loadActiveRidesForBookForOtherPolicy() async {
+    final cached = homeController.activeRides.toList(growable: false);
+    if (cached.isNotEmpty) return cached;
+
+    final activeResult = await rideRepository.getActiveRide();
+    return activeResult.fold(
+      (_) => const <RideModel>[],
+      (response) => parseActiveRidesFromResponse(response?.data),
+    );
+  }
+
+  /// Both options on the choice step (check-book-mode passed, no self ride).
   Future<void> _finishWithBookingPrompt() async {
     final result = await BookingForSomeoneElseFlowBottomSheet.show();
     if (result == null) return;
@@ -487,6 +560,22 @@ class ConfirmLocationController extends GetxController {
     Get.back(
       result: _buildPickupResult(
         isBookedForOther: isBookedForOther,
+        bookingResult: result,
+      ),
+    );
+  }
+
+  /// Choice step with only "For someone else" — user taps through to details.
+  Future<void> _finishWithOtherOnlyBooking() async {
+    final result = await BookingForSomeoneElseFlowBottomSheet.show(
+      showSelfOption: false,
+      showOtherOption: true,
+    );
+    if (result == null) return;
+
+    Get.back(
+      result: _buildPickupResult(
+        isBookedForOther: true,
         bookingResult: result,
       ),
     );

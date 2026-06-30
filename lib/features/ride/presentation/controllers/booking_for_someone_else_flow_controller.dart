@@ -15,7 +15,18 @@ enum BookingMode { self, other }
 enum BookingFlowStep { choice, details }
 
 class BookingForSomeoneElseFlowController extends GetxController {
-  final currentStep = BookingFlowStep.choice.obs;
+  BookingForSomeoneElseFlowController({
+    BookingFlowStep initialStep = BookingFlowStep.choice,
+    this.showSelfOption = true,
+    this.showOtherOption = true,
+  }) : currentStep = initialStep.obs;
+
+  /// When false, choice step hides "For me" (active self ride case).
+  final bool showSelfOption;
+
+  /// When false, choice step hides "For someone else".
+  final bool showOtherOption;
+  final Rx<BookingFlowStep> currentStep;
   final nameError = RxnString();
   final phoneError = RxnString();
   final selectedCountry = Rx<CountryData>(Countries.findByIsoCode('TZ'));

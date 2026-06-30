@@ -1231,6 +1231,8 @@ class VehicleSelectionController extends GetxController {
 
   /// Client guard before `POST go/validate_ride_payment`.
   ///
+  /// See `docs/flows/book-for-other-pickup-flow.md`.
+  ///
   /// Self booking: blocked when any active self ride exists (backend: `RIDE_ALREADY_ACTIVE`).
   /// Book-for-other: blocked when active book-for-other count >= `max_active` from settings
   /// (backend: `BOOKED_FOR_OTHER_LIMIT_REACHED`).
