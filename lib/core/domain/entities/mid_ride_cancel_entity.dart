@@ -19,6 +19,7 @@ MidRideCaptureStatus? midRideCaptureStatusFromApi(String? raw) {
 class MidRideCancelEntity {
   final String? reason;
   final String? reasonText;
+  final String? message;
   final double? distanceCoveredKm;
   final int? partialFare;
   final int? capturedAmount;
@@ -32,6 +33,7 @@ class MidRideCancelEntity {
   const MidRideCancelEntity({
     this.reason,
     this.reasonText,
+    this.message,
     this.distanceCoveredKm,
     this.partialFare,
     this.capturedAmount,

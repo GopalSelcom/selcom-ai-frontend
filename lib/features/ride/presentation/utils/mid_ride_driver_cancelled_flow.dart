@@ -57,6 +57,7 @@ abstract final class MidRideDriverCancelledFlow {
     return MidRideCancelModel(
       reason: cancel.reason,
       reasonText: cancel.reasonText,
+      message: cancel.message,
       distanceCoveredKm: cancel.distanceCoveredKm,
       partialFare: cancel.partialFare,
       capturedAmount: cancel.capturedAmount,

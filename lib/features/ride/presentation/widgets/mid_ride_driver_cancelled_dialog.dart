@@ -31,20 +31,6 @@ class MidRideDriverCancelledDialog extends StatelessWidget {
     fontSize: 15.sp,
   );
 
-  TextStyle get _amountPrimaryStyle => AppTextStyles.price.copyWith(
-    fontSize: 15.sp,
-    height: 1.45,
-    color: AppColors.textHeading,
-    fontWeight: FontWeight.w700,
-  );
-
-  TextStyle get _amountSuccessStyle => AppTextStyles.price.copyWith(
-    fontSize: 15.sp,
-    height: 1.45,
-    color: AppColors.success,
-    fontWeight: FontWeight.w700,
-  );
-
   TextStyle get _reasonHighlightStyle => AppTextStyles.homeSubtitle.copyWith(
     color: AppColors.textHeading,
     fontWeight: FontWeight.w700,
@@ -72,73 +58,29 @@ class MidRideDriverCancelledDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildChargeSummary(MidRideDriverCancelledController c) {
-    return RichText(
-      textAlign: TextAlign.center,
-      text: TextSpan(
-        style: _bodyStyle,
-        children: [
-          TextSpan(text: AppStrings.midRideChargeSummaryLead.tr),
-          TextSpan(text: c.partialFareLabel, style: _amountPrimaryStyle),
-          TextSpan(text: AppStrings.midRideChargeSummaryFor.tr),
-          TextSpan(text: c.distanceLabel, style: _amountPrimaryStyle),
-          TextSpan(text: AppStrings.midRideChargeSummaryTrail.tr),
-        ],
-      ),
-    );
+  TextStyle _messageStyle(MidRideDriverCancelledController c) {
+    switch (c.statusKind) {
+      case MidRideDialogStatusKind.finalising:
+        return _bodyStyle.copyWith(fontStyle: FontStyle.italic);
+      case MidRideDialogStatusKind.underReview:
+        return _bodyStyle.copyWith(color: AppColors.info);
+      case MidRideDialogStatusKind.captured:
+      case MidRideDialogStatusKind.noCharge:
+        return _bodyStyle.copyWith(color: AppColors.success);
+      case MidRideDialogStatusKind.scheduled:
+      case null:
+        return _bodyStyle;
+    }
   }
 
-  Widget? _buildStatusLine(MidRideDriverCancelledController c) {
-    switch (c.statusKind) {
-      case MidRideDialogStatusKind.scheduled:
-        final time = c.captureTimeLabel;
-        if (time == null) return null;
-        return RichText(
-          textAlign: TextAlign.center,
-          text: TextSpan(
-            style: _bodyStyle,
-            children: [
-              TextSpan(text: AppStrings.midRideChargeScheduledLead.tr),
-              TextSpan(text: time, style: _amountPrimaryStyle),
-              TextSpan(text: AppStrings.midRideChargeScheduledTrail.tr),
-            ],
-          ),
-        );
-      case MidRideDialogStatusKind.finalising:
-        return Text(
-          AppStrings.midRideChargeFinalising.tr,
-          textAlign: TextAlign.center,
-          style: _bodyStyle.copyWith(fontStyle: FontStyle.italic),
-        );
-      case MidRideDialogStatusKind.captured:
-        return RichText(
-          textAlign: TextAlign.center,
-          text: TextSpan(
-            style: _bodyStyle,
-            children: [
-              TextSpan(text: AppStrings.midRideChargeCapturedLead.tr),
-              TextSpan(text: c.capturedAmountLabel, style: _amountPrimaryStyle),
-              TextSpan(text: AppStrings.midRideChargeCapturedMiddle.tr),
-              TextSpan(text: c.refundAmountLabel, style: _amountSuccessStyle),
-              TextSpan(text: AppStrings.midRideChargeCapturedRefundTrail.tr),
-            ],
-          ),
-        );
-      case MidRideDialogStatusKind.underReview:
-        return Text(
-          AppStrings.midRideUnderReview.tr,
-          textAlign: TextAlign.center,
-          style: _bodyStyle.copyWith(color: AppColors.info),
-        );
-      case MidRideDialogStatusKind.noCharge:
-        return Text(
-          AppStrings.midRideNoCharge.tr,
-          textAlign: TextAlign.center,
-          style: _bodyStyle.copyWith(color: AppColors.success),
-        );
-      case null:
-        return null;
-    }
+  Widget? _buildChargeMessage(MidRideDriverCancelledController c) {
+    final message = c.chargeMessage;
+    if (message == null || message.isEmpty) return null;
+    return Text(
+      message,
+      textAlign: TextAlign.center,
+      style: _messageStyle(c),
+    );
   }
 
   @override
@@ -151,7 +93,7 @@ class MidRideDriverCancelledDialog extends StatelessWidget {
       c.isDisputing.value;
       c.now.value;
 
-      final statusLine = _buildStatusLine(c);
+      final chargeMessage = _buildChargeMessage(c);
 
       return AppCancelFlowDialog(
         canPop: false,
@@ -162,13 +104,11 @@ class MidRideDriverCancelledDialog extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _buildReasonLine(c),
-            SizedBox(height: 16.h),
-            _buildChargeSummary(c),
-            if (statusLine != null) ...[
+            if (chargeMessage != null) ...[
               SizedBox(height: 16.h),
               Divider(height: 1.h, color: AppColors.bgSoftCircle),
               SizedBox(height: 16.h),
-              statusLine,
+              chargeMessage,
             ],
             SizedBox(height: 20.h),
             if (c.showDisputeButton) ...[

@@ -442,31 +442,9 @@ class LanguageEn extends Languages {
     'retry': 'Retry',
     'ride_cancelled': 'Ride Cancelled',
     'trip_ended_by_driver': 'Trip ended by driver',
-    'mid_ride_driver_could_not_finish':
-        'Your driver couldn\'t finish the trip (@reason).',
     'mid_ride_sorry_subtitle':
         'We\'re sorry your trip couldn\'t be completed.',
     'mid_ride_reason_lead': 'Reason: ',
-    'mid_ride_charge_title': 'Charge summary',
-    'mid_ride_charge_summary_lead': 'You\'ll be charged ',
-    'mid_ride_charge_summary_for': ' for ',
-    'mid_ride_charge_summary_trail': ' km covered.',
-    'mid_ride_charge_summary':
-        'You\'ll be charged @amount for the @distance km covered.',
-    'mid_ride_charge_scheduled_lead': 'Scheduled charge at ',
-    'mid_ride_charge_scheduled_trail':
-        '. Dispute before then if something looks wrong.',
-    'mid_ride_charge_scheduled':
-        'This will be charged at @time. If something\'s wrong, you can dispute it before then.',
-    'mid_ride_charge_finalising': 'Finalising your charge…',
-    'mid_ride_charge_captured_lead': 'Charged ',
-    'mid_ride_charge_captured_middle': ' for distance covered. ',
-    'mid_ride_charge_captured_refund_trail': ' refunded to your wallet.',
-    'mid_ride_charge_captured':
-        'Charged @captured for distance covered. @refund returned to your wallet.',
-    'mid_ride_under_review':
-        'Under review — you won\'t be charged while we check.',
-    'mid_ride_no_charge': 'No charge — your hold was fully released.',
     'mid_ride_dispute_charge': 'Dispute charge',
     'mid_ride_dispute_success':
         'Hold released. Our team will review — you won\'t be charged while we check.',
@@ -2132,67 +2110,10 @@ class LanguageEn extends Languages {
   String get tripEndedByDriver => values['trip_ended_by_driver'] ?? '';
 
   @override
-  String get midRideDriverCouldNotFinish =>
-      values['mid_ride_driver_could_not_finish'] ?? '';
-
-  @override
   String get midRideSorrySubtitle => values['mid_ride_sorry_subtitle'] ?? '';
 
   @override
   String get midRideReasonLead => values['mid_ride_reason_lead'] ?? '';
-
-  @override
-  String get midRideChargeTitle => values['mid_ride_charge_title'] ?? '';
-
-  @override
-  String get midRideChargeSummaryLead =>
-      values['mid_ride_charge_summary_lead'] ?? '';
-
-  @override
-  String get midRideChargeSummaryFor => values['mid_ride_charge_summary_for'] ?? '';
-
-  @override
-  String get midRideChargeSummaryTrail =>
-      values['mid_ride_charge_summary_trail'] ?? '';
-
-  @override
-  String get midRideChargeSummary => values['mid_ride_charge_summary'] ?? '';
-
-  @override
-  String get midRideChargeScheduledLead =>
-      values['mid_ride_charge_scheduled_lead'] ?? '';
-
-  @override
-  String get midRideChargeScheduledTrail =>
-      values['mid_ride_charge_scheduled_trail'] ?? '';
-
-  @override
-  String get midRideChargeScheduled => values['mid_ride_charge_scheduled'] ?? '';
-
-  @override
-  String get midRideChargeFinalising =>
-      values['mid_ride_charge_finalising'] ?? '';
-
-  @override
-  String get midRideChargeCapturedLead =>
-      values['mid_ride_charge_captured_lead'] ?? '';
-
-  @override
-  String get midRideChargeCapturedMiddle =>
-      values['mid_ride_charge_captured_middle'] ?? '';
-
-  @override
-  String get midRideChargeCapturedRefundTrail =>
-      values['mid_ride_charge_captured_refund_trail'] ?? '';
-
-  @override
-  String get midRideChargeCaptured => values['mid_ride_charge_captured'] ?? '';
-
-  @override
-  String get midRideUnderReview => values['mid_ride_under_review'] ?? '';
-
-  @override
-  String get midRideNoCharge => values['mid_ride_no_charge'] ?? '';
 
   @override
   String get midRideDisputeCharge => values['mid_ride_dispute_charge'] ?? '';

@@ -4,6 +4,7 @@ class MidRideCancelModel extends MidRideCancelEntity {
   const MidRideCancelModel({
     super.reason,
     super.reasonText,
+    super.message,
     super.distanceCoveredKm,
     super.partialFare,
     super.capturedAmount,
@@ -24,6 +25,7 @@ class MidRideCancelModel extends MidRideCancelEntity {
     return MidRideCancelModel(
       reason: json['reason']?.toString(),
       reasonText: json['reason_text']?.toString(),
+      message: json['message']?.toString(),
       distanceCoveredKm: (json['distance_covered_km'] as num?)?.toDouble(),
       partialFare: (json['partial_fare'] as num?)?.toInt(),
       capturedAmount: (json['captured_amount'] as num?)?.toInt(),
@@ -41,6 +43,7 @@ class MidRideCancelModel extends MidRideCancelEntity {
   Map<String, dynamic> toJson() => {
     'reason': reason,
     'reason_text': reasonText,
+    'message': message,
     'distance_covered_km': distanceCoveredKm,
     'partial_fare': partialFare,
     'captured_amount': capturedAmount,
@@ -55,6 +58,7 @@ class MidRideCancelModel extends MidRideCancelEntity {
   MidRideCancelModel merge({
     String? reason,
     String? reasonText,
+    String? message,
     double? distanceCoveredKm,
     int? partialFare,
     int? capturedAmount,
@@ -68,6 +72,7 @@ class MidRideCancelModel extends MidRideCancelEntity {
     return MidRideCancelModel(
       reason: reason ?? this.reason,
       reasonText: reasonText ?? this.reasonText,
+      message: message ?? this.message,
       distanceCoveredKm: distanceCoveredKm ?? this.distanceCoveredKm,
       partialFare: partialFare ?? this.partialFare,
       capturedAmount: capturedAmount ?? this.capturedAmount,

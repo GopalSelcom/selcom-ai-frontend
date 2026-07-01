@@ -1362,6 +1362,7 @@ class DriverAcceptedController extends GetxController
       return MidRideCancelModel(
         reason: block.reason,
         reasonText: block.reasonText,
+        message: block.message,
         distanceCoveredKm: block.distanceCoveredKm,
         partialFare: block.partialFare,
         capturedAmount: block.capturedAmount,
@@ -1382,6 +1383,7 @@ class DriverAcceptedController extends GetxController
     return MidRideCancelModel(
       reason: block.reason,
       reasonText: block.reasonText,
+      message: block.message,
       distanceCoveredKm: block.distanceCoveredKm,
       partialFare: block.partialFare,
       capturedAmount: block.capturedAmount,

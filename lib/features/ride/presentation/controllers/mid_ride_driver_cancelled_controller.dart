@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/data/models/mid_ride_cancel_model.dart';
 import '../../../../core/domain/entities/mid_ride_cancel_entity.dart';
@@ -10,7 +9,6 @@ import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../shared/utils/app_dialogs.dart';
-import '../../../../shared/utils/currency_formatter.dart';
 import '../../../wallet/presentation/utils/wallet_refresh.dart';
 import '../../data/models/mid_ride_cancel_models.dart';
 import '../../domain/repositories/ride_repository.dart';
@@ -45,6 +43,7 @@ class MidRideDriverCancelledController extends GetxController {
   StreamSubscription<RideChargeSettledPayload>? _chargeSettledSub;
   StreamSubscription<RideChargeDisputedPayload>? _chargeDisputedSub;
   Timer? _clockTimer;
+  bool _didRefreshPastCapture = false;
 
   @override
   void onInit() {
@@ -57,6 +56,15 @@ class MidRideDriverCancelledController extends GetxController {
   void _startClock() {
     _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       now.value = DateTime.now().toUtc();
+      final block = midRideCancel.value;
+      final captureAt = block?.captureAt;
+      if (!_didRefreshPastCapture &&
+          block?.captureStatus == MidRideCaptureStatus.scheduled &&
+          captureAt != null &&
+          now.value.isAfter(captureAt)) {
+        _didRefreshPastCapture = true;
+        unawaited(_refreshFromRideDetails());
+      }
     });
   }
 
@@ -84,6 +92,7 @@ class MidRideDriverCancelledController extends GetxController {
         midRideCancel.value = MidRideCancelModel(
           reason: block.reason,
           reasonText: block.reasonText,
+          message: block.message,
           distanceCoveredKm: block.distanceCoveredKm,
           partialFare: block.partialFare,
           capturedAmount: block.capturedAmount,
@@ -102,12 +111,15 @@ class MidRideDriverCancelledController extends GetxController {
     final current = midRideCancel.value;
     if (current == null) return;
     midRideCancel.value = current.merge(
+      message: payload.message,
       capturedAmount: payload.capturedAmount,
       netRefund: payload.netRefund,
-      captureStatus: MidRideCaptureStatus.captured,
+      captureStatus:
+          payload.captureStatus ?? MidRideCaptureStatus.captured,
       canDispute: false,
     );
     unawaited(WalletRefresh.afterBalanceChange());
+    unawaited(_refreshFromRideDetails());
   }
 
   void _applyChargeDisputed(RideChargeDisputedPayload payload) {
@@ -115,11 +127,14 @@ class MidRideDriverCancelledController extends GetxController {
     if (current == null) return;
     disputeSubmitted.value = true;
     midRideCancel.value = current.merge(
+      message: payload.message,
       releasedAmount: payload.releasedAmount,
-      captureStatus: MidRideCaptureStatus.disputed,
+      captureStatus:
+          payload.captureStatus ?? MidRideCaptureStatus.disputed,
       canDispute: false,
     );
     unawaited(WalletRefresh.afterBalanceChange());
+    unawaited(_refreshFromRideDetails());
   }
 
   String get reasonLabel => midRideCancelReasonLabel(
@@ -127,23 +142,11 @@ class MidRideDriverCancelledController extends GetxController {
     reasonText: midRideCancel.value?.reasonText,
   );
 
-  String get partialFareLabel =>
-      CurrencyFormatter.format(midRideCancel.value?.partialFare ?? 0);
-
-  String get distanceLabel =>
-      (midRideCancel.value?.distanceCoveredKm ?? 0).toStringAsFixed(1);
-
-  String? get captureTimeLabel {
-    final captureAt = midRideCancel.value?.captureAt;
-    if (captureAt == null) return null;
-    return DateFormat('HH:mm').format(captureAt.toLocal());
+  String? get chargeMessage {
+    final text = midRideCancel.value?.message?.trim();
+    if (text == null || text.isEmpty) return null;
+    return text;
   }
-
-  String get capturedAmountLabel =>
-      CurrencyFormatter.format(midRideCancel.value?.capturedAmount ?? 0);
-
-  String get refundAmountLabel =>
-      CurrencyFormatter.format(midRideCancel.value?.netRefund ?? 0);
 
   MidRideDialogStatusKind? get statusKind {
     final block = midRideCancel.value;
@@ -213,12 +216,15 @@ class MidRideDriverCancelledController extends GetxController {
           final current = midRideCancel.value;
           if (current != null) {
             midRideCancel.value = current.merge(
+              message: data.message,
               releasedAmount: data.releasedAmount,
-              captureStatus: MidRideCaptureStatus.disputed,
+              captureStatus: midRideCaptureStatusFromApi(data.status) ??
+                  MidRideCaptureStatus.disputed,
               canDispute: false,
             );
           }
           await WalletRefresh.afterBalanceChange();
+          await _refreshFromRideDetails();
           AppDialogs.showSuccessDialog(
             message: AppStrings.midRideDisputeSuccess.tr,
           );
