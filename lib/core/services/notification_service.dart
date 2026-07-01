@@ -263,7 +263,7 @@ class NotificationService {
     String? title = message.notification?.title ?? data.title;
     String? body = message.notification?.body ?? data.body;
     // Only show a local notification if this is a data-only message.
-    if (title != null&&body != null) {
+    if (message.notification == null && title != null && body != null) {
       _logger.d("Showing local notification for foreground message");
       showLocalNotification(
         id: message.notification?.hashCode ?? message.messageId.hashCode,
@@ -341,21 +341,27 @@ class NotificationService {
         final rideRepo = sl<RideRepository>();
         final result = await rideRepo.getRideDetails(rideId);
 
-        result.fold((failure) {
-          _logger.e("Error fetching ride details: ${failure.message}");
-          AppDialogs.showErrorDialog(
-            message: AppStrings.unableToOpenRideDetails.tr,
-          );
-        }, (ride) {
-          if (rideNeedsMidRideCancelScreen(ride)) {
-            final block = ride.midRideCancel;
-            if (block != null) {
-              showMidRideDriverCancelledDialog(rideId: ride.id, cancel: block);
-              return;
+        result.fold(
+          (failure) {
+            _logger.e("Error fetching ride details: ${failure.message}");
+            AppDialogs.showErrorDialog(
+              message: AppStrings.unableToOpenRideDetails.tr,
+            );
+          },
+          (ride) {
+            if (rideNeedsMidRideCancelScreen(ride)) {
+              final block = ride.midRideCancel;
+              if (block != null) {
+                showMidRideDriverCancelledDialog(
+                  rideId: ride.id,
+                  cancel: block,
+                );
+                return;
+              }
             }
-          }
-          navigateToOngoingRide(ride);
-        });
+            navigateToOngoingRide(ride);
+          },
+        );
       } finally {
         Loader.instance.hide();
       }
