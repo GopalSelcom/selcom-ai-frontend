@@ -687,6 +687,7 @@ class LanguageEn extends Languages {
     'wallet': 'Wallet',
     'wallet_number_copied': 'Wallet number copied',
     'wallet_number_label': 'Wallet Number',
+    'wallet_reserved_balance': 'Reserved: @amount',
     'recent_transactions': 'Recent Transactions',
     'recent_transaction_title': 'Recent Transaction',
     'view_all': 'View All',
@@ -2761,6 +2762,10 @@ class LanguageEn extends Languages {
 
   @override
   String get walletNumberLabel => values['wallet_number_label'] ?? '';
+
+  @override
+  String get walletReservedBalance =>
+      values['wallet_reserved_balance'] ?? '';
 
   @override
   String get recentTransactions => values['recent_transactions'] ?? '';

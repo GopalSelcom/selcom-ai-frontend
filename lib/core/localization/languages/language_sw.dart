@@ -621,6 +621,7 @@ class LanguageSw extends Languages {
     'wallet': 'Mkoba',
     'wallet_number_copied': 'Namba ya mkoba imenakiliwa',
     'wallet_number_label': 'Namba ya Mkoba',
+    'wallet_reserved_balance': 'Imehifadhiwa: @amount',
     'recent_transactions': 'Miamala ya Hivi Karibuni',
     'recent_transaction_title': 'Muamala wa Hivi Karibuni',
     'view_all': 'Angalia Zote',
@@ -2680,6 +2681,10 @@ class LanguageSw extends Languages {
 
   @override
   String get walletNumberLabel => values['wallet_number_label'] ?? '';
+
+  @override
+  String get walletReservedBalance =>
+      values['wallet_reserved_balance'] ?? '';
 
   @override
   String get recentTransactions => values['recent_transactions'] ?? '';

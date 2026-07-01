@@ -757,6 +757,7 @@ class AppStrings {
   static const String wallet = 'wallet';
   static const String walletNumberCopied = 'wallet_number_copied';
   static const String walletNumberLabel = 'wallet_number_label';
+  static const String walletReservedBalance = 'wallet_reserved_balance';
   static const String recentTransactions = 'recent_transactions';
   static const String recentTransactionTitle = 'recent_transaction_title';
   static const String viewAll = 'view_all';

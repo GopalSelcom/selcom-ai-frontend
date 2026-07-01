@@ -35,6 +35,8 @@ class WalletScreen extends GetView<WalletController> {
                   children: [
                     WalletInfoCard(
                       balanceText: controller.formattedBalance,
+                      reservedBalanceText:
+                          controller.formattedReservedBalanceLabel,
                       walletNumberText: controller.formattedWalletNumber,
                       onCopyWalletNumber: controller.copyWalletNumber,
                       onAddMoney: controller.openAddMoney,

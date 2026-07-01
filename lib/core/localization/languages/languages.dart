@@ -575,6 +575,7 @@ abstract class Languages {
   String get wallet;
   String get walletNumberCopied;
   String get walletNumberLabel;
+  String get walletReservedBalance;
   String get recentTransactions;
   String get recentTransactionTitle;
   String get viewAll;

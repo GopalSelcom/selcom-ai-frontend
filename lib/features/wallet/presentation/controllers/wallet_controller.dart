@@ -91,6 +91,16 @@ class WalletController extends GetxController {
     );
   }
 
+  String? get formattedReservedBalanceLabel {
+    final reserved = summary.value?.reserved ?? 0;
+    if (reserved <= 0) return null;
+    final formatted = CurrencyFormatter.formatWithApiCurrency(
+      reserved,
+      summary.value?.currency,
+    );
+    return AppStrings.walletReservedBalance.trParams({'amount': formatted});
+  }
+
   String get formattedWalletNumber {
     final raw = summary.value?.walletNumber ?? '';
     return formatWalletAccountNumber(raw);
