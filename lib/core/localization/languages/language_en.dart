@@ -475,7 +475,7 @@ class LanguageEn extends Languages {
     'mid_ride_dispute_window_closed':
         'The dispute window has closed. Contact support if you still need help.',
     'mid_ride_cancelled_by_driver_partial_charge':
-        'Cancelled by driver — partial charge',
+        'Cancelled by driver',
     'mid_ride_reason_vehicle_breakdown': 'Vehicle breakdown',
     'mid_ride_reason_accident': 'Accident',
     'mid_ride_reason_unsafe': 'Unsafe situation',

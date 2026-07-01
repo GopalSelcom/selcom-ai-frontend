@@ -435,7 +435,7 @@ class LanguageSw extends Languages {
     'mid_ride_dispute_window_closed':
         'Muda wa kupinga umekwisha. Wasiliana na msaada ikiwa bado unahitaji usaidizi.',
     'mid_ride_cancelled_by_driver_partial_charge':
-        'Imeghairiwa na dereva — malipo ya sehemu',
+        'Imeghairiwa na dereva',
     'mid_ride_reason_vehicle_breakdown': 'Gari limevunjika',
     'mid_ride_reason_accident': 'Ajali',
     'mid_ride_reason_unsafe': 'Hali si salama',

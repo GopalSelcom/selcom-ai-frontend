@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../../shared/utils/currency_formatter.dart';
 
-/// Formats wallet account numbers in spaced groups (v4-style).
-String formatWalletAccountNumber(String account, {int groupSize = 5}) {
+/// Formats wallet account numbers in spaced groups of three (11 digits → 3 3 3 2).
+String formatWalletAccountNumber(String account, {int groupSize = 3}) {
   final clean = account.replaceAll(RegExp(r'\s+'), '');
   if (clean.isEmpty) return '';
   final buffer = StringBuffer();
