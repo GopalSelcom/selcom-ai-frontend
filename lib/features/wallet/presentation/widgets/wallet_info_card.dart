@@ -13,6 +13,7 @@ class WalletInfoCard extends StatelessWidget {
   const WalletInfoCard({
     super.key,
     required this.balanceText,
+    this.reservedBalanceText,
     required this.walletNumberText,
     required this.onCopyWalletNumber,
     required this.onAddMoney,
@@ -20,6 +21,7 @@ class WalletInfoCard extends StatelessWidget {
   });
 
   final String balanceText;
+  final String? reservedBalanceText;
   final String walletNumberText;
   final VoidCallback onCopyWalletNumber;
   final VoidCallback onAddMoney;
@@ -60,6 +62,17 @@ class WalletInfoCard extends StatelessWidget {
                           height: 38 / 30,
                         ),
                       ),
+                      if (reservedBalanceText != null &&
+                          reservedBalanceText!.isNotEmpty) ...[
+                        SizedBox(height: 4.h),
+                        Text(
+                          reservedBalanceText!,
+                          style: AppTextStyles.homeSubtitle.copyWith(
+                            fontSize: 12.sp,
+                            height: 16 / 12,
+                          ),
+                        ),
+                      ],
                       Text(
                         AppStrings.walletNumberLabel.tr,
                         style: AppTextStyles.homeSubtitle,

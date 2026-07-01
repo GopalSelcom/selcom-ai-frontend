@@ -441,6 +441,23 @@ class LanguageEn extends Languages {
     'resend_otp': 'Resend OTP',
     'retry': 'Retry',
     'ride_cancelled': 'Ride Cancelled',
+    'trip_ended_by_driver': 'Trip ended by driver',
+    'mid_ride_sorry_subtitle':
+        'We\'re sorry your trip couldn\'t be completed.',
+    'mid_ride_reason_lead': 'Reason: ',
+    'mid_ride_dispute_charge': 'Dispute charge',
+    'mid_ride_dispute_success':
+        'Hold released. Our team will review — you won\'t be charged while we check.',
+    'mid_ride_dispute_failed': 'Could not submit dispute',
+    'mid_ride_dispute_unavailable': 'Dispute unavailable',
+    'mid_ride_dispute_window_closed':
+        'The dispute window has closed. Contact support if you still need help.',
+    'mid_ride_cancelled_by_driver_partial_charge':
+        'Cancelled by driver',
+    'mid_ride_reason_vehicle_breakdown': 'Vehicle breakdown',
+    'mid_ride_reason_accident': 'Accident',
+    'mid_ride_reason_unsafe': 'Unsafe situation',
+    'mid_ride_reason_other': 'Other',
     'driver_started_your_ride': '@driverName has started your ride',
     'ride_completed': 'Ride Completed',
     'the_ride_has_been_cancelled': 'The ride has been cancelled.',
@@ -648,6 +665,7 @@ class LanguageEn extends Languages {
     'wallet': 'Wallet',
     'wallet_number_copied': 'Wallet number copied',
     'wallet_number_label': 'Wallet Number',
+    'wallet_reserved_balance': 'Reserved: @amount',
     'recent_transactions': 'Recent Transactions',
     'recent_transaction_title': 'Recent Transaction',
     'view_all': 'View All',
@@ -2089,6 +2107,49 @@ class LanguageEn extends Languages {
   String get rideCancelled => values['ride_cancelled'] ?? '';
 
   @override
+  String get tripEndedByDriver => values['trip_ended_by_driver'] ?? '';
+
+  @override
+  String get midRideSorrySubtitle => values['mid_ride_sorry_subtitle'] ?? '';
+
+  @override
+  String get midRideReasonLead => values['mid_ride_reason_lead'] ?? '';
+
+  @override
+  String get midRideDisputeCharge => values['mid_ride_dispute_charge'] ?? '';
+
+  @override
+  String get midRideDisputeSuccess => values['mid_ride_dispute_success'] ?? '';
+
+  @override
+  String get midRideDisputeFailed => values['mid_ride_dispute_failed'] ?? '';
+
+  @override
+  String get midRideDisputeUnavailable =>
+      values['mid_ride_dispute_unavailable'] ?? '';
+
+  @override
+  String get midRideDisputeWindowClosed =>
+      values['mid_ride_dispute_window_closed'] ?? '';
+
+  @override
+  String get midRideCancelledByDriverPartialCharge =>
+      values['mid_ride_cancelled_by_driver_partial_charge'] ?? '';
+
+  @override
+  String get midRideReasonVehicleBreakdown =>
+      values['mid_ride_reason_vehicle_breakdown'] ?? '';
+
+  @override
+  String get midRideReasonAccident => values['mid_ride_reason_accident'] ?? '';
+
+  @override
+  String get midRideReasonUnsafe => values['mid_ride_reason_unsafe'] ?? '';
+
+  @override
+  String get midRideReasonOther => values['mid_ride_reason_other'] ?? '';
+
+  @override
   String get driverStartedYourRide => values['driver_started_your_ride'] ?? '';
 
   @override
@@ -2622,6 +2683,10 @@ class LanguageEn extends Languages {
 
   @override
   String get walletNumberLabel => values['wallet_number_label'] ?? '';
+
+  @override
+  String get walletReservedBalance =>
+      values['wallet_reserved_balance'] ?? '';
 
   @override
   String get recentTransactions => values['recent_transactions'] ?? '';

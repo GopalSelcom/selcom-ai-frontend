@@ -8,11 +8,12 @@ import '../../../../core/config/app_config.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/services/app_settings_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/selcom_pesa/selcom_pesa_app_launcher_service.dart';
 import '../../../../core/services/storage_service.dart';
-import '../../../../shared/data/countries_phone_data.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/payment_countdown_timer.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
 import '../../../../shared/utils/thousands_separator_input_formatter.dart';
 import '../../../wallet/domain/entities/wallet_details_entity.dart';
@@ -23,6 +24,7 @@ import '../../data/models/go_other_payment_methods_models.dart';
 import '../../data/models/selcom_pesa_topup_models.dart';
 import '../../domain/wallet_payment_phone_country.dart';
 import '../../domain/wallet_top_up_limits.dart';
+import '../../../settings/data/models/settings_models.dart';
 import '../widgets/mobile_money_topup_status_dialog.dart';
 
 enum SelcomPesaTopupFlow { self, other }
@@ -32,15 +34,17 @@ class SelcomPesaTopupController extends GetxController {
     this.controllerTag,
     WalletRepository? walletRepository,
     SelcomPesaAppLauncherService? selcomPesaLauncher,
+    AppSettingsService? appSettingsService,
   }) : _walletRepository = walletRepository ?? sl<WalletRepository>(),
        _selcomPesaLauncher =
-           selcomPesaLauncher ?? sl<SelcomPesaAppLauncherService>();
+           selcomPesaLauncher ?? sl<SelcomPesaAppLauncherService>(),
+       _appSettingsService = appSettingsService ?? sl<AppSettingsService>();
 
   final String? controllerTag;
   final WalletRepository _walletRepository;
   final SelcomPesaAppLauncherService _selcomPesaLauncher;
+  final AppSettingsService _appSettingsService;
 
-  static const int paymentTimeoutSeconds = 300;
   static const Duration pollInterval = Duration(seconds: 3);
 
   final amountRaw = ''.obs;
@@ -58,10 +62,10 @@ class SelcomPesaTopupController extends GetxController {
   bool get textFieldsDisposed => _textFieldsDisposed;
 
   final ValueNotifier<int> pendingCountdown = ValueNotifier<int>(
-    paymentTimeoutSeconds,
+    AppSettingsModel.defaultPaymentTimerSeconds,
   );
 
-  Timer? _countdownTimer;
+  late final PaymentCountdownTimer _paymentCountdown;
   Timer? _pollTimer;
   bool _pendingDialogVisible = false;
   bool _paymentHandled = false;
@@ -116,6 +120,11 @@ class SelcomPesaTopupController extends GetxController {
   void onInit() {
     super.onInit();
     amountController = TextEditingController();
+    _paymentCountdown = PaymentCountdownTimer(
+      onTick: (remaining) => pendingCountdown.value = remaining,
+      onExpired: _onPaymentTimeoutExpired,
+      onResumed: () => unawaited(_pollSelcomPesaStatus()),
+    );
   }
 
   void bindPhoneController(TextEditingController controller) {
@@ -330,8 +339,7 @@ class SelcomPesaTopupController extends GetxController {
       return;
     }
 
-    _showPaymentPendingDialog();
-    _startPaymentPolling();
+    await _beginAwaitingPayment();
   }
 
   Future<void> _startOtherFlow(SelcomPesaTopupResult result) async {
@@ -341,12 +349,18 @@ class SelcomPesaTopupController extends GetxController {
         ? result.message
         : AppStrings.requestSentCompleteSelcomTopup.tr;
 
+    await _beginAwaitingPayment();
+  }
+
+  Future<void> _beginAwaitingPayment() async {
+    final durationSeconds =
+        await _appSettingsService.resolvePaymentTimerSeconds();
+    pendingCountdown.value = durationSeconds;
     _showPaymentPendingDialog();
-    _startPaymentPolling();
+    _startPaymentPolling(durationSeconds);
   }
 
   void _showPaymentPendingDialog() {
-    pendingCountdown.value = paymentTimeoutSeconds;
     _pendingDialogVisible = true;
 
     AppDialogs.showAnimatedDialog<void>(
@@ -372,20 +386,11 @@ class SelcomPesaTopupController extends GetxController {
     AppDialogs.dismissTopOverlay();
   }
 
-  void _startPaymentPolling() {
+  void _startPaymentPolling(int durationSeconds) {
     _stopTimers();
-    pendingCountdown.value = paymentTimeoutSeconds;
     _paymentHandled = false;
 
-    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      final next = pendingCountdown.value - 1;
-      if (next <= 0) {
-        pendingCountdown.value = 0;
-        _onPaymentTimeoutExpired();
-        return;
-      }
-      pendingCountdown.value = next;
-    });
+    _paymentCountdown.start(durationSeconds);
 
     _pollTimer = Timer.periodic(pollInterval, (_) {
       unawaited(_pollSelcomPesaStatus());
@@ -644,8 +649,7 @@ class SelcomPesaTopupController extends GetxController {
   }
 
   void _stopTimers() {
-    _countdownTimer?.cancel();
-    _countdownTimer = null;
+    _paymentCountdown.stop();
     _pollTimer?.cancel();
     _pollTimer = null;
   }

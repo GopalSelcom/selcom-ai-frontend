@@ -27,7 +27,7 @@ class WalletSummaryCard extends StatelessWidget {
   final String? currencyCode;
   final bool isLoading;
 
-  static const String _accountNumberWidthTemplate = '00000 00000';
+  static const String _accountNumberWidthTemplate = '000 000 000 00';
 
   static double get amountGroupWidth => 96.w;
 
@@ -53,7 +53,7 @@ class WalletSummaryCard extends StatelessWidget {
     if (walletNumber.isEmpty) return '—';
     final clean = walletNumber.replaceAll(RegExp(r'\s+'), '');
     if (clean.isEmpty) return '—';
-    return formatWalletAccountNumber(clean, groupSize: 5);
+    return formatWalletAccountNumber(clean);
   }
 
   String _accountNumberForCopy() => walletNumber.replaceAll(RegExp(r'\s+'), '');

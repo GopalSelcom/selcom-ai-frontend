@@ -505,6 +505,22 @@ class AppStrings {
   static const String resendOtp = 'resend_otp';
   static const String retry = 'retry';
   static const String rideCancelled = 'ride_cancelled';
+  static const String tripEndedByDriver = 'trip_ended_by_driver';
+  static const String midRideSorrySubtitle = 'mid_ride_sorry_subtitle';
+  static const String midRideReasonLead = 'mid_ride_reason_lead';
+  static const String midRideDisputeCharge = 'mid_ride_dispute_charge';
+  static const String midRideDisputeSuccess = 'mid_ride_dispute_success';
+  static const String midRideDisputeFailed = 'mid_ride_dispute_failed';
+  static const String midRideDisputeUnavailable = 'mid_ride_dispute_unavailable';
+  static const String midRideDisputeWindowClosed =
+      'mid_ride_dispute_window_closed';
+  static const String midRideCancelledByDriverPartialCharge =
+      'mid_ride_cancelled_by_driver_partial_charge';
+  static const String midRideReasonVehicleBreakdown =
+      'mid_ride_reason_vehicle_breakdown';
+  static const String midRideReasonAccident = 'mid_ride_reason_accident';
+  static const String midRideReasonUnsafe = 'mid_ride_reason_unsafe';
+  static const String midRideReasonOther = 'mid_ride_reason_other';
   static const String driverStartedYourRide = 'driver_started_your_ride';
   static const String rideCompleted = 'ride_completed';
   static const String theRideHasBeenCancelled = 'the_ride_has_been_cancelled';
@@ -723,6 +739,7 @@ class AppStrings {
   static const String wallet = 'wallet';
   static const String walletNumberCopied = 'wallet_number_copied';
   static const String walletNumberLabel = 'wallet_number_label';
+  static const String walletReservedBalance = 'wallet_reserved_balance';
   static const String recentTransactions = 'recent_transactions';
   static const String recentTransactionTitle = 'recent_transaction_title';
   static const String viewAll = 'view_all';

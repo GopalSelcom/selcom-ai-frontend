@@ -30,11 +30,25 @@ class BookingForSomeoneElseFlowBottomSheet extends StatelessWidget {
   BookingForSomeoneElseFlowController get controller =>
       Get.find<BookingForSomeoneElseFlowController>(tag: controllerTag);
 
-  /// Opens the multi-step booking sheet via [AppDialogs.showStandardBottomSheet].
-  static Future<Map<String, dynamic>?> show() {
+  /// Multi-step book-for-other UI.
+  ///
+  /// - [showSelfOption] / [showOtherOption] control the choice step rows.
+  /// - Tapping "for someone else" advances to passenger name/phone ([BookingFlowStep.details]).
+  static Future<Map<String, dynamic>?> show({
+    BookingFlowStep initialStep = BookingFlowStep.choice,
+    bool showSelfOption = true,
+    bool showOtherOption = true,
+  }) {
     final controllerTag =
         'booking_for_someone_else_${DateTime.now().microsecondsSinceEpoch}';
-    Get.put(BookingForSomeoneElseFlowController(), tag: controllerTag);
+    Get.put(
+      BookingForSomeoneElseFlowController(
+        initialStep: initialStep,
+        showSelfOption: showSelfOption,
+        showOtherOption: showOtherOption,
+      ),
+      tag: controllerTag,
+    );
 
     return AppDialogs.showStandardBottomSheet<Map<String, dynamic>>(
       sheet: BookingForSomeoneElseFlowBottomSheet(controllerTag: controllerTag),
@@ -134,17 +148,20 @@ class _BookingChoiceStep extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _bookingChoiceRow(
-          icon: Iconsax.user,
-          title: AppStrings.bookingRideOptionForMe.tr,
-          onTap: controller.confirmSelfBooking,
-        ),
-        SizedBox(height: 12.h),
-        _bookingChoiceRow(
-          icon: Iconsax.user_add,
-          title: AppStrings.bookingRideOptionForSomeoneElse.tr,
-          onTap: controller.goToDetailsStep,
-        ),
+        if (controller.showSelfOption) ...[
+          _bookingChoiceRow(
+            icon: Iconsax.user,
+            title: AppStrings.bookingRideOptionForMe.tr,
+            onTap: controller.confirmSelfBooking,
+          ),
+          if (controller.showOtherOption) SizedBox(height: 12.h),
+        ],
+        if (controller.showOtherOption)
+          _bookingChoiceRow(
+            icon: Iconsax.user_add,
+            title: AppStrings.bookingRideOptionForSomeoneElse.tr,
+            onTap: controller.goToDetailsStep,
+          ),
         SizedBox(height: 12.h),
       ],
     );

@@ -203,6 +203,9 @@ class AndroidOrderTrackingManager {
         etaDetail = 'Hope you had a great ride!';
       } else if (normalizedStatus.contains('driver_arrived')) {
         etaDetail = 'Driver is here for pickup';
+      } else if (normalizedStatus.contains('searching') ||
+          normalizedStatus.contains('finding')) {
+        etaDetail = 'Looking for a driver nearby • Soon';
       } else {
         final String phase = isInRide
             ? 'Arriving at destination'

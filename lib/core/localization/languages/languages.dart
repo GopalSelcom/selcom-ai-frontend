@@ -385,6 +385,19 @@ abstract class Languages {
   String get resendOtp;
   String get retry;
   String get rideCancelled;
+  String get tripEndedByDriver;
+  String get midRideSorrySubtitle;
+  String get midRideReasonLead;
+  String get midRideDisputeCharge;
+  String get midRideDisputeSuccess;
+  String get midRideDisputeFailed;
+  String get midRideDisputeUnavailable;
+  String get midRideDisputeWindowClosed;
+  String get midRideCancelledByDriverPartialCharge;
+  String get midRideReasonVehicleBreakdown;
+  String get midRideReasonAccident;
+  String get midRideReasonUnsafe;
+  String get midRideReasonOther;
   String get driverStartedYourRide;
   String get rideCompleted;
   String get theRideHasBeenCancelled;
@@ -546,6 +559,7 @@ abstract class Languages {
   String get wallet;
   String get walletNumberCopied;
   String get walletNumberLabel;
+  String get walletReservedBalance;
   String get recentTransactions;
   String get recentTransactionTitle;
   String get viewAll;

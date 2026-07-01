@@ -6,8 +6,10 @@ import 'package:get/get.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/services/app_settings_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/payment_countdown_timer.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
 import '../../../../shared/utils/grouped_phone_number_formatter.dart';
 import '../../../../shared/utils/thousands_separator_input_formatter.dart';
@@ -17,19 +19,22 @@ import '../../data/datasources/wallet_payment_remote_data_source.dart';
 import '../../data/models/go_other_payment_methods_models.dart';
 import '../../domain/wallet_payment_phone_country.dart';
 import '../../domain/wallet_top_up_limits.dart';
+import '../../../settings/data/models/settings_models.dart';
 import '../widgets/mobile_money_topup_status_dialog.dart';
 
 class MobileMoneyTopupController extends GetxController {
   MobileMoneyTopupController({
     this.controllerTag,
     WalletRepository? walletRepository,
-  }) : _walletRepository = walletRepository ?? sl<WalletRepository>();
+    AppSettingsService? appSettingsService,
+  }) : _walletRepository = walletRepository ?? sl<WalletRepository>(),
+       _appSettingsService = appSettingsService ?? sl<AppSettingsService>();
 
   final String? controllerTag;
 
   final WalletRepository _walletRepository;
+  final AppSettingsService _appSettingsService;
 
-  static const int countdownDurationSeconds = 60;
   static const Duration pollInterval = Duration(seconds: 10);
 
   /// Info-only UX: show request-sent message, no countdown, poll, or retry.
@@ -51,10 +56,10 @@ class MobileMoneyTopupController extends GetxController {
   bool get textFieldsDisposed => _textFieldsDisposed;
 
   final ValueNotifier<int> pendingCountdown = ValueNotifier<int>(
-    countdownDurationSeconds,
+    AppSettingsModel.defaultPaymentTimerSeconds,
   );
 
-  Timer? _countdownTimer;
+  late final PaymentCountdownTimer _paymentCountdown;
   Timer? _pollTimer;
   bool _paymentHandled = false;
   bool _pendingDialogVisible = false;
@@ -89,6 +94,11 @@ class MobileMoneyTopupController extends GetxController {
     super.onInit();
     phoneController = TextEditingController();
     amountController = TextEditingController();
+    _paymentCountdown = PaymentCountdownTimer(
+      onTick: (remaining) => pendingCountdown.value = remaining,
+      onExpired: _onTimerExpired,
+      onResumed: () => unawaited(_pollPaymentStatus()),
+    );
   }
 
   void disposeTextFields() {
@@ -235,9 +245,9 @@ class MobileMoneyTopupController extends GetxController {
       }
 
       await Future<void>.delayed(Duration.zero);
-      _showPendingDialog();
+      await _showPendingDialog();
       if (!_infoDialogOnlyFlow) {
-        _startPollingTimers();
+        await _startPollingTimers();
       }
     } on WalletPaymentException catch (e) {
       if (closeSheetFirst) {
@@ -276,21 +286,42 @@ class MobileMoneyTopupController extends GetxController {
     return '$countryDialCodeDisplay $grouped';
   }
 
-  void _showPendingDialog() {
+  Future<void> _showPendingDialog() async {
+    if (!_infoDialogOnlyFlow) {
+      final durationSeconds =
+          await _appSettingsService.resolvePaymentTimerSeconds();
+      pendingCountdown.value = durationSeconds;
+    }
+
     _pendingDialogVisible = true;
 
     AppDialogs.showAnimatedDialog<void>(
       barrierDismissible: false,
       child: PopScope(
         canPop: false,
-        child: MobileMoneyTopupStatusDialog(
-          type: MobileMoneyTopupDialogType.request,
-          requestTitle: AppStrings.mobileMoneyRequestSentTitle.tr,
-          requestSubtitle: AppStrings.mobileMoneyRequestSentMessage.trParams({
-            'number': _enteredPhoneDisplay(),
-          }),
-          onAcknowledge: _dismissPendingDialog,
-        ),
+        child: _infoDialogOnlyFlow
+            ? MobileMoneyTopupStatusDialog(
+                type: MobileMoneyTopupDialogType.request,
+                requestTitle: AppStrings.mobileMoneyRequestSentTitle.tr,
+                requestSubtitle:
+                    AppStrings.mobileMoneyRequestSentMessage.trParams({
+                  'number': _enteredPhoneDisplay(),
+                }),
+                onAcknowledge: _dismissPendingDialog,
+              )
+            : Obx(
+                () => MobileMoneyTopupStatusDialog(
+                  type: MobileMoneyTopupDialogType.request,
+                  requestTitle: AppStrings.mobileMoneyRequestSentTitle.tr,
+                  requestSubtitle:
+                      AppStrings.mobileMoneyRequestSentMessage.trParams({
+                    'number': _enteredPhoneDisplay(),
+                  }),
+                  secondsListenable: pendingCountdown,
+                  onCancel: () => unawaited(cancelPaymentRequest()),
+                  isCancelling: isCancelling.value,
+                ),
+              ),
       ),
     );
   }
@@ -306,22 +337,16 @@ class MobileMoneyTopupController extends GetxController {
     }
   }
 
-  void _startPollingTimers() {
+  Future<void> _startPollingTimers() async {
     if (_infoDialogOnlyFlow) return;
 
     _stopTimers();
-    pendingCountdown.value = countdownDurationSeconds;
+    final durationSeconds =
+        await _appSettingsService.resolvePaymentTimerSeconds();
+    pendingCountdown.value = durationSeconds;
     _paymentHandled = false;
 
-    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      final next = pendingCountdown.value - 1;
-      if (next <= 0) {
-        pendingCountdown.value = 0;
-        _onTimerExpired();
-        return;
-      }
-      pendingCountdown.value = next;
-    });
+    _paymentCountdown.start(durationSeconds);
 
     _pollTimer = Timer.periodic(pollInterval, (_) {
       unawaited(_pollPaymentStatus());
@@ -448,8 +473,7 @@ class MobileMoneyTopupController extends GetxController {
   }
 
   void _stopTimers() {
-    _countdownTimer?.cancel();
-    _countdownTimer = null;
+    _paymentCountdown.stop();
     _pollTimer?.cancel();
     _pollTimer = null;
   }

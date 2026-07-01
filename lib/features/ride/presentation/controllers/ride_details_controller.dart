@@ -112,19 +112,28 @@ class RideDetailsController extends GetxController {
 
   bool get isCancelled => ride.status.name == 'cancelled';
 
+  bool get isMidRideDriverCancelled =>
+      ride.midRideCancel?.isDriverMidRideCancel == true;
+
   bool get isCompleted => ride.status == RideStatus.rideCompleted;
 
   int get rideCharge {
+    if (isMidRideDriverCancelled) {
+      return ride.midRideCancel?.displayChargeAmount ?? 0;
+    }
     if (isCancelled) return ride.cancellationFee ?? 0;
     return ride.fareBreakdown?.rideCharge ?? ride.fareEstimate;
   }
 
   int get bookingFee {
-    if (isCancelled) return 0;
+    if (isCancelled || isMidRideDriverCancelled) return 0;
     return ride.fareBreakdown?.bookingFee ?? 0;
   }
 
   int get totalAmount {
+    if (isMidRideDriverCancelled) {
+      return ride.midRideCancel?.displayChargeAmount ?? 0;
+    }
     if (isCancelled) return ride.cancellationFee ?? 0;
     return ride.fareBreakdown?.totalAmount ??
         ride.finalFare ??

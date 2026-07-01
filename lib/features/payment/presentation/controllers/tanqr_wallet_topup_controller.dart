@@ -8,9 +8,11 @@ import '../../../../core/data/models/user_model.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/services/app_settings_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/payment_countdown_timer.dart';
 import '../../../../shared/utils/thousands_separator_input_formatter.dart';
 import '../../../wallet/domain/repositories/wallet_repository.dart';
 import '../../../wallet/domain/usecases/get_wallet_summary_usecase.dart';
@@ -20,16 +22,20 @@ import '../../../wallet/presentation/utils/wallet_refresh.dart';
 import '../../data/datasources/wallet_payment_remote_data_source.dart';
 import '../../data/models/go_other_payment_methods_models.dart';
 import '../../domain/wallet_top_up_limits.dart';
+import '../../../settings/data/models/settings_models.dart';
 
 enum TanQrTopupStep { options, amountEntry, qrDisplay }
 
 class TanQrWalletTopupController extends GetxController {
-  TanQrWalletTopupController({WalletRepository? walletRepository})
-    : _walletRepository = walletRepository ?? sl<WalletRepository>();
+  TanQrWalletTopupController({
+    WalletRepository? walletRepository,
+    AppSettingsService? appSettingsService,
+  }) : _walletRepository = walletRepository ?? sl<WalletRepository>(),
+       _appSettingsService = appSettingsService ?? sl<AppSettingsService>();
 
   final WalletRepository _walletRepository;
+  final AppSettingsService _appSettingsService;
 
-  static const int countdownDurationSeconds = 300;
   static const Duration pollInterval = Duration(seconds: 10);
 
   final step = TanQrTopupStep.options.obs;
@@ -37,7 +43,7 @@ class TanQrWalletTopupController extends GetxController {
   final amountError = RxnString();
   final apiError = RxnString();
   final session = Rxn<TanQrPaymentSession>();
-  final countdownSeconds = countdownDurationSeconds.obs;
+  final countdownSeconds = AppSettingsModel.defaultPaymentTimerSeconds.obs;
   final isSubmitting = false.obs;
   final isCancelling = false.obs;
   final displayName = ''.obs;
@@ -48,7 +54,7 @@ class TanQrWalletTopupController extends GetxController {
 
   bool get textFieldsDisposed => _textFieldsDisposed;
 
-  Timer? _countdownTimer;
+  late final PaymentCountdownTimer _paymentCountdown;
   Timer? _pollTimer;
   bool _paymentHandled = false;
   String? _registeredPhone;
@@ -69,6 +75,11 @@ class TanQrWalletTopupController extends GetxController {
   void onInit() {
     super.onInit();
     amountController = TextEditingController();
+    _paymentCountdown = PaymentCountdownTimer(
+      onTick: (remaining) => countdownSeconds.value = remaining,
+      onExpired: _onTimerExpired,
+      onResumed: () => unawaited(_pollPaymentStatus()),
+    );
     unawaited(_loadRegisteredPhone());
     unawaited(_loadDisplayAccountDetails());
   }
@@ -150,7 +161,7 @@ class TanQrWalletTopupController extends GetxController {
   void backToOptions() {
     _stopTimers();
     session.value = null;
-    countdownSeconds.value = countdownDurationSeconds;
+    countdownSeconds.value = _appSettingsService.paymentWaitSeconds.value;
     apiError.value = null;
     amountError.value = null;
     step.value = TanQrTopupStep.options;
@@ -222,7 +233,7 @@ class TanQrWalletTopupController extends GetxController {
       session.value = result;
       await _loadDisplayAccountDetails();
       step.value = TanQrTopupStep.qrDisplay;
-      _startQrTimers();
+      await _startQrTimers();
     } on WalletPaymentException catch (e) {
       apiError.value = e.message.tr;
     } catch (_) {
@@ -233,20 +244,14 @@ class TanQrWalletTopupController extends GetxController {
     }
   }
 
-  void _startQrTimers() {
+  Future<void> _startQrTimers() async {
     _stopTimers();
-    countdownSeconds.value = countdownDurationSeconds;
+    final durationSeconds =
+        await _appSettingsService.resolvePaymentTimerSeconds();
+    countdownSeconds.value = durationSeconds;
     _paymentHandled = false;
 
-    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      final next = countdownSeconds.value - 1;
-      if (next <= 0) {
-        countdownSeconds.value = 0;
-        _onTimerExpired();
-        return;
-      }
-      countdownSeconds.value = next;
-    });
+    _paymentCountdown.start(durationSeconds);
 
     _pollTimer = Timer.periodic(pollInterval, (_) {
       unawaited(_pollPaymentStatus());
@@ -311,7 +316,7 @@ class TanQrWalletTopupController extends GetxController {
   void resetToAmountEntry() {
     _stopTimers();
     session.value = null;
-    countdownSeconds.value = countdownDurationSeconds;
+    countdownSeconds.value = _appSettingsService.paymentWaitSeconds.value;
     apiError.value = null;
     amountError.value = null;
     step.value = TanQrTopupStep.amountEntry;
@@ -361,8 +366,7 @@ class TanQrWalletTopupController extends GetxController {
   }
 
   void _stopTimers() {
-    _countdownTimer?.cancel();
-    _countdownTimer = null;
+    _paymentCountdown.stop();
     _pollTimer?.cancel();
     _pollTimer = null;
   }

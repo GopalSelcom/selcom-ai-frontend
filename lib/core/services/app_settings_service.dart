@@ -47,6 +47,14 @@ class AppSettingsService {
     return List<String>.from(cancellationReasons);
   }
 
+  /// `/go/settings` `payment_timer` (seconds), defaulting to [AppSettingsModel.defaultPaymentTimerSeconds].
+  Future<int> resolvePaymentTimerSeconds() async {
+    if (!isLoaded.value) {
+      await preload();
+    }
+    return paymentWaitSeconds.value;
+  }
+
   Future<void> preload({bool forceRefresh = false}) async {
     if (isLoaded.value && !forceRefresh) return;
 

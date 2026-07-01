@@ -61,6 +61,7 @@ class WalletRepositoryImpl implements WalletRepository {
       balance: balance?.available ?? 0,
       walletNumber: walletNumber,
       currency: balance?.currency ?? 'TZS',
+      reserved: balance?.reserved ?? 0,
     );
   }
 

@@ -12,6 +12,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../../features/ride/domain/repositories/ride_repository.dart';
 import '../../shared/utils/app_dialogs.dart';
+import '../../shared/utils/mid_ride_cancel_navigation.dart';
 import '../../shared/utils/ride_active_navigation.dart';
 import '../data/models/notification_model.dart';
 import '../di/injection_container.dart';
@@ -262,7 +263,7 @@ class NotificationService {
     String? title = message.notification?.title ?? data.title;
     String? body = message.notification?.body ?? data.body;
     // Only show a local notification if this is a data-only message.
-    if (title != null&&body != null) {
+    if (message.notification == null && title != null && body != null) {
       _logger.d("Showing local notification for foreground message");
       showLocalNotification(
         id: message.notification?.hashCode ?? message.messageId.hashCode,
@@ -340,12 +341,27 @@ class NotificationService {
         final rideRepo = sl<RideRepository>();
         final result = await rideRepo.getRideDetails(rideId);
 
-        result.fold((failure) {
-          _logger.e("Error fetching ride details: ${failure.message}");
-          AppDialogs.showErrorDialog(
-            message: AppStrings.unableToOpenRideDetails.tr,
-          );
-        }, (ride) => navigateToOngoingRide(ride));
+        result.fold(
+          (failure) {
+            _logger.e("Error fetching ride details: ${failure.message}");
+            AppDialogs.showErrorDialog(
+              message: AppStrings.unableToOpenRideDetails.tr,
+            );
+          },
+          (ride) {
+            if (rideNeedsMidRideCancelScreen(ride)) {
+              final block = ride.midRideCancel;
+              if (block != null) {
+                showMidRideDriverCancelledDialog(
+                  rideId: ride.id,
+                  cancel: block,
+                );
+                return;
+              }
+            }
+            navigateToOngoingRide(ride);
+          },
+        );
       } finally {
         Loader.instance.hide();
       }

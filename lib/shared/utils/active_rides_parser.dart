@@ -1,8 +1,11 @@
 /// Helpers for `GET /go/rides/active` (multi-ride list on Home).
 ///
-/// Booking limits (enforced in `VehicleSelectionController._guardActiveRideLimits`):
+/// Used by book-for-other pickup flow — see `docs/flows/book-for-other-pickup-flow.md`.
+///
+/// Booking limits (also enforced in `VehicleSelectionController._guardActiveRideLimits`):
 /// - Self: max one active ride (`is_booked_for_other == false`).
-/// - Book for other: max `settings.features.book_for_other.max_active` concurrent rides.
+/// - Book for other: max `settings.features.book_for_other.max_active` concurrent rides
+///   (self ride is **not** counted toward `max_active`).
 
 import '../../core/data/models/responses/rides/active_ride_response.dart'
     as active_ride_api;
