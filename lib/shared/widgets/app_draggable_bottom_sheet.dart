@@ -32,7 +32,8 @@ class AppDraggableBottomSheet extends StatelessWidget {
   final bool snap;
   final bool expand;
 
-  /// When true (default), lifts all sheet content above system bottom inset.
+  /// When true (default), reserves system bottom clearance. On Android this is
+  /// shell padding; on iOS clearance is included in sheet height instead.
   final bool reserveSystemBottomInset;
   final List<double>? snapSizes;
   final Widget Function(ScrollController scrollController) childBuilder;
@@ -42,23 +43,26 @@ class AppDraggableBottomSheet extends StatelessWidget {
     return BottomInsetHelper.instance.resolveDraggableSheetBottomInset(context);
   }
 
-  /// Adds [bottomInsetOf] to [baseFraction] for Android sheet sizing.
+  /// Grows [baseFraction] by [bottomInsetOf] so sheet height fits content plus
+  /// system bottom clearance.
   ///
-  /// On iOS, [reserveSystemBottomInset] shell padding alone clears the home
-  /// indicator — inflating the fraction as well causes extra white space.
+  /// On iOS the shell does not apply bottom padding ([_usesShellBottomInset]);
+  /// clearance comes from this inflated height instead.
   static double sheetFractionIncludingBottomInset(
     BuildContext context,
     double baseFraction,
   ) {
-    if (defaultTargetPlatform == TargetPlatform.iOS) {
-      return baseFraction;
-    }
-
     final screenH = MediaQuery.sizeOf(context).height;
     if (screenH <= 0) return baseFraction;
     final inset = bottomInsetOf(context);
     if (inset <= 0) return baseFraction;
     return (baseFraction + inset / screenH).clamp(baseFraction, 0.92);
+  }
+
+  /// Android: shell padding plus fraction inflation. iOS: inflation only.
+  static bool _usesShellBottomInset(bool reserveSystemBottomInset) {
+    return reserveSystemBottomInset &&
+        defaultTargetPlatform != TargetPlatform.iOS;
   }
 
   @override
@@ -84,7 +88,7 @@ class AppDraggableBottomSheet extends StatelessWidget {
               ),
             ],
           ),
-          child: reserveSystemBottomInset
+          child: _usesShellBottomInset(reserveSystemBottomInset)
               ? Padding(
                   padding: EdgeInsets.only(
                     bottom: bottomInsetOf(context),
