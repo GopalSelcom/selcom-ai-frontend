@@ -1,6 +1,5 @@
-import 'package:flutter/foundation.dart';
-
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
@@ -59,7 +58,7 @@ class WalletRemoteDataSourceImpl implements WalletRemoteDataSource {
       }
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      debugPrint('getWalletDetails error (suppressed): $e');
+      AppLogger.d('getWalletDetails error (suppressed): $e', tag: 'WalletRemoteDataSource');
     }
     return null;
   }
@@ -90,7 +89,7 @@ class WalletRemoteDataSourceImpl implements WalletRemoteDataSource {
       }
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      debugPrint('getCardBalance error (suppressed): $e');
+      AppLogger.d('getCardBalance error (suppressed): $e', tag: 'WalletRemoteDataSource');
     }
     return null;
   }
@@ -130,7 +129,7 @@ class WalletRemoteDataSourceImpl implements WalletRemoteDataSource {
       }
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      debugPrint('getCardStatement error (suppressed): $e');
+      AppLogger.d('getCardStatement error (suppressed): $e', tag: 'WalletRemoteDataSource');
     }
     return const [];
   }

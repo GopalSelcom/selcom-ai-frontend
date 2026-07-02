@@ -1,5 +1,3 @@
-import 'dart:developer' as developer;
-
 import 'package:dio/dio.dart';
 
 import '../../../../core/config/app_config.dart';
@@ -15,6 +13,7 @@ import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/services/session_expiry_service.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../payment/domain/models/insufficient_wallet_balance_details.dart';
 import '../models/destination_update_models.dart';
 import '../models/emergency_contacts_response.dart';
@@ -461,7 +460,11 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       final statusCode = response.statusCode;
 
       // Business rejections from validate payment (400/409) — never return empty validation_id.
-      if (_isValidateRidePaymentBusinessRejection(statusCode, errorCode, message)) {
+      if (_isValidateRidePaymentBusinessRejection(
+        statusCode,
+        errorCode,
+        message,
+      )) {
         final payload = body['data'];
         throw RidePaymentValidationException(
           errorCode: errorCode.isNotEmpty
@@ -557,9 +560,9 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   @override
   Future<bool> updateActivityToken(String rideId, String token) async {
     try {
-      developer.log(
+      AppLogger.d(
         "🚀 API Request: PATCH /v4/go/rides/$rideId/activity-token",
-        name: 'ORDER_TRACKING',
+        tag: 'ORDER_TRACKING',
       );
       final response = await ApiService().call(
         request: ApiRequest(
@@ -568,22 +571,22 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
           body: {'ios_activity_token': token},
         ),
       );
-      developer.log(
+      AppLogger.d(
         "✅ API Response: ${response.statusCode} for ride $rideId",
-        name: 'ORDER_TRACKING',
+        tag: 'ORDER_TRACKING',
       );
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       if (e is DioException) {
-        developer.log(
+        AppLogger.d(
           "❌ API Error: ${e.response?.statusCode} - ${e.response?.data} while updating token for ride $rideId",
-          name: 'ORDER_TRACKING',
+          tag: 'ORDER_TRACKING',
         );
       } else {
-        developer.log(
+        AppLogger.d(
           "❌ Unexpected Error: $e while updating token for ride $rideId",
-          name: 'ORDER_TRACKING',
+          tag: 'ORDER_TRACKING',
         );
       }
       return false;
@@ -655,7 +658,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       );
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      developer.log("Error cancelling pending stops: $e");
+      AppLogger.d("Error cancelling pending stops: $e");
     }
   }
 
@@ -768,8 +771,9 @@ Map<String, dynamic>? _apiResponseMap(dynamic raw) {
 void _throwIfInsufficientWalletBalance(dynamic raw) {
   final body = _apiResponseMap(raw);
   if (body == null) return;
-  final insufficient =
-      InsufficientWalletBalanceDetails.tryParseFromApiResponse(body);
+  final insufficient = InsufficientWalletBalanceDetails.tryParseFromApiResponse(
+    body,
+  );
   if (insufficient != null) {
     throw InsufficientWalletBalanceException(insufficient);
   }

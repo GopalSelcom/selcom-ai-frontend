@@ -1,11 +1,11 @@
 import 'dart:convert';
-import 'dart:developer' as developer;
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../../theme/app_colors.dart';
+import '../../utils/app_logger.dart';
 import '../storage_service.dart';
 
 class AndroidOrderTrackingManager {
@@ -65,9 +65,9 @@ class AndroidOrderTrackingManager {
 
     await _plugin.initialize(initializationSettings);
     _isPluginInitialized = true;
-    developer.log(
+    AppLogger.d(
       'AndroidOrderTrackingManager: Plugin Initialized',
-      name: 'ORDER_TRACKING',
+      tag: 'ORDER_TRACKING',
     );
   }
 
@@ -258,14 +258,14 @@ class AndroidOrderTrackingManager {
         NotificationDetails(android: androidDetails),
       );
 
-      developer.log(
+      AppLogger.d(
         'Android ride tracking notification shown for $orderId: $status',
-        name: 'ORDER_TRACKING',
+        tag: 'ORDER_TRACKING',
       );
     } catch (e) {
-      developer.log(
+      AppLogger.d(
         'Error showing Android ride tracking notification: $e',
-        name: 'ORDER_TRACKING',
+        tag: 'ORDER_TRACKING',
       );
     }
   }
@@ -275,14 +275,14 @@ class AndroidOrderTrackingManager {
     try {
       final int notificationId = _getNotificationId(orderId);
       await _plugin.cancel(notificationId);
-      developer.log(
+      AppLogger.d(
         'Android ride tracking notification dismissed for $orderId',
-        name: 'ORDER_TRACKING',
+        tag: 'ORDER_TRACKING',
       );
     } catch (e) {
-      developer.log(
+      AppLogger.d(
         'Error dismissing Android ride tracking notification: $e',
-        name: 'ORDER_TRACKING',
+        tag: 'ORDER_TRACKING',
       );
     }
   }

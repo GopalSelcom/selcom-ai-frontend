@@ -1,14 +1,12 @@
-import 'package:flutter/foundation.dart';
+import 'app_logger.dart';
 
-/// Debug-only Apple Sign-In tracing. Never log email, names, tokens, or nonces.
+/// Apple Sign-In tracing. Never log email, names, tokens, or nonces.
 void appleSignInDebugLog(
   String step, {
   Map<String, Object?> metadata = const {},
 }) {
-  if (!kDebugMode) return;
-
   if (metadata.isEmpty) {
-    debugPrint('[AppleSignIn] $step');
+    AppLogger.d(step, tag: 'AppleSignIn');
     return;
   }
 
@@ -17,5 +15,5 @@ void appleSignInDebugLog(
       .map((entry) => '${entry.key}=${entry.value}')
       .join(' ');
 
-  debugPrint('[AppleSignIn] $step | $details');
+  AppLogger.d('$step | $details', tag: 'AppleSignIn');
 }

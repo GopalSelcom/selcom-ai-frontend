@@ -111,7 +111,8 @@ class StopEditorController extends GetxController {
   bool canRemoveDraftStopAt(int index) =>
       stopLocalKeys[index].startsWith('new_');
 
-  bool get isAtMaxStops => stops.length >= driverController.maxIntermediateStops;
+  bool get isAtMaxStops =>
+      stops.length >= driverController.maxIntermediateStops;
 
   Future<void> addStop() async {
     if (isAtMaxStops) {
@@ -177,8 +178,9 @@ class StopEditorController extends GetxController {
           if (driverController.destinationUpdatePreview.value == null) {
             await driverController.previewDropLocationUpdate(selected);
           } else {
-            popEditorOnSuccess =
-                await driverController.applyDropLocationUpdate(selected);
+            popEditorOnSuccess = await driverController.applyDropLocationUpdate(
+              selected,
+            );
           }
         });
         if (popEditorOnSuccess) {
@@ -198,8 +200,9 @@ class StopEditorController extends GetxController {
         if (driverController.stopUpdatePreview.value == null) {
           await driverController.previewStopsUpdate(stops.toList());
         } else {
-          popEditorOnSuccess =
-              await driverController.applyStopsUpdate(stops.toList());
+          popEditorOnSuccess = await driverController.applyStopsUpdate(
+            stops.toList(),
+          );
         }
       });
       if (popEditorOnSuccess) {

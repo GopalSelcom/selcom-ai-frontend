@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 import '../../../../core/constants/currency_code.dart';
 import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
 import '../../../../core/data/models/responses/create_saved_place_response.dart';
@@ -10,6 +8,7 @@ import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../wallet/data/models/go_card_balance_response.dart';
 import '../models/contact_us_models.dart';
 import '../models/profile_response_model.dart';
@@ -127,7 +126,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       return null;
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      debugPrint("Error fetching saved places: $e");
+      AppLogger.d('Error fetching saved places: $e', tag: 'ProfileRemoteDataSource');
       return null;
     }
   }
@@ -180,7 +179,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       }
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      debugPrint("getWalletBalance error (suppressed): $e");
+      AppLogger.d('getWalletBalance error (suppressed): $e', tag: 'ProfileRemoteDataSource');
     }
     return GoCardBalanceResponseModel(
       response: GoCardBalanceData(balance: "0", currency: CurrencyCode.tzs),

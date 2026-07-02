@@ -1,7 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
-
+import '../utils/app_logger.dart';
 import 'connectivity_probe.dart';
 
 /// Monitors internet connectivity and notifies listeners when connection is restored
@@ -27,7 +26,7 @@ class NetworkConnectivityService {
     if (_isMonitoring) return;
 
     _isMonitoring = true;
-    debugPrint("🌐 NetworkConnectivityService: Started monitoring");
+    AppLogger.d('Started monitoring', tag: 'NetworkConnectivity');
 
     // Initial check
     _checkConnection().then((isOnline) {
@@ -42,7 +41,7 @@ class NetworkConnectivityService {
   void _startPeriodicCheck() {
     _stopPeriodicCheck();
 
-    debugPrint("🔄 Starting periodic connectivity check (every 3s)");
+    AppLogger.d('Starting periodic connectivity check (every 3s)', tag: 'NetworkConnectivity');
 
     _checkTimer = Timer.periodic(const Duration(seconds: 3), (_) async {
       final wasOnline = _isOnline;
@@ -50,7 +49,7 @@ class NetworkConnectivityService {
 
       if (!wasOnline && _isOnline) {
         // Connection restored!
-        debugPrint("✅ Connection restored!");
+        AppLogger.i('Connection restored!', tag: 'NetworkConnectivity');
         _controller.add(true);
         _stopPeriodicCheck();
       }
@@ -74,7 +73,7 @@ class NetworkConnectivityService {
   void notifyOffline() {
     if (_isOnline) {
       _isOnline = false;
-      debugPrint("📵 Manual offline notification");
+      AppLogger.d('📵 Manual offline notification', tag: 'NetworkConnectivity');
       _startPeriodicCheck();
     }
   }
@@ -84,6 +83,6 @@ class NetworkConnectivityService {
     _stopPeriodicCheck();
     _controller.close();
     _isMonitoring = false;
-    debugPrint("🌐 NetworkConnectivityService: Disposed");
+    AppLogger.d('🌐 Disposed', tag: 'NetworkConnectivity');
   }
 }

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+import '../utils/app_logger.dart';
 import 'storage_service.dart';
 
 /// Bridge for native iOS PushKit/CallKit events delivered via AppDelegate.
@@ -16,6 +17,7 @@ class VoipCallkitBridgeService {
   static final VoipCallkitBridgeService instance = VoipCallkitBridgeService._();
 
   static const MethodChannel _channel = MethodChannel('com.selcom.go/voip');
+  static const String _logTag = 'VOIP_BRIDGE';
   bool _initialized = false;
 
   String? _voipToken;
@@ -53,13 +55,12 @@ class VoipCallkitBridgeService {
     if (_initialized) return;
     _initialized = true;
     _voipToken = await StorageService().read(StorageKeys.voipToken);
-    if (kDebugMode) {
-      final cached = _voipToken;
-      debugPrint(
-        '[VOIP_BRIDGE] initialize — cached token '
-        '${cached == null || cached.isEmpty ? 'NONE' : 'len=${cached.length}'}',
-      );
-    }
+    final cached = _voipToken;
+    AppLogger.d(
+      'initialize — cached token '
+      '${cached == null || cached.isEmpty ? 'NONE' : 'len=${cached.length}'}',
+      tag: _logTag,
+    );
     _channel.setMethodCallHandler(_onNativeCall);
     await _consumePendingNativeEvents();
   }
@@ -84,9 +85,7 @@ class VoipCallkitBridgeService {
         }
       }
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('[VOIP_BRIDGE] consume pending events failed: $e');
-      }
+      AppLogger.e('consume pending events failed', tag: _logTag, error: e);
     }
   }
 
@@ -106,32 +105,25 @@ class VoipCallkitBridgeService {
     switch (method) {
       case 'onVoipIncomingCall':
       case 'onIncomingCall':
-        if (kDebugMode) {
-          debugPrint('[VOIP_BRIDGE] $method received args=$args');
-        }
+        AppLogger.d('$method received args=$args', tag: _logTag);
         final normalised = _normalizeIncoming(args);
         if (normalised == null) {
-          if (kDebugMode) {
-            debugPrint('[VOIP_BRIDGE] $method dropped — no ride_id in payload');
-          }
+          AppLogger.d('$method dropped — no ride_id in payload', tag: _logTag);
           return;
         }
         final sink = _onIncomingCall;
         if (sink == null) {
-          if (kDebugMode) {
-            debugPrint(
-              '[VOIP_BRIDGE] $method dropped — no sink registered '
-              '(setOnIncomingCall not called yet)',
-            );
-          }
+          AppLogger.d(
+            '$method dropped — no sink registered '
+            '(setOnIncomingCall not called yet)',
+            tag: _logTag,
+          );
           return;
         }
         try {
           sink(normalised);
         } catch (e) {
-          if (kDebugMode) {
-            debugPrint('[VOIP_BRIDGE] onIncomingCall sink failed: $e');
-          }
+          AppLogger.e('onIncomingCall sink failed', tag: _logTag, error: e);
         }
         return;
       case 'onVoipToken':
@@ -139,22 +131,16 @@ class VoipCallkitBridgeService {
         if (token.isEmpty) return;
         if (token == _voipToken) return;
         _voipToken = token;
-        if (kDebugMode) {
-          debugPrint('[VOIP_BRIDGE] token received len=${token.length}');
-        }
+        AppLogger.d('token received len=${token.length}', tag: _logTag);
         try {
           await StorageService().write(StorageKeys.voipToken, token);
         } catch (e) {
-          if (kDebugMode) {
-            debugPrint('[VOIP_BRIDGE] persist token failed: $e');
-          }
+          AppLogger.e('persist token failed', tag: _logTag, error: e);
         }
         await _safeInvokeTokenHandler(token);
         break;
       default:
-        if (kDebugMode) {
-          debugPrint('[VOIP_BRIDGE] unhandled method=$method');
-        }
+        AppLogger.d('unhandled method=$method', tag: _logTag);
     }
   }
 
@@ -164,9 +150,7 @@ class VoipCallkitBridgeService {
     try {
       await handler(token);
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('[VOIP_BRIDGE] onVoipTokenChanged handler failed: $e');
-      }
+      AppLogger.e('onVoipTokenChanged handler failed', tag: _logTag, error: e);
     }
   }
 

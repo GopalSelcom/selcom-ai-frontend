@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../../core/utils/app_logger.dart';
 import '../../core/network/api_constants.dart';
 import '../../core/theme/app_colors.dart';
 
@@ -31,7 +31,10 @@ class AppWebViewController extends GetxController {
           onPageStarted: (_) => isLoading.value = true,
           onPageFinished: (_) => isLoading.value = false,
           onWebResourceError: (error) {
-            debugPrint('WebView Error: ${error.description}');
+            AppLogger.e(
+              'WebView Error: ${error.description}',
+              tag: 'AppWebView',
+            );
             isLoading.value = false;
           },
         ),

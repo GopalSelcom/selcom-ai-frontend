@@ -1,9 +1,9 @@
 import 'package:agora_calling_package/agora_calling_package.dart';
-import 'package:flutter/foundation.dart';
 
 import '../config/app_config.dart';
 import '../network/api_constants.dart';
 import '../network/headers.dart';
+import '../utils/app_logger.dart';
 import 'call_permission_prompt_service.dart';
 import 'session_auth_service.dart';
 
@@ -55,15 +55,12 @@ class AgoraCallingBootstrap {
   static Future<Map<String, String>> _authHeadersForCalling() async {
     await SessionAuthService.instance.ensureAccessTokenLoaded();
     final headers = await commonHeaders(accessTokenRequired: true);
-    if (kDebugMode) {
-      final accessToken = headers[Params.accessToken] ?? '';
-      final authorization = headers[Params.authorization] ?? '';
-      debugPrint(
-        '[AGORA_AUTH] getAuthHeaders '
-        'access_token=${_tokenDebugLabel(accessToken)} '
-        'authorization=${_tokenDebugLabel(_stripBearer(authorization))}',
-      );
-    }
+    AppLogger.d(
+      '[AGORA_AUTH] getAuthHeaders '
+      'access_token=${_tokenDebugLabel(headers[Params.accessToken] ?? '')} '
+      'authorization=${_tokenDebugLabel(_stripBearer(headers[Params.authorization] ?? ''))}',
+      tag: 'AGORA_AUTH',
+    );
     return headers;
   }
 

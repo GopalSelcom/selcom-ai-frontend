@@ -112,7 +112,9 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
           Obx(() {
             final double factor = _calculateInitialSheetSize(context);
             return AppDraggableBottomSheet(
-              key: ValueKey('vehicle_selection_sheet_${controller.estimates.length}'),
+              key: ValueKey(
+                'vehicle_selection_sheet_${controller.estimates.length}',
+              ),
               initialChildSize: factor,
               minChildSize: factor,
               maxChildSize: factor,

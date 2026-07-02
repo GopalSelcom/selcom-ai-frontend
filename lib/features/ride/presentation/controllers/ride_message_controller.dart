@@ -9,6 +9,7 @@ import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../domain/entities/ride_chat_message.dart';
 import '../../domain/repositories/ride_chat_repository.dart';
@@ -222,7 +223,7 @@ class RideMessageController extends GetxController {
       }
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      debugPrint("Error fetching chat history: $e");
+      AppLogger.e('Error fetching chat history', tag: 'RideMessageController', error: e);
     }
   }
 
@@ -291,7 +292,7 @@ class RideMessageController extends GetxController {
       }
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      debugPrint("Error sending message: $e");
+      AppLogger.e('Error sending message', tag: 'RideMessageController', error: e);
       AppDialogs.showErrorDialog(
         title: AppStrings.chat.tr,
         message: AppStrings.errorSendingMessage.tr,

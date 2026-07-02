@@ -1,7 +1,5 @@
 import 'dart:async';
-import 'dart:developer' as developer;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geolocator/geolocator.dart';
@@ -29,6 +27,7 @@ import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/session_expiry_service.dart';
 import '../../../../core/services/location_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/active_rides_parser.dart';
 import '../../../../shared/utils/app_dialogs.dart';
@@ -171,9 +170,9 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       try {
         await rideRatingController.tryOpenRatingSheetAfterHomeLoad();
       } catch (e, stackTrace) {
-        developer.log(
+        AppLogger.e(
           'Pending review prompt failed: $e',
-          name: 'HomeController',
+          tag: 'HomeController',
           stackTrace: stackTrace,
         );
       }
@@ -278,7 +277,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       unawaited(_recenterCameraOnDeviceGps(animated: false));
     });
   }
-
 
   void _applyLocationPermissionDenied() {
     hasLocationPermission.value = false;
@@ -438,7 +436,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
       // Handle Active Ride
       results[3].fold((_) => null, (response) {
-        final activeRideResponse = response as active_ride_api.ActiveRideResponseModel?;
+        final activeRideResponse =
+            response as active_ride_api.ActiveRideResponseModel?;
         _applyActiveRideResponse(activeRideResponse);
       });
 
@@ -698,10 +697,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       );
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      developer.log(
-        '❌ Error syncing Live Activity: $e',
-        name: 'HOME_CONTROLLER',
-      );
+      AppLogger.d('❌ Error syncing Live Activity: $e', tag: 'HOME_CONTROLLER');
     }
   }
 
@@ -1074,7 +1070,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       await _reverseGeocodeAtCenter();
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      developer.log("📍 Location Fetch Error: $e", name: 'HomeController');
+      AppLogger.d("📍 Location Fetch Error: $e", tag: 'HomeController');
       // Even if GPS fails, try geocoding the current map center (which might be the default Dar Lat/Lng)
       await _reverseGeocodeAtCenter();
     }
@@ -1093,9 +1089,9 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
       result.fold(
         (failure) {
-          developer.log(
+          AppLogger.d(
             "📍 Reverse Geocode Failure: ${failure.message}",
-            name: 'HomeController',
+            tag: 'HomeController',
           );
           if (currentMapAddress.value == AppStrings.locating.tr) {
             currentMapAddress.value = AppStrings.currentLocation.tr;
@@ -1108,23 +1104,20 @@ class HomeController extends GetxController with WidgetsBindingObserver {
             }
             return;
           }
-          developer.log(
+          AppLogger.d(
             "📍 Reverse Geocode Success. Status: ${data.data?.status}, Results: ${data.data?.results?.length}",
-            name: 'HomeController',
+            tag: 'HomeController',
           );
           final firstResult = data.data?.results?.firstOrNull;
           final formatted = (firstResult?.formattedAddress ?? "").trim();
           if (formatted.isNotEmpty) {
-            developer.log(
+            AppLogger.d(
               "📍 Resolved Address: $formatted",
-              name: 'HomeController',
+              tag: 'HomeController',
             );
             currentMapAddress.value = formatted;
           } else {
-            developer.log(
-              "📍 Resolved Address is EMPTY",
-              name: 'HomeController',
-            );
+            AppLogger.d("📍 Resolved Address is EMPTY", tag: 'HomeController');
             if (currentMapAddress.value == AppStrings.locating.tr) {
               currentMapAddress.value = AppStrings.currentLocation.tr;
             }
@@ -1132,7 +1125,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         },
       );
     } catch (e) {
-      developer.log("📍 Reverse Geocode Exception: $e", name: 'HomeController');
+      AppLogger.d("📍 Reverse Geocode Exception: $e", tag: 'HomeController');
     } finally {
       isResolvingAddress.value = false;
     }
@@ -1831,16 +1824,15 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     String? preferredVehicleTypeId,
     String? preferredVehicleName,
   }) async {
-    if (kDebugMode) {
-      debugPrint(
-        '[LocationSelection] BookRide tapped: '
-        'pickupTextLen=${pickup.trim().length}, '
-        'destinationTextLen=${destinations.isNotEmpty ? destinations.last.trim().length : 0}, '
-        'routePickup=($routePickupLat,$routePickupLng), '
-        'routeDestination=($routeDestinationLat,$routeDestinationLng), '
-        'destinationPlaceIdPresent=${(destinationPlaceId ?? '').trim().isNotEmpty}',
-      );
-    }
+    AppLogger.d(
+      '[LocationSelection] BookRide tapped: '
+      'pickupTextLen=${pickup.trim().length}, '
+      'destinationTextLen=${destinations.isNotEmpty ? destinations.last.trim().length : 0}, '
+      'routePickup=($routePickupLat,$routePickupLng), '
+      'routeDestination=($routeDestinationLat,$routeDestinationLng), '
+      'destinationPlaceIdPresent=${(destinationPlaceId ?? '').trim().isNotEmpty}',
+      tag: 'HomeController',
+    );
     final List<String> items = destinations
         .map((d) => d.trim())
         .where((d) => d.isNotEmpty)
@@ -1923,13 +1915,12 @@ class HomeController extends GetxController with WidgetsBindingObserver {
           return null;
         }
 
-        if (kDebugMode) {
-          debugPrint(
-            '[LocationSelection] Navigate booking args => '
-            'pickup=($pLat,$pLng), destinationsCount=${resolvedDestinations.length}, '
-            'preferredVehicleTypeId=${preferredVehicleTypeId ?? ''}',
-          );
-        }
+        AppLogger.d(
+          '[LocationSelection] Navigate booking args => '
+          'pickup=($pLat,$pLng), destinationsCount=${resolvedDestinations.length}, '
+          'preferredVehicleTypeId=${preferredVehicleTypeId ?? ''}',
+          tag: 'HomeController',
+        );
 
         return {
           'pickup': pickup,

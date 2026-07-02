@@ -1,8 +1,6 @@
 import 'dart:async';
-import 'dart:developer' as developer;
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/material.dart';
@@ -30,6 +28,7 @@ import '../../../../core/services/app_settings_service.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/active_rides_parser.dart';
 import '../../../../shared/utils/address_display_utils.dart';
@@ -188,20 +187,17 @@ class VehicleSelectionController extends GetxController {
 
   void _parseArguments() {
     final raw = Get.arguments;
-    if (kDebugMode) {
-      debugPrint('[VehicleSelection] Raw Get.arguments => $raw');
-    }
+    AppLogger.d('[VehicleSelection] Raw Get.arguments => $raw', tag: 'VehicleSelection');
 
     final args = raw is Map
         ? Map<String, dynamic>.from(raw)
         : <String, dynamic>{};
 
     if (args.isEmpty) {
-      if (kDebugMode) {
-        debugPrint(
-          '[VehicleSelection] WARNING: Arguments are empty or not a Map.',
-        );
-      }
+      AppLogger.w(
+        '[VehicleSelection] Arguments are empty or not a Map.',
+        tag: 'VehicleSelection',
+      );
     }
 
     final pickupAddr = (args['pickup'] as String?)?.trim() ?? '';
@@ -228,14 +224,13 @@ class VehicleSelectionController extends GetxController {
       destinations.assignAll([destinationEntity]);
     }
 
-    if (kDebugMode) {
-      debugPrint(
-        '[VehicleSelection] Parsed args => '
-        'pickup=(${pickupEntity.lat},${pickupEntity.lng}), '
-        'destinationsCount=${destinations.length}, '
-        'finalDestination=(${destinationEntity.lat},${destinationEntity.lng})',
-      );
-    }
+    AppLogger.d(
+      '[VehicleSelection] Parsed args => '
+      'pickup=(${pickupEntity.lat},${pickupEntity.lng}), '
+      'destinationsCount=${destinations.length}, '
+      'finalDestination=(${destinationEntity.lat},${destinationEntity.lng})',
+      tag: 'VehicleSelection',
+    );
 
     _preferredVehicleTypeId = (args['preferredVehicleTypeId'] as String?)
         ?.trim();
@@ -290,30 +285,25 @@ class VehicleSelectionController extends GetxController {
     final result = await homeRepository.estimateFare(req);
     result.fold(
       (f) {
-        if (kDebugMode) {
-          debugPrint('[VehicleSelection] Fare estimate error: $f');
-        }
+        AppLogger.w('[VehicleSelection] Fare estimate error: $f', tag: 'VehicleSelection');
         estimates.assignAll(_dummyEstimates(vehicleTypes));
         isRouteReady.value = false;
       },
       (model) {
-        if (kDebugMode) {
-          debugPrint(
-            '[VehicleSelection] Fare estimate success => '
-            'estimates=${model.estimates.length}, '
-            'routeGeometry=${model.routeGeometry != null}, '
-            'points=${model.routeGeometry?.coordinates?.length ?? 0}',
-          );
-        }
+        AppLogger.d(
+          '[VehicleSelection] Fare estimate success => '
+          'estimates=${model.estimates.length}, '
+          'routeGeometry=${model.routeGeometry != null}, '
+          'points=${model.routeGeometry?.coordinates?.length ?? 0}',
+          tag: 'VehicleSelection',
+        );
         if (model.estimates.isEmpty) {
           estimates.assignAll(_dummyEstimates(vehicleTypes));
         } else {
           final normalized = model.estimates
               .map((e) => _withResolvedVehicleTypeId(e, vehicleTypes))
               .toList();
-          estimates.assignAll(
-            _estimatesWithBookAny(normalized, model.bookAny),
-          );
+          estimates.assignAll(_estimatesWithBookAny(normalized, model.bookAny));
           final pending = _pendingPromoApplyResult;
           if (pending != null) {
             _applyPromoValidationToEstimates(pending);
@@ -336,14 +326,13 @@ class VehicleSelectionController extends GetxController {
             if (mapped.length >= 2) {
               routePoints.assignAll(mapped);
               isRouteReady.value = true;
-              if (kDebugMode) {
-                debugPrint(
-                  '[VehicleSelection] API route geometry applied => '
-                  'points=${mapped.length}, '
-                  'first=${mapped.first.latitude},${mapped.first.longitude}, '
-                  'last=${mapped.last.latitude},${mapped.last.longitude}',
-                );
-              }
+              AppLogger.d(
+                '[VehicleSelection] API route geometry applied => '
+                'points=${mapped.length}, '
+                'first=${mapped.first.latitude},${mapped.first.longitude}, '
+                'last=${mapped.last.latitude},${mapped.last.longitude}',
+                tag: 'VehicleSelection',
+              );
             } else {
               _useStraightLineFallback();
             }
@@ -371,11 +360,10 @@ class VehicleSelectionController extends GetxController {
     ];
     routePoints.assignAll(list);
     isRouteReady.value = true;
-    if (kDebugMode) {
-      debugPrint(
-        '[VehicleSelection] Using straight-line fallback for routePoints.',
-      );
-    }
+    AppLogger.d(
+      '[VehicleSelection] Using straight-line fallback for routePoints.',
+      tag: 'VehicleSelection',
+    );
   }
 
   Future<void> loadDriverIcon() async {
@@ -429,9 +417,11 @@ class VehicleSelectionController extends GetxController {
       }
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      if (kDebugMode) {
-        debugPrint('[VehicleSelection] Error loading markers: $e');
-      }
+      AppLogger.e(
+        '[VehicleSelection] Error loading markers',
+        tag: 'VehicleSelection',
+        error: e,
+      );
     }
     isLocationIconsReady.value = pickupIcon != null && dropIcon != null;
   }
@@ -864,9 +854,7 @@ class VehicleSelectionController extends GetxController {
           final normalized = model.estimates
               .map((e) => _withResolvedVehicleTypeId(e, _vehicleTypes))
               .toList();
-          estimates.assignAll(
-            _estimatesWithBookAny(normalized, model.bookAny),
-          );
+          estimates.assignAll(_estimatesWithBookAny(normalized, model.bookAny));
 
           _restoreVehicleSelectionAfterRefresh(
             wasBookAny: isBookAny,
@@ -937,7 +925,9 @@ class VehicleSelectionController extends GetxController {
         return;
       }
 
-      if (!await _guardBookForOtherMultiStop(isBookedForOther: isBookedForOther)) {
+      if (!await _guardBookForOtherMultiStop(
+        isBookedForOther: isBookedForOther,
+      )) {
         return;
       }
 
@@ -999,7 +989,7 @@ class VehicleSelectionController extends GetxController {
               _socketService.joinPaymentRoom(validationId: roomValidationId);
             }
             final paymentConfirmed = AppConfig.ridePaymentBypass
-                ? await _confirmDevPaymentCallback(roomValidationId??"")
+                ? await _confirmDevPaymentCallback(roomValidationId ?? "")
                 : true;
 
             if (paymentConfirmed) {
@@ -1273,7 +1263,9 @@ class VehicleSelectionController extends GetxController {
   }
 
   /// Book-for-other cannot include intermediate stops (backend: `BOOKED_FOR_OTHER_NO_MULTI_STOP`).
-  Future<bool> _guardBookForOtherMultiStop({required bool isBookedForOther}) async {
+  Future<bool> _guardBookForOtherMultiStop({
+    required bool isBookedForOther,
+  }) async {
     if (!isBookedForOther) return true;
     if (routeStops.isEmpty) return true;
 
@@ -1415,20 +1407,17 @@ class VehicleSelectionController extends GetxController {
   }
 
   void _logNearbyDriversRequest({required String vehicleType}) {
-    if (!kDebugMode) return;
-    developer.log(
+    AppLogger.d(
       '▶ REQUEST nearby drivers (awaiting result)\n'
       '  vehicleType: $vehicleType\n'
       '  lat: ${pickupEntity.lat}\n'
       '  lng: ${pickupEntity.lng}\n'
       '  socketConnected: ${isSocketConnected.value}',
-      name: _nearbyDriversLogName,
+      tag: _nearbyDriversLogName,
     );
   }
 
   void _logNearbyDriversResult(List<Driver> drivers) {
-    if (!kDebugMode) return;
-
     final found = drivers.length;
     final vehicleType = _pendingNearbyDriversVehicleType ?? 'any';
     if (_lastLoggedNearbyDriversCount == found) {
@@ -1459,26 +1448,24 @@ class VehicleSelectionController extends GetxController {
       }
     }
 
-    developer.log(buffer.toString(), name: _nearbyDriversLogName);
+    AppLogger.d(buffer.toString(), tag: _nearbyDriversLogName);
   }
 
   void _logNearbyDriversError(String message) {
-    if (!kDebugMode) return;
     _lastLoggedNearbyDriversCount = null;
-    developer.log(
+    AppLogger.d(
       '▶ ERROR — nearby drivers failed\n'
       '  vehicleType: ${_pendingNearbyDriversVehicleType ?? 'any'}\n'
       '  message: $message',
-      name: _nearbyDriversLogName,
+      tag: _nearbyDriversLogName,
     );
   }
 
   void _logNearbyDriversInfo(String headline) {
-    if (!kDebugMode) return;
-    developer.log(
+    AppLogger.d(
       '▶ $headline\n'
       '  socketConnected: ${isSocketConnected.value}',
-      name: _nearbyDriversLogName,
+      tag: _nearbyDriversLogName,
     );
   }
 
@@ -1516,7 +1503,9 @@ class VehicleSelectionController extends GetxController {
     _logNearbyDriversResult(drivers);
   }
 
-  Future<void> _preloadNearbyDriverIcons(List<NearbyDriverPoint> drivers) async {
+  Future<void> _preloadNearbyDriverIcons(
+    List<NearbyDriverPoint> drivers,
+  ) async {
     final types = drivers
         .map((d) => (d.vehicleType ?? '').trim().toLowerCase())
         .where((t) => t.isNotEmpty)

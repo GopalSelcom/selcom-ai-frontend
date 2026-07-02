@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer' as developer;
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -22,6 +21,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/svg_picture_asset.dart';
 import '../config/app_config.dart';
+import '../utils/app_logger.dart';
 import 'api_constants.dart';
 import 'connectivity_probe.dart';
 import 'failed_request_queue.dart';
@@ -195,9 +195,9 @@ class ApiService {
 
     // ── No Internet ──
     if (!await _checkInternetConnection()) {
-      developer.log(
+      AppLogger.d(
         "🌐 No Internet → ${client.options.baseUrl}${request.endpoint}",
-        name: 'ApiService',
+        tag: 'ApiService',
       );
 
       // Mark offline so retry manager starts/continues reconnect polling.
@@ -254,7 +254,7 @@ class ApiService {
       finalHeaders['Content-Type'] = 'multipart/form-data';
     }
 
-    if (kDebugMode) _logRequest(fullUrl, request, finalHeaders, finalBody);
+    _logRequest(fullUrl, request, finalHeaders, finalBody);
 
     if (request.showLoader) {
       Loader.instance.show();
@@ -292,30 +292,26 @@ class ApiService {
 
       stopwatch.stop();
 
-      if (kDebugMode) {
-        _logResponse(
-          fullUrl: fullUrl,
-          statusCode: response.statusCode,
-          duration: stopwatch.elapsedMilliseconds,
-          data: response.data,
-          isError: false,
-        );
-      }
+      _logResponse(
+        fullUrl: fullUrl,
+        statusCode: response.statusCode,
+        duration: stopwatch.elapsedMilliseconds,
+        data: response.data,
+        isError: false,
+      );
 
       return response;
     } on DioException catch (e) {
       stopwatch.stop();
 
-      if (kDebugMode) {
-        _logResponse(
-          fullUrl: fullUrl,
-          statusCode: e.response?.statusCode,
-          duration: stopwatch.elapsedMilliseconds,
-          data: e.response?.data,
-          isError: true,
-          errorMessage: e.message,
-        );
-      }
+      _logResponse(
+        fullUrl: fullUrl,
+        statusCode: e.response?.statusCode,
+        duration: stopwatch.elapsedMilliseconds,
+        data: e.response?.data,
+        isError: true,
+        errorMessage: e.message,
+      );
 
       // Retry is request-driven (configured by the caller) to keep transport
       // generic and avoid endpoint-specific rules inside ApiService.
@@ -337,7 +333,7 @@ class ApiService {
       return _handleDioError(e, request);
     } catch (e) {
       stopwatch.stop();
-      developer.log("💥 [API EXCEPTION] $fullUrl | $e", name: 'ApiService');
+      AppLogger.d("💥 [API EXCEPTION] $fullUrl | $e", tag: 'ApiService');
       return Response(
         requestOptions: RequestOptions(path: request.endpoint),
         statusCode: 500,
@@ -389,9 +385,9 @@ class ApiService {
       }
     }
 
-    developer.log(
+    AppLogger.d(
       "📦 Multipart files count: ${formData.files.length}",
-      name: 'ApiService',
+      tag: 'ApiService',
     );
 
     final response = await dioInstance.request(
@@ -400,27 +396,23 @@ class ApiService {
       queryParameters: request.queryParams,
       options: Options(method: 'POST', headers: finalHeaders),
       onSendProgress: (sent, total) {
-        if (kDebugMode) {
-          int percentage = ((sent / total) * 100).toInt();
-          developer.log(
-            "📤 Upload Progress: $percentage% ($sent/$total bytes)",
-            name: 'ApiService',
-          );
-        }
+        final percentage = ((sent / total) * 100).toInt();
+        AppLogger.d(
+          "📤 Upload Progress: $percentage% ($sent/$total bytes)",
+          tag: 'ApiService',
+        );
       },
     );
 
     stopwatch.stop();
 
-    if (kDebugMode) {
-      _logResponse(
-        fullUrl: fullUrl,
-        statusCode: response.statusCode,
-        duration: stopwatch.elapsedMilliseconds,
-        data: response.data,
-        isError: false,
-      );
-    }
+    _logResponse(
+      fullUrl: fullUrl,
+      statusCode: response.statusCode,
+      duration: stopwatch.elapsedMilliseconds,
+      data: response.data,
+      isError: false,
+    );
 
     return response;
   }
@@ -456,24 +448,25 @@ class ApiService {
     Map<String, dynamic> headers,
     Map<String, dynamic> body,
   ) {
+    if (!AppLogger.enabled) return;
     final safeHeaders = _redactSensitiveMap(headers);
     final safeQuery = _redactSensitiveMap(request.queryParams);
     final safeBody = _redactSensitiveMap(body);
-    developer.log(
+    AppLogger.d(
       "🚀 REQUEST >> ${request.method.name.toUpperCase()} $fullUrl",
-      name: 'ApiService',
+      tag: 'ApiService',
     );
-    developer.log(
+    AppLogger.d(
       "$fullUrl [Headers] ${_safeJsonEncode(safeHeaders)}",
-      name: 'ApiService',
+      tag: 'ApiService',
     );
-    developer.log(
+    AppLogger.d(
       "$fullUrl [Query] ${_safeJsonEncode(safeQuery)}",
-      name: 'ApiService',
+      tag: 'ApiService',
     );
-    developer.log(
+    AppLogger.d(
       "$fullUrl [Body] ${_safeJsonEncode(safeBody)}",
-      name: 'ApiService',
+      tag: 'ApiService',
     );
 
     ErrorReporter.instance.addLog(
@@ -490,17 +483,18 @@ class ApiService {
     required bool isError,
     String? errorMessage,
   }) {
+    if (!AppLogger.enabled) return;
     final prefix = isError ? '❌ ERROR' : '✅ SUCCESS';
-    developer.log(
+    AppLogger.d(
       "$prefix >> $fullUrl | ${statusCode ?? 'N/A'} | ${duration}ms",
-      name: 'ApiService',
+      tag: 'ApiService',
     );
     if (isError && errorMessage != null) {
-      developer.log("$fullUrl Message: $errorMessage", name: 'ApiService');
+      AppLogger.d("$fullUrl Message: $errorMessage", tag: 'ApiService');
     }
-    developer.log(
+    AppLogger.d(
       "$fullUrl [Response] ${_safeJsonEncode(_redactSensitiveData(data))}",
-      name: 'ApiService',
+      tag: 'ApiService',
     );
 
     ErrorReporter.instance.addLog(
@@ -563,12 +557,10 @@ class ApiService {
           ),
         );
 
-        if (kDebugMode) {
-          developer.log(
-            "🔁 Request retry success on attempt ${i + 1}",
-            name: 'ApiService',
-          );
-        }
+        AppLogger.d(
+          "🔁 Request retry success on attempt ${i + 1}",
+          tag: 'ApiService',
+        );
         return response;
       } on DioException catch (e) {
         lastError = e;
@@ -664,9 +656,9 @@ class ApiService {
     }
 
     if (e.type == DioExceptionType.receiveTimeout) {
-      developer.log(
+      AppLogger.d(
         "⏳ Server slow response (receive timeout)",
-        name: 'ApiService',
+        tag: 'ApiService',
       );
 
       if (request.errorPresentationType == ErrorPresentationType.dialog) {
@@ -692,16 +684,16 @@ class ApiService {
     if (isNetworkError && request.shouldQueue && !request.skipAuthInterceptor) {
       // Network-level Dio errors should also flip connectivity state to offline.
       NetworkConnectivityService.instance.notifyOffline();
-      developer.log(
+      AppLogger.d(
         "📥 Queueing failed request: ${request.endpoint}",
-        name: 'ApiService',
+        tag: 'ApiService',
       );
       final completer = Completer<Response>();
       final added = await FailedRequestQueue.instance.add(request, completer);
 
       if (added) {
         if (!RetryManager.instance.isPopupShowing) {
-          developer.log("📱 Showing retry popup", name: 'ApiService');
+          AppLogger.d("📱 Showing retry popup", tag: 'ApiService');
           unawaited(RetryManager.instance.showRetryPopup());
         }
       }
@@ -913,12 +905,12 @@ class AuthInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    developer.log("dioError => ${err.error}", name: 'AuthInterceptor');
+    AppLogger.d("dioError => ${err.error}", tag: 'AuthInterceptor');
 
     if (SessionExpiryService.isHandling) {
-      developer.log(
+      AppLogger.d(
         "⏭️ Session already ended — skipping auth refresh",
-        name: 'AuthInterceptor',
+        tag: 'AuthInterceptor',
       );
       return handler.resolve(
         Response(
@@ -936,9 +928,9 @@ class AuthInterceptor extends Interceptor {
         ? responseData['error_code'] as String?
         : null;
     if (_isAuthErrorCode(errorCode)) {
-      developer.log(
+      AppLogger.d(
         "❌ Auth error_code detected ($errorCode) - logging out",
-        name: 'AuthInterceptor',
+        tag: 'AuthInterceptor',
       );
       unawaited(SessionExpiryService.handleSessionExpired());
       return handler.resolve(
@@ -957,35 +949,35 @@ class AuthInterceptor extends Interceptor {
     // Skip refresh for requests that should skip auth
     final skipAuth = err.requestOptions.headers['skip-auth-interceptor'];
     if (skipAuth == 'true') {
-      developer.log(
+      AppLogger.d(
         "⏭️ Skipping auth interceptor for this request",
-        name: 'AuthInterceptor',
+        tag: 'AuthInterceptor',
       );
       return handler.next(err);
     }
 
     // Prevent infinite retry loops
     if (err.requestOptions.headers['retry-after-refresh'] == 'true') {
-      developer.log(
+      AppLogger.d(
         "❌ Request already retried after refresh, logging out",
-        name: 'AuthInterceptor',
+        tag: 'AuthInterceptor',
       );
       unawaited(SessionExpiryService.handleSessionExpired());
       return handler.next(err);
     }
 
-    developer.log(
+    AppLogger.d(
       "🔄 401 Unauthorized detected, attempting token refresh...",
-      name: 'AuthInterceptor',
+      tag: 'AuthInterceptor',
     );
 
     try {
       final refreshSuccess = await _handleTokenRefresh();
 
       if (refreshSuccess) {
-        developer.log(
+        AppLogger.d(
           "✅ Token refreshed successfully, retrying request",
-          name: 'AuthInterceptor',
+          tag: 'AuthInterceptor',
         );
 
         final newAccessToken = await StorageService().readAccessToken();
@@ -1001,9 +993,9 @@ class AuthInterceptor extends Interceptor {
         }
         updatedHeaders['retry-after-refresh'] = 'true';
 
-        developer.log(
+        AppLogger.d(
           "✅ Headers updated with new token for retry",
-          name: 'AuthInterceptor',
+          tag: 'AuthInterceptor',
         );
 
         // Create new RequestOptions with updated token
@@ -1011,9 +1003,9 @@ class AuthInterceptor extends Interceptor {
 
         // Retry the request
         try {
-          developer.log(
+          AppLogger.d(
             "🔄 Retrying request to: ${newOptions.uri.toString()}",
-            name: 'AuthInterceptor',
+            tag: 'AuthInterceptor',
           );
 
           final response = await Dio().request(
@@ -1031,23 +1023,23 @@ class AuthInterceptor extends Interceptor {
             onSendProgress: newOptions.onSendProgress,
             onReceiveProgress: newOptions.onReceiveProgress,
           );
-          developer.log(
+          AppLogger.d(
             "✅ Retry succeeded with status: ${response.statusCode}",
-            name: 'AuthInterceptor',
+            tag: 'AuthInterceptor',
           );
           return handler.resolve(response);
         } catch (retryError) {
-          developer.log(
+          AppLogger.d(
             "❌ Retry request failed: $retryError",
-            name: 'AuthInterceptor',
+            tag: 'AuthInterceptor',
           );
 
           // If retry also fails with 401 — session truly expired
           if (retryError is DioException &&
               retryError.response?.statusCode == 401) {
-            developer.log(
+            AppLogger.d(
               "❌ Retry failed with 401, token refresh ineffective - logging out",
-              name: 'AuthInterceptor',
+              tag: 'AuthInterceptor',
             );
 
             unawaited(SessionExpiryService.handleSessionExpired());
@@ -1067,9 +1059,9 @@ class AuthInterceptor extends Interceptor {
           return handler.next(err);
         }
       } else {
-        developer.log(
+        AppLogger.d(
           "❌ Token refresh failed, logging out",
-          name: 'AuthInterceptor',
+          tag: 'AuthInterceptor',
         );
 
         apiService.showLogoutPopup();
@@ -1083,9 +1075,9 @@ class AuthInterceptor extends Interceptor {
         );
       }
     } catch (e) {
-      developer.log(
+      AppLogger.d(
         "💥 Unexpected error during refresh: $e",
-        name: 'AuthInterceptor',
+        tag: 'AuthInterceptor',
       );
 
       apiService.showLogoutPopup();
@@ -1103,15 +1095,15 @@ class AuthInterceptor extends Interceptor {
   static Future<bool> _handleTokenRefresh() async {
     // If refresh is already in progress, wait for it
     if (_isRefreshing && _refreshCompleter != null) {
-      developer.log(
+      AppLogger.d(
         "⏳ Token refresh already in progress, waiting...",
-        name: 'AuthInterceptor',
+        tag: 'AuthInterceptor',
       );
       return await _refreshCompleter!.future;
     }
 
     // Start new refresh process
-    developer.log("🔄 Starting token refresh", name: 'AuthInterceptor');
+    AppLogger.d("🔄 Starting token refresh", tag: 'AuthInterceptor');
     _isRefreshing = true;
     _refreshCompleter = Completer<bool>();
 
@@ -1121,7 +1113,7 @@ class AuthInterceptor extends Interceptor {
       );
 
       if (refreshToken == null || refreshToken.isEmpty) {
-        developer.log("❌ No refresh token available", name: 'AuthInterceptor');
+        AppLogger.d("❌ No refresh token available", tag: 'AuthInterceptor');
         if (!_refreshCompleter!.isCompleted) {
           _refreshCompleter!.complete(false);
         }
@@ -1143,9 +1135,9 @@ class AuthInterceptor extends Interceptor {
       if (response.statusCode == 200 && response.data != null) {
         final root = response.data;
         if (root is! Map) {
-          developer.log(
+          AppLogger.d(
             '❌ Refresh API 200 but response is not a map',
-            name: 'AuthInterceptor',
+            tag: 'AuthInterceptor',
           );
           if (!_refreshCompleter!.isCompleted) {
             _refreshCompleter!.complete(false);
@@ -1158,21 +1150,23 @@ class AuthInterceptor extends Interceptor {
             ? Map<String, dynamic>.from(rootMap['data'] as Map)
             : rootMap;
 
-        final newAccessToken = (payload['authorization_token'] ??
-                payload['access_token'] ??
-                payload['accessToken'])
-            ?.toString()
-            .trim();
-        final newRefreshToken = (payload['refresh_token'] ??
-                payload['refreshToken'] ??
-                payload['newRefreshToken'])
-            ?.toString()
-            .trim();
+        final newAccessToken =
+            (payload['authorization_token'] ??
+                    payload['access_token'] ??
+                    payload['accessToken'])
+                ?.toString()
+                .trim();
+        final newRefreshToken =
+            (payload['refresh_token'] ??
+                    payload['refreshToken'] ??
+                    payload['newRefreshToken'])
+                ?.toString()
+                .trim();
 
         if (newAccessToken == null || newAccessToken.isEmpty) {
-          developer.log(
+          AppLogger.d(
             '❌ Refresh API 200 but no access token in payload',
-            name: 'AuthInterceptor',
+            tag: 'AuthInterceptor',
           );
           if (!_refreshCompleter!.isCompleted) {
             _refreshCompleter!.complete(false);
@@ -1188,7 +1182,7 @@ class AuthInterceptor extends Interceptor {
           );
         }
 
-        developer.log("✅ Tokens refreshed and saved", name: 'AuthInterceptor');
+        AppLogger.d("✅ Tokens refreshed and saved", tag: 'AuthInterceptor');
 
         if (!_refreshCompleter!.isCompleted) {
           _refreshCompleter!.complete(true);
@@ -1196,16 +1190,16 @@ class AuthInterceptor extends Interceptor {
         return true;
       }
 
-      developer.log(
+      AppLogger.d(
         "❌ Refresh API returned non-200: ${response.statusCode}",
-        name: 'AuthInterceptor',
+        tag: 'AuthInterceptor',
       );
       if (!_refreshCompleter!.isCompleted) {
         _refreshCompleter!.complete(false);
       }
       return false;
     } catch (e) {
-      developer.log("❌ Token refresh exception: $e", name: 'AuthInterceptor');
+      AppLogger.d("❌ Token refresh exception: $e", tag: 'AuthInterceptor');
       if (!_refreshCompleter!.isCompleted) {
         _refreshCompleter!.complete(false);
       }

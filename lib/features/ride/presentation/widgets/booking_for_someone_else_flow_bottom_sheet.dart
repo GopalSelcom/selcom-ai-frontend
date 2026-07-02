@@ -195,10 +195,7 @@ class _BookingDetailsStepState extends State<_BookingDetailsStep> {
     _phoneController = TextEditingController();
     _nameController.addListener(controller.onFieldsChanged);
     _phoneController.addListener(controller.onFieldsChanged);
-    controller.bindDetailFields(
-      name: _nameController,
-      phone: _phoneController,
-    );
+    controller.bindDetailFields(name: _nameController, phone: _phoneController);
   }
 
   @override

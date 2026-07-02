@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer' as developer;
 import 'dart:io';
 import 'dart:math' as math;
 
@@ -35,6 +34,7 @@ import '../../../../core/services/live_activity/live_activity_manager.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/storage_service.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/address_display_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
@@ -381,10 +381,9 @@ class DriverAcceptedController extends GetxController
     _emergencyContactsLoadedOnce = true;
     final result = await rideRepository.getEmergencyContacts();
     result.fold(
-      (f) => developer.log(
-        'emergency_contacts request failed',
-        name: 'EmergencyContacts',
-        error: f.message,
+      (f) => AppLogger.w(
+        'emergency_contacts request failed: ${f.message}',
+        tag: 'EmergencyContacts',
       ),
       (EmergencyContactsResponse res) {
         emergencyContacts.assignAll(res.data.contacts);
@@ -769,10 +768,9 @@ class DriverAcceptedController extends GetxController
   }
 
   void _hydrateSocketSeedPayloads(Map<String, dynamic> args) {
-    developer.log(
-      "💧 Hydrating socket seed payloads from args",
-      name: 'ORDER_TRACKING',
-      error: args.toString(),
+    AppLogger.d(
+      '💧 Hydrating socket seed payloads from args: $args',
+      tag: 'ORDER_TRACKING',
     );
     final statusRaw = args['statusPayload'];
     if (statusRaw is Map) {
@@ -854,10 +852,9 @@ class DriverAcceptedController extends GetxController
       (f) async {
         // Generic localized copy for UI; technical detail stays in logs only.
         _setRideLoadFailure(AppStrings.failedToLoadRideDetails.tr);
-        developer.log(
-          'ride_details request failed',
-          name: 'DriverAcceptedController',
-          error: f.message,
+        AppLogger.w(
+          'ride_details request failed: ${f.message}',
+          tag: 'DriverAcceptedController',
         );
       },
       (r) async {
@@ -885,11 +882,12 @@ class DriverAcceptedController extends GetxController
 
         // Debug logging for the "Stuck" state issues
         if (isUpdatingStops.value) {
-          debugPrint(
+          AppLogger.d(
             "STOPS_UPDATE_POLL: step=${stopUpdateProgressStep.value}, "
             "pendingStatus=${r.pendingStopsUpdate?.status}, "
             "rideStopsCount=${r.stops.length}, "
             "workingStopsCount=${stopUpdateWorkingStops.length}",
+            tag: 'DriverAcceptedController',
           );
         }
 
@@ -1067,10 +1065,9 @@ class DriverAcceptedController extends GetxController
     // Primary realtime status feed — always normalize before comparing.
     _rideStatusSub = _socketService.rideStatusStream.listen((payload) async {
       if (!_isSocketEventForThisRide(payload.rideId)) return;
-      developer.log(
-        "📥 Socket Event: ride_status_stream - Status: ${payload.status} for ride $rideId",
-        name: 'ORDER_TRACKING',
-        error: jsonEncode(payload.toJson()),
+      AppLogger.d(
+        '📥 Socket Event: ride_status_stream - Status: ${payload.status} for ride $rideId | ${jsonEncode(payload.toJson())}',
+        tag: 'ORDER_TRACKING',
       );
       final status = (payload.status ?? '').toString().trim();
       final normalized = normalizeRideStatusString(status);
@@ -1199,10 +1196,9 @@ class DriverAcceptedController extends GetxController
         if (_navigatedAway) return;
         if (!_isSocketEventForThisRide(payload.rideId)) return;
         _hasReceivedTrackingUpdate = true;
-        developer.log(
-          "📥 Socket Event: tracking_update_socket - Target: ${payload.routeTarget} for ride $rideId",
-          name: 'ORDER_TRACKING',
-          error: jsonEncode(payload.toJson()),
+        AppLogger.d(
+          '📥 Socket Event: tracking_update_socket - Target: ${payload.routeTarget} for ride $rideId | ${jsonEncode(payload.toJson())}',
+          tag: 'ORDER_TRACKING',
         );
         _applyTrackingPayload(payload);
       }
@@ -1217,7 +1213,9 @@ class DriverAcceptedController extends GetxController
     ) async {
       if (payload.rideId.trim() != rideId) return;
       if (_navigatedAway) return;
-      await _maybeNavigateMidRideDriverCancelled(payload.toMidRideCancelModel());
+      await _maybeNavigateMidRideDriverCancelled(
+        payload.toMidRideCancelModel(),
+      );
     });
 
     // Ensure socket is connected for the active-ride entry path too.
@@ -1311,8 +1309,9 @@ class DriverAcceptedController extends GetxController
         MapVehicleMarkerUtils.defaultMarkerWidth,
       );
     } catch (e, stackTrace) {
-      developer.log(
+      AppLogger.e(
         "Error loading map marker icon ($vehicleType): $e",
+        tag: 'DriverAcceptedController',
         error: e,
         stackTrace: stackTrace,
       );
@@ -1395,6 +1394,7 @@ class DriverAcceptedController extends GetxController
       captureStatus: block.captureStatus,
     );
   }
+
   void _syncBottomSheetVehicleImage(String? vehicleType) {
     final previousAsset = bottomSheetVehicleImageAsset.value;
     bottomSheetVehicleImageAsset
@@ -2185,7 +2185,7 @@ class DriverAcceptedController extends GetxController
       }
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      debugPrint("Error launching dialer: $e");
+      AppLogger.e('Error launching dialer', tag: 'DriverAcceptedController', error: e);
       AppDialogs.showErrorDialog(
         title: errorDialogTitle,
         message: AppStrings.errorOpeningPhoneDialer.tr,
@@ -2353,9 +2353,9 @@ class DriverAcceptedController extends GetxController
       // startActivity call removed to respect 'APNs-only' update model
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      developer.log(
+      AppLogger.d(
         "❌ Error in DriverAcceptedController._syncLiveActivityFromStatusPayload: $e",
-        name: 'ORDER_TRACKING',
+        tag: 'ORDER_TRACKING',
       );
     }
   }
@@ -2406,7 +2406,11 @@ class DriverAcceptedController extends GetxController
       );
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      debugPrint('❌ Error syncing Live Activity from Details: $e');
+      AppLogger.e(
+        'Error syncing Live Activity from Details',
+        tag: 'DriverAcceptedController',
+        error: e,
+      );
     }
   }
 
@@ -2436,19 +2440,22 @@ class DriverAcceptedController extends GetxController
       idempotencyKey: stopUpdateIdempotencyKey.value,
     );
 
-    result.fold((f) {
-      if (_handleInsufficientWalletFailure(f)) return;
-      _showStopUpdateError(f.message);
-    }, (res) {
-      if (res is StopUpdatePreviewModel) {
-        stopUpdatePreview.value = res;
-        // Generate key if not present and save it
-        if (stopUpdateIdempotencyKey.value.isEmpty) {
-          stopUpdateIdempotencyKey.value = const Uuid().v4();
+    result.fold(
+      (f) {
+        if (_handleInsufficientWalletFailure(f)) return;
+        _showStopUpdateError(f.message);
+      },
+      (res) {
+        if (res is StopUpdatePreviewModel) {
+          stopUpdatePreview.value = res;
+          // Generate key if not present and save it
+          if (stopUpdateIdempotencyKey.value.isEmpty) {
+            stopUpdateIdempotencyKey.value = const Uuid().v4();
+          }
+          _saveIdempotencyKey(stopUpdateIdempotencyKey.value);
         }
-        _saveIdempotencyKey(stopUpdateIdempotencyKey.value);
-      }
-    });
+      },
+    );
   }
 
   Future<bool> applyStopsUpdate(List<RideStopEntity> stops) async {
@@ -2704,12 +2711,15 @@ class DriverAcceptedController extends GetxController
       rideId,
       dest,
     );
-    previewRes.fold((f) {
-      if (_handleInsufficientWalletFailure(f)) return;
-      _showDestinationUpdateError(f.message);
-    }, (preview) {
-      destinationUpdatePreview.value = preview;
-    });
+    previewRes.fold(
+      (f) {
+        if (_handleInsufficientWalletFailure(f)) return;
+        _showDestinationUpdateError(f.message);
+      },
+      (preview) {
+        destinationUpdatePreview.value = preview;
+      },
+    );
   }
 
   Future<bool> applyDropLocationUpdate(Map<String, dynamic> destination) async {

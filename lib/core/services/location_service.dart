@@ -1,20 +1,17 @@
 import 'dart:async';
-import 'dart:developer' as developer;
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 
 import '../../shared/utils/app_dialogs.dart';
 import '../localization/app_strings.dart';
+import '../utils/app_logger.dart';
 import 'error_reporting/error_reporter.dart';
 
 void devPrint(String message) {
-  if (kDebugMode) {
-    debugPrint(message);
-  }
+  AppLogger.d(message, tag: 'LocationService');
 }
 
 class LocationService extends GetxController {
@@ -35,7 +32,10 @@ class LocationService extends GetxController {
       getLocationContinuously();
 
       Geolocator.getServiceStatusStream().listen((event) {
-        developer.log("[location-service] location service: $event");
+        AppLogger.d(
+          '[location-service] location service: $event',
+          tag: 'LocationService',
+        );
         if (event == ServiceStatus.disabled) {
           _isLocationServiceEnabled.value = false;
         } else {
@@ -44,13 +44,16 @@ class LocationService extends GetxController {
         }
       });
     } catch (e, s) {
-      developer.log("[location-service] checkServiceContinuously Exception: $e");
+      AppLogger.d(
+        '[location-service] checkServiceContinuously Exception: $e',
+        tag: 'LocationService',
+      );
       ErrorReporter.instance.report(
         error: e,
         stackTrace: s,
         customMessage: "Exception in checkServiceContinuously",
         extraData: [
-          {"isLocationServiceEnabled": _isLocationServiceEnabled.value}
+          {"isLocationServiceEnabled": _isLocationServiceEnabled.value},
         ],
       );
     }
@@ -99,13 +102,22 @@ class LocationService extends GetxController {
             _isLocationListeningStarted = true;
             _position.value = position;
             _position.refresh();
-            developer.log("[location-service] latitude: ${position.latitude}");
-            developer.log("[location-service] longitude: ${position.longitude}");
+            AppLogger.d(
+              '[location-service] latitude: ${position.latitude}',
+              tag: 'LocationService',
+            );
+            AppLogger.d(
+              '[location-service] longitude: ${position.longitude}',
+              tag: 'LocationService',
+            );
           });
         }
       }
     } catch (e, s) {
-      developer.log("[location-service] getLocationContinuously Exception: $e");
+      AppLogger.d(
+        '[location-service] getLocationContinuously Exception: $e',
+        tag: 'LocationService',
+      );
       ErrorReporter.instance.report(
         error: e,
         stackTrace: s,
@@ -113,9 +125,10 @@ class LocationService extends GetxController {
         extraData: [
           {
             "isLocationServiceEnabled": isLocationServiceEnabled.value,
-            "isLocationFirstTimeFetchSuccessfully": isLocationFirstTimeFetchSuccessfully,
+            "isLocationFirstTimeFetchSuccessfully":
+                isLocationFirstTimeFetchSuccessfully,
             "isLocationListeningStarted": isLocationListeningStarted,
-          }
+          },
         ],
       );
     }
@@ -197,7 +210,7 @@ class LocationService extends GetxController {
         customMessage: "Exception in checkPermission (LocationService)",
         extraData: [
           {"precise": precise},
-          {"force": force}
+          {"force": force},
         ],
       );
       return false;
@@ -232,16 +245,14 @@ class LocationService extends GetxController {
         customMessage: "Exception in requestPermission (LocationService)",
         extraData: [
           {"precise": precise},
-          {"force": force}
+          {"force": force},
         ],
       );
       return false;
     }
   }
 
-  Future<bool> checkLocationService({
-    bool force = true,
-  }) async {
+  Future<bool> checkLocationService({bool force = true}) async {
     try {
       var req = await requestPermission(force: true, precise: true);
 
@@ -266,20 +277,16 @@ class LocationService extends GetxController {
         stackTrace: s,
         customMessage: "Exception in checkLocationService (LocationService)",
         extraData: [
-          {"force": force}
+          {"force": force},
         ],
       );
       return false;
     }
   }
 
-  Future<bool> enableLocationService({
-    bool force = false,
-  }) async {
+  Future<bool> enableLocationService({bool force = false}) async {
     try {
-      bool serviceStatus = await checkLocationService(
-        force: false,
-      );
+      bool serviceStatus = await checkLocationService(force: false);
 
       if (!serviceStatus) {
         try {
@@ -292,9 +299,7 @@ class LocationService extends GetxController {
         } catch (e) {
           devPrint("Geolocator.getCurrentPosition Exception: $e");
         }
-        return await checkLocationService(
-          force: force,
-        );
+        return await checkLocationService(force: force);
       } else {
         return true;
       }
@@ -305,7 +310,7 @@ class LocationService extends GetxController {
         stackTrace: s,
         customMessage: "Exception in enableLocationService (LocationService)",
         extraData: [
-          {"force": force}
+          {"force": force},
         ],
       );
       return false;
@@ -323,9 +328,7 @@ class LocationService extends GetxController {
           precise: precise,
         );
         if (permissionStatus) {
-          bool serviceStatus = await enableLocationService(
-            force: force,
-          );
+          bool serviceStatus = await enableLocationService(force: force);
           if (serviceStatus) {
             try {
               return await Geolocator.getCurrentPosition(
@@ -346,9 +349,7 @@ class LocationService extends GetxController {
           precise: precise,
         );
         if (permissionStatus) {
-          bool serviceStatus = await checkLocationService(
-            force: force,
-          );
+          bool serviceStatus = await checkLocationService(force: force);
           if (serviceStatus) {
             try {
               return await Geolocator.getCurrentPosition(
@@ -373,7 +374,7 @@ class LocationService extends GetxController {
         customMessage: "Exception in getCurrentPosition (LocationService)",
         extraData: [
           {"precise": precise},
-          {"force": force}
+          {"force": force},
         ],
       );
       return null;
@@ -425,7 +426,8 @@ class LocationService extends GetxController {
         return false;
       }
 
-      if (permission != LocationPermission.always && permission != LocationPermission.whileInUse) {
+      if (permission != LocationPermission.always &&
+          permission != LocationPermission.whileInUse) {
         _pendingRequest!.complete(false);
         return false;
       }
@@ -450,8 +452,7 @@ class LocationService extends GetxController {
           await handlePermanentlyDenied(
             forLocationPermission: true,
             msg: "",
-            customMsg:
-                "Precise location is required for navigation accuracy.",
+            customMsg: "Precise location is required for navigation accuracy.",
           );
           _pendingRequest!.complete(false);
           return false;
@@ -475,7 +476,8 @@ class LocationService extends GetxController {
             await handlePermanentlyDenied(
               forLocationService: true,
               msg: "",
-              customMsg: "Please enable your location services to get your current location.",
+              customMsg:
+                  "Please enable your location services to get your current location.",
             );
             _pendingRequest!.complete(false);
             return false;
@@ -492,7 +494,7 @@ class LocationService extends GetxController {
         stackTrace: s,
         customMessage: "Error ensuring location access (LocationService)",
         extraData: [
-          {"isRequesting": _isRequesting}
+          {"isRequesting": _isRequesting},
         ],
       );
       _pendingRequest!.complete(false);
@@ -509,9 +511,7 @@ class LocationService extends GetxController {
     String customMsg = "",
   }) async {
     if (forLocationPermission) {
-      await LocationUtils.giveLocationPermissionDialog(
-        msg: customMsg,
-      );
+      await LocationUtils.giveLocationPermissionDialog(msg: customMsg);
     } else if (forLocationService) {
       await LocationUtils.enableLocationServicenDialog();
     }
@@ -528,18 +528,19 @@ class LocationService extends GetxController {
 
       Position? position = await getCurrentPosition(force: false);
 
-      if (position != null && position.latitude != 0.0 && position.longitude != 0.0) {
+      if (position != null &&
+          position.latitude != 0.0 &&
+          position.longitude != 0.0) {
         return {
           'latitude': position.latitude.toString(),
           'longitude': position.longitude.toString(),
         };
       }
 
-      devPrint("[location-service] Unable to get current location, returning 0.0");
-      return {
-        'latitude': '0.0',
-        'longitude': '0.0',
-      };
+      devPrint(
+        "[location-service] Unable to get current location, returning 0.0",
+      );
+      return {'latitude': '0.0', 'longitude': '0.0'};
     } catch (e, s) {
       devPrint("[location-service] getCurrentLocationAsStrings Exception: $e");
       ErrorReporter.instance.report(
@@ -550,13 +551,10 @@ class LocationService extends GetxController {
           {
             "latitude": _position.value.latitude,
             "longitude": _position.value.longitude,
-          }
+          },
         ],
       );
-      return {
-        'latitude': '0.0',
-        'longitude': '0.0',
-      };
+      return {'latitude': '0.0', 'longitude': '0.0'};
     }
   }
 }
@@ -574,8 +572,8 @@ class LocationUtils {
       final message = msg.isNotEmpty
           ? msg
           : (precise
-              ? "Precise location is required to request a ride. Please enable it in Settings."
-              : AppStrings.locationPermissionDeniedOpenSettings.tr);
+                ? "Precise location is required to request a ride. Please enable it in Settings."
+                : AppStrings.locationPermissionDeniedOpenSettings.tr);
 
       await AppDialogs.showPermissionDialog(
         title: title,
@@ -599,7 +597,8 @@ class LocationUtils {
 
       AppDialogs.showConfirmationDialog(
         title: AppStrings.enableLocationService.tr,
-        message: "Please enable your location service to get your current location.",
+        message:
+            "Please enable your location service to get your current location.",
         confirmText: "Open Settings",
         cancelText: "Cancel",
         onConfirm: () async {

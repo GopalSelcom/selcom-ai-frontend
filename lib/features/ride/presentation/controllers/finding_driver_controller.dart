@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:developer' as developer;
 
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -20,6 +18,7 @@ import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/address_display_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
@@ -242,9 +241,9 @@ class FindingDriverController extends GetxController {
         if (shouldLeaveFindingDriverForPickup(normalized)) {
           _onDriverAssignedPhase(normalized, payload);
         } else {
-          developer.log(
+          AppLogger.d(
             "⚠️ Unhandled Socket Status: $normalized",
-            name: 'ORDER_TRACKING',
+            tag: 'ORDER_TRACKING',
           );
         }
         break;
@@ -483,7 +482,7 @@ class FindingDriverController extends GetxController {
           );
         }
       } catch (e) {
-        debugPrint('Error parsing destinations: $e');
+        AppLogger.e('Error parsing destinations', tag: 'FindingDriverController', error: e);
       }
     }
 
@@ -570,11 +569,10 @@ class FindingDriverController extends GetxController {
       );
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      developer.log(
+      AppLogger.d(
         "❌ Error in FindingDriverController._syncLiveActivity: $e",
-        name: 'ORDER_TRACKING',
+        tag: 'ORDER_TRACKING',
       );
-      debugPrint('❌ Error syncing Live Activity: $e');
     }
   }
 
@@ -666,10 +664,9 @@ class FindingDriverController extends GetxController {
       )) {
         return;
       }
-      developer.log(
-        "📥 Socket Event: ride_status_stream - Status: ${payload.status} for ride $rideId",
-        name: 'ORDER_TRACKING',
-        error: jsonEncode(payload.toJson()),
+      AppLogger.d(
+        '📥 Socket Event: ride_status_stream - Status: ${payload.status} for ride $rideId | ${jsonEncode(payload.toJson())}',
+        tag: 'ORDER_TRACKING',
       );
       latestRideStatusPayload.value = payload;
       _applyStatusPayload(payload);
@@ -836,9 +833,9 @@ class FindingDriverController extends GetxController {
 
     final statusPayload = _mergeTrackingIntoStatusPayload(payload);
     latestRideStatusPayload.value = statusPayload;
-    developer.log(
+    AppLogger.d(
       "📥 Tracking status drives navigation: $normalized for ride $rideId",
-      name: 'ORDER_TRACKING',
+      tag: 'ORDER_TRACKING',
     );
     _handleRideStatus(rawStatus, statusPayload);
   }

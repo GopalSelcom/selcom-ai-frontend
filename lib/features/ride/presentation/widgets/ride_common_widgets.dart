@@ -24,7 +24,10 @@ class RideDateFormatter {
 
       final day = parsed.day;
       final month = DateFormat.MMM(locale).format(parsed);
-      final time = DateFormat('hh:mma', locale).format(parsed).replaceAll(' ', '');
+      final time = DateFormat(
+        'hh:mma',
+        locale,
+      ).format(parsed).replaceAll(' ', '');
       final dayStr = day.toString().padLeft(2, '0');
       return '$dayStr${_ordinalSuffix(day)} $month ${parsed.year} . $time';
     } catch (e) {

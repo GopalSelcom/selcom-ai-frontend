@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer';
 
-import 'package:flutter/foundation.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
+import '../../features/ride/data/models/mid_ride_cancel_models.dart';
 import '../config/app_config.dart';
+import '../utils/app_logger.dart';
 import '../data/models/responses/nearbyRiders/response/driver_location_socker_response.dart';
 import '../data/models/responses/nearbyRiders/response/near_by_rider_response.dart';
 import '../data/models/responses/nearbyRiders/response/ride_fare_settled_response.dart';
@@ -13,7 +13,6 @@ import '../data/models/responses/nearbyRiders/response/ride_stops_update_respons
 import '../data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
 import '../data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
 import '../data/models/responses/payment_status_response/payment_status_response.dart';
-import '../../../features/ride/data/models/mid_ride_cancel_models.dart';
 import 'error_reporting/error_reporter.dart';
 import 'storage_service.dart';
 
@@ -188,16 +187,16 @@ class AppSocketService {
           .disableAutoConnect()
           .build(),
     );
-    debugPrint("SOCKET URL ----->  $baseUrl");
+    AppLogger.d('SOCKET URL ----->  $baseUrl', tag: 'Socket');
 
-    if (kDebugMode) {
+    if (AppLogger.enabled) {
       _socket?.onAny((event, data) {
-        debugPrint("socket => event: $event");
+        AppLogger.d('socket => event: $event', tag: 'Socket');
       });
     }
     _socket!.onConnect((data) {
-      debugPrint("Socket connected");
-      debugPrint("Connected socketId: ${_socket?.id}");
+      AppLogger.d('Socket connected', tag: 'Socket');
+      AppLogger.d('Connected socketId: ${_socket?.id}', tag: 'Socket');
       _isConnecting = false;
       _reconnectAttempt = 0;
       _cancelReconnectTimer();
@@ -206,13 +205,13 @@ class AppSocketService {
       _connectionController.add(true);
     });
     _socket!.onDisconnect((data) {
-      debugPrint("Socket disconnected: $data");
+      AppLogger.d('Socket disconnected: $data', tag: 'Socket');
       _isConnecting = false;
       _connectionController.add(false);
       _scheduleReconnect(reason: 'disconnect:$data');
     });
     _socket!.onConnectError((err) {
-      debugPrint("onConnectError init function: $err");
+      AppLogger.w('onConnectError init function: $err', tag: 'Socket');
       _isConnecting = false;
       _connectionController.add(false);
       _errorController.add(err?.toString() ?? 'Socket connection error');
@@ -233,32 +232,35 @@ class AppSocketService {
       _errorController.add(_parseError(payload));
     });
     _socket!.on(evtRideStatusUpdate, (payload) {
-      print("this is the evtRideStatusUpdate----->$payload");
+      AppLogger.d('evtRideStatusUpdate -> $payload', tag: 'Socket');
       final data = eventRiderStatusUpdateResponseFromJson(jsonEncode(payload));
 
       if (data != null) _rideStatusController.add(data);
     });
     _socket!.on(evtRideStopUpdate, (payload) {
-      print("this is the evtRideStopUpdate----->$payload");
+      AppLogger.d('evtRideStopUpdate -> $payload', tag: 'Socket');
       final data = eventRiderStatusUpdateResponseFromJson(jsonEncode(payload));
       if (data != null) _rideStopUpdateController.add(data);
     });
     _socket!.on(evtRideStopsUpdated, (payload) {
-      print("this is the evtRideStopsUpdated----->$payload");
+      AppLogger.d('evtRideStopsUpdated -> $payload', tag: 'Socket');
       final data = RideStopsUpdatedResponse.fromJson(
         payload as Map<String, dynamic>,
       );
       _rideStopsUpdatedController.add(data);
     });
     _socket!.on(evtRideStopsUpdateFailed, (payload) {
-      print("this is the evtRideStopsUpdateFailed----->$payload");
+      AppLogger.d('evtRideStopsUpdateFailed -> $payload', tag: 'Socket');
       final data = RideStopsUpdateFailedResponse.fromJson(
         payload as Map<String, dynamic>,
       );
       _rideStopsUpdateFailedController.add(data);
     });
     _socket!.on(trackingDriverLocation, (payload) {
-      log("this is the call back ---driver_location:->${jsonEncode(payload)}");
+      AppLogger.d(
+        'trackingDriverLocation -> ${jsonEncode(payload)}',
+        tag: 'Socket',
+      );
       final data = trackingUpdateSocketResponseFromJson(jsonEncode(payload));
       if (data != null) {
         _trackingUpdateStatusController.add(
@@ -267,7 +269,10 @@ class AppSocketService {
       }
     });
     _socket!.on(evtRideDriverLocation, (payload) {
-      print("this is the evtRideDriverLocation---->${jsonEncode(payload)}");
+      AppLogger.d(
+        'evtRideDriverLocation -> ${jsonEncode(payload)}',
+        tag: 'Socket',
+      );
       final data = driverLocationSocketResponseFromJson(jsonEncode(payload));
       _rideDriverLocationController.add(data);
     });
@@ -281,25 +286,19 @@ class AppSocketService {
     _socket!.on(evtRideDriverCancelled, (payload) {
       if (payload is! Map) return;
       _driverCancelledController.add(
-        RideDriverCancelledPayload.fromJson(
-          Map<String, dynamic>.from(payload),
-        ),
+        RideDriverCancelledPayload.fromJson(Map<String, dynamic>.from(payload)),
       );
     });
     _socket!.on(evtRideChargeSettled, (payload) {
       if (payload is! Map) return;
       _chargeSettledController.add(
-        RideChargeSettledPayload.fromJson(
-          Map<String, dynamic>.from(payload),
-        ),
+        RideChargeSettledPayload.fromJson(Map<String, dynamic>.from(payload)),
       );
     });
     _socket!.on(evtRideChargeDisputed, (payload) {
       if (payload is! Map) return;
       _chargeDisputedController.add(
-        RideChargeDisputedPayload.fromJson(
-          Map<String, dynamic>.from(payload),
-        ),
+        RideChargeDisputedPayload.fromJson(Map<String, dynamic>.from(payload)),
       );
     });
     _socket!.on(evtPaymentStatusUpdate, (payload) {
@@ -311,7 +310,7 @@ class AppSocketService {
 
     // 💬 CHAT LISTENER
     _socket!.on(evtReceiveMessage, (payload) {
-      print("this is payLoad --->evtReceiveMessage---->$payload");
+      AppLogger.d('evtReceiveMessage -> $payload', tag: 'Socket');
       final data = _asMap(payload);
       if (data != null) _chatController.add(data);
     });
@@ -336,9 +335,10 @@ class AppSocketService {
       'lng': lng,
       'radius_km': radiusKm,
     };
-    if (kDebugMode) {
-      debugPrint('requested nearby drivers with configured radius');
-    }
+    AppLogger.d(
+      'requested nearby drivers with configured radius',
+      tag: 'Socket',
+    );
     if (vehicleType != null && vehicleType.trim().isNotEmpty) {
       body['vehicle_type'] = vehicleType;
     }
@@ -404,9 +404,7 @@ class AppSocketService {
       _socket!.emit(evtJoinPaymentRoom, {'validation_id': validationId});
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      if (kDebugMode) {
-        debugPrint('joinPaymentRoom failed');
-      }
+      AppLogger.e('joinPaymentRoom failed', tag: 'Socket', error: e);
     }
   }
 
@@ -477,9 +475,10 @@ class AppSocketService {
 
     final delaySeconds = (1 << _reconnectAttempt).clamp(1, 20);
     _reconnectAttempt += 1;
-    debugPrint(
+    AppLogger.d(
       'Socket reconnect scheduled in ${delaySeconds}s '
       '(attempt $_reconnectAttempt/$_maxReconnectAttempts, reason=$reason)',
+      tag: 'Socket',
     );
     _reconnectTimer = Timer(Duration(seconds: delaySeconds), () async {
       if (_manualDisconnect || _socket?.connected == true) return;

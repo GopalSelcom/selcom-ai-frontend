@@ -45,8 +45,9 @@ class CancelRideFlow {
     if (confirmResult != true) return;
 
     // 2. Server-managed cancel reasons (preload only when not cached).
-    final cancelReasons =
-        await di.sl<AppSettingsService>().resolveCancellationReasons();
+    final cancelReasons = await di
+        .sl<AppSettingsService>()
+        .resolveCancellationReasons();
     if (cancelReasons.isEmpty) {
       AppDialogs.showErrorDialog(
         title: AppStrings.cancelFailed.tr,

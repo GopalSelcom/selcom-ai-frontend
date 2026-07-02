@@ -1,5 +1,3 @@
-import 'dart:developer' as developer;
-
 import 'package:dartz/dartz.dart';
 
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
@@ -9,6 +7,7 @@ import '../../../../core/errors/failures.dart';
 import '../../../../core/errors/insufficient_wallet_balance_exception.dart';
 import '../../../../core/errors/ride_payment_validation_exception.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../shared/utils/ride_payment_validation_messages.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../datasources/ride_remote_data_source.dart';
@@ -295,9 +294,9 @@ class RideRepositoryImpl implements RideRepository {
       return Right(result);
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      developer.log(
+      AppLogger.d(
         "❌ Repository Error during updateActivityToken: $e",
-        name: 'ORDER_TRACKING',
+        tag: 'ORDER_TRACKING',
       );
       return Left(ServerFailure(e.toString()));
     }

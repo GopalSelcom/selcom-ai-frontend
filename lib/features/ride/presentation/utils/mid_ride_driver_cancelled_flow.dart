@@ -23,7 +23,8 @@ abstract final class MidRideDriverCancelledFlow {
     if (id.isEmpty) return;
 
     final model = _toModel(cancel);
-    final tag = 'mid_ride_cancel_${id}_${DateTime.now().microsecondsSinceEpoch}';
+    final tag =
+        'mid_ride_cancel_${id}_${DateTime.now().microsecondsSinceEpoch}';
 
     await LiveActivityManager().endActivity(id);
 
