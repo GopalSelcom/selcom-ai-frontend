@@ -15,7 +15,7 @@
         <key>CFBundleExecutable</key>
         <string>$(EXECUTABLE_NAME)</string>
         <key>GIDClientID</key>
-        <string>235920604285-bk28ard68qaleas80g3onqei5afag197.apps.googleusercontent.com</string>
+        <string>$(GOOGLE_CLIENT_ID)</string>
         <key>CFBundleIdentifier</key>
         <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
         <key>CFBundleInfoDictionaryVersion</key>
@@ -43,7 +43,7 @@
                 <string>Editor</string>
                 <key>CFBundleURLSchemes</key>
                 <array>
-                    <string>com.googleusercontent.apps.235920604285-bk28ard68qaleas80g3onqei5afag197</string>
+                    <string>$(GOOGLE_REVERSED_CLIENT_ID)</string>
                 </array>
             </dict>
         </array>

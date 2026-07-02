@@ -1,2 +1,4 @@
 APP_DISPLAY_NAME=Selcom Go Dev
 PRODUCT_BUNDLE_IDENTIFIER=com.selcom.go.dev
+GOOGLE_CLIENT_ID=235920604285-92hs59iuoj1kamectrmbvhm8blaefm7u.apps.googleusercontent.com
+GOOGLE_REVERSED_CLIENT_ID=com.googleusercontent.apps.235920604285-92hs59iuoj1kamectrmbvhm8blaefm7u
