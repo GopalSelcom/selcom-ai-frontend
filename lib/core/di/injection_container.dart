@@ -12,10 +12,14 @@ import '../../features/notification/data/datasources/notification_remote_data_so
 import '../../features/notification/data/repositories/notification_repository_impl.dart';
 import '../../features/notification/domain/repositories/notification_repository.dart';
 import '../../features/notification/presentation/controllers/notification_controller.dart';
+import '../../features/profile/presentation/controllers/payment_methods_controller.dart';
 import '../../features/payment/presentation/controllers/payment_method_controller.dart';
 import '../../features/profile/data/datasources/profile_remote_data_source.dart';
+import '../../features/profile/data/datasources/selcom_pesa_link_remote_data_source.dart';
 import '../../features/profile/data/repositories/profile_repository_impl.dart';
+import '../../features/profile/data/repositories/selcom_pesa_link_repository_impl.dart';
 import '../../features/profile/domain/repositories/profile_repository.dart';
+import '../../features/profile/domain/repositories/selcom_pesa_link_repository.dart';
 import '../../features/profile/domain/usecases/profile_usecase.dart';
 import '../../features/profile/presentation/controllers/profile_controller.dart';
 import '../../features/ride/data/datasources/ride_remote_data_source.dart';
@@ -134,6 +138,12 @@ Future<void> init() async {
   sl.registerLazySingleton<ProfileRepository>(
     () => ProfileRepositoryImpl(remoteDataSource: sl()),
   );
+  sl.registerLazySingleton<SelcomPesaLinkRemoteDataSource>(
+    () => SelcomPesaLinkRemoteDataSourceImpl(),
+  );
+  sl.registerLazySingleton<SelcomPesaLinkRepository>(
+    () => SelcomPesaLinkRepositoryImpl(remoteDataSource: sl()),
+  );
   sl.registerLazySingleton<SettingsRemoteDataSource>(
     () => SettingsRemoteDataSourceImpl(),
   );
@@ -157,6 +167,7 @@ Future<void> init() async {
     ),
   );
   sl.registerFactory(() => PaymentMethodController(profileRepository: sl()));
+  sl.registerFactory(() => PaymentMethodsController());
 
   // ── Notification Feature ──
   sl.registerLazySingleton<NotificationRemoteDataSource>(

@@ -16,6 +16,9 @@ import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/payment_countdown_timer.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
 import '../../../../shared/utils/thousands_separator_input_formatter.dart';
+import '../../../profile/domain/entities/selcom_pesa_linked_account_entity.dart';
+import '../../../profile/presentation/controllers/payment_methods_controller.dart';
+import '../../../settings/data/models/settings_models.dart';
 import '../../../wallet/domain/entities/wallet_details_entity.dart';
 import '../../../wallet/domain/repositories/wallet_repository.dart';
 import '../../../wallet/presentation/utils/wallet_refresh.dart';
@@ -24,7 +27,6 @@ import '../../data/models/go_other_payment_methods_models.dart';
 import '../../data/models/selcom_pesa_topup_models.dart';
 import '../../domain/wallet_payment_phone_country.dart';
 import '../../domain/wallet_top_up_limits.dart';
-import '../../../settings/data/models/settings_models.dart';
 import '../widgets/mobile_money_topup_status_dialog.dart';
 
 enum SelcomPesaTopupFlow { self, other }
@@ -230,6 +232,31 @@ class SelcomPesaTopupController extends GetxController {
     );
   }
 
+  Future<void> submitSelectedLinkedAccountTopUp({
+    required SelcomPesaLinkedAccountEntity account,
+    required bool closeSheetFirst,
+  }) async {
+    if (isSubmitting.value) return;
+
+    final amountValidation = _validateAmount(showEmptyError: true);
+    amountError.value = amountValidation;
+    if (amountValidation != null) return;
+
+    final amount = parsedAmount;
+    if (amount == null) return;
+
+    _lastSelfAmount = amount;
+    _activeFlow = SelcomPesaTopupFlow.other;
+
+    await _sendTopUpRequest(
+      amount: amount,
+      mobileNumber: _buildLinkedAccountUssdPhone(account),
+      requireShortCode: false,
+      closeSheetFirst: closeSheetFirst,
+      onSuccess: _startOtherFlow,
+    );
+  }
+
   Future<void> retrySelfTopUp() async {
     final amount = _lastSelfAmount;
     if (amount == null) return;
@@ -245,6 +272,17 @@ class SelcomPesaTopupController extends GetxController {
 
   Future<void> retryOtherTopUp() async {
     if (_activeFlow != SelcomPesaTopupFlow.other) return;
+    if (Get.isRegistered<PaymentMethodsController>()) {
+      final selected =
+          Get.find<PaymentMethodsController>().selectedLinkedAccount;
+      if (selected != null) {
+        await submitSelectedLinkedAccountTopUp(
+          account: selected,
+          closeSheetFirst: false,
+        );
+        return;
+      }
+    }
     await submitOtherTopUp(closeSheetFirst: false);
   }
 
@@ -624,6 +662,14 @@ class SelcomPesaTopupController extends GetxController {
       digits = digits.substring(1);
     }
     return '$countryDialCode$digits';
+  }
+
+  String _buildLinkedAccountUssdPhone(SelcomPesaLinkedAccountEntity account) {
+    final digits = account.normalizedMobileDigits;
+    final code = account.countryCode.trim().isNotEmpty
+        ? account.countryCode.replaceAll(RegExp(r'\D'), '')
+        : countryDialCode;
+    return '$code$digits';
   }
 
   void handleSheetDismissed() {

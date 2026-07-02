@@ -45,13 +45,6 @@ abstract class Languages {
   String get addMoneyTanQrTips;
   String get addMoneyTanQrTipsSubtitle;
   String get addMoneyMobileMoneySubtitle;
-  String get addMoneyStepsToLoadGoWallet;
-  String get addMoneyStepsToLoadGoWalletSubtitle;
-  String get addMoneyGoWalletStep1;
-  String get addMoneyGoWalletStep2;
-  String get addMoneyGoWalletStep3;
-  String get addMoneyGoWalletStep4;
-  String get addMoneyGoWalletStep5;
   String get walletFundsReceivedTitle;
   String get walletFundsReceivedSubtitle;
   String get topUpRequestSentTitle;
@@ -627,6 +620,12 @@ abstract class Languages {
   String get selcomPesaConnectStep1;
   String get selcomPesaConnectStep2;
   String get selcomPesaConnectStep3;
+  String get selcomPesaLinkRequestSentMessage;
+  String get selcomPesaAlreadyLinkedMessage;
+  String get linkAnotherAccount;
+  String get selcomPesaPendingApproval;
+  String get selcomPesaMaxLinkedAccounts;
+  String get selcomPesaMultipleLinked;
   String get selcomPesaConnectStep4;
   String get otpSentToYourPhoneNumber;
   String get requireVerificationPinBeforeStartingRide;

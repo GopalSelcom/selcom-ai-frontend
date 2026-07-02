@@ -12,6 +12,8 @@ class Params {
   static const String deviceTokenRider = "device_token_rider";
   static const String deviceToken = "device_token";
   static const String deviceType = "device_type";
+  static const String languageCode = "language_code";
+  static const String intUdid = "int_udid";
 
   static const String appUuid = "app_uuid";
   static const String accessToken = "access_token";

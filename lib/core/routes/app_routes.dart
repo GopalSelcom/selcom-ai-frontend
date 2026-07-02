@@ -23,6 +23,8 @@ import '../../features/profile/presentation/bindings/favorite_locations_binding.
 import '../../features/profile/presentation/screens/contact_us_screen.dart';
 import '../../features/profile/presentation/screens/favorite_locations_screen.dart';
 import '../../features/profile/presentation/screens/payment_methods_screen.dart';
+import '../../features/payment/presentation/bindings/selcom_pesa_to_wallet_binding.dart';
+import '../../features/payment/presentation/screens/selcom_pesa_to_wallet_screen.dart';
 import '../../features/profile/presentation/settings/bindings/safety_binding.dart';
 import '../../features/profile/presentation/settings/bindings/settings_binding.dart';
 import '../../features/profile/presentation/settings/screens/safety_screen.dart';
@@ -69,6 +71,7 @@ class AppRoutes {
   static const String notifications = '/notifications';
   static const String rideMessage = '/ride/message';
   static const String paymentMethods = '/payment-methods';
+  static const String selcomPesaToWallet = '/selcom-pesa-to-wallet';
   static const String settings = '/settings';
   static const String safety = '/safety';
   static const String selectSavedLocation = '/select-saved-location';
@@ -161,6 +164,11 @@ class AppRoutes {
       binding: RideMessageBinding(),
     ),
     GetPage(name: paymentMethods, page: () => const PaymentMethodsScreen()),
+    GetPage(
+      name: selcomPesaToWallet,
+      page: () => const SelcomPesaToWalletScreen(),
+      binding: SelcomPesaToWalletBinding(),
+    ),
     GetPage(
       name: settings,
       page: () => const SettingsScreen(),

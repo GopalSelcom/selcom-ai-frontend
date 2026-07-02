@@ -17,9 +17,8 @@ import '../../../../shared/widgets/app_standard_bottom_sheet.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../../data/models/go_other_payment_methods_models.dart';
 import '../controllers/tanqr_wallet_topup_controller.dart';
+import '../screens/selcom_pesa_to_wallet_screen.dart';
 import 'mobile_money_topup_bottom_sheet.dart';
-import 'selcom_pesa_to_wallet_bottom_sheet.dart';
-import 'steps_to_load_go_wallet_bottom_sheet.dart';
 import 'tanqr_tips_bottom_sheet.dart';
 import 'wallet_topup_sheet_lifecycle.dart';
 
@@ -136,34 +135,21 @@ class _OptionsContent extends StatelessWidget {
         _AddMoneyOptionTile(
           title: AppStrings.mobileMoney.tr,
           subtitle: AppStrings.addMoneyMobileMoneySubtitle.tr,
-          onTap: () => _onOptionTap(_AddMoneyOption.mobileMoney),
+          onTap: _onMobileMoneyTap,
         ),
         SizedBox(height: 8.h),
-        // _AddMoneyOptionTile(
-        //   title: AppStrings.addMoneyStepsToLoadGoWallet.tr,
-        //   subtitle: AppStrings.addMoneyStepsToLoadGoWalletSubtitle.tr,
-        //   onTap: () => _onOptionTap(_AddMoneyOption.stepsToLoad),
-        // ),
-        // SizedBox(height: 8.h),
       ],
     );
   }
 
   void _onSelcomPesaTap() {
     Get.back<void>();
-    SelcomPesaToWalletBottomSheet.show();
+    unawaited(SelcomPesaToWalletScreen.open());
   }
 
-  void _onOptionTap(_AddMoneyOption option) {
+  void _onMobileMoneyTap() {
     Get.back<void>();
-    switch (option) {
-      case _AddMoneyOption.stepsToLoad:
-        StepsToLoadGoWalletBottomSheet.show();
-        break;
-      case _AddMoneyOption.mobileMoney:
-        MobileMoneyTopupBottomSheet.show();
-        break;
-    }
+    unawaited(MobileMoneyTopupBottomSheet.show());
   }
 }
 
@@ -330,8 +316,6 @@ class _TanQrDisplayFooter extends StatelessWidget {
     });
   }
 }
-
-enum _AddMoneyOption { mobileMoney, stepsToLoad }
 
 class _AddMoneyOptionTile extends StatelessWidget {
   const _AddMoneyOptionTile({

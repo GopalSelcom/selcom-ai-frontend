@@ -1,19 +1,35 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 
+import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
-import '../../../payment/domain/wallet_payment_phone_country.dart';
 import '../../domain/entities/payment_card.dart';
 import '../controllers/payment_methods_controller.dart';
 import '../widgets/wallet_summary_card.dart';
 
-class PaymentMethodsScreen extends StatelessWidget {
+class PaymentMethodsScreen extends StatefulWidget {
   const PaymentMethodsScreen({super.key});
+
+  @override
+  State<PaymentMethodsScreen> createState() => _PaymentMethodsScreenState();
+}
+
+class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    final controller = Get.put(sl<PaymentMethodsController>());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(controller.refreshPaymentMethodsState());
+    });
+  }
 
   static const PaymentCard _activeCard = PaymentCard(
     brand: 'VISA',
@@ -34,7 +50,7 @@ class PaymentMethodsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(PaymentMethodsController());
+    final controller = Get.find<PaymentMethodsController>();
 
     return Scaffold(
       backgroundColor: AppColors.pageBackground,
@@ -102,9 +118,7 @@ class PaymentMethodsScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(16.r),
       ),
       child: InkWell(
-        onTap: isLinked
-            ? controller.openLinkedAccountSheet
-            : controller.linkSelcomPesa,
+        onTap: controller.openSelcomPesaToWallet,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -152,12 +166,7 @@ class PaymentMethodsScreen extends StatelessWidget {
             ),
             SizedBox(height: 5.h),
             Text(
-              isLinked
-                  ? AppStrings.selcomPesaLinkedNumber.trParams({
-                      'number':
-                          '${WalletPaymentPhoneCountry.dialCodeDisplay} 711 410 410',
-                    })
-                  : AppStrings.connectSelcomPesaRideChargesSubtitle.tr,
+              controller.selcomPesaSummarySubtitle,
               style: isLinked
                   ? AppTextStyles.bodySecondary.copyWith(
                       color: AppColors.textBody,

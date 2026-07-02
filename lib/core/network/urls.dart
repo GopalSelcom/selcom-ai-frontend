@@ -11,6 +11,7 @@ abstract class URLS {
   static const address = _AddressEndpoints();
   static const places = _PlacesEndpoints();
   static const wallet = _WalletEndpoints();
+  static const selcomPesa = _SelcomPesaEndpoints();
   static const notification = _NotificationEndpoints();
   static const pdf = _PdfEndpoints();
   static const support = _SupportEndpoints();
@@ -186,6 +187,17 @@ class _WalletEndpoints {
   final checkSelcomPesaTopUpStatus = "go_wallet/check_selcom_pesa_status";
   final cardStatement = "go_wallet/go_card_statement";
   final emailCardStatement = "go_wallet/go_email_card_statement";
+}
+
+/// ─────────────────────────────────
+/// SELCOM PESA LINK ENDPOINTS
+/// ─────────────────────────────────
+class _SelcomPesaEndpoints {
+  const _SelcomPesaEndpoints();
+
+  final sendLinkRequest = "go/selcom_pesa/send_link_request";
+  final linkedAccounts = "go/selcom_pesa/linked_accounts";
+  final mainBalance = "go/selcom_pesa/main_balance";
 }
 
 /// ─────────────────────────────────

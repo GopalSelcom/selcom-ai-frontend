@@ -24,31 +24,18 @@ class SelcomPesaAnotherNumberBottomSheet extends StatefulWidget {
 
   final String controllerTag;
 
-  static Future<void> show({required String controllerTag}) {
-    if (!Get.isRegistered<SelcomPesaTopupController>(tag: controllerTag)) {
-      Get.put(
-        SelcomPesaTopupController(controllerTag: controllerTag),
-        tag: controllerTag,
-      );
-    }
+  static Future<void> show() {
+    final tag = 'selcom_pesa_other_${DateTime.now().millisecondsSinceEpoch}';
+    Get.put(SelcomPesaTopupController(controllerTag: tag), tag: tag);
 
     return AppDialogs.showStandardBottomSheet<void>(
       title: AppStrings.selcomPesa.tr,
       headerTextAlign: TextAlign.center,
       showHeaderDivider: true,
       barrierDismissible: true,
-      content: SelcomPesaAnotherNumberBottomSheet(controllerTag: controllerTag),
-      footer: _SelcomPesaOtherFooter(controllerTag: controllerTag),
-    ).whenComplete(() async {
-      if (!Get.isRegistered<SelcomPesaTopupController>(tag: controllerTag)) {
-        return;
-      }
-      final selcomController = Get.find<SelcomPesaTopupController>(
-        tag: controllerTag,
-      );
-      selcomController.clearRetainForFollowUpSheet();
-      await disposeSelcomPesaTopupAfterSheetClosed(controllerTag);
-    });
+      content: SelcomPesaAnotherNumberBottomSheet(controllerTag: tag),
+      footer: _SelcomPesaOtherFooter(controllerTag: tag),
+    ).whenComplete(() => disposeSelcomPesaTopupAfterSheetClosed(tag));
   }
 
   @override
@@ -59,6 +46,7 @@ class SelcomPesaAnotherNumberBottomSheet extends StatefulWidget {
 class _SelcomPesaAnotherNumberBottomSheetState
     extends State<SelcomPesaAnotherNumberBottomSheet> {
   late final TextEditingController _phoneController;
+  late final TextEditingController _amountController;
 
   SelcomPesaTopupController get _controller =>
       Get.find<SelcomPesaTopupController>(tag: widget.controllerTag);
@@ -67,6 +55,7 @@ class _SelcomPesaAnotherNumberBottomSheetState
   void initState() {
     super.initState();
     _phoneController = TextEditingController();
+    _amountController = TextEditingController();
     _controller.bindPhoneController(_phoneController);
   }
 
@@ -76,8 +65,10 @@ class _SelcomPesaAnotherNumberBottomSheetState
       _controller.unbindPhoneController();
     }
     final phone = _phoneController;
+    final amount = _amountController;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       phone.dispose();
+      amount.dispose();
     });
     super.dispose();
   }
@@ -154,7 +145,7 @@ class _SelcomPesaAnotherNumberBottomSheetState
             inputFormatters: [ThousandsSeparatorInputFormatter()],
             textFieldBackgroundColor: AppColors.surfaceSubtle,
             borderColor: AppColors.borderWalletCard,
-            controller: _controller.amountController,
+            controller: _amountController,
             errorText: _controller.amountError.value,
             onChanged: _controller.onAmountChanged,
             prefixIcon: Padding(

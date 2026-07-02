@@ -3,19 +3,20 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
-import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/phone_formatter.dart';
-import '../../../../shared/widgets/app_otp_field.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_standard_bottom_sheet.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../controllers/payment_methods_controller.dart';
 
+/// Phone-number entry for Selcom Pesa link (`POST send_link_request`).
+///
+/// Shown from [PaymentMethodsController.linkSelcomPesa]; on dismiss calls
+/// [PaymentMethodsController.stopLinkFlow]. See `docs/flows/selcom-pesa-link-flow.md`.
 class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
   const SelcomPesaFlowBottomSheet({super.key});
 
@@ -23,136 +24,26 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
     return AppDialogs.showStandardBottomSheet<void>(
       sheet: const SelcomPesaFlowBottomSheet(),
       barrierDismissible: true,
-    );
-  }
-
-  static String _titleForStep(SelcomPesaStep step) {
-    switch (step) {
-      case SelcomPesaStep.connect:
-        return AppStrings.stepsToConnectSelcomPesa.tr;
-      case SelcomPesaStep.phoneInput:
-        return AppStrings.enterYourSelcomPesaNumber.tr;
-      case SelcomPesaStep.otp:
-        return AppStrings.enterOtp.tr;
-      case SelcomPesaStep.selfie:
-        return AppStrings.verifyYourSelfie.tr;
-    }
+    ).whenComplete(() {
+      if (Get.isRegistered<PaymentMethodsController>()) {
+        Get.find<PaymentMethodsController>().stopLinkFlow();
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () => AppStandardBottomSheet(
-        title: _titleForStep(controller.selcomPesaStep.value),
-        headerTextAlign: TextAlign.center,
-        showHeaderDivider: true,
-        maxHeightFactor: 0.92,
-        content: AnimatedSize(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOutCubic,
-          alignment: Alignment.topCenter,
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            switchInCurve: Curves.easeInOutCubic,
-            switchOutCurve: Curves.easeInOutCubic,
-            transitionBuilder: (child, animation) {
-              final offsetAnimation = Tween<Offset>(
-                begin: const Offset(0.1, 0.0),
-                end: Offset.zero,
-              ).animate(animation);
-              return FadeTransition(
-                opacity: animation,
-                child: SlideTransition(position: offsetAnimation, child: child),
-              );
-            },
-            child: _buildStepContent(context, controller.selcomPesaStep.value),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStepContent(BuildContext context, SelcomPesaStep step) {
-    switch (step) {
-      case SelcomPesaStep.connect:
-        return _buildConnectStep(context);
-      case SelcomPesaStep.phoneInput:
-        return _buildPhoneInputStep(context);
-      case SelcomPesaStep.otp:
-        return _buildOtpStep(context);
-      case SelcomPesaStep.selfie:
-        return _buildSelfieStep(context);
-    }
-  }
-
-  Widget _buildConnectStep(BuildContext context) {
-    return Column(
-      key: const ValueKey(SelcomPesaStep.connect),
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _buildStepper(),
-
-        SizedBox(height: 14.h),
-
-        Container(
-          width: double.infinity,
-          padding: EdgeInsets.all(16.w),
-          decoration: BoxDecoration(
-            color: AppColors.bgRequestMoney,
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-          child: Text(
-            AppStrings
-                .youCanStillAbleToRequestMoneyOnSelcomPesaUsingAnotherNumber
-                .tr,
-            style: AppTextStyles.caption.copyWith(
-              color: AppColors.success,
-              fontWeight: FontWeight.w500,
-              fontSize: 15.sp,
-              height: 20 / 15,
-            ),
-          ),
-        ),
-        SizedBox(height: 20.h),
-
-        AppPrimaryButton(
-          label: AppStrings.continueLabel.tr,
-          onPressed: controller.openPhoneInput,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStepper() {
-    return Column(
-      children: [
-        _StepperItem(
-          step: '1',
-          description: AppStrings.selcomPesaConnectStep1.tr,
-          isLast: false,
-        ),
-        _StepperItem(
-          step: '2',
-          description: AppStrings.selcomPesaConnectStep2.tr,
-          isLast: false,
-        ),
-        _StepperItem(
-          step: '3',
-          description: AppStrings.selcomPesaConnectStep3.tr,
-          isLast: false,
-        ),
-        _StepperItem(
-          step: '4',
-          description: AppStrings.selcomPesaConnectStep4.tr,
-          isLast: true,
-        ),
-      ],
+    return AppStandardBottomSheet(
+      title: AppStrings.enterYourSelcomPesaNumber.tr,
+      headerTextAlign: TextAlign.center,
+      showHeaderDivider: true,
+      maxHeightFactor: 0.92,
+      content: _buildPhoneInputStep(context),
     );
   }
 
   Widget _buildPhoneInputStep(BuildContext context) {
     return Column(
-      key: const ValueKey(SelcomPesaStep.phoneInput),
       mainAxisSize: MainAxisSize.min,
       children: [
         Align(
@@ -165,12 +56,11 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
           ),
         ),
         SizedBox(height: 4.h),
-
         Obx(
           () => AppTextField(
             controller: controller.selcomPhoneController,
             keyboardType: TextInputType.phone,
-            autofocus: true,
+            autofocus: false,
             textFieldBackgroundColor: AppColors.pageBackground,
             borderColor: AppColors.borderWalletCard,
             errorText: controller.phoneError.value.isEmpty
@@ -194,9 +84,7 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
             onChanged: controller.onSelcomPhoneChanged,
           ),
         ),
-
         SizedBox(height: 24.h),
-
         Obx(
           () => AnimatedSwitcher(
             duration: const Duration(milliseconds: 260),
@@ -214,243 +102,14 @@ class SelcomPesaFlowBottomSheet extends GetView<PaymentMethodsController> {
                 ? AppPrimaryButton(
                     key: const ValueKey('selcom-pesa-continue-visible'),
                     label: AppStrings.continueLabel.tr,
-                    onPressed: controller.onPhoneContinue,
+                    isLoading: controller.isLinkRequestSubmitting.value,
+                    onPressed: controller.isLinkRequestSubmitting.value
+                        ? null
+                        : controller.onPhoneContinue,
                   )
                 : const SizedBox.shrink(
                     key: ValueKey('selcom-pesa-continue-hidden'),
                   ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildOtpStep(BuildContext context) {
-    return Column(
-      key: const ValueKey(SelcomPesaStep.otp),
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          AppStrings.otpSentToYourPhoneNumber.trParams({
-            'phoneNumber': TanzaniaPhoneFormatter.formatInternational(
-              controller.selcomPhoneController.text,
-            ),
-          }),
-          textAlign: TextAlign.center,
-          style: AppTextStyles.body.copyWith(
-            color: AppColors.textBody,
-            fontSize: 14.sp,
-          ),
-        ),
-        SizedBox(height: 16.h),
-        Obx(
-          () => Column(
-            children: [
-              AppOtpField(
-                length: 6,
-                variant: AppOtpFieldVariant.wallet,
-                controller: controller.otpController,
-                autofocus: true,
-                fieldHeight: 56.h,
-                fieldWidth: 50.w,
-                fieldBorderRadius: 12,
-                fieldFillColor: AppColors.surfaceSubtle,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                hasError: controller.otpError.isNotEmpty,
-                textStyle: AppTextStyles.body.copyWith(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textHeading,
-                ),
-                onCompleted: controller.onOtpComplete,
-                onChanged: (_) => controller.otpError.value = '',
-              ),
-              if (controller.otpError.isNotEmpty) ...[
-                SizedBox(height: 8.h),
-                Text(
-                  controller.otpError.value,
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.body.copyWith(
-                    color: AppColors.error,
-                    fontSize: 13.sp,
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-
-        SizedBox(height: 10.52.h),
-
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 4.w),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Obx(() {
-                if (controller.resendTimer.value > 0) {
-                  return Text(
-                    '0:${controller.resendTimer.value.toString().padLeft(2, '0')}',
-                    style: AppTextStyles.body.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 15.sp,
-                      height: 20 / 15,
-                    ),
-                  );
-                } else {
-                  return InkWell(
-                    onTap: controller.resendOtp,
-                    child: Text(
-                      AppStrings.resendOtp.tr,
-                      style: AppTextStyles.body.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 15.sp,
-                        height: 20 / 15,
-                      ),
-                    ),
-                  );
-                }
-              }),
-              InkWell(
-                onTap: controller.openPhoneInput,
-                child: Text(
-                  AppStrings.changePhoneNumber.tr,
-                  style: AppTextStyles.body.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 15.sp,
-                    height: 20 / 15,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        SizedBox(height: 16.h),
-      ],
-    );
-  }
-
-  Widget _buildSelfieStep(BuildContext context) {
-    return Column(
-      key: const ValueKey(SelcomPesaStep.selfie),
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Center(
-          child: SvgPictureAsset(
-            AppAssets.icFaceScan,
-            height: 200.h,
-            width: 160.w,
-          ),
-        ),
-        SizedBox(height: 24.h),
-
-        Text(
-          AppStrings
-              .yourSelfieWillBeCapturedToHelpUsValidateYouAgainstYourIdPleaseHoldYour
-              .tr,
-          textAlign: TextAlign.center,
-          style: AppTextStyles.body.copyWith(
-            color: AppColors.textBody,
-            fontSize: 15.sp,
-            fontWeight: FontWeight.w500,
-            height: 20 / 15,
-          ),
-        ),
-        SizedBox(height: 24.h),
-
-        AppPrimaryButton(
-          label: AppStrings.takeSelfie.tr,
-          onPressed: controller.takeSelfie,
-        ),
-      ],
-    );
-  }
-}
-
-class _StepperItem extends StatelessWidget {
-  final String step;
-  final String description;
-  final bool isLast;
-
-  const _StepperItem({
-    required this.step,
-    required this.description,
-    this.isLast = false,
-  });
-
-  static final double _nodeSize = 48.w;
-  static final double _connectorHeight = 32.h;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: _nodeSize,
-          child: Column(
-            children: [
-              Container(
-                width: _nodeSize,
-                height: _nodeSize,
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceSubtle,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: AppColors.borderWalletCard,
-                    width: 1,
-                  ),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  step,
-                  style: AppTextStyles.body.copyWith(
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textHeading,
-                    fontSize: 15.sp,
-                    height: 20 / 15,
-                  ),
-                ),
-              ),
-              if (!isLast)
-                Container(
-                  width: 10.w,
-                  height: _connectorHeight,
-                  decoration: const BoxDecoration(
-                    color: AppColors.surfaceSubtle,
-                    border: Border.symmetric(
-                      vertical: BorderSide(color: AppColors.borderWalletCard),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-        SizedBox(width: 16.w),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                height: _nodeSize,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    description,
-                    style: AppTextStyles.body.copyWith(
-                      color: AppColors.textBody,
-                      fontSize: 15.sp,
-                      height: 1.4,
-                    ),
-                  ),
-                ),
-              ),
-              if (!isLast) SizedBox(height: _connectorHeight),
-            ],
           ),
         ),
       ],

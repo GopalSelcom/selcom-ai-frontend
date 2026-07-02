@@ -35,13 +35,6 @@ class LanguageSw extends Languages {
     'add_money_tan_qr_tips': 'TanQR',
     'add_money_tan_qr_tips_subtitle': 'Ongeza Pesa ukitumia TanQR',
     'add_money_mobile_money_subtitle': 'Ongeza Pesa ukitumia Pesa ya Mtandao',
-    'add_money_steps_to_load_go_wallet': 'Hatua za kuongeza kwenye mkoba wako wa Go',
-    'add_money_steps_to_load_go_wallet_subtitle': 'Ongeza Pesa ukitumia programu ya benki yako au USSD',
-    'add_money_go_wallet_step_1': 'Chagua TanQR au tuma pesa kwa benki nyingine',
-    'add_money_go_wallet_step_2': 'Chagua Selcom MFB',
-    'add_money_go_wallet_step_3': 'Ingiza namba yako ya Go Wallet',
-    'add_money_go_wallet_step_4': 'Ingiza Kiasi',
-    'add_money_go_wallet_step_5': 'Ingiza PIN ili kuthibitisha',
     'wallet_funds_received_title': 'Mkoba wako umepokea fedha',
     'wallet_funds_received_subtitle':
         'Sasa unaweza kutumia mkoba wako kuweka nafasi ya safari.',
@@ -683,6 +676,15 @@ class LanguageSw extends Languages {
         'Thibitisha picha ya selfie inayohusiana na akaunti yako ya Selcom Pesa.',
     'selcom_pesa_connect_step_3':
         'Angalia programu yako ya Selcom Pesa na uidhinishe ombi la uthibitisho.',
+    'selcom_pesa_link_request_sent_message':
+        'Ombi la kuunganisha limetumwa kwa @phoneNumber. Tafadhali fungua Selcom Pesa na uidhinishe ili kuunganisha akaunti yako.',
+    'selcom_pesa_already_linked_message':
+        '@phoneNumber tayari imeunganishwa na akaunti yako ya Selcom Go.',
+    'link_another_account': 'Unganisha akaunti nyingine',
+    'selcom_pesa_pending_approval': 'Inasubiri idhini',
+    'selcom_pesa_max_linked_accounts':
+        'Unaweza kuunganisha akaunti @max za Selcom Pesa.',
+    'selcom_pesa_multiple_linked': 'Akaunti @count za Selcom Pesa zimeunganishwa',
     'selcom_pesa_connect_step_4':
         'Umekamilisha kila kitu! Akaunti yako ya Selcom Pesa imeunganishwa.',
     'otp_sent_to_your_phone_number':
@@ -893,34 +895,6 @@ class LanguageSw extends Languages {
   @override
   String get addMoneyMobileMoneySubtitle =>
       values['add_money_mobile_money_subtitle'] ?? '';
-
-  @override
-  String get addMoneyStepsToLoadGoWallet =>
-      values['add_money_steps_to_load_go_wallet'] ?? '';
-
-  @override
-  String get addMoneyStepsToLoadGoWalletSubtitle =>
-      values['add_money_steps_to_load_go_wallet_subtitle'] ?? '';
-
-  @override
-  String get addMoneyGoWalletStep1 =>
-      values['add_money_go_wallet_step_1'] ?? '';
-
-  @override
-  String get addMoneyGoWalletStep2 =>
-      values['add_money_go_wallet_step_2'] ?? '';
-
-  @override
-  String get addMoneyGoWalletStep3 =>
-      values['add_money_go_wallet_step_3'] ?? '';
-
-  @override
-  String get addMoneyGoWalletStep4 =>
-      values['add_money_go_wallet_step_4'] ?? '';
-
-  @override
-  String get addMoneyGoWalletStep5 =>
-      values['add_money_go_wallet_step_5'] ?? '';
 
   @override
   String get walletFundsReceivedTitle =>
@@ -2836,6 +2810,29 @@ class LanguageSw extends Languages {
   @override
   String get selcomPesaConnectStep3 =>
       values['selcom_pesa_connect_step_3'] ?? '';
+
+  @override
+  String get selcomPesaLinkRequestSentMessage =>
+      values['selcom_pesa_link_request_sent_message'] ?? '';
+
+  @override
+  String get selcomPesaAlreadyLinkedMessage =>
+      values['selcom_pesa_already_linked_message'] ?? '';
+
+  @override
+  String get linkAnotherAccount => values['link_another_account'] ?? '';
+
+  @override
+  String get selcomPesaPendingApproval =>
+      values['selcom_pesa_pending_approval'] ?? '';
+
+  @override
+  String get selcomPesaMaxLinkedAccounts =>
+      values['selcom_pesa_max_linked_accounts'] ?? '';
+
+  @override
+  String get selcomPesaMultipleLinked =>
+      values['selcom_pesa_multiple_linked'] ?? '';
 
   @override
   String get selcomPesaConnectStep4 =>

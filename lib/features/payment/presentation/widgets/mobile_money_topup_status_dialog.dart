@@ -102,14 +102,36 @@ class MobileMoneyTopupStatusDialog extends StatelessWidget {
                                 )
                               : ValueListenableBuilder<int>(
                                   valueListenable: secondsListenable!,
-                                  builder: (_, seconds, __) => Text(
-                                    requestSubtitle ??
+                                  builder: (_, seconds, __) {
+                                    final subtitle = requestSubtitle;
+                                    if (subtitle == null || subtitle.isEmpty) {
+                                      return Text(
                                         AppStrings.expiresInWithTime.trParams({
                                           'time': _formatTimer(seconds),
                                         }),
-                                    textAlign: TextAlign.center,
-                                    style: AppTextStyles.homeSubtitle,
-                                  ),
+                                        textAlign: TextAlign.center,
+                                        style: AppTextStyles.homeSubtitle,
+                                      );
+                                    }
+                                    return Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          subtitle,
+                                          textAlign: TextAlign.center,
+                                          style: AppTextStyles.homeSubtitle,
+                                        ),
+                                        SizedBox(height: 8.h),
+                                        Text(
+                                          AppStrings.expiresInWithTime.trParams({
+                                            'time': _formatTimer(seconds),
+                                          }),
+                                          textAlign: TextAlign.center,
+                                          style: AppTextStyles.homeSubtitle,
+                                        ),
+                                      ],
+                                    );
+                                  },
                                 ))
                         : Text(
                             AppStrings.walletFundsReceivedSubtitle.tr,
