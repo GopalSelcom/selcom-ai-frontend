@@ -36,7 +36,10 @@ Future<Map<String, String>> commonHeaders({
   headers[Params.longitude] = (longitude ?? 39.2860629).toString();
 
   // ── Language ──
-  headers[Params.language] = "en";
+  final preferredLanguage = await StorageService().read(
+    StorageKeys.preferredLanguage,
+  );
+  headers[Params.language] = apiLanguageHeaderValue(preferredLanguage);
 
   // ── Platform ──
   headers[Params.deviceType] = Platform.isAndroid ? "1" : "2";
@@ -91,4 +94,9 @@ Future<Map<String, String>> commonHeaders({
   // print("API Headers: $headers"); // Temporary for verification
 
   return headers;
+}
+
+/// API language header: `en` (default) or `sw`.
+String apiLanguageHeaderValue(String? languageCode) {
+  return languageCode == 'sw' ? 'sw' : 'en';
 }
