@@ -144,6 +144,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   bool _isResolvingLocationPermission = false;
   double _cachedMapZoom = 16;
   Timer? _sheetCameraSettleTimer;
+  bool _isClosed = false;
 
   final pickupMarkerIcon = Rxn<BitmapDescriptor>();
 
@@ -761,9 +762,11 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }
 
   void _onHomeSheetChanged() {
+    if (_isClosed) return;
     if (!homeSheetController.isAttached) return;
     final size = homeSheetController.size;
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_isClosed) return;
       if (!homeSheetController.isAttached) return;
       // Avoid map/sheet relayout fighting with modal sheets (e.g. add favourite).
       if (Get.isDialogOpen ?? false) return;
@@ -870,6 +873,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   bool get homeSheetShouldSnap => homeSheetSnapSizes.length > 1;
 
   void syncHomeSheetToDefault({bool animated = false}) {
+    if (_isClosed) return;
     final max = homeSheetMaxChildSize;
     var target = homeSheetInitialSize;
     if (homeSheetController.isAttached) {
@@ -881,6 +885,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     sheetSize.value = target;
     if (!homeSheetController.isAttached) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_isClosed) return;
         syncHomeSheetToDefault(animated: animated);
       });
       return;
@@ -950,9 +955,14 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
   @override
   void onClose() {
+    _isClosed = true;
     _sheetCameraSettleTimer?.cancel();
     homeSheetController.removeListener(_onHomeSheetChanged);
-    homeSheetController.dispose();
+    // Don't call homeSheetController.dispose() here because the old HomeScreen widget
+    // might still be in the widget tree (e.g. animating out) during a route transition,
+    // and disposing it now would crash the animating-out sheet.
+    // Instead, removing the listener above is sufficient, and the controller will be
+    // garbage-collected when the view is unmounted.
     WidgetsBinding.instance.removeObserver(this);
     stopActiveRidePolling();
     _socketService.dispose();
