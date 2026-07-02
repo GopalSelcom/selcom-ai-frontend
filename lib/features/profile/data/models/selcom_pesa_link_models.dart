@@ -96,22 +96,39 @@ class SelcomPesaMainBalanceResult {
   final Map<String, dynamic> raw;
 
   factory SelcomPesaMainBalanceResult.fromEnvelope(Map<String, dynamic> json) {
-    final data = json['data'];
-    final map = data is Map<String, dynamic>
-        ? data
-        : data is Map
-        ? Map<String, dynamic>.from(data)
-        : const <String, dynamic>{};
+    final data = _asMap(json['data']);
+    final spResponse = _asMap(data['sp_response']);
+    final balanceSource = spResponse.isNotEmpty
+        ? _asMap(spResponse['data'])
+        : data;
+    final source = balanceSource.isNotEmpty ? balanceSource : data;
 
     return SelcomPesaMainBalanceResult(
-      balance: _readBalance(map),
-      currency: _readString(map, const [
+      balance: _readBalance(source),
+      currency: _readString(source, const [
         'currency',
         'currency_code',
         'ccy',
       ]),
-      raw: map,
+      raw: data,
     );
+  }
+
+  /// When envelope `status_code` is 200 but SP payload reports failure.
+  static String? spResponseErrorMessage(Map<String, dynamic> envelope) {
+    final spResponse = _asMap(_asMap(envelope['data'])['sp_response']);
+    if (spResponse.isEmpty) return null;
+    if (spResponse['success'] == true) return null;
+
+    final message = spResponse['message']?.toString().trim();
+    if (message != null && message.isNotEmpty) return message;
+    return null;
+  }
+
+  static Map<String, dynamic> _asMap(dynamic value) {
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) return Map<String, dynamic>.from(value);
+    return const {};
   }
 
   static double _readBalance(Map<String, dynamic> map) {

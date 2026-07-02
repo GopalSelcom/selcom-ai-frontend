@@ -183,6 +183,12 @@ class SelcomPesaLinkRemoteDataSourceImpl implements SelcomPesaLinkRemoteDataSour
           _messageFromResponse(data) ?? AppStrings.somethingWentWrongPleaseTryAgain,
         );
       }
+
+      final spError = SelcomPesaMainBalanceResult.spResponseErrorMessage(data);
+      if (spError != null) {
+        throw SelcomPesaLinkException(spError);
+      }
+
       return SelcomPesaMainBalanceResult.fromEnvelope(data);
     }
 
