@@ -11,7 +11,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'firebase_options.dart';
 import 'core/config/app_config.dart';
 import 'core/config/environment.dart';
 import 'core/di/injection_container.dart' as di;
@@ -55,7 +54,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   WidgetsFlutterBinding.ensureInitialized();
   DartPluginRegistrant.ensureInitialized();
 
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Firebase.initializeApp();
   _registerKillCallLogSink();
 
   killStateCallLog(
@@ -130,10 +129,8 @@ void main() async {
       //   await mapsImplementation.initializeWithRenderer(AndroidMapRenderer.latest);
       // }
 
-      // Initialize Firebase
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
+      // Initialize Firebase (native config per flavor: google-services / GoogleService-Info).
+      await Firebase.initializeApp();
 
       // Hive app storage (tokens, user, prefs) — must run before readers.
       await StorageService().init();

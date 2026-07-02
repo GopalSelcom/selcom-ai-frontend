@@ -45,6 +45,19 @@ android {
         multiDexEnabled = true
     }
 
+    flavorDimensions += "environment"
+    productFlavors {
+        create("dev") {
+            dimension = "environment"
+            applicationIdSuffix = ".dev"
+            resValue("string", "app_name", "Selcom Go Dev")
+        }
+        create("prod") {
+            dimension = "environment"
+            resValue("string", "app_name", "Selcom Go")
+        }
+    }
+
     signingConfigs {
         create("release") {
             keyAlias = keystoreProperties.getProperty("keyAlias")
