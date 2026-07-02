@@ -342,6 +342,7 @@ class LanguageSw extends Languages {
     'please_tell_us_what_went_wrong_or_how_we_can_improve': 'Tafadhali tuambie nini kimeenda vibaya au jinsi tunavyoweza kuboresha.',
     'please_try_again': 'Tafadhali jaribu tena.',
     'privacy_policy': 'Sera ya Faragha',
+    'terms_and_conditions': 'Vigezo na Masharti',
     'payment_method_with_name': 'Njia ya malipo @name',
     'calculating_best_route': 'Inatafuta njia bora zaidi...',
     'ride_receipt': 'Stakabadhi ya Safari',
@@ -1832,6 +1833,9 @@ class LanguageSw extends Languages {
 
   @override
   String get privacyPolicy => values['privacy_policy'] ?? '';
+
+  @override
+  String get termsAndConditions => values['terms_and_conditions'] ?? '';
 
   @override
   String get paymentMethodWithName => values['payment_method_with_name'] ?? '';

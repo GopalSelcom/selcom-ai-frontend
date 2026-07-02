@@ -439,6 +439,7 @@ class AppStrings {
   static const String somethingWentWrongPleaseTryAgain =
       'something_went_wrong_please_try_again';
   static const String privacyPolicy = 'privacy_policy';
+  static const String termsAndConditions = 'terms_and_conditions';
   static const String paymentMethodWithName = 'payment_method_with_name';
   static const String calculatingBestRoute = 'calculating_best_route';
   static const String rideReceipt = 'ride_receipt';

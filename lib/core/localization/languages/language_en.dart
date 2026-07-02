@@ -377,6 +377,7 @@ class LanguageEn extends Languages {
         'Please tell us what went wrong or how we can improve.',
     'please_try_again': 'Please try again.',
     'privacy_policy': 'Privacy Policy',
+    'terms_and_conditions': 'Terms and Conditions',
     'payment_method_with_name': 'Payment method @name',
     'calculating_best_route': 'Calculating best route...',
     'ride_receipt': 'Ride Receipt',
@@ -1912,6 +1913,9 @@ class LanguageEn extends Languages {
 
   @override
   String get privacyPolicy => values['privacy_policy'] ?? '';
+
+  @override
+  String get termsAndConditions => values['terms_and_conditions'] ?? '';
 
   @override
   String get paymentMethodWithName => values['payment_method_with_name'] ?? '';

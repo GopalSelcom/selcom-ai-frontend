@@ -78,7 +78,7 @@ class ProfileController extends GetxController {
 
   /// Menu rows shown when not loading (must match [_buildSettingsList]).
   int get visibleMenuItemCount {
-    var count = 4;
+    var count = 5;
     if (showSafetyOption.value) count++;
     if (showSettingsOption.value) count++;
     return count;
@@ -316,6 +316,14 @@ class ProfileController extends GetxController {
       title: AppStrings.privacyPolicy.tr,
       url:
           '${AppConfig.apiHost}${AppConfig.apiPathPrefix}/v4/${URLS.common.privacy}',
+    );
+  }
+
+  void openTermsAndConditions() {
+    WebViewScreen.open(
+      title: AppStrings.termsAndConditions.tr,
+      url:
+          '${AppConfig.apiHost}${AppConfig.apiPathPrefix}/v4/${URLS.common.termsAndConditions}',
     );
   }
 

@@ -325,6 +325,7 @@ abstract class Languages {
   String get pleaseTellUsWhatWentWrongOrHowWeCanImprove;
   String get pleaseTryAgain;
   String get privacyPolicy;
+  String get termsAndConditions;
   String get paymentMethodWithName;
   String get calculatingBestRoute;
   String get rideReceipt;

@@ -354,14 +354,19 @@ class ProfileScreen extends StatelessWidget {
                 onTap: controller.openSafety,
               ),
             MenuItemWidget(
+              icon: Iconsax.heart,
+              title: AppStrings.savedLocations.tr,
+              onTap: controller.openFavoriteLocations,
+            ),
+            MenuItemWidget(
               icon: Iconsax.shield_tick,
               title: AppStrings.privacyPolicy.tr,
               onTap: controller.openPrivacyPolicy,
             ),
             MenuItemWidget(
-              icon: Iconsax.heart,
-              title: AppStrings.savedLocations.tr,
-              onTap: controller.openFavoriteLocations,
+              icon: Iconsax.document_text,
+              title: AppStrings.termsAndConditions.tr,
+              onTap: controller.openTermsAndConditions,
               showDivider: controller.showSettingsOption.value,
             ),
             if (controller.showSettingsOption.value)

@@ -132,6 +132,8 @@ class _CommonEndpoints {
   final onboardingBanner = "go/banner";
   final chatQuickReplies = "go/chat/quick-replies";
   final privacy = "go/get_setting?type=3";
+  /// todo: url need to update
+  final termsAndConditions = "go/get_setting?type=1";
 }
 
 /// ─────────────────────────────────
