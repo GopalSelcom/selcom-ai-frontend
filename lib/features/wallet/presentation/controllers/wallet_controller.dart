@@ -139,7 +139,7 @@ class WalletController extends GetxController {
       final profileResult = await _profileUseCase.getProfile();
       var email = '';
       profileResult.fold((_) => null, (user) {
-        email = "gopal@selcom.net";
+        email = user.emailId?.trim() ?? '';
       });
 
       if (email.isEmpty) {
