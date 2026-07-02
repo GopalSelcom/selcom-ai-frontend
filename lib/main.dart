@@ -11,6 +11,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'core/services/deeplink/deeplink_manager.dart';
 import 'firebase_options.dart';
 import 'core/config/app_config.dart';
 import 'core/config/environment.dart';
@@ -231,6 +232,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   Locale _locale = const Locale('en');
+  final DeepLinkManager _deepLinkManager = DeepLinkManager();
 
   @override
   void initState() {
@@ -239,6 +241,7 @@ class _MyAppState extends State<MyApp> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(NotificationService().flushPendingNavigationIfAny());
     });
+    _deepLinkManager.initializeDeepLinks();
   }
 
   Future<void> _loadSavedLocale() async {
@@ -252,6 +255,11 @@ class _MyAppState extends State<MyApp> {
       _locale = locale;
     });
     Get.updateLocale(locale);
+  }
+  @override
+  void dispose() {
+    _deepLinkManager.dispose();
+    super.dispose();
   }
 
   @override
