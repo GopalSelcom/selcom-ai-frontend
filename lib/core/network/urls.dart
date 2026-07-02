@@ -198,6 +198,7 @@ class _SelcomPesaEndpoints {
   final sendLinkRequest = "go/selcom_pesa/send_link_request";
   final linkedAccounts = "go/selcom_pesa/linked_accounts";
   final mainBalance = "go/selcom_pesa/main_balance";
+  final requestUnlink = "go/selcom_pesa/request_unlink";
 }
 
 /// ─────────────────────────────────

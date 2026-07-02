@@ -26,7 +26,7 @@ Same UI as the former bottom sheet, now a full screen.
 | **Account selection** | Circle selector on the **right** of each linked card; **none selected** by default |
 | **Link another** | Shown below linked cards while count &lt; **5** |
 | **Unlinked** | Single card: connect subtitle + **Link account** |
-| **Remove account** | `AppCupertinoTextButton` on each linked card (local unlink until API) |
+| **Remove account** | `AppCupertinoTextButton` on each linked card → `POST request_unlink` |
 | **Pull to refresh** | Reloads linked list via `GET linked_accounts` |
 | **Use another number** | Opens other-number top-up bottom sheet (separate controllers) |
 | **Amount** | TZS field (screen-owned `TextEditingController`) |
@@ -73,17 +73,17 @@ POST go/selcom_pesa/send_link_request
 
 There is **no polling** during link. User stays in Selcom Go; app refreshes via `GET linked_accounts` (on screen open, after link request, or pull-to-refresh).
 
-### Unlink (current)
+### Unlink
 
 ```
 Tap "Remove account" on linked card
         │
         ▼
-Local list update + success dialog
-(no backend call yet)
+POST go/selcom_pesa/request_unlink
+Body: sp_mobile_number (9 digits, no trunk 0)
         │
         ▼
-Pull-to-refresh may restore row until unlink API ships
+GET linked_accounts refresh + success dialog
 ```
 
 ---
@@ -95,6 +95,7 @@ Pull-to-refresh may restore row until unlink API ships
 | `POST` | `go/selcom_pesa/send_link_request` | Start / repeat link request |
 | `GET` | `go/selcom_pesa/linked_accounts` | Linked (and pending) accounts for UI |
 | `POST` | `go/selcom_pesa/main_balance` | Optional balance on linked detail sheet |
+| `POST` | `go/selcom_pesa/request_unlink` | Unlink a linked Selcom Pesa number |
 
 ### `POST send_link_request`
 
@@ -117,6 +118,19 @@ Pull-to-refresh may restore row until unlink API ships
 - Returns linked and pending rows.
 - Screen shows **only `LINKED`** accounts as cards (up to 5 linked in product rules).
 - Duplicate numbers merged in UI by normalized 9-digit key.
+
+### `POST request_unlink`
+
+**Body:**
+
+```json
+{
+  "sp_mobile_number": "711410410"
+}
+```
+
+- Send **9-digit NSN** without leading `0` (same normalization as link request).
+- Headers: same as `send_link_request` (`selcom_pesa_link_headers.dart`).
 
 ---
 
@@ -150,6 +164,3 @@ Screen amount field and other-number sheet **do not share** `TextEditingControll
 
 ---
 
-## TODO (backend / product)
-
-- Unlink account API (when product adds remove-linked-account action)

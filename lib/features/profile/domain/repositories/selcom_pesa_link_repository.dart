@@ -15,4 +15,6 @@ abstract class SelcomPesaLinkRepository {
     required String mobileNumber,
     required String countryCode,
   });
+
+  Future<void> requestUnlink({required String mobileNumber});
 }

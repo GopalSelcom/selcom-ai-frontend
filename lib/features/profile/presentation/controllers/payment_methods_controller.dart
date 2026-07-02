@@ -69,6 +69,7 @@ class PaymentMethodsController extends GetxController {
   final RxString phoneError = ''.obs;
   final RxBool canContinueSelcomPhone = false.obs;
   final RxBool isLinkRequestSubmitting = false.obs;
+  final RxBool isUnlinkSubmitting = false.obs;
 
   // --- Per-card balance reveal (POST main_balance, auto-hide after 30s) ---
 
@@ -201,35 +202,44 @@ class PaymentMethodsController extends GetxController {
     selectedLinkedAccountKey.value = key;
   }
 
-  /// Removes account from local list and shows success dialog.
-  ///
-  /// TODO: Call unlink API when backend endpoint is available; until then pull-to-
-  /// refresh may restore the account from `GET linked_accounts`.
+  /// `POST request_unlink` with SP mobile, then refreshes linked list.
   Future<void> unlinkLinkedAccount(SelcomPesaLinkedAccountEntity account) async {
+    if (isUnlinkSubmitting.value) return;
+
     final key = linkedAccountKey(account);
-    _hideLinkedAccountBalance(key);
-    _linkedBalanceLoading.remove(key);
-    _linkedBalanceLoading.refresh();
+    isUnlinkSubmitting.value = true;
+    Loader.instance.show();
 
-    if (selectedLinkedAccountKey.value == key) {
-      selectedLinkedAccountKey.value = null;
+    try {
+      await _selcomPesaLinkRepository.requestUnlink(
+        mobileNumber: account.mobileNumber,
+      );
+
+      _hideLinkedAccountBalance(key);
+      _linkedBalanceLoading.remove(key);
+      _linkedBalanceLoading.refresh();
+
+      if (selectedLinkedAccountKey.value == key) {
+        selectedLinkedAccountKey.value = null;
+      }
+
+      await loadLinkedAccounts();
+
+      AppDialogs.showSuccessDialog(
+        title: AppStrings.selcomPesa.tr,
+        message: AppStrings.accountUnlinkedSuccessfully.tr,
+      );
+    } on SelcomPesaLinkException catch (e) {
+      AppDialogs.showErrorDialog(message: e.message.tr);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      AppDialogs.showErrorDialog(
+        message: AppStrings.somethingWentWrongPleaseTryAgain.tr,
+      );
+    } finally {
+      isUnlinkSubmitting.value = false;
+      Loader.instance.hide();
     }
-
-    linkedAccountsList.removeWhere((a) => linkedAccountKey(a) == key);
-    linkedAccountsCount.value = linkedAccountsList.length;
-
-    if (linkedAccountsList.isEmpty) {
-      primaryLinkedAccount.value = null;
-      isSelcomPesaLinked.value = false;
-    } else {
-      primaryLinkedAccount.value = linkedAccountsList.first;
-      isSelcomPesaLinked.value = true;
-    }
-
-    AppDialogs.showSuccessDialog(
-      title: AppStrings.selcomPesa.tr,
-      message: AppStrings.accountUnlinkedSuccessfully.tr,
-    );
   }
 
   void _pruneSelectedLinkedAccount() {

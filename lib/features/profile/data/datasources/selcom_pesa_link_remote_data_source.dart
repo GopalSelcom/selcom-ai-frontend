@@ -18,6 +18,8 @@ abstract class SelcomPesaLinkRemoteDataSource {
   Future<SelcomPesaMainBalanceResult> getMainBalance([
     SelcomPesaMainBalanceRequest? request,
   ]);
+
+  Future<void> requestUnlink(SelcomPesaRequestUnlinkRequest request);
 }
 
 class SelcomPesaLinkException implements Exception {
@@ -108,6 +110,39 @@ class SelcomPesaLinkRemoteDataSourceImpl implements SelcomPesaLinkRemoteDataSour
         );
       }
       return SelcomPesaLinkedAccountsResult.fromEnvelope(data);
+    }
+
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      throw SelcomPesaLinkException(
+        _messageFromResponse(response.data) ?? AppStrings.somethingWentWrongPleaseTryAgain,
+      );
+    }
+
+    throw SelcomPesaLinkException(AppStrings.somethingWentWrongPleaseTryAgain);
+  }
+
+  @override
+  Future<void> requestUnlink(SelcomPesaRequestUnlinkRequest request) async {
+    final linkHeaders = await selcomPesaLinkRequestHeaders();
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.selcomPesa.requestUnlink,
+        method: ApiMethod.post,
+        body: request.toJson(),
+        headers: linkHeaders,
+        errorPresentationType: ErrorPresentationType.none,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data is Map<String, dynamic>) {
+      final data = Map<String, dynamic>.from(response.data as Map);
+      final statusCode = data['status_code'];
+      if (statusCode is int && statusCode != 200) {
+        throw SelcomPesaLinkException(
+          _messageFromResponse(data) ?? AppStrings.somethingWentWrongPleaseTryAgain,
+        );
+      }
+      return;
     }
 
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {

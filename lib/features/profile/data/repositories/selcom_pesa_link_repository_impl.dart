@@ -37,6 +37,15 @@ class SelcomPesaLinkRepositoryImpl implements SelcomPesaLinkRepository {
   }
 
   @override
+  Future<void> requestUnlink({required String mobileNumber}) {
+    return _remoteDataSource.requestUnlink(
+      SelcomPesaRequestUnlinkRequest(
+        spMobileNumber: normalizeTzMobileForSelcomPesa(mobileNumber),
+      ),
+    );
+  }
+
+  @override
   Future<SelcomPesaBalanceEntity> getMainBalance({
     required String mobileNumber,
     required String countryCode,

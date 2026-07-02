@@ -366,7 +366,6 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
           ],
         ),
         SizedBox(height: 8.h),
-        // Local unlink until backend API; see PaymentMethodsController.unlinkLinkedAccount.
         Align(
           alignment: Alignment.centerRight,
           child: AppCupertinoTextButton(
