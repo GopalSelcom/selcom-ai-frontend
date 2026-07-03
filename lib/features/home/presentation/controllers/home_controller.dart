@@ -539,6 +539,9 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
   void onHomeVisible() {
     if (SessionExpiryService.isHandling) return;
+    // HomeScreen can stay mounted under ongoing-ride routes; only release the
+    // ride room when Home is actually the active route.
+    if (Get.currentRoute != AppRoutes.home) return;
     // Release ride socket room when user is on Home (one room at a time).
     _socketService.leaveJoinedRideRoom();
     if (_skipNextVisibleRefresh) {

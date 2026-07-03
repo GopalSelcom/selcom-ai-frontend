@@ -36,15 +36,28 @@ class PaymentCountdownTimer with WidgetsBindingObserver {
     _deadline = DateTime.now().add(Duration(seconds: durationSeconds));
     _ensureLifecycleObserver();
     _syncRemaining();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _syncRemaining());
+    _startPeriodicTimer();
   }
 
   void stop() {
-    _timer?.cancel();
-    _timer = null;
+    _cancelPeriodicTimer();
     _deadline = null;
     _expired = false;
     _removeLifecycleObserver();
+  }
+
+  void _startPeriodicTimer() {
+    _cancelPeriodicTimer();
+    if (!isRunning) return;
+    _timer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => _syncRemaining(),
+    );
+  }
+
+  void _cancelPeriodicTimer() {
+    _timer?.cancel();
+    _timer = null;
   }
 
   void _syncRemaining() {
@@ -77,10 +90,22 @@ class PaymentCountdownTimer with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state != AppLifecycleState.resumed) return;
-    _syncRemaining();
-    if (isRunning) {
-      onResumed?.call();
+    if (!isRunning) return;
+
+    switch (state) {
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.paused:
+      case AppLifecycleState.hidden:
+        // Wall-clock deadline keeps counting; pause UI ticks while backgrounded.
+        _cancelPeriodicTimer();
+      case AppLifecycleState.resumed:
+        _syncRemaining();
+        if (isRunning) {
+          _startPeriodicTimer();
+          onResumed?.call();
+        }
+      case AppLifecycleState.detached:
+        break;
     }
   }
 }

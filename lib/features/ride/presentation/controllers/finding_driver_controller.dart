@@ -661,6 +661,7 @@ class FindingDriverController extends GetxController {
       if (!socketPayloadIsForRide(
         activeRideId: rideId,
         payloadRideId: payload.rideId,
+        joinedRideRoomId: _socketService.joinedRideRoomId,
       )) {
         return;
       }
@@ -690,6 +691,7 @@ class FindingDriverController extends GetxController {
       if (!socketPayloadIsForRide(
         activeRideId: rideId,
         payloadRideId: payload.rideId,
+        joinedRideRoomId: _socketService.joinedRideRoomId,
       )) {
         return;
       }
