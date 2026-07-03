@@ -1132,7 +1132,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }
 
   SavedPlace? getSavedPlaceByLabel(String label) {
-    return SavedPlacesOrdering.placeForCanonicalLabel(savedPlaces, label);
+    return SavedPlacesOrdering.placeForLabel(savedPlaces, label);
   }
 
   /// Saved places not bound to a preset chip (custom labels or duplicate presets).
@@ -2079,36 +2079,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         }
       });
     }
-  }
-
-  bool applySavedLabelToLocationSelection({
-    required String label,
-    required int activeSegmentIndex,
-    required TextEditingController pickupController,
-    required TextEditingController destinationController,
-    required List<TextEditingController> extraDestinationControllers,
-    required RxBool pickupEditedByUser,
-    required RxnDouble routePickupLat,
-    required RxnDouble routePickupLng,
-    required RxnDouble routeDestinationLat,
-    required RxnDouble routeDestinationLng,
-    required RxnString destinationPlaceId,
-  }) {
-    final savedPlace = getSavedPlaceByLabel(label);
-    if (savedPlace == null) return false;
-    return applySavedPlaceToLocationSelection(
-      savedPlace: savedPlace,
-      activeSegmentIndex: activeSegmentIndex,
-      pickupController: pickupController,
-      destinationController: destinationController,
-      extraDestinationControllers: extraDestinationControllers,
-      pickupEditedByUser: pickupEditedByUser,
-      routePickupLat: routePickupLat,
-      routePickupLng: routePickupLng,
-      routeDestinationLat: routeDestinationLat,
-      routeDestinationLng: routeDestinationLng,
-      destinationPlaceId: destinationPlaceId,
-    );
   }
 
   bool applySavedPlaceToLocationSelection({

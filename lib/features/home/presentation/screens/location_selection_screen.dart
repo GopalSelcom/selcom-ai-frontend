@@ -543,8 +543,8 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             Get.toNamed(AppRoutes.selectSavedLocation, arguments: canonical);
             return;
           }
-          final applied = controller.applySavedLabelToLocationSelection(
-            label: canonical,
+          final applied = controller.applySavedPlaceToLocationSelection(
+            savedPlace: place,
             activeSegmentIndex: _activeSegmentIndex.value,
             pickupController: pickupController,
             destinationController: destinationController,
@@ -773,8 +773,8 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
               );
               return;
             }
-            final applied = controller.applySavedLabelToLocationSelection(
-              label: label,
+            final applied = controller.applySavedPlaceToLocationSelection(
+              savedPlace: place,
               activeSegmentIndex: _activeSegmentIndex.value,
               pickupController: pickupController,
               destinationController: destinationController,

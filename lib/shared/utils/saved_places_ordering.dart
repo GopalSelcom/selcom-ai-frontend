@@ -65,6 +65,25 @@ class SavedPlacesOrdering {
     return null;
   }
 
+  /// Preset slot match first, then case-insensitive match on [effectiveLabel].
+  static SavedPlace? placeForLabel(
+    Iterable<SavedPlace> places,
+    String label,
+  ) {
+    final byPreset = placeForCanonicalLabel(places, label);
+    if (byPreset != null) return byPreset;
+
+    final needle = label.trim().toLowerCase();
+    if (needle.isEmpty) return null;
+
+    for (final place in places) {
+      if (effectiveLabel(place).toLowerCase() == needle) {
+        return place;
+      }
+    }
+    return null;
+  }
+
   /// Non-preset saved places, including duplicate preset labels (e.g. second "other").
   static List<SavedPlace> beyondPresetSlots(Iterable<SavedPlace> places) {
     final assignedIds = <String>{};
