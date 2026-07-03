@@ -643,6 +643,9 @@ class DriverAcceptedController extends GetxController
     _chatSub?.cancel();
     _fareSettledSub?.cancel();
     _driverCancelledSub?.cancel();
+    _rideStopsUpdatedSub?.cancel();
+    _rideStopsUpdateFailedSub?.cancel();
+    _paymentStatusSub?.cancel();
     if (!_skipRideRoomLeaveOnClose && rideId.isNotEmpty) {
       _socketService.leaveRideRoom(rideId: rideId);
     }
@@ -746,19 +749,20 @@ class DriverAcceptedController extends GetxController
     _refreshMapRouteHeader();
   }
 
+  /// Updates [routeTarget] only — polylines come from `ride:tracking_update`
+  /// `route_geometry` via [TrackingRouteGeometryUtils.shouldDrawPolyline].
   void _setDropRouteFallback() {
     routeTarget.value = 'drop_off';
-    routePoints.assignAll([pickupLatLng, destinationLatLng]);
   }
 
   void _setPickupRouteFallback() {
     routeTarget.value = 'pick_up';
-    final driver = assignedDriverLocation.value;
-    if (driver != null) {
-      routePoints.assignAll([driver, pickupLatLng]);
-      return;
-    }
-    routePoints.assignAll([pickupLatLng, destinationLatLng]);
+  }
+
+  void _clearRouteAwaitingTrackingUpdate() {
+    if (routePoints.isEmpty) return;
+    routePoints.clear();
+    isInitialRouteLoaded.value = false;
   }
 
   void _markInitialRouteReady() {
@@ -919,7 +923,7 @@ class DriverAcceptedController extends GetxController
             isDestinationUpdateFlow.value = false;
             _pendingDestinationTargetLat = null;
             _pendingDestinationTargetLng = null;
-            _setDropRouteFallback();
+            unawaited(_ensureRideRealtimeAfterLocationUpdate());
           }
         }
       },
@@ -1259,6 +1263,8 @@ class DriverAcceptedController extends GetxController
       _clearIdempotencyKey();
       isUpdatingStops.value = false;
       stopUpdateProgressStep.value = 0;
+      _clearRouteAwaitingTrackingUpdate();
+      unawaited(_ensureRideRealtimeAfterLocationUpdate());
       _fetchRideDetails();
     });
 
@@ -1282,6 +1288,10 @@ class DriverAcceptedController extends GetxController
             message: userMessage,
           );
         });
+
+    _paymentStatusSub = _socketService.paymentStatusStream.listen(
+      _handlePaymentBlockStatus,
+    );
   }
 
   /// Ignores socket ticks from other active rides when Home joined multiple rooms.
@@ -1289,7 +1299,72 @@ class DriverAcceptedController extends GetxController
     return socketPayloadIsForRide(
       activeRideId: rideId,
       payloadRideId: payloadRideId,
+      joinedRideRoomId: _socketService.joinedRideRoomId,
     );
+  }
+
+  Future<void> _ensureRideRealtimeAfterLocationUpdate() async {
+    if (rideId.isEmpty) return;
+    try {
+      await _socketService.ensureConnected();
+      _joinRideRoomIfNeeded();
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      AppLogger.w(
+        'Ride socket rejoin after location update failed',
+        tag: 'DriverAcceptedController',
+      );
+    }
+  }
+
+  bool? _paymentBlockOutcome(PaymentStatusUpdateResponse event) {
+    final phase = (event.phase ?? '').toString().toLowerCase();
+    final status = (event.status ?? '').toString().toLowerCase();
+
+    if (phase.isNotEmpty && phase != 'block') return null;
+
+    if (status == 'confirmed' || status == 'completed') {
+      return true;
+    }
+    if (status == 'failed') {
+      return false;
+    }
+    return null;
+  }
+
+  void _handlePaymentBlockStatus(PaymentStatusUpdateResponse event) {
+    final outcome = _paymentBlockOutcome(event);
+    if (outcome == null) return;
+
+    if (isUpdatingStops.value && stopUpdateProgressStep.value == 1) {
+      if (outcome) {
+        stopUpdateProgressStep.value = 2;
+        unawaited(_ensureRideRealtimeAfterLocationUpdate());
+      } else {
+        isUpdatingStops.value = false;
+        stopUpdateProgressStep.value = 0;
+        _showStopUpdateError(
+          AppStrings.paymentHoldUpdateFailedNoChargesApplied.tr,
+        );
+      }
+      return;
+    }
+
+    if (isUpdatingDestination.value && stopUpdateProgressStep.value == 1) {
+      if (outcome) {
+        stopUpdateProgressStep.value = 2;
+        unawaited(_ensureRideRealtimeAfterLocationUpdate());
+      } else {
+        isUpdatingDestination.value = false;
+        isDestinationUpdateFlow.value = false;
+        stopUpdateProgressStep.value = 0;
+        _pendingDestinationTargetLat = null;
+        _pendingDestinationTargetLng = null;
+        _showDestinationUpdateError(
+          AppStrings.paymentHoldUpdateFailedNoChargesApplied.tr,
+        );
+      }
+    }
   }
 
   void _joinRideRoomIfNeeded() {
@@ -2080,16 +2155,10 @@ class DriverAcceptedController extends GetxController
     final kind = TrackingRouteGeometryUtils.classify(coordinates);
     switch (kind) {
       case TrackingRouteGeometryKind.empty:
-        _markInitialRouteReady();
-        if (_hasReceivedTrackingUpdate) {
-          if (routeTarget == 'pick_up') {
-            _setPickupRouteFallback();
-          } else {
-            _setDropRouteFallback();
-          }
-          if (fitCameraOnChange) _fitRouteBounds();
-        } else if (routePoints.isNotEmpty) {
-          routePoints.clear();
+        // Wait for the next tracking payload with path geometry — never draw
+        // a straight pickup→destination fallback line.
+        if (routePoints.isEmpty) {
+          _markInitialRouteReady();
         }
         return;
       case TrackingRouteGeometryKind.repeatedLocation:
@@ -2506,6 +2575,7 @@ class DriverAcceptedController extends GetxController
       _pendingStopPaymentDirection = null;
       isUpdatingStops.value = true;
       stopUpdateProgressStep.value = 1;
+      _clearRouteAwaitingTrackingUpdate();
       await _processPaymentHold(resumeValidationId, direction);
       return;
     }
@@ -2521,6 +2591,7 @@ class DriverAcceptedController extends GetxController
         (applied.blockUpdateValidationId ?? '').isNotEmpty) {
       isUpdatingStops.value = true;
       stopUpdateProgressStep.value = 1;
+      _clearRouteAwaitingTrackingUpdate();
       await _processPaymentHold(
         applied.blockUpdateValidationId!,
         applied.direction,
@@ -2532,6 +2603,8 @@ class DriverAcceptedController extends GetxController
     _clearIdempotencyKey();
     stopUpdateProgressStep.value = 0;
     isUpdatingStops.value = false;
+    _clearRouteAwaitingTrackingUpdate();
+    await _ensureRideRealtimeAfterLocationUpdate();
     await _fetchRideDetails();
   }
 
@@ -2608,10 +2681,13 @@ class DriverAcceptedController extends GetxController
   ) async {
     if (direction == 'up') {
       stopUpdateProgressStep.value = 1; // Show payment step
-      if (!_socketService.isConnected) {
-        await _socketService.connect();
+      try {
+        await _socketService.ensureConnected();
+      } catch (e, stackTrace) {
+        ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       }
       _socketService.joinPaymentRoom(validationId: validationId);
+      _joinRideRoomIfNeeded();
       if (AppConfig.ridePaymentBypass) {
         await rideRepository.walletDummyPaymentRequest(
           DummyPaymentRequest(
@@ -2623,8 +2699,10 @@ class DriverAcceptedController extends GetxController
       }
     } else if (direction == 'down') {
       stopUpdateProgressStep.value = 2; // Jump to route update (silent payment)
+      unawaited(_ensureRideRealtimeAfterLocationUpdate());
     } else {
       stopUpdateProgressStep.value = 2; // Jump to route update (no payment)
+      unawaited(_ensureRideRealtimeAfterLocationUpdate());
     }
 
     // The socket listeners will handle the rest of the flow
@@ -2777,6 +2855,7 @@ class DriverAcceptedController extends GetxController
     _pendingDestinationTargetLng = lng;
 
     isDestinationUpdateFlow.value = true;
+    _clearRouteAwaitingTrackingUpdate();
 
     // Step 2: apply destination update (confirm=true).
     final result = await rideRepository.confirmUpdateDestination(rideId, dest);
@@ -2827,8 +2906,8 @@ class DriverAcceptedController extends GetxController
       );
     } else {
       isDestinationUpdateFlow.value = false;
+      await _ensureRideRealtimeAfterLocationUpdate();
       await _fetchRideDetails();
-      _setDropRouteFallback();
       stopUpdateProgressStep.value = 0;
       isUpdatingDestination.value = false;
     }
@@ -2839,15 +2918,19 @@ class DriverAcceptedController extends GetxController
     String direction,
   ) async {
     isUpdatingDestination.value = true;
+    _clearRouteAwaitingTrackingUpdate();
     // Mirrors stop-update payment behavior:
     // - up: request payment authorization
     // - down/flat: skip to route sync step
     if (direction == 'up') {
       stopUpdateProgressStep.value = 1;
-      if (!_socketService.isConnected) {
-        await _socketService.connect();
+      try {
+        await _socketService.ensureConnected();
+      } catch (e, stackTrace) {
+        ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       }
       _socketService.joinPaymentRoom(validationId: validationId);
+      _joinRideRoomIfNeeded();
       if (AppConfig.ridePaymentBypass) {
         await rideRepository.walletDummyPaymentRequest(
           DummyPaymentRequest(
@@ -2859,8 +2942,10 @@ class DriverAcceptedController extends GetxController
       }
     } else if (direction == 'down') {
       stopUpdateProgressStep.value = 2;
+      unawaited(_ensureRideRealtimeAfterLocationUpdate());
     } else {
       stopUpdateProgressStep.value = 2;
+      unawaited(_ensureRideRealtimeAfterLocationUpdate());
     }
     _startDestinationUpdateTimeout();
   }

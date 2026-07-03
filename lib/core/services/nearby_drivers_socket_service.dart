@@ -163,6 +163,32 @@ class AppSocketService {
 
   // ---------------- CONNECT ----------------
 
+  /// Waits until the socket is connected (or [timeout] elapses).
+  Future<void> ensureConnected({
+    Duration timeout = const Duration(seconds: 15),
+  }) async {
+    if (_socket?.connected == true) return;
+
+    final completer = Completer<void>();
+    late StreamSubscription<bool> sub;
+    sub = connectionStream.listen((connected) {
+      if (connected && !completer.isCompleted) {
+        completer.complete();
+      }
+    });
+
+    try {
+      await connect();
+      if (_socket?.connected == true) return;
+      await completer.future.timeout(timeout);
+    } on TimeoutException {
+      _errorController.add('Socket connection timed out');
+      rethrow;
+    } finally {
+      await sub.cancel();
+    }
+  }
+
   Future<void> connect() async {
     if (_socket?.connected == true || _isConnecting) return;
     _manualDisconnect = false;
@@ -402,6 +428,8 @@ class AppSocketService {
     }
     try {
       _socket!.emit(evtJoinPaymentRoom, {'validation_id': validationId});
+      // Payment room is separate; stay subscribed to the active ride room too.
+      _rejoinRideRoomIfNeeded();
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       AppLogger.e('joinPaymentRoom failed', tag: 'Socket', error: e);
