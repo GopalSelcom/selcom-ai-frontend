@@ -147,7 +147,6 @@ class SelcomPesaTopupController extends GetxController {
   @override
   void onClose() {
     _stopTimers();
-    pendingCountdown.dispose();
     if (!_textFieldsDisposed) {
       disposeTextFields();
     }

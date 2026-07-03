@@ -263,9 +263,7 @@ class AppSocketService {
       );
       final data = trackingUpdateSocketResponseFromJson(jsonEncode(payload));
       if (data != null) {
-        _trackingUpdateStatusController.add(
-          trackingUpdateSocketResponseFromJson(jsonEncode(payload)),
-        );
+        _trackingUpdateStatusController.add(data);
       }
     });
     _socket!.on(evtRideDriverLocation, (payload) {
