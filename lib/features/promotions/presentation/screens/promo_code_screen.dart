@@ -106,7 +106,7 @@ class PromoCodeScreen extends StatelessWidget {
       );
     }
 
-    if (!controller.promoCodes.isEmpty) {
+    if (controller.promoCodes.isEmpty) {
       return _buildListMessage(
         message: AppStrings.noAvailablePromoCodes.tr,
         showRetry: true,
