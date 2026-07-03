@@ -70,6 +70,7 @@ class SelcomPesaTopupController extends GetxController {
   late final PaymentCountdownTimer _paymentCountdown;
   Timer? _pollTimer;
   bool _pendingDialogVisible = false;
+  bool _dialogRouteOpen = false;
   bool _paymentHandled = false;
   bool _statusPollInFlight = false;
   bool _retainForFollowUpSheet = false;
@@ -125,7 +126,11 @@ class SelcomPesaTopupController extends GetxController {
     _paymentCountdown = PaymentCountdownTimer(
       onTick: (remaining) => pendingCountdown.value = remaining,
       onExpired: _onPaymentTimeoutExpired,
-      onResumed: () => unawaited(_pollSelcomPesaStatus()),
+      onResumed: () {
+        _ensurePendingDialogVisible();
+        unawaited(_pollSelcomPesaStatus());
+        _restartPollTimerIfNeeded();
+      },
     );
   }
 
@@ -366,18 +371,21 @@ class SelcomPesaTopupController extends GetxController {
         .requestSentPleaseCompletePaymentOnSelcomPesaToBookYourRide
         .tr;
 
+    await _beginAwaitingPayment();
+
     final launchResult = await _selcomPesaLauncher.openPcodePayment(
       result.shortCode,
     );
     if (!launchResult.launched) {
+      _paymentHandled = true;
+      _stopTimers();
+      await _dismissPendingDialogAndWait();
       AppDialogs.showErrorDialog(
         message: AppStrings.selcomPesaHandoffFailed.tr,
       );
       _finishFlow();
       return;
     }
-
-    await _beginAwaitingPayment();
   }
 
   Future<void> _startOtherFlow(SelcomPesaTopupResult result) async {
@@ -400,9 +408,29 @@ class SelcomPesaTopupController extends GetxController {
 
   void _showPaymentPendingDialog() {
     _pendingDialogVisible = true;
+    _presentPaymentPendingDialog();
+  }
 
+  void _ensurePendingDialogVisible() {
+    if (!_pendingDialogVisible || _paymentHandled) return;
+    _presentPaymentPendingDialog();
+  }
+
+  void _presentPaymentPendingDialog() {
+    if (!_pendingDialogVisible || _paymentHandled || _dialogRouteOpen) return;
+
+    final context = Get.context;
+    if (context == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _presentPaymentPendingDialog();
+      });
+      return;
+    }
+
+    _dialogRouteOpen = true;
     AppDialogs.showAnimatedDialog<void>(
       barrierDismissible: false,
+      useRootNavigator: true,
       child: PopScope(
         canPop: false,
         child: Obx(
@@ -415,13 +443,17 @@ class SelcomPesaTopupController extends GetxController {
           ),
         ),
       ),
-    );
+    ).whenComplete(() {
+      _dialogRouteOpen = false;
+    });
   }
 
   void _dismissPendingDialog() {
     if (!_pendingDialogVisible) return;
     _pendingDialogVisible = false;
-    AppDialogs.dismissTopOverlay();
+    if (_dialogRouteOpen) {
+      AppDialogs.dismissTopOverlay();
+    }
   }
 
   void _startPaymentPolling(int durationSeconds) {
@@ -698,6 +730,14 @@ class SelcomPesaTopupController extends GetxController {
     _paymentCountdown.stop();
     _pollTimer?.cancel();
     _pollTimer = null;
+  }
+
+  void _restartPollTimerIfNeeded() {
+    if (_paymentHandled || _session == null) return;
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(pollInterval, (_) {
+      unawaited(_pollSelcomPesaStatus());
+    });
   }
 }
 

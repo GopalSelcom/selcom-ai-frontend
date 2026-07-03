@@ -78,7 +78,10 @@ class TanQrWalletTopupController extends GetxController {
     _paymentCountdown = PaymentCountdownTimer(
       onTick: (remaining) => countdownSeconds.value = remaining,
       onExpired: _onTimerExpired,
-      onResumed: () => unawaited(_pollPaymentStatus()),
+      onResumed: () {
+        unawaited(_pollPaymentStatus());
+        _restartPollTimerIfNeeded();
+      },
     );
     unawaited(_loadRegisteredPhone());
     unawaited(_loadDisplayAccountDetails());
@@ -369,6 +372,15 @@ class TanQrWalletTopupController extends GetxController {
     _paymentCountdown.stop();
     _pollTimer?.cancel();
     _pollTimer = null;
+  }
+
+  void _restartPollTimerIfNeeded() {
+    if (_paymentHandled || session.value == null) return;
+    if (step.value != TanQrTopupStep.qrDisplay) return;
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(pollInterval, (_) {
+      unawaited(_pollPaymentStatus());
+    });
   }
 
   String formatCountdown(int totalSeconds) {
