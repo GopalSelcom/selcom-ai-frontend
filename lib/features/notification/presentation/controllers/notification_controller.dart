@@ -21,10 +21,10 @@ class NotificationController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    getNotifications(markAllOnOpen: true);
+    getNotifications();
   }
 
-  Future<void> getNotifications({bool markAllOnOpen = false}) async {
+  Future<void> getNotifications() async {
     currentPage.value = 1;
     isLoading.value = true;
     final result = await repository.getNotifications(
@@ -48,10 +48,6 @@ class NotificationController extends GetxController {
     );
 
     isLoading.value = false;
-
-    if (markAllOnOpen && unreadCount.value > 0) {
-      await markAllAsRead(silent: true);
-    }
   }
 
   bool get hasMorePages => currentPage.value < totalPages.value;
@@ -100,14 +96,12 @@ class NotificationController extends GetxController {
     });
   }
 
-  Future<void> markAllAsRead({bool silent = false}) async {
+  Future<void> markAllAsRead() async {
     if (!canMarkAllAsRead) {
       return;
     }
 
-    if (!silent) {
-      isMarkAllLoading.value = true;
-    }
+    isMarkAllLoading.value = true;
     final result = await repository.markAllAsRead();
 
     result.fold((failure) {}, (success) {
@@ -118,9 +112,7 @@ class NotificationController extends GetxController {
         unreadCount.value = 0;
       }
     });
-    if (!silent) {
-      isMarkAllLoading.value = false;
-    }
+    isMarkAllLoading.value = false;
   }
 
   void deleteNotification(String id) {
