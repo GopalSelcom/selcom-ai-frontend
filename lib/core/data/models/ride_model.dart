@@ -1,3 +1,4 @@
+import '../../../shared/utils/driver_search_timeout_from_cancel_time.dart';
 import '../../domain/entities/location_entity.dart';
 import '../../domain/entities/mid_ride_cancel_entity.dart';
 import '../../domain/entities/ride_entity.dart';
@@ -41,6 +42,8 @@ class RideModel extends RideEntity {
     super.promoCode,
     super.promoDiscount,
     super.midRideCancel,
+    super.cancelTime,
+    super.searchStartedAt,
   });
 
   factory RideModel.fromJson(Map<String, dynamic> json) {
@@ -160,6 +163,8 @@ class RideModel extends RideEntity {
       promoCode: promoCodeParsed,
       promoDiscount: promoDiscountParsed,
       midRideCancel: midRideCancel,
+      cancelTime: (json['cancel_time'] as num?)?.toInt(),
+      searchStartedAt: parseDriverSearchStartedAt(json['search_started_at']),
     );
   }
 
@@ -201,6 +206,8 @@ class RideModel extends RideEntity {
     String? promoCode,
     int? promoDiscount,
     MidRideCancelEntity? midRideCancel,
+    int? cancelTime,
+    DateTime? searchStartedAt,
   }) {
     return RideModel(
       id: id ?? this.id,
@@ -239,6 +246,8 @@ class RideModel extends RideEntity {
       promoCode: promoCode ?? this.promoCode,
       promoDiscount: promoDiscount ?? this.promoDiscount,
       midRideCancel: midRideCancel ?? this.midRideCancel,
+      cancelTime: cancelTime ?? this.cancelTime,
+      searchStartedAt: searchStartedAt ?? this.searchStartedAt,
     );
   }
 

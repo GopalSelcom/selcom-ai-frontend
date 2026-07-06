@@ -163,7 +163,7 @@ class LanguageSw extends Languages {
     'ride_started_description': 'Uko njiani kuelekea unakokwenda.',
     'finding_your_driver': 'Kumtafuta Dereva Wako',
     'finding_driver_default_description': 'Dereva atakuchukua haraka iwezekanavyo baada ya kuthibitisha agizo lako',
-    'finding_driver_minutes_remain': 'Zimebaki dakika @minutes',
+    'finding_driver_minutes_remain': 'Zimebaki dakika @minutes na sekunde @seconds',
     'driver_will_arriving_in_minutes': 'Dereva atawasili baada ya dakika @minutes...',
     'driver_assigned': 'Dereva Amepangwa',
     'driver_arriving': 'Dereva Anakuja',

@@ -176,7 +176,7 @@ class LanguageEn extends Languages {
     'finding_your_driver': 'Finding Your Driver',
     'finding_driver_default_description':
         'The driver will pick you up as soon as possible after they confirm your order',
-    'finding_driver_minutes_remain': '@minutes min remaining',
+    'finding_driver_minutes_remain': '@minutes min @seconds sec remaining',
     'driver_will_arriving_in_minutes': 'Driver will arrive in @minutes min...',
     'driver_assigned': 'Driver Assigned',
     'driver_arriving': 'Driver Arriving',

@@ -24,6 +24,7 @@ import '../../../../shared/utils/address_display_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/book_any_fare_settled_ui.dart';
 import '../../../../shared/utils/driver_search_timeout_from_cancel_time.dart';
+import '../../../../shared/utils/payment_countdown_timer.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../../../shared/utils/ride_pickup_status_labels.dart';
 import '../../../../shared/utils/ride_status_normalizer.dart';
@@ -46,6 +47,7 @@ class FindingDriverController extends GetxController {
 
   /// Total search window in seconds (from API `cancel_time` ms, else default 9 min).
   late final int _searchTimeoutSeconds;
+  DateTime? _searchStartedAt;
   static const int _defaultSearchTimeoutSeconds = 540;
 
   late final String rideId;
@@ -126,7 +128,7 @@ class FindingDriverController extends GetxController {
 
   GoogleMapController? mapController;
 
-  Timer? _countdownTimer;
+  late final PaymentCountdownTimer _searchCountdown;
   Timer? _mockDriverAssignTimer;
   StreamSubscription<bool>? _connectionSub;
   StreamSubscription<EventRiderStatusUpdateResponse>? _rideStatusSub;
@@ -169,7 +171,7 @@ class FindingDriverController extends GetxController {
     String normalized,
     EventRiderStatusUpdateResponse payload,
   ) {
-    _countdownTimer?.cancel();
+    _searchCountdown.stop();
     _loadDriverMarkerIcon(vehicleType: payload.driverSnapshot?.vehicleType);
     if (!_didNavigateToAccepted) {
       _navigateToDriverAccepted();
@@ -279,6 +281,10 @@ class FindingDriverController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    _searchCountdown = PaymentCountdownTimer(
+      onTick: (remaining) => remainingSeconds.value = remaining,
+      onExpired: () => unawaited(_autoCancelRide()),
+    );
     _parseArgs();
     _startCountdown();
     _initNearbyDriversSocket();
@@ -295,7 +301,10 @@ class FindingDriverController extends GetxController {
     result.fold((_) {}, (ride) {
       final rawStatus = rideStatusToApiValue(ride.status);
       final normalized = normalizeRideStatusString(rawStatus);
-      if (isRideSearchingStatus(normalized)) return;
+      if (isRideSearchingStatus(normalized)) {
+        _resyncCountdownFromRide(ride);
+        return;
+      }
 
       final d = ride.driverSnapshot;
       DriverSnapshot? driverSnapshot;
@@ -425,7 +434,7 @@ class FindingDriverController extends GetxController {
 
   @override
   void onClose() {
-    _countdownTimer?.cancel();
+    _searchCountdown.stop();
     _mockDriverAssignTimer?.cancel();
     _connectionSub?.cancel();
     _rideStatusSub?.cancel();
@@ -498,6 +507,7 @@ class FindingDriverController extends GetxController {
     _searchTimeoutSeconds = driverSearchTimeoutSecondsFromCancelTimeMillis(
       args['cancel_time'],
     );
+    _searchStartedAt = parseDriverSearchStartedAt(args['search_started_at']);
 
     activeRoutePoints.clear();
     routeTarget.value = 'pick_up';
@@ -541,17 +551,33 @@ class FindingDriverController extends GetxController {
       assignedDriverLocation.value != null && shouldShowPickupRoute;
 
   void _startCountdown() {
-    remainingSeconds.value = _searchTimeoutSeconds;
-    _countdownTimer?.cancel();
-    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (remainingSeconds.value <= 0) {
-        _countdownTimer?.cancel();
-        _autoCancelRide();
-        return;
-      }
-      remainingSeconds.value--;
-    });
+    final remaining = driverSearchRemainingSeconds(
+      timeoutSeconds: _searchTimeoutSeconds,
+      searchStartedAt: _searchStartedAt,
+    );
+    remainingSeconds.value = remaining;
+    if (remaining <= 0) {
+      unawaited(_autoCancelRide());
+      return;
+    }
+    _searchCountdown.start(remaining);
     _syncLiveActivity();
+  }
+
+  void _resyncCountdownFromRide(RideModel ride) {
+    if (!isSearchingPhase || isRideCancelled.value) return;
+
+    final remaining = driverSearchRemainingSeconds(
+      timeoutSeconds: _searchTimeoutSeconds,
+      searchStartedAt: ride.searchStartedAt ?? _searchStartedAt,
+      fallbackStartAt: ride.createdAt,
+    );
+    if (remaining <= 0) {
+      _searchCountdown.stop();
+      unawaited(_autoCancelRide());
+      return;
+    }
+    _searchCountdown.start(remaining);
   }
 
   Future<void> _syncLiveActivity() async {
@@ -610,7 +636,7 @@ class FindingDriverController extends GetxController {
   void _navigateToDriverAccepted() {
     if (_didNavigateToAccepted) return;
     _didNavigateToAccepted = true;
-    _countdownTimer?.cancel();
+    _searchCountdown.stop();
     _mockDriverAssignTimer?.cancel();
     _connectionSub?.cancel();
     _rideStatusSub?.cancel();
@@ -955,18 +981,15 @@ class FindingDriverController extends GetxController {
   int get remainingWholeMinutes =>
       (remainingSeconds.value ~/ 60).clamp(0, _searchTimeoutSeconds ~/ 60);
 
-  /// Countdown shown as `M:SS` (e.g. 9:00 → 8:59 → …) aligned with [remainingSeconds].
-  String findingDriverCountdownMmSs() {
-    final s = remainingSeconds.value.clamp(0, 999999);
-    final m = s ~/ 60;
-    final sec = s % 60;
-    return '$m:${sec.toString().padLeft(2, '0')}';
-  }
-
-  /// Localized "X min remaining" — whole minutes = floor(seconds / 60) so 8:59 shows 8.
+  /// Localized "X min Y sec remaining" from [remainingSeconds].
   String findingDriverMinutesRemainLabel() {
-    final mins = remainingSeconds.value ~/ 60;
-    return AppStrings.findingDriverMinutesRemain.trParams({'minutes': '$mins'});
+    final s = remainingSeconds.value.clamp(0, 999999);
+    final mins = s ~/ 60;
+    final sec = s % 60;
+    return AppStrings.findingDriverMinutesRemain.trParams({
+      'minutes': '$mins',
+      'seconds': sec.toString().padLeft(2, '0'),
+    });
   }
 
   /// User cancel from the searching bottom sheet — shared [CancelRideFlow].

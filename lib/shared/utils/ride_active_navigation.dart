@@ -144,6 +144,9 @@ Map<String, dynamic> findingDriverArgumentsFromRide(RideModel ride) {
     'isBookedForOther': ride.isBookedForOther,
     if (ride.passengerName != null) 'passengerName': ride.passengerName,
     if (ride.passengerPhone != null) 'passengerPhone': ride.passengerPhone,
+    if (ride.cancelTime != null) 'cancel_time': ride.cancelTime,
+    if (ride.searchStartedAt != null)
+      'search_started_at': ride.searchStartedAt!.toIso8601String(),
   };
 }
 

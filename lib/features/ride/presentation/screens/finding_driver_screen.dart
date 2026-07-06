@@ -357,7 +357,7 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
 
                   SizedBox(height: 20.h),
 
-                  // 3. Timer: M:SS countdown + floor-minute "X min remaining"
+                  // 3. Timer: "X min Y sec remaining" (wall-clock; survives background)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,

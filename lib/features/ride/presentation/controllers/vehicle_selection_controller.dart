@@ -1139,6 +1139,9 @@ class VehicleSelectionController extends GetxController {
                       'passengerName': passengerName,
                       'passengerPhone': passengerPhone,
                       'cancel_time': ride.cancelTime,
+                      if (ride.searchStartedAt != null)
+                        'search_started_at':
+                            ride.searchStartedAt!.toIso8601String(),
                     },
                   );
                 },

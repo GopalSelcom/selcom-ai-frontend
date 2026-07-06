@@ -144,6 +144,12 @@ class RideEntity {
   /// Present when the driver ended the trip mid-ride (partial charge flow).
   final MidRideCancelEntity? midRideCancel;
 
+  /// Driver-search window length from API `cancel_time` (milliseconds).
+  final int? cancelTime;
+
+  /// When the driver search phase started (`search_started_at`).
+  final DateTime? searchStartedAt;
+
   const RideEntity({
     required this.id,
     required this.riderId,
@@ -181,6 +187,8 @@ class RideEntity {
     this.promoCode,
     this.promoDiscount,
     this.midRideCancel,
+    this.cancelTime,
+    this.searchStartedAt,
   });
 
   RideEntity copyWith({
@@ -220,6 +228,8 @@ class RideEntity {
     String? promoCode,
     int? promoDiscount,
     MidRideCancelEntity? midRideCancel,
+    int? cancelTime,
+    DateTime? searchStartedAt,
   }) {
     return RideEntity(
       id: id ?? this.id,
@@ -258,6 +268,8 @@ class RideEntity {
       promoCode: promoCode ?? this.promoCode,
       promoDiscount: promoDiscount ?? this.promoDiscount,
       midRideCancel: midRideCancel ?? this.midRideCancel,
+      cancelTime: cancelTime ?? this.cancelTime,
+      searchStartedAt: searchStartedAt ?? this.searchStartedAt,
     );
   }
 }
