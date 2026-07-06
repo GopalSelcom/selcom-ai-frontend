@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:get/get.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -41,13 +43,17 @@ class AppWebViewController extends GetxController {
           onPageFinished: (pageUrl) {
             isLoading.value = false;
             _logPageEvent('finished', pageUrl);
+            unawaited(_logPageResponseSuccess(pageUrl));
+          },
+          onHttpError: _logHttpResponseError,
+          onUrlChange: (change) {
+            final nextUrl = change.url;
+            if (nextUrl != null && nextUrl.isNotEmpty) {
+              _logUrlChange(nextUrl);
+            }
           },
           onWebResourceError: (error) {
-            AppLogger.e(
-              'WebView error: ${error.description} | '
-              'type=${error.errorType} | code=${error.errorCode}',
-              tag: _logTag,
-            );
+            _logWebResourceError(error);
             isLoading.value = false;
           },
         ),
@@ -91,6 +97,55 @@ class AppWebViewController extends GetxController {
   void _logPageEvent(String event, String pageUrl) {
     if (!AppLogger.enabled) return;
     AppLogger.d('PAGE $event >> $pageUrl', tag: _logTag);
+  }
+
+  void _logUrlChange(String nextUrl) {
+    if (!AppLogger.enabled) return;
+    AppLogger.d('URL CHANGE >> $nextUrl', tag: _logTag);
+  }
+
+  void _logHttpResponseError(HttpResponseError error) {
+    if (!AppLogger.enabled) return;
+    final response = error.response;
+    final request = error.request;
+    final uri = response?.uri ?? request?.uri;
+    final url = uri?.toString() ?? 'unknown';
+    final statusCode = response?.statusCode;
+    AppLogger.e(
+      '❌ RESPONSE >> $url | status=${statusCode ?? 'N/A'}',
+      tag: _logTag,
+    );
+    final headers = response?.headers;
+    if (headers != null && headers.isNotEmpty) {
+      AppLogger.d('$url [Response Headers] $headers', tag: _logTag);
+    }
+  }
+
+  void _logWebResourceError(WebResourceError error) {
+    if (!AppLogger.enabled) return;
+    final failingUrl = error.url;
+    AppLogger.e(
+      '❌ RESPONSE >> ${failingUrl ?? 'unknown'} | '
+      'resource_error=${error.description} | '
+      'type=${error.errorType} | code=${error.errorCode}',
+      tag: _logTag,
+    );
+  }
+
+  Future<void> _logPageResponseSuccess(String pageUrl) async {
+    if (!AppLogger.enabled) return;
+    try {
+      final title = await webController.getTitle();
+      AppLogger.d(
+        '✅ RESPONSE >> $pageUrl | status=loaded | title=${title ?? ''}',
+        tag: _logTag,
+      );
+    } catch (_) {
+      AppLogger.d(
+        '✅ RESPONSE >> $pageUrl | status=loaded',
+        tag: _logTag,
+      );
+    }
   }
 
   Future<bool> handleWillPop() async {
