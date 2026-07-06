@@ -170,6 +170,49 @@ class ApiService {
 
   String get baseUrl => AppConfig.apiHost;
 
+  // ── Cancel All Requests ──
+
+  /// Cancels all active/in-flight requests by closing and recreating Dio clients,
+  /// and clears the failed request queue.
+  void cancelAllRequests() {
+    AppLogger.d("🛑 Cancelling all active requests and clearing queue", tag: 'ApiService');
+
+    // 1. Clear failed request queue
+    FailedRequestQueue.instance.clear();
+
+    // 2. Force close existing Dio clients to cancel all in-flight requests
+    try {
+      _defaultDio.close(force: true);
+    } catch (e) {
+      AppLogger.e("Error closing default Dio: $e", tag: 'ApiService');
+    }
+    try {
+      _customDio.close(force: true);
+    } catch (e) {
+      AppLogger.e("Error closing custom Dio: $e", tag: 'ApiService');
+    }
+
+    // 3. Re-initialize the Dio instances
+    _defaultDio = Dio(
+      BaseOptions(
+        baseUrl: AppConfig.apiHost,
+        connectTimeout: const Duration(seconds: 40),
+        receiveTimeout: const Duration(seconds: 40),
+      ),
+    );
+
+    _customDio = Dio(
+      BaseOptions(
+        connectTimeout: const Duration(seconds: 40),
+        receiveTimeout: const Duration(seconds: 40),
+      ),
+    );
+
+    // Recreate and re-add auth interceptor
+    _authInterceptor = AuthInterceptor(apiService: this);
+    _defaultDio.interceptors.add(_authInterceptor);
+  }
+
   // ── Internet Check ──
 
   Future<bool> _checkInternetConnection() async {
@@ -702,12 +745,14 @@ class ApiService {
       return completer.future;
     }
 
-    if (request.errorPresentationType == ErrorPresentationType.dialog) {
+    if (request.errorPresentationType == ErrorPresentationType.dialog &&
+        e.type != DioExceptionType.cancel) {
       AppDialogs.showErrorDialog(message: message);
     }
 
     // Automatically report significant errors (Server errors, timeouts, etc.)
-    if (statusCode >= 500 || statusCode == 408 || isNetworkError) {
+    if ((statusCode >= 500 || statusCode == 408 || isNetworkError) &&
+        e.type != DioExceptionType.cancel) {
       ErrorReporter.instance.report(
         error: e,
         customMessage: "API Error at ${request.endpoint} | Status: $statusCode",

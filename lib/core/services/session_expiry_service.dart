@@ -27,6 +27,7 @@ class SessionExpiryService {
   static void teardownOnLogout() {
     _userLoggedOut = true;
     _stopActiveRidePolling();
+    ApiService().cancelAllRequests();
   }
 
   static bool isSessionExpired({int? httpStatus, Map<String, dynamic>? body}) {
