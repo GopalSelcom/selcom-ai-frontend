@@ -78,10 +78,10 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Payment methods section
-                  _buildSectionTitle(AppStrings.paymentMethodsTitle.tr),
+                  // _buildSectionTitle(AppStrings.paymentMethodsTitle.tr),
                   SizedBox(height: 8.h),
-                  Obx(() => _buildSelcomPesaCard(controller)),
-                  SizedBox(height: 14.h),
+                  // Obx(() => _buildSelcomPesaCard(controller)),
+                  // SizedBox(height: 14.h),
                   // Cards section
                   _buildSectionTitle(AppStrings.cards.tr),
                   SizedBox(height: 8.h),

@@ -184,6 +184,8 @@ class AppSocketService {
     } on TimeoutException {
       _errorController.add('Socket connection timed out');
       rethrow;
+    }catch(e){
+      print("error $e");
     } finally {
       await sub.cancel();
     }
@@ -200,11 +202,11 @@ class AppSocketService {
     _socket?.dispose();
 
     _socket = io.io(
-      baseUrl,
+      "https://go.selcom.app:8853",
       io.OptionBuilder()
           .setTransports(['websocket'])
           .enableReconnection()
-          .setPath('/go-socket.io')
+          .setPath('/socket.io')
           .setReconnectionAttempts(_maxReconnectAttempts)
           .setReconnectionDelay(1000)
           .setTimeout(12000)

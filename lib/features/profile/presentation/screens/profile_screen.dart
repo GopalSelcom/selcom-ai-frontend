@@ -343,6 +343,16 @@ class ProfileScreen extends StatelessWidget {
               onTap: controller.openMyRides,
             ),
             MenuItemWidget(
+              icon: Iconsax.heart,
+              title: AppStrings.savedLocations.tr,
+              onTap: controller.openFavoriteLocations,
+            ),
+            MenuItemWidget(
+              icon: Iconsax.card,
+              title: "Saved Cards",
+              onTap: controller.openPaymentMethods,
+            ),
+            MenuItemWidget(
               icon: Iconsax.message_question,
               title: AppStrings.help.tr,
               onTap: controller.openContactUs,
@@ -353,11 +363,7 @@ class ProfileScreen extends StatelessWidget {
                 title: AppStrings.safety.tr,
                 onTap: controller.openSafety,
               ),
-            MenuItemWidget(
-              icon: Iconsax.heart,
-              title: AppStrings.savedLocations.tr,
-              onTap: controller.openFavoriteLocations,
-            ),
+
             MenuItemWidget(
               icon: Iconsax.shield_tick,
               title: AppStrings.privacyPolicy.tr,

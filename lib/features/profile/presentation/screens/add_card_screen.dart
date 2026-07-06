@@ -6,11 +6,17 @@ import 'package:get/get.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/data/countries_phone_data.dart';
 import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../controllers/add_card_controller.dart';
+import 'country_select_screen.dart';
+import 'state_select_screen.dart';
+import '../../../../shared/widgets/phone_country_picker_chip.dart';
+import '../../../../shared/utils/phone_national_rules.dart';
 
 class AddCardScreen extends StatefulWidget {
   const AddCardScreen({super.key});
@@ -50,106 +56,87 @@ class _AddCardScreenState extends State<AddCardScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Obx(
-                            () => AppTextField(
-                              label: AppStrings.fullName.tr,
-                              hintText: AppStrings.eGJohnDoe.tr,
-                              controller: controller.cardHolderController,
-                              focusNode: controller.fullNameFocus,
-                              textInputAction: TextInputAction.next,
-                              onSubmitted: (_) => controller.focusCardNumber(),
-                              onChanged: (_) => controller.onFieldChanged(),
-                              errorText: controller.fullNameError.value,
-                              fontSize: 15.h,
-                              fontWeight: FontWeight.w500,
-                              textFieldBackgroundColor:
-                                  AppColors.pageBackground,
-                              textColor: AppColors.textHeading,
+                          // SECTION 1: Card Information
+                          Text(
+                            "Card Information",
+                            style: AppTextStyles.cardTitle.copyWith(
+                              fontSize: 16.h,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textHeading,
                             ),
                           ),
-                          SizedBox(height: 12.h),
-                          Obx(
-                            () => AppTextField(
-                              label: AppStrings.cardNumber.tr,
-                              hintText: AppStrings.value0000000000000000.tr,
-                              controller: controller.cardNumberController,
-                              focusNode: controller.cardNumberFocus,
-                              keyboardType: TextInputType.number,
-                              textInputAction: TextInputAction.next,
-                              onSubmitted: (_) => controller.focusExpiry(),
-                              onChanged: (_) => controller.onFieldChanged(),
-                              errorText: controller.cardNumberError.value,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly,
-                                LengthLimitingTextInputFormatter(16),
-                                _CardNumberFormatter(),
-                              ],
-                              fontSize: 15.h,
-                              fontWeight: FontWeight.w500,
-                              textFieldBackgroundColor:
-                                  AppColors.pageBackground,
-                              textColor: AppColors.textHeading,
+                          SizedBox(height: 8.h),
+                          Container(
+                            padding: EdgeInsets.all(16.w),
+                            decoration: BoxDecoration(
+                              color: AppColors.white,
+                              borderRadius: BorderRadius.circular(12.r),
+                              border: Border.all(color: AppColors.borderDefault, width: 1.w),
                             ),
-                          ),
-                          SizedBox(height: 12.h),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Obx(
-                                  () => AppTextField(
-                                    label: AppStrings.expiry.tr,
-                                    hintText: AppStrings.mmYy.tr,
-                                    controller: controller.expiryController,
-                                    focusNode: controller.expiryFocus,
-                                    keyboardType: TextInputType.number,
-                                    textInputAction: TextInputAction.next,
-                                    onSubmitted: (_) => controller.focusCvv(),
-                                    onChanged: (_) =>
-                                        controller.onFieldChanged(),
-                                    errorText: controller.expiryError.value,
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.digitsOnly,
-                                      LengthLimitingTextInputFormatter(4),
-                                      _CardExpiryFormatter(),
-                                    ],
-                                    fontSize: 15.h,
-                                    fontWeight: FontWeight.w500,
-                                    textFieldBackgroundColor:
-                                        AppColors.pageBackground,
-                                    textColor: AppColors.textHeading,
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 12.w),
-                              Expanded(
-                                child: Obx(
-                                  () => AppTextField(
-                                    label: AppStrings.cvv.tr,
-                                    hintText: AppStrings.eG123.tr,
-                                    controller: controller.cvvController,
-                                    focusNode: controller.cvvFocus,
-                                    keyboardType: TextInputType.number,
-                                    textInputAction: TextInputAction.done,
-                                    onSubmitted: (_) => controller.submitCard(),
-                                    onChanged: (_) =>
-                                        controller.onFieldChanged(),
-                                    errorText: controller.cvvError.value,
-                                    isPassword: controller.isCvvHidden.value,
-                                    suffixIcon: IconButton(
-                                      onPressed: controller.toggleCvvVisibility,
-                                      icon: Icon(
-                                        controller.isCvvHidden.value
-                                            ? Icons.visibility_off_outlined
-                                            : Icons.visibility_outlined,
-                                        color: AppColors.textBody.withValues(
-                                          alpha: 0.7,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Obx(
+                                      () => Expanded(
+                                        child: AppTextField(
+                                          label: "First Name",
+                                          hintText: AppStrings.eGJohnDoe.tr,
+                                          controller: controller.cardHolderController,
+                                          focusNode: controller.fullNameFocus,
+                                          textInputAction: TextInputAction.next,
+                                          onSubmitted: (_) =>
+                                              controller.lastNameFocus.requestFocus(),
+                                          onChanged: (_) => controller.onFieldChanged(),
+                                          errorText: controller.fullNameError.value,
+                                          fontSize: 15.h,
+                                          fontWeight: FontWeight.w500,
+                                          textFieldBackgroundColor:
+                                              AppColors.pageBackground,
+                                          textColor: AppColors.textHeading,
                                         ),
-                                        size: 20.w,
                                       ),
                                     ),
+                                    SizedBox(width: 12.w),
+                                    Obx(
+                                      () => Expanded(
+                                        child: AppTextField(
+                                          label: "Last Name",
+                                          hintText: AppStrings.eGJohnDoe.tr,
+                                          controller: controller.lastNameController,
+                                          focusNode: controller.lastNameFocus,
+                                          textInputAction: TextInputAction.next,
+                                          onSubmitted: (_) =>
+                                              controller.focusCardNumber(),
+                                          onChanged: (_) => controller.onFieldChanged(),
+                                          errorText: controller.lastNameError.value,
+                                          fontSize: 15.h,
+                                          fontWeight: FontWeight.w500,
+                                          textFieldBackgroundColor:
+                                              AppColors.pageBackground,
+                                          textColor: AppColors.textHeading,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 12.h),
+                                Obx(
+                                  () => AppTextField(
+                                    label: AppStrings.cardNumber.tr,
+                                    hintText: AppStrings.value0000000000000000.tr,
+                                    controller: controller.cardNumberController,
+                                    focusNode: controller.cardNumberFocus,
+                                    keyboardType: TextInputType.number,
+                                    textInputAction: TextInputAction.next,
+                                    onSubmitted: (_) => controller.focusExpiry(),
+                                    onChanged: (_) => controller.onFieldChanged(),
+                                    errorText: controller.cardNumberError.value,
                                     inputFormatters: [
                                       FilteringTextInputFormatter.digitsOnly,
-                                      LengthLimitingTextInputFormatter(3),
+                                      LengthLimitingTextInputFormatter(16),
+                                      _CardNumberFormatter(),
                                     ],
                                     fontSize: 15.h,
                                     fontWeight: FontWeight.w500,
@@ -158,9 +145,278 @@ class _AddCardScreenState extends State<AddCardScreen> {
                                     textColor: AppColors.textHeading,
                                   ),
                                 ),
-                              ),
-                            ],
+                                SizedBox(height: 12.h),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Obx(
+                                        () => AppTextField(
+                                          label: AppStrings.expiry.tr,
+                                          hintText: AppStrings.mmYy.tr,
+                                          controller: controller.expiryController,
+                                          focusNode: controller.expiryFocus,
+                                          keyboardType: TextInputType.number,
+                                          textInputAction: TextInputAction.next,
+                                          onSubmitted: (_) => controller.focusCvv(),
+                                          onChanged: (_) =>
+                                              controller.onFieldChanged(),
+                                          errorText: controller.expiryError.value,
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter.digitsOnly,
+                                            LengthLimitingTextInputFormatter(4),
+                                            _CardExpiryFormatter(),
+                                          ],
+                                          fontSize: 15.h,
+                                          fontWeight: FontWeight.w500,
+                                          textFieldBackgroundColor:
+                                              AppColors.pageBackground,
+                                          textColor: AppColors.textHeading,
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(width: 12.w),
+                                    Expanded(
+                                      child: Obx(
+                                        () => AppTextField(
+                                          label: AppStrings.cvv.tr,
+                                          hintText: AppStrings.eG123.tr,
+                                          controller: controller.cvvController,
+                                          focusNode: controller.cvvFocus,
+                                          keyboardType: TextInputType.number,
+                                          textInputAction: TextInputAction.next,
+                                          onSubmitted: (_) => controller.phoneFocus.requestFocus(),
+                                          onChanged: (_) =>
+                                              controller.onFieldChanged(),
+                                          errorText: controller.cvvError.value,
+                                          isPassword: controller.isCvvHidden.value,
+                                          suffixIcon: IconButton(
+                                            onPressed: controller.toggleCvvVisibility,
+                                            icon: Icon(
+                                              controller.isCvvHidden.value
+                                                  ? Icons.visibility_off_outlined
+                                                  : Icons.visibility_outlined,
+                                              color: AppColors.textBody.withValues(
+                                                alpha: 0.7,
+                                              ),
+                                              size: 20.w,
+                                            ),
+                                          ),
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter.digitsOnly,
+                                            LengthLimitingTextInputFormatter(3),
+                                          ],
+                                          fontSize: 15.h,
+                                          fontWeight: FontWeight.w500,
+                                          textFieldBackgroundColor:
+                                              AppColors.pageBackground,
+                                          textColor: AppColors.textHeading,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
+                          SizedBox(height: 24.h),
+
+                          // SECTION 2: Billing & Address Details
+                          Text(
+                            "Billing Details",
+                            style: AppTextStyles.cardTitle.copyWith(
+                              fontSize: 16.h,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textHeading,
+                            ),
+                          ),
+                          SizedBox(height: 8.h),
+                          Container(
+                            padding: EdgeInsets.all(16.w),
+                            decoration: BoxDecoration(
+                              color: AppColors.white,
+                              borderRadius: BorderRadius.circular(12.r),
+                              border: Border.all(color: AppColors.borderDefault, width: 1.w),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Country Picker Dropdown field
+                                GestureDetector(
+                                  onTap: () async {
+                                    final result = await Get.to(() => CountrySelectScreen(
+                                          selectedCountry: controller.selectedCountry.value,
+                                        ));
+                                    if (result != null && result is CountryData) {
+                                      controller.selectCountry(result);
+                                    }
+                                  },
+                                  child: AbsorbPointer(
+                                    child: Obx(
+                                      () => AppTextField(
+                                        label: "Country",
+                                        hintText: "Select Country",
+                                        controller: TextEditingController(
+                                          text: controller.selectedCountry.value != null
+                                              ? '${controller.selectedCountry.value!.flag}  ${controller.selectedCountry.value!.name}'
+                                              : '',
+                                        ),
+                                        errorText: controller.countryError.value,
+                                        readOnly: true,
+                                        suffixIcon: Icon(
+                                          Icons.arrow_drop_down,
+                                          color: AppColors.textMutedStrong,
+                                          size: 26.h,
+                                        ),
+                                        fontSize: 15.h,
+                                        fontWeight: FontWeight.w500,
+                                        textFieldBackgroundColor: AppColors.pageBackground,
+                                        textColor: AppColors.textHeading,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+
+                                // State Picker Dropdown field (Visible only when Country is selected)
+                                Obx(() {
+                                  if (controller.selectedCountry.value == null) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  return Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      SizedBox(height: 12.h),
+                                      GestureDetector(
+                                        onTap: () async {
+                                          final result = await Get.to(() => StateSelectScreen(
+                                                countryCode: controller.selectedCountry.value!.code,
+                                                selectedState: controller.selectedState.value,
+                                              ));
+                                          if (result != null && result is String) {
+                                            controller.selectState(result);
+                                          }
+                                        },
+                                        child: AbsorbPointer(
+                                          child: Obx(
+                                            () => AppTextField(
+                                              label: "State",
+                                              hintText: "Select State",
+                                              controller: TextEditingController(
+                                                text: controller.selectedState.value ?? '',
+                                              ),
+                                              errorText: controller.stateError.value,
+                                              readOnly: true,
+                                              suffixIcon: Icon(
+                                                Icons.arrow_drop_down,
+                                                color: AppColors.textMutedStrong,
+                                                size: 26.h,
+                                              ),
+                                              fontSize: 15.h,
+                                              fontWeight: FontWeight.w500,
+                                              textFieldBackgroundColor: AppColors.pageBackground,
+                                              textColor: AppColors.textHeading,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }),
+                                SizedBox(height: 12.h),
+
+                                // Phone number field with country prefix picker
+                                Obx(() {
+                                  final country = controller.selectedPhoneCountry.value;
+                                  final iso = country.code;
+                                  final resetV = controller.phoneFieldResetVersion.value;
+                                  return AppTextField(
+                                    key: ValueKey('add-card-phone-$iso-$resetV'),
+                                    label: "Phone Number",
+                                    hintText: PhoneNationalRules.hintForIso(iso),
+                                    controller: controller.phoneController,
+                                    focusNode: controller.phoneFocus,
+                                    keyboardType: TextInputType.phone,
+                                    inputFormatters: PhoneNationalRules.inputFormattersForIso(iso),
+                                    maxLength: PhoneNationalRules.maxDisplayCharactersForIso(iso),
+                                    textInputAction: TextInputAction.next,
+                                    onSubmitted: (_) => controller.emailFocus.requestFocus(),
+                                    onChanged: (_) => controller.onFieldChanged(),
+                                    errorText: controller.phoneError.value,
+                                    fontSize: 15.h,
+                                    fontWeight: FontWeight.w500,
+                                    prefixIcon: Container(
+                                      padding: EdgeInsets.only(left: 12.w, right: 2.w),
+                                      child: PhoneCountryPickerChip(
+                                        inline: true,
+                                        selected: country,
+                                        onChanged: controller.selectPhoneCountry,
+                                      ),
+                                    ),
+                                    textFieldBackgroundColor: AppColors.pageBackground,
+                                    textColor: AppColors.textHeading,
+                                  );
+                                }),
+                                SizedBox(height: 12.h),
+
+                                // Email field
+                                Obx(
+                                  () => AppTextField(
+                                    label: "Email",
+                                    hintText: "e.g. user@example.com",
+                                    controller: controller.emailController,
+                                    focusNode: controller.emailFocus,
+                                    keyboardType: TextInputType.emailAddress,
+                                    textInputAction: TextInputAction.next,
+                                    onSubmitted: (_) => controller.addressFocus.requestFocus(),
+                                    onChanged: (_) => controller.onFieldChanged(),
+                                    errorText: controller.emailError.value,
+                                    fontSize: 15.h,
+                                    fontWeight: FontWeight.w500,
+                                    textFieldBackgroundColor: AppColors.pageBackground,
+                                    textColor: AppColors.textHeading,
+                                  ),
+                                ),
+                                SizedBox(height: 12.h),
+
+                                // Address field
+                                Obx(
+                                  () => AppTextField(
+                                    label: "Address",
+                                    hintText: "Street name / House number",
+                                    controller: controller.addressController,
+                                    focusNode: controller.addressFocus,
+                                    textInputAction: TextInputAction.next,
+                                    onSubmitted: (_) => controller.cityFocus.requestFocus(),
+                                    onChanged: (_) => controller.onFieldChanged(),
+                                    errorText: controller.addressError.value,
+                                    fontSize: 15.h,
+                                    fontWeight: FontWeight.w500,
+                                    textFieldBackgroundColor: AppColors.pageBackground,
+                                    textColor: AppColors.textHeading,
+                                  ),
+                                ),
+                                SizedBox(height: 12.h),
+
+                                // City field
+                                Obx(
+                                  () => AppTextField(
+                                    label: "City",
+                                    hintText: "e.g. Dar es Salaam",
+                                    controller: controller.cityController,
+                                    focusNode: controller.cityFocus,
+                                    textInputAction: TextInputAction.done,
+                                    onSubmitted: (_) => controller.submitCard(),
+                                    onChanged: (_) => controller.onFieldChanged(),
+                                    errorText: controller.cityError.value,
+                                    fontSize: 15.h,
+                                    fontWeight: FontWeight.w500,
+                                    textFieldBackgroundColor: AppColors.pageBackground,
+                                    textColor: AppColors.textHeading,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(height: 24.h),
                         ],
                       ),
                     ),
