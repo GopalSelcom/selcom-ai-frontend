@@ -161,6 +161,9 @@ class ConfirmLocationController extends GetxController {
 
   String _savedPlaceLabel = '';
 
+  /// Set when rebooking via finding-driver "Search again" after timeout.
+  bool _forceRefreshActiveRides = false;
+
   VoidCallback? _noteListener;
   int _cameraSyncGeneration = 0;
 
@@ -205,6 +208,7 @@ class ConfirmLocationController extends GetxController {
     final route = Get.currentRoute;
     if (route == AppRoutes.confirmPickup) {
       _flow = 'ride_pickup';
+      _forceRefreshActiveRides = args['forceRefreshActiveRides'] == true;
       uiConfig = ConfirmLocationUiConfig.ridePickup(
         showPreviousPointMarker: showPreviousPointMarker,
         showRouteCircles: showRouteCircles,
@@ -537,8 +541,20 @@ class ConfirmLocationController extends GetxController {
     }
   }
 
-  /// Prefer Home cache; refresh from API when empty.
+  /// Prefer Home cache; refresh from API when empty or [Search again] after timeout.
   Future<List<RideModel>> _loadActiveRidesForBookForOtherPolicy() async {
+    if (_forceRefreshActiveRides) {
+      if (Get.isRegistered<HomeController>()) {
+        await homeController.refreshActiveRide(force: true);
+        return homeController.activeRides.toList(growable: false);
+      }
+      final activeResult = await rideRepository.getActiveRide();
+      return activeResult.fold(
+        (_) => const <RideModel>[],
+        (response) => parseActiveRidesFromResponse(response?.data),
+      );
+    }
+
     final cached = homeController.activeRides.toList(growable: false);
     if (cached.isNotEmpty) return cached;
 

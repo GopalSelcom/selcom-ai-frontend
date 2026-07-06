@@ -104,6 +104,7 @@ class VehicleSelectionController extends GetxController {
 
   String? _preferredVehicleTypeId;
   String? _preferredVehicleName;
+  bool _forceRefreshActiveRides = false;
   final _vehicleTypes = <VehicleTypeModel>[];
   AppSocketService get _socketService => Get.find<AppSocketService>();
   StreamSubscription<List<Driver>>? _nearbyDriversSub;
@@ -237,6 +238,7 @@ class VehicleSelectionController extends GetxController {
     _preferredVehicleName = (args['preferredVehicleName'] as String?)
         ?.trim()
         .toLowerCase();
+    _forceRefreshActiveRides = args['forceRefreshActiveRides'] == true;
 
     isRouteReady.value = false;
     update(['route_header']);
@@ -793,6 +795,7 @@ class VehicleSelectionController extends GetxController {
           'pickupLat': pickupEntity.lat,
           'pickupLng': pickupEntity.lng,
           'pickupAddress': pickupEntity.address,
+          if (_forceRefreshActiveRides) 'forceRefreshActiveRides': true,
         },
       );
       Loader.instance.show();

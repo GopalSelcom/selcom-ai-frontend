@@ -35,6 +35,7 @@ import '../../../../shared/utils/map_vehicle_marker_utils.dart';
 import '../../../../shared/utils/socket_ride_scope.dart';
 import '../../../../shared/utils/tracking_route_geometry_utils.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
+import '../../../home/presentation/controllers/home_controller.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../utils/cancel_ride_flow.dart';
 
@@ -143,8 +144,11 @@ class FindingDriverController extends GetxController {
   /// Suppresses duplicate cancel UI when the user initiated cancel (socket may also fire `cancelled`).
   bool _isUserInitiatedCancellation = false;
 
-  /// Ensures only one no-driver terminal dialog (timeout auto-cancel + socket can both fire).
+  /// Ensures only one no-driver terminal dialog (socket path; not used on search timeout).
   bool _noDriverDialogShown = false;
+
+  /// Search-timeout auto-cancel uses bottom sheet only — blocks duplicate dialog from socket.
+  bool _searchTimeoutAutoCancelHandled = false;
 
   /// When false, hide search countdown/progress (driver matched or later).
   bool get isSearchingPhase =>
@@ -222,6 +226,10 @@ class FindingDriverController extends GetxController {
         break;
       case 'cancelled':
         if (_isUserInitiatedCancellation) return;
+        if (_searchTimeoutAutoCancelHandled) {
+          _applyNoDriverFoundSheetState();
+          return;
+        }
         isRideCancelled.value = true;
         currentStatusLabel.value = AppStrings.rideCancelled.tr;
         currentDescriptionLabel.value = AppStrings.theRideHasBeenCancelled.tr;
@@ -230,6 +238,10 @@ class FindingDriverController extends GetxController {
         break;
       case 'no_driver_found':
       case 'no_drivers_found':
+        if (_searchTimeoutAutoCancelHandled) {
+          _applyNoDriverFoundSheetState();
+          return;
+        }
         isRideCancelled.value = true;
         currentStatusLabel.value = AppStrings.noDriverFound.tr;
         currentDescriptionLabel.value =
@@ -276,6 +288,14 @@ class FindingDriverController extends GetxController {
         onConfirm: () => Get.offAllNamed(AppRoutes.home),
       );
     });
+  }
+
+  /// No-driver terminal UI on the bottom sheet only (search timeout — no dialog).
+  void _applyNoDriverFoundSheetState() {
+    _searchCountdown.stop();
+    isRideCancelled.value = true;
+    currentStatusLabel.value = AppStrings.noDriverFound.tr;
+    currentDescriptionLabel.value = AppStrings.weCouldntFindADriverNearby.tr;
   }
 
   @override
@@ -603,7 +623,8 @@ class FindingDriverController extends GetxController {
   }
 
   Future<void> _autoCancelRide() async {
-    if (rideId.isEmpty || _noDriverDialogShown) return;
+    if (rideId.isEmpty || _searchTimeoutAutoCancelHandled) return;
+    _searchTimeoutAutoCancelHandled = true;
 
     final result = await rideRepository.cancelRide(
       rideId,
@@ -612,15 +633,11 @@ class FindingDriverController extends GetxController {
     result.fold(
       (failure) async {
         await LiveActivityManager().endActivity(rideId);
-        _showNoDriverFoundDialogThenGoHome(
-          AppStrings.noDriversFoundWithin9MinutesCancellingRide.tr,
-        );
+        _applyNoDriverFoundSheetState();
       },
       (success) async {
         await LiveActivityManager().endActivity(rideId);
-        _showNoDriverFoundDialogThenGoHome(
-          AppStrings.noDriversFoundWithin9MinutesCancellingRide.tr,
-        );
+        _applyNoDriverFoundSheetState();
       },
     );
   }
@@ -1003,7 +1020,15 @@ class FindingDriverController extends GetxController {
   }
 
   void searchAgain() {
-    Get.offNamed(
+    unawaited(_searchAgain());
+  }
+
+  /// After search timeout, Home may still cache the cancelled ride — refresh before rebooking.
+  Future<void> _searchAgain() async {
+    if (Get.isRegistered<HomeController>()) {
+      await Get.find<HomeController>().refreshActiveRide(force: true);
+    }
+    await Get.offNamed(
       AppRoutes.booking,
       arguments: {
         'pickup': pickupAddress,
@@ -1013,6 +1038,7 @@ class FindingDriverController extends GetxController {
         'destinationLat': destinationLatLng.latitude,
         'destinationLng': destinationLatLng.longitude,
         'destinations': destinations.toList(),
+        'forceRefreshActiveRides': true,
       },
     );
   }
