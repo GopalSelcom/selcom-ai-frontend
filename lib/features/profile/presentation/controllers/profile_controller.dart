@@ -345,6 +345,9 @@ class ProfileController extends GetxController {
       message: AppStrings.areYouSureYouWantToLogoutFromTheApp.tr,
       confirmText: AppStrings.logout.tr,
       onConfirm: () async {
+        // Best-effort: revoke backend session before clearing local tokens.
+        final logoutResult = await di.sl<AuthRepository>().logout();
+        logoutResult.fold((_) {}, (_) {});
         SessionExpiryService.teardownOnLogout();
         await di.sl<AuthRepository>().signOutFirebase();
         await StorageService().deleteAll();
