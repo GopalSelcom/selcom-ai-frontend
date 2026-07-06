@@ -230,14 +230,19 @@ class PaymentMethodsController extends GetxController {
 
       await loadLinkedAccounts();
 
+      await Loader.instance.hideAsync();
+      await WidgetsBinding.instance.endOfFrame;
+
       AppDialogs.showSuccessDialog(
         title: AppStrings.selcomPesa.tr,
         message: AppStrings.accountUnlinkedSuccessfully.tr,
       );
     } on SelcomPesaLinkException catch (e) {
+      await Loader.instance.hideAsync();
       AppDialogs.showErrorDialog(message: e.message.tr);
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      await Loader.instance.hideAsync();
       AppDialogs.showErrorDialog(
         message: AppStrings.somethingWentWrongPleaseTryAgain.tr,
       );
@@ -418,23 +423,37 @@ class PaymentMethodsController extends GetxController {
     }
 
     if (isLinkRequestSubmitting.value) return;
+
+    final normalized = normalizeTzMobileForSelcomPesa(selcomPhoneController.text);
+    final phoneDisplay = TanzaniaPhoneFormatter.formatInternational(normalized);
+
+    // Dismiss keyboard and close the sheet once before the loader so it does not
+    // flash back when the loader is removed after the API call.
+    FocusManager.instance.primaryFocus?.unfocus();
+    await AppDialogs.ensureKeyboardClosed();
+    AppDialogs.closeActiveDialog();
+    await WidgetsBinding.instance.endOfFrame;
+
     isLinkRequestSubmitting.value = true;
     Loader.instance.show();
 
     try {
-      final normalized = normalizeTzMobileForSelcomPesa(selcomPhoneController.text);
       final result = await _selcomPesaLinkRepository.sendLinkRequest(
         countryCode: WalletPaymentPhoneCountry.dialCodeDigits,
         mobileNumber: normalized,
       );
-      final phoneDisplay = TanzaniaPhoneFormatter.formatInternational(normalized);
-      AppDialogs.closeActiveDialog();
-      await _handleSendLinkRequestResult(result, phoneDisplay);
+
+      await Loader.instance.hideAsync();
+      await WidgetsBinding.instance.endOfFrame;
+
       await loadLinkedAccounts();
+      await _handleSendLinkRequestResult(result, phoneDisplay);
     } on SelcomPesaLinkException catch (e) {
+      await Loader.instance.hideAsync();
       AppDialogs.showErrorDialog(message: e.message.tr);
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      await Loader.instance.hideAsync();
       AppDialogs.showErrorDialog(
         message: AppStrings.somethingWentWrongPleaseTryAgain.tr,
       );
