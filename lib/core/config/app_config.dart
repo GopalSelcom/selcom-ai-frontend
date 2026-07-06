@@ -32,9 +32,8 @@ class AppConfig {
     switch (environment) {
       case Environment.dev:
       case Environment.staging:
-        return '/api';
       case Environment.prod:
-        return '';
+        return '/api';
     }
   }
 
