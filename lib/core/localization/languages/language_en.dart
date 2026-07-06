@@ -311,7 +311,7 @@ class LanguageEn extends Languages {
     'no_recent_locations_found': 'No recent locations found',
     'no_recent_locations': 'No recent locations',
     'note_by_proceeding_you_consent_to_get_calls_whatsapp_or_sms_messages_including_by_au':
-        'Note: By proceeding, you consent to get calls, WhatsApp or SMS messages, including by automated means, from GoChauffeur and its affiliates to the number provided.',
+        'Note: By proceeding, you consent to get calls, WhatsApp or SMS messages, including by automated means, from Selcom Go and its affiliates to the number provided.',
     'notification': 'Notification',
     'notifications': 'Notifications',
     'ok': 'OK',

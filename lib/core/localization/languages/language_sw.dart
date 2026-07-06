@@ -285,7 +285,7 @@ class LanguageSw extends Languages {
     'no_recent_locations_found': 'Hakuna maeneo ya hivi karibuni yaliyopatikana',
     'no_recent_locations': 'Hakuna maeneo ya hivi karibuni',
     'note_by_proceeding_you_consent_to_get_calls_whatsapp_or_sms_messages_including_by_au':
-        'Kumbuka: Kwa kuendelea, unakubali kupokea simu, ujumbe wa WhatsApp au SMS, ikiwa ni pamoja na njia za kiotomatiki, kutoka GoChauffeur na washirika wake kwenye namba iliyotolewa.',
+        'Kumbuka: Kwa kuendelea, unakubali kupokea simu, ujumbe wa WhatsApp au SMS, ikiwa ni pamoja na njia za kiotomatiki, kutoka Selcom Go na washirika wake kwenye namba iliyotolewa.',
     'notification': 'Arifa',
     'notifications': 'Arifa',
     'ok': 'Sawa',
