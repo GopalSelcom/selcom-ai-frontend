@@ -8,6 +8,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart' hide Response, FormData, MultipartFile;
 import 'package:http_parser/http_parser.dart';
 
+import '../../features/wallet/presentation/utils/wallet_session.dart';
 import '../../shared/utils/app_dialogs.dart';
 import '../constants/app_assets.dart';
 import '../localization/app_strings.dart';
@@ -819,6 +820,9 @@ class ApiService {
               // Login Button
               InkWell(
                 onTap: () async {
+                  // Same wallet teardown as profile logout — prevent stale balance
+                  // if the user signs in again from this dialog.
+                  WalletSession.teardownOnLogout();
                   SessionExpiryService.teardownOnLogout();
                   await StorageService().deleteAll();
                   SessionExpiryService.resetOnLogin();

@@ -27,6 +27,8 @@ import '../utils/wallet_refresh.dart';
 import '../utils/wallet_transaction_mapper.dart';
 
 class WalletController extends GetxController {
+  /// Manual singleton used by [WalletRouteMiddleware] and top-up flows outside
+  /// GetX bindings. Must be cleared on logout — see [WalletSession.teardownOnLogout].
   static WalletController? _instance;
 
   factory WalletController() {
@@ -35,6 +37,19 @@ class WalletController extends GetxController {
   }
 
   WalletController._internal();
+
+  /// Clears in-memory wallet UI and drops [_instance] so the next session
+  /// cannot reuse the previous user's balance or transaction preview.
+  static void resetForLogout() {
+    final controller = _instance;
+    if (controller != null) {
+      controller.summary.value = null;
+      controller.recentTransactions.clear();
+      controller.isLoading.value = true;
+      controller.isEmailingStatement.value = false;
+    }
+    _instance = null;
+  }
 
   final GetWalletSummaryUseCase _getWalletSummaryUseCase =
       sl<GetWalletSummaryUseCase>();

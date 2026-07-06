@@ -110,9 +110,14 @@ class PaymentMethodsController extends GetxController {
       ).format(summary.balance);
       walletNumber.value = summary.walletNumber.trim();
     } catch (_) {
-      walletBalance.value = '';
-      walletNumber.value = '';
+      clearWalletDisplayOnLogout();
     }
+  }
+
+  /// Clears wallet summary shown on Payment Methods after session teardown.
+  void clearWalletDisplayOnLogout() {
+    walletBalance.value = '';
+    walletNumber.value = '';
   }
 
   /// Pull-to-refresh on Selcom Pesa to Go Wallet — re-fetches `GET linked_accounts`.

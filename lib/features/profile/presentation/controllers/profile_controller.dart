@@ -22,6 +22,7 @@ import '../../../auth/domain/repositories/auth_repository.dart';
 import '../../../ride/presentation/screens/my_rides_screen.dart';
 import '../../../wallet/domain/usecases/get_wallet_summary_usecase.dart';
 import '../../../wallet/presentation/utils/wallet_format_utils.dart';
+import '../../../wallet/presentation/utils/wallet_session.dart';
 import '../../data/models/request/update_profile_request.dart';
 import '../../domain/usecases/profile_usecase.dart';
 
@@ -170,6 +171,14 @@ class ProfileController extends GetxController {
     walletBalance.value = '';
     walletCurrency.value = '';
     walletNumber.value = '';
+  }
+
+  /// Clears profile-card wallet fields when the session ends.
+  ///
+  /// Separate from [WalletController] — this screen fetches summary on its own.
+  void clearWalletDisplayOnLogout() {
+    _setWalletUnlinked();
+    isLoadingWallet.value = false;
   }
 
   void toggleEditMode() {
@@ -348,6 +357,8 @@ class ProfileController extends GetxController {
         // Best-effort: revoke backend session before clearing local tokens.
         final logoutResult = await di.sl<AuthRepository>().logout();
         logoutResult.fold((_) {}, (_) {});
+        // Clear wallet caches/controllers before wiping tokens/storage.
+        WalletSession.teardownOnLogout();
         SessionExpiryService.teardownOnLogout();
         await di.sl<AuthRepository>().signOutFirebase();
         await StorageService().deleteAll();

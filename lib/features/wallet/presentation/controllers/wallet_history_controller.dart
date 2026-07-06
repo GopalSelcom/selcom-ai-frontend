@@ -44,6 +44,9 @@ class WalletHistoryController extends GetxController {
   Future<void> loadAllFilters() async {
     isLoading.value = true;
     try {
+      // Match [refreshTransactions] — initial load must not reuse a prior
+      // user's cached statement after account switch.
+      sl<WalletRepository>().invalidateStatementCache();
       await _fetchTransactions();
     } finally {
       isLoading.value = false;
