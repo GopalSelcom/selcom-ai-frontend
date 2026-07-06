@@ -96,28 +96,27 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
             // Pull-to-refresh reloads linked accounts from GET linked_accounts.
             child: RefreshIndicator(
               onRefresh: _paymentController.refreshLinkedAccounts,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(
-                  parent: BouncingScrollPhysics(),
-                ),
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+              child: Obx(() {
+                final paymentController = _paymentController;
+                return ListView(
+                  physics: const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics(),
+                  ),
+                  padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 16.h),
                   children: [
-                    SizedBox(height: 8.h),
                     Text(
                       AppStrings.paymentMethodsTitle.tr,
                       style: AppTextStyles.homeSubtitle,
                     ),
                     SizedBox(height: 8.h),
-                    Obx(() => _linkedAccountsSection(_paymentController)),
+                    ..._linkedAccountListChildren(paymentController),
                     SizedBox(height: 8.h),
                     Align(
                       alignment: Alignment.centerRight,
                       child: GestureDetector(
-                        onTap: () =>
-                            unawaited(SelcomPesaAnotherNumberBottomSheet.show()),
+                        onTap: () => unawaited(
+                          SelcomPesaAnotherNumberBottomSheet.show(),
+                        ),
                         child: Text(
                           AppStrings.useAnotherNumber.tr,
                           style: AppTextStyles.homeSubtitle.copyWith(
@@ -126,20 +125,26 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 14.h),
-                    Obx(() => _selfAmountSection(topup)),
                   ],
-                ),
-              ),
+                );
+              }),
             ),
           ),
           SafeArea(
             top: false,
             child: Padding(
-              padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
-              child: _SelcomPesaSelfFooter(
-                controllerTag: topupTag,
-                amountController: _selfAmountController,
+              padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 16.h),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Obx(() => _selfAmountSection(topup)),
+                  SizedBox(height: 12.h),
+                  _SelcomPesaSelfFooter(
+                    controllerTag: topupTag,
+                    amountController: _selfAmountController,
+                  ),
+                ],
               ),
             ),
           ),
@@ -201,33 +206,35 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
             ),
           ),
         ],
-        SizedBox(height: 25.h),
       ],
     );
   }
 
-  /// Empty → single unlinked card; otherwise one card per LINKED account + optional link-another.
-  Widget _linkedAccountsSection(PaymentMethodsController paymentController) {
+  /// Linked-account cards for the scrollable list (empty → single unlinked card).
+  List<Widget> _linkedAccountListChildren(
+    PaymentMethodsController paymentController,
+  ) {
     final accounts = paymentController.linkedAccountsList;
     if (accounts.isEmpty) {
-      return _selcomCard(paymentController);
+      return [_selcomCard(paymentController)];
     }
-    return Column(
-      children: [
-        for (var i = 0; i < accounts.length; i++) ...[
-          if (i > 0) SizedBox(height: 8.h),
-          _selcomCard(
-            paymentController,
-            account: accounts[i],
-            // showDefaultBadge: i == 0, // No default linked account for now.
-          ),
-        ],
-        if (paymentController.canLinkAnother) ...[
-          SizedBox(height: 8.h),
-          _linkAnotherAccountCard(paymentController),
-        ],
-      ],
-    );
+
+    final children = <Widget>[];
+    for (var i = 0; i < accounts.length; i++) {
+      if (i > 0) children.add(SizedBox(height: 8.h));
+      children.add(
+        _selcomCard(
+          paymentController,
+          account: accounts[i],
+          // showDefaultBadge: i == 0, // No default linked account for now.
+        ),
+      );
+    }
+    if (paymentController.canLinkAnother) {
+      children.add(SizedBox(height: 8.h));
+      children.add(_linkAnotherAccountCard(paymentController));
+    }
+    return children;
   }
 
   Widget _linkAnotherAccountCard(PaymentMethodsController paymentController) {
