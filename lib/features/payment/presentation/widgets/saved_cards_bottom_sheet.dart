@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
+import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -14,34 +15,24 @@ import '../../../../shared/widgets/app_text_field.dart';
 import '../controllers/saved_cards_controller.dart';
 
 class SavedCardsBottomSheet extends GetView<SavedCardsController> {
-  const SavedCardsBottomSheet({super.key, required this.controllerTag});
-
-  final String controllerTag;
+  const SavedCardsBottomSheet({super.key});
 
   static Future<void> show() {
-    final tag = 'saved_cards_${DateTime.now().millisecondsSinceEpoch}';
-    Get.put(
-      SavedCardsController(controllerTag: tag),
-      tag: tag,
-    );
+    if (!Get.isRegistered<SavedCardsController>()) {
+      Get.put(sl<SavedCardsController>());
+    }
+    final controller = Get.find<SavedCardsController>();
+    controller.resetState();
+    unawaited(controller.loadCards());
+
     return AppDialogs.showStandardBottomSheet<void>(
-      sheet: SavedCardsBottomSheet(controllerTag: tag),
-    ).whenComplete(() {
-      if (Get.isRegistered<SavedCardsController>(tag: tag)) {
-        Get.delete<SavedCardsController>(tag: tag);
-      }
-    });
+      sheet: const SavedCardsBottomSheet(),
+    );
   }
 
   @override
-  String? get tag => controllerTag;
-
-  @override
   Widget build(BuildContext context) {
-    if (!Get.isRegistered<SavedCardsController>(tag: tag)) {
-      return const SizedBox.shrink();
-    }
-    final controller = this.controller;
+    final controller = Get.find<SavedCardsController>();
     return Obx(() {
       final step = controller.step.value;
       return AppStandardBottomSheet(
@@ -110,8 +101,10 @@ class SavedCardsBottomSheet extends GetView<SavedCardsController> {
         separatorBuilder: (_, __) => SizedBox(height: 12.h),
         itemBuilder: (context, index) {
           final card = cards[index];
-          final bool isVisa = card.label.toLowerCase().contains('visa');
-          final String brandText = isVisa ? 'VISA' : 'CARD';
+          final bool isVisa = card.maskedCard.startsWith('4');
+          final bool isMastercard = card.maskedCard.startsWith('5');
+          final String brandText = isVisa ? 'VISA' : (isMastercard ? 'MC' : 'CARD');
+          final String label = card.maskedCard.replaceAll(RegExp(r'[xX]'), '*');
 
           return InkWell(
             onTap: () => controller.selectCard(card),
@@ -139,7 +132,7 @@ class SavedCardsBottomSheet extends GetView<SavedCardsController> {
                   SizedBox(width: 16.w),
                   Expanded(
                     child: Text(
-                      card.label,
+                      label,
                       style: AppTextStyles.homeSubtitle.copyWith(
                         color: AppColors.textHeading,
                         fontWeight: FontWeight.w600,

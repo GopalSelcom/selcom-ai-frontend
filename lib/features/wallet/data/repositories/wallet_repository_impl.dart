@@ -1,3 +1,5 @@
+import 'package:dartz/dartz.dart';
+import '../../../../core/errors/failures.dart';
 import '../../../payment/data/datasources/selcom_pesa_topup_remote_data_source.dart';
 import '../../../payment/data/datasources/wallet_payment_remote_data_source.dart';
 import '../../../payment/data/models/go_other_payment_methods_models.dart';
@@ -12,6 +14,8 @@ import '../../domain/repositories/wallet_repository.dart';
 import '../../domain/utils/wallet_statement_utils.dart';
 import '../datasources/wallet_remote_data_source.dart';
 import '../models/go_email_card_statement_models.dart';
+import '../models/go_wallet_card_model.dart';
+import '../models/go_add_card_response_model.dart';
 
 class WalletRepositoryImpl implements WalletRepository {
   WalletRepositoryImpl({
@@ -180,4 +184,46 @@ class WalletRepositoryImpl implements WalletRepository {
   Future<SelcomPesaTopupStatusResult> checkSelcomPesaTopUpStatus({
     required String transid,
   }) => _selcomPesaTopupRemoteDataSource.checkTopUpStatus(transid: transid);
+
+  @override
+  Future<Either<Failure, List<GoWalletCardModel>>> fetchCards() async {
+    try {
+      final result = await _paymentRemoteDataSource.fetchCards();
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, GoAddCardResponseModel>> goAddCardNew({
+    required int amount,
+    required int newCard,
+  }) async {
+    try {
+      final result = await _paymentRemoteDataSource.goAddCardNew(
+        amount: amount,
+        newCard: newCard,
+      );
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> goPayByExistingCard({
+    required String transId,
+    required String cardToken,
+  }) async {
+    try {
+      await _paymentRemoteDataSource.goPayByExistingCard(
+        transId: transId,
+        cardToken: cardToken,
+      );
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

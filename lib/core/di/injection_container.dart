@@ -14,6 +14,8 @@ import '../../features/notification/domain/repositories/notification_repository.
 import '../../features/notification/presentation/controllers/notification_controller.dart';
 import '../../features/profile/presentation/controllers/payment_methods_controller.dart';
 import '../../features/payment/presentation/controllers/payment_method_controller.dart';
+import '../../features/payment/presentation/controllers/saved_cards_controller.dart';
+
 import '../../features/profile/data/datasources/profile_remote_data_source.dart';
 import '../../features/profile/data/datasources/selcom_pesa_link_remote_data_source.dart';
 import '../../features/profile/data/repositories/profile_repository_impl.dart';
@@ -66,6 +68,7 @@ import '../services/apple_sign_in_service.dart';
 import '../services/google_sign_in_service.dart';
 import '../services/facebook_sign_in_service.dart';
 import '../services/selcom_pesa/selcom_pesa_app_launcher_service.dart';
+import '../services/local_bank_instructions_service.dart';
 
 final sl = GetIt.instance; // sl: Service Locator
 
@@ -81,6 +84,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => AppleSignInService());
   sl.registerLazySingleton(() => FacebookSignInService());
   sl.registerLazySingleton(() => FirebaseAuthDataSource());
+  sl.registerLazySingleton(() => LocalBankInstructionsService());
   sl.registerLazySingleton<AppleAuthLocalDataSource>(
     () => AppleAuthLocalDataSourceImpl(),
   );
@@ -214,6 +218,10 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetWalletSummaryUseCase(sl()));
   sl.registerLazySingleton(() => GetWalletTransactionsUseCase(sl()));
   sl.registerLazySingleton(() => EmailWalletStatementUseCase(sl()));
+
+  sl.registerLazySingleton<SavedCardsController>(
+    () => SavedCardsController(walletRepository: sl()),
+  );
 
   await sl<AppRegionService>().restore();
 }

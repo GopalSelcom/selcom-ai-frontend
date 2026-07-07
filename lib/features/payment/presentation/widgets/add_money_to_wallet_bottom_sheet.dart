@@ -15,11 +15,13 @@ import '../../../../shared/utils/thousands_separator_input_formatter.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_standard_bottom_sheet.dart';
 import '../../../../shared/widgets/app_text_field.dart';
+import '../../../wallet/presentation/utils/wallet_format_utils.dart';
 import '../../data/models/go_other_payment_methods_models.dart';
 import '../controllers/tanqr_wallet_topup_controller.dart';
 import '../screens/selcom_pesa_to_wallet_screen.dart';
 import 'mobile_money_topup_bottom_sheet.dart';
 import 'saved_cards_bottom_sheet.dart';
+import 'local_bank_instructions_bottom_sheet.dart';
 import 'tanqr_tips_bottom_sheet.dart';
 import 'wallet_topup_sheet_lifecycle.dart';
 
@@ -130,7 +132,7 @@ class _OptionsContent extends StatelessWidget {
         _AddMoneyOptionTile(
           title: "Local banks to Wallet",
           subtitle: AppStrings.addMoneyTanQrTipsSubtitle.tr,
-          onTap: controller.openTanQrAmountEntry,
+          onTap: _onLocalBanksTap,
         ),
         SizedBox(height: 12.h),
         _AddMoneyOptionTile(
@@ -152,6 +154,11 @@ class _OptionsContent extends StatelessWidget {
   void _onSelcomPesaTap() {
     Get.back<void>();
     unawaited(SelcomPesaToWalletScreen.open());
+  }
+
+  void _onLocalBanksTap() {
+    Get.back<void>();
+    unawaited(LocalBankInstructionsBottomSheet.show());
   }
 
   void _onMobileMoneyTap() {

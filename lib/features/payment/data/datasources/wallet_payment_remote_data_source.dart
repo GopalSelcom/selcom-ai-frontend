@@ -2,6 +2,8 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
+import '../../../wallet/data/models/go_wallet_card_model.dart';
+import '../../../wallet/data/models/go_add_card_response_model.dart';
 import '../models/go_other_payment_methods_models.dart';
 
 abstract class WalletPaymentRemoteDataSource {
@@ -27,6 +29,18 @@ abstract class WalletPaymentRemoteDataSource {
   Future<void> cancelUssdOrder({
     required String transid,
     required String paymentMethod,
+  });
+
+  Future<List<GoWalletCardModel>> fetchCards();
+
+  Future<GoAddCardResponseModel> goAddCardNew({
+    required int amount,
+    required int newCard,
+  });
+
+  Future<void> goPayByExistingCard({
+    required String transId,
+    required String cardToken,
   });
 }
 
@@ -237,6 +251,112 @@ class WalletPaymentRemoteDataSourceImpl
     }
 
     return null;
+  }
+
+  @override
+  Future<List<GoWalletCardModel>> fetchCards() async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.wallet.fetchCards,
+        method: ApiMethod.get,
+        errorPresentationType: ErrorPresentationType.none,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      final data = response.data;
+      if (data is Map<String, dynamic>) {
+        final resultcode = data['resultcode']?.toString();
+        if (resultcode == '404') {
+          return [];
+        }
+        final list = data['data'];
+        if (list is List) {
+          return list
+              .map((e) => GoWalletCardModel.fromJson(Map<String, dynamic>.from(e)))
+              .toList();
+        }
+      }
+    }
+
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return [];
+    }
+
+    throw WalletPaymentException(
+      _messageFromResponse(response.data) ?? 'Failed to fetch cards',
+    );
+  }
+
+  @override
+  Future<GoAddCardResponseModel> goAddCardNew({
+    required int amount,
+    required int newCard,
+  }) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.wallet.goAddCardNew,
+        method: ApiMethod.post,
+        body: {
+          'amount': amount,
+          'newCard': newCard,
+        },
+        errorPresentationType: ErrorPresentationType.none,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      final data = response.data;
+      if (data is Map<String, dynamic>) {
+        final statusCode = data['status_code'] ?? data['status'];
+        if (statusCode == 200) {
+          return GoAddCardResponseModel.fromJson(data);
+        }
+        throw WalletPaymentException(
+          data['errorMsg']?.toString() ??
+              data['message']?.toString() ??
+              'Failed to start card transaction',
+        );
+      }
+    }
+
+    throw WalletPaymentException(
+      _messageFromResponse(response.data) ?? 'Failed to start card transaction',
+    );
+  }
+
+  @override
+  Future<void> goPayByExistingCard({
+    required String transId,
+    required String cardToken,
+  }) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.wallet.goPayByExistingCard,
+        method: ApiMethod.post,
+        body: {
+          'transid': transId,
+          'card_token': cardToken,
+        },
+        errorPresentationType: ErrorPresentationType.none,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      final data = response.data;
+      if (data is Map<String, dynamic>) {
+        final statusCode = data['status_code'] ?? data['status'];
+        if (statusCode == 200) {
+          return;
+        }
+        final message = data['message']?.toString() ?? 'Debit failed';
+        throw WalletPaymentException(message);
+      }
+    }
+
+    throw WalletPaymentException(
+      _messageFromResponse(response.data) ?? 'Debit failed',
+    );
   }
 }
 

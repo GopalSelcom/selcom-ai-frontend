@@ -34,6 +34,10 @@ class AppWebViewController extends GetxController {
         NavigationDelegate(
           onNavigationRequest: (request) {
             _logNavigationRequest(request.url);
+            if (request.url.contains('redirect.html')) {
+              Get.back(result: true);
+              return NavigationDecision.prevent;
+            }
             return NavigationDecision.navigate;
           },
           onPageStarted: (pageUrl) {
