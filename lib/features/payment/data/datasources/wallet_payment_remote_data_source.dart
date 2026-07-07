@@ -178,6 +178,16 @@ class WalletPaymentRemoteDataSourceImpl
 
   String? _messageFromResponse(dynamic data) {
     if (data is! Map) return null;
+    final errors = data['errors'];
+    if (errors is List) {
+      for (final item in errors) {
+        if (item is! Map) continue;
+        final errorMessage = item['message']?.toString().trim();
+        if (errorMessage != null && errorMessage.isNotEmpty) {
+          return errorMessage;
+        }
+      }
+    }
     final message = data['message'];
     if (message == null) return null;
     final text = message.toString().trim();
