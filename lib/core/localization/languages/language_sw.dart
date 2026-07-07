@@ -31,7 +31,7 @@ class LanguageSw extends Languages {
     'add_money': 'Ongeza Pesa',
     'amount': 'Kiasi',
     'back': 'Nyuma',
-    'add_money_selcom_pesa_subtitle': 'Omba pesa kutoka Selcom Pesa',
+    'add_money_selcom_pesa_subtitle': 'Omba pesa kutoka SelcomPesa',
     'add_money_tan_qr_tips': 'TanQR',
     'add_money_tan_qr_tips_subtitle': 'Ongeza Pesa ukitumia TanQR',
     'add_money_mobile_money_subtitle': 'Ongeza Pesa ukitumia Pesa ya Mtandao',
@@ -42,12 +42,12 @@ class LanguageSw extends Languages {
     'mobile_money_request_sent_title': 'Ombi limetumwa',
     'mobile_money_request_sent_message':
         'Ombi lako la malipo limetumwa kwa @number. Kiasi kitaonyeshwa kwenye mkoba wako wa Selcom Go.',
-    'selcom_pesa_to_go_wallet': 'Selcom Pesa kwenda kwenye mkoba wa Go',
+    'selcom_pesa_to_go_wallet': 'SelcomPesa kwenda kwenye mkoba wa Go',
     'use_another_number': '+ Tumia namba nyingine',
     'enter_selcom_pesa_customer_phone_hint':
-        'Ingiza namba ya simu ya mteja wa Selcom Pesa, na tutatuma ombi',
+        'Ingiza namba ya simu ya mteja wa SelcomPesa, na tutatuma ombi',
     'request_sent_complete_selcom_topup':
-        'Ombi limetumwa. Tafadhali kamilisha malipo kwenye Selcom Pesa ili kuongeza salio la mkoba wako wa Go',
+        'Ombi limetumwa. Tafadhali kamilisha malipo kwenye SelcomPesa ili kuongeza salio la mkoba wako wa Go',
     'expires_in_with_time': 'Inaisha baada ya @time',
     'tanqr_amount_required': 'Tafadhali ingiza kiasi',
     'tanqr_amount_must_be_greater_than_zero': 'Kiasi lazima kiwe zaidi ya 0',
@@ -62,11 +62,11 @@ class LanguageSw extends Languages {
     'tanqr_missing_registered_phone':
         'Namba yako ya simu iliyosajiliwa haipo. Tafadhali sasisha wasifu wako.',
     'tanqr_cancel_request': 'Futa ombi',
-    'selcom_pesa_app_not_installed': 'Programu ya Selcom Pesa haijasakinishwa',
+    'selcom_pesa_app_not_installed': 'Programu ya SelcomPesa haijasakinishwa',
     'selcom_pesa_install_prompt':
-        'Sakinisha Selcom Pesa ili kukamilisha malipo kwenye kifaa chako.',
+        'Sakinisha SelcomPesa ili kukamilisha malipo kwenye kifaa chako.',
     'selcom_pesa_handoff_failed':
-        'Imeshindikana kufungua Selcom Pesa. Hakikisha programu imesakinishwa na ujaribu tena.',
+        'Imeshindikana kufungua SelcomPesa. Hakikisha programu imesakinishwa na ujaribu tena.',
     'selcom_pesa_status_not_found':
         'Hatukuweza kupata malipo haya. Tafadhali jaribu tena.',
     'selcom_pesa_payment_rejected':
@@ -180,7 +180,7 @@ class LanguageSw extends Languages {
         'Ingiza namba ya simu kwa uthibitisho',
     'enter_promo_code': 'Ingiza msimbo wa promosi',
     'enter_promocode': 'Ingiza Msimbo wa Promosi',
-    'enter_your_selcom_pesa_number': 'Ingiza namba yako ya Selcom Pesa',
+    'enter_your_selcom_pesa_number': 'Ingiza namba yako ya SelcomPesa',
     'error': 'Itilafu',
     'error_opening_phone_dialer': 'Itilafu wakati wa kufungua kipiga simu',
     'error_sending_message': 'Itilafu wakati wa kutuma ujumbe',
@@ -195,7 +195,7 @@ class LanguageSw extends Languages {
     'days_left_count': 'Siku @count zimebaki',
     'expires_in_timer': 'Inaisha baada ya @timer',
     'request_sent_please_complete_payment_on_selcom_pesa_to_book_your_ride':
-        'Ombi limetumwa. Tafadhali kamilisha malipo kwenye Selcom Pesa ili kuongeza salio la mkoba wako.',
+        'Ombi limetumwa. Tafadhali kamilisha malipo kwenye SelcomPesa ili kuongeza salio la mkoba wako.',
     'payment_completed_successfully': 'Malipo yamekamilika kwa mafanikio',
     'thank_you_for_riding_with_us_see_you_on_the_next_trip': 'Asante kwa kusafiri nasi, tutakuona kwenye safari ijayo.',
     'fare': 'Nauli',
@@ -467,7 +467,7 @@ class LanguageSw extends Languages {
     'search_timeout': 'Muda wa kutafuta umeisha',
     'security_and_preference_controls_more_settings_will_appear_here_as_they_are_enable':
         'Udhibiti wa usalama na upendeleo. Mipangilio zaidi itaonekana hapa itakapowezeshwa.',
-    'selcom_pesa': 'Selcom Pesa',
+    'selcom_pesa': 'SelcomPesa',
     'select_anearby_point_for_easier_pickup': 'Chagua eneo la karibu kwa ajili ya kuchukuliwa kwa urahisi',
     'select_apayment_method': 'Chagua njia ya malipo',
     'select_country': 'Chagua nchi',
@@ -493,7 +493,7 @@ class LanguageSw extends Languages {
     'start_typing_destination': 'Anza kuandika eneo unalokwenda',
     'stay_notified': 'Pata Taarifa!',
     'enable_notifications_for_ride_updates': 'Wezesha arifa ili kupokea taarifa za wakati halisi kuhusu kuwasili kwa dereva na hali ya safari.',
-    'steps_to_connect_selcom_pesa': 'Hatua za kuunganisha Selcom Pesa',
+    'steps_to_connect_selcom_pesa': 'Hatua za kuunganisha SelcomPesa',
     'submit_failed': 'Uwasilishaji umefeli',
     'submit': 'Wasilisha',
     'success': 'Mafanikio',
@@ -624,12 +624,12 @@ class LanguageSw extends Languages {
     'yes': 'Ndiyo',
     'yes_cancel': 'NDIYO, GHAIRI',
     'you_can_still_able_to_request_money_on_selcom_pesa_using_another_number':
-        'Bado unaweza kuomba fedha kwenye Selcom Pesa kwa kutumia namba nyingine.',
+        'Bado unaweza kuomba fedha kwenye SelcomPesa kwa kutumia namba nyingine.',
     'your_card_has_been_nadded_successfully':
         'Kadi yako imeongezwa kwa mafanikio.',
     'your_driver_is_already_on_the_way': 'Dereva wako tayari yuko njiani.',
     'your_identity_has_been_successfully_verified_you_can_now_use_selcom_pesa':
-        'Uthibitisho wa utambulisho wako umekamilika kwa mafanikio. Sasa unaweza kutumia Selcom Pesa.',
+        'Uthibitisho wa utambulisho wako umekamilika kwa mafanikio. Sasa unaweza kutumia SelcomPesa.',
     'your_linked_account': 'Akaunti Yako Iliyounganishwa',
     'your_rating_has_been_submitted': 'Ukadiriaji wako umewasilishwa.',
     'your_ride_was_cancelled': 'Safari yako imeghairiwa.',
@@ -672,22 +672,22 @@ class LanguageSw extends Languages {
     'card_ready_to_use_you_can_manage_or_remove_anytime':
         'Sasa iko tayari kwa malipo. Unaweza kudhibiti au kuondoa kadi hii wakati wowote kutoka kwenye mipangilio ya malipo.',
     'selcom_pesa_connect_step_1':
-        'Ingiza namba yako ya simu iliyosajiliwa ya Selcom Pesa',
+        'Ingiza namba yako ya simu iliyosajiliwa ya SelcomPesa',
     'selcom_pesa_connect_step_2':
-        'Thibitisha picha ya selfie inayohusiana na akaunti yako ya Selcom Pesa.',
+        'Thibitisha picha ya selfie inayohusiana na akaunti yako ya SelcomPesa.',
     'selcom_pesa_connect_step_3':
-        'Angalia programu yako ya Selcom Pesa na uidhinishe ombi la uthibitisho.',
+        'Angalia programu yako ya SelcomPesa na uidhinishe ombi la uthibitisho.',
     'selcom_pesa_link_request_sent_message':
-        'Ombi la kuunganisha limetumwa kwa @phoneNumber. Tafadhali fungua Selcom Pesa na uidhinishe ili kuunganisha akaunti yako.',
+        'Ombi la kuunganisha limetumwa kwa @phoneNumber. Tafadhali fungua SelcomPesa na uidhinishe ili kuunganisha akaunti yako.',
     'selcom_pesa_already_linked_message':
         '@phoneNumber tayari imeunganishwa na akaunti yako ya Selcom Go.',
     'link_another_account': 'Unganisha akaunti nyingine',
     'selcom_pesa_pending_approval': 'Inasubiri idhini',
     'selcom_pesa_max_linked_accounts':
-        'Unaweza kuunganisha akaunti @max za Selcom Pesa.',
-    'selcom_pesa_multiple_linked': 'Akaunti @count za Selcom Pesa zimeunganishwa',
+        'Unaweza kuunganisha akaunti @max za SelcomPesa.',
+    'selcom_pesa_multiple_linked': 'Akaunti @count za SelcomPesa zimeunganishwa',
     'selcom_pesa_connect_step_4':
-        'Umekamilisha kila kitu! Akaunti yako ya Selcom Pesa imeunganishwa.',
+        'Umekamilisha kila kitu! Akaunti yako ya SelcomPesa imeunganishwa.',
     'otp_sent_to_your_phone_number':
         'OTP imetumwa kwa namba yako ya simu ya @phoneNumber',
     'require_verification_pin_before_starting_ride': 'Inahitaji PIN ya uthibitisho kabla ya kuanza safari.',
@@ -756,7 +756,7 @@ class LanguageSw extends Languages {
     'confirm_and_update': 'Thibitisha & Sasisha',
     'confirm_stop': 'Thibitisha Kituo',
     'connect_selcom_pesa_ride_charges_subtitle':
-        'Unganisha akaunti yako ya Selcom Pesa kuwezesha ukataji wa nauli otomatiki na rahisi.',
+        'Unganisha akaunti yako ya SelcomPesa kuwezesha ukataji wa nauli otomatiki na rahisi.',
     'connecting_drivers': 'Inatafuta madereva wa karibu...',
     'connecting_socket': 'Inatafuta madereva wa karibu...',
     'could_not_refresh_fare_after_pickup':
@@ -789,6 +789,20 @@ class LanguageSw extends Languages {
     'write_a_message': 'Andika ujumbe...',
     'your_driver': 'Dereva Wako',
     'incorrect_pin': 'PIN si sahihi.',
+    'selcom_pesa_link_number': '+ Unganisha namba',
+    'selcom_pesa_self_title': 'Binafsi',
+    'selcom_pesa_self_subtitle': 'Ingiza kiasi na uelekezwe kwenye SelcomPesa',
+    'selcom_pesa_other_title': 'Nyingine',
+    'selcom_pesa_other_subtitle': 'Ingiza namba ya simu na kiasi',
+    'remove_account_title': 'Ondoa Akaunti',
+    'remove_account_message': 'Je, una uhakika unataka kuondoa akaunti hii ya SelcomPesa?',
+    'remove_label': 'Ondoa',
+    'saved_card_label': 'Kadi iliyohifadhiwa',
+    'saved_card_subtitle': 'Ongeza salio ukitumia kadi zilizohifadhiwa',
+    'no_saved_cards_found': 'Hakuna kadi zilizohifadhiwa',
+    'add_new_card_text': '+ Ongeza kadi mpya',
+    'amount_is_required': 'Kiasi kinahitajika',
+    'enter_valid_amount': 'Tafadhali ingiza kiasi sahihi',
   };
 
   @override
@@ -3160,4 +3174,46 @@ class LanguageSw extends Languages {
   @override
   // TODO: implement savedLocations
   String get savedLocations => values['saved_locations'] ?? '';
+
+  @override
+  String get selcomPesaLinkNumber => values['selcom_pesa_link_number'] ?? '';
+
+  @override
+  String get selcomPesaSelfTitle => values['selcom_pesa_self_title'] ?? '';
+
+  @override
+  String get selcomPesaSelfSubtitle => values['selcom_pesa_self_subtitle'] ?? '';
+
+  @override
+  String get selcomPesaOtherTitle => values['selcom_pesa_other_title'] ?? '';
+
+  @override
+  String get selcomPesaOtherSubtitle => values['selcom_pesa_other_subtitle'] ?? '';
+
+  @override
+  String get removeAccountTitle => values['remove_account_title'] ?? '';
+
+  @override
+  String get removeAccountMessage => values['remove_account_message'] ?? '';
+
+  @override
+  String get removeLabel => values['remove_label'] ?? '';
+
+  @override
+  String get savedCardLabel => values['saved_card_label'] ?? '';
+
+  @override
+  String get savedCardSubtitle => values['saved_card_subtitle'] ?? '';
+
+  @override
+  String get noSavedCardsFound => values['no_saved_cards_found'] ?? '';
+
+  @override
+  String get addNewCardText => values['add_new_card_text'] ?? '';
+
+  @override
+  String get amountIsRequired => values['amount_is_required'] ?? '';
+
+  @override
+  String get enterValidAmount => values['enter_valid_amount'] ?? '';
 }

@@ -44,7 +44,8 @@ class AppStrings {
   static const String addMoneyTanQrTipsSubtitle =
       'add_money_tan_qr_tips_subtitle';
   static const String addMoneyMobileMoneySubtitle =
-      'add_money_mobile_money_subtitle';
+      'add_money_mobile_money_subtitle';  static const String addMoneyLocalBanksSubtitle =
+      'add_money_local_banks_subtitle';
   static const String walletFundsReceivedTitle = 'wallet_funds_received_title';
   static const String walletFundsReceivedSubtitle =
       'wallet_funds_received_subtitle';
@@ -901,4 +902,18 @@ class AppStrings {
   static const String updateRide = 'update_ride';
   static const String writeAMessage = 'write_a_message';
   static const String yourDriver = 'your_driver';
+  static const String selcomPesaLinkNumber = 'selcom_pesa_link_number';
+  static const String selcomPesaSelfTitle = 'selcom_pesa_self_title';
+  static const String selcomPesaSelfSubtitle = 'selcom_pesa_self_subtitle';
+  static const String selcomPesaOtherTitle = 'selcom_pesa_other_title';
+  static const String selcomPesaOtherSubtitle = 'selcom_pesa_other_subtitle';
+  static const String removeAccountTitle = 'remove_account_title';
+  static const String removeAccountMessage = 'remove_account_message';
+  static const String removeLabel = 'remove_label';
+  static const String savedCardLabel = 'saved_card_label';
+  static const String savedCardSubtitle = 'saved_card_subtitle';
+  static const String noSavedCardsFound = 'no_saved_cards_found';
+  static const String addNewCardText = 'add_new_card_text';
+  static const String amountIsRequired = 'amount_is_required';
+  static const String enterValidAmount = 'enter_valid_amount';
 }

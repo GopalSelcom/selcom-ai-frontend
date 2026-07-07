@@ -19,6 +19,7 @@ import '../../data/models/go_other_payment_methods_models.dart';
 import '../controllers/tanqr_wallet_topup_controller.dart';
 import '../screens/selcom_pesa_to_wallet_screen.dart';
 import 'mobile_money_topup_bottom_sheet.dart';
+import 'saved_cards_bottom_sheet.dart';
 import 'tanqr_tips_bottom_sheet.dart';
 import 'wallet_topup_sheet_lifecycle.dart';
 
@@ -126,16 +127,22 @@ class _OptionsContent extends StatelessWidget {
           onTap: _onSelcomPesaTap,
         ),
         SizedBox(height: 12.h),
-        // _AddMoneyOptionTile(
-        //   title: AppStrings.addMoneyTanQrTips.tr,
-        //   subtitle: AppStrings.addMoneyTanQrTipsSubtitle.tr,
-        //   onTap: controller.openTanQrAmountEntry,
-        // ),
-        // SizedBox(height: 12.h),
+        _AddMoneyOptionTile(
+          title: "Local banks to Wallet",
+          subtitle: AppStrings.addMoneyTanQrTipsSubtitle.tr,
+          onTap: controller.openTanQrAmountEntry,
+        ),
+        SizedBox(height: 12.h),
         _AddMoneyOptionTile(
           title: AppStrings.mobileMoney.tr,
           subtitle: AppStrings.addMoneyMobileMoneySubtitle.tr,
           onTap: _onMobileMoneyTap,
+        ),
+        SizedBox(height: 12.h),
+        _AddMoneyOptionTile(
+          title: AppStrings.savedCardLabel.tr,
+          subtitle: AppStrings.savedCardSubtitle.tr,
+          onTap: _onSavedCardTap,
         ),
         SizedBox(height: 8.h),
       ],
@@ -150,6 +157,11 @@ class _OptionsContent extends StatelessWidget {
   void _onMobileMoneyTap() {
     Get.back<void>();
     unawaited(MobileMoneyTopupBottomSheet.show());
+  }
+
+  void _onSavedCardTap() {
+    Get.back<void>();
+    unawaited(SavedCardsBottomSheet.show());
   }
 }
 

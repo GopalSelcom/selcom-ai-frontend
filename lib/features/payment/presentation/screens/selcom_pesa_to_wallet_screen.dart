@@ -9,23 +9,16 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../shared/utils/thousands_separator_input_formatter.dart';
-import '../../../../shared/widgets/app_cupertino_text_button.dart';
-import '../../../../shared/widgets/app_primary_button.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
-import '../../../../shared/widgets/app_text_field.dart';
 import '../../../profile/domain/entities/selcom_pesa_linked_account_entity.dart';
 import '../../../profile/presentation/controllers/payment_methods_controller.dart';
-import '../bindings/selcom_pesa_to_wallet_binding.dart';
-import '../controllers/selcom_pesa_topup_controller.dart';
 import '../widgets/selcom_pesa_another_number_bottom_sheet.dart';
-import '../widgets/wallet_topup_sheet_lifecycle.dart';
+import '../widgets/selcom_pesa_self_bottom_sheet.dart';
 
 /// Selcom Pesa link + Go wallet top-up on one screen.
 ///
 /// Flow: `docs/flows/selcom-pesa-link-flow.md`
-/// - Link / linked list / selection / balance / unlink → [PaymentMethodsController]
-/// - Amount + Done top-up → [SelcomPesaTopupController] (tag from [SelcomPesaToWalletBinding])
 class SelcomPesaToWalletScreen extends StatefulWidget {
   const SelcomPesaToWalletScreen({super.key});
 
@@ -39,18 +32,6 @@ class SelcomPesaToWalletScreen extends StatefulWidget {
 }
 
 class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
-  late final TextEditingController _selfAmountController;
-
-  String? get _topupTag => SelcomPesaToWalletBinding.topupTag;
-
-  SelcomPesaTopupController? get _topupController {
-    final tag = _topupTag;
-    if (tag == null || !Get.isRegistered<SelcomPesaTopupController>(tag: tag)) {
-      return null;
-    }
-    return Get.find<SelcomPesaTopupController>(tag: tag);
-  }
-
   PaymentMethodsController get _paymentController {
     if (Get.isRegistered<PaymentMethodsController>()) {
       return Get.find<PaymentMethodsController>();
@@ -59,32 +40,9 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    _selfAmountController = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    final tag = _topupTag;
-    if (tag != null) {
-      unawaited(disposeSelcomPesaTopupAfterSheetClosed(tag));
-    }
-    _selfAmountController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final topup = _topupController;
-    final topupTag = _topupTag;
-
-    if (topupTag == null || topup == null || topup.textFieldsDisposed) {
-      return const Scaffold(body: SizedBox.shrink());
-    }
-
     return Scaffold(
-      backgroundColor: AppColors.pageBackground,
+      backgroundColor: AppColors.white,
       body: Column(
         children: [
           AppProfileHeader(
@@ -93,7 +51,6 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
             bottomPadding: 16.h,
           ),
           Expanded(
-            // Pull-to-refresh reloads linked accounts from GET linked_accounts.
             child: RefreshIndicator(
               onRefresh: _paymentController.refreshLinkedAccounts,
               child: Obx(() {
@@ -104,48 +61,44 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
                   ),
                   padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 16.h),
                   children: [
-                    Text(
-                      AppStrings.paymentMethodsTitle.tr,
-                      style: AppTextStyles.homeSubtitle,
-                    ),
-                    SizedBox(height: 8.h),
-                    ..._linkedAccountListChildren(paymentController),
-                    SizedBox(height: 8.h),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: GestureDetector(
-                        onTap: () => unawaited(
-                          SelcomPesaAnotherNumberBottomSheet.show(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          AppStrings.paymentMethodsTitle.tr,
+                          style: AppTextStyles.homeSubtitle,
                         ),
-                        child: Text(
-                          AppStrings.useAnotherNumber.tr,
-                          style: AppTextStyles.homeSubtitle.copyWith(
-                            color: AppColors.iconHeartFilled,
+                        if (paymentController.canLinkAnother && paymentController.linkedAccountsList.isNotEmpty)
+                          GestureDetector(
+                            onTap: paymentController.linkSelcomPesa,
+                            behavior: HitTestBehavior.opaque,
+                            child: Text(
+                              AppStrings.selcomPesaLinkNumber.tr,
+                              style: AppTextStyles.homeSubtitle.copyWith(
+                                color: AppColors.brandRed,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
+                      ],
+                    ),
+                    SizedBox(height: 12.h),
+                    _linkedAccountsHorizontalList(paymentController),
+                    _orDivider(),
+                    _actionOption(
+                      title: AppStrings.selcomPesaSelfTitle.tr,
+                      subtitle: AppStrings.selcomPesaSelfSubtitle.tr,
+                      onTap: () => unawaited(SelcomPesaSelfBottomSheet.show()),
+                    ),
+                    SizedBox(height: 12.h),
+                    _actionOption(
+                      title: AppStrings.selcomPesaOtherTitle.tr,
+                      subtitle: AppStrings.selcomPesaOtherSubtitle.tr,
+                      onTap: () => unawaited(SelcomPesaAnotherNumberBottomSheet.show()),
                     ),
                   ],
                 );
               }),
-            ),
-          ),
-          SafeArea(
-            top: false,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 16.h),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Obx(() => _selfAmountSection(topup)),
-                  SizedBox(height: 12.h),
-                  _SelcomPesaSelfFooter(
-                    controllerTag: topupTag,
-                    amountController: _selfAmountController,
-                  ),
-                ],
-              ),
             ),
           ),
         ],
@@ -153,118 +106,25 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
     );
   }
 
-  Widget _selfAmountSection(SelcomPesaTopupController topup) {
-    if (topup.textFieldsDisposed) return const SizedBox.shrink();
-    final apiError = topup.apiError.value;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          AppStrings.amount.tr,
-          style: AppTextStyles.homeSubtitle.copyWith(
-            color: AppColors.textMutedStrong,
-          ),
-        ),
-        SizedBox(height: 4.h),
-        AppTextField(
-          readOnly: false,
-          enabled: !topup.isSubmitting.value,
-          hintText: '5,000',
-          keyboardType: TextInputType.number,
-          inputFormatters: [ThousandsSeparatorInputFormatter()],
-          textFieldBackgroundColor: AppColors.surfaceSubtle,
-          borderColor: AppColors.borderWalletCard,
-          controller: _selfAmountController,
-          errorText: topup.amountError.value,
-          onChanged: topup.onAmountChanged,
-          prefixIcon: Padding(
-            padding: EdgeInsets.only(left: 16.w, right: 8.w),
-            child: Center(
-              widthFactor: 1,
-              child: Text(
-                AppStrings.defaultCurrencyTzs.tr,
-                style: AppTextStyles.homeTitle.copyWith(
-                  fontSize: 16.sp,
-                  height: 22 / 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textHeading,
-                ),
-              ),
-            ),
-          ),
-          textColor: AppColors.textHeading,
-          fontSize: 16.sp,
-          fontWeight: FontWeight.w700,
-        ),
-        if (apiError != null && apiError.isNotEmpty) ...[
-          SizedBox(height: 8.h),
-          Text(
-            apiError,
-            style: AppTextStyles.homeSubtitle.copyWith(
-              color: AppColors.error,
-              fontSize: 13.sp,
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
-  /// Linked-account cards for the scrollable list (empty → single unlinked card).
-  List<Widget> _linkedAccountListChildren(
-    PaymentMethodsController paymentController,
-  ) {
+  Widget _linkedAccountsHorizontalList(PaymentMethodsController paymentController) {
     final accounts = paymentController.linkedAccountsList;
     if (accounts.isEmpty) {
-      return [_selcomCard(paymentController)];
+      return _selcomCard(paymentController);
     }
 
-    final children = <Widget>[];
-    for (var i = 0; i < accounts.length; i++) {
-      if (i > 0) children.add(SizedBox(height: 8.h));
-      children.add(
-        _selcomCard(
-          paymentController,
-          account: accounts[i],
-          // showDefaultBadge: i == 0, // No default linked account for now.
-        ),
-      );
-    }
-    if (paymentController.canLinkAnother) {
-      children.add(SizedBox(height: 8.h));
-      children.add(_linkAnotherAccountCard(paymentController));
-    }
-    return children;
-  }
-
-  Widget _linkAnotherAccountCard(PaymentMethodsController paymentController) {
-    return InkWell(
-      onTap: paymentController.linkSelcomPesa,
-      borderRadius: BorderRadius.circular(16.r),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 17.w, vertical: 18.h),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceSubtle,
-          border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                AppStrings.linkAnotherAccount.tr,
-                style: AppTextStyles.homeSubtitle.copyWith(
-                  color: AppColors.iconHeartFilled,
-                ),
-              ),
-            ),
-            Icon(
-              Icons.add_circle_outline,
-              size: 22.sp,
-              color: AppColors.iconHeartFilled,
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      child: Row(
+        children: [
+          for (var i = 0; i < accounts.length; i++) ...[
+            if (i > 0) SizedBox(width: 12.w),
+            _selcomCard(
+              paymentController,
+              account: accounts[i],
             ),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -272,32 +132,49 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
   Widget _selcomCard(
     PaymentMethodsController paymentMethodsController, {
     SelcomPesaLinkedAccountEntity? account,
-    // bool showDefaultBadge = false, // No default linked account for now.
   }) {
     final linked = account != null;
+    final isSelected = linked && paymentMethodsController.isLinkedAccountSelected(account);
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 17.w, vertical: 18.h),
+      width: 280.w,
       decoration: BoxDecoration(
-        color: AppColors.surfaceSubtle,
-        border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
+        color: AppColors.white,
+        border: Border.all(
+          color: isSelected ? AppColors.successBadge : AppColors.borderWalletCard,
+          width: isSelected ? 1.5 : 0.8,
+        ),
         borderRadius: BorderRadius.circular(16.r),
       ),
-      child: linked
-          ? _linkedSelcomCardContent(paymentMethodsController, account)
-          : InkWell(
-              onTap: paymentMethodsController.linkSelcomPesa,
-              child: _unlinkedSelcomCardContent(),
-            ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16.r),
+          onTap: () {
+            if (linked) {
+              paymentMethodsController.toggleLinkedAccountSelection(account);
+              unawaited(SelcomPesaSelfBottomSheet.show(account: account));
+            } else {
+              paymentMethodsController.linkSelcomPesa();
+            }
+          },
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+            child: linked
+                ? _linkedSelcomCardContent(paymentMethodsController, account)
+                : _unlinkedSelcomCardContent(),
+          ),
+        ),
+      ),
     );
   }
 
-  /// Linked card: title + selector, phone, hidden balance + eye, Remove account.
   Widget _linkedSelcomCardContent(
     PaymentMethodsController paymentMethodsController,
     SelcomPesaLinkedAccountEntity account,
   ) {
     final phoneDisplay = paymentMethodsController.phoneDisplayFor(account);
+    final isSelected = paymentMethodsController.isLinkedAccountSelected(account);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -310,22 +187,60 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
                 AppStrings.selcomPesa.tr,
                 style: AppTextStyles.homeSubtitle.copyWith(
                   color: AppColors.black,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-            _linkedAccountSelectionControl(paymentMethodsController, account),
+            if (isSelected) ...[
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                decoration: BoxDecoration(
+                  color: AppColors.successBadge,
+                  borderRadius: BorderRadius.circular(4.r),
+                ),
+                child: Text(
+                  'Default',
+                  style: TextStyle(
+                    color: AppColors.white,
+                    fontSize: 10.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              SizedBox(width: 8.w),
+            ],
+            GestureDetector(
+              onTap: () {
+                AppDialogs.showConfirmationDialog(
+                  title: AppStrings.removeAccountTitle.tr,
+                  message: AppStrings.removeAccountMessage.tr,
+                  confirmText: AppStrings.removeLabel.tr,
+                  confirmColor: AppColors.brandRed,
+                  onConfirm: () => unawaited(
+                    paymentMethodsController.unlinkLinkedAccount(account),
+                  ),
+                );
+              },
+              behavior: HitTestBehavior.opaque,
+              child: Icon(
+                Icons.more_vert,
+                size: 20.sp,
+                color: AppColors.textBody,
+              ),
+            ),
           ],
         ),
-        SizedBox(height: 6.h),
+        SizedBox(height: 10.h),
         Text(
-          AppStrings.selcomPesaLinkedNumber.trParams({
-            'number': phoneDisplay,
-          }),
-          style: AppTextStyles.bodySecondary.copyWith(height: 20 / 14),
+          phoneDisplay,
+          style: AppTextStyles.bodySecondary.copyWith(
+            color: AppColors.textBody,
+            fontSize: 14.sp,
+          ),
         ),
         SizedBox(height: 10.h),
         Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
               child: Obx(
@@ -352,40 +267,26 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
                           account,
                         ),
                       ),
+                behavior: HitTestBehavior.opaque,
                 child: Padding(
-                  padding: EdgeInsets.fromLTRB(4.w, 4.h, 0, 4.h),
+                  padding: EdgeInsets.all(4.w),
                   child: loading
                       ? SizedBox(
-                          width: 20.w,
-                          height: 20.w,
+                          width: 16.w,
+                          height: 16.w,
                           child: const CircularProgressIndicator(
                             strokeWidth: 2,
                           ),
                         )
                       : Icon(
                           Iconsax.eye,
-                          size: 20.sp,
+                          size: 18.sp,
                           color: AppColors.textBody,
                         ),
                 ),
               );
             }),
           ],
-        ),
-        SizedBox(height: 8.h),
-        Align(
-          alignment: Alignment.centerRight,
-          child: AppCupertinoTextButton(
-            label: AppStrings.removeAccount.tr,
-            onPressed: () => unawaited(
-              paymentMethodsController.unlinkLinkedAccount(account),
-            ),
-            padding: EdgeInsets.zero,
-            alignment: Alignment.centerRight,
-            textStyle: AppTextStyles.homeSubtitle.copyWith(
-              color: AppColors.iconHeartFilled,
-            ),
-          ),
         ),
       ],
     );
@@ -399,6 +300,7 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
           AppStrings.selcomPesa.tr,
           style: AppTextStyles.homeSubtitle.copyWith(
             color: AppColors.black,
+            fontWeight: FontWeight.w600,
           ),
         ),
         SizedBox(height: 6.h),
@@ -407,108 +309,103 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
           style: AppTextStyles.bodySecondary.copyWith(
             color: AppColors.textBody,
             fontSize: 12.sp,
-            height: 20 / 12,
+            height: 1.4,
           ),
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
         ),
-        SizedBox(height: 5.h),
+        SizedBox(height: 10.h),
         Text(
           AppStrings.linkAccount.tr,
           style: AppTextStyles.homeSubtitle.copyWith(
-            color: AppColors.iconHeartFilled,
+            color: AppColors.brandRed,
           ),
         ),
       ],
     );
   }
 
-  Widget _linkedAccountSelectionControl(
-    PaymentMethodsController paymentMethodsController,
-    SelcomPesaLinkedAccountEntity account,
-  ) {
-    return Obx(() {
-      final selected = paymentMethodsController.isLinkedAccountSelected(account);
-      return GestureDetector(
-        onTap: () => paymentMethodsController.toggleLinkedAccountSelection(
-          account,
-        ),
-        behavior: HitTestBehavior.opaque,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          width: 24.w,
-          height: 24.w,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: selected
-                  ? AppColors.textVerified
-                  : AppColors.borderWalletCard,
-              width: 2,
+  Widget _orDivider() {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 24.h),
+      child: Row(
+        children: [
+          Expanded(
+            child: Divider(
+              color: AppColors.borderWalletCard,
+              thickness: 1,
             ),
-            color: selected ? AppColors.textVerified : AppColors.white,
           ),
-          child: selected
-              ? Icon(
-                  Icons.check,
-                  size: 16.sp,
-                  color: AppColors.white,
-                )
-              : null,
-        ),
-      );
-    });
-  }
-}
-
-/// Done branches: selected linked card → other-number top-up API; else self top-up (opens SP app).
-class _SelcomPesaSelfFooter extends GetView<SelcomPesaTopupController> {
-  const _SelcomPesaSelfFooter({
-    required this.controllerTag,
-    required this.amountController,
-  });
-
-  final String controllerTag;
-  final TextEditingController amountController;
-
-  @override
-  String? get tag => controllerTag;
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      if (!Get.isRegistered<SelcomPesaTopupController>(tag: controllerTag) ||
-          controller.textFieldsDisposed) {
-        return const SizedBox.shrink();
-      }
-      return AppPrimaryButton(
-        label: AppStrings.done.tr,
-        onPressed: controller.canSubmitSelf ? _onDonePressed : null,
-        isLoading: controller.isSubmitting.value,
-        borderRadius: 16.r,
-        height: 56.h,
-      );
-    });
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            child: Text(
+              'OR',
+              style: AppTextStyles.bodySecondary.copyWith(
+                color: AppColors.textMuted,
+                fontWeight: FontWeight.w500,
+                fontSize: 14.sp,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Divider(
+              color: AppColors.borderWalletCard,
+              thickness: 1,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
-  void _onDonePressed() {
-    controller.onAmountChanged(amountController.text);
-    controller.amountError.value = controller.validateAmountForDisplay();
-    if (controller.amountError.value != null) return;
-
-    final paymentController = Get.isRegistered<PaymentMethodsController>()
-        ? Get.find<PaymentMethodsController>()
-        : null;
-    final selectedAccount = paymentController?.selectedLinkedAccount;
-
-    if (selectedAccount != null) {
-      unawaited(
-        controller.submitSelectedLinkedAccountTopUp(
-          account: selectedAccount,
-          closeSheetFirst: false,
+  Widget _actionOption({
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16.r),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceSubtle,
+          border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
+          borderRadius: BorderRadius.circular(16.r),
         ),
-      );
-      return;
-    }
-
-    unawaited(controller.submitSelfTopUp(closeSheetFirst: true));
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTextStyles.homeTitle.copyWith(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textHeading,
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    subtitle,
+                    style: AppTextStyles.bodySecondary.copyWith(
+                      fontSize: 13.sp,
+                      color: AppColors.textBody,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16.sp,
+              color: AppColors.textHeading,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

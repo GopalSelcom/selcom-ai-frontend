@@ -54,43 +54,28 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.pageBackground,
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AppProfileHeader(
-              title: AppStrings.payment.tr,
-              onBack: controller.handleBack,
-              bottomPadding: 16.h,
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                child: Obx(
-                  () => WalletSummaryCard(
-                    balance: controller.walletBalance.value,
-                    walletNumber: controller.walletNumber.value,
-                  ),
-                ),
-              ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AppProfileHeader(title: AppStrings.savedCardLabel.tr),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Payment methods section
+                // _buildSectionTitle(AppStrings.paymentMethodsTitle.tr),
+                SizedBox(height: 8.h),
+                // Obx(() => _buildSelcomPesaCard(controller)),
+                // SizedBox(height: 14.h),
+                // Cards section
+                _buildSectionTitle(AppStrings.cards.tr),
+                SizedBox(height: 8.h),
+                _buildCardsSection(controller),
+              ],
             ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Payment methods section
-                  // _buildSectionTitle(AppStrings.paymentMethodsTitle.tr),
-                  SizedBox(height: 8.h),
-                  // Obx(() => _buildSelcomPesaCard(controller)),
-                  // SizedBox(height: 14.h),
-                  // Cards section
-                  _buildSectionTitle(AppStrings.cards.tr),
-                  SizedBox(height: 8.h),
-                  _buildCardsSection(controller),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

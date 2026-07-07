@@ -423,6 +423,8 @@ class AppDialogs {
     String title = AppStrings.success,
     required String message,
     VoidCallback? onConfirm,
+    String? confirmLabel,
+    bool barrierDismissible = true,
   }) {
     var didHandleAction = false;
     void handleAction() {
@@ -434,7 +436,7 @@ class AppDialogs {
 
     showAnimatedDialog(
       child: PopScope(
-        canPop: false,
+        canPop: barrierDismissible,
         child: Dialog(
           backgroundColor: AppColors.cardBackground,
           surfaceTintColor: AppColors.transparent,
@@ -481,7 +483,7 @@ class AppDialogs {
                 ),
                 SizedBox(height: 32.h),
                 AppPrimaryButton(
-                  label: AppStrings.continueLabel.tr,
+                  label: confirmLabel?.tr ?? AppStrings.continueLabel.tr,
                   onPressed: handleAction,
                   height: 50.h,
                   borderRadius: 12.r,
@@ -492,7 +494,7 @@ class AppDialogs {
           ),
         ),
       ),
-      barrierDismissible: false,
+      barrierDismissible: barrierDismissible,
       barrierColor: AppColors.overlayBlack12,
     );
   }

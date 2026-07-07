@@ -724,4 +724,18 @@ abstract class Languages {
   String get writeAMessage;
   String get yourDriver;
   String get savedLocations;
+  String get selcomPesaLinkNumber;
+  String get selcomPesaSelfTitle;
+  String get selcomPesaSelfSubtitle;
+  String get selcomPesaOtherTitle;
+  String get selcomPesaOtherSubtitle;
+  String get removeAccountTitle;
+  String get removeAccountMessage;
+  String get removeLabel;
+  String get savedCardLabel;
+  String get savedCardSubtitle;
+  String get noSavedCardsFound;
+  String get addNewCardText;
+  String get amountIsRequired;
+  String get enterValidAmount;
 }

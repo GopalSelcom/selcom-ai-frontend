@@ -8,24 +8,27 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/utils/app_dialogs.dart';
-import '../../../../shared/utils/phone_national_rules.dart';
 import '../../../../shared/utils/thousands_separator_input_formatter.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_text_field.dart';
-import '../../domain/wallet_payment_phone_country.dart';
+import '../../../profile/domain/entities/selcom_pesa_linked_account_entity.dart';
 import '../controllers/selcom_pesa_topup_controller.dart';
 import 'wallet_topup_sheet_lifecycle.dart';
 
-class SelcomPesaAnotherNumberBottomSheet extends StatefulWidget {
-  const SelcomPesaAnotherNumberBottomSheet({
+class SelcomPesaSelfBottomSheet extends StatefulWidget {
+  const SelcomPesaSelfBottomSheet({
     super.key,
     required this.controllerTag,
+    this.account,
   });
 
   final String controllerTag;
+  final SelcomPesaLinkedAccountEntity? account;
 
-  static Future<void> show() {
-    final tag = 'selcom_pesa_other_${DateTime.now().millisecondsSinceEpoch}';
+  static Future<void> show({SelcomPesaLinkedAccountEntity? account}) {
+    final tag = account != null
+        ? 'selcom_pesa_linked_${account.id}_${DateTime.now().millisecondsSinceEpoch}'
+        : 'selcom_pesa_self_${DateTime.now().millisecondsSinceEpoch}';
     Get.put(SelcomPesaTopupController(controllerTag: tag), tag: tag);
 
     return AppDialogs.showStandardBottomSheet<void>(
@@ -33,19 +36,17 @@ class SelcomPesaAnotherNumberBottomSheet extends StatefulWidget {
       headerTextAlign: TextAlign.center,
       showHeaderDivider: true,
       barrierDismissible: true,
-      content: SelcomPesaAnotherNumberBottomSheet(controllerTag: tag),
-      footer: _SelcomPesaOtherFooter(controllerTag: tag),
+      content: SelcomPesaSelfBottomSheet(controllerTag: tag, account: account),
+      footer: _SelcomPesaSelfSheetFooter(controllerTag: tag, account: account),
     ).whenComplete(() => disposeSelcomPesaTopupAfterSheetClosed(tag));
   }
 
   @override
-  State<SelcomPesaAnotherNumberBottomSheet> createState() =>
-      _SelcomPesaAnotherNumberBottomSheetState();
+  State<SelcomPesaSelfBottomSheet> createState() =>
+      _SelcomPesaSelfBottomSheetState();
 }
 
-class _SelcomPesaAnotherNumberBottomSheetState
-    extends State<SelcomPesaAnotherNumberBottomSheet> {
-  late final TextEditingController _phoneController;
+class _SelcomPesaSelfBottomSheetState extends State<SelcomPesaSelfBottomSheet> {
   late final TextEditingController _amountController;
 
   SelcomPesaTopupController get _controller =>
@@ -54,9 +55,8 @@ class _SelcomPesaAnotherNumberBottomSheetState
   @override
   void initState() {
     super.initState();
-    _phoneController = TextEditingController();
     _amountController = TextEditingController();
-    _controller.bindPhoneController(_phoneController);
+    _controller.bindPhoneController(TextEditingController()); // Empty or dummy phone controller as it's self.
   }
 
   @override
@@ -64,10 +64,8 @@ class _SelcomPesaAnotherNumberBottomSheetState
     if (Get.isRegistered<SelcomPesaTopupController>(tag: widget.controllerTag)) {
       _controller.unbindPhoneController();
     }
-    final phone = _phoneController;
     final amount = _amountController;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      phone.dispose();
       amount.dispose();
     });
     super.dispose();
@@ -75,9 +73,6 @@ class _SelcomPesaAnotherNumberBottomSheetState
 
   @override
   Widget build(BuildContext context) {
-    const iso = WalletPaymentPhoneCountry.iso;
-    const dialCodeDisplay = WalletPaymentPhoneCountry.dialCodeDisplay;
-
     return Obx(() {
       if (!mounted ||
           !Get.isRegistered<SelcomPesaTopupController>(
@@ -91,45 +86,6 @@ class _SelcomPesaAnotherNumberBottomSheetState
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            AppStrings.enterPhoneNumber.tr,
-            style: AppTextStyles.homeSubtitle.copyWith(
-              color: AppColors.textMutedStrong,
-            ),
-          ),
-          SizedBox(height: 4.h),
-          AppTextField(
-            readOnly: false,
-            enabled: !_controller.isSubmitting.value,
-            hintText: PhoneNationalRules.hintForIso(iso),
-            keyboardType: TextInputType.phone,
-            maxLength: PhoneNationalRules.maxDisplayCharactersForIso(iso),
-            inputFormatters: PhoneNationalRules.inputFormattersForIso(iso),
-            textFieldBackgroundColor: AppColors.surfaceSubtle,
-            borderColor: AppColors.borderWalletCard,
-            controller: _phoneController,
-            errorText: _controller.phoneError.value,
-            onChanged: _controller.onPhoneChanged,
-            prefixIcon: Padding(
-              padding: EdgeInsets.only(left: 16.w, right: 8.w),
-              child: Center(
-                widthFactor: 1,
-                child: Text(
-                  dialCodeDisplay,
-                  style: AppTextStyles.homeTitle.copyWith(
-                    fontSize: 16.sp,
-                    height: 22 / 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textHeading,
-                  ),
-                ),
-              ),
-            ),
-            textColor: AppColors.success,
-            fontSize: 16.sp,
-            fontWeight: FontWeight.w700,
-          ),
-          SizedBox(height: 12.h),
           Text(
             AppStrings.amount.tr,
             style: AppTextStyles.homeSubtitle.copyWith(
@@ -177,24 +133,21 @@ class _SelcomPesaAnotherNumberBottomSheetState
               ),
             ),
           ],
-          Padding(
-            padding: EdgeInsets.fromLTRB(35.w, 12.h, 35.w, 35.h),
-            child: Text(
-              AppStrings.enterSelcomPesaCustomerPhoneHint.tr,
-              style: AppTextStyles.homeSubtitle,
-              textAlign: TextAlign.center,
-            ),
-          ),
+          SizedBox(height: 20.h),
         ],
       );
     });
   }
 }
 
-class _SelcomPesaOtherFooter extends GetView<SelcomPesaTopupController> {
-  const _SelcomPesaOtherFooter({required this.controllerTag});
+class _SelcomPesaSelfSheetFooter extends GetView<SelcomPesaTopupController> {
+  const _SelcomPesaSelfSheetFooter({
+    required this.controllerTag,
+    this.account,
+  });
 
   final String controllerTag;
+  final SelcomPesaLinkedAccountEntity? account;
 
   @override
   String? get tag => controllerTag;
@@ -227,7 +180,7 @@ class _SelcomPesaOtherFooter extends GetView<SelcomPesaTopupController> {
           Expanded(
             child: AppPrimaryButton(
               label: AppStrings.continueLabel.tr,
-              onPressed: controller.canSubmitOther ? _onContinuePressed : null,
+              onPressed: controller.canSubmitSelf ? _onContinuePressed : null,
               isLoading: controller.isSubmitting.value,
               borderRadius: 16.r,
               height: 56.h,
@@ -239,12 +192,19 @@ class _SelcomPesaOtherFooter extends GetView<SelcomPesaTopupController> {
   }
 
   void _onContinuePressed() {
-    controller.phoneError.value = controller.validatePhoneForDisplay();
     controller.amountError.value = controller.validateAmountForDisplay();
-    if (controller.phoneError.value != null ||
-        controller.amountError.value != null) {
+    if (controller.amountError.value != null) {
       return;
     }
-    unawaited(controller.submitOtherTopUp(closeSheetFirst: true));
+    if (account != null) {
+      unawaited(
+        controller.submitSelectedLinkedAccountTopUp(
+          account: account!,
+          closeSheetFirst: true,
+        ),
+      );
+    } else {
+      unawaited(controller.submitSelfTopUp(closeSheetFirst: true));
+    }
   }
 }
