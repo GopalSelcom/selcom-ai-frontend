@@ -54,7 +54,7 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.notification.readById(notificationId),
-        method: ApiMethod.put,
+        method: ApiMethod.post,
       ),
     );
 
@@ -66,7 +66,7 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.notification.readAll,
-        method: ApiMethod.put,
+        method: ApiMethod.post,
       ),
     );
 
