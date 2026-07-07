@@ -188,6 +188,12 @@ class _WalletEndpoints {
   final checkSelcomPesaTopUpStatus = "go_wallet/check_selcom_pesa_status";
   final cardStatement = "go_wallet/go_card_statement";
   final emailCardStatement = "go_wallet/go_email_card_statement";
+  final getLocalBankInstructions = "go_wallet/get_local_bank_instructions";
+
+  final fetchCards = "go_wallet/fetch_cards";
+  final goAddCardNew = "go_wallet/go_add_card_new";
+  final goPayByExistingCard = "go_wallet/go_pay_by_existing_card";
+  final goInitCardSession = "go_wallet/go_init_card_session";
 }
 
 /// ─────────────────────────────────

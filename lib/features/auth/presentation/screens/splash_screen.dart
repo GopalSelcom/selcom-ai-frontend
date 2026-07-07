@@ -9,6 +9,7 @@ import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/app_settings_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/services/voip_callkit_bridge_service.dart';
+import '../../../../core/services/local_bank_instructions_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../controllers/auth_controller.dart';
@@ -32,6 +33,7 @@ class _SplashScreenState extends State<SplashScreen> {
     // settings API (or DNS / connectivity checks in ApiService) would block
     // leaving the user on the splash screen.
     unawaited(sl<AppSettingsService>().preload());
+    unawaited(sl<LocalBankInstructionsService>().fetchInstructions());
     await Future.delayed(const Duration(milliseconds: 2500));
 
     if (!mounted) return;

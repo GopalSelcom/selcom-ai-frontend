@@ -10,9 +10,13 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
-import '../../domain/entities/payment_card.dart';
+import '../../../../shared/widgets/app_text_field.dart';
+import '../../../../shared/widgets/app_primary_button.dart';
+import '../../../../shared/widgets/app_standard_bottom_sheet.dart';
+import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/thousands_separator_input_formatter.dart';
+import '../../../payment/presentation/controllers/saved_cards_controller.dart';
 import '../controllers/payment_methods_controller.dart';
-import '../widgets/wallet_summary_card.dart';
 
 class PaymentMethodsScreen extends StatefulWidget {
   const PaymentMethodsScreen({super.key});
@@ -26,27 +30,12 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
   void initState() {
     super.initState();
     final controller = Get.put(sl<PaymentMethodsController>());
+    final savedCardsController = Get.put(sl<SavedCardsController>());
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(controller.refreshPaymentMethodsState());
+      unawaited(savedCardsController.loadCards());
     });
   }
-
-  static const PaymentCard _activeCard = PaymentCard(
-    brand: 'VISA',
-    fullNumber: '4233 5054 0234 1920',
-    expiry: '09/26',
-    cvv: '123',
-    nickName: 'John deo',
-  );
-
-  static const PaymentCard _expiredCard = PaymentCard(
-    brand: 'VISA',
-    fullNumber: '4233 5054 0234 5455',
-    expiry: '08/21',
-    cvv: '123',
-    nickName: 'John deo',
-    isExpired: true,
-  );
 
   @override
   Widget build(BuildContext context) {
@@ -184,6 +173,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
   }
 
   Widget _buildCardsSection(PaymentMethodsController controller) {
+    final savedCardsController = Get.find<SavedCardsController>();
     return Container(
       padding: EdgeInsets.fromLTRB(10.w, 19.h, 10.w, 0.h),
       decoration: BoxDecoration(
@@ -191,33 +181,50 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
         border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
         borderRadius: BorderRadius.circular(20.r),
       ),
-      child: Column(
-        children: [
-          _buildCardTile(
-            icon: Icons.credit_card, // Replace with Visa icon if available
-            brand: _activeCard.brand,
-            number: _activeCard.maskedNumber,
-            onTap: () => controller.openCardDetails(_activeCard),
-          ),
-          _buildCardTile(
-            icon: Icons.credit_card,
-            brand: _activeCard.brand,
-            name: _activeCard.nickName,
-            number: _activeCard.maskedNumber,
-            onTap: () => controller.openCardDetails(_activeCard),
-          ),
-          _buildCardTile(
-            icon: Icons.credit_card,
-            brand: _expiredCard.brand,
-            number: _expiredCard.maskedNumber,
-            status: AppStrings.cardExpired.tr,
-            onTap: () => controller.openCardDetails(_expiredCard),
-            showDivider: false,
-          ),
-          const Divider(color: AppColors.borderWalletCard, height: 1),
-          _buildAddCardTile(controller),
-        ],
-      ),
+      child: Obx(() {
+        if (savedCardsController.isLoading.value) {
+          return SizedBox(
+            height: 100.h,
+            child: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final cards = savedCardsController.cards;
+        return Column(
+          children: [
+            if (cards.isEmpty)
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 24.h),
+                child: Center(
+                  child: Text(
+                    AppStrings.noSavedCardsFound.tr,
+                    style: AppTextStyles.body.copyWith(color: AppColors.textBody),
+                  ),
+                ),
+              )
+            else
+              ...List.generate(cards.length, (index) {
+                final card = cards[index];
+                final isVisa = card.maskedCard.startsWith('4');
+                final isMastercard = card.maskedCard.startsWith('5');
+                final brand = isVisa ? 'VISA' : (isMastercard ? 'MC' : 'CARD');
+                final label = card.maskedCard.replaceAll(RegExp(r'[xX]'), '*');
+
+                return _buildCardTile(
+                  icon: Icons.credit_card,
+                  brand: brand,
+                  number: label,
+                  onTap: () {
+                    // Open details screen or simply show info
+                  },
+                  showDivider: index < cards.length - 1,
+                );
+              }),
+            const Divider(color: AppColors.borderWalletCard, height: 1),
+            _buildAddCardTile(savedCardsController),
+          ],
+        );
+      }),
     );
   }
 
@@ -302,9 +309,9 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
     );
   }
 
-  Widget _buildAddCardTile(PaymentMethodsController controller) {
+  Widget _buildAddCardTile(SavedCardsController controller) {
     return InkWell(
-      onTap: controller.addCard,
+      onTap: () => _showAmountPrompt(controller),
       child: Padding(
         padding: EdgeInsets.only(bottom: 16.h, top: 14.h, left: 4.w),
         child: Row(
@@ -322,6 +329,74 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _showAmountPrompt(SavedCardsController controller) {
+    final TextEditingController localAmountController = TextEditingController(text: '100');
+    final RxString error = ''.obs;
+
+    AppDialogs.showStandardBottomSheet<void>(
+      sheet: AppStandardBottomSheet(
+        title: AppStrings.addMoneyToWallet.tr,
+        headerTextAlign: TextAlign.center,
+        showHeaderDivider: true,
+        content: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                "Enter amount to top up and link card (Minimum TZS 100)",
+                style: AppTextStyles.homeSubtitle.copyWith(color: AppColors.textMutedStrong),
+              ),
+              SizedBox(height: 8.h),
+              Obx(() => AppTextField(
+                hintText: '100',
+                keyboardType: TextInputType.number,
+                inputFormatters: [ThousandsSeparatorInputFormatter()],
+                textFieldBackgroundColor: AppColors.surfaceSubtle,
+                borderColor: AppColors.borderWalletCard,
+                controller: localAmountController,
+                errorText: error.value.isEmpty ? null : error.value,
+                prefixIcon: Padding(
+                  padding: EdgeInsets.only(left: 16.w, right: 8.w),
+                  child: Center(
+                    widthFactor: 1,
+                    child: Text(
+                      AppStrings.defaultCurrencyTzs.tr,
+                      style: AppTextStyles.homeTitle.copyWith(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textHeading,
+                      ),
+                    ),
+                  ),
+                ),
+                textColor: AppColors.success,
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w700,
+              )),
+              SizedBox(height: 24.h),
+              AppPrimaryButton(
+                label: AppStrings.continueLabel.tr,
+                onPressed: () async {
+                  final text = localAmountController.text.replaceAll(RegExp(r'\D'), '');
+                  final val = int.tryParse(text);
+                  if (val == null || val < 100) {
+                    error.value = "Minimum top-up is TZS 100";
+                    return;
+                  }
+                  Get.back<void>(); // close amount prompt sheet
+                  await controller.startNewCardLinkFlow(amount: val);
+                },
+                borderRadius: 16.r,
+                height: 56.h,
+              ),
+            ],
+          ),
         ),
       ),
     );
