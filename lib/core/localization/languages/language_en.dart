@@ -382,6 +382,7 @@ class LanguageEn extends Languages {
     'calculating_best_route': 'Calculating best route...',
     'ride_receipt': 'Ride Receipt',
     'ref_with_id': 'Ref: @id',
+    'transaction_id_with_value': 'Transaction ID: @id',
     'route': 'Route',
     'dropoff': 'Dropoff',
     'em_dash': '—',
@@ -1943,6 +1944,10 @@ class LanguageEn extends Languages {
 
   @override
   String get refWithId => values['ref_with_id'] ?? '';
+
+  @override
+  String get transactionIdWithValue =>
+      values['transaction_id_with_value'] ?? '';
 
   @override
   String get route => values['route'] ?? '';

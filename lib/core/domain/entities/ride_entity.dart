@@ -141,6 +141,9 @@ class RideEntity {
   final String? promoCode;
   final int? promoDiscount;
 
+  /// Wallet/payment transaction id from ride payload (`transid`).
+  final String transactionId;
+
   /// Present when the driver ended the trip mid-ride (partial charge flow).
   final MidRideCancelEntity? midRideCancel;
 
@@ -186,6 +189,7 @@ class RideEntity {
     this.pdfLinks,
     this.promoCode,
     this.promoDiscount,
+    this.transactionId = '',
     this.midRideCancel,
     this.cancelTime,
     this.searchStartedAt,
@@ -227,6 +231,7 @@ class RideEntity {
     List<PdfLinkEntity>? pdfLinks,
     String? promoCode,
     int? promoDiscount,
+    String? transactionId,
     MidRideCancelEntity? midRideCancel,
     int? cancelTime,
     DateTime? searchStartedAt,
@@ -267,6 +272,7 @@ class RideEntity {
       pdfLinks: pdfLinks ?? this.pdfLinks,
       promoCode: promoCode ?? this.promoCode,
       promoDiscount: promoDiscount ?? this.promoDiscount,
+      transactionId: transactionId ?? this.transactionId,
       midRideCancel: midRideCancel ?? this.midRideCancel,
       cancelTime: cancelTime ?? this.cancelTime,
       searchStartedAt: searchStartedAt ?? this.searchStartedAt,

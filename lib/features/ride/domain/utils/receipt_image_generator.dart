@@ -132,14 +132,18 @@ class ReceiptImageGenerator {
               ),
               const SizedBox(height: 6),
               receiptDateTimeRow(dateTime: completedAt, style: dateStyle),
-              const SizedBox(height: 2),
-              Text(
-                AppStrings.refWithId.trParams({'id': receipt.rideId}).tr,
-                style: const TextStyle(
-                  fontSize: 9,
-                  color: AppColors.receiptTextMuted,
+              if (receipt.transactionId.trim().isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(
+                  AppStrings.transactionIdWithValue
+                      .trParams({'id': receipt.transactionId.trim()})
+                      .tr,
+                  style: const TextStyle(
+                    fontSize: 9,
+                    color: AppColors.receiptTextMuted,
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
           SizedBox(

@@ -445,6 +445,7 @@ class AppStrings {
   static const String calculatingBestRoute = 'calculating_best_route';
   static const String rideReceipt = 'ride_receipt';
   static const String refWithId = 'ref_with_id';
+  static const String transactionIdWithValue = 'transaction_id_with_value';
   static const String route = 'route';
   static const String dropoff = 'dropoff';
   static const String emDash = 'em_dash';

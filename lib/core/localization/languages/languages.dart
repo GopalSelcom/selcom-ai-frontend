@@ -330,6 +330,7 @@ abstract class Languages {
   String get calculatingBestRoute;
   String get rideReceipt;
   String get refWithId;
+  String get transactionIdWithValue;
   String get route;
   String get dropoff;
   String get emDash;

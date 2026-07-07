@@ -41,6 +41,7 @@ class RideModel extends RideEntity {
     super.pdfLinks,
     super.promoCode,
     super.promoDiscount,
+    super.transactionId = '',
     super.midRideCancel,
     super.cancelTime,
     super.searchStartedAt,
@@ -162,6 +163,9 @@ class RideModel extends RideEntity {
       pdfLinks: pdfLinks,
       promoCode: promoCodeParsed,
       promoDiscount: promoDiscountParsed,
+      transactionId: (json['transid'] ?? json['trans_id'] ?? '')
+          .toString()
+          .trim(),
       midRideCancel: midRideCancel,
       cancelTime: (json['cancel_time'] as num?)?.toInt(),
       searchStartedAt: parseDriverSearchStartedAt(json['search_started_at']),
@@ -205,6 +209,7 @@ class RideModel extends RideEntity {
     List<PdfLinkEntity>? pdfLinks,
     String? promoCode,
     int? promoDiscount,
+    String? transactionId,
     MidRideCancelEntity? midRideCancel,
     int? cancelTime,
     DateTime? searchStartedAt,
@@ -245,6 +250,7 @@ class RideModel extends RideEntity {
       pdfLinks: pdfLinks ?? this.pdfLinks,
       promoCode: promoCode ?? this.promoCode,
       promoDiscount: promoDiscount ?? this.promoDiscount,
+      transactionId: transactionId ?? this.transactionId,
       midRideCancel: midRideCancel ?? this.midRideCancel,
       cancelTime: cancelTime ?? this.cancelTime,
       searchStartedAt: searchStartedAt ?? this.searchStartedAt,

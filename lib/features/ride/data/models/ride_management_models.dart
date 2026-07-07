@@ -56,8 +56,46 @@ class RecentDestinationModel {
   }
 }
 
+String receiptTransactionIdFromJson(Map<String, dynamic> json) {
+  final direct =
+      json['transid'] ??
+      json['trans_id'] ??
+      json['transaction_id'] ??
+      json['block_transid'];
+  final directText = direct?.toString().trim() ?? '';
+  if (directText.isNotEmpty) return directText;
+
+  final payment = (json['payment'] as Map?)?.cast<String, dynamic>();
+  if (payment != null) {
+    final paymentId =
+        (payment['transid'] ?? payment['trans_id'])?.toString().trim() ?? '';
+    if (paymentId.isNotEmpty) return paymentId;
+  }
+
+  final preauths = json['preauths'];
+  if (preauths is List) {
+    for (final item in preauths) {
+      if (item is! Map) continue;
+      final map = Map<String, dynamic>.from(item);
+      for (final key in ['transid', 'capture_transid']) {
+        final id = map[key]?.toString().trim() ?? '';
+        if (id.isNotEmpty) return id;
+      }
+      final raw = map['raw_response'];
+      if (raw is Map) {
+        final rawId =
+            Map<String, dynamic>.from(raw)['transid']?.toString().trim() ?? '';
+        if (rawId.isNotEmpty) return rawId;
+      }
+    }
+  }
+
+  return '';
+}
+
 class ReceiptModel {
   final String rideId;
+  final String transactionId;
   final int baseFare;
   final int distanceCharge;
   final int timeCharge;
@@ -91,6 +129,7 @@ class ReceiptModel {
 
   ReceiptModel({
     required this.rideId,
+    this.transactionId = '',
     required this.baseFare,
     required this.distanceCharge,
     required this.timeCharge,
@@ -117,6 +156,38 @@ class ReceiptModel {
     this.bookingFee = 0,
     this.totalAmount = 0,
   });
+
+  ReceiptModel copyWith({String? transactionId}) {
+    return ReceiptModel(
+      rideId: rideId,
+      transactionId: transactionId ?? this.transactionId,
+      baseFare: baseFare,
+      distanceCharge: distanceCharge,
+      timeCharge: timeCharge,
+      total: total,
+      discount: discount,
+      tax: tax,
+      currency: currency,
+      paymentMethod: paymentMethod,
+      completedAt: completedAt,
+      promoCode: promoCode,
+      promoDiscountAmount: promoDiscountAmount,
+      driverName: driverName,
+      vehicleModel: vehicleModel,
+      vehicleColor: vehicleColor,
+      vehicleRegistration: vehicleRegistration,
+      vehicleType: vehicleType,
+      distanceKm: distanceKm,
+      durationMinutes: durationMinutes,
+      pickupAddress: pickupAddress,
+      destinationAddress: destinationAddress,
+      isMultiStop: isMultiStop,
+      stops: stops,
+      totalFare: totalFare,
+      bookingFee: bookingFee,
+      totalAmount: totalAmount,
+    );
+  }
 
   factory ReceiptModel.fromJson(Map<String, dynamic> json) {
     final fareBreakdown =
@@ -147,8 +218,10 @@ class ReceiptModel {
     final totalAmount = (fareBreakdown['total_amount'] ?? (totalFare + bookingFee)) as int;
 
     return ReceiptModel(
-      rideId: json['ride_id'] ?? '',
-      baseFare: (fareBreakdown['base_fare'] ?? 0) as int,
+      rideId: (json['ride_id'] ?? json['_id'] ?? '').toString(),
+      transactionId: receiptTransactionIdFromJson(json),
+      baseFare: (fareBreakdown['base_fare'] ?? fareBreakdown['ride_charge'] ?? 0)
+          as int,
       distanceCharge: (fareBreakdown['distance_charge'] ?? 0) as int,
       timeCharge: (fareBreakdown['time_charge'] ?? 0) as int,
       total: totalParsed,
@@ -158,7 +231,8 @@ class ReceiptModel {
       promoCode: fareBreakdown['promo_code']?.toString(),
       promoDiscountAmount: promoDisc,
       paymentMethod: (json['payment_method'] ?? '') as String,
-      completedAt: json['completed_at'] as String?,
+      completedAt:
+          (json['completed_at'] ?? json['ride_completed_at'])?.toString(),
       driverName: driverSnap['name'] as String?,
       vehicleModel: driverSnap['vehicle_model'] as String?,
       vehicleColor: driverSnap['vehicle_color'] as String?,

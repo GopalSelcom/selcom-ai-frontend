@@ -347,6 +347,7 @@ class LanguageSw extends Languages {
     'calculating_best_route': 'Inatafuta njia bora zaidi...',
     'ride_receipt': 'Stakabadhi ya Safari',
     'ref_with_id': 'Rejea: @id',
+    'transaction_id_with_value': 'Kitambulisho cha Muamala: @id',
     'route': 'Njia',
     'dropoff': 'Kushukia',
     'em_dash': '—',
@@ -1862,6 +1863,10 @@ class LanguageSw extends Languages {
 
   @override
   String get refWithId => values['ref_with_id'] ?? '';
+
+  @override
+  String get transactionIdWithValue =>
+      values['transaction_id_with_value'] ?? '';
 
   @override
   String get route => values['route'] ?? '';
