@@ -202,11 +202,11 @@ class AppSocketService {
     _socket?.dispose();
 
     _socket = io.io(
-      "https://go.selcom.app:8853",
+      baseUrl,
       io.OptionBuilder()
           .setTransports(['websocket'])
           .enableReconnection()
-          .setPath('/socket.io')
+          // .setPath('/socket.io')
           .setReconnectionAttempts(_maxReconnectAttempts)
           .setReconnectionDelay(1000)
           .setTimeout(12000)
