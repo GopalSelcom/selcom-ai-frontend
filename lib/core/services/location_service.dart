@@ -28,7 +28,10 @@ class LocationService extends GetxController {
 
   void checkServiceContinuously() async {
     try {
-      _isLocationServiceEnabled.value = await checkLocationService();
+      // Silent check — do not show settings dialogs from the background listener.
+      _isLocationServiceEnabled.value = await checkLocationService(
+        force: false,
+      );
       getLocationContinuously();
 
       Geolocator.getServiceStatusStream().listen((event) {
@@ -252,14 +255,10 @@ class LocationService extends GetxController {
     }
   }
 
+  /// Device Location Services / GPS toggle only.
+  /// Does not request app permission — callers handle app permission separately.
   Future<bool> checkLocationService({bool force = true}) async {
     try {
-      var req = await requestPermission(force: true, precise: true);
-
-      if (req == false) {
-        return req;
-      }
-
       bool serviceStatus = await Geolocator.isLocationServiceEnabled();
 
       if (serviceStatus) {
@@ -595,21 +594,22 @@ class LocationUtils {
 
       final Completer<void> completer = Completer<void>();
 
-      AppDialogs.showConfirmationDialog(
+      // Same large column dialog as app-permission; opens DEVICE location settings.
+      await AppDialogs.showPermissionDialog(
         title: AppStrings.enableLocationService.tr,
-        message:
-            "Please enable your location service to get your current location.",
-        confirmText: "Open Settings",
-        cancelText: "Cancel",
-        onConfirm: () async {
+        message: AppStrings.enableLocationServiceMessage.tr,
+        onOpenSettings: () async {
           await Geolocator.openLocationSettings();
           if (!completer.isCompleted) completer.complete();
         },
         onCancel: () {
           if (!completer.isCompleted) completer.complete();
         },
+        icon: Icons.location_off_outlined,
+        secondaryIcon: Icons.location_on_outlined,
       );
 
+      if (!completer.isCompleted) completer.complete();
       await completer.future;
       LocationService.instance.isDialogOpen = false;
     }

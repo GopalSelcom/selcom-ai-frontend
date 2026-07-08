@@ -501,6 +501,8 @@ class LanguageSw extends Languages {
     'selected_address': 'Anwani iliyochaguliwa',
     'searching_for_driver': 'Inamtafuta dereva...',
     'enable_location_service': 'Wezesha huduma ya eneo',
+    'enable_location_service_message':
+        'Tafadhali wezesha huduma ya eneo ili kupata eneo lako la sasa.',
     'location_permission_denied': 'Ruhusa ya eneo imekataliwa',
     'location_access_required': 'Ufikiaji wa eneo unahitajika',
     'location_permission_denied_open_settings': 'Ruhusa ya eneo imekataliwa kabisa. Fungua Mipangilio ili kuruhusu eneo kwa ajili ya kuchukuliwa na kuona madereva wa karibu.',
@@ -2348,6 +2350,10 @@ class LanguageSw extends Languages {
 
   @override
   String get enableLocationService => values['enable_location_service'] ?? '';
+
+  @override
+  String get enableLocationServiceMessage =>
+      values['enable_location_service_message'] ?? '';
 
   @override
   String get locationPermissionDenied =>

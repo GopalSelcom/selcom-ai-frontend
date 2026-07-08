@@ -480,6 +480,7 @@ abstract class Languages {
   String get selectedAddress;
   String get searchingForDriver;
   String get enableLocationService;
+  String get enableLocationServiceMessage;
   String get locationPermissionDenied;
   String get locationAccessRequired;
   String get locationPermissionDeniedOpenSettings;

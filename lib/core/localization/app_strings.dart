@@ -622,6 +622,8 @@ class AppStrings {
   static const String selectedAddress = 'selected_address';
   static const String searchingForDriver = 'searching_for_driver';
   static const String enableLocationService = 'enable_location_service';
+  static const String enableLocationServiceMessage =
+      'enable_location_service_message';
   static const String locationPermissionDenied = 'location_permission_denied';
   static const String locationAccessRequired = 'location_access_required';
   static const String locationPermissionDeniedOpenSettings =

@@ -554,6 +554,8 @@ class LanguageEn extends Languages {
     'selected_address': 'Selected address',
     'searching_for_driver': 'Searching for driver...',
     'enable_location_service': 'Enable location service',
+    'enable_location_service_message':
+        'Please enable your location service to get your current location.',
     'location_permission_denied': 'Location permission denied',
     'location_access_required': 'Location access required',
     'location_permission_denied_open_settings':
@@ -2429,6 +2431,10 @@ class LanguageEn extends Languages {
 
   @override
   String get enableLocationService => values['enable_location_service'] ?? '';
+
+  @override
+  String get enableLocationServiceMessage =>
+      values['enable_location_service_message'] ?? '';
 
   @override
   String get locationPermissionDenied =>

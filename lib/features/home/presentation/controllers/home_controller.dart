@@ -285,10 +285,27 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }
 
   /// Returns true when location permission is granted and services are on.
+  ///
+  /// GPS button (`showLocationSettingsDialogIfBlocked: true`): check device
+  /// Location Services first so we open the correct settings, then app permission.
+  /// Startup / silent refresh: keep previous order (app permission first) so we
+  /// still grant permission and enable the map blue-dot without blocking on a
+  /// transient device-service false while [force] is off.
   Future<bool> _ensureLocationPermission({
     bool requestPermissionIfDenied = false,
     bool showLocationSettingsDialogIfBlocked = false,
   }) async {
+    if (showLocationSettingsDialogIfBlocked) {
+      final serviceEnabled =
+          await LocationService.instance.checkLocationService(force: true);
+      if (!serviceEnabled) {
+        hasLocationPermission.value = false;
+        deviceGpsLocation.value = null;
+        currentMapAddress.value = AppStrings.enableLocationService.tr;
+        return false;
+      }
+    }
+
     final hasPermission = await LocationService.instance.checkPermission(
       force: showLocationSettingsDialogIfBlocked,
       precise: true,
