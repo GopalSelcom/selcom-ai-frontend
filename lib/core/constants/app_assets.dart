@@ -1,6 +1,5 @@
 class AppAssets {
   static const String _imagePath = 'assets/images';
-  static const String _jsonPath = 'assets/json';
 
   static const String _brandingPath = '$_imagePath/branding';
   static const String _authPath = '$_imagePath/auth';
@@ -30,13 +29,9 @@ class AppAssets {
   static const String imgBajaji = '$_vehicleImagePath/img_bajaji.svg';
   static const String imgCab = '$_vehicleImagePath/img_cab.svg';
 
-  /// Legacy alias for cab vehicle art (SVG).
-  static const String gariPlus = imgCab;
-
   // Auth / Onboarding
   static const String icFacebook = '$_authPath/ic_facebook.svg';
   static const String icGoogle = '$_authPath/ic_google.svg';
-  static const String icGoogleLogo = '$_imagePath/ic_google_logo.svg';
   static const String onboarding1 = '$_authPath/onboarding_1.svg';
   static const String onboarding2 = '$_authPath/onboarding_2.svg';
   static const String onboarding3 = '$_authPath/onboarding_3.svg';
@@ -50,16 +45,11 @@ class AppAssets {
   static const String selcomGoLogoPrimaryColor =
       '$_brandingPath/selcom_go_logo_primary_color.svg';
 
-  /// PNG variant (e.g. PDF / non-SVG pipelines).
-  static const String selcomGoLogoPng = '$_imagePath/selcom_go_logo.png';
-  static const String selcomGoLogoRedSvg = '$_imagePath/Selcom Go logo-red.svg';
-
   /// Map driver markers (top-down silhouettes; SVG → bitmap via [MapMarkerUtils]).
   static const String _mapMarkerPath = '$_imagePath/map';
   static const String mapMarkerBoda = '$_mapMarkerPath/map_marker_boda.svg';
   static const String mapMarkerCab = '$_mapMarkerPath/map_marker_cab.svg';
   static const String mapMarkerBajaji = '$_mapMarkerPath/map_marker_bajaji.svg';
-  static const String icPromotions = '$_imagePath/ic_promotions.svg';
   static const String icPromoCode = '$_promoPath/ic_promo_code.svg';
   static const String icPromoCodeDisabled =
       '$_promoPath/ic_promo_code_disabled.svg';
@@ -67,8 +57,6 @@ class AppAssets {
   // Profile
   static const String icProfile = '$_profilePath/ic_profile.svg';
   static const String icProfileEdit = '$_profilePath/ic_profile_edit.svg';
-  static const String icFaceScan = '$_imagePath/ic_face_scan.svg';
-  static const String icAccountVerified = '$_imagePath/ic_account_verified.svg';
   static const String icWallet = '$_profilePath/ic_wallet.svg';
   static const String icCopy = '$_profilePath/ic_copy.svg';
   static const String icHeadPhone = '$_ridePath/headphone.svg';
@@ -91,17 +79,9 @@ class AppAssets {
   static const String _paymentPath = '$_imagePath/payment';
   static const String icPaymentPerson = '$_paymentPath/ic_person.svg';
   static const String icCardReceive = '$_paymentPath/ic_card_receive.svg';
-  static const String icTips = '$_paymentPath/ic_tips.svg';
-  static const String imgQrCode = '$_paymentPath/img_qr_code.png';
-  static const String imgQrBg = '$_paymentPath/img_qr_bg.png';
   static const String imgPaymentAddCardSuccess =
       '$_paymentPath/add_card_success.png';
   static const String imgPaymentDeleteCardConfirm =
       '$_paymentPath/delete_card_confirm.png';
   static const String icEStatement = '$_paymentPath/ic_e_statement.svg';
-  static const String icShowVcn = '$_paymentPath/ic_show_vcn.svg';
-  static const String imgVcnCard = '$_paymentPath/img_vcn_card.png';
-
-  ///animations:-
-  static const String carAnimation = '$_jsonPath/car_animation.json';
 }

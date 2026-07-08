@@ -35,9 +35,8 @@ class LanguageEn extends Languages {
     'amount': 'Amount',
     'back': 'Back',
     'add_money_selcom_pesa_subtitle': 'Request money from SelcomPesa',
-    'add_money_tan_qr_tips': 'TanQR',
-    'add_money_tan_qr_tips_subtitle': 'Add money using TanQR',
     'add_money_mobile_money_subtitle': 'Add money using Mobile Money',
+    'add_money_local_banks_subtitle': 'Add money using local banks',
     'wallet_funds_received_title': 'Your wallet has received funds',
     'wallet_funds_received_subtitle':
         'You can now use your wallet to book rides.',
@@ -52,21 +51,17 @@ class LanguageEn extends Languages {
     'request_sent_complete_selcom_topup':
         'Request sent. Please complete payment on SelcomPesa to Topup your Go wallet',
     'expires_in_with_time': 'Expires in @time',
-    'tanqr_amount_required': 'Please enter an amount',
-    'tanqr_amount_must_be_greater_than_zero':
+    'wallet_topup_amount_required': 'Please enter an amount',
+    'wallet_topup_amount_must_be_greater_than_zero':
         'Amount must be greater than 0',
-    'tanqr_amount_exceeds_max':
+    'wallet_topup_amount_exceeds_max':
         'Amount cannot exceed TZS @max',
-    'tanqr_scan_qr_instruction':
-        'Scan this QR code with your mobile money app to complete the top-up',
-    'tanqr_payment_request_failed':
+    'wallet_topup_request_failed':
         'Could not start the payment. Please try again.',
-    'tanqr_timer_expired_title': 'Payment time expired',
-    'tanqr_timer_expired_message':
+    'wallet_topup_timer_expired_title': 'Payment time expired',
+    'wallet_topup_timer_expired_message':
         'The payment request has expired. Would you like to try again?',
-    'tanqr_missing_registered_phone':
-        'Your registered phone number is missing. Please update your profile.',
-    'tanqr_cancel_request': 'Cancel request',
+    'wallet_topup_cancel_request': 'Cancel request',
     'selcom_pesa_app_not_installed': 'SelcomPesa app not installed',
     'selcom_pesa_install_prompt':
         'Install SelcomPesa to complete this payment on your device.',
@@ -879,7 +874,6 @@ class LanguageEn extends Languages {
     'remove_account_title': 'Remove Account',
     'remove_account_message': 'Are you sure you want to remove this SelcomPesa account?',
     'remove_label': 'Remove',
-    'add_money_local_banks_subtitle':"Add money using local banks",
     'saved_card_label': 'Saved card',
     'saved_card_subtitle': 'Top up using saved debit/credit cards',
     'no_saved_cards_found': 'No saved cards found',
@@ -984,15 +978,12 @@ class LanguageEn extends Languages {
       values['add_money_selcom_pesa_subtitle'] ?? '';
 
   @override
-  String get addMoneyTanQrTips => values['add_money_tan_qr_tips'] ?? '';
-
-  @override
-  String get addMoneyTanQrTipsSubtitle =>
-      values['add_money_tan_qr_tips_subtitle'] ?? '';
-
-  @override
   String get addMoneyMobileMoneySubtitle =>
       values['add_money_mobile_money_subtitle'] ?? '';
+
+  @override
+  String get addMoneyLocalBanksSubtitle =>
+      values['add_money_local_banks_subtitle'] ?? '';
 
   @override
   String get walletFundsReceivedTitle =>
@@ -1031,37 +1022,32 @@ class LanguageEn extends Languages {
   String get expiresInWithTime => values['expires_in_with_time'] ?? '';
 
   @override
-  String get tanQrAmountRequired => values['tanqr_amount_required'] ?? '';
+  String get walletTopUpAmountRequired =>
+      values['wallet_topup_amount_required'] ?? '';
 
   @override
-  String get tanQrAmountMustBeGreaterThanZero =>
-      values['tanqr_amount_must_be_greater_than_zero'] ?? '';
+  String get walletTopUpAmountMustBeGreaterThanZero =>
+      values['wallet_topup_amount_must_be_greater_than_zero'] ?? '';
 
   @override
-  String get tanQrAmountExceedsMax => values['tanqr_amount_exceeds_max'] ?? '';
+  String get walletTopUpAmountExceedsMax =>
+      values['wallet_topup_amount_exceeds_max'] ?? '';
 
   @override
-  String get tanQrScanQrInstruction =>
-      values['tanqr_scan_qr_instruction'] ?? '';
+  String get walletTopUpRequestFailed =>
+      values['wallet_topup_request_failed'] ?? '';
 
   @override
-  String get tanQrPaymentRequestFailed =>
-      values['tanqr_payment_request_failed'] ?? '';
+  String get walletTopUpTimerExpiredTitle =>
+      values['wallet_topup_timer_expired_title'] ?? '';
 
   @override
-  String get tanQrTimerExpiredTitle =>
-      values['tanqr_timer_expired_title'] ?? '';
+  String get walletTopUpTimerExpiredMessage =>
+      values['wallet_topup_timer_expired_message'] ?? '';
 
   @override
-  String get tanQrTimerExpiredMessage =>
-      values['tanqr_timer_expired_message'] ?? '';
-
-  @override
-  String get tanQrMissingRegisteredPhone =>
-      values['tanqr_missing_registered_phone'] ?? '';
-
-  @override
-  String get tanQrCancelRequest => values['tanqr_cancel_request'] ?? '';
+  String get walletTopUpCancelRequest =>
+      values['wallet_topup_cancel_request'] ?? '';
 
   @override
   String get selcomPesaAppNotInstalled =>

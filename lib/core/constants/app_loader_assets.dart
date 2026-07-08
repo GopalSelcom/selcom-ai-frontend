@@ -4,6 +4,5 @@ class AppLoaderAssets {
 
   static const String _lotties = 'assets/lottie';
 
-  static const String inlineLoaderLottie = '$_lotties/app_loader.json';
   static const String overlayLoaderLottie = '$_lotties/app_loader_overlay.json';
 }

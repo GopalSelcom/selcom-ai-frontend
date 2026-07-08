@@ -29,11 +29,7 @@ abstract class WalletRepository {
     required String currency,
   });
 
-  Future<TanQrPaymentSession> initiateTanQrTopUp(
-    GoOtherPaymentMethodsRequest request,
-  );
-
-  Future<TanQrPaymentSession> initiateMobileMoneyTopUp(
+  Future<WalletTopUpSession> initiateMobileMoneyTopUp(
     GoOtherPaymentMethodsRequest request,
   );
 

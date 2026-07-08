@@ -49,18 +49,18 @@ class SelcomPesaTopupRemoteDataSourceImpl
       }
       throw WalletPaymentException(
         _messageFromResponse(response.data) ??
-            AppStrings.tanQrPaymentRequestFailed,
+            AppStrings.walletTopUpRequestFailed,
       );
     }
 
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
       throw WalletPaymentException(
         _messageFromResponse(response.data) ??
-            AppStrings.tanQrPaymentRequestFailed,
+            AppStrings.walletTopUpRequestFailed,
       );
     }
 
-    throw WalletPaymentException(AppStrings.tanQrPaymentRequestFailed);
+    throw WalletPaymentException(AppStrings.walletTopUpRequestFailed);
   }
 
   @override
@@ -81,7 +81,7 @@ class SelcomPesaTopupRemoteDataSourceImpl
       final statusCode = data['status_code'];
       if (statusCode is int && statusCode != 200) {
         throw WalletPaymentException(
-          _messageFromResponse(data) ?? AppStrings.tanQrPaymentRequestFailed,
+          _messageFromResponse(data) ?? AppStrings.walletTopUpRequestFailed,
         );
       }
       final result = SelcomPesaTopupStatusResult.fromEnvelope(data);
@@ -98,11 +98,11 @@ class SelcomPesaTopupRemoteDataSourceImpl
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
       throw WalletPaymentException(
         _messageFromResponse(response.data) ??
-            AppStrings.tanQrPaymentRequestFailed,
+            AppStrings.walletTopUpRequestFailed,
       );
     }
 
-    throw WalletPaymentException(AppStrings.tanQrPaymentRequestFailed);
+    throw WalletPaymentException(AppStrings.walletTopUpRequestFailed);
   }
 
   @override
@@ -111,7 +111,7 @@ class SelcomPesaTopupRemoteDataSourceImpl
   }) async {
     final trimmedTransid = transid.trim();
     if (trimmedTransid.isEmpty) {
-      throw WalletPaymentException(AppStrings.tanQrPaymentRequestFailed);
+      throw WalletPaymentException(AppStrings.walletTopUpRequestFailed);
     }
 
     final response = await ApiService().call(
@@ -132,7 +132,7 @@ class SelcomPesaTopupRemoteDataSourceImpl
       final statusCode = data['status_code'];
       if (statusCode is int && statusCode != 200) {
         throw WalletPaymentException(
-          _messageFromResponse(data) ?? AppStrings.tanQrPaymentRequestFailed,
+          _messageFromResponse(data) ?? AppStrings.walletTopUpRequestFailed,
         );
       }
       return SelcomPesaTopupStatusResult.fromEnvelope(data);
@@ -144,11 +144,11 @@ class SelcomPesaTopupRemoteDataSourceImpl
       }
       throw WalletPaymentException(
         _messageFromResponse(response.data) ??
-            AppStrings.tanQrPaymentRequestFailed,
+            AppStrings.walletTopUpRequestFailed,
       );
     }
 
-    throw WalletPaymentException(AppStrings.tanQrPaymentRequestFailed);
+    throw WalletPaymentException(AppStrings.walletTopUpRequestFailed);
   }
 
   SelcomPesaTopupResult? _parseSuccess(

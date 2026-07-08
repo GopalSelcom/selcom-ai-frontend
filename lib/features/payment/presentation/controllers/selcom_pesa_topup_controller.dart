@@ -351,7 +351,7 @@ class SelcomPesaTopupController extends GetxController {
         AppDialogs.showErrorDialog(message: message);
       }
     } catch (_) {
-      final message = AppStrings.tanQrPaymentRequestFailed.tr;
+      final message = AppStrings.walletTopUpRequestFailed.tr;
       if (closeSheetFirst) {
         apiError.value = message;
       } else {
@@ -517,8 +517,8 @@ class SelcomPesaTopupController extends GetxController {
     _dismissPendingDialog();
 
     AppDialogs.showConfirmationDialog(
-      title: AppStrings.tanQrTimerExpiredTitle.tr,
-      message: AppStrings.tanQrTimerExpiredMessage.tr,
+      title: AppStrings.walletTopUpTimerExpiredTitle.tr,
+      message: AppStrings.walletTopUpTimerExpiredMessage.tr,
       confirmText: AppStrings.retry,
       cancelText: AppStrings.cancel,
       onConfirm: _activeFlow == SelcomPesaTopupFlow.other
@@ -668,16 +668,16 @@ class SelcomPesaTopupController extends GetxController {
   String? _validateAmount({required bool showEmptyError}) {
     final digits = amountRaw.value.replaceAll(RegExp(r'\D'), '');
     if (digits.isEmpty) {
-      return showEmptyError ? AppStrings.tanQrAmountRequired.tr : null;
+      return showEmptyError ? AppStrings.walletTopUpAmountRequired.tr : null;
     }
 
     final amount = int.tryParse(digits);
     if (amount == null || amount <= 0) {
-      return AppStrings.tanQrAmountMustBeGreaterThanZero.tr;
+      return AppStrings.walletTopUpAmountMustBeGreaterThanZero.tr;
     }
 
     if (amount > WalletTopUpLimits.maxTopUpAmount) {
-      return AppStrings.tanQrAmountExceedsMax.trParams({
+      return AppStrings.walletTopUpAmountExceedsMax.trParams({
         'max': ThousandsSeparatorInputFormatter.formatDigits(
           WalletTopUpLimits.maxTopUpAmount.toString(),
         ),

@@ -11,7 +11,6 @@ import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../profile/domain/usecases/profile_usecase.dart';
-import '../../../payment/data/models/go_other_payment_methods_models.dart';
 import '../../../payment/presentation/widgets/add_money_to_wallet_bottom_sheet.dart';
 import '../../domain/entities/wallet_summary_entity.dart';
 import '../../domain/entities/wallet_transaction_filter.dart';
@@ -23,7 +22,6 @@ import '../../domain/usecases/get_wallet_transactions_usecase.dart';
 import '../../domain/utils/wallet_statement_utils.dart';
 import '../models/wallet_transaction_item.dart';
 import '../utils/wallet_format_utils.dart';
-import '../utils/wallet_refresh.dart';
 import '../utils/wallet_transaction_mapper.dart';
 
 class WalletController extends GetxController {
@@ -137,10 +135,7 @@ class WalletController extends GetxController {
   }
 
   Future<void> _openAddMoney() async {
-    final result = await AddMoneyToWalletBottomSheet.show();
-    if (result == TanQrTopupResult.success) {
-      await WalletRefresh.afterBalanceChange();
-    }
+    await AddMoneyToWalletBottomSheet.show();
   }
 
   void openEStatement() {

@@ -143,12 +143,7 @@ class WalletRepositoryImpl implements WalletRepository {
   }
 
   @override
-  Future<TanQrPaymentSession> initiateTanQrTopUp(
-    GoOtherPaymentMethodsRequest request,
-  ) => _paymentRemoteDataSource.initiateTanQrTopUp(request);
-
-  @override
-  Future<TanQrPaymentSession> initiateMobileMoneyTopUp(
+  Future<WalletTopUpSession> initiateMobileMoneyTopUp(
     GoOtherPaymentMethodsRequest request,
   ) => _paymentRemoteDataSource.initiateMobileMoneyTopUp(request);
 

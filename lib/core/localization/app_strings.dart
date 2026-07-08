@@ -40,11 +40,9 @@ class AppStrings {
   static const String back = 'back';
   static const String addMoneySelcomPesaSubtitle =
       'add_money_selcom_pesa_subtitle';
-  static const String addMoneyTanQrTips = 'add_money_tan_qr_tips';
-  static const String addMoneyTanQrTipsSubtitle =
-      'add_money_tan_qr_tips_subtitle';
   static const String addMoneyMobileMoneySubtitle =
-      'add_money_mobile_money_subtitle';  static const String addMoneyLocalBanksSubtitle =
+      'add_money_mobile_money_subtitle';
+  static const String addMoneyLocalBanksSubtitle =
       'add_money_local_banks_subtitle';
   static const String walletFundsReceivedTitle = 'wallet_funds_received_title';
   static const String walletFundsReceivedSubtitle =
@@ -61,17 +59,20 @@ class AppStrings {
   static const String requestSentCompleteSelcomTopup =
       'request_sent_complete_selcom_topup';
   static const String expiresInWithTime = 'expires_in_with_time';
-  static const String tanQrAmountRequired = 'tanqr_amount_required';
-  static const String tanQrAmountMustBeGreaterThanZero =
-      'tanqr_amount_must_be_greater_than_zero';
-  static const String tanQrAmountExceedsMax = 'tanqr_amount_exceeds_max';
-  static const String tanQrScanQrInstruction = 'tanqr_scan_qr_instruction';
-  static const String tanQrPaymentRequestFailed = 'tanqr_payment_request_failed';
-  static const String tanQrTimerExpiredTitle = 'tanqr_timer_expired_title';
-  static const String tanQrTimerExpiredMessage = 'tanqr_timer_expired_message';
-  static const String tanQrMissingRegisteredPhone =
-      'tanqr_missing_registered_phone';
-  static const String tanQrCancelRequest = 'tanqr_cancel_request';
+  static const String walletTopUpAmountRequired =
+      'wallet_topup_amount_required';
+  static const String walletTopUpAmountMustBeGreaterThanZero =
+      'wallet_topup_amount_must_be_greater_than_zero';
+  static const String walletTopUpAmountExceedsMax =
+      'wallet_topup_amount_exceeds_max';
+  static const String walletTopUpRequestFailed =
+      'wallet_topup_request_failed';
+  static const String walletTopUpTimerExpiredTitle =
+      'wallet_topup_timer_expired_title';
+  static const String walletTopUpTimerExpiredMessage =
+      'wallet_topup_timer_expired_message';
+  static const String walletTopUpCancelRequest =
+      'wallet_topup_cancel_request';
   static const String selcomPesaAppNotInstalled =
       'selcom_pesa_app_not_installed';
   static const String selcomPesaInstallPrompt = 'selcom_pesa_install_prompt';

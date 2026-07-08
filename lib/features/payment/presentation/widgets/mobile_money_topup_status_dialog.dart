@@ -143,7 +143,7 @@ class MobileMoneyTopupStatusDialog extends StatelessWidget {
                     Padding(
                       padding: EdgeInsets.fromLTRB(22.w, 0, 22.w, 26.h),
                       child: AppPrimaryButton(
-                        label: AppStrings.tanQrCancelRequest.tr,
+                        label: AppStrings.walletTopUpCancelRequest.tr,
                         onPressed: isCancelling ? null : onCancel,
                         isLoading: isCancelling,
                         width: double.infinity,

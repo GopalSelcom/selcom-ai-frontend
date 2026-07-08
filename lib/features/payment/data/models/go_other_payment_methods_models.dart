@@ -2,11 +2,10 @@ class GoOtherPaymentMethodsRequest {
   const GoOtherPaymentMethodsRequest({
     required this.totalPrice,
     required this.ussdPhoneNumber,
-    this.paymentMode = paymentModeTanQr,
+    this.paymentMode = paymentModeMobileMoney,
     this.sqrAmount = 0,
   });
 
-  static const String paymentModeTanQr = 'Selcom Pay / Mastercard QR';
   static const String paymentModeMobileMoney = 'Mobile Money';
 
   /// `payment_method` values for [WalletRepository.cancelUssdOrder].
@@ -28,9 +27,10 @@ class GoOtherPaymentMethodsRequest {
   }
 }
 
-class TanQrPaymentSession {
-  const TanQrPaymentSession({
-    required this.qr,
+/// Session returned by wallet top-up initiate APIs (e.g. Mobile Money).
+class WalletTopUpSession {
+  const WalletTopUpSession({
+    this.qr = '',
     this.orderId = '',
     this.paymentToken = '',
     this.transid = '',
@@ -41,8 +41,8 @@ class TanQrPaymentSession {
   final String paymentToken;
   final String transid;
 
-  factory TanQrPaymentSession.fromJson(Map<String, dynamic> json) {
-    return TanQrPaymentSession(
+  factory WalletTopUpSession.fromJson(Map<String, dynamic> json) {
+    return WalletTopUpSession(
       qr: json['qr']?.toString() ?? '',
       orderId: _readString(json, const ['order_id', 'orderId']),
       paymentToken: _readString(json, const ['payment_token', 'paymentToken']),
@@ -82,7 +82,5 @@ class PaymentStatusResult {
     );
   }
 }
-
-enum TanQrTopupResult { success, cancelled }
 
 enum MobileMoneyTopupResult { success, cancelled }

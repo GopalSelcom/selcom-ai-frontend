@@ -11,112 +11,35 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
-import '../../../../shared/utils/thousands_separator_input_formatter.dart';
-import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_standard_bottom_sheet.dart';
-import '../../../../shared/widgets/app_text_field.dart';
-import '../../../wallet/presentation/utils/wallet_format_utils.dart';
-import '../../data/models/go_other_payment_methods_models.dart';
-import '../controllers/tanqr_wallet_topup_controller.dart';
 import '../screens/selcom_pesa_to_wallet_screen.dart';
+import 'local_bank_instructions_bottom_sheet.dart';
 import 'mobile_money_topup_bottom_sheet.dart';
 import 'saved_cards_bottom_sheet.dart';
-import 'local_bank_instructions_bottom_sheet.dart';
-import 'tanqr_tips_bottom_sheet.dart';
-import 'wallet_topup_sheet_lifecycle.dart';
 
 /// Add-money options after insufficient-balance "Top up Wallet" (Figma sheet).
 class AddMoneyToWalletBottomSheet extends StatelessWidget {
-  const AddMoneyToWalletBottomSheet({super.key, required this.controllerTag});
+  const AddMoneyToWalletBottomSheet({super.key});
 
-  final String controllerTag;
-
-  static Future<TanQrTopupResult?> show() {
-    final tag = 'tanqr_wallet_${DateTime.now().millisecondsSinceEpoch}';
-    Get.put(TanQrWalletTopupController(), tag: tag);
-    return AppDialogs.showStandardBottomSheet<TanQrTopupResult?>(
-      sheet: AddMoneyToWalletBottomSheet(controllerTag: tag),
-    ).whenComplete(() => disposeTanQrTopupAfterSheetClosed(tag));
-  }
-
-  TanQrWalletTopupController get _controller {
-    if (!Get.isRegistered<TanQrWalletTopupController>(tag: controllerTag)) {
-      throw FlutterError(
-        'TanQrWalletTopupController(tag: $controllerTag) is not registered.',
-      );
-    }
-    return Get.find<TanQrWalletTopupController>(tag: controllerTag);
+  static Future<void> show() {
+    return AppDialogs.showStandardBottomSheet<void>(
+      sheet: const AddMoneyToWalletBottomSheet(),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!Get.isRegistered<TanQrWalletTopupController>(tag: controllerTag)) {
-      return const SizedBox.shrink();
-    }
-    final controller = _controller;
-    return Obx(() {
-      final step = controller.step.value;
-      return PopScope(
-        canPop: step != TanQrTopupStep.qrDisplay,
-        onPopInvokedWithResult: (didPop, _) {
-          if (didPop) {
-            controller.handleSheetDismissed();
-          }
-        },
-        child: AppStandardBottomSheet(
-          title: _titleForStep(step),
-          headerTextAlign: TextAlign.center,
-          showHeaderDivider:
-              step != TanQrTopupStep.options &&
-              step != TanQrTopupStep.qrDisplay,
-          content: _contentForStep(step, controller),
-          footer: _footerForStep(step, controller),
-        ),
-      );
-    });
-  }
-
-  String? _titleForStep(TanQrTopupStep step) {
-    switch (step) {
-      case TanQrTopupStep.options:
-        return AppStrings.addMoneyToWallet.tr;
-      case TanQrTopupStep.amountEntry:
-        return AppStrings.addMoneyTanQrTips.tr;
-      case TanQrTopupStep.qrDisplay:
-        return AppStrings.addMoneyTanQrTips.tr;
-    }
-  }
-
-  Widget _contentForStep(TanQrTopupStep step, TanQrWalletTopupController controller) {
-    switch (step) {
-      case TanQrTopupStep.options:
-        return _OptionsContent(controller: controller);
-      case TanQrTopupStep.amountEntry:
-        return _AmountEntryContent(controller: controller);
-      case TanQrTopupStep.qrDisplay:
-        return _TanQrDisplayContent(controller: controller);
-    }
-  }
-
-  Widget? _footerForStep(
-    TanQrTopupStep step,
-    TanQrWalletTopupController controller,
-  ) {
-    switch (step) {
-      case TanQrTopupStep.options:
-        return null;
-      case TanQrTopupStep.amountEntry:
-        return _AmountEntryFooter(controller: controller);
-      case TanQrTopupStep.qrDisplay:
-        return _TanQrDisplayFooter(controller: controller);
-    }
+    return AppStandardBottomSheet(
+      title: AppStrings.addMoneyToWallet.tr,
+      headerTextAlign: TextAlign.center,
+      showHeaderDivider: false,
+      content: const _OptionsContent(),
+    );
   }
 }
 
 class _OptionsContent extends StatelessWidget {
-  const _OptionsContent({required this.controller});
-
-  final TanQrWalletTopupController controller;
+  const _OptionsContent();
 
   @override
   Widget build(BuildContext context) {
@@ -130,8 +53,8 @@ class _OptionsContent extends StatelessWidget {
         ),
         SizedBox(height: 12.h),
         _AddMoneyOptionTile(
-          title: "Local banks to Wallet",
-          subtitle: AppStrings.addMoneyTanQrTipsSubtitle.tr,
+          title: 'Local banks to Wallet',
+          subtitle: AppStrings.addMoneyLocalBanksSubtitle.tr,
           onTap: _onLocalBanksTap,
         ),
         SizedBox(height: 12.h),
@@ -166,173 +89,10 @@ class _OptionsContent extends StatelessWidget {
     unawaited(MobileMoneyTopupBottomSheet.show());
   }
 
+  // ignore: unused_element
   void _onSavedCardTap() {
     Get.back<void>();
     unawaited(SavedCardsBottomSheet.show());
-  }
-}
-
-class _AmountEntryContent extends StatelessWidget {
-  const _AmountEntryContent({required this.controller});
-
-  final TanQrWalletTopupController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      if (controller.textFieldsDisposed) {
-        return const SizedBox.shrink();
-      }
-      final apiError = controller.apiError.value;
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            AppStrings.amount.tr,
-            style: AppTextStyles.homeSubtitle.copyWith(
-              color: AppColors.textMutedStrong,
-            ),
-          ),
-          SizedBox(height: 4.h),
-          AppTextField(
-            readOnly: false,
-            enabled: !controller.isSubmitting.value,
-            hintText: '5,000',
-            keyboardType: TextInputType.number,
-            inputFormatters: [ThousandsSeparatorInputFormatter()],
-            textFieldBackgroundColor: AppColors.surfaceSubtle,
-            borderColor: AppColors.borderWalletCard,
-            controller: controller.amountController,
-            errorText: controller.amountError.value,
-            onChanged: controller.onAmountChanged,
-            prefixIcon: Padding(
-              padding: EdgeInsets.only(left: 16.w, right: 8.w),
-              child: Center(
-                widthFactor: 1,
-                child: Text(
-                  AppStrings.defaultCurrencyTzs.tr,
-                  style: AppTextStyles.homeTitle.copyWith(
-                    fontSize: 16.sp,
-                    height: 22 / 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textHeading,
-                  ),
-                ),
-              ),
-            ),
-            textColor: AppColors.iconHeartFilled,
-            fontSize: 16.sp,
-            fontWeight: FontWeight.w700,
-          ),
-          if (apiError != null && apiError.isNotEmpty) ...[
-            SizedBox(height: 8.h),
-            Text(
-              apiError,
-              style: AppTextStyles.homeSubtitle.copyWith(
-                color: AppColors.error,
-                fontSize: 13.sp,
-              ),
-            ),
-          ],
-          SizedBox(height: 42.h),
-        ],
-      );
-    });
-  }
-}
-
-class _AmountEntryFooter extends StatelessWidget {
-  const _AmountEntryFooter({required this.controller});
-
-  final TanQrWalletTopupController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final canContinue = controller.canContinue;
-      return Row(
-        children: [
-          Expanded(
-            child: AppPrimaryButton(
-              label: AppStrings.back.tr,
-              onPressed: controller.isSubmitting.value
-                  ? null
-                  : controller.backToOptions,
-              outlined: true,
-              backgroundColor: AppColors.white,
-              outlinedTextColor: AppColors.black,
-              outlinedBorderColor: AppColors.black,
-              outlinedBorderWidth: 1,
-              borderRadius: 16.r,
-              height: 56.h,
-            ),
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: AppPrimaryButton(
-              label: AppStrings.continueLabel.tr,
-              onPressed: canContinue ? _onContinuePressed : null,
-              isLoading: controller.isSubmitting.value,
-              borderRadius: 16.r,
-              height: 56.h,
-            ),
-          ),
-        ],
-      );
-    });
-  }
-
-  void _onContinuePressed() {
-    final validation = controller.validateAmountForDisplay();
-    controller.amountError.value = validation;
-    if (validation != null) return;
-    unawaited(controller.submitAmount());
-  }
-}
-
-class _TanQrDisplayContent extends StatelessWidget {
-  const _TanQrDisplayContent({required this.controller});
-
-  final TanQrWalletTopupController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final seconds = controller.countdownSeconds.value;
-      return TanQrTipsContent(
-        qrData: controller.session.value?.qr ?? '',
-        accountName: controller.displayName.value,
-        accountNumber: controller.displayWalletNumber.value,
-        countdownText: AppStrings.expiresInTimer.trParams({
-          'timer': controller.formatCountdown(seconds),
-        }),
-      );
-    });
-  }
-}
-
-class _TanQrDisplayFooter extends StatelessWidget {
-  const _TanQrDisplayFooter({required this.controller});
-
-  final TanQrWalletTopupController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final hasTransid =
-          (controller.session.value?.transid.trim().isNotEmpty ?? false);
-      return AppPrimaryButton(
-        label: AppStrings.tanQrCancelRequest.tr,
-        onPressed: hasTransid && !controller.isCancelling.value
-            ? () => unawaited(controller.cancelPaymentRequest())
-            : null,
-        isLoading: controller.isCancelling.value,
-        width: double.infinity,
-        height: 56.h,
-        borderRadius: 16.r,
-      );
-    });
   }
 }
 
