@@ -66,12 +66,16 @@ class SessionExpiryService {
   }
 
   /// Stops background work and shows the session-expired login prompt once.
+  ///
+  /// Callers include the auth interceptor and ride APIs. [ApiService.showLogoutPopup]
+  /// must remain callable after flags are set — do not gate the dialog on [isHandling].
   static Future<void> handleSessionExpired() async {
-    if (isHandling) return;
+    if (_isHandling || AuthInterceptor.isLoggingOutDueToAuthFailure) return;
     _isHandling = true;
     _userLoggedOut = true;
 
     _stopActiveRidePolling();
+    ApiService().cancelAllRequests();
 
     ApiService().showLogoutPopup();
   }

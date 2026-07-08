@@ -819,9 +819,19 @@ class ApiService {
   // ── Session Expired Popup ──
 
   void showLogoutPopup() {
-    if (SessionExpiryService.isHandling) return;
+    // Prevent duplicate dialogs only — not [SessionExpiryService.isHandling],
+    // because [handleSessionExpired] sets that flag before calling here.
     if (AuthInterceptor.isLoggingOutDueToAuthFailure) return;
     AuthInterceptor.isLoggingOutDueToAuthFailure = true;
+
+    // Drop authenticated routes (e.g. Home pushed from splash) so the expired
+    // session prompt is not shown on top of an authenticated screen.
+    final currentRoute = Get.currentRoute;
+    if (currentRoute != AppRoutes.login &&
+        currentRoute != AppRoutes.onboarding &&
+        currentRoute != AppRoutes.splash) {
+      unawaited(Get.offAllNamed(AppRoutes.login));
+    }
 
     AppDialogs.showAnimatedDialog(
       child: Dialog(
