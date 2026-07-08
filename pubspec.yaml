@@ -84,7 +84,12 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/images/
+    - assets/images/branding/
+    - assets/images/auth/
+    - assets/images/home/
+    - assets/images/ride/
+    - assets/images/profile/
+    - assets/images/promo/
     - assets/images/payment/
     - assets/images/location/
     - assets/images/map/
@@ -100,14 +105,20 @@ flutter:
         - asset: assets/fonts/metropolis/Metropolis-Regular.otf
         - asset: assets/fonts/metropolis/Metropolis-Medium.otf
           weight: 500
+        - asset: assets/fonts/metropolis/Metropolis-MediumItalic.otf
+          weight: 500
+          style: italic
         - asset: assets/fonts/metropolis/Metropolis-SemiBold.otf
           weight: 600
         - asset: assets/fonts/metropolis/Metropolis-Bold.otf
           weight: 700
         - asset: assets/fonts/metropolis/Metropolis-ExtraBold.otf
           weight: 800
-        - asset: assets/fonts/metropolis/Metropolis-Light.otf
-          weight: 300
+        - asset: assets/fonts/metropolis/Metropolis-Black.otf
+          weight: 900
+        - asset: assets/fonts/metropolis/Metropolis-BlackItalic.otf
+          weight: 900
+          style: italic
 
 flutter_launcher_icons:
   android: "launcher_icon"
