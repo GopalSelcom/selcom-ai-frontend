@@ -16,6 +16,7 @@ import '../../../../shared/utils/selcom_pesa_phone_utils.dart';
 import '../../../payment/domain/wallet_payment_phone_country.dart';
 import '../../../wallet/domain/usecases/get_wallet_summary_usecase.dart';
 import '../../data/datasources/selcom_pesa_link_remote_data_source.dart';
+import '../../data/models/selcom_pesa_link_models.dart';
 import '../../domain/entities/payment_card.dart';
 import '../../domain/entities/selcom_pesa_linked_account_entity.dart';
 import '../../domain/repositories/selcom_pesa_link_repository.dart';
@@ -53,11 +54,11 @@ class PaymentMethodsController extends GetxController {
   final RxBool isLoadingLinkedAccount = false.obs;
   final RxInt linkedAccountsCount = 0.obs;
   /// First linked account — used for Payment Methods subtitle only.
-  final Rxn<SelcomPesaLinkedAccountEntity> primaryLinkedAccount =
-      Rxn<SelcomPesaLinkedAccountEntity>();
+  final Rxn<Account> primaryLinkedAccount =
+      Rxn<Account>();
   /// LINKED-only rows shown on Selcom Pesa to Go Wallet (max [maxLinkedAccounts]).
-  final RxList<SelcomPesaLinkedAccountEntity> linkedAccountsList =
-      <SelcomPesaLinkedAccountEntity>[].obs;
+  final RxList<Account> linkedAccountsList =
+      <Account>[].obs;
   /// Optional top-up target on wallet screen; none selected by default.
   final RxnString selectedLinkedAccountKey = RxnString();
 
@@ -128,23 +129,18 @@ class PaymentMethodsController extends GetxController {
     isLoadingLinkedAccount.value = true;
     try {
       final accounts = await _selcomPesaLinkRepository.getLinkedAccounts();
-      final linked = _dedupeLinked(
-        accounts
-            .where((a) => a.status == SelcomPesaLinkStatus.linked)
-            .toList(),
-      );
 
-      linkedAccountsList.assignAll(linked);
+      linkedAccountsList.assignAll(accounts.data?.accounts??[]);
       _clearLinkedBalanceState();
-      _pruneSelectedLinkedAccount();
-      linkedAccountsCount.value = linked.length;
-      if (linked.isEmpty) {
+      // _pruneSelectedLinkedAccount();
+      linkedAccountsCount.value = accounts.data?.count??0;
+      if (linkedAccountsList.isEmpty) {
         primaryLinkedAccount.value = null;
         isSelcomPesaLinked.value = false;
         return;
       }
 
-      primaryLinkedAccount.value = linked.first;
+      primaryLinkedAccount.value = linkedAccountsList.firstWhereOrNull((e)=>(e.isDefault??false));
       isSelcomPesaLinked.value = true;
     } on SelcomPesaLinkException catch (e, stackTrace) {
       _clearLinkedSummary();
@@ -156,21 +152,7 @@ class PaymentMethodsController extends GetxController {
       isLoadingLinkedAccount.value = false;
     }
   }
-
-  /// Merges duplicate rows from API using normalized 9-digit mobile key.
-  List<SelcomPesaLinkedAccountEntity> _dedupeLinked(
-    List<SelcomPesaLinkedAccountEntity> accounts,
-  ) {
-    final seen = <String>{};
-    final result = <SelcomPesaLinkedAccountEntity>[];
-    for (final account in accounts) {
-      final key = account.normalizedMobileDigits;
-      if (key.isEmpty || seen.contains(key)) continue;
-      seen.add(key);
-      result.add(account);
-    }
-    return result;
-  }
+  
 
   void _clearLinkedSummary() {
     primaryLinkedAccount.value = null;
@@ -184,7 +166,7 @@ class PaymentMethodsController extends GetxController {
   bool get canLinkAnother => linkedAccountsCount.value < maxLinkedAccounts;
 
   /// Selected linked card on wallet screen, or null when Done runs self top-up.
-  SelcomPesaLinkedAccountEntity? get selectedLinkedAccount {
+  Account? get selectedLinkedAccount {
     final key = selectedLinkedAccountKey.value;
     if (key == null || key.isEmpty) return null;
     for (final account in linkedAccountsList) {
@@ -193,12 +175,12 @@ class PaymentMethodsController extends GetxController {
     return null;
   }
 
-  bool isLinkedAccountSelected(SelcomPesaLinkedAccountEntity account) {
+  bool isLinkedAccountSelected(Account account) {
     return selectedLinkedAccountKey.value == linkedAccountKey(account);
   }
 
   /// Toggles single-select on wallet screen (tap again to deselect).
-  void toggleLinkedAccountSelection(SelcomPesaLinkedAccountEntity account) {
+  void toggleLinkedAccountSelection(Account account) {
     final key = linkedAccountKey(account);
     if (selectedLinkedAccountKey.value == key) {
       selectedLinkedAccountKey.value = null;
@@ -208,7 +190,7 @@ class PaymentMethodsController extends GetxController {
   }
 
   /// `POST request_unlink` with SP mobile, then refreshes linked list.
-  Future<void> unlinkLinkedAccount(SelcomPesaLinkedAccountEntity account) async {
+  Future<void> unlinkLinkedAccount(Account account) async {
     if (isUnlinkSubmitting.value) return;
 
     final key = linkedAccountKey(account);
@@ -217,7 +199,7 @@ class PaymentMethodsController extends GetxController {
 
     try {
       await _selcomPesaLinkRepository.requestUnlink(
-        mobileNumber: account.mobileNumber,
+        mobileNumber: account.spMobileNumber??"",
       );
 
       _hideLinkedAccountBalance(key);
@@ -252,38 +234,27 @@ class PaymentMethodsController extends GetxController {
     }
   }
 
-  void _pruneSelectedLinkedAccount() {
-    final key = selectedLinkedAccountKey.value;
-    if (key == null || key.isEmpty) return;
-    final stillExists = linkedAccountsList.any(
-      (account) => linkedAccountKey(account) == key,
-    );
-    if (!stillExists) {
-      selectedLinkedAccountKey.value = null;
-    }
-  }
 
   /// Stable key for selection/balance maps — prefers server `id`, else mobile digits.
-  String linkedAccountKey(SelcomPesaLinkedAccountEntity account) {
-    final id = account.id.trim();
-    if (id.isNotEmpty) return id;
-    return account.normalizedMobileDigits;
+  String linkedAccountKey(Account account) {
+    final id = (account.id??"").trim();
+    return id;
   }
 
-  String linkedAccountBalanceDisplay(SelcomPesaLinkedAccountEntity account) {
+  String linkedAccountBalanceDisplay(Account account) {
     final key = linkedAccountKey(account);
     return _linkedBalanceVisible[key] ?? hiddenBalancePlaceholder;
   }
 
-  bool isLinkedAccountBalanceLoading(SelcomPesaLinkedAccountEntity account) {
+  bool isLinkedAccountBalanceLoading(Account account) {
     return _linkedBalanceLoading[linkedAccountKey(account)] ?? false;
   }
 
   /// Fetches SP balance for one card; visible for [linkedBalanceVisibleDuration].
   Future<void> revealLinkedAccountBalance(
-    SelcomPesaLinkedAccountEntity account,
+    Account account,
   ) async {
-    if (!account.isLinked) return;
+    if (!(account.status=="LINKED")) return;
 
     final key = linkedAccountKey(account);
     if (_linkedBalanceLoading[key] == true) return;
@@ -292,18 +263,16 @@ class PaymentMethodsController extends GetxController {
     _linkedBalanceLoading.refresh();
 
     try {
-      final countryCode = account.countryCode.trim().isNotEmpty
-          ? account.countryCode.trim()
+      final countryCode = (account.goCountryCode??"").trim().isNotEmpty
+          ? (account.goCountryCode??"").trim()
           : WalletPaymentPhoneCountry.dialCodeDigits;
       final result = await _selcomPesaLinkRepository.getMainBalance(
-        mobileNumber: account.mobileNumber,
-        countryCode: countryCode,
+        mobileNumber: account.spMobileNumber??"",
+        countryCode: account.spCountryCode??"",
       );
-      final currency = result.currency.trim().isNotEmpty
-          ? result.currency.trim()
-          : AppStrings.defaultCurrencyTzs.tr;
+      final currency = AppStrings.defaultCurrencyTzs.tr;
       _linkedBalanceVisible[key] =
-          '$currency ${NumberFormat('#,##0', 'en_US').format(result.balance)}';
+          '$currency ${NumberFormat('#,##0', 'en_US').format(result.data?.balance)}';
       _linkedBalanceVisible.refresh();
       _scheduleLinkedBalanceHide(key);
     } on SelcomPesaLinkException catch (e, stackTrace) {
@@ -345,9 +314,9 @@ class PaymentMethodsController extends GetxController {
     _linkedBalanceHideTimers.clear();
   }
 
-  String phoneDisplayFor(SelcomPesaLinkedAccountEntity account) {
-    final digits = account.normalizedMobileDigits;
-    if (digits.isEmpty) return account.mobileNumber;
+  String phoneDisplayFor(Account account) {
+    final digits = account.spMobileNumber??"";
+    if (digits.isEmpty) return account.spMobileNumber??"";
     return TanzaniaPhoneFormatter.formatInternational(digits);
   }
 
@@ -447,7 +416,7 @@ class PaymentMethodsController extends GetxController {
       await WidgetsBinding.instance.endOfFrame;
 
       await loadLinkedAccounts();
-      await _handleSendLinkRequestResult(result, phoneDisplay);
+      // await _handleSendLinkRequestResult(result, phoneDisplay);
     } on SelcomPesaLinkException catch (e) {
       await Loader.instance.hideAsync();
       AppDialogs.showErrorDialog(message: e.message.tr);

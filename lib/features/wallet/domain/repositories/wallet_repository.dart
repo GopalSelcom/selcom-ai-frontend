@@ -5,6 +5,7 @@ import '../../../payment/data/models/selcom_pesa_topup_models.dart';
 import '../../../payment/data/models/selcom_pesa_topup_status_models.dart';
 import '../../data/models/go_wallet_card_model.dart';
 import '../../data/models/go_add_card_response_model.dart';
+import '../../data/models/go_init_card_session_response_model.dart';
 import '../entities/wallet_details_entity.dart';
 import '../entities/wallet_statement_email_result.dart';
 import '../entities/wallet_summary_entity.dart';
@@ -69,5 +70,21 @@ abstract class WalletRepository {
   Future<Either<Failure, void>> goPayByExistingCard({
     required String transId,
     required String cardToken,
+  });
+
+  Future<Either<Failure, GoInitCardSessionResponseModel>> goInitCardSession({
+    required int amount,
+    required int newCard,
+    required String email,
+    required String mobileNumber,
+    required String countryCode,
+    required String cardBin,
+    String? fname,
+    String? lname,
+    String? address,
+    String? city,
+    String? state,
+    String? country,
+    String? postalcode,
   });
 }

@@ -16,6 +16,7 @@ import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/payment_countdown_timer.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
 import '../../../../shared/utils/thousands_separator_input_formatter.dart';
+import '../../../profile/data/models/selcom_pesa_link_models.dart';
 import '../../../profile/domain/entities/selcom_pesa_linked_account_entity.dart';
 import '../../../profile/presentation/controllers/payment_methods_controller.dart';
 import '../../../settings/data/models/settings_models.dart';
@@ -237,7 +238,7 @@ class SelcomPesaTopupController extends GetxController {
   }
 
   Future<void> submitSelectedLinkedAccountTopUp({
-    required SelcomPesaLinkedAccountEntity account,
+    required Account account,
     required bool closeSheetFirst,
   }) async {
     if (isSubmitting.value) return;
@@ -695,10 +696,10 @@ class SelcomPesaTopupController extends GetxController {
     return '$countryDialCode$digits';
   }
 
-  String _buildLinkedAccountUssdPhone(SelcomPesaLinkedAccountEntity account) {
-    final digits = account.normalizedMobileDigits;
-    final code = account.countryCode.trim().isNotEmpty
-        ? account.countryCode.replaceAll(RegExp(r'\D'), '')
+  String _buildLinkedAccountUssdPhone(Account account) {
+    final digits = account.spMobileNumber;
+    final code = (account.spCountryCode??"").trim().isNotEmpty
+        ? (account.spCountryCode??"").replaceAll(RegExp(r'\D'), '')
         : countryDialCode;
     return '$code$digits';
   }

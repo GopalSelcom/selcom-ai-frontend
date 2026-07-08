@@ -1,12 +1,24 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../../core/di/injection_container.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../shared/data/countries_phone_data.dart';
+import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
-import '../../domain/entities/payment_card.dart';
+import '../../../../shared/widgets/web_view_screen.dart';
+import '../../../wallet/domain/repositories/wallet_repository.dart';
+import '../../../wallet/presentation/utils/wallet_refresh.dart';
 
 class AddCardController extends GetxController {
+  final WalletRepository _walletRepository;
+
+  AddCardController({
+    WalletRepository? walletRepository,
+  }) : _walletRepository = walletRepository ?? sl<WalletRepository>();
+
   final cardHolderController = TextEditingController();
   final lastNameController = TextEditingController();
   final cardNumberController = TextEditingController();
@@ -148,17 +160,114 @@ class AddCardController extends GetxController {
       return;
     }
 
+    final args = Get.arguments as Map<String, dynamic>?;
+    final int amount = args?['amount'] as int? ?? 100;
+
+    final fname = cardHolderController.text.trim();
+    final lname = lastNameController.text.trim();
+    final cardNo = cardNumberController.text.replaceAll(' ', '');
+    final cardBin = cardNo.length >= 6 ? cardNo.substring(0, 6) : '';
+    final expiry = expiryController.text.trim();
+    final cvv = cvvController.text.trim();
+
+    final countryCode = selectedPhoneCountry.value.dialCode;
+    String mobileNumber = phoneController.text.trim().replaceAll(RegExp(r'\D'), '');
+    if (mobileNumber.startsWith('0')) {
+      mobileNumber = mobileNumber.substring(1);
+    }
+    final email = emailController.text.trim();
+    final address = addressController.text.trim();
+    final city = cityController.text.trim();
+    final state = selectedState.value;
+    final country = selectedCountry.value?.code;
+
     await Loader.withFlag(isSubmitting, () async {
-      // TODO(api): Replace this with AddCard use case + repository call.
-      await Future.delayed(const Duration(seconds: 3));
-      Get.back<PaymentCard>(
-        result: PaymentCard(
-          brand: 'VISA',
-          fullNumber: cardNumberController.text.trim(),
-          expiry: expiryController.text.trim(),
-          cvv: cvvController.text.trim(),
-          nickName: '${cardHolderController.text.trim()} ${lastNameController.text.trim()}',
-        ),
+      final result = await _walletRepository.goInitCardSession(
+        amount: amount,
+        newCard: 0,
+        email: email,
+        mobileNumber: mobileNumber,
+        countryCode: countryCode,
+        cardBin: cardBin,
+        fname: fname,
+        lname: lname,
+        address: address,
+        city: city,
+        state: state,
+        country: country,
+      );
+
+      await result.fold(
+        (failure) async {
+          AppDialogs.showErrorDialog(message: failure.message);
+        },
+        (response) async {
+          // Extract session data map
+          final sessionData = response.data;
+          Map<String, dynamic> sessionMap = {};
+          if (sessionData is Map<String, dynamic>) {
+            sessionMap = sessionData;
+          } else if (sessionData is List && sessionData.isNotEmpty) {
+            final first = sessionData.first;
+            if (first is Map) {
+              sessionMap = Map<String, dynamic>.from(first);
+            }
+          }
+
+          // Build hidden inputs dynamically from backend signature fields
+          final StringBuffer formInputs = StringBuffer();
+          sessionMap.forEach((key, value) {
+            formInputs.write('<input type="hidden" name="$key" value="$value" />\n');
+          });
+
+          // Detect card brand
+          String cardType = '001'; // Default: Visa
+          if (cardNo.startsWith('4')) {
+            cardType = '001'; // Visa
+          } else if (cardNo.startsWith('5')) {
+            cardType = '002'; // Mastercard
+          } else if (cardNo.startsWith('3')) {
+            cardType = '003'; // Amex
+          }
+
+          final parts = expiry.split('/');
+          final month = parts.isNotEmpty ? parts[0] : '';
+          final year = parts.length > 1 ? parts[1] : '';
+          final fullYear = year.isNotEmpty ? '20$year' : '';
+          final expiryDate = '$month-$fullYear'; // format MM-YYYY
+
+          // Append user card inputs
+          formInputs.write('<input type="hidden" name="card_number" value="$cardNo" />\n');
+          formInputs.write('<input type="hidden" name="card_type" value="$cardType" />\n');
+          formInputs.write('<input type="hidden" name="card_expiry_date" value="$expiryDate" />\n');
+          formInputs.write('<input type="hidden" name="card_cvn" value="$cvv" />\n');
+
+          final htmlData = '''
+<html>
+<body onload="document.forms[0].submit()">
+  <form method="POST" action="https://secureacceptance.cybersource.com/silent/pay">
+    $formInputs
+  </form>
+</body>
+</html>
+''';
+
+          final success = await WebViewScreen.open<bool>(
+            title: AppStrings.addNewCard.tr,
+            htmlData: htmlData,
+          );
+
+          unawaited(WalletRefresh.afterBalanceChange());
+
+          if (success == true) {
+            AppDialogs.showSuccessDialog(
+              message: AppStrings.yourCardHasBeenNaddedSuccessfully.tr,
+              confirmLabel: AppStrings.ok,
+              barrierDismissible: true,
+            );
+            Get.back<bool>(result: true);
+          }
+        },
       );
     });
     canSubmitForm.value = _isFormInputValidForVisibility();

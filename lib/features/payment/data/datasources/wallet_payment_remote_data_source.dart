@@ -4,6 +4,7 @@ import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
 import '../../../wallet/data/models/go_wallet_card_model.dart';
 import '../../../wallet/data/models/go_add_card_response_model.dart';
+import '../../../wallet/data/models/go_init_card_session_response_model.dart';
 import '../models/go_other_payment_methods_models.dart';
 
 abstract class WalletPaymentRemoteDataSource {
@@ -42,6 +43,23 @@ abstract class WalletPaymentRemoteDataSource {
     required String transId,
     required String cardToken,
   });
+
+  Future<GoInitCardSessionResponseModel> goInitCardSession({
+    required int amount,
+    required int newCard,
+    required String email,
+    required String mobileNumber,
+    required String countryCode,
+    required String cardBin,
+    String? fname,
+    String? lname,
+    String? address,
+    String? city,
+    String? state,
+    String? country,
+    String? postalcode,
+  });
+
 }
 
 class WalletPaymentRemoteDataSourceImpl
@@ -356,6 +374,63 @@ class WalletPaymentRemoteDataSourceImpl
 
     throw WalletPaymentException(
       _messageFromResponse(response.data) ?? 'Debit failed',
+    );
+  }
+
+  @override
+  Future<GoInitCardSessionResponseModel> goInitCardSession({
+    required int amount,
+    required int newCard,
+    required String email,
+    required String mobileNumber,
+    required String countryCode,
+    required String cardBin,
+    String? fname,
+    String? lname,
+    String? address,
+    String? city,
+    String? state,
+    String? country,
+    String? postalcode,
+  }) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.wallet.goInitCardSession,
+        method: ApiMethod.post,
+        body: {
+          'amount': "100",
+          'newCard': newCard,
+          'email': email,
+          'mobile_number': mobileNumber,
+          'country_code': countryCode,
+          'cardBin': cardBin,
+          if (fname != null) 'fname': fname,
+          if (lname != null) 'lname': lname,
+          if (address != null) 'address': address,
+          if (city != null) 'city': city,
+          if (state != null) 'state': state,
+          if (country != null) 'country': country,
+          if (postalcode != null) 'postalcode': postalcode,
+        },
+        errorPresentationType: ErrorPresentationType.none,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      final data = response.data;
+      if (data is Map<String, dynamic>) {
+        final statusCode = data['status_code'] ?? data['status'];
+        if (statusCode == 200) {
+          return GoInitCardSessionResponseModel.fromJson(data);
+        }
+        throw WalletPaymentException(
+          data['message']?.toString() ?? 'Failed to initialize card session',
+        );
+      }
+    }
+
+    throw WalletPaymentException(
+      _messageFromResponse(response.data) ?? 'Failed to initialize card session',
     );
   }
 }

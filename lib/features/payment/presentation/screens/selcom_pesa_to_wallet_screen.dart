@@ -11,6 +11,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
+import '../../../profile/data/models/selcom_pesa_link_models.dart';
 import '../../../profile/domain/entities/selcom_pesa_linked_account_entity.dart';
 import '../../../profile/presentation/controllers/payment_methods_controller.dart';
 import '../widgets/selcom_pesa_another_number_bottom_sheet.dart';
@@ -131,7 +132,7 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
 
   Widget _selcomCard(
     PaymentMethodsController paymentMethodsController, {
-    SelcomPesaLinkedAccountEntity? account,
+    Account? account,
   }) {
     final linked = account != null;
     final isSelected = linked && paymentMethodsController.isLinkedAccountSelected(account);
@@ -171,7 +172,7 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
 
   Widget _linkedSelcomCardContent(
     PaymentMethodsController paymentMethodsController,
-    SelcomPesaLinkedAccountEntity account,
+    Account account,
   ) {
     final phoneDisplay = paymentMethodsController.phoneDisplayFor(account);
     final isSelected = paymentMethodsController.isLinkedAccountSelected(account);

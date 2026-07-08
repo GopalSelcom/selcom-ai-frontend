@@ -11,6 +11,7 @@ import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/thousands_separator_input_formatter.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_text_field.dart';
+import '../../../profile/data/models/selcom_pesa_link_models.dart';
 import '../../../profile/domain/entities/selcom_pesa_linked_account_entity.dart';
 import '../controllers/selcom_pesa_topup_controller.dart';
 import 'wallet_topup_sheet_lifecycle.dart';
@@ -23,9 +24,9 @@ class SelcomPesaSelfBottomSheet extends StatefulWidget {
   });
 
   final String controllerTag;
-  final SelcomPesaLinkedAccountEntity? account;
+  final Account? account;
 
-  static Future<void> show({SelcomPesaLinkedAccountEntity? account}) {
+  static Future<void> show({Account? account}) {
     final tag = account != null
         ? 'selcom_pesa_linked_${account.id}_${DateTime.now().millisecondsSinceEpoch}'
         : 'selcom_pesa_self_${DateTime.now().millisecondsSinceEpoch}';
@@ -147,7 +148,7 @@ class _SelcomPesaSelfSheetFooter extends GetView<SelcomPesaTopupController> {
   });
 
   final String controllerTag;
-  final SelcomPesaLinkedAccountEntity? account;
+  final Account? account;
 
   @override
   String? get tag => controllerTag;

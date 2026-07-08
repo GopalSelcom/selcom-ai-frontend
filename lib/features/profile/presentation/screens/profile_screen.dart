@@ -347,11 +347,11 @@ class ProfileScreen extends StatelessWidget {
               title: AppStrings.savedLocations.tr,
               onTap: controller.openFavoriteLocations,
             ),
-            // MenuItemWidget(
-            //   icon: Iconsax.card,
-            //   title: "Saved Cards",
-            //   onTap: controller.openPaymentMethods,
-            // ),
+            MenuItemWidget(
+              icon: Iconsax.card,
+              title: "Saved Cards",
+              onTap: controller.openPaymentMethods,
+            ),
             MenuItemWidget(
               icon: Iconsax.message_question,
               title: AppStrings.help.tr,

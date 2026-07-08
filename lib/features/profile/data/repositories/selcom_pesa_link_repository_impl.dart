@@ -14,7 +14,7 @@ class SelcomPesaLinkRepositoryImpl implements SelcomPesaLinkRepository {
   final SelcomPesaLinkRemoteDataSource _remoteDataSource;
 
   @override
-  Future<SelcomPesaLinkedAccountEntity> sendLinkRequest({
+  Future<SelcomPesaLinkedAccountsResult> sendLinkRequest({
     required String countryCode,
     required String mobileNumber,
   }) {
@@ -27,13 +27,13 @@ class SelcomPesaLinkRepositoryImpl implements SelcomPesaLinkRepository {
   }
 
   @override
-  Future<List<SelcomPesaLinkedAccountEntity>> getLinkedAccounts({
+  Future<SelcomPesaLinkedAccountsResult> getLinkedAccounts({
     SelcomPesaLinkStatus? statusFilter,
   }) async {
     final result = await _remoteDataSource.getLinkedAccounts(
       statusFilter: statusFilter,
     );
-    return result.accounts;
+    return result;
   }
 
   @override
@@ -46,7 +46,7 @@ class SelcomPesaLinkRepositoryImpl implements SelcomPesaLinkRepository {
   }
 
   @override
-  Future<SelcomPesaBalanceEntity> getMainBalance({
+  Future<SpMainBalanceResponse> getMainBalance({
     required String mobileNumber,
     required String countryCode,
   }) async {
@@ -57,9 +57,6 @@ class SelcomPesaLinkRepositoryImpl implements SelcomPesaLinkRepository {
           : WalletPaymentPhoneCountry.dialCodeDigits,
     );
     final result = await _remoteDataSource.getMainBalance(request);
-    return SelcomPesaBalanceEntity(
-      balance: result.balance,
-      currency: result.currency,
-    );
+    return result;
   }
 }

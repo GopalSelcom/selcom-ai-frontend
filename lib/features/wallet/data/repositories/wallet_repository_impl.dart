@@ -16,6 +16,7 @@ import '../datasources/wallet_remote_data_source.dart';
 import '../models/go_email_card_statement_models.dart';
 import '../models/go_wallet_card_model.dart';
 import '../models/go_add_card_response_model.dart';
+import '../models/go_init_card_session_response_model.dart';
 
 class WalletRepositoryImpl implements WalletRepository {
   WalletRepositoryImpl({
@@ -222,6 +223,44 @@ class WalletRepositoryImpl implements WalletRepository {
         cardToken: cardToken,
       );
       return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, GoInitCardSessionResponseModel>> goInitCardSession({
+    required int amount,
+    required int newCard,
+    required String email,
+    required String mobileNumber,
+    required String countryCode,
+    required String cardBin,
+    String? fname,
+    String? lname,
+    String? address,
+    String? city,
+    String? state,
+    String? country,
+    String? postalcode,
+  }) async {
+    try {
+      final result = await _paymentRemoteDataSource.goInitCardSession(
+        amount: amount,
+        newCard: newCard,
+        email: email,
+        mobileNumber: mobileNumber,
+        countryCode: countryCode,
+        cardBin: cardBin,
+        fname: fname,
+        lname: lname,
+        address: address,
+        city: city,
+        state: state,
+        country: country,
+        postalcode: postalcode,
+      );
+      return Right(result);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

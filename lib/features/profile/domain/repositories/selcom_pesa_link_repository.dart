@@ -1,17 +1,18 @@
+import '../../data/models/selcom_pesa_link_models.dart';
 import '../entities/selcom_pesa_balance_entity.dart';
 import '../entities/selcom_pesa_linked_account_entity.dart';
 
 abstract class SelcomPesaLinkRepository {
-  Future<SelcomPesaLinkedAccountEntity> sendLinkRequest({
+  Future<SelcomPesaLinkedAccountsResult> sendLinkRequest({
     required String countryCode,
     required String mobileNumber,
   });
 
-  Future<List<SelcomPesaLinkedAccountEntity>> getLinkedAccounts({
+  Future<SelcomPesaLinkedAccountsResult> getLinkedAccounts({
     SelcomPesaLinkStatus? statusFilter,
   });
 
-  Future<SelcomPesaBalanceEntity> getMainBalance({
+  Future<SpMainBalanceResponse> getMainBalance({
     required String mobileNumber,
     required String countryCode,
   });

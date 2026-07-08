@@ -17,6 +17,7 @@ import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/thousands_separator_input_formatter.dart';
 import '../../../payment/presentation/controllers/saved_cards_controller.dart';
 import '../controllers/payment_methods_controller.dart';
+import 'add_card_screen.dart';
 
 class PaymentMethodsScreen extends StatefulWidget {
   const PaymentMethodsScreen({super.key});
@@ -311,7 +312,15 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
 
   Widget _buildAddCardTile(SavedCardsController controller) {
     return InkWell(
-      onTap: () => _showAmountPrompt(controller),
+      onTap: () async {
+        final success = await Get.to<bool>(
+          () => const AddCardScreen(),
+          arguments: {'amount': 0},
+        );
+        if (success == true) {
+          await controller.loadCards();
+        }
+      },
       child: Padding(
         padding: EdgeInsets.only(bottom: 16.h, top: 14.h, left: 4.w),
         child: Row(
@@ -329,74 +338,6 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  void _showAmountPrompt(SavedCardsController controller) {
-    final TextEditingController localAmountController = TextEditingController(text: '100');
-    final RxString error = ''.obs;
-
-    AppDialogs.showStandardBottomSheet<void>(
-      sheet: AppStandardBottomSheet(
-        title: AppStrings.addMoneyToWallet.tr,
-        headerTextAlign: TextAlign.center,
-        showHeaderDivider: true,
-        content: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                "Enter amount to top up and link card (Minimum TZS 100)",
-                style: AppTextStyles.homeSubtitle.copyWith(color: AppColors.textMutedStrong),
-              ),
-              SizedBox(height: 8.h),
-              Obx(() => AppTextField(
-                hintText: '100',
-                keyboardType: TextInputType.number,
-                inputFormatters: [ThousandsSeparatorInputFormatter()],
-                textFieldBackgroundColor: AppColors.surfaceSubtle,
-                borderColor: AppColors.borderWalletCard,
-                controller: localAmountController,
-                errorText: error.value.isEmpty ? null : error.value,
-                prefixIcon: Padding(
-                  padding: EdgeInsets.only(left: 16.w, right: 8.w),
-                  child: Center(
-                    widthFactor: 1,
-                    child: Text(
-                      AppStrings.defaultCurrencyTzs.tr,
-                      style: AppTextStyles.homeTitle.copyWith(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textHeading,
-                      ),
-                    ),
-                  ),
-                ),
-                textColor: AppColors.success,
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w700,
-              )),
-              SizedBox(height: 24.h),
-              AppPrimaryButton(
-                label: AppStrings.continueLabel.tr,
-                onPressed: () async {
-                  final text = localAmountController.text.replaceAll(RegExp(r'\D'), '');
-                  final val = int.tryParse(text);
-                  if (val == null || val < 100) {
-                    error.value = "Minimum top-up is TZS 100";
-                    return;
-                  }
-                  Get.back<void>(); // close amount prompt sheet
-                  await controller.startNewCardLinkFlow(amount: val);
-                },
-                borderRadius: 16.r,
-                height: 56.h,
-              ),
-            ],
-          ),
         ),
       ),
     );
