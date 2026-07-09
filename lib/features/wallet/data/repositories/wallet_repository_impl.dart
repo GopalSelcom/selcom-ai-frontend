@@ -1,10 +1,12 @@
 import 'package:dartz/dartz.dart';
+
 import '../../../../core/errors/failures.dart';
 import '../../../payment/data/datasources/selcom_pesa_topup_remote_data_source.dart';
 import '../../../payment/data/datasources/wallet_payment_remote_data_source.dart';
 import '../../../payment/data/models/go_other_payment_methods_models.dart';
 import '../../../payment/data/models/selcom_pesa_topup_models.dart';
 import '../../../payment/data/models/selcom_pesa_topup_status_models.dart';
+import '../../domain/entities/wallet_card_balance_entity.dart';
 import '../../domain/entities/wallet_details_entity.dart';
 import '../../domain/entities/wallet_statement_email_result.dart';
 import '../../domain/entities/wallet_summary_entity.dart';
@@ -34,49 +36,35 @@ class WalletRepositoryImpl implements WalletRepository {
 
   @override
   Future<WalletDetailsEntity?> getWalletDetails() async {
-    final details = await _remoteDataSource.getWalletDetails();
-    if (details != null && details.hasWallet) {
-      return details;
-    }
-
     final balance = await _remoteDataSource.getCardBalance();
-    final pan = balance?.pan.trim() ?? '';
-    if (pan.isEmpty) {
-      return details;
-    }
-
-    return WalletDetailsEntity(
-      accountNo: pan,
-      name: balance?.holderName,
-      status: 1,
-    );
+    return _walletDetailsFromCardBalance(balance);
   }
 
   @override
   Future<WalletSummaryEntity> getWalletSummary() async {
     final balance = await _remoteDataSource.getCardBalance();
-    final details = await _remoteDataSource.getWalletDetails();
-
-    final walletNumber = _resolveWalletNumber(
-      detailsAccountNo: details?.accountNo,
-      balancePan: balance?.pan,
-    );
 
     return WalletSummaryEntity(
       balance: balance?.available ?? 0,
-      walletNumber: walletNumber,
+      walletNumber: balance?.pan.trim() ?? '',
       currency: balance?.currency ?? 'TZS',
       reserved: balance?.reserved ?? 0,
     );
   }
 
-  String _resolveWalletNumber({
-    required String? detailsAccountNo,
-    required String? balancePan,
-  }) {
-    final accountNo = detailsAccountNo?.trim() ?? '';
-    if (accountNo.isNotEmpty) return accountNo;
-    return balancePan?.trim() ?? '';
+  WalletDetailsEntity? _walletDetailsFromCardBalance(
+    WalletCardBalanceEntity? balance,
+  ) {
+    if (balance == null) return null;
+
+    final accountNo = balance.pan.trim();
+    if (accountNo.isEmpty) return null;
+
+    return WalletDetailsEntity(
+      accountNo: accountNo,
+      name: balance.holderName,
+      status: 1,
+    );
   }
 
   @override
@@ -161,11 +149,10 @@ class WalletRepositoryImpl implements WalletRepository {
   Future<void> cancelUssdOrder({
     required String transid,
     required String paymentMethod,
-  }) =>
-      _paymentRemoteDataSource.cancelUssdOrder(
-        transid: transid,
-        paymentMethod: paymentMethod,
-      );
+  }) => _paymentRemoteDataSource.cancelUssdOrder(
+    transid: transid,
+    paymentMethod: paymentMethod,
+  );
 
   @override
   Future<SelcomPesaTopupResult> sendSelcomPesaTopUpRequest(

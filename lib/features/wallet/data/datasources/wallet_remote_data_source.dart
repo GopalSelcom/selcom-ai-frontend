@@ -5,17 +5,13 @@ import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../domain/entities/wallet_card_balance_entity.dart';
-import '../../domain/entities/wallet_details_entity.dart';
 import '../../domain/entities/wallet_statement_email_result.dart';
 import '../../domain/entities/wallet_transaction_entity.dart';
 import '../models/go_card_balance_response.dart';
 import '../models/go_card_statement_response.dart';
 import '../models/go_email_card_statement_models.dart';
-import '../models/go_wallet_details_response.dart';
 
 abstract class WalletRemoteDataSource {
-  Future<WalletDetailsEntity?> getWalletDetails();
-
   Future<WalletCardBalanceEntity?> getCardBalance();
 
   Future<List<WalletTransactionEntity>> getCardStatement({
@@ -31,37 +27,6 @@ abstract class WalletRemoteDataSource {
 
 class WalletRemoteDataSourceImpl implements WalletRemoteDataSource {
   WalletRemoteDataSourceImpl();
-
-  @override
-  Future<WalletDetailsEntity?> getWalletDetails() async {
-    try {
-      final response = await ApiService().call(
-        request: ApiRequest(
-          endpoint: URLS.wallet.details,
-          method: ApiMethod.get,
-          errorPresentationType: ErrorPresentationType.none,
-        ),
-      );
-
-      if (response.statusCode == 200 && response.data is Map<String, dynamic>) {
-        final model = GoWalletDetailsResponseModel.fromJson(
-          Map<String, dynamic>.from(response.data),
-        );
-        if (model.isSuccess) {
-          return model.response!.toEntity();
-        }
-        return null;
-      }
-
-      if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
-        return null;
-      }
-    } catch (e, stackTrace) {
-      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      AppLogger.d('getWalletDetails error (suppressed): $e', tag: 'WalletRemoteDataSource');
-    }
-    return null;
-  }
 
   @override
   Future<WalletCardBalanceEntity?> getCardBalance() async {
@@ -89,7 +54,10 @@ class WalletRemoteDataSourceImpl implements WalletRemoteDataSource {
       }
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      AppLogger.d('getCardBalance error (suppressed): $e', tag: 'WalletRemoteDataSource');
+      AppLogger.d(
+        'getCardBalance error (suppressed): $e',
+        tag: 'WalletRemoteDataSource',
+      );
     }
     return null;
   }
@@ -129,7 +97,10 @@ class WalletRemoteDataSourceImpl implements WalletRemoteDataSource {
       }
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      AppLogger.d('getCardStatement error (suppressed): $e', tag: 'WalletRemoteDataSource');
+      AppLogger.d(
+        'getCardStatement error (suppressed): $e',
+        tag: 'WalletRemoteDataSource',
+      );
     }
     return const [];
   }

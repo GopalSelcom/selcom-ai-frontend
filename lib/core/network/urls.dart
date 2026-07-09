@@ -174,7 +174,7 @@ class _PlacesEndpoints {
 class _WalletEndpoints {
   const _WalletEndpoints();
 
-  final details = "go_wallet/go_wallet_details";
+  // final details = "go_wallet/go_wallet_details";
   final cardBalance = "go_wallet/go_card_balance";
   final otherPaymentMethods = "go_wallet/go_other_payment_methods";
   final walletTopUp = "go_wallet/wallet_push_ussd";
