@@ -46,7 +46,7 @@ class AgoraCallingBootstrap {
         ),
         // Rider only ever receives calls from drivers; this default keeps the
         // CallKit / heads-up surface neutral when `caller_name` is missing.
-        peerNameResolver: (_) => 'Your Driver',
+        peerNameResolver: (_) => 'Your Rider',
       ),
     );
   }

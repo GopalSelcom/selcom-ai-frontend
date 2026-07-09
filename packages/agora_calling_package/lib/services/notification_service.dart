@@ -424,8 +424,8 @@ class AgoraCallingNotificationService {
         (data['caller_name'] ?? data['callerName'])?.toString().trim();
     if (fromPush != null && fromPush.isNotEmpty) return fromPush;
     return localRole == CallParticipantRole.rider
-        ? 'Your Driver'
-        : 'Your Rider';
+        ? 'Your Rider'
+        : 'Your Passenger';
   }
 
   static bool _isDuplicatePush(

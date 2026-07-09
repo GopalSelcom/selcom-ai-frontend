@@ -241,11 +241,11 @@ import CallKit
     if let name = data["caller_name"] as? String, !name.isEmpty { return name }
     if let role = (data["caller_role"] as? String)?.lowercased() {
       switch role {
-      case "rider":  return "Your Rider"
-      case "driver": return "Your Driver"
+      case "rider":  return "Your Passenger"
+      case "driver": return "Your Rider"
       default: break
       }
     }
-    return "Caller"
+    return "Your Rider"
   }
 }

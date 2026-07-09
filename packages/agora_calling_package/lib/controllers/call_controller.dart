@@ -987,8 +987,8 @@ class CallController extends GetxController {
         (data['caller_name'] ?? data['callerName'])?.toString().trim();
     if (fromPush != null && fromPush.isNotEmpty) return fromPush;
     return config.localRole == CallParticipantRole.rider
-        ? 'Your Driver'
-        : 'Your Rider';
+        ? 'Your Rider'
+        : 'Your Passenger';
   }
 
   void _openActiveCallScreen() {
