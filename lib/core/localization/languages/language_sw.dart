@@ -503,6 +503,8 @@ class LanguageSw extends Languages {
     'enable_location_service': 'Wezesha huduma ya eneo',
     'enable_location_service_message':
         'Tafadhali wezesha huduma ya eneo ili kupata eneo lako la sasa.',
+    'enable_location_service_message_ios':
+        'Huduma za Eneo zimezimwa kwenye kifaa chako.\n\nNenda Mipangilio → Faragha na Usalama → Huduma za Eneo na uzivute. Kisha rudi kwenye programu na uguse kitufe cha GPS ili kuruhusu eneo kwa Selcom Go.',
     'location_permission_denied': 'Ruhusa ya eneo imekataliwa',
     'location_access_required': 'Ufikiaji wa eneo unahitajika',
     'location_permission_denied_open_settings': 'Ruhusa ya eneo imekataliwa kabisa. Fungua Mipangilio ili kuruhusu eneo kwa ajili ya kuchukuliwa na kuona madereva wa karibu.',
@@ -2354,6 +2356,10 @@ class LanguageSw extends Languages {
   @override
   String get enableLocationServiceMessage =>
       values['enable_location_service_message'] ?? '';
+
+  @override
+  String get enableLocationServiceMessageIos =>
+      values['enable_location_service_message_ios'] ?? '';
 
   @override
   String get locationPermissionDenied =>

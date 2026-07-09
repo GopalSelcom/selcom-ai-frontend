@@ -556,6 +556,8 @@ class LanguageEn extends Languages {
     'enable_location_service': 'Enable location service',
     'enable_location_service_message':
         'Please enable your location service to get your current location.',
+    'enable_location_service_message_ios':
+        'Location Services are turned off on your device.\n\nGo to Settings → Privacy & Security → Location Services and turn it on. Then return to the app and tap the GPS button again to allow location for Selcom Go.',
     'location_permission_denied': 'Location permission denied',
     'location_access_required': 'Location access required',
     'location_permission_denied_open_settings':
@@ -2435,6 +2437,10 @@ class LanguageEn extends Languages {
   @override
   String get enableLocationServiceMessage =>
       values['enable_location_service_message'] ?? '';
+
+  @override
+  String get enableLocationServiceMessageIos =>
+      values['enable_location_service_message_ios'] ?? '';
 
   @override
   String get locationPermissionDenied =>

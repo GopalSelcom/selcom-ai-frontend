@@ -396,12 +396,7 @@ class LocationService extends GetxController {
       if (Platform.isIOS) {
         bool isServiceEnabled = await Geolocator.isLocationServiceEnabled();
         if (!isServiceEnabled) {
-          await handlePermanentlyDenied(
-            forLocationService: true,
-            msg: "",
-            customMsg:
-                "Location Services are turned off on your device.\n\nGo to Settings → Privacy & Security → Location Services and turn it on.",
-          );
+          await handlePermanentlyDenied(forLocationService: true);
           _pendingRequest!.complete(false);
           return false;
         }
@@ -512,7 +507,7 @@ class LocationService extends GetxController {
     if (forLocationPermission) {
       await LocationUtils.giveLocationPermissionDialog(msg: customMsg);
     } else if (forLocationService) {
-      await LocationUtils.enableLocationServicenDialog();
+      await LocationUtils.enableLocationServicenDialog(customMsg: customMsg);
     }
   }
 
@@ -588,18 +583,27 @@ class LocationUtils {
     }
   }
 
-  static Future<void> enableLocationServicenDialog() async {
+  static Future<void> enableLocationServicenDialog({String customMsg = ''}) async {
     if (!LocationService.instance.isDialogOpen) {
       LocationService.instance.isDialogOpen = true;
 
       final Completer<void> completer = Completer<void>();
+      final isIos = Platform.isIOS;
+      final message = customMsg.isNotEmpty
+          ? customMsg
+          : (isIos
+                ? AppStrings.enableLocationServiceMessageIos.tr
+                : AppStrings.enableLocationServiceMessage.tr);
 
-      // Same large column dialog as app-permission; opens DEVICE location settings.
       await AppDialogs.showPermissionDialog(
         title: AppStrings.enableLocationService.tr,
-        message: AppStrings.enableLocationServiceMessage.tr,
+        message: message,
+        settingsButtonLabel: isIos ? AppStrings.gotIt.tr : null,
         onOpenSettings: () async {
-          await Geolocator.openLocationSettings();
+          // iOS cannot deep-link to device Location Services; Android can.
+          if (!isIos) {
+            await Geolocator.openLocationSettings();
+          }
           if (!completer.isCompleted) completer.complete();
         },
         onCancel: () {

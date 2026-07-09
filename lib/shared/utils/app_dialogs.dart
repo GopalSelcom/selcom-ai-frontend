@@ -643,6 +643,7 @@ class AppDialogs {
     required String message,
     required VoidCallback onOpenSettings,
     VoidCallback? onCancel,
+    String? settingsButtonLabel,
     IconData icon = Icons.notifications_off,
     IconData? secondaryIcon,
   }) {
@@ -725,7 +726,7 @@ class AppDialogs {
 
               // Open Settings Button (Primary)
               AppPrimaryButton(
-                label: AppStrings.openSettings.tr,
+                label: settingsButtonLabel ?? AppStrings.openSettings.tr,
                 onPressed: () {
                   _dismissActiveDialog();
                   onOpenSettings();
