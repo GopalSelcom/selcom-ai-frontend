@@ -39,6 +39,18 @@ class SessionAuthService {
     );
   }
 
+  /// Drops the in-memory JWT cache after [StorageService.deleteAll].
+  ///
+  /// Without this, Agora/auth helpers could still read a stale token until
+  /// process restart even though Hive was cleared.
+  void clearInMemorySession() {
+    _accessToken = null;
+    AppLogger.d(
+      '[USER_AUTH] clearInMemorySession: access_token cleared',
+      tag: 'USER_AUTH',
+    );
+  }
+
   static String _tokenDebugLabel(String? token) {
     final t = token?.trim() ?? '';
     if (t.isEmpty) return 'present=false len=0';

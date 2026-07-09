@@ -32,8 +32,8 @@ class _SplashScreenState extends State<SplashScreen> {
 
   /// True when auth interceptor / session coordinator already invalidated login.
   ///
-  /// Splash must not route to Home in this state — otherwise the user lands on
-  /// Home while the session-expired dialog is shown on top.
+  /// Splash must not route to Home in this state — otherwise authenticated
+  /// background work or navigation can race the session-expired dialog.
   bool _isSessionAlreadyInvalidated() {
     return SessionExpiryService.isHandling ||
         AuthInterceptor.isLoggingOutDueToAuthFailure;

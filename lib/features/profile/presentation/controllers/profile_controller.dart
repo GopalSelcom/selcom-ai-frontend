@@ -13,6 +13,7 @@ import '../../../../core/network/urls.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/app_settings_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
+import '../../../../core/services/session_auth_service.dart';
 import '../../../../core/services/session_expiry_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../shared/utils/app_dialogs.dart';
@@ -362,6 +363,7 @@ class ProfileController extends GetxController {
         SessionExpiryService.teardownOnLogout();
         await di.sl<AuthRepository>().signOutFirebase();
         await StorageService().deleteAll();
+        SessionAuthService.instance.clearInMemorySession();
         Get.offAllNamed(AppRoutes.login);
       },
     );

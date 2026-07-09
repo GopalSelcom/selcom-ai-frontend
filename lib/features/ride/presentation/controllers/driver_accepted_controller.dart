@@ -632,6 +632,13 @@ class DriverAcceptedController extends GetxController
     stopIcons.assignAll(icons);
   }
 
+  /// Stops ride fallback polling when the session is invalidated.
+  void onSessionExpired() {
+    isUpdatingStops.value = false;
+    isUpdatingDestination.value = false;
+    stopUpdateProgressStep.value = 0;
+  }
+
   @override
   void onClose() {
     WidgetsBinding.instance.removeObserver(this);

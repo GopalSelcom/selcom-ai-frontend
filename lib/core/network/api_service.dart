@@ -8,7 +8,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart' hide Response, FormData, MultipartFile;
 import 'package:http_parser/http_parser.dart';
 
-import '../../features/wallet/presentation/utils/wallet_session.dart';
 import '../../shared/utils/app_dialogs.dart';
 import '../constants/app_assets.dart';
 import '../localization/app_strings.dart';
@@ -819,19 +818,11 @@ class ApiService {
   // ── Session Expired Popup ──
 
   void showLogoutPopup() {
-    // Prevent duplicate dialogs only — not [SessionExpiryService.isHandling],
-    // because [handleSessionExpired] sets that flag before calling here.
-    if (AuthInterceptor.isLoggingOutDueToAuthFailure) return;
+    // This method may be reached from multiple 401 / auth-error paths.
+    // The session coordinator owns the "show exactly once" rule so the same
+    // popup does not stack while the first one is already visible.
+    if (!SessionExpiryService.tryMarkSessionExpiredDialogShown()) return;
     AuthInterceptor.isLoggingOutDueToAuthFailure = true;
-
-    // Drop authenticated routes (e.g. Home pushed from splash) so the expired
-    // session prompt is not shown on top of an authenticated screen.
-    final currentRoute = Get.currentRoute;
-    if (currentRoute != AppRoutes.login &&
-        currentRoute != AppRoutes.onboarding &&
-        currentRoute != AppRoutes.splash) {
-      unawaited(Get.offAllNamed(AppRoutes.login));
-    }
 
     AppDialogs.showAnimatedDialog(
       child: Dialog(
@@ -872,15 +863,13 @@ class ApiService {
               ),
               SizedBox(height: 32.h),
 
-              // Login Button
+              // Login only navigates now.
+              // Local session wipe already happened in `handleSessionExpired()`
+              // before the dialog was shown, so this button just acknowledges
+              // the dialog and routes to the login screen.
               InkWell(
                 onTap: () async {
-                  // Same wallet teardown as profile logout — prevent stale balance
-                  // if the user signs in again from this dialog.
-                  WalletSession.teardownOnLogout();
-                  SessionExpiryService.teardownOnLogout();
-                  await StorageService().deleteAll();
-                  SessionExpiryService.resetOnLogin();
+                  SessionExpiryService.acknowledgeExpiredSessionForReLogin();
                   Get.back();
                   Get.offAllNamed(AppRoutes.login);
                 },
@@ -949,6 +938,24 @@ class AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
+    final skipAuth = options.headers['skip-auth-interceptor'] == 'true';
+    // Once session teardown starts, block any new authenticated request from
+    // leaving the app. Pre-login and refresh endpoints explicitly opt out with
+    // `skip-auth-interceptor`.
+    if (SessionExpiryService.isHandling && !skipAuth) {
+      AppLogger.d(
+        '⏭️ Session ended — blocking authenticated request',
+        tag: 'AuthInterceptor',
+      );
+      return handler.reject(
+        DioException(
+          requestOptions: options,
+          type: DioExceptionType.cancel,
+          message: 'Session expired',
+        ),
+      );
+    }
+
     final token = await StorageService().readAccessToken();
 
     final currentAuth = options.headers['Authorization'];
@@ -966,6 +973,9 @@ class AuthInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     AppLogger.d("dioError => ${err.error}", tag: 'AuthInterceptor');
 
+    // After session teardown starts, do not attempt token refresh or open a
+    // second dialog. Resolve the request as expired and let the coordinator
+    // finish the flow already in progress.
     if (SessionExpiryService.isHandling) {
       AppLogger.d(
         "⏭️ Session already ended — skipping auth refresh",
@@ -1123,7 +1133,7 @@ class AuthInterceptor extends Interceptor {
           tag: 'AuthInterceptor',
         );
 
-        apiService.showLogoutPopup();
+        unawaited(SessionExpiryService.handleSessionExpired());
 
         return handler.resolve(
           Response(
@@ -1139,7 +1149,7 @@ class AuthInterceptor extends Interceptor {
         tag: 'AuthInterceptor',
       );
 
-      apiService.showLogoutPopup();
+      unawaited(SessionExpiryService.handleSessionExpired());
 
       return handler.resolve(
         Response(
