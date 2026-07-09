@@ -61,13 +61,19 @@ class GoWalletDetailsData {
       dob: json['dob']?.toString(),
       maskedCard: json['masked_card']?.toString(),
       expiry: json['expiry']?.toString(),
-      status: json['status'] as int?,
+      status: _parseStatus(json['status']),
       isPrepaid: json['is_prepaid'] as bool?,
       limitAmount: json['limit_amount'] as num?,
       createdOn: json['created_on'] == null
           ? null
           : DateTime.tryParse(json['created_on'].toString()),
     );
+  }
+
+  static int? _parseStatus(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    return int.tryParse(value.toString());
   }
 
   WalletDetailsEntity toEntity() {
