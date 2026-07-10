@@ -317,6 +317,7 @@ class WalletPaymentRemoteDataSourceImpl
         method: ApiMethod.post,
         body: {
           'amount': amount,
+          'send_amount':0,
           'newCard': newCard,
         },
         errorPresentationType: ErrorPresentationType.none,

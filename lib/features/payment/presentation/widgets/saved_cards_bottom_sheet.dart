@@ -12,6 +12,7 @@ import '../../../../shared/utils/thousands_separator_input_formatter.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_standard_bottom_sheet.dart';
 import '../../../../shared/widgets/app_text_field.dart';
+import 'package:iconsax/iconsax.dart';
 import '../controllers/saved_cards_controller.dart';
 
 class SavedCardsBottomSheet extends GetView<SavedCardsController> {
@@ -59,97 +60,7 @@ class SavedCardsBottomSheet extends GetView<SavedCardsController> {
 
     final step = controller.step.value;
     if (step == SavedCardsStep.cardList) {
-      if (controller.isLoading.value) {
-        return SizedBox(
-          height: 150.h,
-          child: const Center(
-            child: CircularProgressIndicator(),
-          ),
-        );
-      }
-
-      final apiError = controller.apiError.value;
-      if (apiError != null) {
-        return Padding(
-          padding: EdgeInsets.symmetric(vertical: 24.h),
-          child: Center(
-            child: Text(
-              apiError,
-              style: AppTextStyles.body.copyWith(color: AppColors.error),
-            ),
-          ),
-        );
-      }
-
-      final cards = controller.cards;
-      if (cards.isEmpty) {
-        return Padding(
-          padding: EdgeInsets.symmetric(vertical: 36.h),
-          child: Center(
-            child: Text(
-              AppStrings.noSavedCardsFound.tr,
-              style: AppTextStyles.body.copyWith(color: AppColors.textBody),
-            ),
-          ),
-        );
-      }
-
-      return ListView.separated(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: cards.length,
-        separatorBuilder: (_, __) => SizedBox(height: 12.h),
-        itemBuilder: (context, index) {
-          final card = cards[index];
-          final bool isVisa = card.maskedCard.startsWith('4');
-          final bool isMastercard = card.maskedCard.startsWith('5');
-          final String brandText = isVisa ? 'VISA' : (isMastercard ? 'MC' : 'CARD');
-          final String label = card.maskedCard.replaceAll(RegExp(r'[xX]'), '*');
-
-          return InkWell(
-            onTap: () => controller.selectCard(card),
-            borderRadius: BorderRadius.circular(12.r),
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceSubtle,
-                border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-              child: Row(
-                children: [
-                  Text(
-                    brandText,
-                    style: TextStyle(
-                      color: isVisa
-                          ? AppColors.textBrandVisaSecondary
-                          : AppColors.brandRed,
-                      fontWeight: FontWeight.w900,
-                      fontStyle: FontStyle.italic,
-                      fontSize: 16.sp,
-                    ),
-                  ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: Text(
-                      label,
-                      style: AppTextStyles.homeSubtitle.copyWith(
-                        color: AppColors.textHeading,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    size: 14.sp,
-                    color: AppColors.textBody,
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      );
+      return _buildCardsSection(controller);
     } else {
       // Amount Entry Step
       return Column(
@@ -196,26 +107,158 @@ class SavedCardsBottomSheet extends GetView<SavedCardsController> {
     }
   }
 
+  Widget _buildCardsSection(SavedCardsController controller) {
+    if (controller.isLoading.value) {
+      return SizedBox(
+        height: 150.h,
+        child: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    final apiError = controller.apiError.value;
+    if (apiError != null) {
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: 24.h),
+        child: Center(
+          child: Text(
+            apiError,
+            style: AppTextStyles.body.copyWith(color: AppColors.error),
+          ),
+        ),
+      );
+    }
+
+    final cards = controller.cards;
+    return Container(
+      padding: EdgeInsets.fromLTRB(10.w, 19.h, 10.w, 0.h),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceSubtle,
+        border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
+        borderRadius: BorderRadius.circular(20.r),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (cards.isEmpty)
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 24.h),
+              child: Center(
+                child: Text(
+                  AppStrings.noSavedCardsFound.tr,
+                  style: AppTextStyles.body.copyWith(color: AppColors.textBody),
+                ),
+              ),
+            )
+          else
+            ...List.generate(cards.length, (index) {
+              final card = cards[index];
+              final bool isVisa = card.maskedCard.startsWith('4');
+              final bool isMastercard = card.maskedCard.startsWith('5');
+              final String brand = isVisa ? 'VISA' : (isMastercard ? 'MC' : 'CARD');
+              final String label = card.maskedCard.replaceAll(RegExp(r'[xX]'), '*');
+
+              return _buildCardTile(
+                brand: brand,
+                number: label,
+                onTap: () => controller.selectCard(card),
+                showDivider: true,
+              );
+            }),
+          const Divider(color: AppColors.borderWalletCard, height: 1),
+          _buildAddCardTile(controller),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCardTile({
+    required String brand,
+    required String number,
+    required VoidCallback onTap,
+    bool showDivider = true,
+  }) {
+    final isVisa = brand == 'VISA';
+    return InkWell(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(top: 2.h, left: 8.w, right: 2.w),
+            child: Row(
+              children: [
+                Text(
+                  brand,
+                  style: TextStyle(
+                    color: isVisa
+                        ? AppColors.textBrandVisaSecondary
+                        : AppColors.brandRed,
+                    fontWeight: FontWeight.w900,
+                    fontStyle: FontStyle.italic,
+                    fontSize: 16.sp,
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Text(
+                  number,
+                  style: AppTextStyles.body.copyWith(
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textHeading,
+                  ),
+                ),
+                const Spacer(),
+                Icon(
+                  Iconsax.arrow_right_3,
+                  size: 20.w,
+                  color: AppColors.textBody.withValues(alpha: 0.5),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 15.h),
+          if (showDivider) ...[
+            const Divider(color: AppColors.borderWalletCard, height: 1),
+            SizedBox(height: 18.h),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAddCardTile(SavedCardsController controller) {
+    return InkWell(
+      onTap: controller.onAddCardPressed,
+      child: Padding(
+        padding: EdgeInsets.only(bottom: 16.h, top: 14.h, left: 4.w),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Icon(Icons.add, color: AppColors.primary, size: 24.w),
+            SizedBox(width: 4.w),
+            Text(
+              AppStrings.addDebitCreditCard.tr,
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.primary,
+                fontSize: 15.sp,
+                fontWeight: FontWeight.w500,
+                height: 20 / 15,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget? _buildFooter(SavedCardsController controller) {
     if (controller.isSubmitting.value) return null;
 
     final step = controller.step.value;
     if (step == SavedCardsStep.cardList) {
-      return Center(
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 8.h),
-          child: TextButton(
-            onPressed: controller.onAddCardPressed,
-            child: Text(
-              AppStrings.addNewCardText.tr,
-              style: AppTextStyles.homeSubtitle.copyWith(
-                color: AppColors.brandRed,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ),
-      );
+      return null;
     } else {
       return Row(
         children: [
