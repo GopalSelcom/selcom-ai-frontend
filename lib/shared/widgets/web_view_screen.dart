@@ -26,10 +26,16 @@ class WebViewScreen extends StatelessWidget {
     String? url,
     String? htmlData,
     String? language,
+    String? baseUrl,
   }) async {
     final controllerTag = 'app_web_view_${DateTime.now().microsecondsSinceEpoch}';
     Get.put(
-      AppWebViewController(url: url, htmlData: htmlData, language: language),
+      AppWebViewController(
+        url: url,
+        htmlData: htmlData,
+        language: language,
+        baseUrl: baseUrl,
+      ),
       tag: controllerTag,
     );
 

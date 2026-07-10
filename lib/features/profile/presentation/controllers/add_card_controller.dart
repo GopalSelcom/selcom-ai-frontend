@@ -315,6 +315,7 @@ class AddCardController extends GetxController {
           final success = await WebViewScreen.open<bool>(
             title: AppStrings.addNewCard.tr,
             htmlData: htmlData,
+            baseUrl: URLS.wallet.securepay,
           );
 
           unawaited(WalletRefresh.afterBalanceChange());

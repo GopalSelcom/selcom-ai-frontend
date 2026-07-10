@@ -13,11 +13,13 @@ class AppWebViewController extends GetxController {
     this.url,
     this.htmlData,
     this.language,
+    this.baseUrl,
   });
 
   final String? url;
   final String? htmlData;
   final String? language;
+  final String? baseUrl;
 
   final isLoading = true.obs;
   late final WebViewController webController;
@@ -72,7 +74,7 @@ class AppWebViewController extends GetxController {
       );
     } else if (htmlData != null) {
       _logHtmlLoad();
-      webController.loadHtmlString(htmlData!);
+      webController.loadHtmlString(htmlData!, baseUrl: baseUrl);
     }
   }
 
