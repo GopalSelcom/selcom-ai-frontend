@@ -4,7 +4,9 @@ import '../../../../core/data/models/requests/firebase_login_request.dart';
 import '../../../../core/data/models/requests/go_phone_otp_request.dart';
 import '../../../../core/data/models/requests/go_phone_verify_otp_request.dart';
 import '../../../../core/data/models/requests/save_user_additional_details_request.dart';
+import '../../../../core/data/models/requests/set_name_request.dart';
 import '../../../../core/data/models/responses/onboarding_banners_response.dart';
+import '../../../../core/data/models/responses/set_name_response.dart';
 import '../../../../core/data/models/responses/send_otp_response.dart';
 import '../../../../core/data/models/responses/verify_otp_response.dart';
 import '../../../../core/data/models/user_model.dart';
@@ -27,6 +29,10 @@ abstract class AuthRemoteDataSource {
 
   Future<VerifyOtpResponseModel?> verifyPhoneOtp({
     required GoPhoneVerifyOtpRequest request,
+  });
+
+  Future<SetNameResponseModel?> setName({
+    required SetNameRequest request,
   });
 
   Future<UserModel> saveUserAdditionalDetails({
@@ -131,6 +137,26 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     }
 
     _throwIfErrorResponse(response, URLS.auth.phoneVerifyOtp);
+  }
+
+  @override
+  /// Auth required — uses the access token from firebase_login.
+  Future<SetNameResponseModel?> setName({
+    required SetNameRequest request,
+  }) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.auth.setName,
+        method: ApiMethod.post,
+        body: request.toJson(),
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      return SetNameResponseModel.fromJson(_responseMap(response.data));
+    }
+
+    _throwIfErrorResponse(response, URLS.auth.setName);
   }
 
   @override

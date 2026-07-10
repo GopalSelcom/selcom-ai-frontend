@@ -47,6 +47,8 @@ class _AuthEndpoints {
   final logout = "logout";
 
   final firebaseLogin = "go/auth/firebase_login";
+  /// Saves display name after SSO when firebase_login returns needs_name.
+  final setName = "go/auth/set_name";
   final phoneSendOtp = "go/auth/phone/send_otp";
   final phoneResendOtp = "go/auth/phone/resend_otp";
   final phoneVerifyOtp = "go/auth/phone/verify_otp";

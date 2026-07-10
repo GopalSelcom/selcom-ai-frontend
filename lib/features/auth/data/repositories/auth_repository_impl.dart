@@ -9,7 +9,9 @@ import '../../../../core/data/models/requests/go_phone_otp_request.dart';
 import '../../../../core/data/models/requests/go_phone_verify_otp_request.dart';
 import '../../../../core/data/models/requests/save_user_additional_details_request.dart';
 import '../../../../core/errors/error_mapper.dart';
+import '../../../../core/data/models/requests/set_name_request.dart';
 import '../../../../core/data/models/responses/onboarding_banners_response.dart';
+import '../../../../core/data/models/responses/set_name_response.dart';
 import '../../../../core/data/models/responses/send_otp_response.dart';
 import '../../../../core/data/models/responses/verify_otp_response.dart';
 import '../../../../core/data/models/user_model.dart';
@@ -127,6 +129,27 @@ class AuthRepositoryImpl implements AuthRepository {
       if (result == null) {
         return const Left(
           ServerFailure('Phone verification failed. Please try again.'),
+        );
+      }
+      return Right(result);
+    } on DioException catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ErrorMapper.mapDioExceptionToFailure(e));
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, SetNameResponseModel?>> setName({
+    required SetNameRequest request,
+  }) async {
+    try {
+      final result = await remoteDataSource.setName(request: request);
+      if (result == null) {
+        return const Left(
+          ServerFailure('Failed to save name. Please try again.'),
         );
       }
       return Right(result);

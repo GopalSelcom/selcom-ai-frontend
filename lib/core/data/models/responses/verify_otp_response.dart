@@ -42,6 +42,9 @@ class VerifyOtpData {
   String? name;
   String? email;
   bool? needsPhone;
+  /// `true` when the backend has no name for this user (not from Firebase SSO,
+  /// not from DB). Show the name field on the phone screen and call set_name.
+  bool? needsName;
   bool? isNewUser;
 
   VerifyOtpData({
@@ -55,6 +58,7 @@ class VerifyOtpData {
     this.name,
     this.email,
     this.needsPhone,
+    this.needsName,
     this.isNewUser,
   });
 
@@ -80,6 +84,7 @@ class VerifyOtpData {
     name = json['name']?.toString();
     email = json['email']?.toString();
     needsPhone = json['needs_phone'] as bool?;
+    needsName = json['needs_name'] as bool?;
   }
 
   /// Wallet is missing when API sets [walletStatusFlag] to `true`.
@@ -109,6 +114,7 @@ class VerifyOtpData {
     data['name'] = name;
     data['email'] = email;
     data['needs_phone'] = needsPhone;
+    data['needs_name'] = needsName;
     data['is_new_user'] = isNewUser;
     return data;
   }

@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/config/environment.dart';
 import '../../../../core/data/models/requests/go_phone_otp_request.dart';
+import '../../../../core/data/models/requests/set_name_request.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/data/models/requests/go_phone_verify_otp_request.dart';
 import '../../../../core/data/models/responses/verify_otp_response.dart';
@@ -25,6 +26,7 @@ import '../../domain/entities/social_auth_user.dart';
 import '../../domain/usecases/exchange_firebase_session_use_case.dart';
 import '../../domain/usecases/resend_phone_otp_use_case.dart';
 import '../../domain/usecases/send_phone_otp_use_case.dart';
+import '../../domain/usecases/set_name_use_case.dart';
 import '../../domain/usecases/sign_in_with_apple_use_case.dart';
 import '../../domain/usecases/sign_in_with_google_use_case.dart';
 import '../../domain/usecases/sign_in_with_facebook_use_case.dart';
@@ -35,6 +37,7 @@ class AuthController extends GetxController {
     required this.sendPhoneOtpUseCase,
     required this.resendPhoneOtpUseCase,
     required this.verifyPhoneOtpUseCase,
+    required this.setNameUseCase,
     required this.signInWithAppleUseCase,
     required this.signInWithFacebookUseCase,
     required this.signInWithGoogleUseCase,
@@ -45,6 +48,7 @@ class AuthController extends GetxController {
   final SendPhoneOtpUseCase sendPhoneOtpUseCase;
   final ResendPhoneOtpUseCase resendPhoneOtpUseCase;
   final VerifyPhoneOtpUseCase verifyPhoneOtpUseCase;
+  final SetNameUseCase setNameUseCase;
   final SignInWithAppleUseCase signInWithAppleUseCase;
   final SignInWithFacebookUseCase signInWithFacebookUseCase;
   final SignInWithGoogleUseCase signInWithGoogleUseCase;
@@ -52,6 +56,8 @@ class AuthController extends GetxController {
   final AppRegionService appRegionService;
 
   final mobileNumber = ''.obs;
+  /// Name typed on the phone screen when [needsName] is true.
+  final userName = ''.obs;
   final countryCode = '+255'.obs;
   final selectedCountryIso = 'TZ'.obs;
   final phoneFieldResetVersion = 0.obs;
@@ -60,6 +66,9 @@ class AuthController extends GetxController {
   final isLoading = false.obs;
   final errorMessage = ''.obs;
   final isPhoneAttachFlow = false.obs;
+  /// Set from firebase_login `needs_name`, or inferred on resume when stored
+  /// user has no name (e.g. Apple private relay / Google without display name).
+  final needsName = false.obs;
 
   final resendTimer = 59.obs;
   final pendingSignUpName = ''.obs;
@@ -130,18 +139,96 @@ class AuthController extends GetxController {
   }
 
   Future<void> sendOtpAndNavigate() async {
+    // SSO users missing a name must save it before phone OTP (set_name → send_otp).
+    if (needsName.value) {
+      final nameSaved = await setName();
+      if (!nameSaved) return;
+    }
+
     final success = await sendOtp();
     if (!success) return;
     startResendTimer();
     Get.toNamed(AppRoutes.otp);
   }
 
-  bool get canRequestOtp =>
-      PhoneNationalRules.isCompleteValidNational(
-        selectedCountryIso.value,
-        mobileNumber.value.replaceAll(RegExp(r'\D'), ''),
-      ) &&
-      !isLoading.value;
+  static const int _nameMinLength = 1;
+  static const int _nameMaxLength = 120; // Matches POST /go/auth/set_name contract.
+
+  bool get _isUserNameValid {
+    final value = userName.value.trim();
+    return value.length >= _nameMinLength && value.length <= _nameMaxLength;
+  }
+
+  void onUserNameChanged(String value) {
+    userName.value = value;
+    if (errorMessage.isNotEmpty) {
+      errorMessage.value = '';
+    }
+  }
+
+  /// Calls `POST /go/auth/set_name` with the firebase_login access token.
+  Future<bool> setName() async {
+    if (isLoading.value) return false;
+    errorMessage.value = '';
+
+    final trimmedName = userName.value.trim();
+    if (trimmedName.length < _nameMinLength) {
+      errorMessage.value = AppStrings.nameIsRequired.tr;
+      return false;
+    }
+    if (trimmedName.length > _nameMaxLength) {
+      errorMessage.value = AppStrings.pleaseEnterAValidName.tr;
+      return false;
+    }
+
+    return Loader.withFlag(isLoading, () async {
+      final result = await setNameUseCase(SetNameRequest(name: trimmedName));
+      return await result.fold(
+        (failure) async {
+          errorMessage.value = failure.message;
+          return false;
+        },
+        (response) async {
+          if (response?.isSuccess != true) {
+            errorMessage.value =
+                response?.message ??
+                AppStrings.somethingWentWrongPleaseTryAgain.tr;
+            return false;
+          }
+
+          final savedName =
+              response?.user?.name?.trim().isNotEmpty == true
+              ? response!.user!.name!.trim()
+              : trimmedName;
+          await _mergeNameIntoStoredUser(savedName);
+
+          needsName.value = false;
+          pendingSignUpName.value = savedName;
+          return true;
+        },
+      );
+    });
+  }
+
+  /// `set_name` returns a partial user (`_id`, `name` only) — patch name locally.
+  Future<void> _mergeNameIntoStoredUser(String name) async {
+    final raw = await StorageService().read(StorageKeys.user);
+    if (raw == null || raw.trim().isEmpty) return;
+
+    final map = jsonDecode(raw) as Map<String, dynamic>;
+    map['name'] = name;
+    await StorageService().write(StorageKeys.user, jsonEncode(map));
+  }
+
+  bool get canRequestOtp {
+    final phoneValid = PhoneNationalRules.isCompleteValidNational(
+      selectedCountryIso.value,
+      mobileNumber.value.replaceAll(RegExp(r'\D'), ''),
+    );
+    // When needsName, block Continue until name length is valid (1–120).
+    final nameValid = !needsName.value || _isUserNameValid;
+    return phoneValid && nameValid && !isLoading.value;
+  }
 
   void onPhoneCountrySelected(CountryData country) {
     if (country.code == selectedCountryIso.value) return;
@@ -242,6 +329,21 @@ class AuthController extends GetxController {
   Future<void> _configurePhoneAttachMode() async {
     final token = await StorageService().readAccessToken();
     isPhoneAttachFlow.value = token != null && token.isNotEmpty;
+
+    if (!isPhoneAttachFlow.value) return;
+
+    // App relaunch after firebase_login: re-show name field if profile has no name.
+    final userJson = await StorageService().read(StorageKeys.user);
+    if (userJson == null || userJson.trim().isEmpty) return;
+
+    try {
+      final user = UserModel.fromJson(
+        jsonDecode(userJson) as Map<String, dynamic>,
+      );
+      needsName.value = user.name == null || user.name!.trim().isEmpty;
+    } catch (_) {
+      needsName.value = true;
+    }
   }
 
   void _navigateAfterAuth(String route) {
@@ -428,6 +530,8 @@ class AuthController extends GetxController {
 
     if (verifyData.needsPhone == true) {
       isPhoneAttachFlow.value = true;
+      // Independent of needs_phone; both can be true (collect name + phone together).
+      needsName.value = verifyData.needsName == true;
       await StorageService().write(StorageKeys.signupCompleted, 'true');
       await VoipCallkitBridgeService.instance.syncCachedTokenToBackend();
       SessionExpiryService.resetOnLogin();

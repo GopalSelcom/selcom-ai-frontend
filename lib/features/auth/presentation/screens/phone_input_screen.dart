@@ -54,6 +54,46 @@ class PhoneInputScreen extends GetView<AuthController> {
                           ),
                         ),
                         SizedBox(height: 22.h),
+                        // Shown when firebase_login returns needs_name (SSO gave no display name).
+                        Obx(() {
+                          if (!controller.needsName.value) {
+                            return const SizedBox.shrink();
+                          }
+
+                          final nameFieldStyle = TextStyle(
+                            fontFamily: AppTextStyles.metropolisFont,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16.sp,
+                            height: 1.2,
+                            letterSpacing: -0.16,
+                            color: AppColors.primary,
+                          );
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              AppFocusInputField(
+                                height: 54.h,
+                                focusedBorderColor: AppColors.primary,
+                                keyboardType: TextInputType.name,
+                                maxLength: 120,
+                                style: nameFieldStyle,
+                                onChanged: controller.onUserNameChanged,
+                                hintText: AppStrings.enterYourFullName.tr,
+                                hintStyle: nameFieldStyle.copyWith(
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.5,
+                                  ),
+                                ),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 16.w,
+                                  vertical: 16.h,
+                                ),
+                              ),
+                              SizedBox(height: 16.h),
+                            ],
+                          );
+                        }),
                         Obx(() {
                           final iso = controller.selectedCountryIso.value;
                           final resetV =
@@ -147,7 +187,9 @@ class PhoneInputScreen extends GetView<AuthController> {
                         Obx(
                           () => AppAnimatedReveal(
                             show: controller.canRequestOtp,
-                            visibleKey: const ValueKey('continue-button-visible'),
+                            visibleKey: const ValueKey(
+                              'continue-button-visible',
+                            ),
                             hiddenKey: const ValueKey('continue-button-hidden'),
                             child: AppPrimaryButton(
                               label: AppStrings.continueLabel.tr,
