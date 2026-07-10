@@ -122,5 +122,7 @@
         <array>
             <string>UIInterfaceOrientationPortrait</string>
         </array>
+        <key>FlutterDeepLinkingEnabled</key>
+        <false/>
     </dict>
 </plist>

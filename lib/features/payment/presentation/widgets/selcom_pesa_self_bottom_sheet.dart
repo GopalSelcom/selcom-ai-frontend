@@ -164,7 +164,7 @@ class _SelcomPesaSelfSheetFooter extends GetView<SelcomPesaTopupController> {
         children: [
           Expanded(
             child: AppPrimaryButton(
-              label: AppStrings.back.tr,
+              label: AppStrings.cancel.tr,
               onPressed: controller.isSubmitting.value
                   ? null
                   : () => Get.back<void>(),

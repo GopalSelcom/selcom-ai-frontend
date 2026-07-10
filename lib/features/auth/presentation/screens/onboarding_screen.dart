@@ -197,19 +197,19 @@ class _OnboardingIllustration extends StatelessWidget {
         return SvgPicture.network(
           raw,
           width: double.infinity,
-          fit: BoxFit.contain,
+          fit: BoxFit.cover,
           placeholderBuilder: (_) => const _OnboardingIllustrationShimmer(),
         );
       }
       return CachedNetworkImage(
         imageUrl: raw,
         width: double.infinity,
-        fit: BoxFit.contain,
+        fit: BoxFit.fill,
         placeholder: (_, __) => const _OnboardingIllustrationShimmer(),
         errorWidget: (_, __, ___) => SvgPictureAsset(
           slide.image,
           width: double.infinity,
-          fit: BoxFit.contain,
+          fit: BoxFit.cover,
         ),
       );
     }
@@ -217,7 +217,7 @@ class _OnboardingIllustration extends StatelessWidget {
     return SvgPictureAsset(
       slide.image,
       width: double.infinity,
-      fit: BoxFit.contain,
+      fit: BoxFit.cover,
     );
   }
 }

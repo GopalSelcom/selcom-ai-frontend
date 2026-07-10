@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui' show DartPluginRegistrant;
 
 import 'package:agora_calling_package/agora_calling_package.dart';
@@ -38,6 +39,7 @@ import 'package:screenshot/screenshot.dart';
 ///
 /// Same idea as `ApiEnvironment` in our other apps — one line to flip QA target.
 /// Release CI can still pass `--dart-define=ENV=prod` (overrides when set).
+/// const Environment kAppEnvironment = Environment.prod;
 const Environment kAppEnvironment = Environment.prod;
 
 void _registerKillCallLogSink() {
@@ -118,6 +120,9 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 void main() async {
+  debugPrint("==========================================================================");
+  debugPrint("[NATIVE_DEEPLINK_LOG] main() EXECUTED. PID: $pid, Time: ${DateTime.now().toIso8601String()}");
+  debugPrint("==========================================================================");
   await runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();

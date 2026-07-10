@@ -8,6 +8,7 @@ import '../../../../core/config/app_config.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/app_settings_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/selcom_pesa/selcom_pesa_app_launcher_service.dart';
@@ -539,6 +540,40 @@ class SelcomPesaTopupController extends GetxController {
 
     _activeFlow = null;
     _session = null;
+
+    String? landedRoute;
+    Get.until((route) {
+      final name = route.settings.name;
+      if (name == AppRoutes.wallet) {
+        landedRoute = AppRoutes.wallet;
+        return true;
+      }
+      if (name == AppRoutes.booking ||
+          name == AppRoutes.driverAccepted ||
+          name == AppRoutes.findingDriver ||
+          name == AppRoutes.confirmPickup ||
+          name == AppRoutes.home) {
+        landedRoute = name;
+        return true;
+      }
+      if (route.isFirst) {
+        landedRoute = name;
+        return true;
+      }
+      return false;
+    });
+
+    final isRideRoute = landedRoute == AppRoutes.booking ||
+        landedRoute == AppRoutes.driverAccepted ||
+        landedRoute == AppRoutes.findingDriver ||
+        landedRoute == AppRoutes.confirmPickup ||
+        landedRoute == AppRoutes.home;
+
+    final isWalletRoute = landedRoute == AppRoutes.wallet;
+
+    if (!isWalletRoute && !isRideRoute) {
+      await Get.toNamed(AppRoutes.wallet);
+    }
 
     AppDialogs.showSuccessDialog(
       title: AppStrings.walletFundsReceivedTitle.tr,
