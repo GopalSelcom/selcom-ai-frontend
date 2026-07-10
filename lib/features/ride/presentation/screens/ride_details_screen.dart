@@ -8,7 +8,7 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../shared/utils/phone_formatter.dart';
+import '../../../../shared/utils/phone_national_rules.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/vehicle_type_image.dart';
@@ -274,7 +274,7 @@ class RideDetailsScreen extends StatelessWidget {
                                       Text(
                                         AppStrings.phoneWithNumber.trParams({
                                           'phone':
-                                              TanzaniaPhoneFormatter.formatInternational(
+                                              PhoneNationalRules.formatE164DigitsForDisplay(
                                                 ride.passengerPhone ?? '',
                                               ),
                                         }),
