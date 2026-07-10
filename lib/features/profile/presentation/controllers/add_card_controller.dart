@@ -318,16 +318,20 @@ class AddCardController extends GetxController {
             baseUrl: URLS.wallet.securepay,
           );
 
-          unawaited(WalletRefresh.afterBalanceChange());
-
           if (success == true) {
+            unawaited(WalletRefresh.afterBalanceChange());
             AppDialogs.showSuccessDialog(
               message: AppStrings.yourCardHasBeenNaddedSuccessfully.tr,
               confirmLabel: AppStrings.ok,
               barrierDismissible: true,
             );
             Get.back<bool>(result: true);
+          } else if (success == false) {
+            AppDialogs.showErrorDialog(
+              message: AppStrings.somethingWentWrongPleaseTryAgain.tr,
+            );
           }
+          // success == null → user cancelled / left early; no dialog or refresh.
         },
       );
     });
