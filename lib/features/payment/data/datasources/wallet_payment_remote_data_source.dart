@@ -4,7 +4,7 @@ import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
 import '../../../wallet/data/models/go_wallet_card_model.dart';
 import '../../../wallet/data/models/go_add_card_response_model.dart';
-import '../../../wallet/data/models/go_init_card_session_response_model.dart';
+import '../../../wallet/data/models/go_init_card_session_response_model.dart' hide Datum;
 import '../models/go_other_payment_methods_models.dart';
 
 abstract class WalletPaymentRemoteDataSource {
@@ -32,7 +32,7 @@ abstract class WalletPaymentRemoteDataSource {
     required String paymentMethod,
   });
 
-  Future<List<GoWalletCardModel>> fetchCards();
+  Future<List<Datum>> fetchCards();
 
   Future<GoAddCardResponseModel> goAddCardNew({
     required int amount,
@@ -272,7 +272,7 @@ class WalletPaymentRemoteDataSourceImpl
   }
 
   @override
-  Future<List<GoWalletCardModel>> fetchCards() async {
+  Future<List<Datum>> fetchCards() async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.wallet.fetchCards,
@@ -284,16 +284,11 @@ class WalletPaymentRemoteDataSourceImpl
     if (response.statusCode == 200 && response.data != null) {
       final data = response.data;
       if (data is Map<String, dynamic>) {
-        final resultcode = data['resultcode']?.toString();
-        if (resultcode == '404') {
+        final cardResponse = GoWalletCardModel.fromJson(data);
+        if (cardResponse.resultcode == '404') {
           return [];
         }
-        final list = data['data'];
-        if (list is List) {
-          return list
-              .map((e) => GoWalletCardModel.fromJson(Map<String, dynamic>.from(e)))
-              .toList();
-        }
+        return cardResponse.data ?? [];
       }
     }
 

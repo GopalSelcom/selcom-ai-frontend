@@ -206,10 +206,10 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
             else
               ...List.generate(cards.length, (index) {
                 final card = cards[index];
-                final isVisa = card.maskedCard.startsWith('4');
-                final isMastercard = card.maskedCard.startsWith('5');
+                final isVisa = card.maskedCard?.startsWith('4') ?? false;
+                final bool isMastercard = card.maskedCard?.startsWith('5') ?? false;
                 final brand = isVisa ? 'VISA' : (isMastercard ? 'MC' : 'CARD');
-                final label = card.maskedCard.replaceAll(RegExp(r'[xX]'), '*');
+                final label = (card.maskedCard ?? '').replaceAll(RegExp(r'[xX]'), '*');
 
                 return _buildCardTile(
                   icon: Icons.credit_card,

@@ -58,11 +58,6 @@ class _SplashScreenState extends State<SplashScreen> {
     if (_isSessionAlreadyInvalidated()) return;
 
     if (token != null && token.isNotEmpty) {
-      // Wallet bank instructions need auth — only prefetch for logged-in users.
-      // Unawaited so splash is not blocked; routing guards above/below prevent
-      // navigating to Home if this call (or any other) invalidates the session.
-      unawaited(sl<LocalBankInstructionsService>().fetchInstructions());
-
       await VoipCallkitBridgeService.instance.syncCachedTokenToBackend();
       if (!mounted || _isSessionAlreadyInvalidated()) return;
 

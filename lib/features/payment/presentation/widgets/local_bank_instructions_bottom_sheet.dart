@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -27,7 +28,8 @@ class LocalBankInstructionsBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final instructionsData = sl<LocalBankInstructionsService>().instructionsData;
+    final instructionsData =
+        sl<LocalBankInstructionsService>().instructionsData;
     if (instructionsData == null) {
       return AppStandardBottomSheet(
         title: AppStrings.addMoneyToWallet.tr,
@@ -51,7 +53,9 @@ class LocalBankInstructionsBottomSheet extends StatelessWidget {
       );
     }
 
-    final model = LocalBankInstructions.fromJson(Map<String, dynamic>.from(instructionsData));
+    final model = LocalBankInstructions.fromJson(
+      Map<String, dynamic>.from(instructionsData),
+    );
     final locale = Get.locale?.languageCode ?? 'en';
 
     if (model.items.isEmpty) {
@@ -169,6 +173,9 @@ class LocalBankInstructionsBottomSheet extends StatelessWidget {
                                     await Clipboard.setData(
                                       ClipboardData(text: accountNumber),
                                     );
+                                    if(Platform.isIOS){
+                                      AppDialogs.showSuccessDialog(message: "${formatWalletAccountNumber(accountNumber)} copied",confirmLabel: 'Okay');
+                                    }
                                   },
                               ),
                               TextSpan(text: after),

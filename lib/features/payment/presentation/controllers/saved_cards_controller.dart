@@ -23,16 +23,17 @@ class SavedCardsController extends GetxController {
   final step = SavedCardsStep.cardList.obs;
   final isLoading = false.obs;
   final isSubmitting = false.obs;
-  final cards = <GoWalletCardModel>[].obs;
-  final selectedCard = Rxn<GoWalletCardModel>();
+  final cards = <Datum>[].obs;
+  final selectedCard = Rxn<Datum>();
   final amountError = RxnString();
   final apiError = RxnString();
 
-  final TextEditingController amountController = TextEditingController();
+  TextEditingController amountController = TextEditingController();
 
   @override
   void onInit() {
     super.onInit();
+    amountController = TextEditingController();
     loadCards();
   }
 
@@ -70,7 +71,7 @@ class SavedCardsController extends GetxController {
     );
   }
 
-  void selectCard(GoWalletCardModel card) {
+  void selectCard(Datum card) {
     selectedCard.value = card;
     step.value = SavedCardsStep.amountEntry;
     amountError.value = null;
@@ -125,7 +126,7 @@ class SavedCardsController extends GetxController {
         (response) async {
           final payResult = await _walletRepository.goPayByExistingCard(
             transId: response.transId,
-            cardToken: selectedCard.value!.cardToken,
+            cardToken: selectedCard.value!.cardToken ?? '',
           );
 
           payResult.fold(

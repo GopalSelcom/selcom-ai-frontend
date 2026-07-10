@@ -154,10 +154,10 @@ class SavedCardsBottomSheet extends GetView<SavedCardsController> {
           else
             ...List.generate(cards.length, (index) {
               final card = cards[index];
-              final bool isVisa = card.maskedCard.startsWith('4');
-              final bool isMastercard = card.maskedCard.startsWith('5');
+              final bool isVisa = card.maskedCard?.startsWith('4') ?? false;
+              final bool isMastercard = card.maskedCard?.startsWith('5') ?? false;
               final String brand = isVisa ? 'VISA' : (isMastercard ? 'MC' : 'CARD');
-              final String label = card.maskedCard.replaceAll(RegExp(r'[xX]'), '*');
+              final String label = (card.maskedCard ?? '').replaceAll(RegExp(r'[xX]'), '*');
 
               return _buildCardTile(
                 brand: brand,

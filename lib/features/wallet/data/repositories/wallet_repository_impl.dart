@@ -18,7 +18,7 @@ import '../datasources/wallet_remote_data_source.dart';
 import '../models/go_email_card_statement_models.dart';
 import '../models/go_wallet_card_model.dart';
 import '../models/go_add_card_response_model.dart';
-import '../models/go_init_card_session_response_model.dart';
+import '../models/go_init_card_session_response_model.dart' hide Datum;
 
 class WalletRepositoryImpl implements WalletRepository {
   WalletRepositoryImpl({
@@ -174,7 +174,7 @@ class WalletRepositoryImpl implements WalletRepository {
   }) => _selcomPesaTopupRemoteDataSource.checkTopUpStatus(transid: transid);
 
   @override
-  Future<Either<Failure, List<GoWalletCardModel>>> fetchCards() async {
+  Future<Either<Failure, List<Datum>>> fetchCards() async {
     try {
       final result = await _paymentRemoteDataSource.fetchCards();
       return Right(result);

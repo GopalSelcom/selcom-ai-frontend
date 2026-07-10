@@ -48,6 +48,8 @@ import '../../data/models/places_models.dart';
 import '../../domain/repositories/home_repository.dart';
 import '../screens/recent_locations_screen.dart';
 import 'location_selection_controller.dart';
+import '../../../../core/di/injection_container.dart';
+import '../../../../core/services/local_bank_instructions_service.dart';
 
 class HomeController extends GetxController with WidgetsBindingObserver {
   static const String _currentLocationPlaceId = '__current_location__';
@@ -153,6 +155,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   @override
   void onInit() {
     super.onInit();
+    unawaited(sl<LocalBankInstructionsService>().fetchInstructions());
     homeSheetController.addListener(_onHomeSheetChanged);
     WidgetsBinding.instance.addObserver(this);
     analyticsService.logEvent('home_screen_viewed');
