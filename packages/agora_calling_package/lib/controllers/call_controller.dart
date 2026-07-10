@@ -17,6 +17,7 @@ import '../utils/agora_call_log.dart';
 import '../utils/audio_helper.dart';
 import '../utils/constants.dart';
 import '../utils/permissions_helper.dart';
+import '../utils/push_peer_label.dart';
 
 /// Public surface for both apps. Reactive state powers the screens.
 ///
@@ -432,6 +433,10 @@ class CallController extends GetxController {
     if (cur == null) return;
     if (pushedRide != null && pushedRide.isNotEmpty && pushedRide != cur.rideId) {
       return;
+    }
+    final joinedName = callerNameFromPush(data);
+    if (joinedName != null) {
+      currentCall.value = cur.copyWith(peerDisplayName: joinedName);
     }
     _markConnected();
   }
@@ -980,15 +985,15 @@ class CallController extends GetxController {
     final resolver = config.peerNameResolver;
     if (resolver != null) {
       try {
-        return resolver(data);
+        final resolved = resolver(data).trim();
+        if (resolved.isNotEmpty) return resolved;
       } catch (_) {}
     }
-    final fromPush =
-        (data['caller_name'] ?? data['callerName'])?.toString().trim();
-    if (fromPush != null && fromPush.isNotEmpty) return fromPush;
-    return config.localRole == CallParticipantRole.rider
-        ? 'Your Rider'
-        : 'Your Passenger';
+    return peerLabelFromPush(
+      data,
+      localRole: config.localRole,
+      appName: config.appName,
+    );
   }
 
   void _openActiveCallScreen() {

@@ -95,6 +95,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
         callKitCallIdNamespace: AgoraCallingBootstrap.callKitCallIdNamespace,
         backgroundCallKitAppName:
             AgoraCallingBootstrap.fcmBackgroundCallKitAppName,
+        localRole: CallParticipantRole.rider,
       );
       killStateCallLog('FCM_BG', 'Agora background handler finished type=$type');
     } catch (e, st) {

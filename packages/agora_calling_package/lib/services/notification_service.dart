@@ -11,6 +11,7 @@ import 'package:uuid/uuid.dart';
 import '../models/agora_config.dart';
 import '../utils/agora_call_log.dart';
 import '../utils/constants.dart';
+import '../utils/push_peer_label.dart';
 
 /// Shared CallStyle params for incoming calls (foreground iOS + FCM background).
 ///
@@ -65,6 +66,7 @@ Future<void> _agoraCallingBackgroundHandler(
   String iosCallKitIconName = '',
   String callKitCallIdNamespace = 'agora-call:',
   String backgroundCallKitAppName = 'Selcom Go',
+  CallParticipantRole localRole = CallParticipantRole.rider,
 }) async {
   killStateCallLog(
     'CALLKIT',
@@ -75,6 +77,7 @@ Future<void> _agoraCallingBackgroundHandler(
     iosCallKitIconName: iosCallKitIconName,
     callKitCallIdNamespace: callKitCallIdNamespace,
     backgroundCallKitAppName: backgroundCallKitAppName,
+    localRole: localRole,
   );
   killStateCallLog('CALLKIT', 'agora background handler exited');
 }
@@ -109,12 +112,14 @@ class AgoraCallingNotificationService {
     String iosCallKitIconName = '',
     String callKitCallIdNamespace = 'agora-call:',
     String backgroundCallKitAppName = 'Selcom Go',
+    CallParticipantRole localRole = CallParticipantRole.rider,
   }) =>
       _agoraCallingBackgroundHandler(
         message,
         iosCallKitIconName: iosCallKitIconName,
         callKitCallIdNamespace: callKitCallIdNamespace,
         backgroundCallKitAppName: backgroundCallKitAppName,
+        localRole: localRole,
       );
 
   static String callkitUuidForRide(String rideId, String namespace) {
@@ -287,10 +292,15 @@ class AgoraCallingNotificationService {
     final resolver = _config.peerNameResolver;
     if (resolver != null) {
       try {
-        return resolver(data);
+        final resolved = resolver(data).trim();
+        if (resolved.isNotEmpty) return resolved;
       } catch (_) {}
     }
-    return _defaultPeerLabel(_config.localRole, data);
+    return peerLabelFromPush(
+      data,
+      localRole: _config.localRole,
+      appName: _config.appName,
+    );
   }
 
   static final Map<String, DateTime> _bgPushDedup = <String, DateTime>{};
@@ -320,6 +330,7 @@ class AgoraCallingNotificationService {
     required String iosCallKitIconName,
     required String callKitCallIdNamespace,
     required String backgroundCallKitAppName,
+    CallParticipantRole localRole = CallParticipantRole.rider,
   }) async {
     final type = (message.data['type'] ?? '').toString().toLowerCase();
     killStateCallLog(
@@ -356,9 +367,10 @@ class AgoraCallingNotificationService {
       return;
     }
 
-    final peerLabel = _defaultPeerLabel(
-      _peerRoleFromDataOrFallback(message.data),
+    final peerLabel = peerLabelFromPush(
       message.data,
+      localRole: localRole,
+      appName: backgroundCallKitAppName,
     );
     killStateCallLog(
       'CALLKIT',
@@ -416,18 +428,6 @@ class AgoraCallingNotificationService {
     }
   }
 
-  static String _defaultPeerLabel(
-    CallParticipantRole localRole,
-    Map<String, dynamic> data,
-  ) {
-    final fromPush =
-        (data['caller_name'] ?? data['callerName'])?.toString().trim();
-    if (fromPush != null && fromPush.isNotEmpty) return fromPush;
-    return localRole == CallParticipantRole.rider
-        ? 'Your Rider'
-        : 'Your Passenger';
-  }
-
   static bool _isDuplicatePush(
     String type,
     Map<String, dynamic> data,
@@ -442,16 +442,6 @@ class AgoraCallingNotificationService {
     bucket[key] = now;
     if (last == null) return false;
     return now.difference(last) <= _pushDedupWindow;
-  }
-
-  static CallParticipantRole _peerRoleFromDataOrFallback(
-    Map<String, dynamic> data,
-  ) {
-    final raw =
-        (data['caller_role'] ?? data['callerRole'])?.toString().toLowerCase();
-    if (raw == 'rider') return CallParticipantRole.driver;
-    if (raw == 'driver') return CallParticipantRole.rider;
-    return CallParticipantRole.rider;
   }
 }
 
