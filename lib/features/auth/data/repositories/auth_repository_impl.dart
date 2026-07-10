@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import '../../../../core/data/models/requests/firebase_login_request.dart';
@@ -488,8 +489,8 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, SocialAuthUser>> signInWithFacebook() async {
     try {
-      final facebookToken = await facebookSignInService.signIn();
-      final oauthCredential = FacebookAuthProvider.credential(facebookToken.tokenString);
+      final facebookSignInResult = await facebookSignInService.signIn();
+      final oauthCredential = _buildFacebookCredential(facebookSignInResult);
 
       final userCredential = await _signInOrLinkFacebookCredential(oauthCredential);
       final firebaseUser = userCredential.user;
@@ -524,6 +525,29 @@ class AuthRepositoryImpl implements AuthRepository {
       return const Left(
         FacebookSignInFailure('Facebook Sign-In failed. Please try again.'),
       );
+    }
+  }
+
+  /// Maps flutter_facebook_auth tokens to the Firebase credential shape each type
+  /// requires. Using [FacebookAuthProvider.credential] for a [LimitedToken] JWT
+  /// causes Firebase `invalid-credential` / Facebook error 190 (bad signature).
+  AuthCredential _buildFacebookCredential(FacebookSignInResult result) {
+    final accessToken = result.accessToken;
+
+    switch (accessToken.type) {
+      case AccessTokenType.limited:
+        // iOS Limited Login: OIDC id token + the raw nonce from sign-in.
+        final token = accessToken as LimitedToken;
+        return OAuthCredential(
+          providerId: 'facebook.com',
+          signInMethod: 'oauth',
+          idToken: token.tokenString,
+          rawNonce: result.rawNonce,
+        );
+      case AccessTokenType.classic:
+        // Android / classic iOS: standard Facebook access token.
+        final token = accessToken as ClassicToken;
+        return FacebookAuthProvider.credential(token.tokenString);
     }
   }
 
