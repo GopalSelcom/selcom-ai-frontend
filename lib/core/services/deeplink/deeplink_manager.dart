@@ -3,6 +3,7 @@ import 'package:app_links/app_links.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:selcom_rides_frontend/features/profile/presentation/screens/profile_screen.dart';
+import '../../routes/app_routes.dart';
 
 class DeepLinkManager {
   final _appLinks = AppLinks();
@@ -33,12 +34,12 @@ class DeepLinkManager {
   void _handleRouting(Uri uri) {
     debugPrint("Intercepted deep link URL: $uri");
 
-    // Parse the path (e.g., /pay or /profile)
-    String path = uri.path;
-
-    // Read query parameters (e.g., ?transaction_id=123)
-    Map<String, String> params = uri.queryParameters;
-    Get.to(() => ProfileScreen());
+    // // Parse the path (e.g., /pay or /profile)
+    // String path = uri.path;
+    //
+    // // Read query parameters (e.g., ?transaction_id=123)
+    // Map<String, String> params = uri.queryParameters;
+    // Get.to(() => ProfileScreen());
   }
 
   void dispose() {

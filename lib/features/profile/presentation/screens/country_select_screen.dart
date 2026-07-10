@@ -4,13 +4,20 @@ import 'package:get/get.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../shared/data/countries_phone_data.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/app_text_field.dart';
+import '../../data/models/country_response.dart';
+import '../controllers/add_card_controller.dart';
 
 class CountrySelectScreen extends StatefulWidget {
-  final CountryData? selectedCountry;
-  const CountrySelectScreen({super.key, this.selectedCountry});
+  final List<CountriesResponse> countries;
+  final CountriesResponse? selectedCountry;
+
+  const CountrySelectScreen({
+    super.key,
+    required this.countries,
+    this.selectedCountry,
+  });
 
   @override
   State<CountrySelectScreen> createState() => _CountrySelectScreenState();
@@ -19,6 +26,14 @@ class CountrySelectScreen extends StatefulWidget {
 class _CountrySelectScreenState extends State<CountrySelectScreen> {
   final TextEditingController _searchController = TextEditingController();
   final RxString _searchQuery = ''.obs;
+  late final AddCardController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = Get.find<AddCardController>();
+    controller.fetchCountries();
+  }
 
   @override
   void dispose() {
@@ -26,15 +41,18 @@ class _CountrySelectScreenState extends State<CountrySelectScreen> {
     super.dispose();
   }
 
-  List<CountryData> get _filteredCountries {
+  List<CountriesResponse> get _filteredCountries {
     final query = _searchQuery.value.trim().toLowerCase();
     if (query.isEmpty) {
-      return Countries.all;
+      return widget.countries;
     }
-    return Countries.all.where((country) {
-      return country.name.toLowerCase().contains(query) ||
-          country.code.toLowerCase().contains(query) ||
-          country.dialCode.toLowerCase().contains(query);
+    return widget.countries.where((country) {
+      final name = country.name ?? '';
+      final code = country.iso2Code ?? '';
+      final phone = country.phoneCode ?? '';
+      return name.toLowerCase().contains(query) ||
+          code.toLowerCase().contains(query) ||
+          phone.toLowerCase().contains(query);
     }).toList();
   }
 
@@ -83,6 +101,14 @@ class _CountrySelectScreenState extends State<CountrySelectScreen> {
                   Expanded(
                     child: Obx(
                       () {
+                        if (controller.isLoadingCountries.value) {
+                          return const Center(
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryButton),
+                            ),
+                          );
+                        }
+
                         final list = _filteredCountries;
                         if (list.isEmpty) {
                           return Center(
@@ -103,18 +129,14 @@ class _CountrySelectScreenState extends State<CountrySelectScreen> {
                           ),
                           itemBuilder: (context, index) {
                             final country = list[index];
-                            final isSelected = widget.selectedCountry?.code == country.code;
+                            final isSelected = widget.selectedCountry?.id == country.id;
                             return ListTile(
                               contentPadding: EdgeInsets.symmetric(
-                                horizontal: 8.w,
+                                horizontal: 16.w,
                                 vertical: 4.h,
                               ),
-                              leading: Text(
-                                country.flag,
-                                style: TextStyle(fontSize: 24.sp),
-                              ),
                               title: Text(
-                                country.name,
+                                country.name ?? '',
                                 style: AppTextStyles.body.copyWith(
                                   fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                                   color: isSelected ? AppColors.primaryButton : AppColors.textHeading,
@@ -124,7 +146,7 @@ class _CountrySelectScreenState extends State<CountrySelectScreen> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
-                                    country.code,
+                                    country.iso2Code ?? '',
                                     style: AppTextStyles.hint.copyWith(
                                       fontWeight: FontWeight.w600,
                                       fontSize: 13.sp,

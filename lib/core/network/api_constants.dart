@@ -57,6 +57,11 @@ class Params {
   static const String currency = "currency";
   static const String orderId = "order_id";
   static const String transId = "transid";
+  static String CARD_NUMBER = "card_number";
+  static String CARD_TYPE = "card_type";
+  static String CARD_CVN = "card_cvn";
+  static String CARD_EXPIRY_DATE = "card_expiry_date";
+  static String app_referal_code = "app_referal_code";
 }
 
 /// Standard HTTP status/result codes for API response handling.

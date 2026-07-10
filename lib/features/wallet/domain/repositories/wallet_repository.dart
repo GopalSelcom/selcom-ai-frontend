@@ -72,7 +72,7 @@ abstract class WalletRepository {
     required String cardToken,
   });
 
-  Future<Either<Failure, GoInitCardSessionResponseModel>> goInitCardSession({
+  Future<Either<Failure, InitSessionCardModel>> goInitCardSession({
     required int amount,
     required int newCard,
     required String email,

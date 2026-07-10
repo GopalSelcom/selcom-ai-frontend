@@ -39,18 +39,25 @@ class SelcomPesaTopupRemoteDataSourceImpl
       ),
     );
 
-    if (response.statusCode == 200 && response.data != null) {
-      final data = response.data;
-      if (data is Map<String, dynamic>) {
-        final result = _parseSuccess(data, requireShortCode: requireShortCode);
-        if (result != null) {
-          return result;
-        }
+    if (response.statusCode == 200 && response.data is Map<String, dynamic>) {
+      final data = Map<String, dynamic>.from(response.data as Map);
+      final statusCode = data['status_code'];
+      if (statusCode is int && statusCode != 200) {
+        throw WalletPaymentException(
+          _messageFromResponse(data) ?? AppStrings.tanQrPaymentRequestFailed,
+        );
       }
-      throw WalletPaymentException(
-        _messageFromResponse(response.data) ??
-            AppStrings.tanQrPaymentRequestFailed,
-      );
+
+      final result = SelcomPesaTopupResult.fromJson(data);
+      if (result.transid.trim().isEmpty) {
+        throw WalletPaymentException(AppStrings.tanQrPaymentRequestFailed);
+      }
+
+      if (requireShortCode && result.shortCode.trim().isEmpty) {
+        throw WalletPaymentException(AppStrings.tanQrPaymentRequestFailed);
+      }
+
+      return result;
     }
 
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
@@ -151,26 +158,7 @@ class SelcomPesaTopupRemoteDataSourceImpl
     throw WalletPaymentException(AppStrings.tanQrPaymentRequestFailed);
   }
 
-  SelcomPesaTopupResult? _parseSuccess(
-    Map<String, dynamic> data, {
-    required bool requireShortCode,
-  }) {
-    final statusCode = data['status_code'];
-    if (statusCode is int && statusCode != 200) {
-      return null;
-    }
 
-    final result = SelcomPesaTopupResult.fromJson(data);
-    if (result.transid.trim().isEmpty) {
-      return null;
-    }
-
-    if (requireShortCode && result.shortCode.trim().isEmpty) {
-      return null;
-    }
-
-    return result;
-  }
 
   String? _messageFromResponse(dynamic data) {
     if (data is! Map) return null;

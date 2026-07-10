@@ -1,3 +1,5 @@
+import 'package:selcom_rides_frontend/features/profile/data/models/sp_link_response.dart';
+
 import '../../../../shared/utils/selcom_pesa_phone_utils.dart';
 import '../../../payment/domain/wallet_payment_phone_country.dart';
 import '../../data/datasources/selcom_pesa_link_remote_data_source.dart';
@@ -14,7 +16,7 @@ class SelcomPesaLinkRepositoryImpl implements SelcomPesaLinkRepository {
   final SelcomPesaLinkRemoteDataSource _remoteDataSource;
 
   @override
-  Future<SelcomPesaLinkedAccountsResult> sendLinkRequest({
+  Future<SpLinkResponse> sendLinkRequest({
     required String countryCode,
     required String mobileNumber,
   }) {
@@ -41,6 +43,15 @@ class SelcomPesaLinkRepositoryImpl implements SelcomPesaLinkRepository {
     return _remoteDataSource.requestUnlink(
       SelcomPesaRequestUnlinkRequest(
         spMobileNumber: normalizeTzMobileForSelcomPesa(mobileNumber),
+      ),
+    );
+  }
+
+  @override
+  Future<void> setDefaultAccount({required String mobileNumber}) {
+    return _remoteDataSource.setDefaultAccount(
+      SelcomPesaSetDefaultRequest(
+        spMobileNumber: mobileNumber,
       ),
     );
   }

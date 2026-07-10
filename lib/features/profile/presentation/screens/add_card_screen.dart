@@ -7,7 +7,6 @@ import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../shared/data/countries_phone_data.dart';
 import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
@@ -17,6 +16,8 @@ import 'country_select_screen.dart';
 import 'state_select_screen.dart';
 import '../../../../shared/widgets/phone_country_picker_chip.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
+import '../../data/models/country_response.dart';
+import '../../data/models/state_model.dart';
 
 class AddCardScreen extends StatefulWidget {
   const AddCardScreen({super.key});
@@ -240,87 +241,88 @@ class _AddCardScreenState extends State<AddCardScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Country Picker Dropdown field
-                                GestureDetector(
-                                  onTap: () async {
-                                    final result = await Get.to(() => CountrySelectScreen(
-                                          selectedCountry: controller.selectedCountry.value,
-                                        ));
-                                    if (result != null && result is CountryData) {
-                                      controller.selectCountry(result);
-                                    }
-                                  },
-                                  child: AbsorbPointer(
-                                    child: Obx(
-                                      () => AppTextField(
-                                        label: "Country",
-                                        hintText: "Select Country",
-                                        controller: TextEditingController(
-                                          text: controller.selectedCountry.value != null
-                                              ? '${controller.selectedCountry.value!.flag}  ${controller.selectedCountry.value!.name}'
-                                              : '',
-                                        ),
-                                        errorText: controller.countryError.value,
-                                        readOnly: true,
-                                        suffixIcon: Icon(
-                                          Icons.arrow_drop_down,
-                                          color: AppColors.textMutedStrong,
-                                          size: 26.h,
-                                        ),
-                                        fontSize: 15.h,
-                                        fontWeight: FontWeight.w500,
-                                        textFieldBackgroundColor: AppColors.pageBackground,
-                                        textColor: AppColors.textHeading,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-
-                                // State Picker Dropdown field (Visible only when Country is selected)
-                                Obx(() {
-                                  if (controller.selectedCountry.value == null) {
-                                    return const SizedBox.shrink();
-                                  }
-                                  return Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      SizedBox(height: 12.h),
-                                      GestureDetector(
-                                        onTap: () async {
-                                          final result = await Get.to(() => StateSelectScreen(
-                                                countryCode: controller.selectedCountry.value!.code,
-                                                selectedState: controller.selectedState.value,
-                                              ));
-                                          if (result != null && result is String) {
-                                            controller.selectState(result);
-                                          }
-                                        },
-                                        child: AbsorbPointer(
-                                          child: Obx(
-                                            () => AppTextField(
-                                              label: "State",
-                                              hintText: "Select State",
-                                              controller: TextEditingController(
-                                                text: controller.selectedState.value ?? '',
-                                              ),
-                                              errorText: controller.stateError.value,
-                                              readOnly: true,
-                                              suffixIcon: Icon(
-                                                Icons.arrow_drop_down,
-                                                color: AppColors.textMutedStrong,
-                                                size: 26.h,
-                                              ),
-                                              fontSize: 15.h,
-                                              fontWeight: FontWeight.w500,
-                                              textFieldBackgroundColor: AppColors.pageBackground,
-                                              textColor: AppColors.textHeading,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                }),
+                                 // Country Picker Dropdown field
+                                 GestureDetector(
+                                   onTap: () async {
+                                     final result = await Get.to(() => CountrySelectScreen(
+                                           countries: controller.countriesList,
+                                           selectedCountry: controller.selectedCountry.value,
+                                         ));
+                                     if (result != null && result is CountriesResponse) {
+                                       controller.selectCountry(result);
+                                     }
+                                   },
+                                   child: AbsorbPointer(
+                                     child: Obx(
+                                       () => AppTextField(
+                                         label: "Country",
+                                         hintText: "Select Country",
+                                         controller: TextEditingController(
+                                           text: controller.selectedCountry.value != null
+                                               ? (controller.selectedCountry.value!.name ?? '').trim()
+                                               : '',
+                                         ),
+                                         errorText: controller.countryError.value,
+                                         readOnly: true,
+                                         suffixIcon: Icon(
+                                           Icons.arrow_drop_down,
+                                           color: AppColors.textMutedStrong,
+                                           size: 26.h,
+                                         ),
+                                         fontSize: 15.h,
+                                         fontWeight: FontWeight.w500,
+                                         textFieldBackgroundColor: AppColors.pageBackground,
+                                         textColor: AppColors.textHeading,
+                                       ),
+                                     ),
+                                   ),
+                                 ),
+ 
+                                 // State Picker Dropdown field (Visible once country is selected)
+                                 Obx(() {
+                                   if (controller.selectedCountry.value == null) {
+                                     return const SizedBox.shrink();
+                                   }
+                                   return Column(
+                                     crossAxisAlignment: CrossAxisAlignment.start,
+                                     children: [
+                                       SizedBox(height: 12.h),
+                                       GestureDetector(
+                                         onTap: () async {
+                                           final result = await Get.to(() => StateSelectScreen(
+                                                 states: controller.statesList,
+                                                 selectedState: controller.selectedStateResponse.value,
+                                               ));
+                                           if (result != null && result is StateResponse) {
+                                             controller.selectState(result);
+                                           }
+                                         },
+                                         child: AbsorbPointer(
+                                           child: Obx(
+                                             () => AppTextField(
+                                               label: "State",
+                                               hintText: "Select State",
+                                               controller: TextEditingController(
+                                                 text: controller.selectedState.value ?? '',
+                                               ),
+                                               errorText: controller.stateError.value,
+                                               readOnly: true,
+                                               suffixIcon: Icon(
+                                                 Icons.arrow_drop_down,
+                                                 color: AppColors.textMutedStrong,
+                                                 size: 26.h,
+                                               ),
+                                               fontSize: 15.h,
+                                               fontWeight: FontWeight.w500,
+                                               textFieldBackgroundColor: AppColors.pageBackground,
+                                               textColor: AppColors.textHeading,
+                                             ),
+                                           ),
+                                         ),
+                                       ),
+                                     ],
+                                   );
+                                 }),
                                 SizedBox(height: 12.h),
 
                                 // Phone number field with country prefix picker

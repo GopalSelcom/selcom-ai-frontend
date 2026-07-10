@@ -14,6 +14,7 @@ class FacebookSignInService {
     try {
       final LoginResult result = await FacebookAuth.instance.login(
         permissions: ['public_profile', 'email'],
+        loginBehavior: LoginBehavior.nativeWithFallback,
       );
 
       switch (result.status) {

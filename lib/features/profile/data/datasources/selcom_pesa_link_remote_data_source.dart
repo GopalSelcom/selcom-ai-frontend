@@ -1,3 +1,5 @@
+import 'package:selcom_rides_frontend/features/profile/data/models/sp_link_response.dart';
+
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
@@ -8,7 +10,7 @@ import '../../domain/entities/selcom_pesa_linked_account_entity.dart';
 import '../models/selcom_pesa_link_models.dart';
 
 abstract class SelcomPesaLinkRemoteDataSource {
-  Future<SelcomPesaLinkedAccountsResult> sendLinkRequest(
+  Future<SpLinkResponse> sendLinkRequest(
     SelcomPesaSendLinkRequest request,
   );
 
@@ -21,6 +23,8 @@ abstract class SelcomPesaLinkRemoteDataSource {
   ]);
 
   Future<void> requestUnlink(SelcomPesaRequestUnlinkRequest request);
+
+  Future<void> setDefaultAccount(SelcomPesaSetDefaultRequest request);
 }
 
 class SelcomPesaLinkException implements Exception {
@@ -37,7 +41,7 @@ class SelcomPesaLinkRemoteDataSourceImpl
   SelcomPesaLinkRemoteDataSourceImpl();
 
   @override
-  Future<SelcomPesaLinkedAccountsResult> sendLinkRequest(
+  Future<SpLinkResponse> sendLinkRequest(
     SelcomPesaSendLinkRequest request,
   ) async {
     final linkHeaders = await selcomPesaLinkRequestHeaders();
@@ -50,9 +54,16 @@ class SelcomPesaLinkRemoteDataSourceImpl
         errorPresentationType: ErrorPresentationType.none,
       ),
     );
-    if (response.statusCode == 200) {
-      final data = selcomPesaLinkedAccountsResultFromJson(response.data);
-      return data;
+    if (response.statusCode == 200 && response.data is Map<String, dynamic>) {
+      final data = Map<String, dynamic>.from(response.data as Map);
+      final statusCode = data['status_code'];
+      if (statusCode is int && statusCode != 200) {
+        throw SelcomPesaLinkException(
+          _messageFromResponse(data) ??
+              AppStrings.somethingWentWrongPleaseTryAgain,
+        );
+      }
+      return SpLinkResponse.fromJson(data);
     }
 
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
@@ -92,7 +103,7 @@ class SelcomPesaLinkRemoteDataSourceImpl
               AppStrings.somethingWentWrongPleaseTryAgain,
         );
       }
-      return SelcomPesaLinkedAccountsResult(message: "Sucess",statusCode: 200,data: Data.fromJson(data['data']));
+      return SelcomPesaLinkedAccountsResult.fromJson(data);
     }
 
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
@@ -111,6 +122,47 @@ class SelcomPesaLinkRemoteDataSourceImpl
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.selcomPesa.requestUnlink,
+        method: ApiMethod.post,
+        body: request.toJson(),
+        headers: linkHeaders,
+        errorPresentationType: ErrorPresentationType.none,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data is Map<String, dynamic>) {
+      final data = Map<String, dynamic>.from(response.data as Map);
+      final statusCode = data['status_code'];
+      if (statusCode is int && statusCode != 200) {
+        throw SelcomPesaLinkException(
+          _messageFromResponse(data) ??
+              AppStrings.somethingWentWrongPleaseTryAgain,
+        );
+      }
+      return;
+    }
+    if(response.statusCode==400){
+      throw SelcomPesaLinkException(
+        _messageFromResponse(response.data) ??
+            AppStrings.somethingWentWrongPleaseTryAgain,
+      );
+    }
+
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      throw SelcomPesaLinkException(
+        _messageFromResponse(response.data) ??
+            AppStrings.somethingWentWrongPleaseTryAgain,
+      );
+    }
+
+    throw SelcomPesaLinkException(AppStrings.somethingWentWrongPleaseTryAgain);
+  }
+
+  @override
+  Future<void> setDefaultAccount(SelcomPesaSetDefaultRequest request) async {
+    final linkHeaders = await selcomPesaLinkRequestHeaders();
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.selcomPesa.setDefaultAccount,
         method: ApiMethod.post,
         body: request.toJson(),
         headers: linkHeaders,

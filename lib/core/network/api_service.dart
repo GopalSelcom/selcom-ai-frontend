@@ -645,6 +645,14 @@ class ApiService {
       );
     }
 
+    if (statusCode == 404) {
+      return Response(
+        requestOptions: e.requestOptions,
+        statusCode: statusCode,
+        data: e.response?.data ?? {'message': e.response?.data['message']??AppStrings.badRequest.tr},
+      );
+    }
+
     if (statusCode == 405) {
       return Response(
         requestOptions: e.requestOptions,

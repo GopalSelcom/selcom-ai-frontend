@@ -6,101 +6,16 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/app_text_field.dart';
-
-class CountryStates {
-  static const Map<String, List<String>> _statesMap = {
-    'TZ': [
-      'Dar es Salaam',
-      'Dodoma',
-      'Arusha',
-      'Mwanza',
-      'Kilimanjaro',
-      'Zanzibar',
-      'Tanga',
-      'Morogoro',
-      'Iringa',
-      'Mbeya',
-      'Kigoma',
-      'Tabora',
-      'Ruvuma',
-      'Shinyanga',
-      'Kagera',
-      'Mara',
-      'Singida',
-      'Manyara',
-      'Lindi',
-      'Mtwara',
-      'Pwani',
-      'Rukwa',
-      'Katavi',
-      'Njombe',
-      'Geita',
-      'Simiyu',
-      'Songwe'
-    ],
-    'US': [
-      'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado',
-      'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho',
-      'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana',
-      'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota',
-      'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada',
-      'New Hampshire', 'New Jersey', 'New Mexico', 'New York',
-      'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon',
-      'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota',
-      'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington',
-      'West Virginia', 'Wisconsin', 'Wyoming'
-    ],
-    'IN': [
-      'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
-      'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand',
-      'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur',
-      'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan',
-      'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh',
-      'Uttarakhand', 'West Bengal', 'Delhi'
-    ],
-    'GB': [
-      'England', 'Scotland', 'Wales', 'Northern Ireland'
-    ],
-    'KE': [
-      'Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret', 'Kiambu', 'Kakamega',
-      'Machakos', 'Nyeri', 'Kilifi', 'Kericho', 'Uasin Gishu', 'Kajiado',
-      'Laikipia', 'Trans Nzoia'
-    ],
-    'UG': [
-      'Central Region (Kampala)', 'Eastern Region', 'Northern Region', 'Western Region'
-    ],
-    'CA': [
-      'Alberta', 'British Columbia', 'Manitoba', 'New Brunswick',
-      'Newfoundland and Labrador', 'Nova Scotia', 'Ontario',
-      'Prince Edward Island', 'Quebec', 'Saskatchewan'
-    ]
-  };
-
-  static List<String> getStatesForCountry(String countryCode) {
-    final code = countryCode.toUpperCase();
-    if (_statesMap.containsKey(code)) {
-      return _statesMap[code]!;
-    }
-    // Fallback: general regions
-    return [
-      'Central Region',
-      'Northern Region',
-      'Eastern Region',
-      'Western Region',
-      'Southern Region',
-      'State Region A',
-      'State Region B',
-      'State Region C',
-    ];
-  }
-}
+import '../../data/models/state_model.dart';
+import '../controllers/add_card_controller.dart';
 
 class StateSelectScreen extends StatefulWidget {
-  final String countryCode;
-  final String? selectedState;
+  final List<StateResponse> states;
+  final StateResponse? selectedState;
+
   const StateSelectScreen({
     super.key,
-    required this.countryCode,
+    required this.states,
     this.selectedState,
   });
 
@@ -111,12 +26,12 @@ class StateSelectScreen extends StatefulWidget {
 class _StateSelectScreenState extends State<StateSelectScreen> {
   final TextEditingController _searchController = TextEditingController();
   final RxString _searchQuery = ''.obs;
-  late final List<String> _allStates;
+  late final AddCardController controller;
 
   @override
   void initState() {
     super.initState();
-    _allStates = CountryStates.getStatesForCountry(widget.countryCode);
+    controller = Get.find<AddCardController>();
   }
 
   @override
@@ -125,13 +40,13 @@ class _StateSelectScreenState extends State<StateSelectScreen> {
     super.dispose();
   }
 
-  List<String> get _filteredStates {
+  List<StateResponse> get _filteredStates {
     final query = _searchQuery.value.trim().toLowerCase();
     if (query.isEmpty) {
-      return _allStates;
+      return widget.states;
     }
-    return _allStates
-        .where((state) => state.toLowerCase().contains(query))
+    return widget.states
+        .where((state) => (state.name ?? '').toLowerCase().contains(query))
         .toList();
   }
 
@@ -180,6 +95,14 @@ class _StateSelectScreenState extends State<StateSelectScreen> {
                   Expanded(
                     child: Obx(
                       () {
+                        if (controller.isLoadingStates.value) {
+                          return const Center(
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryButton),
+                            ),
+                          );
+                        }
+
                         final list = _filteredStates;
                         if (list.isEmpty) {
                           return Center(
@@ -199,15 +122,15 @@ class _StateSelectScreenState extends State<StateSelectScreen> {
                             height: 1,
                           ),
                           itemBuilder: (context, index) {
-                            final stateName = list[index];
-                            final isSelected = widget.selectedState == stateName;
+                            final state = list[index];
+                            final isSelected = widget.selectedState?.id == state.id;
                             return ListTile(
                               contentPadding: EdgeInsets.symmetric(
                                 horizontal: 16.w,
                                 vertical: 4.h,
                               ),
                               title: Text(
-                                stateName,
+                                state.name ?? '',
                                 style: AppTextStyles.body.copyWith(
                                   fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                                   color: isSelected ? AppColors.primaryButton : AppColors.textHeading,
@@ -220,7 +143,7 @@ class _StateSelectScreenState extends State<StateSelectScreen> {
                                     )
                                   : null,
                               onTap: () {
-                                Get.back(result: stateName);
+                                Get.back(result: state);
                               },
                             );
                           },

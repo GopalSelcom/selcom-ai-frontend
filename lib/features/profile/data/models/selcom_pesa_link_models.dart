@@ -26,6 +26,16 @@ class SelcomPesaRequestUnlinkRequest {
   };
 }
 
+class SelcomPesaSetDefaultRequest {
+  const SelcomPesaSetDefaultRequest({required this.spMobileNumber});
+
+  final String spMobileNumber;
+
+  Map<String, dynamic> toJson() => {
+    'sp_mobile_number': spMobileNumber.trim(),
+  };
+}
+
 class SelcomPesaMainBalanceRequest {
   const SelcomPesaMainBalanceRequest({
     this.mobileNumber,

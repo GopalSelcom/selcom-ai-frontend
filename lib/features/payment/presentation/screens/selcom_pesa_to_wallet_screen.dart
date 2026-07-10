@@ -9,11 +9,11 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
+import '../../../../shared/widgets/app_skeleton_loader.dart';
 import '../../../profile/data/models/selcom_pesa_link_models.dart';
-import '../../../profile/domain/entities/selcom_pesa_linked_account_entity.dart';
 import '../../../profile/presentation/controllers/payment_methods_controller.dart';
+import '../widgets/selcom_pesa_account_action_bottom_sheet.dart';
 import '../widgets/selcom_pesa_another_number_bottom_sheet.dart';
 import '../widgets/selcom_pesa_self_bottom_sheet.dart';
 
@@ -108,6 +108,20 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
   }
 
   Widget _linkedAccountsHorizontalList(PaymentMethodsController paymentController) {
+    if (paymentController.isLoadingLinkedAccount.value) {
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const NeverScrollableScrollPhysics(),
+        child: Row(
+          children: [
+            AppSkeletonLoader(width: 280.w, height: 110.h, borderRadius: 16.r),
+            SizedBox(width: 12.w),
+            AppSkeletonLoader(width: 280.w, height: 110.h, borderRadius: 16.r),
+          ],
+        ),
+      );
+    }
+
     final accounts = paymentController.linkedAccountsList;
     if (accounts.isEmpty) {
       return _selcomCard(paymentController);
@@ -175,7 +189,6 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
     Account account,
   ) {
     final phoneDisplay = paymentMethodsController.phoneDisplayFor(account);
-    final isSelected = paymentMethodsController.isLinkedAccountSelected(account);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -192,7 +205,7 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
                 ),
               ),
             ),
-            if (isSelected) ...[
+            if (account.isDefault ?? false) ...[
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                 decoration: BoxDecoration(
@@ -211,17 +224,12 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
               SizedBox(width: 8.w),
             ],
             GestureDetector(
-              onTap: () {
-                AppDialogs.showConfirmationDialog(
-                  title: AppStrings.removeAccountTitle.tr,
-                  message: AppStrings.removeAccountMessage.tr,
-                  confirmText: AppStrings.removeLabel.tr,
-                  confirmColor: AppColors.brandRed,
-                  onConfirm: () => unawaited(
-                    paymentMethodsController.unlinkLinkedAccount(account),
-                  ),
-                );
-              },
+              onTap: () => unawaited(
+                SelcomPesaAccountActionBottomSheet.show(
+                  account: account,
+                  paymentMethodsController: paymentMethodsController,
+                ),
+              ),
               behavior: HitTestBehavior.opaque,
               child: Icon(
                 Icons.more_vert,
@@ -270,7 +278,7 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
                       ),
                 behavior: HitTestBehavior.opaque,
                 child: Padding(
-                  padding: EdgeInsets.all(4.w),
+                  padding: EdgeInsets.all(10.w),
                   child: loading
                       ? SizedBox(
                           width: 16.w,

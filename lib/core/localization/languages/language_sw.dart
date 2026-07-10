@@ -808,6 +808,9 @@ class LanguageSw extends Languages {
     'add_new_card_text': '+ Ongeza kadi mpya',
     'amount_is_required': 'Kiasi kinahitajika',
     'enter_valid_amount': 'Tafadhali ingiza kiasi sahihi',
+    'set_as_default': 'Weka kama Chaguomsingi',
+    'set_as_default_confirm': 'Weka hii kama akaunti yako ya chaguomsingi',
+    'default_account_set_successfully': 'Akaunti ya chaguomsingi imesasishwa kwa mafanikio',
   };
 
   @override

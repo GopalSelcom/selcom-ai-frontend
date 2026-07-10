@@ -17,6 +17,7 @@ import '../../../payment/domain/wallet_payment_phone_country.dart';
 import '../../../wallet/domain/usecases/get_wallet_summary_usecase.dart';
 import '../../data/datasources/selcom_pesa_link_remote_data_source.dart';
 import '../../data/models/selcom_pesa_link_models.dart';
+import '../../data/models/sp_link_response.dart';
 import '../../domain/entities/payment_card.dart';
 import '../../domain/entities/selcom_pesa_linked_account_entity.dart';
 import '../../domain/repositories/selcom_pesa_link_repository.dart';
@@ -71,6 +72,7 @@ class PaymentMethodsController extends GetxController {
   final RxBool canContinueSelcomPhone = false.obs;
   final RxBool isLinkRequestSubmitting = false.obs;
   final RxBool isUnlinkSubmitting = false.obs;
+  final RxBool isSetDefaultSubmitting = false.obs;
 
   // --- Per-card balance reveal (POST main_balance, auto-hide after 30s) ---
 
@@ -234,6 +236,41 @@ class PaymentMethodsController extends GetxController {
     }
   }
 
+  Future<void> setDefaultAccount(Account account) async {
+    if (isSetDefaultSubmitting.value) return;
+
+    isSetDefaultSubmitting.value = true;
+    Loader.instance.show();
+
+    try {
+      await _selcomPesaLinkRepository.setDefaultAccount(
+        mobileNumber:(account.spCountryCode??"") + (account.spMobileNumber ?? ""),
+      );
+
+      await loadLinkedAccounts();
+
+      await Loader.instance.hideAsync();
+      await WidgetsBinding.instance.endOfFrame;
+
+      AppDialogs.showSuccessDialog(
+        title: AppStrings.selcomPesa.tr,
+        message: AppStrings.defaultAccountSetSuccessfully.tr,
+      );
+    } on SelcomPesaLinkException catch (e) {
+      await Loader.instance.hideAsync();
+      AppDialogs.showErrorDialog(message: e.message.tr);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      await Loader.instance.hideAsync();
+      AppDialogs.showErrorDialog(
+        message: AppStrings.somethingWentWrongPleaseTryAgain.tr,
+      );
+    } finally {
+      isSetDefaultSubmitting.value = false;
+      Loader.instance.hide();
+    }
+  }
+
 
   /// Stable key for selection/balance maps — prefers server `id`, else mobile digits.
   String linkedAccountKey(Account account) {
@@ -254,7 +291,6 @@ class PaymentMethodsController extends GetxController {
   Future<void> revealLinkedAccountBalance(
     Account account,
   ) async {
-    if (!(account.status=="LINKED")) return;
 
     final key = linkedAccountKey(account);
     if (_linkedBalanceLoading[key] == true) return;
@@ -263,9 +299,6 @@ class PaymentMethodsController extends GetxController {
     _linkedBalanceLoading.refresh();
 
     try {
-      final countryCode = (account.goCountryCode??"").trim().isNotEmpty
-          ? (account.goCountryCode??"").trim()
-          : WalletPaymentPhoneCountry.dialCodeDigits;
       final result = await _selcomPesaLinkRepository.getMainBalance(
         mobileNumber: account.spMobileNumber??"",
         countryCode: account.spCountryCode??"",
@@ -415,8 +448,8 @@ class PaymentMethodsController extends GetxController {
       await Loader.instance.hideAsync();
       await WidgetsBinding.instance.endOfFrame;
 
-      await loadLinkedAccounts();
-      // await _handleSendLinkRequestResult(result, phoneDisplay);
+      // await loadLinkedAccounts();
+      await _handleSendLinkRequestResult(result.data, phoneDisplay);
     } on SelcomPesaLinkException catch (e) {
       await Loader.instance.hideAsync();
       AppDialogs.showErrorDialog(message: e.message.tr);
@@ -434,12 +467,12 @@ class PaymentMethodsController extends GetxController {
 
   /// LINKED → already-linked message; PENDING/other → request-sent message (no SP app open).
   Future<void> _handleSendLinkRequestResult(
-    SelcomPesaLinkedAccountEntity account,
+    LinkData? account,
     String phoneDisplay,
   ) async {
     final params = {'phoneNumber': phoneDisplay};
 
-    if (account.isLinked) {
+    if (!(account?.isNewRequest??false)) {
       AppDialogs.showSuccessDialog(
         title: AppStrings.selcomPesa.tr,
         message: AppStrings.selcomPesaAlreadyLinkedMessage.trParams(params),

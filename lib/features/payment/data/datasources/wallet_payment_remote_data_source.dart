@@ -44,7 +44,7 @@ abstract class WalletPaymentRemoteDataSource {
     required String cardToken,
   });
 
-  Future<GoInitCardSessionResponseModel> goInitCardSession({
+  Future<InitSessionCardModel> goInitCardSession({
     required int amount,
     required int newCard,
     required String email,
@@ -378,7 +378,7 @@ class WalletPaymentRemoteDataSourceImpl
   }
 
   @override
-  Future<GoInitCardSessionResponseModel> goInitCardSession({
+  Future<InitSessionCardModel> goInitCardSession({
     required int amount,
     required int newCard,
     required String email,
@@ -421,7 +421,7 @@ class WalletPaymentRemoteDataSourceImpl
       if (data is Map<String, dynamic>) {
         final statusCode = data['status_code'] ?? data['status'];
         if (statusCode == 200) {
-          return GoInitCardSessionResponseModel.fromJson(data);
+          return InitSessionCardModel.fromJson(data);
         }
         throw WalletPaymentException(
           data['message']?.toString() ?? 'Failed to initialize card session',

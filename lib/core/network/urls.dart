@@ -133,6 +133,8 @@ class _CommonEndpoints {
   final chatQuickReplies = "go/chat/quick-replies";
   final privacy = "go/get_setting?type=3";
   final termsAndConditions = "go/get_setting?type=2";
+  final countries = "countries";
+  final stateByCountry = "state-by-country";
 }
 
 /// ─────────────────────────────────
@@ -194,6 +196,8 @@ class _WalletEndpoints {
   final goAddCardNew = "go_wallet/go_add_card_new";
   final goPayByExistingCard = "go_wallet/go_pay_by_existing_card";
   final goInitCardSession = "go_wallet/go_init_card_session";
+
+  final securepay = "https://secureacceptance.cybersource.com/silent/pay";
 }
 
 /// ─────────────────────────────────
@@ -206,6 +210,7 @@ class _SelcomPesaEndpoints {
   final linkedAccounts = "go/selcom_pesa/linked_accounts";
   final mainBalance = "go/selcom_pesa/main_balance";
   final requestUnlink = "go/selcom_pesa/request_unlink";
+  final setDefaultAccount = "go/selcom_pesa/set_default_account";
 }
 
 /// ─────────────────────────────────
