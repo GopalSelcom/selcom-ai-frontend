@@ -1,45 +1,23 @@
 import 'dart:io';
 
+/// Payload for `edit_profile` — JSON body sends [name] only; [image] is multipart.
 class UserProfileUpdateRequest {
-  final String? name;
-  final String? emailId;
-  final String? dob;
-  final String? nidaNumber;
-  final String? userId;
+  final String name;
 
-  /// Image is not part of JSON; used only when uploading
+  /// Optional profile photo; not included in [toJson].
   final File? image;
 
-  UserProfileUpdateRequest({
-    this.name,
-    this.emailId,
-    this.dob,
-    this.nidaNumber,
-    this.userId,
-    this.image,
-  });
+  UserProfileUpdateRequest({required String name, this.image})
+    : name = name.trim() {
+    // Controller validates before save; guard direct construction too.
+    if (this.name.isEmpty) {
+      throw ArgumentError.value(name, 'name', 'must not be null or empty');
+    }
+  }
 
-  /// Create model from JSON Map
   factory UserProfileUpdateRequest.fromJson(Map<String, dynamic> json) {
-    return UserProfileUpdateRequest(
-      name: json['name'],
-      emailId: json['emailId'],
-      dob: json['dob'],
-      nidaNumber: json['nida_number'],
-      userId: json['user_id'],
-      image: null, // image can't come from normal JSON
-    );
+    return UserProfileUpdateRequest(name: json['name']?.toString() ?? '');
   }
 
-  /// Convert model to JSON Map
-  Map<String, dynamic> toJson() {
-    return {
-      'name': name,
-      'emailId': emailId,
-      'dob': dob,
-      'nida_number': nidaNumber,
-      'user_id': userId,
-      // image excluded because MultipartFile is not JSON compatible
-    };
-  }
+  Map<String, dynamic> toJson() => {'name': name};
 }

@@ -38,6 +38,7 @@ import '../../../../shared/utils/active_ride_vehicle_image_resolver.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../../shared/widgets/add_favorite_location_sheet.dart';
 import '../../../../shared/widgets/favorite_location_chips_row.dart';
+import '../../../profile/data/cache/user_profile_cache.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../../ride/data/models/ride_management_models.dart';
@@ -1819,13 +1820,15 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   Future<void> openProfile() async {
     await Get.to(() => ProfileScreen());
     if (SessionExpiryService.isHandling) return;
-    await refreshProfileImage();
+    // No GET on return — avatar syncs from cache only after profile edit.
+    _syncProfileImageFromCacheIfChanged();
   }
 
-  Future<void> refreshProfileImage() async {
-    if (SessionExpiryService.isHandling) return;
-    final result = await profileRepository.getProfile();
-    result.fold((_) {}, _applyProfileImage);
+  /// Updates the home header avatar from session cache after profile edit only.
+  void _syncProfileImageFromCacheIfChanged() {
+    if (!UserProfileCache.consumeChanged()) return;
+    final user = UserProfileCache.user;
+    if (user != null) _applyProfileImage(user);
   }
 
   void _applyProfileImage(UserModel user) {

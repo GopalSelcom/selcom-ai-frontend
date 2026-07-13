@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../profile/presentation/controllers/payment_methods_controller.dart';
 import '../../../profile/presentation/controllers/profile_controller.dart';
+import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../domain/repositories/wallet_repository.dart';
 import '../controllers/wallet_controller.dart';
 import '../controllers/wallet_history_controller.dart';
@@ -22,6 +23,8 @@ abstract final class WalletSession {
   static void teardownOnLogout() {
     // Drop repository-level statement cache (singleton via DI).
     sl<WalletRepository>().invalidateStatementCache();
+    // Profile GET cache — avoid showing the previous user's name/avatar.
+    sl<ProfileRepository>().invalidateProfileCache();
 
     // Clear observables and null the WalletController factory singleton.
     WalletController.resetForLogout();

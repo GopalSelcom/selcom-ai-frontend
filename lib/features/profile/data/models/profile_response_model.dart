@@ -1,5 +1,6 @@
 import '../../../../core/data/models/user_model.dart';
 
+/// Envelope for `GET go/user/profile`.
 class UserProfileResponseModel {
   final int statusCode;
   final String message;
@@ -22,6 +23,7 @@ class UserProfileResponseModel {
   }
 }
 
+/// `data` object for profile GET and edit_profile (no `_id` in API).
 class UserProfileDataModel {
   final String profileImage;
   final String number;
@@ -50,9 +52,10 @@ class UserProfileDataModel {
     );
   }
 
-  UserModel toUserModel() {
+  /// Profile APIs omit user id — pass login session id when merging after edit.
+  UserModel toUserModel({String? preserveUserId}) {
     return UserModel(
-      id: '',
+      id: preserveUserId ?? '',
       name: name,
       image: profileImage,
       mobileNumber: int.tryParse(number),

@@ -11,7 +11,11 @@ import '../../data/models/request/update_profile_request.dart';
 import '../../data/models/update_profile_response.dart';
 
 abstract class ProfileRepository {
-  Future<Either<Failure, UserModel>> getProfile();
+  /// Returns [UserProfileCache] when loaded; pass [forceRefresh] to bypass cache.
+  Future<Either<Failure, UserModel>> getProfile({bool forceRefresh = false});
+
+  /// Drops cached profile (logout / session expiry).
+  void invalidateProfileCache();
 
   Future<Either<Failure, UserProfileUpdateResponse>> updateProfile(
     UserProfileUpdateRequest profileRequest,

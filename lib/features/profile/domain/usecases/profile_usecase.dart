@@ -14,8 +14,9 @@ class ProfileUseCase {
 
   ProfileUseCase(this.repository);
 
-  Future<Either<Failure, UserModel>> getProfile() {
-    return repository.getProfile();
+  Future<Either<Failure, UserModel>> getProfile({bool forceRefresh = false}) {
+    // Cached after first fetch; use forceRefresh only when a hard reload is needed.
+    return repository.getProfile(forceRefresh: forceRefresh);
   }
 
   Future<Either<Failure, UserProfileUpdateResponse>> updateProfile(

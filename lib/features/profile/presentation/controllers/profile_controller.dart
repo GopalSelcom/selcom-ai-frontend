@@ -27,6 +27,7 @@ import '../../../wallet/domain/usecases/get_wallet_summary_usecase.dart';
 import '../../../wallet/domain/entities/wallet_summary_entity.dart';
 import '../../../wallet/presentation/utils/wallet_format_utils.dart';
 import '../../../wallet/presentation/utils/wallet_session.dart';
+import '../../data/cache/user_profile_cache.dart';
 import '../../data/models/request/update_profile_request.dart';
 import '../../domain/usecases/profile_usecase.dart';
 
@@ -174,10 +175,20 @@ class ProfileController extends GetxController {
   }
 
   Future<void> _loadInitialContent() async {
-    isLoadingProfile.value = true;
+    // Home usually populates [UserProfileCache] first — skip GET + shimmer on revisit.
+    final cachedUser = UserProfileCache.user;
+    final hasCachedProfile =
+        UserProfileCache.isLoaded && cachedUser != null;
+    if (hasCachedProfile) {
+      _updateLocalUserState(cachedUser);
+    } else {
+      isLoadingProfile.value = true;
+    }
     try {
       await _syncProfileMenuVisibility();
-      await _fetchProfileData();
+      if (!hasCachedProfile) {
+        await _fetchProfileData();
+      }
     } finally {
       isLoadingProfile.value = false;
     }
@@ -200,6 +211,7 @@ class ProfileController extends GetxController {
   }
 
   Future<void> _fetchProfileData() async {
+    // Repository returns [UserProfileCache] when already loaded this session.
     final result = await profileUseCase.getProfile();
     result.fold(
       (failure) {
@@ -398,12 +410,8 @@ class ProfileController extends GetxController {
     await Loader.withFlag(isLoading, () async {
       final result = await profileUseCase.updateProfile(
         UserProfileUpdateRequest(
-          image: pickedImage.value,
           name: nameTextController.text.trim(),
-          emailId: '',
-          userId: userModel.value?.id ?? '',
-          dob: '',
-          nidaNumber: '',
+          image: pickedImage.value,
         ),
       );
 
@@ -412,18 +420,13 @@ class ProfileController extends GetxController {
           failureMessage = failure.message;
         },
         (updatedUser) async {
-          final refreshed = await profileUseCase.getProfile();
-          refreshed.fold(
-            (_) {
-              final userModel = UserModel.fromJson(
-                updatedUser.response?.toJson() ?? const {},
-              );
-              _updateLocalUserState(userModel);
-            },
-            (freshUser) {
-              _updateLocalUserState(freshUser);
-            },
+          // Repository already updated [UserProfileCache] from edit_profile response.
+          final merged = updatedUser.toUserModel(
+            preserveUserId: userModel.value?.id ?? '',
           );
+          if (merged != null) {
+            _updateLocalUserState(merged);
+          }
           saved = true;
         },
       );

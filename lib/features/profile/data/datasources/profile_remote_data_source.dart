@@ -101,7 +101,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       return UserProfileUpdateResponse(
         statusCode: response.statusCode,
         message: null,
-        response: null,
+        data: null,
       );
     }
     throw Exception(response.data['message'] ?? 'Failed to update profile');
