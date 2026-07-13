@@ -2,9 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'package:app_links/app_links.dart';
 import 'package:flutter/foundation.dart';
-import 'package:get/get.dart';
-import 'package:selcom_rides_frontend/features/profile/presentation/screens/profile_screen.dart';
-import '../../routes/app_routes.dart';
 
 class DeepLinkManager {
   final _appLinks = AppLinks();

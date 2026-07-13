@@ -8,7 +8,6 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/app_settings_service.dart';
-import '../../../../core/services/local_bank_instructions_service.dart';
 import '../../../../core/services/session_expiry_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/services/voip_callkit_bridge_service.dart';

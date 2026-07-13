@@ -21,8 +21,6 @@ import '../../domain/entities/wallet_transaction_filter.dart';
 import '../../domain/repositories/wallet_repository.dart';
 import '../../data/datasources/wallet_remote_data_source.dart';
 import '../../domain/usecases/email_wallet_statement_usecase.dart';
-import '../../domain/usecases/get_wallet_summary_usecase.dart';
-import '../../domain/usecases/get_wallet_transactions_usecase.dart';
 import '../../domain/utils/wallet_statement_utils.dart';
 import '../models/wallet_transaction_item.dart';
 import '../utils/wallet_format_utils.dart';

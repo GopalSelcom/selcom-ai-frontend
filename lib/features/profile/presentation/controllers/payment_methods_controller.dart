@@ -21,7 +21,6 @@ import '../../data/datasources/selcom_pesa_link_remote_data_source.dart';
 import '../../data/models/selcom_pesa_link_models.dart';
 import '../../data/models/sp_link_response.dart';
 import '../../domain/entities/payment_card.dart';
-import '../../domain/entities/selcom_pesa_linked_account_entity.dart';
 import '../../domain/repositories/selcom_pesa_link_repository.dart';
 import '../screens/add_card_screen.dart';
 import '../screens/card_details_screen.dart';

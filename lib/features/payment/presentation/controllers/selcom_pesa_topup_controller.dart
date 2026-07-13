@@ -18,7 +18,6 @@ import '../../../../shared/utils/payment_countdown_timer.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
 import '../../../../shared/utils/thousands_separator_input_formatter.dart';
 import '../../../profile/data/models/selcom_pesa_link_models.dart';
-import '../../../profile/domain/entities/selcom_pesa_linked_account_entity.dart';
 import '../../../profile/presentation/controllers/payment_methods_controller.dart';
 import '../../../settings/data/models/settings_models.dart';
 import '../../../wallet/domain/entities/wallet_details_entity.dart';
