@@ -173,9 +173,6 @@ class LocalBankInstructionsBottomSheet extends StatelessWidget {
                                     await Clipboard.setData(
                                       ClipboardData(text: accountNumber),
                                     );
-                                    if(Platform.isIOS){
-                                      AppDialogs.showSuccessDialog(message: "${formatWalletAccountNumber(accountNumber)} copied",confirmLabel: 'Okay');
-                                    }
                                   },
                               ),
                               TextSpan(text: after),
