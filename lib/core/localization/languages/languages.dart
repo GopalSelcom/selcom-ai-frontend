@@ -555,6 +555,7 @@ abstract class Languages {
   String get visa;
   String get wallet;
   String get walletNumberCopied;
+  String get copiedToClipboard;
   String get walletNumberLabel;
   String get walletReservedBalance;
   String get recentTransactions;

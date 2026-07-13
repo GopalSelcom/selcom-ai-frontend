@@ -1,5 +1,8 @@
 import '../../domain/entities/wallet_card_balance_entity.dart';
 
+/// Envelope for `go_wallet/go_card_balance`.
+///
+/// Top-level `response` holds card metadata plus a `data[]` balance line list.
 class GoCardBalanceResponseModel {
   GoCardBalanceResponseModel({
     this.statusCode,

@@ -15,7 +15,6 @@ import '../../../../shared/utils/thousands_separator_input_formatter.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_standard_bottom_sheet.dart';
 import '../../../../shared/widgets/app_text_field.dart';
-import '../../../wallet/presentation/utils/wallet_format_utils.dart';
 import '../../data/models/go_other_payment_methods_models.dart';
 import '../controllers/tanqr_wallet_topup_controller.dart';
 import '../screens/selcom_pesa_to_wallet_screen.dart';

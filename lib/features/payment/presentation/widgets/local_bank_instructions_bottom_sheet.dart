@@ -1,9 +1,6 @@
 import 'dart:async';
-import 'dart:io';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
@@ -13,6 +10,7 @@ import '../../../../core/services/local_bank_instructions_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/clipboard_utils.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_standard_bottom_sheet.dart';
 import '../../../wallet/presentation/utils/wallet_format_utils.dart';
@@ -169,9 +167,13 @@ class LocalBankInstructionsBottomSheet extends StatelessWidget {
                                   decoration: TextDecoration.underline,
                                 ),
                                 recognizer: TapGestureRecognizer()
-                                  ..onTap = () async {
-                                    await Clipboard.setData(
-                                      ClipboardData(text: accountNumber),
+                                  ..onTap = () {
+                                    // Copy raw account digits; iOS snackbar only.
+                                    unawaited(
+                                      copyToClipboardWithFeedback(
+                                        text: accountNumber,
+                                        message: AppStrings.walletNumberCopied.tr,
+                                      ),
                                     );
                                   },
                               ),

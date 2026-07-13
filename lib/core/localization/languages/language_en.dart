@@ -662,6 +662,7 @@ class LanguageEn extends Languages {
     'visa': 'VISA',
     'wallet': 'Wallet',
     'wallet_number_copied': 'Wallet number copied',
+    'copied_to_clipboard': 'Copied to clipboard',
     'wallet_number_label': 'Wallet Number',
     'wallet_reserved_balance': 'Reserved: @amount',
     'recent_transactions': 'Recent Transactions',
@@ -2692,6 +2693,9 @@ class LanguageEn extends Languages {
 
   @override
   String get walletNumberCopied => values['wallet_number_copied'] ?? '';
+
+  @override
+  String get copiedToClipboard => values['copied_to_clipboard'] ?? '';
 
   @override
   String get walletNumberLabel => values['wallet_number_label'] ?? '';

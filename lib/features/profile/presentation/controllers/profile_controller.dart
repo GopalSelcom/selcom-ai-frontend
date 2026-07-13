@@ -17,15 +17,88 @@ import '../../../../core/services/session_auth_service.dart';
 import '../../../../core/services/session_expiry_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/balance_visibility_policy.dart';
+import '../../../../shared/utils/clipboard_utils.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
 import '../../../../shared/widgets/web_view_screen.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
 import '../../../ride/presentation/screens/my_rides_screen.dart';
 import '../../../wallet/domain/usecases/get_wallet_summary_usecase.dart';
+import '../../../wallet/domain/entities/wallet_summary_entity.dart';
 import '../../../wallet/presentation/utils/wallet_format_utils.dart';
 import '../../../wallet/presentation/utils/wallet_session.dart';
 import '../../data/models/request/update_profile_request.dart';
 import '../../domain/usecases/profile_usecase.dart';
+
+/// In-memory wallet summary for the profile card across [ProfileController]
+/// instances (GetX factory recreates the controller each profile visit).
+///
+/// Lets us skip the card-balance API on revisit and keep the last known amount
+/// for a silent eye-button refresh. Cleared on logout via [clear].
+abstract final class ProfileWalletCache {
+  ProfileWalletCache._();
+
+  /// True after the first successful (or empty) wallet fetch this session.
+  static bool isLoaded = false;
+
+  /// Whether the amount is currently shown; always reset to hidden on screen entry.
+  static bool isBalanceVisible = false;
+  static bool isWalletLinked = false;
+  static String balance = '';
+  static String currency = '';
+  static String walletNumber = '';
+  static String walletNumberRaw = '';
+  static double reserved = 0;
+
+  static void save({
+    required bool linked,
+    required String balanceValue,
+    required String currencyValue,
+    required String walletNumberValue,
+    String? walletNumberRawValue,
+    double reservedValue = 0,
+  }) {
+    isLoaded = true;
+    isWalletLinked = linked;
+    balance = balanceValue;
+    currency = currencyValue;
+    walletNumber = walletNumberValue;
+    walletNumberRaw = walletNumberRawValue?.trim() ?? '';
+    reserved = reservedValue;
+  }
+
+  /// Shared summary for profile and wallet screens (no network).
+  static WalletSummaryEntity? toSummaryEntity() {
+    if (!isLoaded || !isWalletLinked) return null;
+
+    final rawNumber = walletNumberRaw.trim().isNotEmpty
+        ? walletNumberRaw.trim()
+        : walletNumber.replaceAll(RegExp(r'\s+'), '');
+    if (rawNumber.isEmpty) return null;
+
+    final balanceValue =
+        double.tryParse(balance.replaceAll(',', '')) ?? 0;
+
+    return WalletSummaryEntity(
+      balance: balanceValue,
+      walletNumber: rawNumber,
+      currency: currency.trim().isNotEmpty ? currency.trim() : 'TZS',
+      reserved: reserved,
+    );
+  }
+
+  /// Drops cached wallet fields (logout / unlinked account).
+  static void clear() {
+    isLoaded = false;
+    isBalanceVisible = false;
+    isWalletLinked = false;
+    balance = '';
+    currency = '';
+    walletNumber = '';
+    walletNumberRaw = '';
+    reserved = 0;
+  }
+}
 
 class ProfileController extends GetxController {
   final ProfileUseCase profileUseCase;
@@ -51,8 +124,15 @@ class ProfileController extends GetxController {
   final RxString walletCurrency = ''.obs;
   final RxString walletNumber = ''.obs;
   final RxBool isWalletLinked = false.obs;
+  /// First-visit shimmer for the wallet card (account + amount placeholders).
   final RxBool isLoadingWallet = true.obs;
+  /// Eye-tap refresh: keep old amount, show loader in place of the eye icon.
+  final RxBool isRefreshingWalletBalance = false.obs;
+  /// Amount is hidden by default; revealed only when the user taps the eye.
+  final RxBool isBalanceVisible = false.obs;
   final Rxn<File> pickedImage = Rxn<File>();
+
+  Timer? _walletBalanceHideTimer;
 
   // Controllers for text fields
   late TextEditingController nameTextController;
@@ -71,7 +151,14 @@ class ProfileController extends GetxController {
     nameFocusNode = FocusNode();
     phoneFocusNode = FocusNode();
 
-    fetchWalletBalance();
+    // Always mask amount when the profile screen is entered.
+    resetWalletBalanceVisibilityOnScreenEntry();
+
+    // Reuse cached wallet on revisit; call API only on the first profile open.
+    _restoreWalletFromCacheIfAvailable();
+    if (!ProfileWalletCache.isLoaded) {
+      unawaited(fetchWalletBalance(initialLoad: true));
+    }
     unawaited(_loadInitialContent());
     ever<Map<String, bool>>(appSettingsService.features, (_) {
       syncSettingsVisibility();
@@ -140,6 +227,7 @@ class ProfileController extends GetxController {
 
   @override
   void onClose() {
+    _cancelWalletBalanceHideTimer();
     nameTextController.dispose();
     phoneTextController.dispose();
     nameFocusNode.dispose();
@@ -147,8 +235,46 @@ class ProfileController extends GetxController {
     super.onClose();
   }
 
-  Future<void> fetchWalletBalance() async {
-    isLoadingWallet.value = true;
+  /// Applies [ProfileWalletCache] without hitting the network.
+  void _restoreWalletFromCacheIfAvailable() {
+    if (!ProfileWalletCache.isLoaded) return;
+    isWalletLinked.value = ProfileWalletCache.isWalletLinked;
+    walletBalance.value = ProfileWalletCache.balance;
+    walletCurrency.value = ProfileWalletCache.currency;
+    walletNumber.value = ProfileWalletCache.walletNumber;
+    isLoadingWallet.value = false;
+  }
+
+  /// Masks the wallet amount whenever profile is entered or a child route pops.
+  void resetWalletBalanceVisibilityOnScreenEntry() {
+    _cancelWalletBalanceHideTimer();
+    isBalanceVisible.value = false;
+    ProfileWalletCache.isBalanceVisible = false;
+  }
+
+  void _navigateAndResetWalletBalanceOnReturn(Future<dynamic>? navigation) {
+    // Re-mask balance when the user returns from any child route.
+    navigation?.then((_) => resetWalletBalanceVisibilityOnScreenEntry());
+  }
+
+  /// Loads wallet summary for the profile card.
+  ///
+  /// - [initialLoad] `true`: first visit — may show shimmer; amount stays hidden.
+  /// - [initialLoad] `false`: eye / post-wallet refresh — keep previous amount,
+  ///   show loader on the eye slot, then update the amount silently.
+  Future<void> fetchWalletBalance({bool initialLoad = false}) async {
+    if (initialLoad && ProfileWalletCache.isLoaded) {
+      _restoreWalletFromCacheIfAvailable();
+      return;
+    }
+
+    if (initialLoad) {
+      isLoadingWallet.value = true;
+    } else {
+      // Silent refresh: no shimmer; UI shows spinner instead of the eye icon.
+      isRefreshingWalletBalance.value = true;
+    }
+
     try {
       final summary = await getWalletSummaryUseCase();
       final account = summary.walletNumber.trim();
@@ -157,29 +283,86 @@ class ProfileController extends GetxController {
         return;
       }
       isWalletLinked.value = true;
-      walletBalance.value = NumberFormat('#,##0', 'en_US').format(summary.balance);
+      walletBalance.value =
+          NumberFormat('#,##0', 'en_US').format(summary.balance);
       walletCurrency.value = summary.currency.trim();
       walletNumber.value = formatWalletAccountNumber(account);
+      ProfileWalletCache.save(
+        linked: true,
+        balanceValue: walletBalance.value,
+        currencyValue: walletCurrency.value,
+        walletNumberValue: walletNumber.value,
+        walletNumberRawValue: account,
+        reservedValue: summary.reserved,
+      );
+      ProfileWalletCache.isBalanceVisible = isBalanceVisible.value;
     } catch (_) {
-      _setWalletUnlinked();
+      // Keep last known amount on refresh failure; only clear on first load.
+      if (initialLoad) {
+        _setWalletUnlinked();
+      }
     } finally {
       isLoadingWallet.value = false;
+      isRefreshingWalletBalance.value = false;
     }
   }
 
+  /// Hides the amount, or reveals the cached amount and refreshes from the API.
+  ///
+  /// Hide is local only (no network). Show reveals the last known amount and
+  /// then refreshes once from card balance.
+  void toggleWalletBalanceVisibility() {
+    if (isRefreshingWalletBalance.value) return;
+
+    // Already visible → hide only; do not call the card-balance API.
+    if (isBalanceVisible.value) {
+      _hideWalletBalance();
+      return;
+    }
+
+    // Show old/cached amount immediately; API updates it when the call completes.
+    isBalanceVisible.value = true;
+    ProfileWalletCache.isBalanceVisible = true;
+    _scheduleWalletBalanceHide();
+    unawaited(fetchWalletBalance(initialLoad: false));
+  }
+
+  /// Masks the amount and cancels the auto-hide timer.
+  void _hideWalletBalance() {
+    resetWalletBalanceVisibilityOnScreenEntry();
+  }
+
+  /// Auto-hides the revealed amount after [BalanceVisibilityPolicy.autoHideAfterReveal].
+  void _scheduleWalletBalanceHide() {
+    _cancelWalletBalanceHideTimer();
+    _walletBalanceHideTimer = Timer(BalanceVisibilityPolicy.autoHideAfterReveal, () {
+      _hideWalletBalance();
+    });
+  }
+
+  void _cancelWalletBalanceHideTimer() {
+    _walletBalanceHideTimer?.cancel();
+    _walletBalanceHideTimer = null;
+  }
+
   void _setWalletUnlinked() {
+    _cancelWalletBalanceHideTimer();
     isWalletLinked.value = false;
     walletBalance.value = '';
     walletCurrency.value = '';
     walletNumber.value = '';
+    isBalanceVisible.value = false;
+    ProfileWalletCache.clear();
   }
 
   /// Clears profile-card wallet fields when the session ends.
   ///
   /// Separate from [WalletController] — this screen fetches summary on its own.
   void clearWalletDisplayOnLogout() {
+    _cancelWalletBalanceHideTimer();
     _setWalletUnlinked();
     isLoadingWallet.value = false;
+    isRefreshingWalletBalance.value = false;
   }
 
   void toggleEditMode() {
@@ -296,57 +479,83 @@ class ProfileController extends GetxController {
     }
   }
 
+  /// Unformatted wallet account digits for clipboard (no display spacing).
+  String get walletNumberForCopy {
+    final raw = ProfileWalletCache.walletNumberRaw.trim();
+    if (raw.isNotEmpty) return raw;
+    return walletNumber.value.replaceAll(RegExp(r'\s+'), '');
+  }
+
+  /// Copies wallet number; iOS shows snackbar via [copyToClipboardWithFeedback].
+  void copyWalletNumber() {
+    final number = walletNumberForCopy;
+    if (number.isEmpty) return;
+    unawaited(
+      copyToClipboardWithFeedback(
+        text: number,
+        message: AppStrings.walletNumberCopied.tr,
+      ),
+    );
+  }
+
   void openMyRides() {
-    Get.to(() => const MyRidesScreen());
+    _navigateAndResetWalletBalanceOnReturn(
+      Get.to(() => const MyRidesScreen()),
+    );
   }
 
   void openPaymentMethods() {
-    Get.toNamed(AppRoutes.paymentMethods);
+    _navigateAndResetWalletBalanceOnReturn(
+      Get.toNamed(AppRoutes.paymentMethods),
+    );
   }
 
   void openWallet() {
-    unawaited(_openWallet());
-  }
-
-  Future<void> _openWallet() async {
-    await Get.toNamed(AppRoutes.wallet);
-    await fetchWalletBalance();
+    _navigateAndResetWalletBalanceOnReturn(Get.toNamed(AppRoutes.wallet));
   }
 
   void openContactUs() {
-    Get.toNamed(AppRoutes.contactUs);
+    _navigateAndResetWalletBalanceOnReturn(Get.toNamed(AppRoutes.contactUs));
   }
 
   void openFavoriteLocations() {
-    Get.toNamed(AppRoutes.favoriteLocations);
+    _navigateAndResetWalletBalanceOnReturn(
+      Get.toNamed(AppRoutes.favoriteLocations),
+    );
   }
 
   void openPrivacyPolicy() {
-    WebViewScreen.open(
-      title: AppStrings.privacyPolicy.tr,
-      url:
-          '${AppConfig.apiHost}${AppConfig.apiPathPrefix}/v4/${URLS.common.privacy}',
+    _navigateAndResetWalletBalanceOnReturn(
+      WebViewScreen.open(
+        title: AppStrings.privacyPolicy.tr,
+        url:
+            '${AppConfig.apiHost}${AppConfig.apiPathPrefix}/v4/${URLS.common.privacy}',
+      ),
     );
   }
 
   void openTermsAndConditions() {
-    WebViewScreen.open(
-      title: AppStrings.termsAndConditions.tr,
-      url:
-          '${AppConfig.apiHost}${AppConfig.apiPathPrefix}/v4/${URLS.common.termsAndConditions}',
+    _navigateAndResetWalletBalanceOnReturn(
+      WebViewScreen.open(
+        title: AppStrings.termsAndConditions.tr,
+        url:
+            '${AppConfig.apiHost}${AppConfig.apiPathPrefix}/v4/${URLS.common.termsAndConditions}',
+      ),
     );
   }
 
   void openSafety() {
-    Get.toNamed(AppRoutes.safety);
+    _navigateAndResetWalletBalanceOnReturn(Get.toNamed(AppRoutes.safety));
   }
 
   void openNotifications() {
-    Get.toNamed(AppRoutes.notifications);
+    _navigateAndResetWalletBalanceOnReturn(
+      Get.toNamed(AppRoutes.notifications),
+    );
   }
 
   void openSettings() {
-    Get.toNamed(AppRoutes.settings);
+    _navigateAndResetWalletBalanceOnReturn(Get.toNamed(AppRoutes.settings));
   }
 
   void logout() {

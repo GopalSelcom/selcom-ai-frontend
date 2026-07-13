@@ -1,4 +1,3 @@
-import '../../domain/entities/selcom_pesa_linked_account_entity.dart';
 import 'dart:convert';
 
 class SelcomPesaSendLinkRequest {
