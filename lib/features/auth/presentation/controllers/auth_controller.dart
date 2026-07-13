@@ -9,7 +9,8 @@ import '../../../../core/data/models/requests/go_phone_otp_request.dart';
 import '../../../../core/data/models/requests/set_name_request.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/data/models/requests/go_phone_verify_otp_request.dart';
-import '../../../../core/data/models/responses/verify_otp_response.dart';
+import '../../../../core/data/models/responses/firebase_login_response.dart';
+import '../../../../core/data/models/responses/phone_verify_otp_response.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
@@ -295,8 +296,8 @@ class AuthController extends GetxController {
           return false;
         },
         (response) async {
-          if (response?.isSuccess == true && response?.response != null) {
-            postVerifyRoute = await _persistLoginSession(response!);
+          if (response?.isSuccess == true && response?.data != null) {
+            postVerifyRoute = await _persistPhoneVerifySession(response!);
             return postVerifyRoute != null;
           }
           errorMessage.value =
@@ -486,13 +487,13 @@ class AuthController extends GetxController {
       },
       (response) async {
         appleSignInDebugLog('controller_exchange_firebase_session_succeeded');
-        if (response?.isSuccess != true || response?.response == null) {
+        if (response?.isSuccess != true || response?.data == null) {
           errorMessage.value =
               response?.message ?? AppStrings.somethingWentWrongPleaseTryAgain.tr;
           return;
         }
 
-        final route = await _persistLoginSession(response!);
+        final route = await _persistFirebaseLoginSession(response!);
         if (route == null) return;
 
         _navigateAfterAuth(route);
@@ -502,36 +503,83 @@ class AuthController extends GetxController {
 
   /// Persists tokens/user and returns the next route, or `null` on failure.
   /// Returns [AppRoutes.phone] when the rider must attach a phone number.
-  Future<String?> _persistLoginSession(VerifyOtpResponseModel response) async {
-    final verifyData = response.response!;
-    final user = verifyData.user;
+  Future<String?> _persistFirebaseLoginSession(
+    FirebaseLoginResponseModel response,
+  ) async {
+    final loginData = response.data!;
+    final user = loginData.user;
     if (user == null) {
       errorMessage.value = AppStrings.somethingWentWrongPleaseTryAgain.tr;
       return null;
     }
 
-    if (verifyData.accessToken != null) {
-      await StorageService().writeAccessToken(verifyData.accessToken!);
+    if (loginData.accessToken != null) {
+      await StorageService().writeAccessToken(loginData.accessToken!);
     }
-    if (verifyData.refreshToken != null) {
+    if (loginData.refreshToken != null) {
       await StorageService().write(
         StorageKeys.refreshToken,
-        verifyData.refreshToken!,
+        loginData.refreshToken!,
       );
     }
 
+    return _finalizeAuthSession(
+      user: user,
+      signUpName: loginData.signUpName,
+      signUpEmail: loginData.signUpEmail,
+      needsPhone: loginData.needsPhone == true,
+      needsName: loginData.needsName == true,
+    );
+  }
+
+  Future<String?> _persistPhoneVerifySession(
+    PhoneVerifyOtpResponseModel response,
+  ) async {
+    final verifyData = response.data!;
+    final incomingUser = verifyData.user;
+    if (incomingUser == null) {
+      errorMessage.value = AppStrings.somethingWentWrongPleaseTryAgain.tr;
+      return null;
+    }
+
+    var user = incomingUser;
+    final storedUserJson = await StorageService().read(StorageKeys.user);
+    if (storedUserJson != null && storedUserJson.trim().isNotEmpty) {
+      try {
+        final storedUser = UserModel.fromJson(
+          jsonDecode(storedUserJson) as Map<String, dynamic>,
+        );
+        user = storedUser.mergeSessionPatch(incomingUser);
+      } catch (_) {}
+    }
+
+    return _finalizeAuthSession(
+      user: user,
+      signUpName: verifyData.signUpName,
+      signUpEmail: verifyData.signUpEmail,
+      needsPhone: verifyData.needsPhone == true,
+      needsName: false,
+    );
+  }
+
+  Future<String?> _finalizeAuthSession({
+    required UserModel user,
+    required String signUpName,
+    required String signUpEmail,
+    required bool needsPhone,
+    required bool needsName,
+  }) async {
     await StorageService().write(
       StorageKeys.user,
       jsonEncode(user.toJson()),
     );
 
-    pendingSignUpName.value = verifyData.signUpName;
-    pendingSignUpEmail.value = verifyData.signUpEmail;
+    pendingSignUpName.value = signUpName;
+    pendingSignUpEmail.value = signUpEmail;
 
-    if (verifyData.needsPhone == true) {
+    if (needsPhone) {
       isPhoneAttachFlow.value = true;
-      // Independent of needs_phone; both can be true (collect name + phone together).
-      needsName.value = verifyData.needsName == true;
+      this.needsName.value = needsName;
       await StorageService().write(StorageKeys.signupCompleted, 'true');
       await VoipCallkitBridgeService.instance.syncCachedTokenToBackend();
       SessionExpiryService.resetOnLogin();

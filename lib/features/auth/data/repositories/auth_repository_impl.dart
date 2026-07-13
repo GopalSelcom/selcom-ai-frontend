@@ -12,8 +12,9 @@ import '../../../../core/errors/error_mapper.dart';
 import '../../../../core/data/models/requests/set_name_request.dart';
 import '../../../../core/data/models/responses/onboarding_banners_response.dart';
 import '../../../../core/data/models/responses/set_name_response.dart';
+import '../../../../core/data/models/responses/firebase_login_response.dart';
+import '../../../../core/data/models/responses/phone_verify_otp_response.dart';
 import '../../../../core/data/models/responses/send_otp_response.dart';
-import '../../../../core/data/models/responses/verify_otp_response.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/services/apple_sign_in_service.dart';
@@ -47,7 +48,7 @@ class AuthRepositoryImpl implements AuthRepository {
   final AppleAuthLocalDataSource appleAuthLocalDataSource;
 
   @override
-  Future<Either<Failure, VerifyOtpResponseModel?>> firebaseLogin({
+  Future<Either<Failure, FirebaseLoginResponseModel?>> firebaseLogin({
     required FirebaseLoginRequest request,
   }) async {
     try {
@@ -68,7 +69,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, VerifyOtpResponseModel?>> exchangeFirebaseSession({
+  Future<Either<Failure, FirebaseLoginResponseModel?>> exchangeFirebaseSession({
     String? name,
     double? latitude,
     double? longitude,
@@ -121,7 +122,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, VerifyOtpResponseModel?>> verifyPhoneOtp({
+  Future<Either<Failure, PhoneVerifyOtpResponseModel?>> verifyPhoneOtp({
     required GoPhoneVerifyOtpRequest request,
   }) async {
     try {

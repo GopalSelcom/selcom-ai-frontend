@@ -1,5 +1,5 @@
 class SetNameRequest {
-  /// Body for `POST /go/auth/set_name` when [VerifyOtpData.needsName] is true
+  /// Body for `POST /go/auth/set_name` when [FirebaseLoginData.needsName] is true
   /// after SSO (Google / Apple / Facebook) did not yield a display name.
   final String name;
 
