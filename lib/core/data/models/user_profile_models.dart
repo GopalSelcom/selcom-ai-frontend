@@ -1,6 +1,7 @@
 import '../../constants/currency_code.dart';
 
-/// Saved place item returned on create / from-recent responses.
+/// Saved place in `POST from-recent` response `data.place`.
+/// List screens use [SavedPlace] from get_saved_places_response.dart instead.
 class SavedPlaceModel {
   final String? id;
   final String? userId;

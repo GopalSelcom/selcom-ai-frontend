@@ -166,30 +166,4 @@ class ProfileRepositoryImpl implements ProfileRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
-
-  @override
-  Future<Either<Failure, GetSavedPlacesResponseModel?>>
-  getFavoritePlaces() async {
-    try {
-      final res = await remoteDataSource.getFavoritePlaces();
-      return Right(res);
-    } catch (e, stackTrace) {
-      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      return Left(ServerFailure(e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, bool>> toggleFavorite(
-    String id,
-    bool isFavorite,
-  ) async {
-    try {
-      final result = await remoteDataSource.toggleFavorite(id, isFavorite);
-      return Right(result);
-    } catch (e, stackTrace) {
-      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      return Left(ServerFailure(e.toString()));
-    }
-  }
 }

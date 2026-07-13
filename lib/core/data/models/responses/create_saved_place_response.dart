@@ -1,7 +1,8 @@
 import '../user_profile_models.dart';
 
-/// Envelope for `POST go/user/saved-places` and
-/// `POST go/user/saved-places/from-recent`.
+/// Envelope for `POST go/user/saved-places/from-recent`.
+/// Creates a saved place (favourite by default). Success → refetch list on client.
+/// See `docs/SAVED-PLACES-FLOW.md`.
 class CreateSavedPlaceResponseModel {
   final int? statusCode;
   final String? message;

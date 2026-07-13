@@ -8,6 +8,11 @@ import '../../../home/presentation/controllers/home_controller.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../../domain/usecases/profile_usecase.dart';
 
+/// Profile → Saved locations screen.
+///
+/// Uses the same saved-places API as home (`GET go/user/saved-places`).
+/// Removing an item deletes it on the server — there is no unfavourite-only path.
+/// See `docs/SAVED-PLACES-FLOW.md`.
 class FavoriteLocationsController extends GetxController {
   final ProfileUseCase profileUseCase;
   final ProfileRepository profileRepository;
@@ -17,59 +22,59 @@ class FavoriteLocationsController extends GetxController {
     required this.profileRepository,
   });
 
-  final RxList<SavedPlace> favorites = <SavedPlace>[].obs;
+  final RxList<SavedPlace> savedPlaces = <SavedPlace>[].obs;
   final RxBool isLoading = false.obs;
 
   @override
   void onInit() {
     super.onInit();
-    fetchFavorites();
+    fetchSavedPlaces();
   }
 
-  Future<void> fetchFavorites() async {
+  Future<void> fetchSavedPlaces() async {
     isLoading.value = true;
-    final result = await profileUseCase.getFavoritePlaces();
+    final result = await profileUseCase.getSavedPlaces();
     result.fold(
       (failure) {
         AppDialogs.showErrorDialog(message: failure.message);
       },
       (response) {
-        if (response != null && response.data != null) {
-          favorites.value = response.data!.favouritePlaces;
-        }
+        savedPlaces.assignAll(response?.data?.savedPlaces ?? const []);
       },
     );
     isLoading.value = false;
   }
 
-  Future<void> toggleFavorite(SavedPlace place) async {
-    // Optimistic UI update: remove from list if unfavoriting
-    final originalList = List<SavedPlace>.from(favorites);
-    favorites.removeWhere((p) => p.id == place.id);
+  /// Removing a saved place deletes it on the server (no separate unfavourite).
+  void removeSavedPlace(SavedPlace place) {
+    final placeId = place.id?.trim();
+    if (placeId == null || placeId.isEmpty) return;
 
-    final result = await profileRepository.toggleFavorite(place.id!, false);
+    AppDialogs.showConfirmationDialog(
+      title: AppStrings.removeSavedAddress.tr,
+      message: AppStrings.areYouSureYouWantToRemoveThisSavedAddress.tr,
+      confirmText: AppStrings.remove.tr,
+      cancelText: AppStrings.cancel.tr,
+      onConfirm: () async {
+        final result = await profileRepository.deleteSavedPlace(placeId);
+        result.fold(
+          (failure) {
+            AppDialogs.showErrorDialog(message: failure.message);
+          },
+          (success) async {
+            if (!success) {
+              AppDialogs.showErrorDialog(
+                message: AppStrings.couldNotRemoveAddress.tr,
+              );
+              return;
+            }
 
-    result.fold(
-      (failure) {
-        // Rollback
-        favorites.value = originalList;
-        AppDialogs.showErrorDialog(
-          message: AppStrings.failedToUpdateFavoriteStatus.tr,
+            await fetchSavedPlaces();
+            if (Get.isRegistered<HomeController>()) {
+              Get.find<HomeController>().loadSavedPlaces();
+            }
+          },
         );
-      },
-      (success) {
-        if (!success) {
-          // Rollback
-          favorites.value = originalList;
-          AppDialogs.showErrorDialog(
-            message: AppStrings.failedToUpdateFavoriteStatus.tr,
-          );
-        } else {
-          // Sync with HomeController if it exists
-          if (Get.isRegistered<HomeController>()) {
-            Get.find<HomeController>().loadSavedPlaces();
-          }
-        }
       },
     );
   }

@@ -33,7 +33,7 @@ class ProfileUseCase {
     return repository.getPaymentMethods();
   }
 
-  Future<Either<Failure, GetSavedPlacesResponseModel?>> getFavoritePlaces() {
-    return repository.getFavoritePlaces();
+  Future<Either<Failure, GetSavedPlacesResponseModel?>> getSavedPlaces() {
+    return repository.getSavedPlaces();
   }
 }

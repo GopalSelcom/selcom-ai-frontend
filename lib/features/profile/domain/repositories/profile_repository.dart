@@ -23,8 +23,6 @@ abstract class ProfileRepository {
 
   Future<Either<Failure, GetSavedPlacesResponseModel?>> getSavedPlaces();
 
-  Future<Either<Failure, GetSavedPlacesResponseModel?>> getFavoritePlaces();
-
   Future<Either<Failure, bool>> saveRecentAsFavorite(
     SaveRecentAsFavoriteRequest request,
   );
@@ -40,6 +38,4 @@ abstract class ProfileRepository {
   Future<Either<Failure, SendEmailResponseModel>> sendEmail(
     SendEmailRequestModel request,
   );
-
-  Future<Either<Failure, bool>> toggleFavorite(String id, bool isFavorite);
 }

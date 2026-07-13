@@ -1,5 +1,8 @@
-/// Envelope for `GET go/user/saved-places` and
-/// `GET go/user/saved-places/favourites`.
+/// Models for `GET go/user/saved-places`.
+///
+/// There is no separate favourites endpoint in the app: `data.saved_places` is the
+/// single source of truth. Empty list is valid: `saved_places: []`.
+/// See `docs/SAVED-PLACES-FLOW.md`.
 class GetSavedPlacesResponseModel {
   final int? statusCode;
   final SavedPlacesData? data;
@@ -29,11 +32,9 @@ class SavedPlacesData {
 
   SavedPlacesData({this.savedPlaces = const []});
 
-  /// Populated from `data.favourite_places` on the favourites endpoint.
-  List<SavedPlace> get favouritePlaces => savedPlaces;
-
   factory SavedPlacesData.fromJson(Map<String, dynamic> json) {
-    final raw = json['saved_places'] ?? json['favourite_places'];
+    // Only `saved_places` — not `favourite_places` (no favourites list API).
+    final raw = json['saved_places'];
     if (raw is! List) return SavedPlacesData();
     return SavedPlacesData(
       savedPlaces: raw
@@ -48,7 +49,8 @@ class SavedPlacesData {
   };
 }
 
-/// Saved place item in `data.saved_places` or `data.favourite_places`.
+/// Saved place row from `data.saved_places`.
+/// Backend sets `is_favourite: true` for all saved places; UI uses list membership.
 class SavedPlace {
   final SavedPlaceLocation? location;
   final String? id;

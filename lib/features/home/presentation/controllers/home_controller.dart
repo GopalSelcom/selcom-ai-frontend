@@ -447,12 +447,12 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       // Handle Saved Places
       results[2].fold((_) => null, (response) {
         final res = response as GetSavedPlacesResponseModel?;
-        if (res?.data?.savedPlaces != null) {
-          savedPlaces.assignAll(
-            SavedPlacesOrdering.sortForDisplay(res!.data!.savedPlaces),
-          );
-          _syncSelectedPickupAfterSavedPlacesLoad();
-        }
+        savedPlaces.assignAll(
+          SavedPlacesOrdering.sortForDisplay(
+            res?.data?.savedPlaces ?? const [],
+          ),
+        );
+        _syncSelectedPickupAfterSavedPlacesLoad();
       });
 
       // Handle Active Ride
@@ -1595,15 +1595,16 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     );
   }
 
+  /// Reload from `GET go/user/saved-places`; always applies API list including `[]`.
   Future<void> loadSavedPlaces() async {
     final result = await profileRepository.getSavedPlaces();
     result.fold((_) => null, (response) {
-      if (response?.data?.savedPlaces != null) {
-        savedPlaces.assignAll(
-          SavedPlacesOrdering.sortForDisplay(response!.data!.savedPlaces),
-        );
-        _syncSelectedPickupAfterSavedPlacesLoad();
-      }
+      savedPlaces.assignAll(
+        SavedPlacesOrdering.sortForDisplay(
+          response?.data?.savedPlaces ?? const [],
+        ),
+      );
+      _syncSelectedPickupAfterSavedPlacesLoad();
     });
   }
 
@@ -2244,9 +2245,9 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     );
   }
 
+  /// Saved place = favourite in product terms (no separate favourites list).
   bool isPlaceFavorite(String address, String? placeId) {
-    final saved = getSavedPlaceFor(address, placeId);
-    return saved?.isFavourite ?? false;
+    return getSavedPlaceFor(address, placeId) != null;
   }
 
   Future<void> toggleAddAddressBottomSheet(Prediction item) async {
@@ -2327,6 +2328,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     );
   }
 
+  /// `DELETE go/user/saved-places/{id}` after user confirms.
   Future<void> _confirmAndDeleteSavedPlace(SavedPlace place) async {
     final savedPlaceId = place.id?.trim();
     if (savedPlaceId == null || savedPlaceId.isEmpty) return;

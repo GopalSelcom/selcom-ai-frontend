@@ -153,12 +153,14 @@ class _PaymentEndpoints {
 
 /// ─────────────────────────────────
 /// ADDRESS ENDPOINTS (Saved Places)
+/// Single list API — add via from-recent, remove via DELETE /{id}.
+/// No GET /favourites. See docs/SAVED-PLACES-FLOW.md.
 /// ─────────────────────────────────
 class _AddressEndpoints {
   const _AddressEndpoints();
 
   final savedPlaces = "go/user/saved-places";
-  final favouritePlaces = "go/user/saved-places/favourites";
+  // final favouritePlaces = "go/user/saved-places/favourites";
   final saveRecentAsFavorite = "go/user/saved-places/from-recent";
 }
 
