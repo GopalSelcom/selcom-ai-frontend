@@ -5,18 +5,18 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 
+import '../../../../core/constants/app_assets.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
-import '../../../../shared/widgets/app_text_field.dart';
-import '../../../../shared/widgets/app_primary_button.dart';
-import '../../../../shared/widgets/app_standard_bottom_sheet.dart';
+import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../shared/utils/app_dialogs.dart';
-import '../../../../shared/utils/thousands_separator_input_formatter.dart';
 import '../../../payment/presentation/controllers/saved_cards_controller.dart';
+import '../../../wallet/data/models/go_wallet_card_model.dart';
 import '../controllers/payment_methods_controller.dart';
+import '../widgets/payment_card_action_bottom_sheet.dart';
 import 'add_card_screen.dart';
 
 class PaymentMethodsScreen extends StatefulWidget {
@@ -218,6 +218,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                   onTap: () {
                     // Open details screen or simply show info
                   },
+                  onDelete: () => _openDeleteConfirmationSheet(card, savedCardsController),
                   showDivider: index < cards.length - 1,
                 );
               }),
@@ -229,6 +230,37 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
     );
   }
 
+  void _openDeleteConfirmationSheet(Datum card, SavedCardsController savedCardsController) {
+    final label = (card.maskedCard ?? '').replaceAll(RegExp(r'[xX]'), '*');
+    AppDialogs.showAnimatedBottomSheet(
+      barrierDismissible: true,
+      child: PaymentCardActionBottomSheet(
+        title: AppStrings.areYouSureWantToAddNdeleteThisCard.tr,
+        description: AppStrings.cardDeleteWarningDescription.tr,
+        cardNumber: label,
+        imageAssetPath: AppAssets.imgPaymentDeleteCardConfirm,
+        primaryButtonLabel: AppStrings.noCancel.tr,
+        onPrimaryPressed: AppDialogs.closeActiveDialog,
+        secondaryButtonLabel: AppStrings.deleteCard.tr,
+        onSecondaryPressed: () async {
+          if (card.id == null) return;
+          AppDialogs.closeActiveDialog();
+          Loader.instance.show();
+          final result = await savedCardsController.deleteCard(card.id!);
+          await Loader.instance.hideAsync();
+
+          result.fold(
+            (failure) => AppDialogs.showErrorDialog(message: failure.message),
+            (statusMsg) => AppDialogs.showSuccessDialog(
+              message: statusMsg.message ?? "Card deleted successfully",
+            ),
+          );
+        },
+        isSecondaryDanger: true,
+      ),
+    );
+  }
+
   Widget _buildCardTile({
     required IconData icon,
     required String brand,
@@ -236,6 +268,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
     required String number,
     String? status,
     required VoidCallback onTap,
+    required VoidCallback onDelete,
     bool showDivider = true,
   }) {
     return InkWell(
@@ -292,10 +325,17 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                   ),
                 ],
                 const Spacer(),
-                Icon(
-                  Iconsax.arrow_right_3,
-                  size: 20.w,
-                  color: AppColors.textBody.withValues(alpha: 0.5),
+                GestureDetector(
+                  onTap: onDelete,
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: EdgeInsets.all(4.w),
+                    child: Icon(
+                      Iconsax.trash,
+                      size: 20.w,
+                      color: AppColors.error,
+                    ),
+                  ),
                 ),
               ],
             ),

@@ -6,9 +6,12 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/web_view_screen.dart';
+import 'package:dartz/dartz.dart';
+import '../../../../core/errors/failures.dart';
 import '../../../wallet/domain/repositories/wallet_repository.dart';
 import '../../../wallet/presentation/utils/wallet_refresh.dart';
 import '../../../wallet/data/models/go_wallet_card_model.dart';
+import '../../../wallet/data/models/model_status_msg.dart';
 import '../../../profile/presentation/screens/add_card_screen.dart';
 
 enum SavedCardsStep { cardList, amountEntry }
@@ -69,6 +72,14 @@ class SavedCardsController extends GetxController {
         isLoading.value = false;
       },
     );
+  }
+
+  Future<Either<Failure, ModelStatusMsg>> deleteCard(int id) async {
+    final result = await _walletRepository.deleteCard(id: id);
+    if (result.isRight()) {
+      await loadCards();
+    }
+    return result;
   }
 
   void selectCard(Datum card) {

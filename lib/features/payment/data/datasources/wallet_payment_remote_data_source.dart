@@ -5,9 +5,14 @@ import '../../../../core/network/urls.dart';
 import '../../../wallet/data/models/go_wallet_card_model.dart';
 import '../../../wallet/data/models/go_add_card_response_model.dart';
 import '../../../wallet/data/models/go_init_card_session_response_model.dart' hide Datum;
+import '../../../wallet/data/models/model_status_msg.dart';
 import '../models/go_other_payment_methods_models.dart';
 
 abstract class WalletPaymentRemoteDataSource {
+  Future<ModelStatusMsg> deleteCard({
+    required int id,
+  });
+
   Future<TanQrPaymentSession> initiateOtherPayment(
     GoOtherPaymentMethodsRequest request, {
     required bool requireQr,
@@ -427,6 +432,29 @@ class WalletPaymentRemoteDataSourceImpl
 
     throw WalletPaymentException(
       _messageFromResponse(response.data) ?? 'Failed to initialize card session',
+    );
+  }
+
+  @override
+  Future<ModelStatusMsg> deleteCard({required int id}) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.wallet.deleteCard,
+        method: ApiMethod.post,
+        body: {'id': id},
+        errorPresentationType: ErrorPresentationType.none,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      final data = response.data;
+      if (data is Map<String, dynamic>) {
+        return ModelStatusMsg.fromJson(data);
+      }
+    }
+
+    throw WalletPaymentException(
+      _messageFromResponse(response.data) ?? 'Failed to delete card',
     );
   }
 }

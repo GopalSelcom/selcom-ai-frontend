@@ -80,7 +80,7 @@ class LanguageEn extends Languages {
         'Payment received, processing your top-up. Contact support if your balance does not update.',
     'wallet_account_unavailable':
         'Your Go wallet is not available. Please try again later.',
-    'download_app': 'Download app',
+    'download_app': 'Download',
     'mobile_money_phone_value': '+255 711 410 410',
     'mobile_money_amount_value': 'TZS 43,000',
     'select_a_vehicle': 'Please select a vehicle.',

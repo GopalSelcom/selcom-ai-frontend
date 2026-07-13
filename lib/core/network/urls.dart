@@ -198,6 +198,7 @@ class _WalletEndpoints {
   final goAddCardNew = "go_wallet/go_add_card_new";
   final goPayByExistingCard = "go_wallet/go_pay_by_existing_card";
   final goInitCardSession = "go_wallet/go_init_card_session";
+  final deleteCard = "go_wallet/delete_card";
 
   final securepay = "https://secureacceptance.cybersource.com/silent/pay";
 }

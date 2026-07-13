@@ -19,6 +19,7 @@ import '../models/go_email_card_statement_models.dart';
 import '../models/go_wallet_card_model.dart';
 import '../models/go_add_card_response_model.dart';
 import '../models/go_init_card_session_response_model.dart' hide Datum;
+import '../models/model_status_msg.dart';
 
 class WalletRepositoryImpl implements WalletRepository {
   WalletRepositoryImpl({
@@ -247,6 +248,16 @@ class WalletRepositoryImpl implements WalletRepository {
         country: country,
         postalcode: postalcode,
       );
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, ModelStatusMsg>> deleteCard({required int id}) async {
+    try {
+      final result = await _paymentRemoteDataSource.deleteCard(id: id);
       return Right(result);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
