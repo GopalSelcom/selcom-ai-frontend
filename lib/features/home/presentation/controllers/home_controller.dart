@@ -300,8 +300,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     bool showLocationSettingsDialogIfBlocked = false,
   }) async {
     if (showLocationSettingsDialogIfBlocked) {
-      final serviceEnabled =
-          await LocationService.instance.checkLocationService(force: true);
+      final serviceEnabled = await LocationService.instance
+          .checkLocationService(force: true);
       if (!serviceEnabled) {
         hasLocationPermission.value = false;
         deviceGpsLocation.value = null;
@@ -449,7 +449,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         final res = response as GetSavedPlacesResponseModel?;
         if (res?.data?.savedPlaces != null) {
           savedPlaces.assignAll(
-            SavedPlacesOrdering.sortForDisplay(res!.data!.savedPlaces!),
+            SavedPlacesOrdering.sortForDisplay(res!.data!.savedPlaces),
           );
           _syncSelectedPickupAfterSavedPlacesLoad();
         }
@@ -1600,7 +1600,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     result.fold((_) => null, (response) {
       if (response?.data?.savedPlaces != null) {
         savedPlaces.assignAll(
-          SavedPlacesOrdering.sortForDisplay(response!.data!.savedPlaces!),
+          SavedPlacesOrdering.sortForDisplay(response!.data!.savedPlaces),
         );
         _syncSelectedPickupAfterSavedPlacesLoad();
       }

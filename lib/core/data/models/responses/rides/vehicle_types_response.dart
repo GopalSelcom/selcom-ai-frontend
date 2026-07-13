@@ -1,5 +1,6 @@
 import '../../vehicle_type_model.dart';
 
+/// Envelope for `GET go/vehicles/types`.
 class VehicleTypesResponseModel {
   final int? statusCode;
   final String? message;

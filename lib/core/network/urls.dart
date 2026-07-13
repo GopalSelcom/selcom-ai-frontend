@@ -158,6 +158,7 @@ class _AddressEndpoints {
   const _AddressEndpoints();
 
   final savedPlaces = "go/user/saved-places";
+  final favouritePlaces = "go/user/saved-places/favourites";
   final saveRecentAsFavorite = "go/user/saved-places/from-recent";
 }
 

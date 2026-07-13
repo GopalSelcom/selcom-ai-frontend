@@ -285,13 +285,16 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   Future<GetSavedPlacesResponseModel?> getFavoritePlaces() async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "${URLS.address.savedPlaces}/favourites",
+        endpoint: URLS.address.favouritePlaces,
         method: ApiMethod.get,
-        version: "v4",
       ),
     );
-    if (response.statusCode == 200) {
-      return GetSavedPlacesResponseModel.fromJson(response.data);
+    if (response.statusCode == 200 && response.data != null) {
+      return GetSavedPlacesResponseModel.fromJson(
+        response.data is Map<String, dynamic>
+            ? response.data as Map<String, dynamic>
+            : Map<String, dynamic>.from(response.data as Map),
+      );
     }
     return null;
   }

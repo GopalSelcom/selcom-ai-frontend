@@ -1,5 +1,7 @@
 import '../user_profile_models.dart';
 
+/// Envelope for `POST go/user/saved-places` and
+/// `POST go/user/saved-places/from-recent`.
 class CreateSavedPlaceResponseModel {
   final int? statusCode;
   final String? message;
@@ -9,10 +11,14 @@ class CreateSavedPlaceResponseModel {
 
   factory CreateSavedPlaceResponseModel.fromJson(Map<String, dynamic> json) {
     return CreateSavedPlaceResponseModel(
-      statusCode: json['status_code'],
-      message: json['message'],
+      statusCode: (json['status_code'] as num?)?.toInt(),
+      message: json['message']?.toString(),
       data: json['data'] != null
-          ? CreateSavedPlaceData.fromJson(json['data'])
+          ? CreateSavedPlaceData.fromJson(
+              json['data'] is Map<String, dynamic>
+                  ? json['data'] as Map<String, dynamic>
+                  : Map<String, dynamic>.from(json['data'] as Map),
+            )
           : null,
     );
   }
@@ -36,7 +42,11 @@ class CreateSavedPlaceData {
   factory CreateSavedPlaceData.fromJson(Map<String, dynamic> json) {
     return CreateSavedPlaceData(
       place: json['place'] != null
-          ? SavedPlaceModel.fromJson(json['place'])
+          ? SavedPlaceModel.fromJson(
+              json['place'] is Map<String, dynamic>
+                  ? json['place'] as Map<String, dynamic>
+                  : Map<String, dynamic>.from(json['place'] as Map),
+            )
           : null,
     );
   }

@@ -35,7 +35,7 @@ class FavoriteLocationsController extends GetxController {
       },
       (response) {
         if (response != null && response.data != null) {
-          favorites.value = response.data!.savedPlaces ?? [];
+          favorites.value = response.data!.favouritePlaces;
         }
       },
     );
