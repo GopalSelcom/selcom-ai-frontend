@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -290,8 +291,10 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
                       ? SizedBox(
                           width: 16.w,
                           height: 16.w,
-                          child: const CircularProgressIndicator(
-                            strokeWidth: 2,
+                          // Cupertino spinner for Selcom Pesa main_balance eye reveal.
+                          child: CupertinoActivityIndicator(
+                            radius: 8.r,
+                            color: AppColors.black,
                           ),
                         )
                       : Obx(() {

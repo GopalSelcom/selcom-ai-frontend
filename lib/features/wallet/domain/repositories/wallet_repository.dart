@@ -7,6 +7,7 @@ import '../../data/models/go_wallet_card_model.dart';
 import '../../data/models/go_add_card_response_model.dart';
 import '../../data/models/go_init_card_session_response_model.dart' hide Datum;
 import '../entities/wallet_details_entity.dart';
+import '../entities/wallet_page_data.dart';
 import '../entities/wallet_statement_email_result.dart';
 import '../entities/wallet_summary_entity.dart';
 import '../entities/wallet_transaction_entity.dart';
@@ -17,8 +18,14 @@ abstract class WalletRepository {
 
   Future<WalletSummaryEntity> getWalletSummary();
 
+  /// Loads wallet summary and statement transactions with one card-balance call.
+  Future<WalletPageData> getWalletPageData({
+    WalletTransactionFilter filter = WalletTransactionFilter.all,
+  });
+
   Future<List<WalletTransactionEntity>> getTransactions({
     WalletTransactionFilter filter = WalletTransactionFilter.all,
+    String? currencyOverride,
   });
 
   void invalidateStatementCache();

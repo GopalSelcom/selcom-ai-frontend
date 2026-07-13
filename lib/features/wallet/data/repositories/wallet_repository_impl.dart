@@ -8,6 +8,7 @@ import '../../../payment/data/models/selcom_pesa_topup_models.dart';
 import '../../../payment/data/models/selcom_pesa_topup_status_models.dart';
 import '../../domain/entities/wallet_card_balance_entity.dart';
 import '../../domain/entities/wallet_details_entity.dart';
+import '../../domain/entities/wallet_page_data.dart';
 import '../../domain/entities/wallet_statement_email_result.dart';
 import '../../domain/entities/wallet_summary_entity.dart';
 import '../../domain/entities/wallet_transaction_entity.dart';
@@ -44,6 +45,39 @@ class WalletRepositoryImpl implements WalletRepository {
   Future<WalletSummaryEntity> getWalletSummary() async {
     final balance = await _remoteDataSource.getCardBalance();
 
+    return _summaryFromCardBalance(balance);
+  }
+
+  @override
+  Future<WalletPageData> getWalletPageData({
+    WalletTransactionFilter filter = WalletTransactionFilter.all,
+  }) async {
+    // Single card-balance fetch for wallet screen first paint (summary + statement).
+    invalidateStatementCache();
+    final balance = await _remoteDataSource.getCardBalance();
+    final summary = _summaryFromCardBalance(balance);
+    final all = await _loadStatementTransactions(balance: balance);
+    final transactions = switch (filter) {
+      WalletTransactionFilter.all => all,
+      WalletTransactionFilter.received =>
+        all
+            .where((transaction) => transaction.isCredit)
+            .toList(growable: false),
+      WalletTransactionFilter.sent =>
+        all
+            .where((transaction) => !transaction.isCredit)
+            .toList(growable: false),
+    };
+
+    return WalletPageData(
+      summary: summary,
+      transactions: List.unmodifiable(transactions),
+    );
+  }
+
+  WalletSummaryEntity _summaryFromCardBalance(
+    WalletCardBalanceEntity? balance,
+  ) {
     return WalletSummaryEntity(
       balance: balance?.available ?? 0,
       walletNumber: balance?.pan.trim() ?? '',
@@ -70,8 +104,11 @@ class WalletRepositoryImpl implements WalletRepository {
   @override
   Future<List<WalletTransactionEntity>> getTransactions({
     WalletTransactionFilter filter = WalletTransactionFilter.all,
+    String? currencyOverride,
   }) async {
-    final all = await _loadStatementTransactions();
+    final all = await _loadStatementTransactions(
+      currencyOverride: currencyOverride,
+    );
     final filtered = switch (filter) {
       WalletTransactionFilter.all => all,
       WalletTransactionFilter.received =>
@@ -108,16 +145,25 @@ class WalletRepositoryImpl implements WalletRepository {
     );
   }
 
-  Future<List<WalletTransactionEntity>> _loadStatementTransactions() async {
+  Future<List<WalletTransactionEntity>> _loadStatementTransactions({
+    WalletCardBalanceEntity? balance,
+    String? currencyOverride,
+  }) async {
     if (_statementCache != null) {
       return _statementCache!;
     }
 
     final (startDate, endDate) = defaultWalletStatementDateRange();
-    final balance = await _remoteDataSource.getCardBalance();
-    final currency = balance?.currency.trim().isNotEmpty == true
-        ? balance!.currency.trim()
-        : 'TZS';
+    final resolvedBalance = balance ??
+        (currencyOverride == null
+            ? await _remoteDataSource.getCardBalance()
+            : null);
+    // Prefer explicit currency when profile cache already has balance (skip re-fetch).
+    final currency = currencyOverride?.trim().isNotEmpty == true
+        ? currencyOverride!.trim()
+        : resolvedBalance?.currency.trim().isNotEmpty == true
+            ? resolvedBalance!.currency.trim()
+            : 'TZS';
     final transactions = await _remoteDataSource.getCardStatement(
       startDate: startDate,
       endDate: endDate,

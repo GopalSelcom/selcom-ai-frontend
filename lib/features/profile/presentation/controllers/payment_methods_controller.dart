@@ -11,10 +11,12 @@ import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../../shared/utils/balance_visibility_policy.dart';
 import '../../../../shared/utils/phone_formatter.dart';
 import '../../../../shared/utils/selcom_pesa_phone_utils.dart';
 import '../../../payment/domain/wallet_payment_phone_country.dart';
 import '../../../wallet/domain/usecases/get_wallet_summary_usecase.dart';
+import '../../../wallet/presentation/utils/wallet_format_utils.dart';
 import '../../data/datasources/selcom_pesa_link_remote_data_source.dart';
 import '../../data/models/selcom_pesa_link_models.dart';
 import '../../data/models/sp_link_response.dart';
@@ -75,10 +77,10 @@ class PaymentMethodsController extends GetxController {
   final RxBool isUnlinkSubmitting = false.obs;
   final RxBool isSetDefaultSubmitting = false.obs;
 
-  // --- Per-card balance reveal (POST main_balance, auto-hide after 30s) ---
+  // --- Per-card balance reveal (POST main_balance, auto-hide after reveal) ---
 
-  static const String hiddenBalancePlaceholder = 'TZS ••••••';
-  static const Duration linkedBalanceVisibleDuration = Duration(seconds: 30);
+  String _hiddenLinkedBalanceLabel() =>
+      formatHiddenWalletBalance(AppStrings.defaultCurrencyTzs.tr);
 
   final RxMap<String, String> _linkedBalanceVisible = <String, String>{}.obs;
   final RxMap<String, bool> _linkedBalanceLoading = <String, bool>{}.obs;
@@ -279,14 +281,14 @@ class PaymentMethodsController extends GetxController {
 
   String linkedAccountBalanceDisplay(Account account) {
     final key = linkedAccountKey(account);
-    return _linkedBalanceVisible[key] ?? hiddenBalancePlaceholder;
+    return _linkedBalanceVisible[key] ?? _hiddenLinkedBalanceLabel();
   }
 
   bool isLinkedAccountBalanceLoading(Account account) {
     return _linkedBalanceLoading[linkedAccountKey(account)] ?? false;
   }
 
-  /// Fetches SP balance for one card; visible for [linkedBalanceVisibleDuration].
+  /// Fetches SP balance for one card; visible for [BalanceVisibilityPolicy.autoHideAfterReveal].
   RxBool isAmountVisible = false.obs;
 
   Future<void> revealLinkedAccountBalance(Account account) async {
@@ -327,7 +329,7 @@ class PaymentMethodsController extends GetxController {
 
   void _scheduleLinkedBalanceHide(String key) {
     _linkedBalanceHideTimers[key]?.cancel();
-    _linkedBalanceHideTimers[key] = Timer(linkedBalanceVisibleDuration, () {
+    _linkedBalanceHideTimers[key] = Timer(BalanceVisibilityPolicy.autoHideAfterReveal, () {
       _hideLinkedAccountBalance(key);
     });
   }

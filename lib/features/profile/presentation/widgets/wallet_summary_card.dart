@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -20,12 +21,26 @@ class WalletSummaryCard extends StatelessWidget {
     required this.walletNumber,
     this.currencyCode,
     this.isLoading = false,
+    this.isRefreshingBalance = false,
+    this.isBalanceVisible = false,
+    this.onToggleBalanceVisibility,
   });
 
   final String balance;
   final String walletNumber;
   final String? currencyCode;
+
+  /// First-load shimmer for account number and amount.
   final bool isLoading;
+
+  /// Eye-tap API in flight: keep amount text, replace eye icon with a spinner.
+  final bool isRefreshingBalance;
+
+  /// When false, amount is masked but currency stays visible (e.g. `TZS ••••••`).
+  final bool isBalanceVisible;
+
+  /// Toggles hide/show; while refreshing, the gesture is ignored.
+  final VoidCallback? onToggleBalanceVisibility;
 
   static const String _accountNumberWidthTemplate = '000 000 000 00';
 
@@ -190,7 +205,13 @@ class WalletSummaryCard extends StatelessWidget {
   }
 
   Widget _buildAmountRow() {
-    final amountLabel = _formatBalanceLabel();
+    // During eye refresh, keep the previous amount visible (no shimmer).
+    final showAmount =
+        (isBalanceVisible || isRefreshingBalance) && balance.isNotEmpty;
+    // Hidden: currency + dots; visible: full formatted balance from API/cache.
+    final amountLabel = showAmount
+        ? _formatBalanceLabel()
+        : formatHiddenWalletBalance(currencyCode);
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -222,6 +243,31 @@ class WalletSummaryCard extends StatelessWidget {
                   ),
                 ),
         ),
+        // Eye / eye-slash; Cupertino spinner while balance refresh is in flight.
+        if (!isLoading && onToggleBalanceVisibility != null) ...[
+          SizedBox(width: 4.w),
+          GestureDetector(
+            onTap: isRefreshingBalance ? null : onToggleBalanceVisibility,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: EdgeInsets.all(2.w),
+              child: SizedBox(
+                width: 18.w,
+                height: 18.w,
+                child: isRefreshingBalance
+                    ? CupertinoActivityIndicator(
+                        radius: 9.r,
+                        color: AppColors.black,
+                      )
+                    : Icon(
+                        isBalanceVisible ? Iconsax.eye_slash : Iconsax.eye,
+                        size: 18.w,
+                        color: AppColors.textHeading.withValues(alpha: 0.5),
+                      ),
+              ),
+            ),
+          ),
+        ],
         SizedBox(width: 8.w),
         SvgPictureAsset(
           AppAssets.icArrowForward,

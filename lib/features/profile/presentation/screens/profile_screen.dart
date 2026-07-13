@@ -175,11 +175,17 @@ class ProfileScreen extends StatelessWidget {
                     : controller.openWallet,
                 child: SizedBox(
                   height: ProfileScreenLayout.walletCardHeight,
+                  // Balance hidden by default; eye reveals + silent refresh.
                   child: WalletSummaryCard(
                     balance: balance,
                     walletNumber: walletNum,
                     currencyCode: controller.walletCurrency.value,
                     isLoading: controller.isLoadingWallet.value,
+                    isRefreshingBalance:
+                        controller.isRefreshingWalletBalance.value,
+                    isBalanceVisible: controller.isBalanceVisible.value,
+                    onToggleBalanceVisibility:
+                        controller.toggleWalletBalanceVisibility,
                   ),
                 ),
               ),
