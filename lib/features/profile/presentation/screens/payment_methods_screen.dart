@@ -15,7 +15,6 @@ import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../payment/presentation/controllers/saved_cards_controller.dart';
 import '../../../wallet/data/models/go_wallet_card_model.dart';
-import '../controllers/payment_methods_controller.dart';
 import '../widgets/payment_card_action_bottom_sheet.dart';
 import 'add_card_screen.dart';
 
@@ -30,18 +29,14 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
   @override
   void initState() {
     super.initState();
-    final controller = Get.put(sl<PaymentMethodsController>());
     final savedCardsController = Get.put(sl<SavedCardsController>());
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      unawaited(controller.refreshPaymentMethodsState());
       unawaited(savedCardsController.loadCards());
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<PaymentMethodsController>();
-
     return Scaffold(
       backgroundColor: AppColors.pageBackground,
       body: Column(
@@ -53,15 +48,10 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Payment methods section
-                // _buildSectionTitle(AppStrings.paymentMethodsTitle.tr),
                 SizedBox(height: 8.h),
-                // Obx(() => _buildSelcomPesaCard(controller)),
-                // SizedBox(height: 14.h),
-                // Cards section
                 _buildSectionTitle(AppStrings.cards.tr),
                 SizedBox(height: 8.h),
-                _buildCardsSection(controller),
+                _buildCardsSection(),
               ],
             ),
           ),
@@ -82,98 +72,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
     );
   }
 
-  Widget _buildSelcomPesaCard(PaymentMethodsController controller) {
-    bool isLinked = controller.isSelcomPesaLinked.value;
-
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 17.w, vertical: 18.h),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceSubtle,
-        border: Border.all(color: AppColors.borderWalletCard, width: 0.8),
-        borderRadius: BorderRadius.circular(16.r),
-      ),
-      child: InkWell(
-        onTap: controller.openSelcomPesaToWallet,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  AppStrings.selcomPesa.tr,
-                  style: AppTextStyles.body.copyWith(
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.black,
-                    height: 20 / 15,
-                  ),
-                ),
-                if (isLinked) ...[
-                  SizedBox(width: 7.w),
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 6.w,
-                      vertical: 2.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.textVerified,
-                      borderRadius: BorderRadius.circular(4.r),
-                    ),
-                    child: Text(
-                      AppStrings.defaultLabel.tr,
-                      style: TextStyle(
-                        color: AppColors.white,
-                        fontSize: 10.sp,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-                if (isLinked) ...[
-                  const Spacer(),
-                  Icon(
-                    Iconsax.arrow_right_3,
-                    size: 20.w,
-                    color: AppColors.textBody.withValues(alpha: 0.5),
-                  ),
-                ],
-              ],
-            ),
-            SizedBox(height: 5.h),
-            Text(
-              controller.selcomPesaSummarySubtitle,
-              style: isLinked
-                  ? AppTextStyles.bodySecondary.copyWith(
-                      color: AppColors.textBody,
-                      fontWeight: FontWeight.w500,
-                      height: 20 / 14,
-                    )
-                  : AppTextStyles.caption.copyWith(
-                      color: AppColors.textBody,
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w400,
-                      height: 20 / 12,
-                    ),
-            ),
-            if (!isLinked) ...[
-              SizedBox(height: 5.h),
-              Text(
-                AppStrings.linkAccount.tr,
-                style: AppTextStyles.body.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 15.sp,
-                  height: 20 / 15,
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCardsSection(PaymentMethodsController controller) {
+  Widget _buildCardsSection() {
     final savedCardsController = Get.find<SavedCardsController>();
     return Container(
       padding: EdgeInsets.fromLTRB(10.w, 19.h, 10.w, 0.h),

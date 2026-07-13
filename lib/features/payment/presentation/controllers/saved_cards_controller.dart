@@ -37,7 +37,6 @@ class SavedCardsController extends GetxController {
   void onInit() {
     super.onInit();
     amountController = TextEditingController();
-    loadCards();
   }
 
   @override

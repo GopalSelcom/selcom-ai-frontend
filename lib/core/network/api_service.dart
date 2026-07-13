@@ -485,6 +485,25 @@ class ApiService {
 
   // ── Logging ──
 
+  String _formatBytes(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(2)} KB';
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(2)} MB';
+  }
+
+  int _calculatePayloadSize(dynamic data) {
+    if (data == null) return 0;
+    try {
+      if (data is String) {
+        return utf8.encode(data).length;
+      }
+      if (data is Map || data is List) {
+        return utf8.encode(jsonEncode(data)).length;
+      }
+    } catch (_) {}
+    return 0;
+  }
+
   void _logRequest(
     String fullUrl,
     ApiRequest request,
@@ -495,8 +514,14 @@ class ApiService {
     final safeHeaders = _redactSensitiveMap(headers);
     final safeQuery = _redactSensitiveMap(request.queryParams);
     final safeBody = _redactSensitiveMap(body);
+
+    final headersBytes = _calculatePayloadSize(headers);
+    final queryBytes = _calculatePayloadSize(request.queryParams);
+    final bodyBytes = _calculatePayloadSize(body);
+    final totalRequestBytes = headersBytes + queryBytes + bodyBytes;
+
     AppLogger.d(
-      "🚀 REQUEST >> ${request.method.name.toUpperCase()} $fullUrl",
+      "🚀 REQUEST >> ${request.method.name.toUpperCase()} $fullUrl | Size: ${_formatBytes(totalRequestBytes)} (Headers: ${_formatBytes(headersBytes)}, Query: ${_formatBytes(queryBytes)}, Body: ${_formatBytes(bodyBytes)})",
       tag: 'ApiService',
     );
     AppLogger.d(
@@ -513,7 +538,7 @@ class ApiService {
     );
 
     ErrorReporter.instance.addLog(
-      "🚀 API REQUEST: ${request.method.name.toUpperCase()} $fullUrl | Query: ${jsonEncode(safeQuery)} | Body: ${jsonEncode(safeBody)}",
+      "🚀 API REQUEST: ${request.method.name.toUpperCase()} $fullUrl | Size: ${_formatBytes(totalRequestBytes)} | Query: ${jsonEncode(safeQuery)} | Body: ${jsonEncode(safeBody)}",
       tag: 'API',
     );
   }
@@ -527,9 +552,10 @@ class ApiService {
     String? errorMessage,
   }) {
     if (!AppLogger.enabled) return;
+    final responseBytes = _calculatePayloadSize(data);
     final prefix = isError ? '❌ ERROR' : '✅ SUCCESS';
     AppLogger.d(
-      "$prefix >> $fullUrl | ${statusCode ?? 'N/A'} | ${duration}ms",
+      "$prefix >> $fullUrl | ${statusCode ?? 'N/A'} | ${duration}ms | Payload Size: ${_formatBytes(responseBytes)}",
       tag: 'ApiService',
     );
     if (isError && errorMessage != null) {
@@ -541,7 +567,7 @@ class ApiService {
     );
 
     ErrorReporter.instance.addLog(
-      "✅ API RESPONSE: $fullUrl | Status: ${statusCode ?? 'N/A'} | Error: $isError | Message: ${errorMessage ?? 'None'}",
+      "✅ API RESPONSE: $fullUrl | Status: ${statusCode ?? 'N/A'} | Size: ${_formatBytes(responseBytes)} | Error: $isError | Message: ${errorMessage ?? 'None'}",
       tag: 'API',
     );
   }
