@@ -1,5 +1,6 @@
 import 'dart:io' show Platform;
 
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 
@@ -28,19 +29,32 @@ class FacebookSignInResult {
   final String rawNonce;
 }
 
+class _FacebookLoginRequest {
+  const _FacebookLoginRequest({
+    required this.permissions,
+    required this.loginTracking,
+    this.hashedNonce,
+  });
+
+  final List<String> permissions;
+  final LoginTracking loginTracking;
+  final String? hashedNonce;
+}
+
 class FacebookSignInService {
   Future<FacebookSignInResult> signIn() async {
     try {
-      // Firebase Limited Login requires a nonce: send SHA-256 to Facebook, keep
-      // the raw value for [OAuthCredential.rawNonce] when building the credential.
+      // Keep raw nonce for Firebase Limited Login; pass SHA-256 to Facebook only
+      // when iOS uses LoginTracking.limited.
       final rawNonce = generateAppleSignInNonce();
       final hashedNonce = sha256ofString(rawNonce);
+      final request = await _buildLoginRequest(hashedNonce);
 
       final LoginResult result = await FacebookAuth.instance.login(
-        permissions: ['public_profile', 'email'],
+        permissions: request.permissions,
         loginBehavior: LoginBehavior.nativeWithFallback,
-        loginTracking: _loginTracking,
-        nonce: hashedNonce,
+        loginTracking: request.loginTracking,
+        nonce: request.hashedNonce,
       );
 
       switch (result.status) {
@@ -83,12 +97,37 @@ class FacebookSignInService {
     await FacebookAuth.instance.logOut();
   }
 
-  /// iOS returns a [LimitedToken] (OIDC JWT) under Limited Login / ATT;
-  /// Android keeps classic Graph API access tokens.
-  LoginTracking get _loginTracking {
+  Future<_FacebookLoginRequest> _buildLoginRequest(String hashedNonce) async {
     if (!kIsWeb && Platform.isIOS) {
-      return LoginTracking.limited;
+      return _iosLoginRequest(hashedNonce);
     }
-    return LoginTracking.enabled;
+
+    return const _FacebookLoginRequest(
+      permissions: ['email', 'public_profile'],
+      loginTracking: LoginTracking.enabled,
+    );
+  }
+
+  /// ATT authorized → classic login (may open Facebook app).
+  /// ATT denied → limited login (in-app sheet + nonce for Firebase OIDC).
+  Future<_FacebookLoginRequest> _iosLoginRequest(String hashedNonce) async {
+    var status = await AppTrackingTransparency.trackingAuthorizationStatus;
+    if (status == TrackingStatus.notDetermined) {
+      status = await AppTrackingTransparency.requestTrackingAuthorization();
+    }
+
+    final useLimitedLogin = status != TrackingStatus.authorized;
+    if (useLimitedLogin) {
+      return _FacebookLoginRequest(
+        permissions: const ['email'],
+        loginTracking: LoginTracking.limited,
+        hashedNonce: hashedNonce,
+      );
+    }
+
+    return const _FacebookLoginRequest(
+      permissions: ['email', 'public_profile'],
+      loginTracking: LoginTracking.enabled,
+    );
   }
 }

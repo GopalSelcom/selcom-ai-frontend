@@ -91,6 +91,10 @@
         <string>Selcom Go needs access to your photo library to allow you to upload a profile
             picture.
         </string>
+        <key>NSUserTrackingUsageDescription</key>
+        <string>Selcom Go uses this to offer Facebook sign-in with your Facebook app when you allow
+            tracking. If you decline, sign-in still works in the app.
+        </string>
         <key>NSSupportsLiveActivities</key>
         <true />
         <key>NSVoIPUsageDescription</key>
