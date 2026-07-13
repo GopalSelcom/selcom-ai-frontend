@@ -597,6 +597,7 @@ class LanguageSw extends Languages {
     'visa': 'VISA',
     'wallet': 'Mkoba',
     'wallet_number_copied': 'Namba ya mkoba imenakiliwa',
+    'copied_to_clipboard': 'Imenakiliwa kwenye ubao wa kunakili',
     'wallet_number_label': 'Namba ya Mkoba',
     'wallet_reserved_balance': 'Imehifadhiwa: @amount',
     'recent_transactions': 'Miamala ya Hivi Karibuni',
@@ -2611,6 +2612,9 @@ class LanguageSw extends Languages {
 
   @override
   String get walletNumberCopied => values['wallet_number_copied'] ?? '';
+
+  @override
+  String get copiedToClipboard => values['copied_to_clipboard'] ?? '';
 
   @override
   String get walletNumberLabel => values['wallet_number_label'] ?? '';

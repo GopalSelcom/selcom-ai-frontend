@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
@@ -11,6 +10,7 @@ import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/balance_visibility_policy.dart';
+import '../../../../shared/utils/clipboard_utils.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../profile/domain/usecases/profile_usecase.dart';
 import '../../../profile/presentation/controllers/profile_controller.dart';
@@ -365,10 +365,16 @@ class WalletController extends GetxController {
     });
   }
 
+  /// Copies wallet number; iOS shows snackbar via [copyToClipboardWithFeedback].
   void copyWalletNumber() {
     final number = walletNumberForCopy;
     if (number.isEmpty) return;
-    Clipboard.setData(ClipboardData(text: number));
+    unawaited(
+      copyToClipboardWithFeedback(
+        text: number,
+        message: AppStrings.walletNumberCopied.tr,
+      ),
+    );
   }
 
   ///wallet controller from v4

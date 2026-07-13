@@ -18,6 +18,7 @@ import '../../../../core/services/session_expiry_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/balance_visibility_policy.dart';
+import '../../../../shared/utils/clipboard_utils.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
 import '../../../../shared/widgets/web_view_screen.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
@@ -476,6 +477,25 @@ class ProfileController extends GetxController {
     } else {
       Get.back();
     }
+  }
+
+  /// Unformatted wallet account digits for clipboard (no display spacing).
+  String get walletNumberForCopy {
+    final raw = ProfileWalletCache.walletNumberRaw.trim();
+    if (raw.isNotEmpty) return raw;
+    return walletNumber.value.replaceAll(RegExp(r'\s+'), '');
+  }
+
+  /// Copies wallet number; iOS shows snackbar via [copyToClipboardWithFeedback].
+  void copyWalletNumber() {
+    final number = walletNumberForCopy;
+    if (number.isEmpty) return;
+    unawaited(
+      copyToClipboardWithFeedback(
+        text: number,
+        message: AppStrings.walletNumberCopied.tr,
+      ),
+    );
   }
 
   void openMyRides() {

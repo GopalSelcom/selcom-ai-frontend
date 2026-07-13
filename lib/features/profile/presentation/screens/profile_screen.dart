@@ -186,6 +186,8 @@ class ProfileScreen extends StatelessWidget {
                     isBalanceVisible: controller.isBalanceVisible.value,
                     onToggleBalanceVisibility:
                         controller.toggleWalletBalanceVisibility,
+                    // Copy + iOS snackbar handled in ProfileController.
+                    onCopyWalletNumber: controller.copyWalletNumber,
                   ),
                 ),
               ),

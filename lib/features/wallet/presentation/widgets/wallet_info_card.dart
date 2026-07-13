@@ -31,6 +31,7 @@ class WalletInfoCard extends StatelessWidget {
   final bool isBalanceVisible;
   final bool isRefreshingBalance;
   final VoidCallback? onToggleBalanceVisibility;
+  /// Copy wallet number; iOS snackbar is shown from the controller layer.
   final VoidCallback onCopyWalletNumber;
   final VoidCallback onAddMoney;
   final VoidCallback onEStatement;

@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get_utils/src/extensions/internacionalization.dart';
 import 'package:iconsax/iconsax.dart';
@@ -24,6 +23,7 @@ class WalletSummaryCard extends StatelessWidget {
     this.isRefreshingBalance = false,
     this.isBalanceVisible = false,
     this.onToggleBalanceVisibility,
+    this.onCopyWalletNumber,
   });
 
   final String balance;
@@ -41,6 +41,9 @@ class WalletSummaryCard extends StatelessWidget {
 
   /// Toggles hide/show; while refreshing, the gesture is ignored.
   final VoidCallback? onToggleBalanceVisibility;
+
+  /// Delegates copy to controller; feedback handled in [copyToClipboardWithFeedback].
+  final VoidCallback? onCopyWalletNumber;
 
   static const String _accountNumberWidthTemplate = '000 000 000 00';
 
@@ -70,8 +73,6 @@ class WalletSummaryCard extends StatelessWidget {
     if (clean.isEmpty) return '—';
     return formatWalletAccountNumber(clean);
   }
-
-  String _accountNumberForCopy() => walletNumber.replaceAll(RegExp(r'\s+'), '');
 
   TextStyle get _amountStyle => AppTextStyles.price.copyWith(
     color: AppColors.black,
@@ -166,12 +167,10 @@ class WalletSummaryCard extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: _accountNumberStyle,
         ),
-        if (hasNumber) ...[
+        if (hasNumber && onCopyWalletNumber != null) ...[
           SizedBox(width: 2.w),
           GestureDetector(
-            onTap: () {
-              Clipboard.setData(ClipboardData(text: _accountNumberForCopy()));
-            },
+            onTap: onCopyWalletNumber,
             child: SvgPictureAsset(
               AppAssets.icCopy,
               width: 14.w,
