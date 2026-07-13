@@ -44,22 +44,46 @@ class _FacebookLoginRequest {
 class FacebookSignInService {
   Future<FacebookSignInResult> signIn() async {
     try {
-      // One nonce per sign-in attempt; Firebase Limited Login requires the raw
-      // value to match the SHA-256 hash sent to Facebook on limited flows.
+      // Keep raw nonce for Firebase Limited Login; pass SHA-256 to Facebook only
+      // when iOS uses LoginTracking.limited.
       final rawNonce = generateAppleSignInNonce();
       final hashedNonce = sha256ofString(rawNonce);
+      final request = await _buildLoginRequest(hashedNonce);
 
-      if (!kIsWeb && Platform.isIOS) {
-        return _signInIos(rawNonce: rawNonce, hashedNonce: hashedNonce);
-      }
-
-      return _loginAndMap(
-        request: const _FacebookLoginRequest(
-          permissions: ['email', 'public_profile'],
-          loginTracking: LoginTracking.enabled,
-        ),
-        rawNonce: rawNonce,
+      final LoginResult result = await FacebookAuth.instance.login(
+        permissions: request.permissions,
+        loginBehavior: LoginBehavior.nativeWithFallback,
+        loginTracking: request.loginTracking,
+        nonce: request.hashedNonce,
       );
+
+      switch (result.status) {
+        case LoginStatus.success:
+          final accessToken = result.accessToken;
+          if (accessToken == null) {
+            throw const FacebookSignInServiceException(
+              FacebookSignInErrorType.failed,
+              'Access token is null.',
+            );
+          }
+          return FacebookSignInResult(
+            accessToken: accessToken,
+            rawNonce: rawNonce,
+          );
+        case LoginStatus.cancelled:
+          throw const FacebookSignInServiceException(
+            FacebookSignInErrorType.cancelled,
+          );
+        case LoginStatus.failed:
+          throw FacebookSignInServiceException(
+            FacebookSignInErrorType.failed,
+            result.message,
+          );
+        default:
+          throw const FacebookSignInServiceException(
+            FacebookSignInErrorType.unknown,
+          );
+      }
     } catch (e) {
       if (e is FacebookSignInServiceException) rethrow;
       throw FacebookSignInServiceException(
@@ -73,96 +97,9 @@ class FacebookSignInService {
     await FacebookAuth.instance.logOut();
   }
 
-  /// iOS: ATT denied → limited login. ATT allowed → classic first, then limited
-  /// fallback when Facebook still returns a [LimitedToken] or classic login fails.
-  Future<FacebookSignInResult> _signInIos({
-    required String rawNonce,
-    required String hashedNonce,
-  }) async {
-    final primaryRequest = await _iosPrimaryLoginRequest(hashedNonce);
-
-    if (primaryRequest.loginTracking == LoginTracking.limited) {
-      return _loginAndMap(request: primaryRequest, rawNonce: rawNonce);
-    }
-
-    final classicResult = await _performLogin(primaryRequest);
-    if (classicResult.status == LoginStatus.cancelled) {
-      throw const FacebookSignInServiceException(
-        FacebookSignInErrorType.cancelled,
-      );
-    }
-
-    final classicToken = classicResult.accessToken;
-    if (classicResult.status == LoginStatus.success &&
-        classicToken != null &&
-        classicToken.type == AccessTokenType.classic) {
-      return FacebookSignInResult(
-        accessToken: classicToken,
-        rawNonce: rawNonce,
-      );
-    }
-
-    // ATT allowed but Facebook returned LimitedToken without nonce, or classic
-    // login failed — retry limited login with the same nonce for Firebase OIDC.
-    await FacebookAuth.instance.logOut();
-    return _loginAndMap(
-      request: _iosLimitedLoginRequest(hashedNonce),
-      rawNonce: rawNonce,
-    );
-  }
-
-  Future<LoginResult> _performLogin(_FacebookLoginRequest request) {
-    return FacebookAuth.instance.login(
-      permissions: request.permissions,
-      loginBehavior: LoginBehavior.nativeWithFallback,
-      loginTracking: request.loginTracking,
-      nonce: request.hashedNonce,
-    );
-  }
-
-  Future<FacebookSignInResult> _loginAndMap({
-    required _FacebookLoginRequest request,
-    required String rawNonce,
-  }) async {
-    final result = await _performLogin(request);
-
-    switch (result.status) {
-      case LoginStatus.success:
-        final accessToken = result.accessToken;
-        if (accessToken == null) {
-          throw const FacebookSignInServiceException(
-            FacebookSignInErrorType.failed,
-            'Access token is null.',
-          );
-        }
-        return FacebookSignInResult(
-          accessToken: accessToken,
-          rawNonce: rawNonce,
-        );
-      case LoginStatus.cancelled:
-        throw const FacebookSignInServiceException(
-          FacebookSignInErrorType.cancelled,
-        );
-      case LoginStatus.failed:
-        throw FacebookSignInServiceException(
-          FacebookSignInErrorType.failed,
-          result.message,
-        );
-      default:
-        throw const FacebookSignInServiceException(
-          FacebookSignInErrorType.unknown,
-        );
-    }
-  }
-
-  /// ATT authorized → try classic login first (may open Facebook app).
-  /// ATT denied/restricted → limited login only.
-  Future<_FacebookLoginRequest> _iosPrimaryLoginRequest(
-    String hashedNonce,
-  ) async {
-    final status = await _resolveAttStatus();
-    if (status != TrackingStatus.authorized) {
-      return _iosLimitedLoginRequest(hashedNonce);
+  Future<_FacebookLoginRequest> _buildLoginRequest(String hashedNonce) async {
+    if (!kIsWeb && Platform.isIOS) {
+      return _iosLoginRequest(hashedNonce);
     }
 
     return const _FacebookLoginRequest(
@@ -171,19 +108,26 @@ class FacebookSignInService {
     );
   }
 
-  _FacebookLoginRequest _iosLimitedLoginRequest(String hashedNonce) {
-    return _FacebookLoginRequest(
-      permissions: const ['email'],
-      loginTracking: LoginTracking.limited,
-      hashedNonce: hashedNonce,
-    );
-  }
-
-  Future<TrackingStatus> _resolveAttStatus() async {
+  /// ATT authorized → classic login (may open Facebook app).
+  /// ATT denied → limited login (in-app sheet + nonce for Firebase OIDC).
+  Future<_FacebookLoginRequest> _iosLoginRequest(String hashedNonce) async {
     var status = await AppTrackingTransparency.trackingAuthorizationStatus;
     if (status == TrackingStatus.notDetermined) {
       status = await AppTrackingTransparency.requestTrackingAuthorization();
     }
-    return status;
+
+    final useLimitedLogin = status != TrackingStatus.authorized;
+    if (useLimitedLogin) {
+      return _FacebookLoginRequest(
+        permissions: const ['email'],
+        loginTracking: LoginTracking.limited,
+        hashedNonce: hashedNonce,
+      );
+    }
+
+    return const _FacebookLoginRequest(
+      permissions: ['email', 'public_profile'],
+      loginTracking: LoginTracking.enabled,
+    );
   }
 }
