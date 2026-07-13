@@ -102,6 +102,7 @@ class AppProfileUserSummary extends StatelessWidget {
                 SizedBox(height: 4.h),
                 Row(
                   mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     SvgPictureAsset(
                       AppAssets.icRatingStar,
@@ -117,10 +118,11 @@ class AppProfileUserSummary extends StatelessWidget {
                     SizedBox(width: 4.w),
                     Text(
                       rating.toStringAsFixed(1),
-                      style: AppTextStyles.homeCaption.copyWith(
+                      style: AppTextStyles.homeSubtitle.copyWith(
                         color: AppColors.black.withValues(alpha: 0.9),
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w500,
+                        height: 20 / 14,
                       ),
                     ),
                   ],
