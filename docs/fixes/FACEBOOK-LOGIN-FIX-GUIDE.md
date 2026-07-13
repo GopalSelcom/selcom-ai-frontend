@@ -29,14 +29,14 @@ Limited Login needs:
 
 ## iOS login modes (ATT)
 
-| User choice (ATT) | Facebook mode | UI | Token |
-|-------------------|---------------|-----|-------|
-| **Allow tracking** | `LoginTracking.enabled` | May open Facebook app | `ClassicToken` |
-| **Ask not to track** | `LoginTracking.limited` | In-app sheet only | `LimitedToken` |
+| User choice (ATT) | First attempt | Fallback |
+|-------------------|---------------|----------|
+| **Allow tracking** | `LoginTracking.enabled` (may open Facebook app) | If `LimitedToken` or failure → `limited` + nonce (same attempt) |
+| **Ask not to track** | `LoginTracking.limited` + nonce | — |
 
-Limited Login **never** opens the native Facebook app — that is expected.
+Limited Login **never** opens the native Facebook app — that is expected on the fallback path.
 
-We use `app_tracking_transparency` to read ATT and pick the mode. Sign-in still works if the user declines tracking.
+We use `app_tracking_transparency` to read ATT. **Allow** tries classic first; if Facebook still returns a Limited JWT (common on SDK 18+), we automatically retry limited login with the same nonce so Firebase does not get `invalid-credential` / error 190.
 
 ---
 
@@ -44,10 +44,11 @@ We use `app_tracking_transparency` to read ATT and pick the mode. Sign-in still 
 
 ### 1. `lib/core/services/facebook_sign_in_service.dart`
 
-- Always generate `rawNonce` + SHA-256 hash before login.
+- Always generate `rawNonce` + SHA-256 hash before login (one pair per attempt).
 - **iOS:** request ATT if not determined; then:
-  - authorized → `enabled`, `['email', 'public_profile']`, no nonce param
-  - denied → `limited`, `['email']`, pass hashed nonce
+  - authorized → try `enabled`, `['email', 'public_profile']` (no nonce)
+  - if classic fails or returns `LimitedToken` → `logOut` + retry `limited`, `['email']`, same hashed nonce
+  - denied/restricted → `limited`, `['email']`, pass hashed nonce (single attempt)
 - **Android:** `enabled`, `['email', 'public_profile']`
 - Returns `FacebookSignInResult` (`accessToken` + `rawNonce`).
 
@@ -73,7 +74,7 @@ We use `app_tracking_transparency` to read ATT and pick the mode. Sign-in still 
 ## Test plan
 
 1. **iOS — decline tracking:** in-app Facebook sheet → login → Firebase succeeds.
-2. **iOS — allow tracking:** may open Facebook app → `ClassicToken` → Firebase succeeds.
+2. **iOS — allow tracking:** may open Facebook app; if Limited JWT or failure, auto fallback to in-app limited login → Firebase succeeds.
 3. **Android:** classic flow unchanged.
 
 ---
