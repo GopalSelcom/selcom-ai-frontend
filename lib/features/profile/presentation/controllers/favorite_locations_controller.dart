@@ -56,25 +56,34 @@ class FavoriteLocationsController extends GetxController {
       confirmText: AppStrings.remove.tr,
       cancelText: AppStrings.cancel.tr,
       onConfirm: () async {
-        final result = await profileRepository.deleteSavedPlace(placeId);
-        result.fold(
-          (failure) {
-            AppDialogs.showErrorDialog(message: failure.message);
-          },
-          (success) async {
-            if (!success) {
-              AppDialogs.showErrorDialog(
-                message: AppStrings.couldNotRemoveAddress.tr,
-              );
-              return;
-            }
+        AppDialogs.showLoadingDialog();
+        try {
+          final result = await profileRepository.deleteSavedPlace(placeId);
+          var shouldRefresh = false;
+          result.fold(
+            (failure) {
+              AppDialogs.showErrorDialog(message: failure.message);
+            },
+            (success) {
+              if (!success) {
+                AppDialogs.showErrorDialog(
+                  message: AppStrings.couldNotRemoveAddress.tr,
+                );
+                return;
+              }
+              shouldRefresh = true;
+            },
+          );
 
+          if (shouldRefresh) {
             await fetchSavedPlaces();
             if (Get.isRegistered<HomeController>()) {
               Get.find<HomeController>().loadSavedPlaces();
             }
-          },
-        );
+          }
+        } finally {
+          AppDialogs.dismissLoadingDialog();
+        }
       },
     );
   }
