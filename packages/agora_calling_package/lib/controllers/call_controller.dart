@@ -130,7 +130,7 @@ class CallController extends GetxController {
   /// buffers the event — [_onCallkitEvent] → [_acceptIncomingFromCallkitId]
   /// reconstructs the call from [FlutterCallkitIncoming.activeCalls].
   Future<void> bootstrap() async {
-    agoraCallLog('[AGORA_CTRL] bootstrap()');
+    AgoraCallLogger.d('[AGORA_CTRL] bootstrap()');
     _pushSub ??= notifications.pushStream.listen(_onPush);
     _callkitSub ??= FlutterCallkitIncoming.onEvent.listen(_onCallkitEvent);
     if (_resumeObserver == null) {
@@ -199,7 +199,7 @@ class CallController extends GetxController {
         _resetTransientState();
         currentCall.value = call;
         state.value = CallState.ringing;
-        agoraCallLog('[AGORA_CTRL] resume sync — seeded ringing rideId=$rideId');
+        AgoraCallLogger.d('[AGORA_CTRL] resume sync — seeded ringing rideId=$rideId');
         _startIncomingRingTimer();
         _openIncomingCallScreen();
         return;
@@ -208,12 +208,12 @@ class CallController extends GetxController {
       if (state.value == CallState.ringing &&
           currentCall.value?.rideId == rideId &&
           Get.currentRoute != IncomingCallScreen.routeName) {
-        agoraCallLog('[AGORA_CTRL] resume sync — pushing incoming UI '
+        AgoraCallLogger.d('[AGORA_CTRL] resume sync — pushing incoming UI '
               'rideId=$rideId');
         _openIncomingCallScreen();
       }
     } catch (e) {
-      agoraCallLog('[AGORA_CTRL] activeCalls resume sync failed: $e');
+      AgoraCallLogger.d('[AGORA_CTRL] activeCalls resume sync failed: $e');
     }
   }
 
@@ -245,18 +245,18 @@ class CallController extends GetxController {
     required String peerDisplayName,
     String? peerAvatarUrl,
   }) async {
-    agoraCallLog('[AGORA_CTRL] placeCall rideId=$rideId state=${state.value}');
+    AgoraCallLogger.d('[AGORA_CTRL] placeCall rideId=$rideId state=${state.value}');
     if (state.value == CallState.ringing ||
         state.value == CallState.dialing ||
         state.value == CallState.connecting ||
         state.value == CallState.connected) {
-      agoraCallLog('[AGORA_CTRL] placeCall ignored — already in call '
+      AgoraCallLogger.d('[AGORA_CTRL] placeCall ignored — already in call '
             '(state=${state.value})');
       return;
     }
     final mic = await PermissionsHelper.ensureMicrophone();
     if (mic != PermissionOutcome.granted) {
-      agoraCallLog('[AGORA_CTRL] placeCall mic denied=$mic');
+      AgoraCallLogger.d('[AGORA_CTRL] placeCall mic denied=$mic');
       throw CallPermissionDeniedException(mic);
     }
 
@@ -326,10 +326,10 @@ class CallController extends GetxController {
   /// reaches [_acceptIncoming] and seeds [currentCall] from activeCalls.
   void _onCallkitEvent(CallEvent? event) {
     if (event == null) return;
-    agoraCallLog('[AGORA_CTRL] callkit event=${event.eventName}');
+    AgoraCallLogger.d('[AGORA_CTRL] callkit event=${event.eventName}');
     switch (event) {
       case CallEventActionCallAccept(:final id):
-        killStateCallLog(
+        AgoraCallLogger.kill(
           'ACCEPT',
           'CallKit Accept received — cold-start or background wake id=$id',
         );
@@ -341,7 +341,7 @@ class CallController extends GetxController {
       case CallEventActionCallEnded():
       case CallEventActionCallTimeout():
         if (_acceptInProgress) {
-          agoraCallLog('[AGORA_CTRL] suppressing callkit end during accept');
+          AgoraCallLogger.d('[AGORA_CTRL] suppressing callkit end during accept');
           break;
         }
         unawaited(_localHangup(fromCallkit: true));
@@ -381,13 +381,13 @@ class CallController extends GetxController {
         }
       }
     } catch (e) {
-      agoraCallLog('[AGORA_CTRL] resolve callkit body failed: $e');
+      AgoraCallLogger.d('[AGORA_CTRL] resolve callkit body failed: $e');
     }
     return null;
   }
 
   Future<void> _handleIncomingPush(Map<String, dynamic> data) async {
-    agoraCallLog('[AGORA_CTRL] _handleIncomingPush state=${state.value} '
+    AgoraCallLogger.d('[AGORA_CTRL] _handleIncomingPush state=${state.value} '
           'data=$data');
     // Block only when an actual call session is in flight. `error` is a
     // terminal state from a previous attempt — treat it like `ended`/`idle`
@@ -400,7 +400,7 @@ class CallController extends GetxController {
       CallState.connected,
     };
     if (inFlight.contains(state.value)) {
-      agoraCallLog('[AGORA_CTRL] ignoring incoming — already in call '
+      AgoraCallLogger.d('[AGORA_CTRL] ignoring incoming — already in call '
             '(state=${state.value})');
       return;
     }
@@ -410,7 +410,7 @@ class CallController extends GetxController {
       defaultPeerLabel: defaultLabel,
     );
     if (call == null) {
-      agoraCallLog('[AGORA_CTRL] dropped incoming push: missing ride_id');
+      AgoraCallLogger.d('[AGORA_CTRL] dropped incoming push: missing ride_id');
       return;
     }
     _resetTransientState();
@@ -482,55 +482,55 @@ class CallController extends GetxController {
       defaultPeerLabel: defaultLabel,
     );
     if (reconstructed == null) {
-      agoraCallLog('[AGORA_CTRL] _seedIncomingFromBody: no ride_id, skipping');
+      AgoraCallLogger.d('[AGORA_CTRL] _seedIncomingFromBody: no ride_id, skipping');
       return;
     }
     _resetTransientState();
     currentCall.value = reconstructed;
     state.value = CallState.ringing;
     _startIncomingRingTimer();
-    agoraCallLog('[AGORA_CTRL] seeded ringing call '
+    AgoraCallLogger.d('[AGORA_CTRL] seeded ringing call '
           'rideId=${reconstructed.rideId} peer=${reconstructed.peerDisplayName}');
   }
 
   Future<void> _acceptIncoming(Map<String, dynamic>? eventBody) async {
-    killStateCallLog(
+    AgoraCallLogger.kill(
       'ACCEPT',
       '_acceptIncoming start state=${state.value} '
       'call=${currentCall.value?.rideId} hasBody=${eventBody != null}',
     );
-    agoraCallLog('[AGORA_CTRL] _acceptIncoming start state=${state.value} '
+    AgoraCallLogger.d('[AGORA_CTRL] _acceptIncoming start state=${state.value} '
           'call=${currentCall.value?.rideId} hasBody=${eventBody != null}');
     // Killed-state path: CallKit dispatched Accept before the controller had
     // a chance to consume the incoming-call push. Reconstruct from event.body.
     if ((currentCall.value == null || state.value != CallState.ringing) &&
         eventBody != null) {
-      killStateCallLog('ACCEPT', 'seeding call from CallKit event body (killed-state path)');
+      AgoraCallLogger.kill('ACCEPT', 'seeding call from CallKit event body (killed-state path)');
       await _seedIncomingFromBody(eventBody);
     }
 
     final call = currentCall.value;
     if (call == null) {
-      killStateCallLog('ACCEPT', 'bail — no current call after seed');
-      agoraCallLog('[AGORA_CTRL] _acceptIncoming bail: no current call');
+      AgoraCallLogger.kill('ACCEPT', 'bail — no current call after seed');
+      AgoraCallLogger.d('[AGORA_CTRL] _acceptIncoming bail: no current call');
       return;
     }
     if (state.value == CallState.dialing ||
         state.value == CallState.connecting ||
         state.value == CallState.connected) {
-      agoraCallLog('[AGORA_CTRL] _acceptIncoming dedup — call already active '
+      AgoraCallLogger.d('[AGORA_CTRL] _acceptIncoming dedup — call already active '
             'state=${state.value} rideId=${call.rideId}');
       _openActiveCallScreen();
       return;
     }
     if (state.value != CallState.ringing) {
-      agoraCallLog('[AGORA_CTRL] _acceptIncoming bail: '
+      AgoraCallLogger.d('[AGORA_CTRL] _acceptIncoming bail: '
             'call=${call.rideId} state=${state.value}');
       return;
     }
 
     if (_acceptMutex) {
-      agoraCallLog('[AGORA_CTRL] _acceptIncoming dedup — already answering');
+      AgoraCallLogger.d('[AGORA_CTRL] _acceptIncoming dedup — already answering');
       return;
     }
     _acceptMutex = true;
@@ -540,7 +540,7 @@ class CallController extends GetxController {
       if (state.value == CallState.dialing ||
           state.value == CallState.connecting ||
           state.value == CallState.connected) {
-        agoraCallLog('[AGORA_CTRL] _acceptIncoming dedup after mutex — '
+        AgoraCallLogger.d('[AGORA_CTRL] _acceptIncoming dedup after mutex — '
               'already active state=${state.value}');
         _openActiveCallScreen();
         return;
@@ -551,7 +551,7 @@ class CallController extends GetxController {
 
       final mic = await PermissionsHelper.ensureMicrophone();
       if (mic != PermissionOutcome.granted) {
-        agoraCallLog('[AGORA_CTRL] _acceptIncoming mic denied=$mic');
+        AgoraCallLogger.d('[AGORA_CTRL] _acceptIncoming mic denied=$mic');
         throw CallPermissionDeniedException(mic);
       }
 
@@ -578,12 +578,12 @@ class CallController extends GetxController {
       try {
         final authHeaders = await config.getAuthHeaders();
         final accessToken = authHeaders['access_token']?.trim() ?? '';
-        agoraCallLog(
+        AgoraCallLogger.d(
             '[AGORA_CTRL] _acceptIncoming mint auth '
             'access_token=${accessToken.isEmpty ? "EMPTY" : "len=${accessToken.length}"}',
           );
         if (accessToken.isEmpty) {
-          killStateCallLog(
+          AgoraCallLogger.kill(
             'ACCEPT',
             'FAILED — access_token EMPTY on accept (session not loaded from Hive)',
           );
@@ -594,7 +594,7 @@ class CallController extends GetxController {
           return;
         }
 
-        killStateCallLog(
+        AgoraCallLogger.kill(
           'ACCEPT',
           'minting token rideId=${call.rideId} intent=${CallTokenIntent.answer}',
         );
@@ -619,14 +619,14 @@ class CallController extends GetxController {
         // Second nudge after RTC is up — keeps iOS CallKit history accurate.
         await _silenceNativeIncomingUi(call.rideId);
 
-        killStateCallLog(
+        AgoraCallLogger.kill(
           'ACCEPT',
           'joined channel OK rideId=${call.rideId} channel=${currentCall.value?.channel}',
         );
-        agoraCallLog('[AGORA_CTRL] _acceptIncoming joined channel');
+        AgoraCallLogger.d('[AGORA_CTRL] _acceptIncoming joined channel');
       } catch (e, st) {
-        killStateCallLog('ACCEPT', 'join FAILED rideId=${call.rideId} err=$e');
-        agoraCallLog('[AGORA_CTRL] _acceptIncoming join failed: $e\n$st');
+        AgoraCallLogger.kill('ACCEPT', 'join FAILED rideId=${call.rideId} err=$e');
+        AgoraCallLogger.d('[AGORA_CTRL] _acceptIncoming join failed: $e\n$st');
         _failWith('Could not join the call', e);
       } finally {
         _acceptInProgress = false;
@@ -634,7 +634,7 @@ class CallController extends GetxController {
     } on CallPermissionDeniedException {
       rethrow;
     } catch (e, st) {
-      agoraCallLog('[AGORA_CTRL] _acceptIncoming failed before join: $e\n$st');
+      AgoraCallLogger.d('[AGORA_CTRL] _acceptIncoming failed before join: $e\n$st');
       rethrow;
     } finally {
       _acceptMutex = false;
@@ -653,7 +653,7 @@ class CallController extends GetxController {
     try {
       await FlutterCallkitIncoming.setCallConnected(callkitId);
     } catch (e) {
-      agoraCallLog('[AGORA_CTRL] setCallConnected failed (non-fatal): $e');
+      AgoraCallLogger.d('[AGORA_CTRL] setCallConnected failed (non-fatal): $e');
     }
     if (Platform.isAndroid) {
       try {
@@ -661,7 +661,7 @@ class CallController extends GetxController {
           CallKitParams(id: callkitId),
         );
       } catch (e) {
-        agoraCallLog('[AGORA_CTRL] hideCallkitIncoming failed (non-fatal): $e');
+        AgoraCallLogger.d('[AGORA_CTRL] hideCallkitIncoming failed (non-fatal): $e');
       }
     }
   }
@@ -671,12 +671,12 @@ class CallController extends GetxController {
     try {
       Get.back<void>();
     } catch (e) {
-      agoraCallLog('[AGORA_CTRL] dismiss incoming route failed: $e');
+      AgoraCallLogger.d('[AGORA_CTRL] dismiss incoming route failed: $e');
     }
   }
 
   Future<void> _declineIncoming(Map<String, dynamic>? eventBody) async {
-    agoraCallLog('[AGORA_CTRL] _declineIncoming start state=${state.value} '
+    AgoraCallLogger.d('[AGORA_CTRL] _declineIncoming start state=${state.value} '
           'call=${currentCall.value?.rideId} hasBody=${eventBody != null}');
     if ((currentCall.value == null || state.value != CallState.ringing) &&
         eventBody != null) {
@@ -708,7 +708,7 @@ class CallController extends GetxController {
 
   Future<void> _localHangup({bool fromCallkit = false}) async {
     final call = currentCall.value;
-    agoraCallLog('[AGORA_CTRL] _localHangup state=${state.value} '
+    AgoraCallLogger.d('[AGORA_CTRL] _localHangup state=${state.value} '
           'call=${call?.rideId} fromCallkit=$fromCallkit');
     if (call == null) {
       // No active call but the user mashed End anyway — make sure CallKit is
@@ -785,7 +785,7 @@ class CallController extends GetxController {
     // by Agora with `-17 ERR_JOIN_CHANNEL_REJECTED` and the failure path then
     // calls `leaveChannel`, dropping the *live* call. Skip the duplicate.
     if (_joinedChannelName == channel) {
-      agoraCallLog('[AGORA_CTRL] _joinChannelFor skip — already joined '
+      AgoraCallLogger.d('[AGORA_CTRL] _joinChannelFor skip — already joined '
             'channel=$channel');
       return;
     }
@@ -799,7 +799,7 @@ class CallController extends GetxController {
       // AgoraService normally swallows -17; this is a last-resort guard so
       // _failWith → leaveChannel never tears down a live duplicate join.
       if (_joinedChannelName == channel) {
-        agoraCallLog('[AGORA_CTRL] _joinChannelFor join error ignored — '
+        AgoraCallLogger.d('[AGORA_CTRL] _joinChannelFor join error ignored — '
               'already joined channel=$channel err=$e');
         return;
       }
@@ -859,7 +859,7 @@ class CallController extends GetxController {
         tokenExpiresAt: mint.expiresAt,
       );
     } catch (e) {
-      agoraCallLog('[AGORA_CTRL] token refresh failed: $e');
+      AgoraCallLogger.d('[AGORA_CTRL] token refresh failed: $e');
     }
   }
 
@@ -885,7 +885,7 @@ class CallController extends GetxController {
     CallEndReason reason, {
     bool dismissCallkit = true,
   }) {
-    agoraCallLog('[AGORA_CTRL] _terminate reason=$reason '
+    AgoraCallLogger.d('[AGORA_CTRL] _terminate reason=$reason '
           'state=${state.value} dismissCallkit=$dismissCallkit');
     if (state.value == CallState.ended || state.value == CallState.error) {
       return;
@@ -1018,13 +1018,13 @@ class CallController extends GetxController {
     if (_tryPushRoute(routeName, fullscreenDialog: fullscreenDialog)) {
       return;
     }
-    agoraCallLog('[AGORA_CTRL] navigator not ready — polling for $routeName');
+    AgoraCallLogger.d('[AGORA_CTRL] navigator not ready — polling for $routeName');
     _pendingNavTimer?.cancel();
     var ticks = 0;
     _pendingNavTimer = Timer.periodic(const Duration(milliseconds: 100), (t) {
       ticks++;
       if (ticks > 80) {
-        agoraCallLog('[AGORA_CTRL] navigateWhenReady timeout for $routeName '
+        AgoraCallLogger.d('[AGORA_CTRL] navigateWhenReady timeout for $routeName '
               '(navigator never attached)');
         t.cancel();
         return;
@@ -1041,7 +1041,7 @@ class CallController extends GetxController {
         return;
       }
       if (_tryPushRoute(routeName, fullscreenDialog: fullscreenDialog)) {
-        agoraCallLog('[AGORA_CTRL] navigator attached — pushed $routeName '
+        AgoraCallLogger.d('[AGORA_CTRL] navigator attached — pushed $routeName '
               'after ${ticks * 100}ms');
         t.cancel();
       }
@@ -1065,7 +1065,7 @@ class CallController extends GetxController {
       );
       return true;
     } catch (e) {
-      agoraCallLog('[AGORA_CTRL] _tryPushRoute($routeName) failed: $e');
+      AgoraCallLogger.d('[AGORA_CTRL] _tryPushRoute($routeName) failed: $e');
       return false;
     }
   }
@@ -1089,7 +1089,7 @@ class CallController extends GetxController {
   /// Releases any screen/wakelocks held by Flutter or the Agora UI when the phone locks
   /// or the application transitions to the background.
   void _handleLifecycleBackgrounded() {
-    agoraCallLog('[AGORA_CTRL] App paused/inactive (device locked or backgrounded). '
+    AgoraCallLogger.d('[AGORA_CTRL] App paused/inactive (device locked or backgrounded). '
           'Releasing screen and wake locks.');
     
     // 1. Release Wakelock: If you are using the 'wakelock_plus' package to keep the screen
@@ -1111,7 +1111,7 @@ class CallController extends GetxController {
   /// Re-evaluates and restores necessary wake locks or screen flags when the app returns
   /// to the foreground (resumed state).
   void _handleLifecycleResumed() {
-    agoraCallLog('[AGORA_CTRL] App resumed. Restoring screen/wakelock states.');
+    AgoraCallLogger.d('[AGORA_CTRL] App resumed. Restoring screen/wakelock states.');
 
     // 1. Re-enable Wakelock: If the call is still active, re-acquire the wakelock so
     // the screen stays awake while the user is actively viewing/using the call screen.
@@ -1134,7 +1134,7 @@ class _CallkitResumeObserver with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    agoraCallLog('[AGORA_CTRL] didChangeAppLifecycleState state=$state');
+    AgoraCallLogger.d('[AGORA_CTRL] didChangeAppLifecycleState state=$state');
     if (state == AppLifecycleState.resumed) {
       controller._scheduleResumeCallkitSync();
       controller._handleLifecycleResumed();

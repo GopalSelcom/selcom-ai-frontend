@@ -68,7 +68,7 @@ Future<void> _agoraCallingBackgroundHandler(
   String backgroundCallKitAppName = 'Selcom Go',
   CallParticipantRole localRole = CallParticipantRole.rider,
 }) async {
-  killStateCallLog(
+  AgoraCallLogger.kill(
     'CALLKIT',
     'agora background handler entered messageId=${message.messageId}',
   );
@@ -79,7 +79,7 @@ Future<void> _agoraCallingBackgroundHandler(
     backgroundCallKitAppName: backgroundCallKitAppName,
     localRole: localRole,
   );
-  killStateCallLog('CALLKIT', 'agora background handler exited');
+  AgoraCallLogger.kill('CALLKIT', 'agora background handler exited');
 }
 
 /// Push payload shape emitted to the controller.
@@ -191,12 +191,12 @@ class AgoraCallingNotificationService {
 
   void _onForegroundMessage(RemoteMessage message) {
     final type = (message.data['type'] ?? '').toString().toLowerCase();
-    agoraCallLog('[AGORA_NOTIF] fg push type="$type" '
+    AgoraCallLogger.d('[AGORA_NOTIF] fg push type="$type" '
         'has_notification=${message.notification != null} '
         'data=${message.data}');
     if (type.isEmpty) return;
     if (_isDuplicatePush(type, message.data, _fgPushDedup)) {
-      agoraCallLog('[AGORA_NOTIF] fg push dropped — duplicate within '
+      AgoraCallLogger.d('[AGORA_NOTIF] fg push dropped — duplicate within '
           '${_pushDedupWindow.inSeconds}s');
       return;
     }
@@ -221,7 +221,7 @@ class AgoraCallingNotificationService {
         _dismissIncomingUi(message.data);
         return;
       default:
-        agoraCallLog('[AGORA_NOTIF] ignoring fg push with unhandled type '
+        AgoraCallLogger.d('[AGORA_NOTIF] ignoring fg push with unhandled type '
             '"$type" — not a calling event');
         return;
     }
@@ -229,7 +229,7 @@ class AgoraCallingNotificationService {
 
   void _onMessageOpened(RemoteMessage message) {
     final type = (message.data['type'] ?? '').toString().toLowerCase();
-    agoraCallLog('[AGORA_NOTIF] opened from notification type=$type');
+    AgoraCallLogger.d('[AGORA_NOTIF] opened from notification type=$type');
     if (type.isEmpty) return;
     _pushes.add(
       IncomingPushPayload(type, Map<String, dynamic>.from(message.data)),
@@ -242,7 +242,7 @@ class AgoraCallingNotificationService {
   Future<void> _showCallkitIncoming(Map<String, dynamic> data) async {
     final rideId = (data['ride_id'] ?? data['rideId'])?.toString() ?? 'unknown';
     final peerLabel = _resolvePeerLabel(data);
-    agoraCallLog('[AGORA_NOTIF] showCallkitIncoming '
+    AgoraCallLogger.d('[AGORA_NOTIF] showCallkitIncoming '
         'rideId=$rideId peer=$peerLabel');
     try {
       await FlutterCallkitIncoming.showCallkitIncoming(
@@ -258,22 +258,22 @@ class AgoraCallingNotificationService {
         ),
       );
     } catch (e, st) {
-      agoraCallLog('[AGORA_NOTIF] showCallkitIncoming failed: $e\n$st');
+      AgoraCallLogger.d('[AGORA_NOTIF] showCallkitIncoming failed: $e\n$st');
     }
   }
 
   Future<void> _dismissIncomingUi(Map<String, dynamic> data) async {
     final rideId = (data['ride_id'] ?? data['rideId'])?.toString();
-    agoraCallLog('[AGORA_NOTIF] dismiss incoming UI rideId=$rideId');
+    AgoraCallLogger.d('[AGORA_NOTIF] dismiss incoming UI rideId=$rideId');
     try {
       await FlutterCallkitIncoming.endAllCalls();
     } catch (e) {
-      agoraCallLog('[AGORA_NOTIF] endAllCalls failed: $e');
+      AgoraCallLogger.d('[AGORA_NOTIF] endAllCalls failed: $e');
     }
   }
 
   void injectExternalIncomingCall(Map<String, dynamic> data) {
-    agoraCallLog('[AGORA_NOTIF] injectExternalIncomingCall data=$data');
+    AgoraCallLogger.d('[AGORA_NOTIF] injectExternalIncomingCall data=$data');
     final patched = <String, dynamic>{
       ...data,
       'type': PushTypes.incomingCall,
@@ -282,7 +282,7 @@ class AgoraCallingNotificationService {
   }
 
   Future<void> dismissCallUi() async {
-    agoraCallLog('[AGORA_NOTIF] dismissCallUi');
+    AgoraCallLogger.d('[AGORA_NOTIF] dismissCallUi');
     try {
       await FlutterCallkitIncoming.endAllCalls();
     } catch (_) {}
@@ -333,14 +333,14 @@ class AgoraCallingNotificationService {
     CallParticipantRole localRole = CallParticipantRole.rider,
   }) async {
     final type = (message.data['type'] ?? '').toString().toLowerCase();
-    killStateCallLog(
+    AgoraCallLogger.kill(
       'CALLKIT',
       '_showFromBackground type="$type" '
       'has_notification=${message.notification != null} '
       'data=${message.data}',
     );
     if (type != PushTypes.incomingCall && type != PushTypes.callCancelled) {
-      killStateCallLog('CALLKIT', 'bg push ignored — not a calling event');
+      AgoraCallLogger.kill('CALLKIT', 'bg push ignored — not a calling event');
       return;
     }
 
@@ -349,7 +349,7 @@ class AgoraCallingNotificationService {
             'unknown';
 
     if (_isDuplicatePush(type, message.data, _bgPushDedup)) {
-      killStateCallLog(
+      AgoraCallLogger.kill(
         'CALLKIT',
         'bg push dropped — duplicate within '
         '${_pushDedupWindow.inSeconds}s rideId=$rideId',
@@ -358,11 +358,11 @@ class AgoraCallingNotificationService {
     }
 
     if (type == PushTypes.callCancelled) {
-      killStateCallLog('CALLKIT', 'call_cancelled rideId=$rideId');
+      AgoraCallLogger.kill('CALLKIT', 'call_cancelled rideId=$rideId');
       try {
         await FlutterCallkitIncoming.endAllCalls();
       } catch (e) {
-        killStateCallLog('CALLKIT', 'endAllCalls failed for cancel: $e');
+        AgoraCallLogger.kill('CALLKIT', 'endAllCalls failed for cancel: $e');
       }
       return;
     }
@@ -372,7 +372,7 @@ class AgoraCallingNotificationService {
       localRole: localRole,
       appName: backgroundCallKitAppName,
     );
-    killStateCallLog(
+    AgoraCallLogger.kill(
       'CALLKIT',
       'showCallkitIncoming START rideId=$rideId peer=$peerLabel',
     );
@@ -390,41 +390,41 @@ class AgoraCallingNotificationService {
         android: _incomingAndroidParams,
         ios: _iosCallKitParamsForBackground(iosCallKitIconName),
       ));
-      killStateCallLog(
+      AgoraCallLogger.kill(
         'CALLKIT',
         'showCallkitIncoming OK rideId=$rideId — holding bg isolate '
         '${_bgCallkitEngineKeepAlive.inMilliseconds}ms for native UI',
       );
       if (Platform.isAndroid) {
         await Future<void>.delayed(_bgCallkitEngineKeepAlive);
-        killStateCallLog('CALLKIT', 'bg isolate keep-alive done rideId=$rideId');
+        AgoraCallLogger.kill('CALLKIT', 'bg isolate keep-alive done rideId=$rideId');
       }
     } catch (e, st) {
-      killStateCallLog('CALLKIT', 'showCallkitIncoming FAILED rideId=$rideId err=$e');
-      killStateCallLog('CALLKIT', 'stack=$st');
+      AgoraCallLogger.kill('CALLKIT', 'showCallkitIncoming FAILED rideId=$rideId err=$e');
+      AgoraCallLogger.kill('CALLKIT', 'stack=$st');
     }
   }
 
   static Future<void> _logAndroidCallPermissionState() async {
     try {
       final notif = await Permission.notification.status;
-      killStateCallLog('CALLKIT', 'POST_NOTIFICATIONS status=$notif');
+      AgoraCallLogger.kill('CALLKIT', 'POST_NOTIFICATIONS status=$notif');
       if (!notif.isGranted) {
-        killStateCallLog(
+        AgoraCallLogger.kill(
           'CALLKIT',
           'WARNING: notification permission not granted — CallStyle may not show',
         );
       }
       final canFullScreen = await FlutterCallkitIncoming.canUseFullScreenIntent();
-      killStateCallLog('CALLKIT', 'canUseFullScreenIntent=$canFullScreen');
+      AgoraCallLogger.kill('CALLKIT', 'canUseFullScreenIntent=$canFullScreen');
       if (canFullScreen == false) {
-        killStateCallLog(
+        AgoraCallLogger.kill(
           'CALLKIT',
           'WARNING: full-screen intent disabled — lock-screen incoming UI may be hidden',
         );
       }
     } catch (e) {
-      killStateCallLog('CALLKIT', 'permission probe failed: $e');
+      AgoraCallLogger.kill('CALLKIT', 'permission probe failed: $e');
     }
   }
 

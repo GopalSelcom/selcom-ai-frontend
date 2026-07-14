@@ -43,11 +43,14 @@ import 'package:screenshot/screenshot.dart';
 const Environment kAppEnvironment = Environment.prod;
 
 void _registerKillCallLogSink() {
-  registerAgoraLogSink((line) {
+  // AgoraCallLogger matches AppLogger: debug-only by default.
+  // Uncomment for release kill-state / CallKit debugging (main + FCM isolate):
+  // AgoraCallLogger.forceRelease = true;
+  AgoraCallLogger.sink = (line) {
     try {
       FirebaseCrashlytics.instance.log(line);
     } catch (_) {}
-  });
+  };
 }
 
 /// FCM handler for **background and killed** app state.
@@ -61,14 +64,14 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   _registerKillCallLogSink();
 
-  killStateCallLog(
+  AgoraCallLogger.kill(
     'FCM_BG',
     'isolate woke — messageId=${message.messageId} '
     'has_notification=${message.notification != null} '
     'release=$kReleaseMode',
   );
   if (message.notification != null) {
-    killStateCallLog(
+    AgoraCallLogger.kill(
       'FCM_BG',
       'WARNING: push has notification block — Android may NOT run '
       'CallKit in killed state. title=${message.notification?.title}',
@@ -77,7 +80,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
   final type = (message.data['type'] ?? '').toString().toLowerCase().trim();
   final resolvedType = PushTypes.typeFromData(message.data) ?? '';
-  killStateCallLog(
+  AgoraCallLogger.kill(
     'FCM_BG',
     'data keys=${message.data.keys.toList()} '
     'directType="$type" resolvedType="$resolvedType"',
@@ -87,7 +90,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   if (type == 'incoming_call' ||
       type == 'call_joined' ||
       type == 'call_cancelled') {
-    killStateCallLog('FCM_BG', 'routing to Agora background handler type=$type');
+    AgoraCallLogger.kill('FCM_BG', 'routing to Agora background handler type=$type');
     try {
       await AgoraCallingNotificationService.firebaseBackgroundHandler(
         message,
@@ -97,10 +100,10 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
             AgoraCallingBootstrap.fcmBackgroundCallKitAppName,
         localRole: CallParticipantRole.rider,
       );
-      killStateCallLog('FCM_BG', 'Agora background handler finished type=$type');
+      AgoraCallLogger.kill('FCM_BG', 'Agora background handler finished type=$type');
     } catch (e, st) {
-      killStateCallLog('FCM_BG', 'Agora background handler FAILED type=$type err=$e');
-      killStateCallLog('FCM_BG', 'stack=$st');
+      AgoraCallLogger.kill('FCM_BG', 'Agora background handler FAILED type=$type err=$e');
+      AgoraCallLogger.kill('FCM_BG', 'stack=$st');
     }
     return;
   }
@@ -190,9 +193,9 @@ void main() async {
       _registerKillCallLogSink();
 
       // Initialize Agora calling package (REST + FCM + Android FG service).
-      killStateCallLog('COLD_START', 'AgoraCallingBootstrap.init starting');
+      AgoraCallLogger.kill('COLD_START', 'AgoraCallingBootstrap.init starting');
       await AgoraCallingBootstrap.init();
-      killStateCallLog('COLD_START', 'AgoraCallingBootstrap.init done');
+      AgoraCallLogger.kill('COLD_START', 'AgoraCallingBootstrap.init done');
 
       // Bridge native iOS PushKit/CallKit events into the calling package.
       // Token registration goes through `AgoraCalling.registerVoipToken`,

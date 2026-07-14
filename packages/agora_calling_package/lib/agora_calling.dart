@@ -38,11 +38,11 @@ class AgoraCalling {
   /// `bootstrap()` runs), THEN tell notif to start fanning events.
   static Future<void> init(AgoraCallingConfig config) async {
     if (_initialized) {
-      killStateCallLog('COLD_START', 'AgoraCalling.init skipped — already initialized');
+      AgoraCallLogger.kill('COLD_START', 'AgoraCalling.init skipped — already initialized');
       return;
     }
     _initialized = true;
-    killStateCallLog('COLD_START', 'AgoraCalling.init starting role=${config.localRole}');
+    AgoraCallLogger.kill('COLD_START', 'AgoraCalling.init starting role=${config.localRole}');
 
     final notif = AgoraCallingNotificationService(config);
     final api = CallApiService(config: config);
@@ -61,11 +61,11 @@ class AgoraCalling {
     );
     Get.put<CallController>(controller, permanent: true);
 
-    killStateCallLog('COLD_START', 'CallController.bootstrap starting (CallKit replay listener)');
+    AgoraCallLogger.kill('COLD_START', 'CallController.bootstrap starting (CallKit replay listener)');
     await controller.bootstrap();
-    killStateCallLog('COLD_START', 'CallController.bootstrap done');
+    AgoraCallLogger.kill('COLD_START', 'CallController.bootstrap done');
     await notif.initialize();
-    killStateCallLog('COLD_START', 'AgoraCalling.init complete — FCM foreground listeners ready');
+    AgoraCallLogger.kill('COLD_START', 'AgoraCalling.init complete — FCM foreground listeners ready');
   }
 
   static List<GetPage<dynamic>> routes() {
@@ -98,11 +98,11 @@ class AgoraCalling {
   /// Settings opens only when the user taps **Open Settings**.
   static Future<void> ensureAndroidCallPermissions() async {
     if (!Platform.isAndroid) {
-      killStateCallLog('COLD_START', 'call permissions skipped — not Android');
+      AgoraCallLogger.kill('COLD_START', 'call permissions skipped — not Android');
       return;
     }
     if (!_initialized) {
-      killStateCallLog(
+      AgoraCallLogger.kill(
         'COLD_START',
         'call permissions skipped — AgoraCalling not initialized yet',
       );
@@ -110,10 +110,10 @@ class AgoraCalling {
     }
     final hostUi = Get.find<AgoraCallingConfig>().ensureCallPermissionsUi;
     if (hostUi == null) {
-      killStateCallLog('COLD_START', 'call permissions skipped — no host UI');
+      AgoraCallLogger.kill('COLD_START', 'call permissions skipped — no host UI');
       return;
     }
-    killStateCallLog('COLD_START', 'call permissions — host UI');
+    AgoraCallLogger.kill('COLD_START', 'call permissions — host UI');
     await hostUi();
   }
 
@@ -129,24 +129,24 @@ class AgoraCalling {
 
   static Future<void> registerVoipToken(String token) async {
     if (!_initialized) {
-      agoraCallLog('[AGORA_API] registerVoipToken skipped — package not yet '
+      AgoraCallLogger.d('[AGORA_API] registerVoipToken skipped — package not yet '
           'initialized (call AgoraCalling.init first)');
       return;
     }
     if (token.isEmpty) {
-      agoraCallLog('[AGORA_API] registerVoipToken skipped — empty token');
+      AgoraCallLogger.d('[AGORA_API] registerVoipToken skipped — empty token');
       return;
     }
     final api = Get.find<CallApiService>();
     final cfg = Get.find<AgoraCallingConfig>();
-    agoraCallLog('[AGORA_API] registerVoipToken len=${token.length} '
+    AgoraCallLogger.d('[AGORA_API] registerVoipToken len=${token.length} '
         'prefix=${token.substring(0, token.length < 8 ? token.length : 8)}…');
     try {
       await api.registerVoipToken(token);
-      agoraCallLog('[AGORA_API] registerVoipToken OK — backend should now '
+      AgoraCallLogger.d('[AGORA_API] registerVoipToken OK — backend should now '
           'have a VoIP token for this user');
     } catch (e, st) {
-      agoraCallLog('[AGORA_API] registerVoipToken FAILED — backend will not '
+      AgoraCallLogger.d('[AGORA_API] registerVoipToken FAILED — backend will not '
           'have a VoIP token, iOS incoming calls in background/killed state '
           'WILL NOT ring. error=$e\n$st');
     }

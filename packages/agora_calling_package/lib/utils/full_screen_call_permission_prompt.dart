@@ -19,7 +19,7 @@ class FullScreenCallPermissionPrompt {
           await _channel.invokeMethod<bool>('canUseFullScreenIntent');
       if (nativeGranted != null) return nativeGranted;
     } catch (e) {
-      killStateCallLog(
+      AgoraCallLogger.kill(
         'COLD_START',
         'native canUseFullScreenIntent check failed: $e',
       );
@@ -27,7 +27,7 @@ class FullScreenCallPermissionPrompt {
     try {
       return await FlutterCallkitIncoming.canUseFullScreenIntent();
     } catch (e) {
-      killStateCallLog(
+      AgoraCallLogger.kill(
         'COLD_START',
         'canUseFullScreenIntent check failed: $e',
       );
@@ -42,7 +42,7 @@ class FullScreenCallPermissionPrompt {
       await _channel.invokeMethod<void>('openSettings');
       return;
     } catch (e) {
-      killStateCallLog(
+      AgoraCallLogger.kill(
         'COLD_START',
         'native full-screen settings failed, using plugin fallback: $e',
       );
@@ -50,7 +50,7 @@ class FullScreenCallPermissionPrompt {
     try {
       await FlutterCallkitIncoming.requestFullIntentPermission();
     } catch (e) {
-      killStateCallLog(
+      AgoraCallLogger.kill(
         'COLD_START',
         'requestFullIntentPermission failed: $e',
       );
