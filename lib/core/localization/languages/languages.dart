@@ -148,6 +148,7 @@ abstract class Languages {
   String get findingDriverDefaultDescription;
   String get findingDriverMinutesRemain;
   String get driverWillArrivingInMinutes;
+  String get driverFinishingNearbyTrip;
   String get driverAssigned;
   String get driverArriving;
   String get driverEnRoute;

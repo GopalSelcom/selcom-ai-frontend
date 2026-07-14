@@ -190,6 +190,8 @@ class AppStrings {
       'finding_driver_minutes_remain';
   static const String driverWillArrivingInMinutes =
       'driver_will_arriving_in_minutes';
+  static const String driverFinishingNearbyTrip =
+      'driver_finishing_nearby_trip';
   static const String driverAssigned = 'driver_assigned';
   static const String driverArriving = 'driver_arriving';
   static const String driverEnRoute = 'driver_en_route';

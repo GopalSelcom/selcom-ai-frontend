@@ -141,7 +141,8 @@ class DriverAcceptedScreen extends StatelessWidget {
             ),
             Obx(() {
               // ETA badge is meaningless until ride details load successfully.
-              if (c.hasRideLoadError) {
+              // Also hide while a chained driver is still finishing another trip.
+              if (!c.shouldShowMapEtaChip) {
                 return const SizedBox.shrink();
               }
               final eta = c.etaLabel.value;

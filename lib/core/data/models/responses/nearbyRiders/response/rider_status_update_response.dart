@@ -31,6 +31,14 @@ class EventRiderStatusUpdateResponse {
   num? riderAvgRating;
   num? etaSeconds;
 
+  /// Chained assignment: driver is still finishing another nearby trip.
+  /// Defaults to `false` when the socket omits the field or sends null
+  /// (`json["driver_finishing_nearby"] == true` is the only truthy path).
+  bool driverFinishingNearby;
+
+  /// Active ride the driver is finishing while this ride is queued/assigned.
+  String? activeRideId;
+
   EventRiderStatusUpdateResponse({
     this.rideId,
     this.status,
@@ -47,6 +55,8 @@ class EventRiderStatusUpdateResponse {
     this.driverAvgRating,
     this.riderAvgRating,
     this.etaSeconds,
+    this.driverFinishingNearby = false,
+    this.activeRideId,
   });
 
   factory EventRiderStatusUpdateResponse.fromJson(Map<String, dynamic> json) =>
@@ -74,6 +84,10 @@ class EventRiderStatusUpdateResponse {
         driverAvgRating: json["driver_avg_rating"] as num?,
         riderAvgRating: json["rider_avg_rating"] as num?,
         etaSeconds: json["eta_seconds"] as num?,
+        driverFinishingNearby: json["driver_finishing_nearby"] == true,
+        activeRideId:
+            json["active_ride_id"]?.toString() ??
+            json["activeRideId"]?.toString(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -92,6 +106,8 @@ class EventRiderStatusUpdateResponse {
     "driver_avg_rating": driverAvgRating,
     "rider_avg_rating": riderAvgRating,
     "eta_seconds": etaSeconds,
+    "driver_finishing_nearby": driverFinishingNearby,
+    "active_ride_id": activeRideId,
   };
 }
 

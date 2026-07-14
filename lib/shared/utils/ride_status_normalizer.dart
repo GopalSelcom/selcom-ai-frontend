@@ -44,3 +44,8 @@ bool isDriverPickupEnRouteStatus(String normalized) {
 bool shouldLeaveFindingDriverForPickup(String normalized) {
   return isDriverPickupEnRouteStatus(normalized);
 }
+
+/// Ride chaining: assigned pickup phase can revert to [searching] when the chain breaks.
+bool shouldRevertToFindingDriverFromPickup(String previousNormalized) {
+  return isDriverPickupEnRouteStatus(previousNormalized);
+}

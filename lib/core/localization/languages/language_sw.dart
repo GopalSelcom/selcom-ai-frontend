@@ -165,6 +165,8 @@ class LanguageSw extends Languages {
     'finding_driver_default_description': 'Dereva atakuchukua haraka iwezekanavyo baada ya kuthibitisha agizo lako',
     'finding_driver_minutes_remain': 'Zimebaki dakika @minutes na sekunde @seconds',
     'driver_will_arriving_in_minutes': 'Dereva atawasili baada ya dakika @minutes...',
+    'driver_finishing_nearby_trip':
+        'Dereva wako anakamilisha safari iliyo karibu na atakuchukua hivi karibuni.',
     'driver_assigned': 'Dereva Amepangwa',
     'driver_arriving': 'Dereva Anakuja',
     'driver_en_route': 'Dereva yuko Njiani',
@@ -1276,6 +1278,10 @@ class LanguageSw extends Languages {
   @override
   String get driverWillArrivingInMinutes =>
       values['driver_will_arriving_in_minutes'] ?? '';
+
+  @override
+  String get driverFinishingNearbyTrip =>
+      values['driver_finishing_nearby_trip'] ?? '';
 
   @override
   String get driverAssigned => values['driver_assigned'] ?? '';

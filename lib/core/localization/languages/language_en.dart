@@ -178,6 +178,8 @@ class LanguageEn extends Languages {
         'The driver will pick you up as soon as possible after they confirm your order',
     'finding_driver_minutes_remain': '@minutes min @seconds sec remaining',
     'driver_will_arriving_in_minutes': 'Driver will arrive in @minutes min...',
+    'driver_finishing_nearby_trip':
+        'Your driver is finishing a nearby trip and will pick you up soon.',
     'driver_assigned': 'Driver Assigned',
     'driver_arriving': 'Driver Arriving',
     'driver_en_route': 'Driver En Route',
@@ -1358,6 +1360,10 @@ class LanguageEn extends Languages {
   @override
   String get driverWillArrivingInMinutes =>
       values['driver_will_arriving_in_minutes'] ?? '';
+
+  @override
+  String get driverFinishingNearbyTrip =>
+      values['driver_finishing_nearby_trip'] ?? '';
 
   @override
   String get driverAssigned => values['driver_assigned'] ?? '';
