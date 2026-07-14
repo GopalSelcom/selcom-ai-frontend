@@ -41,7 +41,7 @@ class SavedCardsController extends GetxController {
 
   @override
   void onClose() {
-    amountController.dispose();
+    amountController.clear();
     super.onClose();
   }
 
